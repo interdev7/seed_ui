@@ -21,6 +21,7 @@ import '../components/data_entry/input_number.dart';
 import '../components/data_entry/radio.dart';
 import '../components/data_entry/select.dart';
 import '../components/data_entry/switch.dart';
+import '../components/data_entry/upload.dart';
 import '../components/feedback/alert.dart';
 import '../components/feedback/drawer.dart';
 import '../components/feedback/message.dart';
@@ -72,6 +73,7 @@ class ComponentsConfig {
     this.tooltip,
     this.tour,
     this.tree,
+    this.upload,
   });
 
   /// Overrides applied to every [Alert] under this provider.
@@ -173,6 +175,9 @@ class ComponentsConfig {
   /// Overrides applied to every [Tree] under this provider.
   final TreeToken? tree;
 
+  /// Overrides applied to every [Upload] under this provider.
+  final UploadToken? upload;
+
   /// Fast lookup for a specific component token type [T].
   T? of<T>() {
     if (T == AlertToken && alert != null) return alert as T;
@@ -212,6 +217,7 @@ class ComponentsConfig {
     if (T == TourToken && tour != null) return tour as T;
     if (T == TooltipToken && tooltip != null) return tooltip as T;
     if (T == TreeToken && tree != null) return tree as T;
+    if (T == UploadToken && upload != null) return upload as T;
     return null;
   }
 }

@@ -205,6 +205,11 @@ TreeDropPosition
 TreeNode
 TreeToken
 UiKit
+Upload
+UploadItem
+UploadStatus
+UploadToken
+UploadVariant
 UserIcon
 generate
 message

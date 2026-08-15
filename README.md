@@ -104,6 +104,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Empty](doc/data_display/empty.md)                | Empty-state placeholder; global renderEmpty                                    |
 | [Pagination](doc/navigation/pagination.md)        | Pager: numbers, size-changer, jumper, simple                                   |
 | [Tag](doc/data_display/tag.md)                    | Label / chip; presets, custom colours, closable, checkable                     |
+| [Upload](doc/data_entry/upload.md)                | File list with a picker trigger, per-file progress, retry and remove           |
 
 See also [theming](doc/theming.md) for the token system.
 

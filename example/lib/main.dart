@@ -34,6 +34,7 @@ import 'components/data_display/segmented_demo.dart';
 import 'components/data_display/steps_demo.dart';
 import 'components/data_entry/select_demo.dart';
 import 'components/data_entry/switch_demo.dart';
+import 'components/data_entry/upload_demo.dart';
 import 'components/data_display/tabs_demo.dart';
 import 'components/data_display/tag_demo.dart';
 import 'components/data_display/tooltip_demo.dart';
@@ -276,6 +277,7 @@ final List<Demo> demos = [
   Demo('timeline', 'Timeline', (_) => const TimelineDemo()),
   Demo('tour', 'Tour', (_) => const TourDemo()),
   Demo('switch', 'Switch', (_) => const SwitchDemo()),
+  Demo('upload', 'Upload', (_) => const UploadDemo()),
   Demo('select', 'Select', (_) => const SelectDemo()),
   Demo('dropdown', 'Dropdown', (_) => const DropdownDemo()),
   Demo('empty', 'Empty', (_) => const EmptyDemo()),

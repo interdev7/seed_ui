@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- **`Upload`** — a file list with a picker trigger, per-file progress, and
+  retry and remove actions. Two layouts: rows, or a grid of tiles for images.
+
+  It picks nothing and sends nothing. Opening a file dialog needs platform
+  code and there is no such API in the Flutter SDK, so taking it on would mean
+  either a plugin dependency every consumer inherits, or native code for six
+  platforms to maintain. Instead `Upload` draws the state and calls back:
+  `onPick` opens whatever picker the app already uses, and the app owns the
+  list, rebuilding items with new `progress` and `status` as its upload runs.
+
+  The dashed drop target is drawn here, but the operating system's drag events
+  are not Flutter's to give either — pass them in through `dragging`.
+
+  The gallery demonstrates it against a real `file_picker`, which is a
+  dependency of the example and not of the package. `seed_ui` still has none
+  beyond the Flutter SDK, and its own platform support is unchanged — the
+  gallery's iOS deployment target moved to 14.0 to satisfy that plugin, which
+  binds the example alone.
+
 ## 0.2.0
 
 ### Changed

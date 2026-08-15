@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.2.0
 
 ### Changed
 
@@ -56,6 +56,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is the survivor, and it scrolls once it outgrows the dialog.
 
 ### Fixed
+
+- A dark theme left the system status bar unreadable: nothing ever stated a
+  `SystemUiOverlayStyle`, so the platform's dark icons stayed on a dark bar.
+  `ConfigProvider` now declares one matching its theme, through an
+  `AnnotatedRegion` rather than `SystemChrome` — the style belongs to its
+  subtree instead of mutating global state. Only the icon brightness is set,
+  leaving a translucent or coloured bar alone, and
+  `ConfigProvider(systemOverlayStyle: false)` hands control back to an app
+  that drives its own chrome.
 
 - The gallery declared a hosted `seed_ui` dependency, so it — and with it the
   `example` CI job and the published demo — was building against the release

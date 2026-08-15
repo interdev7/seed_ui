@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:flutter/widgets.dart';
 
 import 'components_config.dart';
@@ -55,12 +56,60 @@ class ThemeData {
 class ConfigProvider extends InheritedWidget {
   /// Creates a [ConfigProvider].
   ConfigProvider({
-    super.key,
+    Key? key,
     ThemeData? theme,
-    this.renderEmpty,
-    this.components = const [],
-    required super.child,
-  }) : theme = theme ?? ThemeData();
+    WidgetBuilder? renderEmpty,
+    List<Object> components = const [],
+    bool systemOverlayStyle = true,
+    required Widget child,
+  }) : this._(
+          key: key,
+          theme: theme ?? ThemeData(),
+          renderEmpty: renderEmpty,
+          components: components,
+          systemOverlayStyle: systemOverlayStyle,
+          child: child,
+        );
+
+  ConfigProvider._({
+    super.key,
+    required this.theme,
+    required this.renderEmpty,
+    required this.components,
+    required this.systemOverlayStyle,
+    required Widget child,
+  }) : super(
+          // Declared rather than pushed through `SystemChrome`, so the style
+          // belongs to this subtree instead of mutating global state that
+          // whatever else is on screen would have to fight.
+          child: systemOverlayStyle
+              ? AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: _overlayStyleFor(theme.token.isDark),
+                  child: child,
+                )
+              : child,
+        );
+
+  /// Status-bar icons legible against a theme of this brightness.
+  ///
+  /// Only the icon brightness is stated: the bar's own colour is left to the
+  /// app, so a translucent or coloured status bar is not overridden.
+  /// `statusBarIconBrightness` is the Android knob and `statusBarBrightness`
+  /// the iOS one, and the two are inverses of each other — iOS names the
+  /// brightness of the *background* the icons sit on.
+  static SystemUiOverlayStyle _overlayStyleFor(bool isDark) =>
+      SystemUiOverlayStyle(
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      );
+
+  /// Whether this provider states a status-bar style matching its theme.
+  ///
+  /// On by default: a dark theme otherwise leaves the platform's dark status
+  /// bar icons on a dark bar, where they cannot be seen. Turn it off if the
+  /// app drives the system chrome itself — through `AppBar.systemOverlayStyle`
+  /// or its own [AnnotatedRegion].
+  final bool systemOverlayStyle;
 
   /// The theme handed to every widget below this point.
   final ThemeData theme;

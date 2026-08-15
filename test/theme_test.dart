@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
@@ -232,5 +233,66 @@ void main() {
       token: const SeedToken(colorPrimary: Color(0xFF1B7A4B)),
     ).token;
     expect(dark.colorBgContainer, const Color(0xFF141414));
+  });
+
+  group('System status bar', () {
+    SystemUiOverlayStyle? styleOf(WidgetTester tester) {
+      final regions = tester.widgetList<AnnotatedRegion<SystemUiOverlayStyle>>(
+        find.byType(AnnotatedRegion<SystemUiOverlayStyle>),
+      );
+      return regions.isEmpty ? null : regions.first.value;
+    }
+
+    testWidgets('a dark theme asks for light status-bar icons', (tester) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(dark: true),
+          child: const SizedBox(),
+        ),
+      );
+
+      final style = styleOf(tester);
+      expect(style, isNotNull);
+      // Android names the icons, iOS names the background they sit on, so the
+      // two are inverses.
+      expect(style!.statusBarIconBrightness, Brightness.light);
+      expect(style.statusBarBrightness, Brightness.dark);
+    });
+
+    testWidgets('a light theme asks for dark status-bar icons', (tester) async {
+      await tester.pumpWidget(
+        ConfigProvider(child: const SizedBox()),
+      );
+
+      final style = styleOf(tester);
+      expect(style, isNotNull);
+      expect(style!.statusBarIconBrightness, Brightness.dark);
+      expect(style.statusBarBrightness, Brightness.light);
+    });
+
+    testWidgets('the bar colour is left to the app', (tester) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(dark: true),
+          child: const SizedBox(),
+        ),
+      );
+
+      // Only legibility is claimed; a translucent or coloured bar the app set
+      // must survive.
+      expect(styleOf(tester)!.statusBarColor, isNull);
+    });
+
+    testWidgets('an app driving its own chrome can opt out', (tester) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(dark: true),
+          systemOverlayStyle: false,
+          child: const SizedBox(),
+        ),
+      );
+
+      expect(styleOf(tester), isNull);
+    });
   });
 }

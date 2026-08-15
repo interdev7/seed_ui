@@ -284,6 +284,28 @@ Builder(
 Combine both: seed the state from the platform brightness and still let the
 user override it with a toggle.
 
+### The system status bar
+
+`ConfigProvider` states a status-bar style matching its theme, so a dark theme
+gets light icons instead of the platform's dark ones — which on a dark bar
+cannot be seen at all. It is declared through an `AnnotatedRegion`, not pushed
+through `SystemChrome`, so the style belongs to the provider's subtree rather
+than to global state.
+
+Only the icon brightness is claimed. The bar's own colour is left alone, so a
+translucent or coloured status bar the app set survives.
+
+If the app drives the system chrome itself — through `AppBar.systemOverlayStyle`
+or its own `AnnotatedRegion` — turn it off:
+
+```dart
+ConfigProvider(
+  theme: ThemeData(dark: true),
+  systemOverlayStyle: false,
+  child: const MyApp(),
+)
+```
+
 ## Palette generation
 
 `generate(color)` returns the ten shades behind a `ColorGroup`, with index

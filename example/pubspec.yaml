@@ -10,8 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   go_router: ^17.4.0
-  seed_ui:
-    path: ../
+  seed_ui: ^0.0.1
 
 dev_dependencies:
   flutter_test:

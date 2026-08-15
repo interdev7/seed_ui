@@ -1,0 +1,78 @@
+name: Bug report
+description: Something in the kit does not behave as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. A runnable reproduction is worth more than any
+        description — most bugs are diagnosed straight from one.
+
+  - type: input
+    id: version
+    attributes:
+      label: seed_ui version
+      placeholder: "0.0.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: flutter-doctor
+    attributes:
+      label: Output of `flutter doctor -v`
+      render: shell
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Platforms you see it on
+      multiple: true
+      options:
+        - Android
+        - iOS
+        - Web
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+      description: Include the full error and stack trace if there was one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: >-
+        A minimal, self-contained widget that shows the problem. Trim it to the
+        smallest thing that still fails.
+      render: dart
+      value: |
+        import 'package:flutter/material.dart';
+        import 'package:seed_ui/seed_ui.dart';
+
+        void main() => runApp(
+              ConfigProvider(
+                child: MaterialApp(
+                  navigatorKey: UiKit.navigatorKey,
+                  home: const Scaffold(body: Center(child: /* ... */ SizedBox())),
+                ),
+              ),
+            );
+    validations:
+      required: true

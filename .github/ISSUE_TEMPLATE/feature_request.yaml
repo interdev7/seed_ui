@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a new component, or a new knob on an existing one.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: >-
+        Describe the problem rather than the solution. Knowing what you are
+        building often points at a better answer than the one asked for.
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: How are you working around it today?
+      description: >-
+        If the kit can already do this awkwardly, say how — it tells us whether
+        this is a missing feature or a usability problem.
+
+  - type: textarea
+    id: api
+    attributes:
+      label: What the API might look like
+      render: dart
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing issues and this is not a duplicate.
+          required: true
+        - label: >-
+            I understand the public API is not stable yet, and that new surface
+            is added conservatively.
+          required: true

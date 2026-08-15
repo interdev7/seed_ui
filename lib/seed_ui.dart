@@ -118,12 +118,7 @@ export 'src/components/data_entry/input.dart'
         PasswordConfig,
         CountArgs;
 export 'src/components/data_entry/input_number.dart'
-    show
-        InputNumber,
-        InputNumberMode,
-        InputNumberToken,
-        SpinButton,
-        SpinDirection;
+    show InputNumber, InputNumberMode, InputNumberToken, SpinDirection;
 export 'src/components/data_entry/radio.dart'
     show
         Radio,
@@ -225,10 +220,7 @@ export 'src/theme/design_token.dart'
         SoftSize,
         Token;
 export 'src/theme/palette.dart' show generate;
-export 'src/utils/border_radius_detector.dart'
-    show detectBorderRadiusFromContext, detectBorderRadiusFromWidget;
 export 'src/utils/overlay_host.dart' show UiKit;
 export 'src/utils/popover.dart'
     show PopoverAnimation, PopoverLayer, PopoverController, PopoverPlacement;
 export 'src/utils/rail.dart' show RailInsets, RailPainter, RailSegment;
-export 'src/utils/size_resolver.dart' show ControlSizeResolver;

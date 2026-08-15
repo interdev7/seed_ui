@@ -267,4 +267,294 @@ void main() {
     final centre = middle.first.end;
     expect(middle.last.start - centre, greaterThan(8));
   });
+
+  group('TimelineGroupController', () {
+    test('starts closed unless told otherwise', () {
+      expect(TimelineGroupController().expanded, isFalse);
+      expect(TimelineGroupController(expanded: true).expanded, isTrue);
+    });
+
+    test('open, close and toggle move the flag', () {
+      final c = TimelineGroupController();
+      c.open();
+      expect(c.expanded, isTrue);
+      c.close();
+      expect(c.expanded, isFalse);
+      c.toggle();
+      expect(c.expanded, isTrue);
+      c.toggle();
+      expect(c.expanded, isFalse);
+    });
+
+    test('only a real change notifies', () {
+      final c = TimelineGroupController();
+      var notifications = 0;
+      c.addListener(() => notifications++);
+
+      // Already closed: closing again is not a change.
+      c.close();
+      expect(notifications, 0);
+
+      c.open();
+      expect(notifications, 1);
+
+      // Already open.
+      c.open();
+      expect(notifications, 1);
+
+      c.toggle();
+      expect(notifications, 2);
+    });
+  });
+
+  group('TimelineGroupItem', () {
+    testWidgets('the run past collapsedCount is folded to nothing',
+        (tester) async {
+      final controller = TimelineGroupController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        _wrap(
+          Timeline(
+            items: [
+              const TimelineItem(content: Text('Before')),
+              TimelineGroupItem(
+                controller: controller,
+                items: const [
+                  TimelineItem(content: Text('Head')),
+                  TimelineItem(content: Text('Hidden A')),
+                  TimelineItem(content: Text('Hidden B')),
+                ],
+              ),
+              const TimelineItem(content: Text('After')),
+            ],
+          ),
+        ),
+      );
+
+      // Ungrouped nodes and the group's head are laid out as usual. Collapsed
+      // content stays mounted at zero height rather than leaving the tree, so
+      // presence proves nothing — the run's height does.
+      expect(find.text('Before'), findsOneWidget);
+      expect(find.text('Head'), findsOneWidget);
+      expect(find.text('After'), findsOneWidget);
+
+      final collapsed = tester.getSize(find.byType(Timeline)).height;
+
+      controller.open();
+      await tester.pumpAndSettle();
+      final expanded = tester.getSize(find.byType(Timeline)).height;
+
+      expect(expanded, greaterThan(collapsed));
+    });
+
+    testWidgets('initiallyExpanded reveals the whole run', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Timeline(
+            items: [
+              TimelineGroupItem(
+                initiallyExpanded: true,
+                items: [
+                  TimelineItem(content: Text('Head')),
+                  TimelineItem(content: Text('Tail')),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('Head'), findsOneWidget);
+      expect(find.text('Tail'), findsOneWidget);
+    });
+
+    testWidgets('a controller opens and closes the group', (tester) async {
+      final controller = TimelineGroupController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        _wrap(
+          Timeline(
+            items: [
+              TimelineGroupItem(
+                controller: controller,
+                items: const [
+                  TimelineItem(content: Text('Head')),
+                  TimelineItem(content: Text('Tail')),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final shut = tester.getSize(find.byType(Timeline)).height;
+
+      controller.open();
+      await tester.pumpAndSettle();
+      final open = tester.getSize(find.byType(Timeline)).height;
+      expect(open, greaterThan(shut));
+
+      controller.close();
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(Timeline)).height, closeTo(shut, 0.5));
+    });
+
+    testWidgets('collapsedCount: 0 folds the whole group away', (tester) async {
+      final controller = TimelineGroupController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        _wrap(
+          Timeline(
+            items: [
+              TimelineGroupItem(
+                controller: controller,
+                collapsedCount: 0,
+                items: const [
+                  TimelineItem(content: Text('Only')),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Nothing is left to show, so the run collapses to no height at all.
+      expect(tester.getSize(find.byType(Timeline)).height, closeTo(0, 0.5));
+
+      controller.open();
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(Timeline)).height, greaterThan(0));
+    });
+
+    test('a negative collapsedCount is rejected', () {
+      expect(
+        () => TimelineGroupItem(
+          collapsedCount: -1,
+          items: const [TimelineItem(content: Text('x'))],
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    testWidgets('groups fold along the axis on a horizontal run',
+        (tester) async {
+      final controller = TimelineGroupController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        _wrap(
+          Timeline(
+            orientation: TimelineOrientation.horizontal,
+            items: [
+              TimelineGroupItem(
+                controller: controller,
+                items: const [
+                  TimelineItem(content: Text('Head')),
+                  TimelineItem(content: Text('Tail')),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // A horizontal group clips along its width, not its height.
+      final shut = tester.getSize(find.byType(Timeline)).width;
+
+      controller.open();
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(Timeline)).width, greaterThan(shut));
+    });
+  });
+
+  group('Orientation and order', () {
+    testWidgets('a horizontal run lays its nodes left to right',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Timeline(
+            orientation: TimelineOrientation.horizontal,
+            items: [
+              TimelineItem(content: Text('First')),
+              TimelineItem(content: Text('Second')),
+              TimelineItem(content: Text('Third')),
+            ],
+          ),
+        ),
+      );
+
+      final first = tester.getCenter(find.text('First'));
+      final second = tester.getCenter(find.text('Second'));
+      final third = tester.getCenter(find.text('Third'));
+
+      expect(second.dx, greaterThan(first.dx));
+      expect(third.dx, greaterThan(second.dx));
+      // A horizontal run does not stack.
+      expect(second.dy, closeTo(first.dy, 0.5));
+    });
+
+    testWidgets('reverse flips the order of the nodes', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Timeline(
+            reverse: true,
+            items: [
+              TimelineItem(content: Text('First')),
+              TimelineItem(content: Text('Second')),
+            ],
+          ),
+        ),
+      );
+
+      // Written first, drawn last.
+      expect(
+        tester.getCenter(find.text('First')).dy,
+        greaterThan(tester.getCenter(find.text('Second')).dy),
+      );
+    });
+
+    testWidgets('reverse puts a pending node at the top', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Timeline(
+            reverse: true,
+            pending: Text('Working…'),
+            items: [
+              TimelineItem(content: Text('Done')),
+            ],
+          ),
+        ),
+      );
+
+      expect(
+        tester.getCenter(find.text('Working…')).dy,
+        lessThan(tester.getCenter(find.text('Done')).dy),
+      );
+    });
+
+    testWidgets('a horizontal run shows labels on the far side',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Timeline(
+            orientation: TimelineOrientation.horizontal,
+            items: [
+              TimelineItem(label: Text('Label'), content: Text('Content')),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('Label'), findsOneWidget);
+      expect(find.text('Content'), findsOneWidget);
+      // The label sits across the axis from the content.
+      expect(
+        tester.getCenter(find.text('Label')).dy,
+        isNot(closeTo(tester.getCenter(find.text('Content')).dy, 1)),
+      );
+    });
+  });
 }

@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Removed
+
+**Breaking.** Four names left the public API. All four were implementation
+details that no documented API returned or accepted, and nothing in the
+example or the docs used them:
+
+- `ControlSizeResolver` — the internal `ControlSize.resolve1D` helper.
+- `SpinButton` — chrome internal to `InputNumber`.
+- `detectBorderRadiusFromContext`, `detectBorderRadiusFromWidget`.
+
+Everything else the kit exported stays: types such as `PopoverPlacement` and
+`RailInsets` appear in public signatures (`Tooltip.placement`,
+`TimelineToken.railInset`), so callers need to be able to name them.
+
+### Added
+
+- A snapshot test over the exported API (`test/public_api_test.dart`). Any
+  change to `lib/seed_ui.dart`'s surface now shows up as a reviewable diff,
+  and a bare `export` without a `show` clause fails the suite.
+- `CONTRIBUTING.md`, issue forms and a pull-request template.
+- Tests for `TimelineGroupController`, collapsible timeline groups, and the
+  horizontal and reversed timeline layouts.
+
 ## 0.0.1
 
 First public release.

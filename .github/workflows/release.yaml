@@ -11,10 +11,14 @@ name: Release
 #
 #   flutter pub publish
 #
-# REQUIRES a `RELEASE_TOKEN` secret: a fine-grained personal access token for
-# this repository with Contents: Read and write. The built-in GITHUB_TOKEN is
-# deliberately not used — anything it creates is attributed to
-# `github-actions[bot]`, so the tag and the release would not be yours.
+# Runs on the built-in GITHUB_TOKEN, so there is no secret to set up. The
+# trade-off is attribution: the GitHub release is credited to
+# `github-actions[bot]`, because that is the identity the token carries. The
+# tag itself is lightweight and records no name at all.
+#
+# To have releases credited to you instead, add a personal access token as a
+# `RELEASE_TOKEN` secret and use it for both `actions/checkout` and
+# `gh release create`.
 on:
   push:
     branches: [main]
@@ -38,19 +42,6 @@ jobs:
         with:
           # Tags are needed to tell an already-released version from a new one.
           fetch-depth: 0
-          # Pushing with this token is what keeps the tag under your account
-          # rather than the Actions bot's.
-          token: ${{ secrets.RELEASE_TOKEN }}
-
-      # Failing here beats silently falling back to GITHUB_TOKEN and stamping
-      # the release with a bot's name.
-      - name: RELEASE_TOKEN is configured
-        run: |
-          if [ -z '${{ secrets.RELEASE_TOKEN }}' ]; then
-            echo '::error::RELEASE_TOKEN is not set. Add a fine-grained PAT'
-            echo '::error::with Contents: Read and write to the repository secrets.'
-            exit 1
-          fi
 
       - name: Read the version
         id: version
@@ -149,7 +140,7 @@ jobs:
       - name: Create the GitHub release
         if: steps.guard.outputs.fresh == 'true'
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           # A version carrying a hyphen (1.0.0-rc.1) is a pre-release.

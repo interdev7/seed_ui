@@ -28,9 +28,10 @@ class _NotificationDemoState extends State<NotificationDemo> {
     for (int i = 1; i <= count; i++) {
       notification.open(
         NotificationConfig(
-          message: 'Notification #$i',
-          description:
-              'This is stacked notification card number $i in the deck.',
+          message: Text('Notification #$i'),
+          description: Text(
+            'This is stacked notification card number $i in the deck.',
+          ),
           duration: Duration.zero,
           placement: _placement,
         ),
@@ -208,8 +209,10 @@ class _NotificationDemoState extends State<NotificationDemo> {
                   late final NotificationHandle close;
                   close = notification.open(
                     NotificationConfig(
-                      message: 'Please confirm',
-                      description: 'Delete this file? This cannot be undone.',
+                      message: const Text('Please confirm'),
+                      description: const Text(
+                        'Delete this file? This cannot be undone.',
+                      ),
                       type: StatusType.warning,
                       duration: Duration.zero,
                       actions: [

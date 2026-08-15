@@ -7,7 +7,7 @@ required.
 
 ```dart
 Drawer.open(const DrawerConfig(
-  title: 'Filters',
+  title: Text('Filters'),
   child: FiltersForm(),
 ));
 ```
@@ -16,7 +16,7 @@ Drawer.open(const DrawerConfig(
 can be sequenced after it:
 
 ```dart
-await Drawer.open(DrawerConfig(title: 'Edit', child: EditForm()));
+await Drawer.open(DrawerConfig(title: Text('Edit'), child: EditForm()));
 refreshList();
 ```
 
@@ -97,7 +97,7 @@ future:
 
 ```dart
 Drawer.open(DrawerConfig(
-  title: 'Unsaved changes',
+  title: Text('Unsaved changes'),
   maskClosable: false, // force a deliberate close
   onClose: saveDraft,
   child: Editor(),
@@ -121,7 +121,7 @@ taller than the panel, wrap `child` in a scroll view:
 
 ```dart
 Drawer.open(DrawerConfig(
-  title: 'Details',
+  title: Text('Details'),
   padding: EdgeInsets.zero,
   child: ListView(children: [for (final row in rows) DetailRow(row)]),
 ));
@@ -132,7 +132,7 @@ Drawer.open(DrawerConfig(
 | Field            | Type              | Default     | Description                                           |
 | ---------------- | ----------------- | ----------- | ----------------------------------------------------- |
 | `child`          | `Widget`          | required    | Panel content                                         |
-| `title`          | `String?`         | `null`      | Header text; omit for no header                       |
+| `title`          | `Widget?`         | `null`      | Header; omit for no header                            |
 | `placement`      | `DrawerPlacement` | `right`     | Edge to slide from                                    |
 | `size`           | `double`          | `378`       | Extent along the sliding axis, capped to the viewport |
 | `onClose`        | `VoidCallback?`   | `null`      | Runs on any dismissal                                 |
@@ -153,7 +153,7 @@ deadline, and drive frames explicitly rather than with `pumpAndSettle`:
 library;
 
 // ...
-Drawer.open(const DrawerConfig(title: 'Panel', child: Text('body')));
+Drawer.open(const DrawerConfig(title: Text('Panel'), child: Text('body')));
 await tester.pump();
 await tester.pump(const Duration(milliseconds: 400));
 expect(find.text('Panel'), findsOneWidget);

@@ -18,22 +18,22 @@ class TooltipDemo extends StatelessWidget {
           PopoverPlacement.right,
         ])
           Tooltip(
-            message: 'Tooltip on the ${placement.name}',
+            message: Text('Tooltip on the ${placement.name}'),
             placement: placement,
             child: Button(onPressed: () {}, child: Text(placement.name)),
           ),
         const Tooltip(
-          message: 'Hover or tap to reveal the hint.',
+          message: Text('Hover or tap to reveal the hint.'),
           child: Icon(Icons.info_outline),
         ),
         Tooltip(
-          message: 'Tap trigger, no arrow',
+          message: const Text('Tap trigger, no arrow'),
           trigger: TooltipTrigger.tap,
           arrow: false,
           child: Button(onPressed: () {}, child: const Text('trigger: tap')),
         ),
         Tooltip(
-          message: 'Long-press me',
+          message: const Text('Long-press me'),
           trigger: TooltipTrigger.longPress,
           child: Button(
             onPressed: () {},

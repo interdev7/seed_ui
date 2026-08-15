@@ -103,7 +103,7 @@ void main() {
             type: ProgressType.dashboard,
             percent: 0.75,
             gradient: const LinearGradient(colors: [Colors.red, Colors.yellow]),
-            format: (p) => 'Done ${(p * 100).round()} / 100',
+            format: (p) => Text('Done ${(p * 100).round()} / 100'),
           ),
         ),
       );
@@ -295,8 +295,8 @@ void main() {
         _host(
           Result(
             status: StatusType.success,
-            title: 'Payment received',
-            subTitle: 'Order is being processed.',
+            title: const Text('Payment received'),
+            subTitle: const Text('Order is being processed.'),
             extra: [
               Button(
                 variant: ButtonVariant.solid,

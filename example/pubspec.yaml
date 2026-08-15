@@ -12,6 +12,14 @@ dependencies:
   go_router: ^17.4.0
   seed_ui: ^0.0.1
 
+# The gallery declares a hosted dependency so it reads like a real consumer,
+# but always builds against the working tree — otherwise it would validate
+# whatever is already on pub.dev instead of the branch, and a breaking change
+# here would go unnoticed until after release.
+dependency_overrides:
+  seed_ui:
+    path: ../
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

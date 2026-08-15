@@ -30,7 +30,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Delete this item?',
+          title: const Text('Delete this item?'),
           onOk: () {},
           child: const Text('trigger'),
         ),
@@ -51,7 +51,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Delete this item?',
+          title: const Text('Delete this item?'),
           onOk: () {},
           child: Button(
             onPressed: () => triggerTapped = true,
@@ -73,7 +73,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Sure?',
+          title: const Text('Sure?'),
           onOk: () => confirmed = true,
           child: const Text('trigger'),
         ),
@@ -94,7 +94,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Sure?',
+          title: const Text('Sure?'),
           onCancel: () => cancelled = true,
           onOk: () {},
           child: const Text('trigger'),
@@ -115,7 +115,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Sure?',
+          title: const Text('Sure?'),
           onOk: () {},
           child: const Text('trigger'),
         ),
@@ -137,7 +137,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Saving?',
+          title: const Text('Saving?'),
           onOk: () => gate.future,
           child: const Text('trigger'),
         ),
@@ -162,7 +162,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Sure?',
+          title: const Text('Sure?'),
           disabled: true,
           onOk: () => confirmed = true,
           child: const Text('trigger'),
@@ -189,8 +189,8 @@ void main() {
       await tester.pumpWidget(
         _hostAt(
           Popconfirm(
-            title: 'Delete this item?',
-            description: 'This action cannot be undone.',
+            title: const Text('Delete this item?'),
+            description: const Text('This action cannot be undone.'),
             onOk: () {},
             child: const Text('trigger'),
           ),
@@ -236,8 +236,10 @@ void main() {
     await tester.pumpWidget(
       _hostAt(
         Popconfirm(
-          title: 'A deliberately long confirmation question that is wide',
-          description: 'With a second line of detail to widen the bubble.',
+          title: const Text(
+              'A deliberately long confirmation question that is wide'),
+          description:
+              const Text('With a second line of detail to widen the bubble.'),
           placement: PopoverPlacement.right,
           onOk: () {},
           child: const Text('trigger'),
@@ -267,7 +269,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Sure?',
+          title: const Text('Sure?'),
           onOk: () {},
           child: const Text('with-arrow'),
         ),
@@ -283,7 +285,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Sure?',
+          title: const Text('Sure?'),
           arrow: false,
           onOk: () {},
           child: const Text('no-arrow'),
@@ -308,7 +310,7 @@ void main() {
             children: [
               const SizedBox(height: 40),
               Popconfirm(
-                title: 'Sure?',
+                title: const Text('Sure?'),
                 onOk: () {},
                 child: const Text('trigger'),
               ),
@@ -332,7 +334,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Popconfirm(
-          title: 'Sure?',
+          title: const Text('Sure?'),
           showCancel: false,
           onOk: () {},
           child: const Text('trigger'),

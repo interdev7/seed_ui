@@ -7,8 +7,8 @@ this is a widget you wrap around a trigger, not a global call.
 
 ```dart
 Popconfirm(
-  title: 'Delete this item?',
-  okText: 'Delete',
+  title: Text('Delete this item?'),
+  okText: Text('Delete'),
   danger: true,
   onOk: () => delete(item),
   child: Button(
@@ -41,7 +41,7 @@ bubble along the trigger's edge:
 
 ```dart
 Popconfirm(
-  title: 'Sure?',
+  title: Text('Sure?'),
   placement: PopoverPlacement.rightTop,
   onOk: save,
   child: trigger,
@@ -67,7 +67,7 @@ with the bubble held open, so the trigger cannot fire twice:
 
 ```dart
 Popconfirm(
-  title: 'Publish now?',
+  title: Text('Publish now?'),
   onOk: () async {
     await api.publish();
     message.success('Published');
@@ -85,8 +85,8 @@ runs to completion.
 
 ```dart
 Popconfirm(
-  title: 'Delete this item?',
-  description: 'This action cannot be undone.',
+  title: Text('Delete this item?'),
+  description: Text('This action cannot be undone.'),
   onOk: delete,
   child: trigger,
 )
@@ -100,7 +100,7 @@ deliberate tap:
 
 ```dart
 Popconfirm(
-  title: 'Got it?',
+  title: Text('Got it?'),
   showCancel: false,
   onOk: acknowledge,
   child: trigger,
@@ -118,10 +118,10 @@ still be interactive for another reason.
 | Field         | Type                         | Default    | Description                                |
 | ------------- | ---------------------------- | ---------- | ------------------------------------------ |
 | `child`       | `Widget`                     | required   | The trigger                                |
-| `title`       | `String`                     | required   | The question                               |
-| `description` | `String?`                    | `null`     | Detail below the title                     |
-| `okText`      | `String`                     | `'OK'`     | Confirm button label                       |
-| `cancelText`  | `String`                     | `'Cancel'` | Cancel button label                        |
+| `title`       | `Widget`                     | required   | The question                               |
+| `description` | `Widget?`                    | `null`     | Detail below the title                     |
+| `okText`      | `Widget`                     | `Text('OK')` | Confirm button label                     |
+| `cancelText`  | `Widget`                  | `Text('Cancel')` | Cancel button label                   |
 | `onOk`        | `FutureOr<void> Function()?` | `null`     | Confirm handler                            |
 | `onCancel`    | `VoidCallback?`              | `null`     | Cancel/dismiss handler                     |
 | `danger`      | `bool`                       | `false`    | Recolors the confirm button                |

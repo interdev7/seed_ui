@@ -6,7 +6,7 @@ child.
 
 ```dart
 Tooltip(
-  message: 'Search',
+  message: const Text('Search'),
   child: Button(
     shape: ButtonShape.circle,
     icon: const Icon(Icons.search),
@@ -28,7 +28,7 @@ engine.
 
 ```dart
 Tooltip(
-  message: 'Delete',
+  message: const Text('Delete'),
   placement: PopoverPlacement.right,
   child: deleteButton,
 )
@@ -46,7 +46,7 @@ Tooltip(
 
 ```dart
 Tooltip(
-  message: 'More options',
+  message: const Text('More options'),
   trigger: TooltipTrigger.tap,
   child: icon,
 )
@@ -63,7 +63,7 @@ the bubble settled on after flipping, and aligns to the trigger's centre,
 staying clear of the rounded corners. Turn it off with `arrow: false`.
 
 ```dart
-Tooltip(message: 'No caret', arrow: false, child: chip)
+Tooltip(message: const Text('No caret'), arrow: false, child: chip)
 ```
 
 ## On-screen positioning
@@ -87,7 +87,7 @@ pointer-exit event, so a tap-shown tooltip retracts on this timer instead.
 
 ```dart
 Tooltip(
-  message: 'Saved automatically',
+  message: const Text('Saved automatically'),
   waitDuration: const Duration(milliseconds: 400),
   child: statusDot,
 )
@@ -119,7 +119,7 @@ page. It follows the active theme automatically.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `message` | `String` | required | The hint text |
+| `message` | `Widget` | required | The hint — usually a `Text` |
 | `child` | `Widget` | required | The widget the tooltip describes |
 | `placement` | `PopoverPlacement` | `top` | Preferred side |
 | `trigger` | `TooltipTrigger` | `hover` | What reveals the tooltip |

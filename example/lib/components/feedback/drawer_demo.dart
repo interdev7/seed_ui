@@ -15,7 +15,7 @@ class DrawerDemo extends StatelessWidget {
           Button(
             onPressed: () => Drawer.open(
               DrawerConfig(
-                title: 'Drawer — ${placement.name}',
+                title: Text('Drawer — ${placement.name}'),
                 placement: placement,
                 child: const Text(
                   'Panels slide in from any edge and trap focus until dismissed.',
@@ -27,7 +27,7 @@ class DrawerDemo extends StatelessWidget {
         Button(
           onPressed: () => Drawer.open(
             const DrawerConfig(
-              title: 'Drawer with Custom Barrier',
+              title: Text('Drawer with Custom Barrier'),
               barrierColor: Color(0x991890FF), // Custom blue tint barrier
               child: Text(
                 'This drawer uses a custom translucent blue barrierColor.',

@@ -117,10 +117,15 @@ class NotificationConfig {
   });
 
   /// Bold headline shown at the top of the card.
-  final String message;
+  ///
+  /// Rendered inside a [DefaultTextStyle] carrying the headline's colour and
+  /// size, so a bare `Text('Saved')` needs no styling of its own.
+  final Widget message;
 
-  /// Optional supporting text below the headline.
-  final String? description;
+  /// Optional supporting detail below the headline.
+  ///
+  /// Wrapped in its own [DefaultTextStyle], dimmer and smaller than [message].
+  final Widget? description;
 
   /// Leave null for a neutral notification with no status icon.
   final StatusType? type;
@@ -171,11 +176,14 @@ class NotificationConfig {
 /// notification.success('Done', description: 'Your file was uploaded.');
 ///
 /// notification.open(NotificationConfig(
-///   message: 'Update available',
+///   message: const Text('Update available'),
 ///   duration: Duration.zero,
 ///   actions: [Button(onPressed: install, child: const Text('Install'))],
 /// ));
 /// ```
+///
+/// The shorthands take plain text; [NotificationConfig.message] and
+/// [NotificationConfig.description] are widgets, for anything richer.
 ///
 /// Requires [UiKit.navigatorKey] to be installed on the app. Use
 /// [message] instead for brief status text with no detail or actions.
@@ -196,8 +204,8 @@ class NotificationApi {
   }) =>
       open(
         NotificationConfig(
-          message: message,
-          description: description,
+          message: Text(message),
+          description: description == null ? null : Text(description),
           type: StatusType.success,
           duration: duration,
           placement: placement,
@@ -219,8 +227,8 @@ class NotificationApi {
   }) =>
       open(
         NotificationConfig(
-          message: message,
-          description: description,
+          message: Text(message),
+          description: description == null ? null : Text(description),
           type: StatusType.error,
           duration: duration,
           placement: placement,
@@ -243,8 +251,8 @@ class NotificationApi {
   }) =>
       open(
         NotificationConfig(
-          message: message,
-          description: description,
+          message: Text(message),
+          description: description == null ? null : Text(description),
           type: StatusType.warning,
           duration: duration,
           placement: placement,
@@ -267,8 +275,8 @@ class NotificationApi {
   }) =>
       open(
         NotificationConfig(
-          message: message,
-          description: description,
+          message: Text(message),
+          description: description == null ? null : Text(description),
           type: StatusType.info,
           duration: duration,
           placement: placement,
@@ -927,8 +935,7 @@ class _NotificationCardState extends State<_NotificationCard>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  config.message,
+                DefaultTextStyle(
                   style: TextStyle(
                     color: token.colorText,
                     fontSize: r.titleFontSize,
@@ -936,11 +943,11 @@ class _NotificationCardState extends State<_NotificationCard>
                     fontFamilyFallback: token.fontFamilyFallback,
                     decoration: TextDecoration.none,
                   ),
+                  child: config.message,
                 ),
                 if (config.description != null) ...[
                   SizedBox(height: token.sizeXS),
-                  Text(
-                    config.description!,
+                  DefaultTextStyle(
                     style: TextStyle(
                       color: token.colorTextSecondary,
                       fontSize: r.descriptionFontSize,
@@ -949,6 +956,7 @@ class _NotificationCardState extends State<_NotificationCard>
                       height: token.lineHeight,
                       decoration: TextDecoration.none,
                     ),
+                    child: config.description!,
                   ),
                 ],
                 if (config.actions != null && config.actions!.isNotEmpty) ...[

@@ -10,7 +10,7 @@ class PopconfirmDemo extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(4.0),
         child: Popconfirm(
-          title: 'Title',
+          title: const Text('Title'),
           placement: placement,
           onOk: () {},
           child: Button(
@@ -34,9 +34,9 @@ class PopconfirmDemo extends StatelessWidget {
             runSpacing: 8,
             children: [
               Popconfirm(
-                title: 'Delete this item?',
-                description: 'This action cannot be undone.',
-                okText: 'Delete',
+                title: const Text('Delete this item?'),
+                description: const Text('This action cannot be undone.'),
+                okText: const Text('Delete'),
                 danger: true,
                 onOk: () => message.success('Deleted'),
                 onCancel: () => message.info('Cancelled'),
@@ -48,7 +48,7 @@ class PopconfirmDemo extends StatelessWidget {
                 ),
               ),
               Popconfirm(
-                title: 'Publish now?',
+                title: const Text('Publish now?'),
                 placement: PopoverPlacement.right,
                 onOk: () async {
                   await Future<void>.delayed(const Duration(seconds: 1));
@@ -60,7 +60,7 @@ class PopconfirmDemo extends StatelessWidget {
                 ),
               ),
               Popconfirm(
-                title: 'No arrow',
+                title: const Text('No arrow'),
                 arrow: false,
                 onOk: () {},
                 child: Button(
@@ -69,7 +69,7 @@ class PopconfirmDemo extends StatelessWidget {
                 ),
               ),
               Popconfirm(
-                title: 'With Barrier Color',
+                title: const Text('With Barrier Color'),
                 barrierColor: const Color(0x7F000000),
                 onOk: () => message.success('Confirmed'),
                 child: Button(

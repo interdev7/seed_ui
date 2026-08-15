@@ -88,7 +88,7 @@ with its normal exit animation.
 
 ```dart
 message.open(MessageConfig(
-  content: 'Custom',
+  content: Text('Custom'),
   type: StatusType.warning,
   duration: const Duration(seconds: 10),
   icon: const Icon(Icons.pets, size: 16),
@@ -99,7 +99,7 @@ message.open(MessageConfig(
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `content` | `String` | The text |
+| `content` | `Widget` | The body — usually a `Text` |
 | `type` | `StatusType` | Status icon and color |
 | `duration` | `Duration?` | `Duration.zero` disables auto-dismiss |
 | `icon` | `Widget?` | Replaces the status icon |
@@ -148,7 +148,7 @@ a widget:
 
 ```dart
 message.open(const MessageConfig(
-  content: 'Saved',
+  content: Text('Saved'),
   token: MessageToken(),
 ));
 

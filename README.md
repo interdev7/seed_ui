@@ -18,8 +18,8 @@ open a drawer.
 - **Token-driven theming.** Every color, size and motion value is derived from
   a small set of seeds. Change `colorPrimary` and the whole kit follows — see
   [theming](doc/theming.md), including light/dark switching.
-- **Feedback you can call from anywhere.** `message.success('Saved')` and
-  `notification.error(...)` need no `BuildContext`.
+- **Feedback you can call from anywhere.** `message.success('Saved')`
+  and `notification.error(...)` need no `BuildContext`.
 - **No Material dependency in the widgets.** Components build on
   `package:flutter/widgets.dart`, so they drop into Material and Cupertino
   apps alike.
@@ -128,8 +128,7 @@ final close = message.loading('Uploading…');
 await upload();
 close();
 
-notification.error(
-  'Upload failed',
+notification.error('Upload failed',
   description: 'The server rejected the file.',
   actions: [
     Button(

@@ -138,7 +138,7 @@ void main() {
           controller: controller,
           onCreateTab: (index) => index == 1
               ? const CreateTabData(
-                  title: 'News',
+                  label: Text('News'),
                   key: 'news',
                   content: Text('News!'),
                 )

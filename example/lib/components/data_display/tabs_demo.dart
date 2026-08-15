@@ -185,7 +185,7 @@ class _TabsDemoState extends State<TabsDemo> {
                 controller: _controller,
                 size: size,
                 onCreateTab: (index) => CreateTabData(
-                  title: 'New ${index + 1}',
+                  label: Text('New ${index + 1}'),
                   content: Text('Fresh tab #${index + 1}'),
                 ),
               ),

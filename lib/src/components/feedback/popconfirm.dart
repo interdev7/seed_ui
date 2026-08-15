@@ -81,8 +81,8 @@ class _ResolvedPopconfirmToken {
 ///
 /// ```dart
 /// Popconfirm(
-///   title: 'Delete this item?',
-///   okText: 'Delete',
+///   title: const Text('Delete this item?'),
+///   okText: const Text('Delete'),
 ///   color: ButtonColor.danger,
 ///   onOk: () => delete(item),
 ///   child: Button(variant: ButtonVariant.text, child: const Text('Delete')),
@@ -97,8 +97,8 @@ class Popconfirm extends StatefulWidget {
     required this.child,
     required this.title,
     this.description,
-    this.okText = 'OK',
-    this.cancelText = 'Cancel',
+    this.okText = const Text('OK'),
+    this.cancelText = const Text('Cancel'),
     this.onOk,
     this.onCancel,
     this.danger = false,
@@ -115,16 +115,19 @@ class Popconfirm extends StatefulWidget {
   final Widget child;
 
   /// The question posed to the user.
-  final String title;
+  ///
+  /// Rendered inside a [DefaultTextStyle] carrying the title's size and
+  /// weight, so a bare `Text('Delete this item?')` needs no styling.
+  final Widget title;
 
-  /// Optional detail shown below the title.
-  final String? description;
+  /// Optional detail shown below the title, in its own dimmer style.
+  final Widget? description;
 
   /// Label of the confirming button.
-  final String okText;
+  final Widget okText;
 
   /// Label of the dismissing button.
-  final String cancelText;
+  final Widget cancelText;
 
   /// Called when confirmed.
   ///
@@ -251,8 +254,7 @@ class _SoftPopconfirmState extends State<Popconfirm> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.title,
+                    DefaultTextStyle(
                       style: TextStyle(
                         color: token.colorText,
                         fontSize: r.titleFontSize,
@@ -261,11 +263,11 @@ class _SoftPopconfirmState extends State<Popconfirm> {
                         fontWeight: FontWeight.w600,
                         decoration: TextDecoration.none,
                       ),
+                      child: widget.title,
                     ),
                     if (widget.description != null) ...[
                       SizedBox(height: token.sizeXXS),
-                      Text(
-                        widget.description!,
+                      DefaultTextStyle(
                         style: TextStyle(
                           color: token.colorTextSecondary,
                           fontSize: r.descriptionFontSize,
@@ -274,6 +276,7 @@ class _SoftPopconfirmState extends State<Popconfirm> {
                           height: token.lineHeight,
                           decoration: TextDecoration.none,
                         ),
+                        child: widget.description!,
                       ),
                     ],
                   ],
@@ -289,7 +292,7 @@ class _SoftPopconfirmState extends State<Popconfirm> {
                 Button(
                   size: SoftSize.small,
                   onPressed: () => _setOpen(false),
-                  child: Text(widget.cancelText),
+                  child: widget.cancelText,
                 ),
                 SizedBox(width: token.sizeXS),
               ],
@@ -299,7 +302,7 @@ class _SoftPopconfirmState extends State<Popconfirm> {
                 color: widget.danger ? ButtonColor.danger : ButtonColor.primary,
                 loading: _confirming,
                 onPressed: _confirm,
-                child: Text(widget.okText),
+                child: widget.okText,
               ),
             ],
           ),

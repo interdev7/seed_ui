@@ -101,8 +101,11 @@ class MessageConfig {
     this.token,
   });
 
-  /// The text shown in the toast.
-  final String content;
+  /// The toast's body. Usually a [Text]; anything else is laid out as given.
+  ///
+  /// Rendered inside a [DefaultTextStyle] carrying the toast's own colour and
+  /// size, so a bare `Text('Saved')` needs no styling of its own.
+  final Widget content;
 
   /// Which status icon and color to use.
   final StatusType type;
@@ -136,6 +139,16 @@ class MessageConfig {
 /// close();
 /// ```
 ///
+/// The shorthands above take plain text. For anything richer — an icon beside
+/// the label, a [RichText] — build a [MessageConfig], whose [MessageConfig.content]
+/// is a widget:
+///
+/// ```dart
+/// message.open(MessageConfig(
+///   content: Row(children: [Icon(Icons.wifi_off), Text('Offline')]),
+/// ));
+/// ```
+///
 /// Requires [UiKit.navigatorKey] to be installed on the app.
 class MessageApi {
   const MessageApi._();
@@ -151,7 +164,7 @@ class MessageApi {
   }) =>
       open(
         MessageConfig(
-          content: content,
+          content: Text(content),
           type: StatusType.success,
           duration: duration,
           onClose: onClose,
@@ -168,7 +181,7 @@ class MessageApi {
   }) =>
       open(
         MessageConfig(
-          content: content,
+          content: Text(content),
           type: StatusType.error,
           duration: duration,
           onClose: onClose,
@@ -185,7 +198,7 @@ class MessageApi {
   }) =>
       open(
         MessageConfig(
-          content: content,
+          content: Text(content),
           type: StatusType.warning,
           duration: duration,
           onClose: onClose,
@@ -203,7 +216,7 @@ class MessageApi {
   }) =>
       open(
         MessageConfig(
-          content: content,
+          content: Text(content),
           type: StatusType.info,
           duration: duration,
           onClose: onClose,
@@ -221,7 +234,7 @@ class MessageApi {
   }) =>
       open(
         MessageConfig(
-          content: content,
+          content: Text(content),
           type: StatusType.loading,
           // Loading has no natural timeout: it ends when the work does.
           duration: duration ?? Duration.zero,
@@ -427,12 +440,11 @@ class _MessageCardState extends State<_MessageCard>
                 StatusIcon(type: widget.config.type, token: token),
             SizedBox(width: token.sizeXS),
             Flexible(
-              child: Text(
-                widget.config.content,
-                // Fully specified because the overlay has no Material
-                // ancestor to inherit from. `height` is deliberately omitted:
-                // a taller line box would push the label down relative to the
-                // icon beside it.
+              // Fully specified because the overlay has no Material ancestor
+              // to inherit from. `height` is deliberately omitted: a taller
+              // line box would push the label down relative to the icon
+              // beside it.
+              child: DefaultTextStyle(
                 style: TextStyle(
                   color: r.contentColor,
                   fontSize: token.fontSize,
@@ -440,6 +452,7 @@ class _MessageCardState extends State<_MessageCard>
                   fontFamilyFallback: token.fontFamilyFallback,
                   decoration: TextDecoration.none,
                 ),
+                child: widget.config.content,
               ),
             ),
           ],

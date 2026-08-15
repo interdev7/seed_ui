@@ -29,7 +29,7 @@ void main() {
   testWidgets('appears after the wait duration on hover', (tester) async {
     await tester.pumpWidget(
       _host(
-        const Tooltip(message: 'Search', child: Text('trigger')),
+        const Tooltip(message: Text('Search'), child: Text('trigger')),
       ),
     );
 
@@ -46,7 +46,7 @@ void main() {
   testWidgets('hides when the pointer leaves', (tester) async {
     await tester.pumpWidget(
       _host(
-        const Tooltip(message: 'Search', child: Text('trigger')),
+        const Tooltip(message: Text('Search'), child: Text('trigger')),
       ),
     );
 
@@ -64,7 +64,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         const Tooltip(
-          message: 'Search',
+          message: Text('Search'),
           trigger: TooltipTrigger.tap,
           child: Text('trigger'),
         ),
@@ -85,7 +85,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         const Tooltip(
-          message: 'Search',
+          message: Text('Search'),
           trigger: TooltipTrigger.longPress,
           showDuration: Duration(milliseconds: 400),
           child: Text('trigger'),
@@ -102,7 +102,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         const Tooltip(
-          message: 'Search',
+          message: Text('Search'),
           arrow: false,
           trigger: TooltipTrigger.tap,
           child: Text('trigger'),
@@ -124,7 +124,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         const Tooltip(
-          message: 'Search',
+          message: Text('Search'),
           trigger: TooltipTrigger.tap,
           child: Text('trigger'),
         ),
@@ -143,7 +143,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         const Tooltip(
-          message: 'Search',
+          message: Text('Search'),
           showDuration: Duration(milliseconds: 500),
           child: Text('trigger'),
         ),
@@ -168,7 +168,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Tooltip(
-          message: 'Search',
+          message: const Text('Search'),
           child: Button(
             onPressed: () => tapped++,
             child: const Text('trigger'),

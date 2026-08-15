@@ -55,14 +55,14 @@ void main() {
 
     notification.open(
       const NotificationConfig(
-        message: 'first',
+        message: Text('first'),
         duration: Duration.zero,
         key: 'a',
       ),
     );
     notification.open(
       const NotificationConfig(
-        message: 'second',
+        message: Text('second'),
         duration: Duration.zero,
         key: 'b',
       ),

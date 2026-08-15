@@ -33,8 +33,8 @@ class ResultDemo extends StatelessWidget {
         ])
           Result(
             status: e.$1,
-            title: e.$2,
-            subTitle: e.$3,
+            title: Text(e.$2),
+            subTitle: Text(e.$3),
             extra: [
               Button(
                 variant: ButtonVariant.solid,

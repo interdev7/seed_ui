@@ -63,8 +63,8 @@ class _ResolvedResultToken {
 /// ```dart
 /// Result(
 ///   status: StatusType.success,
-///   title: 'Payment received',
-///   subTitle: 'Order 2017182818828182881 is being processed.',
+///   title: const Text('Payment received'),
+///   subTitle: const Text('Order 2017182818828182881 is being processed.'),
 ///   extra: [Button(color: ButtonColor.primary, onPressed: home, child: const Text('Home'))],
 /// )
 /// ```
@@ -84,10 +84,13 @@ class Result extends StatelessWidget {
   });
 
   /// The headline stating the outcome.
-  final String title;
+  ///
+  /// Rendered inside a [DefaultTextStyle] carrying the title's size and
+  /// weight, so a bare `Text('Payment received')` needs no styling.
+  final Widget title;
 
-  /// Optional supporting line below the title.
-  final String? subTitle;
+  /// Optional supporting line below the title, in its own dimmer style.
+  final Widget? subTitle;
 
   /// Which status icon and colour to use.
   final StatusType status;
@@ -123,8 +126,7 @@ class Result extends StatelessWidget {
                 painter: _ResultIconPainter(status: status, token: token),
               ),
           SizedBox(height: token.sizeLG),
-          Text(
-            title,
+          DefaultTextStyle(
             textAlign: TextAlign.center,
             style: TextStyle(
               color: token.colorText,
@@ -134,11 +136,11 @@ class Result extends StatelessWidget {
               fontWeight: FontWeight.w500,
               decoration: TextDecoration.none,
             ),
+            child: title,
           ),
           if (subTitle != null) ...[
             SizedBox(height: token.sizeXS),
-            Text(
-              subTitle!,
+            DefaultTextStyle(
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: token.colorTextSecondary,
@@ -148,6 +150,7 @@ class Result extends StatelessWidget {
                 height: token.lineHeight,
                 decoration: TextDecoration.none,
               ),
+              child: subTitle!,
             ),
           ],
           if (child != null) ...[

@@ -73,7 +73,7 @@ tabs.addListener(() => print('active: ${tabs.activeKey}'));
 
 Tabs(controller: tabs, type: TabsType.editableCard, onCreateTab: (index) {
   // Seed the new tab; return null to accept the `Tab N` / autoincrement default.
-  return CreateTabData(title: 'News', key: 'news', content: const Text('News!'));
+  return CreateTabData(label: Text('News'), key: 'news', content: const Text('News!'));
 });
 ```
 

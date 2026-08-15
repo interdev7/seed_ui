@@ -163,7 +163,7 @@ responsible for closing the dialog, so hold on to the handle:
 
 ```dart
 Modal.open(ModalConfig(
-  title: 'Choose',
+  title: Text('Choose'),
   footer: [
     Button(onPressed: () => Modal.destroyAll(), child: const Text('Later')),
   ],
@@ -180,12 +180,12 @@ one. `Modal.destroyAll()` clears every layer.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `title` | `String?` | `null` | Headline |
-| `content` | `String?` | `null` | Body text; ignored when `child` is set |
+| `title` | `Widget?` | `null` | Headline |
+| `content` | `Widget?` | `null` | Body; scrolls once it outgrows the dialog |
 | `child` | `Widget?` | `null` | Arbitrary body content |
 | `type` | `StatusType?` | varies | Status icon; null renders none |
-| `okText` | `String` | `'OK'` | Confirming button label |
-| `cancelText` | `String` | `'Cancel'` | Dismissing button label |
+| `okText` | `Widget` | `Text('OK')` | Confirming button label |
+| `cancelText` | `Widget` | `Text('Cancel')` | Dismissing button label |
 | `showCancel` | `bool` | `true` | Whether to show the cancel button |
 | `onOk` | `FutureOr<bool?> Function()?` | `null` | Confirm handler |
 | `onCancel` | `VoidCallback?` | `null` | Runs on any dismissal |

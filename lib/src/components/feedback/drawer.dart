@@ -100,8 +100,11 @@ class DrawerConfig {
   /// The panel's content, laid out below the optional header.
   final Widget child;
 
-  /// Header text shown at the top of the panel, above a divider.
-  final String? title;
+  /// Header shown at the top of the panel, above a divider.
+  ///
+  /// Rendered inside a [DefaultTextStyle] carrying the header's size and
+  /// weight, so a bare `Text('Filters')` needs no styling of its own.
+  final Widget? title;
 
   /// Which edge the panel slides in from.
   final DrawerPlacement placement;
@@ -139,7 +142,7 @@ class DrawerConfig {
 ///
 /// ```dart
 /// final closed = await Drawer.open(DrawerConfig(
-///   title: 'Filters',
+///   title: const Text('Filters'),
 ///   child: FiltersForm(),
 /// ));
 /// ```
@@ -404,8 +407,7 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  _config.title!,
+                child: DefaultTextStyle(
                   style: TextStyle(
                     color: token.colorText,
                     fontSize: token.fontSizeLG,
@@ -414,6 +416,7 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
                     fontWeight: FontWeight.w600,
                     decoration: TextDecoration.none,
                   ),
+                  child: _config.title!,
                 ),
               ),
               if (_config.closable) ...[

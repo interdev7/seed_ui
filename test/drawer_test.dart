@@ -35,7 +35,7 @@ void main() {
 
     Drawer.open(
       const DrawerConfig(
-        title: 'Filters',
+        title: Text('Filters'),
         child: Text('body'),
       ),
     );
@@ -110,7 +110,7 @@ void main() {
 
     Drawer.open(
       const DrawerConfig(
-        title: 'Panel',
+        title: Text('Panel'),
         child: Text('body'),
       ),
     );

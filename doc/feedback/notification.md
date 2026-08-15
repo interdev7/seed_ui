@@ -97,8 +97,8 @@ way only rubber-bands.
 ```dart
 late final NotificationHandle close;
 close = notification.open(NotificationConfig(
-  message: 'Update available',
-  description: 'Version 2.0 is ready to install.',
+  message: const Text('Update available'),
+  description: const Text('Version 2.0 is ready to install.'),
   type: StatusType.info,
   duration: Duration.zero,
   actions: [
@@ -152,8 +152,8 @@ notification.config(
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `message` | `String` | Headline (required) |
-| `description` | `String?` | Supporting text |
+| `message` | `Widget` | Headline (required) |
+| `description` | `Widget?` | Supporting detail |
 | `type` | `StatusType?` | Status icon; null renders no icon |
 | `duration` | `Duration?` | `Duration.zero` disables auto-dismiss |
 | `placement` | `NotificationPlacement?` | Overrides the configured corner |

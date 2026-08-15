@@ -448,8 +448,11 @@ class Progress extends StatefulWidget {
   /// Position and alignment of the percentage label ([PercentPosition]).
   final PercentPosition? percentPosition;
 
-  /// Custom text formatter function.
-  final String Function(double percent)? format;
+  /// Builds the label shown in place of the default percentage.
+  ///
+  /// Rendered inside a [DefaultTextStyle] carrying the label's colour and
+  /// size for its position, so a bare `Text` needs no styling of its own.
+  final Widget Function(double percent)? format;
 
   /// Layout directionality for progress bar and text placement.
   ///
@@ -503,7 +506,7 @@ class Progress extends StatefulWidget {
     double? gapDegree,
     GapPlacement? gapPlacement,
     PercentPosition? percentPosition,
-    String Function(double percent)? format,
+    Widget Function(double percent)? format,
     TextDirection? direction,
     VoidCallback? onDone,
     void Function(double percent)? onProgressChange,
@@ -659,10 +662,9 @@ class _ProgressState extends State<Progress> {
     return entries.first.value;
   }
 
-  String _labelText(double p) {
-    if (widget.format != null) return widget.format!(p);
-    return '${(p * 100).round()}%';
-  }
+  /// The label for [p]: the caller's own widget, or the default percentage.
+  Widget _label(double p) =>
+      widget.format?.call(p) ?? Text('${(p * 100).round()}%');
 
   _ProgressResolvedSize _resolveSize(Token token, _ResolvedProgressToken r) {
     final effectiveSize = ControlSize.from(widget.size);
@@ -1038,8 +1040,7 @@ class _ProgressState extends State<Progress> {
               key: const ValueKey('text'),
               child: Align(
                 alignment: textAlignment,
-                child: Text(
-                  _labelText(p),
+                child: DefaultTextStyle(
                   style: TextStyle(
                     color: const Color(0xFFFFFFFF),
                     fontSize: token.fontSizeSM,
@@ -1049,6 +1050,7 @@ class _ProgressState extends State<Progress> {
                     height: 1.0,
                     decoration: TextDecoration.none,
                   ),
+                  child: _label(p),
                 ),
               ),
             ),
@@ -1092,8 +1094,7 @@ class _ProgressState extends State<Progress> {
               key: const ValueKey('text'),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minWidth: minInfoWidth),
-                child: Text(
-                  _labelText(p),
+                child: DefaultTextStyle(
                   maxLines: 1,
                   overflow: TextOverflow.clip,
                   style: TextStyle(
@@ -1105,6 +1106,7 @@ class _ProgressState extends State<Progress> {
                     height: 1.0,
                     decoration: TextDecoration.none,
                   ),
+                  child: _label(p),
                 ),
               ),
             ),
@@ -1150,8 +1152,7 @@ class _ProgressState extends State<Progress> {
                 child: Align(
                   alignment:
                       isRtl ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Text(
-                    _labelText(currentPercent),
+                  child: DefaultTextStyle(
                     style: TextStyle(
                       color: token.colorText,
                       fontSize: token.fontSize,
@@ -1160,6 +1161,7 @@ class _ProgressState extends State<Progress> {
                       height: 1.0,
                       decoration: TextDecoration.none,
                     ),
+                    child: _label(currentPercent),
                   ),
                 ),
               ),
@@ -1232,8 +1234,7 @@ class _ProgressState extends State<Progress> {
             )
           : KeyedSubtree(
               key: const ValueKey('text'),
-              child: Text(
-                _labelText(p),
+              child: DefaultTextStyle(
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: token.colorText,
@@ -1244,6 +1245,7 @@ class _ProgressState extends State<Progress> {
                   fontFamilyFallback: token.fontFamilyFallback,
                   decoration: TextDecoration.none,
                 ),
+                child: _label(p),
               ),
             ),
     );

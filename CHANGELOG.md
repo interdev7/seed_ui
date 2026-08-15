@@ -5,6 +5,64 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- **Breaking.** Text-carrying properties on the *declarative* components now
+  take a `Widget` instead of a `String`, matching Flutter's own convention
+  (`AlertDialog.title`, `ListTile.title`) and the kit's existing
+  `Alert.message` and `TabItem.label`. Each is rendered inside a
+  `DefaultTextStyle` carrying its own colour, size and weight, so a bare
+  `Text('Saved')` still needs no styling — and a `Row`, a `RichText` or an
+  icon now fits where only a string did.
+
+  | | |
+  | --- | --- |
+  | `MessageConfig.content` | `Widget` |
+  | `NotificationConfig.message` / `.description` | `Widget` |
+  | `ModalConfig.title` / `.content` / `.okText` / `.cancelText` | `Widget` |
+  | `Popconfirm.title` / `.description` / `.okText` / `.cancelText` | `Widget` |
+  | `DrawerConfig.title` | `Widget` |
+  | `Result.title` / `.subTitle` | `Widget` |
+  | `Tooltip.message` | `Widget` |
+  | `Progress.format` | `Widget Function(double)` |
+
+  The *imperative* shorthands keep taking plain text, because they are
+  one-liners inside callbacks and a `Text(...)` there costs more than it
+  gives:
+
+  ```dart
+  message.success('Saved');
+  notification.error('Upload failed', description: 'The server said no.');
+  Modal.confirm(title: 'Delete file?', content: 'This cannot be undone.');
+  ```
+
+  One rule covers it: **a shorthand takes a `String`, a config takes a
+  `Widget`.** Anything richer goes through the config the shorthand already
+  wraps — `message.open(MessageConfig(content: Row(...)))`.
+
+  `SegmentedOption.label` stays a `String` for the same reason: it already
+  has a `child` beside it for the widget case.
+
+- **Breaking.** `CreateTabData.title` is now `CreateTabData.label`, typed
+  `Widget?`. It seeds `TabItem.label`, so it now shares that name and type.
+  `TabsController.setTitle` is unchanged and still takes a `String`.
+
+### Removed
+
+- **Breaking.** `ModalConfig.child` and the `child` parameter of every `Modal`
+  opener. With `content` typed `Widget` the two were the same thing; `content`
+  is the survivor, and it scrolls once it outgrows the dialog.
+
+### Fixed
+
+- The gallery declared a hosted `seed_ui` dependency, so it — and with it the
+  `example` CI job and the published demo — was building against the release
+  on pub.dev rather than the working tree. A `dependency_overrides` entry
+  points it back at the repository, which immediately surfaced 80 call sites
+  the previous setup had hidden.
+
 ## 0.1.0
 
 ### Removed

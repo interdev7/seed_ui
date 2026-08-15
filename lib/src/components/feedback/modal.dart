@@ -88,10 +88,9 @@ class ModalConfig {
   const ModalConfig({
     this.title,
     this.content,
-    this.child,
     this.type,
-    this.okText = 'OK',
-    this.cancelText = 'Cancel',
+    this.okText = const Text('OK'),
+    this.cancelText = const Text('Cancel'),
     this.showCancel = true,
     this.onOk,
     this.onCancel,
@@ -109,23 +108,25 @@ class ModalConfig {
   });
 
   /// Headline shown at the top of the dialog.
-  final String? title;
+  ///
+  /// Rendered inside a [DefaultTextStyle] carrying the title's size and
+  /// weight, so a bare `Text('Delete file?')` needs no styling of its own.
+  final Widget? title;
 
-  /// Body text. Ignored when [child] is set.
-  final String? content;
-
-  /// Arbitrary body content, replacing [content] for anything richer than
-  /// a paragraph.
-  final Widget? child;
+  /// The dialog's body — a paragraph, a form, anything.
+  ///
+  /// Wrapped in its own [DefaultTextStyle] and allowed to scroll once it
+  /// outgrows the dialog's height cap.
+  final Widget? content;
 
   /// Status icon beside the title. Null renders no icon.
   final StatusType? type;
 
   /// Label of the confirming button.
-  final String okText;
+  final Widget okText;
 
   /// Label of the dismissing button.
-  final String cancelText;
+  final Widget cancelText;
 
   /// Whether to show the cancel button.
   ///
@@ -196,9 +197,20 @@ class ModalConfig {
 /// final ok = await Modal.confirm(
 ///   title: 'Delete file?',
 ///   content: 'This cannot be undone.',
-///   color: ButtonColor.danger,
+///   danger: true,
 /// );
 /// if (ok) delete();
+/// ```
+///
+/// The openers above take plain text. For a body that is more than a
+/// paragraph — a form, a colour picker — build a [ModalConfig], whose
+/// [ModalConfig.title] and [ModalConfig.content] are widgets:
+///
+/// ```dart
+/// Modal.open(ModalConfig(
+///   title: const Text('Pick a colour'),
+///   content: ColourGrid(onPick: ...),
+/// ));
 /// ```
 ///
 /// Every opener returns a `Future<bool>` completing with true when confirmed
@@ -213,7 +225,6 @@ class ModalApi {
   Future<bool> confirm({
     String? title,
     String? content,
-    Widget? child,
     String okText = 'OK',
     String cancelText = 'Cancel',
     FutureOr<bool?> Function()? onOk,
@@ -227,12 +238,11 @@ class ModalApi {
   }) =>
       open(
         ModalConfig(
-          title: title,
-          content: content,
-          child: child,
+          title: title == null ? null : Text(title),
+          content: content == null ? null : Text(content),
           type: type,
-          okText: okText,
-          cancelText: cancelText,
+          okText: Text(okText),
+          cancelText: Text(cancelText),
           onOk: onOk,
           onCancel: onCancel,
           danger: danger,
@@ -247,7 +257,6 @@ class ModalApi {
   Future<bool> info({
     String? title,
     String? content,
-    Widget? child,
     String okText = 'OK',
     bool centered = false,
     double? top,
@@ -257,7 +266,6 @@ class ModalApi {
         StatusType.info,
         title,
         content,
-        child,
         okText,
         centered,
         top,
@@ -268,7 +276,6 @@ class ModalApi {
   Future<bool> success({
     String? title,
     String? content,
-    Widget? child,
     String okText = 'OK',
     bool centered = false,
     double? top,
@@ -278,7 +285,6 @@ class ModalApi {
         StatusType.success,
         title,
         content,
-        child,
         okText,
         centered,
         top,
@@ -289,7 +295,6 @@ class ModalApi {
   Future<bool> error({
     String? title,
     String? content,
-    Widget? child,
     String okText = 'OK',
     bool centered = false,
     double? top,
@@ -299,7 +304,6 @@ class ModalApi {
         StatusType.error,
         title,
         content,
-        child,
         okText,
         centered,
         top,
@@ -310,7 +314,6 @@ class ModalApi {
   Future<bool> warning({
     String? title,
     String? content,
-    Widget? child,
     String okText = 'OK',
     bool centered = false,
     double? top,
@@ -320,7 +323,6 @@ class ModalApi {
         StatusType.warning,
         title,
         content,
-        child,
         okText,
         centered,
         top,
@@ -331,7 +333,6 @@ class ModalApi {
     StatusType type,
     String? title,
     String? content,
-    Widget? child,
     String okText,
     bool centered,
     double? top,
@@ -339,11 +340,10 @@ class ModalApi {
   ) =>
       open(
         ModalConfig(
-          title: title,
-          content: content,
-          child: child,
+          title: title == null ? null : Text(title),
+          content: content == null ? null : Text(content),
           type: type,
-          okText: okText,
+          okText: Text(okText),
           showCancel: false,
           centered: centered,
           top: top,
@@ -611,8 +611,7 @@ class _ModalCardState extends State<_ModalCard>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (config.title != null)
-                        Text(
-                          config.title!,
+                        DefaultTextStyle(
                           style: TextStyle(
                             color: token.colorText,
                             fontSize: r.titleFontSize,
@@ -621,17 +620,16 @@ class _ModalCardState extends State<_ModalCard>
                             fontWeight: FontWeight.w600,
                             decoration: TextDecoration.none,
                           ),
+                          child: config.title!,
                         ),
-                      if (config.title != null &&
-                          (config.content != null || config.child != null))
+                      if (config.title != null && config.content != null)
                         SizedBox(height: token.sizeXS),
-                      if (config.child != null)
-                        Flexible(child: config.child!)
-                      else if (config.content != null)
+                      if (config.content != null)
+                        // Scrolls only once the body outgrows the dialog's
+                        // height cap, so short content is unaffected.
                         Flexible(
                           child: SingleChildScrollView(
-                            child: Text(
-                              config.content!,
+                            child: DefaultTextStyle(
                               style: TextStyle(
                                 color: token.colorTextSecondary,
                                 fontSize: r.contentFontSize,
@@ -640,6 +638,7 @@ class _ModalCardState extends State<_ModalCard>
                                 height: token.lineHeight,
                                 decoration: TextDecoration.none,
                               ),
+                              child: config.content!,
                             ),
                           ),
                         ),
@@ -682,7 +681,7 @@ class _ModalCardState extends State<_ModalCard>
               // Cancelling must stay available while the confirm is running,
               // otherwise a hung request traps the user in the dialog.
               onPressed: () => widget.entry.dismiss(false),
-              child: Text(config.cancelText),
+              child: config.cancelText,
             ),
           SizedBox(width: token.sizeXS),
           Button(
@@ -690,7 +689,7 @@ class _ModalCardState extends State<_ModalCard>
             color: config.danger ? ButtonColor.danger : ButtonColor.primary,
             loading: _confirming,
             onPressed: _handleOk,
-            child: Text(config.okText),
+            child: config.okText,
           ),
         ],
       ],

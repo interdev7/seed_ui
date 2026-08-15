@@ -354,7 +354,7 @@ class _ProgressDemoState extends State<ProgressDemo> {
             width: 250,
             child: Progress(
               percent: _percent,
-              format: (p) => '${(p * 10).round()} / 10 Tasks',
+              format: (p) => Text('${(p * 10).round()} / 10 Tasks'),
             ),
           ),
         ),

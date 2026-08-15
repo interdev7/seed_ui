@@ -344,10 +344,12 @@ class TabItem {
 @immutable
 class CreateTabData {
   /// Creates a [CreateTabData].
-  const CreateTabData({this.title, this.key, this.content});
+  const CreateTabData({this.label, this.key, this.content});
 
-  /// The new tab's label text. Null uses the default `Tab N`.
-  final String? title;
+  /// The new tab's bar label. Null uses the default `Tab N`.
+  ///
+  /// Named and typed to match [TabItem.label], which is what it becomes.
+  final Widget? label;
 
   /// The new tab's key. Null autoincrements a unique key.
   final String? key;
@@ -529,7 +531,8 @@ class Tabs extends StatefulWidget {
   final ValueChanged<String>? onTabClick;
 
   /// Called when the `+` button adds a tab, with the new tab's index. Return
-  /// an [CreateTabData] to seed its title/key/content, or null for the defaults.
+  /// a [CreateTabData] to seed its label/key/content, or null for the
+  /// defaults.
   /// Requires a [controller], which owns the resulting tab.
   final CreateTabData? Function(int index)? onCreateTab;
 
@@ -663,7 +666,7 @@ class _TabsState extends State<Tabs> {
     final index = controller.items.length;
     final data = widget.onCreateTab?.call(index);
     final key = data?.key ?? controller.nextKey();
-    final label = Text(data?.title ?? 'Tab ${index + 1}');
+    final label = data?.label ?? Text('Tab ${index + 1}');
     controller.add(TabItem(key: key, label: label, content: data?.content));
     widget.onEdit?.call(key, TabEditAction.add);
     widget.onChange?.call(key);

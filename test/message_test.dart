@@ -51,7 +51,9 @@ void main() {
     message.config(maxCount: 2);
 
     for (final text in ['first', 'second', 'third']) {
-      message.open(MessageConfig(content: text, duration: Duration.zero));
+      message.open(
+        MessageConfig(content: Text(text), duration: Duration.zero),
+      );
     }
     await _settle(tester);
 

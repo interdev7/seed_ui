@@ -117,8 +117,11 @@ class Tooltip extends StatefulWidget {
     this.token,
   });
 
-  /// The hint text.
-  final String message;
+  /// The hint's content. Usually a [Text].
+  ///
+  /// Rendered inside a [DefaultTextStyle] carrying the tooltip's own colour
+  /// and size, so a bare `Text('Copy')` needs no styling of its own.
+  final Widget message;
 
   /// The widget the tooltip describes and anchors to.
   final Widget child;
@@ -271,8 +274,7 @@ class _SoftTooltipState extends State<Tooltip> {
         borderRadius: BorderRadius.circular(r.borderRadius),
         boxShadow: token.boxShadowSecondary,
       ),
-      child: Text(
-        widget.message,
+      child: DefaultTextStyle(
         style: TextStyle(
           color: r.colorText,
           fontSize: r.fontSize,
@@ -280,6 +282,7 @@ class _SoftTooltipState extends State<Tooltip> {
           fontFamilyFallback: token.fontFamilyFallback,
           decoration: TextDecoration.none,
         ),
+        child: widget.message,
       ),
     );
   }

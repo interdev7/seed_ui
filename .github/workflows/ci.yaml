@@ -55,7 +55,9 @@ jobs:
         with:
           files: coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
+          # A Codecov outage is not a reason to block a merge — the tests
+          # themselves have already passed by this point.
+          fail_ci_if_error: false
 
   example:
     name: Example builds
@@ -97,6 +99,16 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      # `pub publish` refuses to package a dirty tree, and parts of the
+      # toolchain rewrite files in place as they run. Show what moved, then
+      # put the tracked files back: what gets validated should be exactly
+      # what is committed.
+      - name: Show and reset toolchain-modified files
+        run: |
+          git status --porcelain
+          git diff --stat
+          git checkout -- .
 
       # Dry-run publish catches the packaging problems pub.dev would reject:
       # missing LICENSE, a bad version, files that should not ship.

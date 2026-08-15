@@ -51,6 +51,15 @@ jobs:
       - name: Test
         run: flutter test
 
+      # `pub publish` refuses to package a dirty tree, and parts of the
+      # toolchain rewrite files in place as they run. Put the tracked files
+      # back so the tag is validated against exactly what is committed.
+      - name: Show and reset toolchain-modified files
+        run: |
+          git status --porcelain
+          git diff --stat
+          git checkout -- .
+
       # Catches what pub.dev would reject, so the manual `flutter pub publish`
       # that follows the tag is never a surprise.
       - name: Publish dry run

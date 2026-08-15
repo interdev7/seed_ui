@@ -1,0 +1,163 @@
+name: Release
+
+# Tagging is automatic: bump `version:` in pubspec.yaml, merge to main, and
+# this verifies the tree, creates the `v<version>` tag and opens the GitHub
+# release from the matching CHANGELOG section.
+#
+# It all happens in one job on purpose: the release is cut from the very tree
+# the checks just passed on, with no second checkout that could drift from it.
+#
+# Publishing to pub.dev stays manual and is not part of this workflow:
+#
+#   flutter pub publish
+#
+# REQUIRES a `RELEASE_TOKEN` secret: a fine-grained personal access token for
+# this repository with Contents: Read and write. The built-in GITHUB_TOKEN is
+# deliberately not used — anything it creates is attributed to
+# `github-actions[bot]`, so the tag and the release would not be yours.
+on:
+  push:
+    branches: [main]
+    # The version only ever changes here, so nothing else is worth waking for.
+    paths: ["pubspec.yaml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Tag and release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tags are needed to tell an already-released version from a new one.
+          fetch-depth: 0
+          # Pushing with this token is what keeps the tag under your account
+          # rather than the Actions bot's.
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      # Failing here beats silently falling back to GITHUB_TOKEN and stamping
+      # the release with a bot's name.
+      - name: RELEASE_TOKEN is configured
+        run: |
+          if [ -z '${{ secrets.RELEASE_TOKEN }}' ]; then
+            echo '::error::RELEASE_TOKEN is not set. Add a fine-grained PAT'
+            echo '::error::with Contents: Read and write to the repository secrets.'
+            exit 1
+          fi
+
+      - name: Read the version
+        id: version
+        run: |
+          set -euo pipefail
+          version="$(awk '/^version:/{print $2; exit}' pubspec.yaml)"
+          if [ -z "$version" ]; then
+            echo "::error::pubspec.yaml has no version:"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "Version in pubspec.yaml: $version"
+
+      # Re-running on a commit that touched pubspec for some other reason must
+      # not try to release the same version twice.
+      - name: Skip versions that are already tagged
+        id: guard
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null; then
+            echo "${{ steps.version.outputs.tag }} already exists — nothing to release."
+            echo "fresh=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "fresh=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: subosito/flutter-action@v2
+        if: steps.guard.outputs.fresh == 'true'
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        if: steps.guard.outputs.fresh == 'true'
+        run: flutter pub get
+
+      # A release with no changelog entry is a release nobody can read.
+      - name: CHANGELOG has an entry for this version
+        if: steps.guard.outputs.fresh == 'true'
+        run: |
+          set -euo pipefail
+          grep -q "^## \+${{ steps.version.outputs.version }}\b" CHANGELOG.md || {
+            echo "::error::CHANGELOG.md has no '## ${{ steps.version.outputs.version }}' section"
+            exit 1
+          }
+
+      - name: Analyze
+        if: steps.guard.outputs.fresh == 'true'
+        run: flutter analyze --fatal-infos
+
+      - name: Test
+        if: steps.guard.outputs.fresh == 'true'
+        run: flutter test
+
+      # `pub publish` refuses to package a dirty tree, and parts of the
+      # toolchain rewrite files in place as they run. Put the tracked files
+      # back so the check sees exactly what is committed.
+      - name: Show and reset toolchain-modified files
+        if: steps.guard.outputs.fresh == 'true'
+        run: |
+          git status --porcelain
+          git diff --stat
+          git checkout -- .
+
+      # Catches what pub.dev would reject, so the manual `flutter pub publish`
+      # that follows is never a surprise.
+      - name: Publish dry run
+        if: steps.guard.outputs.fresh == 'true'
+        run: flutter pub publish --dry-run
+
+      # A lightweight tag carries no tagger object, so no name or email is
+      # recorded on it — there is nothing to attribute to anyone. The release
+      # notes live on the GitHub release, so the tag needs no message.
+      - name: Tag the release
+        if: steps.guard.outputs.fresh == 'true'
+        run: |
+          set -euo pipefail
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+
+      # The release body is the CHANGELOG section for this version, so the two
+      # can never drift apart.
+      - name: Extract release notes
+        if: steps.guard.outputs.fresh == 'true'
+        run: |
+          set -euo pipefail
+          awk -v v="${{ steps.version.outputs.version }}" '
+            $0 ~ "^## +" v "([^0-9.]|$)" { inside = 1; next }
+            inside && /^## / { exit }
+            inside { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          echo '----- release notes -----'
+          cat RELEASE_NOTES.md
+
+      - name: Create the GitHub release
+        if: steps.guard.outputs.fresh == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          # A version carrying a hyphen (1.0.0-rc.1) is a pre-release.
+          prerelease=''
+          case "${{ steps.version.outputs.version }}" in
+            *-*) prerelease='--prerelease' ;;
+          esac
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes-file RELEASE_NOTES.md \
+            $prerelease

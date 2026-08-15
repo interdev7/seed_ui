@@ -1,0 +1,74 @@
+name: Demo
+
+# Publishes the component gallery to GitHub Pages, so the kit can be tried in
+# a browser without installing anything:
+#
+#   https://interdev7.github.io/seed_ui/
+#
+# Requires Pages to be enabled once, with its source set to GitHub Actions:
+#   Settings → Pages → Build and deployment → Source: GitHub Actions
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pages deployments are not worth queueing: a newer commit supersedes an
+# in-flight one. `cancel-in-progress: false` lets a running deploy finish so
+# the site is never left half-written.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build gallery
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: example
+        run: flutter pub get
+
+      # The site is served from a subdirectory, so the base href has to match
+      # the repository name or every asset request 404s.
+      - name: Build web
+        working-directory: example
+        run: flutter build web --release --base-href /seed_ui/
+
+      # Pages serves 404.html for unknown paths. Handing it the app shell lets
+      # a deep link reach the router instead of a GitHub error page.
+      - name: Add SPA fallback
+        working-directory: example
+        run: cp build/web/index.html build/web/404.html
+
+      # `enablement` turns the Pages site on for the repository the first time
+      # this runs, so the demo needs no manual setup in Settings.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: example/build/web
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

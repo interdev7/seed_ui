@@ -10,6 +10,11 @@ A themeable widget library for Flutter, built around design tokens and
 context-free feedback APIs. Inspired by [Ant Design](https://ant.design) — see
 [Acknowledgements](#acknowledgements).
 
+### ▶ [Try every component in your browser](https://interdev7.github.io/seed_ui/)
+
+The gallery below runs the real widgets — switch the theme, resize the window,
+open a drawer.
+
 - **Token-driven theming.** Every color, size and motion value is derived from
   a small set of seeds. Change `colorPrimary` and the whole kit follows — see
   [theming](doc/theming.md), including light/dark switching.

@@ -5,8 +5,9 @@ name: Demo
 #
 #   https://interdev7.github.io/seed_ui/
 #
-# Requires Pages to be enabled once, with its source set to GitHub Actions:
+# ONE-TIME SETUP, otherwise the `configure-pages` step below fails:
 #   Settings → Pages → Build and deployment → Source: GitHub Actions
+# Then re-run this workflow (Actions → Demo → Run workflow).
 on:
   push:
     branches: [main]
@@ -52,11 +53,11 @@ jobs:
         working-directory: example
         run: cp build/web/index.html build/web/404.html
 
-      # `enablement` turns the Pages site on for the repository the first time
-      # this runs, so the demo needs no manual setup in Settings.
+      # Pages must already be switched on for the repository — see the note at
+      # the top of this file. Letting the action enable it (`enablement: true`)
+      # needs rights over repository settings that GITHUB_TOKEN is not always
+      # granted, and fails the run when it is not.
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

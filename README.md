@@ -7,7 +7,8 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A themeable widget library for Flutter, built around design tokens and
-context-free feedback APIs.
+context-free feedback APIs. Inspired by [Ant Design](https://ant.design) — see
+[Acknowledgements](#acknowledgements).
 
 - **Token-driven theming.** Every color, size and motion value is derived from
   a small set of seeds. Change `colorPrimary` and the whole kit follows — see

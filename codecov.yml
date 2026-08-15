@@ -1,0 +1,28 @@
+# https://docs.codecov.com/docs/codecovyml-reference
+coverage:
+  precision: 1
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: auto
+        # Small refactors move the number by a hair; only a real drop should
+        # fail the check.
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: true
+
+ignore:
+  - "example/**"
+  - "test/**"
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"

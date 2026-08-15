@@ -1,0 +1,86 @@
+name: Publish
+
+# Releases are driven by tags: pushing `v0.0.1` verifies the tree and opens
+# the matching GitHub release.
+#
+# Publishing to pub.dev is deliberately NOT automated — `flutter pub publish`
+# is run by hand, so the tag records the release without ever pushing to the
+# registry on its own.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # The tag is the source of truth for the release, so it must agree with
+      # the version pub.dev will actually see.
+      - name: Tag matches pubspec version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pubspec="$(grep '^version:' pubspec.yaml | awk '{print $2}')"
+          if [ "$tag" != "$pubspec" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match pubspec version $pubspec"
+            exit 1
+          fi
+
+      - name: CHANGELOG has an entry for this version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          grep -q "^## \+${tag}\b" CHANGELOG.md || {
+            echo "CHANGELOG.md has no '## $tag' section"
+            exit 1
+          }
+
+      - name: Analyze
+        run: flutter analyze --fatal-infos
+
+      - name: Test
+        run: flutter test
+
+      # Catches what pub.dev would reject, so the manual `flutter pub publish`
+      # that follows the tag is never a surprise.
+      - name: Publish dry run
+        run: flutter pub publish --dry-run
+
+  release:
+    name: GitHub release
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # The release body is the CHANGELOG section for this tag, so the two
+      # never drift apart.
+      - name: Extract release notes
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          awk -v v="$tag" '
+            $0 ~ "^## +" v "([^0-9.]|$)" { inside = 1; next }
+            inside && /^## / { exit }
+            inside { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

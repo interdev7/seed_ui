@@ -1,0 +1,42 @@
+name: seed_ui_example
+description: Component gallery for seed_ui.
+publish_to: "none"
+version: 0.0.1
+
+environment:
+  sdk: ">=3.10.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  go_router: ^17.4.0
+  seed_ui:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  # Used by the font test to read the asset declarations back out of pubspec.
+  yaml: ^3.1.2
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    # Body face for the New Year preset — has Cyrillic, unlike the display one.
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-Regular.ttf
+        - asset: assets/fonts/Nunito-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Nunito-Bold.ttf
+          weight: 700
+    # Handwritten greeting face — Latin and Cyrillic in one file.
+    - family: MarckScript
+      fonts:
+        - asset: assets/fonts/MarckScript-Regular.ttf
+    # Ornamental heading face, likewise covering both alphabets.
+    - family: RuslanDisplay
+      fonts:
+        - asset: assets/fonts/RuslanDisplay-Regular.ttf

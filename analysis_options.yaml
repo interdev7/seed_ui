@@ -1,0 +1,52 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    # Dangling library doc comments confuse dartdoc's page attribution.
+    dangling_library_doc_comments: error
+  exclude:
+    - example/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    # Documentation — the bulk of the pub.dev score.
+    #
+    # `comment_references` is deliberately left off. The kit's doc comments
+    # reference sibling types across `lib/src`, and satisfying the rule would
+    # mean importing a library purely so a `[Name]` resolves — including
+    # `package:flutter/material.dart`, which the widgets are specifically
+    # built without.
+    - public_member_api_docs
+
+    # API hygiene for a published library.
+    - always_declare_return_types
+    - prefer_final_locals
+    - prefer_final_in_for_each
+    - unnecessary_lambdas
+    - unnecessary_parenthesis
+    - use_super_parameters
+    - sort_constructors_first
+    - sort_unnamed_constructors_first
+
+    # Correctness.
+    - avoid_slow_async_io
+    - cancel_subscriptions
+    - close_sinks
+    - throw_in_finally
+    - unawaited_futures
+    - test_types_in_equals
+
+    # Style consistency across the kit.
+    #
+    # Line length and trailing commas are left to `dart format`, which CI
+    # enforces with `--set-exit-if-changed`. The matching lints disagree with
+    # the formatter in places it cannot split — long doc comments and string
+    # literals — so having both would make a formatted tree fail analysis.
+    - directives_ordering
+    - prefer_single_quotes

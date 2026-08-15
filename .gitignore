@@ -1,0 +1,65 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Visual Studio Code
+# The .vscode folder holds launch configurations and tasks that are often
+# worth sharing, so only the machine-specific parts are ignored.
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Agent tooling
+.claude/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# This package is a library, so its lockfile is not authoritative: consumers
+# resolve their own dependency versions. The example is an application and
+# keeps its lockfile committed.
+/pubspec.lock
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Platform build output inside the example app. The platform project files
+# themselves are committed, so the example stays runnable on a fresh clone.
+example/ios/Flutter/ephemeral/
+example/ios/Podfile.lock
+example/ios/Pods/
+example/ios/Flutter/flutter_export_environment.sh
+example/ios/Flutter/Generated.xcconfig
+example/android/.gradle/
+example/android/local.properties
+example/android/app/debug/
+example/android/app/profile/
+example/android/app/release/

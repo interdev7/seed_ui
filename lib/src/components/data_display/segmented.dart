@@ -1,0 +1,444 @@
+import 'package:flutter/widgets.dart';
+
+import '../../theme/config_provider.dart';
+import '../../theme/design_token.dart';
+
+/// Layout axis for a [Segmented].
+enum SegmentedDirection {
+  /// Options run left to right.
+  horizontal,
+
+  /// Options stack top to bottom.
+  vertical
+}
+
+/// One option in a [Segmented].
+@immutable
+class SegmentedOption<T> {
+  /// Creates a [SegmentedOption].
+  const SegmentedOption({
+    required this.value,
+    this.label,
+    this.icon,
+    this.child,
+    this.disabled = false,
+  }) : assert(
+          label != null || icon != null || child != null,
+          'a segment needs a label, an icon, or a custom child',
+        );
+
+  /// The value reported when this segment is selected.
+  final T value;
+
+  /// Text shown in the segment.
+  final String? label;
+
+  /// Icon shown before the label, or alone.
+  final Widget? icon;
+
+  /// Custom content, replacing [label] and [icon] entirely.
+  ///
+  /// It receives no automatic colouring, so style it yourself if it should
+  /// dim when unselected.
+  final Widget? child;
+
+  /// Whether this individual segment is unselectable.
+  final bool disabled;
+}
+
+/// Per-component design tokens for [Segmented].
+///
+/// Every field is an override; a null one falls back to the value derived from
+/// the global theme. Supply one globally through `ConfigProvider(components:
+/// [SegmentedToken(...)])`, or per instance via [Segmented.token].
+@immutable
+class SegmentedToken {
+  /// Creates a [SegmentedToken].
+  const SegmentedToken({
+    this.trackBg,
+    this.trackPadding,
+    this.itemColor,
+    this.itemHoverColor,
+    this.itemSelectedBg,
+    this.itemSelectedColor,
+    this.borderRadius,
+    this.borderRadiusSM,
+    this.borderRadiusLG,
+  });
+
+  /// Track background color (`trackBg`).
+  final Color? trackBg;
+
+  /// Track inner padding (`trackPadding`).
+  final double? trackPadding;
+
+  /// Unselected item text color (`itemColor`).
+  final Color? itemColor;
+
+  /// Item hover text color (`itemHoverColor`).
+  final Color? itemHoverColor;
+
+  /// Selected thumb background color (`itemSelectedBg`).
+  final Color? itemSelectedBg;
+
+  /// Selected item text color (`itemSelectedColor`).
+  final Color? itemSelectedColor;
+
+  /// Corner radius for standard control (`borderRadius`).
+  final double? borderRadius;
+
+  /// Corner radius for small control (`borderRadiusSM`).
+  final double? borderRadiusSM;
+
+  /// Corner radius for large control (`borderRadiusLG`).
+  final double? borderRadiusLG;
+
+  _ResolvedSegmentedToken _resolve(Token t) => _ResolvedSegmentedToken(
+        trackBg: trackBg ?? t.colorFillSecondary,
+        trackPadding: trackPadding ?? t.sizeXXS / 2,
+        itemColor: itemColor ?? t.colorTextSecondary,
+        itemHoverColor: itemHoverColor ?? t.colorText,
+        itemSelectedBg: itemSelectedBg ?? t.colorBgElevated,
+        itemSelectedColor: itemSelectedColor ?? t.colorText,
+        borderRadius: borderRadius ?? t.borderRadius,
+        borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
+        borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
+      );
+}
+
+@immutable
+class _ResolvedSegmentedToken {
+  const _ResolvedSegmentedToken({
+    required this.trackBg,
+    required this.trackPadding,
+    required this.itemColor,
+    required this.itemHoverColor,
+    required this.itemSelectedBg,
+    required this.itemSelectedColor,
+    required this.borderRadius,
+    required this.borderRadiusSM,
+    required this.borderRadiusLG,
+  });
+
+  final Color trackBg;
+  final double trackPadding;
+  final Color itemColor;
+  final Color itemHoverColor;
+  final Color itemSelectedBg;
+  final Color itemSelectedColor;
+  final double borderRadius;
+  final double borderRadiusSM;
+  final double borderRadiusLG;
+}
+
+/// A single-select control laid out as a strip of segments, with a thumb that
+/// slides to the chosen one — for switching between a few mutually exclusive
+/// options in place.
+///
+/// ```dart
+/// Segmented<String>(
+///   value: _view,
+///   options: const [
+///     SegmentedOption(value: 'list', label: 'List'),
+///     SegmentedOption(value: 'grid', label: 'Grid'),
+///   ],
+///   onChanged: (v) => setState(() => _view = v),
+/// )
+/// ```
+///
+/// Segments size to their content, so long labels are never clipped. Set
+/// [block] to stretch them to fill the width equally, or [direction] to stack
+/// them vertically. For more than a handful of options, or navigation between
+/// views, prefer tabs.
+class Segmented<T> extends StatefulWidget {
+  /// Creates a [Segmented].
+  const Segmented({
+    super.key,
+    required this.value,
+    required this.options,
+    this.onChanged,
+    this.size = SoftSize.middle,
+    this.direction = Axis.horizontal,
+    this.block = false,
+    this.disabled = false,
+    this.trackColor,
+    this.thumbColor,
+    this.token,
+  });
+
+  /// The selected value. Must match one option's value.
+  final T value;
+
+  /// The segments, in order.
+  final List<SegmentedOption<T>> options;
+
+  /// Called with the new value when a segment is chosen. Null disables the
+  /// whole control.
+  final ValueChanged<T>? onChanged;
+
+  /// Which height preset to use.
+  final SoftSize size;
+
+  /// Whether the segments run in a row or a column.
+  final Axis direction;
+
+  /// Stretch the segments to fill the available space equally.
+  final bool block;
+
+  /// Greys the whole control out and blocks selection.
+  final bool disabled;
+
+  /// Overrides the track (background) colour.
+  final Color? trackColor;
+
+  /// Overrides the sliding thumb's colour.
+  final Color? thumbColor;
+
+  /// Per-instance token overrides.
+  final SegmentedToken? token;
+
+  @override
+  State<Segmented<T>> createState() => _SoftSegmentedState<T>();
+}
+
+class _SoftSegmentedState<T> extends State<Segmented<T>> {
+  final GlobalKey _stackKey = GlobalKey();
+  final Map<int, GlobalKey> _segmentKeys = {};
+  Rect? _thumbRect;
+  int? _hoveredIndex;
+
+  bool get _enabled => !widget.disabled && widget.onChanged != null;
+  bool get _vertical => widget.direction == Axis.vertical;
+
+  int get _selectedIndex {
+    final i = widget.options.indexWhere((o) => o.value == widget.value);
+    return i < 0 ? 0 : i;
+  }
+
+  GlobalKey _keyFor(int i) => _segmentKeys.putIfAbsent(i, GlobalKey.new);
+
+  double _height(Token token) => switch (widget.size) {
+        SoftSize.small => token.controlHeightSM,
+        SoftSize.middle => token.controlHeight,
+        SoftSize.large => token.controlHeightLG,
+      };
+
+  double _radius(_ResolvedSegmentedToken r) => switch (widget.size) {
+        SoftSize.small => r.borderRadiusSM,
+        SoftSize.middle => r.borderRadius,
+        SoftSize.large => r.borderRadiusLG,
+      };
+
+  double _fontSize(Token token) => switch (widget.size) {
+        SoftSize.small => token.fontSizeSM,
+        SoftSize.middle => token.fontSize,
+        SoftSize.large => token.fontSizeLG,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final token = context.softToken;
+    final r = (widget.token ??
+            ConfigProvider.componentOf<SegmentedToken>(context) ??
+            const SegmentedToken())
+        ._resolve(token);
+    // Positions depend on the laid-out sizes, so measure after the frame and
+    // let AnimatedPositioned slide the thumb to the selected segment's rect.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+
+    final segmentWidgets = [
+      for (var i = 0; i < widget.options.length; i++)
+        _buildSegment(token, r, i, widget.options[i], i == _selectedIndex),
+    ];
+
+    final rect = _thumbRect;
+    final control = Container(
+      padding: EdgeInsets.all(r.trackPadding),
+      decoration: BoxDecoration(
+        color: widget.trackColor ?? r.trackBg,
+        borderRadius: BorderRadius.circular(_radius(r)),
+      ),
+      child: Stack(
+        key: _stackKey,
+        children: [
+          // The thumb slides behind the labels once measured. It is positioned
+          // in the Stack's own coordinates, so the rect is measured relative to
+          // the Stack — not the padded Container.
+          if (rect != null)
+            AnimatedPositioned(
+              duration: token.motionDurationMid,
+              curve: token.motionEaseInOut,
+              left: rect.left,
+              top: rect.top,
+              width: rect.width,
+              height: rect.height,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _enabled
+                      ? (widget.thumbColor ?? r.itemSelectedBg)
+                      : (widget.thumbColor ?? r.itemSelectedBg)
+                          .withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(_radius(r)),
+                  boxShadow: _enabled ? token.boxShadowSecondary : null,
+                ),
+              ),
+            ),
+          _strip(segmentWidgets),
+        ],
+      ),
+    );
+
+    if (block) return control;
+
+    // the segmented control is `inline-flex`: it is as wide as its
+    // options and no wider. A parent that hands down a tight width — a stretch
+    // Column, a wide page — would otherwise blow the track across the screen.
+    // `block: true` is how you ask for the full width.
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: 1,
+      heightFactor: 1,
+      child: control,
+    );
+  }
+
+  /// Lays the segments out along the chosen axis. Equal-size layouts wrap the
+  /// row/column in an Intrinsic box — the safe place for it, unlike around the
+  /// whole Stack, which trips a rendering assertion.
+  Widget _strip(List<Widget> segments) {
+    if (_vertical) {
+      // A column of equal-width segments; IntrinsicWidth bounds the cross axis
+      // so `stretch` is legal.
+      return IntrinsicWidth(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: segments,
+        ),
+      );
+    }
+    if (block) {
+      // Equal-width segments filling the width; IntrinsicHeight keeps them the
+      // same height even if one wraps to two lines.
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: segments,
+        ),
+      );
+    }
+    // Content-sized single-line segments are all one control-height tall, so
+    // they line up without any Intrinsic box.
+    return Row(mainAxisSize: MainAxisSize.min, children: segments);
+  }
+
+  bool get block => widget.block;
+
+  void _measure() {
+    final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    final segBox = _segmentKeys[_selectedIndex]
+        ?.currentContext
+        ?.findRenderObject() as RenderBox?;
+    if (stackBox == null || segBox == null || !segBox.hasSize) return;
+    final origin = segBox.localToGlobal(Offset.zero, ancestor: stackBox);
+    final rect = origin & segBox.size;
+    if (rect != _thumbRect && mounted) setState(() => _thumbRect = rect);
+  }
+
+  Widget _buildSegment(
+    Token token,
+    _ResolvedSegmentedToken r,
+    int index,
+    SegmentedOption<T> option,
+    bool selected,
+  ) {
+    final enabled = _enabled && !option.disabled;
+    final color = !enabled
+        ? token.colorTextQuaternary
+        : selected
+            ? r.itemSelectedColor
+            : r.itemColor;
+    final hovered = _hoveredIndex == index && enabled && !selected;
+
+    final label = option.label == null
+        ? null
+        : Text(
+            option.label!,
+            textAlign: TextAlign.center,
+            // Block segments have a bounded width, so let a long label wrap
+            // rather than clip; content-sized segments never need to.
+            softWrap: block,
+            style: TextStyle(
+              color: color,
+              fontSize: _fontSize(token),
+              fontFamily: token.fontFamily,
+              fontFamilyFallback: token.fontFamilyFallback,
+              height: 1.2,
+              decoration: TextDecoration.none,
+            ),
+          );
+
+    final content = option.child ??
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (option.icon != null) ...[
+              IconTheme.merge(
+                data: IconThemeData(color: color, size: _fontSize(token)),
+                child: option.icon!,
+              ),
+              if (label != null) SizedBox(width: token.sizeXXS),
+            ],
+            if (label != null)
+              // In block mode the row is width-bounded, so Flexible lets the
+              // label wrap. Elsewhere the row is unbounded and Flexible would
+              // be illegal, so use the label directly.
+              block ? Flexible(child: label) : label,
+          ],
+        );
+
+    final segment = KeyedSubtree(
+      key: _keyFor(index),
+      child: MouseRegion(
+        cursor: enabled && !selected
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        onEnter: enabled ? (_) => _setHovered(index) : null,
+        onExit: enabled ? (_) => _setHovered(null) : null,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: enabled && !selected
+              ? () => widget.onChanged!(option.value)
+              : null,
+          child: AnimatedContainer(
+            duration: token.motionDurationFast,
+            curve: token.motionEaseInOut,
+            constraints: BoxConstraints(minHeight: _height(token)),
+            alignment: Alignment.center,
+            padding: EdgeInsets.symmetric(
+              horizontal: token.sizeSM,
+              vertical: token.sizeXXS / 2,
+            ),
+            decoration: BoxDecoration(
+              // A faint highlight while hovering an unselected segment.
+              color: hovered ? token.colorFillTertiary : null,
+              borderRadius: BorderRadius.circular(_radius(r)),
+            ),
+            child: content,
+          ),
+        ),
+      ),
+    );
+
+    // Block mode stretches each segment to an equal share of the main axis.
+    if (!block) return segment;
+    return Expanded(child: segment);
+  }
+
+  void _setHovered(int? index) {
+    if (_hoveredIndex != index && mounted) {
+      setState(() => _hoveredIndex = index);
+    }
+  }
+}

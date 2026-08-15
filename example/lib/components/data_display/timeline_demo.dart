@@ -25,7 +25,7 @@ class TimelineDemo extends StatelessWidget {
       ),
     ];
 
-    // Горизонтальные примеры
+    // Horizontal examples.
     final horizontalBasic = [
       const TimelineItem(content: Text('Step 1')),
       const TimelineItem(content: Text('Step 2')),
@@ -69,7 +69,7 @@ class TimelineDemo extends StatelessWidget {
       ),
     ];
 
-    // Вспомогательный виджет для горизонтального таймлайна
+    // Helper widget for the horizontal timeline.
     Widget horizontalTimeline({
       required List<TimelineItem> items,
       TimelineMode mode = TimelineMode.left,
@@ -631,7 +631,7 @@ class TimelineDemo extends StatelessWidget {
           ),
         ),
 
-        // Горизонтальный таймлайн с более сложным контентом
+        // A horizontal timeline carrying richer content.
         Group(
           'Horizontal - Complex content',
           horizontalTimeline(

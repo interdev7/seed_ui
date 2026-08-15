@@ -143,9 +143,20 @@ class _ResolvedTimelineToken {
   final Color defaultColor;
 }
 
+/// Anything that can sit in [Timeline.items]: a single [TimelineItem], or a
+/// [TimelineGroupItem] standing for a run of them.
+///
+/// Sealed, so the two are the only cases and the timeline can lay every entry
+/// out exhaustively.
+@immutable
+sealed class TimelineEntry {
+  /// Creates a [TimelineEntry].
+  const TimelineEntry();
+}
+
 /// One node on a [Timeline] — a dot on the axis and its [content].
 @immutable
-class TimelineItem {
+class TimelineItem extends TimelineEntry {
   /// Creates a [TimelineItem].
   const TimelineItem({
     this.color,
@@ -270,7 +281,7 @@ class TimelineGroupController extends ChangeNotifier {
 /// The group draws no node of its own — [items] supply every dot — so the axis
 /// reads as one continuous line whether the group is open or shut.
 @immutable
-class TimelineGroupItem extends TimelineItem {
+class TimelineGroupItem extends TimelineEntry {
   /// Creates a [TimelineGroupItem].
   const TimelineGroupItem({
     required this.items,
@@ -322,8 +333,8 @@ class Timeline extends StatelessWidget {
     this.titleSpan,
   });
 
-  /// The nodes, in order.
-  final List<TimelineItem> items;
+  /// The entries, in order — plain nodes and collapsible groups alike.
+  final List<TimelineEntry> items;
 
   /// How the axis and content are laid out.
   final TimelineMode mode;
@@ -367,16 +378,20 @@ class Timeline extends StatelessWidget {
     // A group contributes its own children rather than a node of its own; the
     // ones past `collapsedCount` are tagged so they can be revealed together.
     final nodes = <_Node>[
-      for (final item in items)
-        if (item is TimelineGroupItem)
-          for (var i = 0; i < item.items.length; i++)
-            _Node(
-              item: item.items[i],
-              dashedTail: item.items[i].dashed,
-              group: i >= item.collapsedCount ? item : null,
-            )
-        else
-          _Node(item: item, dashedTail: item.dashed),
+      for (final entry in items)
+        ...switch (entry) {
+          TimelineGroupItem(:final items, :final collapsedCount) => [
+              for (var i = 0; i < items.length; i++)
+                _Node(
+                  item: items[i],
+                  dashedTail: items[i].dashed,
+                  // Everything past the visible head shares the group, so the
+                  // run reveals and hides as one.
+                  group: i >= collapsedCount ? entry : null,
+                ),
+            ],
+          TimelineItem() => [_Node(item: entry, dashedTail: entry.dashed)],
+        },
       if (pending != null)
         _Node(
           item: TimelineItem(

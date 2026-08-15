@@ -5,8 +5,11 @@ import '../../icons/icons.dart' show HolderPainter;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 
-/// Per-component design tokens for [SortableList] — позволяет кастомизировать
-/// внешний вид (тень, скругление, цвета) через тему.
+/// Per-component design tokens for [SortableList] — the lift shadow, corner
+/// rounding and colours a dragged row takes on.
+///
+/// Every field is an override; a null one falls back to the value derived from
+/// the global theme.
 @immutable
 class SortableListToken {
   /// Creates a [SortableListToken].

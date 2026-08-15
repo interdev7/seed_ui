@@ -173,6 +173,37 @@ void main() {
     expect(hole.bottom, closeTo(target.bottom + 6, 0.5));
   });
 
+  testWidgets('the mask dims in rather than snapping on', (tester) async {
+    await tester.pumpWidget(const _Host(steps: _twoSteps));
+    final state = tester.state<_HostState>(find.byType(_Host));
+    state.controller.open();
+
+    double alpha() {
+      final painter = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((p) => p.painter)
+          .firstWhere((p) => p.runtimeType.toString() == '_MaskPainter');
+      return ((painter as dynamic).colour as Color).a;
+    }
+
+    // First frame: the tour is up but the page is not dark yet.
+    await tester.pump();
+    expect(alpha(), closeTo(0, 0.01));
+
+    // Part way through, the dim is on its way but not arrived.
+    await tester.pump(const Duration(milliseconds: 100));
+    final midway = alpha();
+    expect(midway, greaterThan(0));
+
+    await tester.pumpAndSettle();
+    final settled = alpha();
+    expect(settled, greaterThan(midway));
+
+    // The default mask is half-opaque black; the fade scales that, it does not
+    // invent a new opacity.
+    expect(settled, closeTo(0x80 / 0xFF, 0.01));
+  });
+
   testWidgets('the hole follows the step', (tester) async {
     final controller = await open(tester, const _Host(steps: _twoSteps));
 

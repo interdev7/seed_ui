@@ -217,8 +217,8 @@ ThemeData newYearTheme({
 ///
 /// The bundled set ([NewYearTypography.bundled]) is Nunito, Marck Script and
 /// Ruslan Display: all three are SIL OFL and all three cover **Latin and
-/// Cyrillic in the same file**, so a bilingual greeting never changes typeface
-/// halfway through.
+/// Cyrillic in the same file**, so text never changes typeface halfway
+/// through.
 ///
 /// To use a face of your own, drop the file into `assets/fonts`, declare the
 /// family in `pubspec.yaml`, and name it here — the theme needs no editing:

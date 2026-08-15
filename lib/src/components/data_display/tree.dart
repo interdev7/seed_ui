@@ -1200,31 +1200,31 @@ class _TreeLinePainter extends CustomPainter {
 
     final midY = size.height / 2;
 
-    // Рисуем линии последовательно, чтобы они соединялись в углах
+    // Drawn one level at a time so the strokes meet cleanly at the corners.
     for (var i = 0; i < level; i++) {
       final x = i * indent + indent / 2;
       final isLastAncestor = (i == level - 1);
       final isLastSibling = isLastAncestor && isLast;
 
-      // Вертикальная линия
+      // The vertical run for this level.
       final top = (i == 0 && isFirst) ? midY : 0.0;
       final bottom = isLastSibling ? midY : size.height;
 
       if (i < level - 1) {
-        // Для предков - только если не последний
+        // An ancestor only carries a line down while it has siblings left.
         if (i < ancestorsLast.length && !ancestorsLast[i]) {
           canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
         }
       } else {
-        // Для текущего уровня - рисуем полную линию
+        // The node's own level always draws its full run.
         canvas.drawLine(Offset(x, top), Offset(x, bottom), paint);
 
-        // Горизонтальная линия к узлу
+        // The elbow reaching across to the node.
         canvas.drawLine(Offset(x, midY), Offset(x + indent, midY), paint);
       }
     }
 
-    // Линия вниз к детям, если узел раскрыт
+    // An expanded node carries the line on down to its children.
     if (hasChildrenExpanded) {
       final x = level * indent + indent / 2;
       canvas.drawLine(Offset(x, midY), Offset(x, size.height), paint);

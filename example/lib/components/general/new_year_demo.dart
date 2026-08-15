@@ -32,17 +32,17 @@ class _NewYearDemoState extends State<NewYearDemo> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Both display faces cover Latin and Cyrillic, so a bilingual
-                // greeting stays in one typeface all the way through.
+                // A bundled theme swaps the whole type ramp, not just a colour:
+                // the two display faces below come from the app's assets.
                 Text(
-                  'Merry & Bright · С Новым годом',
+                  'Merry & Bright',
                   style: NewYearTypography.bundled.scriptStyle(
                     color: token.primary.base,
                     size: 34,
                   ),
                 ),
                 Text(
-                  'ЁЛКА · TREE · 2026',
+                  'WINTER · TREE · 2026',
                   style: NewYearTypography.bundled.ornamentStyle(
                     color: token.error.base,
                     size: 22,
@@ -52,8 +52,8 @@ class _NewYearDemoState extends State<NewYearDemo> {
                   padding: const EdgeInsets.only(top: 4, bottom: 8),
                   child: Text(
                     'Marck Script and Ruslan Display for the headings, Nunito '
-                    'for everything else — all three carry Cyrillic, so nothing '
-                    'falls back mid-word.',
+                    'for everything else — bundled as assets, so the theme '
+                    'renders the same on every platform.',
                     style: TextStyle(
                       color: token.colorTextSecondary,
                       fontSize: token.fontSizeSM,

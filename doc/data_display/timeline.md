@@ -63,9 +63,15 @@ TimelineItem(
 ## Groups
 
 A `TimelineGroupItem` is a run of nodes on the same axis that collapses down to
-its first few. Drop one into `items` like any other item — it draws no dot of
+its first few. Drop one into `items` alongside plain nodes — it draws no dot of
 its own, its `items` supply every node, so the axis stays one continuous line
 whether the group is open or shut.
+
+`Timeline.items` takes `List<TimelineEntry>`, and `TimelineEntry` is sealed
+with exactly two cases: `TimelineItem` and `TimelineGroupItem`. A group is
+therefore not itself a node — it carries no `color`, `dot` or `label` — and a
+group cannot contain another group, since its `items` are plain
+`TimelineItem`s.
 
 | Property | Type | Default | Description |
 | --- | --- | --- | --- |

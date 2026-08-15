@@ -83,6 +83,7 @@ export 'src/components/data_display/tag.dart'
 export 'src/components/data_display/timeline.dart'
     show
         Timeline,
+        TimelineEntry,
         TimelineItem,
         TimelineGroupItem,
         TimelineGroupController,

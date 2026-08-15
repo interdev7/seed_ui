@@ -250,7 +250,7 @@ enum PercentInfoAlign {
   /// Align to end (right in LTR, left in RTL).
   end,
 
-  /// Info label follows the moving progress bar tip ("следящий").
+  /// Info label rides along with the moving tip of the bar.
   follow,
 }
 

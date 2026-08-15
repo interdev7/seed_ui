@@ -28,7 +28,7 @@ open a drawer.
 
 ```yaml
 dependencies:
-  seed_ui: ^0.0.1
+  seed_ui: ^0.1.0
 ```
 
 ## Getting started
@@ -193,6 +193,7 @@ flutter test
 
 ## Status
 
-Under active development. The public API is not yet stable and versioning
-begins in earnest once the component set is complete — expect breaking changes
-in any `0.0.x` release.
+Under active development. The public API is not stable yet: while the package
+is on `0.x`, a breaking change bumps the minor version, and every one is
+spelled out in the [changelog](CHANGELOG.md). `1.0.0` follows once the surface
+has gone a few releases without needing one.

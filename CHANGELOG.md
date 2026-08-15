@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.1.0
 
 ### Removed
 
@@ -20,6 +20,23 @@ example or the docs used them:
 Everything else the kit exported stays: types such as `PopoverPlacement` and
 `RailInsets` appear in public signatures (`Tooltip.placement`,
 `TimelineToken.railInset`), so callers need to be able to name them.
+
+### Changed
+
+- **Breaking.** `Timeline.items` now takes `List<TimelineEntry>`.
+  `TimelineEntry` is sealed over exactly two cases, `TimelineItem` and
+  `TimelineGroupItem`. Lists of plain items keep working unchanged.
+
+  `TimelineGroupItem` used to extend `TimelineItem`, which gave it fourteen
+  inherited fields it never read — a caller reaching for `color` or `dot` on a
+  group got silence — and let a group nest inside another group, which
+  compiled but drew an empty node. Neither is expressible now.
+
+### Fixed
+
+- `Tour` eased its panel into place but dropped the mask on at full strength,
+  so opening a tour read as a flash. The dim now fades in over the theme's mid
+  duration, matching the popover barrier.
 
 ### Added
 
@@ -60,5 +77,5 @@ First public release.
 
 - Components build on `package:flutter/widgets.dart` and carry no Material
   dependency, so they drop into Material and Cupertino apps alike.
-- The public API is not yet stable; breaking changes may land in any `0.0.x`
+- The public API is not yet stable; breaking changes may land in any `0.x`
   release.

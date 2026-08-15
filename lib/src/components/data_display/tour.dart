@@ -997,11 +997,24 @@ class _TourMask extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The dim eases in rather than snapping on, matching the popover
+    // barrier — a tour that slams the page dark reads as a flash. The tween
+    // runs once on mount: `end` never changes, so stepping through the tour
+    // does not re-fade it.
+    final t = context.softToken;
     final dimming = colour == null
         ? const SizedBox.expand()
-        : CustomPaint(
-            painter: _MaskPainter(hole: hole, colour: colour!),
-            size: Size.infinite,
+        : TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: 1),
+            duration: t.motionDurationMid,
+            curve: t.motionEaseOut,
+            builder: (context, progress, _) => CustomPaint(
+              painter: _MaskPainter(
+                hole: hole,
+                colour: colour!.withValues(alpha: colour!.a * progress),
+              ),
+              size: Size.infinite,
+            ),
           );
 
     // Everything outside the hole absorbs taps and dismisses the tour; the

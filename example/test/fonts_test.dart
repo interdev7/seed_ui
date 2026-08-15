@@ -50,10 +50,10 @@ bool _draws(List<(int, int)> coverage, int codePoint) =>
     coverage.any((r) => r.$1 <= codePoint && codePoint <= r.$2);
 
 void main() {
-  // The whole point of this font set: a bilingual greeting must not change
-  // typeface halfway through. Plenty of holiday faces are Latin-only, and the
-  // gap is invisible until someone types Cyrillic — so it is asserted from the
-  // font files themselves.
+  // The whole point of this font set: text must not change typeface halfway
+  // through. Plenty of display faces are Latin-only, and the gap stays
+  // invisible until a user types outside that range — so coverage is asserted
+  // from the font files themselves rather than trusted.
   test('every bundled face draws Latin and Cyrillic', () {
     const type = NewYearTypography.bundled;
     final files = {
@@ -68,11 +68,15 @@ void main() {
 
       final coverage = _coverage(file);
       expect(coverage, isNotEmpty, reason: '${entry.key}: unreadable cmap');
+      // Written as code points rather than characters so this file stays
+      // ASCII. U+0041 is Latin A; U+0410 and U+044F bracket the Cyrillic
+      // alphabet; U+0401 is the letter most often absent from a face that
+      // claims to cover it.
       for (final sample in {
-        'A': 0x41,
-        'А': 0x410,
-        'Ё': 0x401,
-        'я': 0x44F,
+        'U+0041': 0x41,
+        'U+0410': 0x410,
+        'U+0401': 0x401,
+        'U+044F': 0x44F,
       }.entries) {
         expect(
           _draws(coverage, sample.value),

@@ -59,8 +59,9 @@ promise. Adding a name is cheap; removing one is a breaking change.
   geometry types belong in `lib/src`, unexported.
 - Keep the barrel's exports alphabetical — `directives_ordering` enforces it.
 
-While the package is on `0.0.x` the API is not stable and breaking changes may
-land in any release. They still need a CHANGELOG entry saying so.
+While the package is on `0.x` the API is not stable. A breaking change bumps
+the minor version (`0.1.0` → `0.2.0`) and needs a CHANGELOG entry that says
+what moved and why.
 
 ## Component documentation
 

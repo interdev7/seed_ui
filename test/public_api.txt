@@ -177,6 +177,7 @@ TagVariant
 ThemeContext
 ThemeData
 Timeline
+TimelineEntry
 TimelineGroupController
 TimelineGroupItem
 TimelineItem

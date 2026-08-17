@@ -4,7 +4,7 @@ Thanks for taking the time. Issues and pull requests are both welcome.
 
 ## Before you open a pull request
 
-The tree has to be clean on all four counts — CI checks the same things, so
+The tree has to be clean on all five counts — CI checks the same things, so
 running them locally saves a round trip:
 
 ```sh
@@ -12,7 +12,14 @@ dart format .
 flutter analyze          # must report "No issues found!"
 flutter test
 cd example && flutter analyze && flutter test
+./tool/check_version.sh  # only matters when you touched pubspec.yaml
 ```
+
+`check_version.sh` compares `pubspec.yaml` against the CHANGELOG heading and
+against the constraint quoted in the README and the gallery. Bumping the
+version without renaming `## Unreleased` is otherwise only caught by
+`pub publish`, and a stale constraint in the README is caught by nothing at
+all.
 
 `analysis_options.yaml` is deliberately strict. Two rules matter most:
 

@@ -13,6 +13,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Runs first and in seconds: no Flutter, no pub. A version bump that forgets
+  # the CHANGELOG is otherwise only caught by `pub publish`, long after merge.
+  version:
+    name: Version references agree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./tool/check_version.sh
+
   analyze:
     name: Format & analyze
     runs-on: ubuntu-latest

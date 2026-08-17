@@ -57,8 +57,8 @@ class ThemeController extends InheritedWidget {
   final ValueChanged<ThemeModeOption> setTheme;
 
   static ThemeController of(BuildContext context) {
-    final result =
-        context.dependOnInheritedWidgetOfExactType<ThemeController>();
+    final result = context
+        .dependOnInheritedWidgetOfExactType<ThemeController>();
     assert(result != null, 'No ThemeController found in context');
     return result!;
   }

@@ -103,6 +103,22 @@ it in the visible extent. Only the bar's own scroll view moves, never the page.
 Tabs(tabPosition: TabPosition.left, scrollAlign: TabScrollAlign.center, items: items)
 ```
 
+### Snapping
+
+`snap: true` settles a flung bar with a tab against its leading edge, instead
+of wherever the throw happened to end — so a long run cannot come to rest
+mid-label.
+
+```dart
+Tabs(items: items, snap: true)
+```
+
+Off by default: a bar of a few tabs has nothing to settle into, and the extra
+pull would only feel like resistance.
+
+Snapping is to the measured tab boundaries, not to a fixed stride. Tabs are as
+wide as their labels, so a page-sized step would land in the middle of one.
+
 ## Extra content
 
 `tabBarExtraContent` pins widgets to the ends of the bar — the slot of

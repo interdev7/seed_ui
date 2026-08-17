@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+// The kit hides Material's ThemeData; this test needs it to pick a platform.
+import 'package:flutter/material.dart' as material;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 // The add button's glyph lives with the kit's other icons and is internal to
@@ -244,6 +246,44 @@ void main() {
       expect(bar.physics, isNotNull);
     });
 
+    testWidgets('the end of the run stops at the end, not before it', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 300,
+              child: Tabs(items: longRun(), snap: true),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final bar = find.byType(SingleChildScrollView);
+      final controller = tester.widget<SingleChildScrollView>(bar).controller!;
+
+      // Throw past the end. No tab begins at the maximum, so insisting on a
+      // tab boundary here would haul the bar back to the last one before it
+      // and strand the final tabs beyond the trailing edge.
+      controller.jumpTo(controller.position.maxScrollExtent);
+      await tester.pumpAndSettle();
+      await tester.fling(bar, const Offset(-300, 0), 3000);
+      await tester.pumpAndSettle();
+
+      expect(
+        controller.position.pixels,
+        moreOrLessEquals(controller.position.maxScrollExtent),
+      );
+      // Which is to say the last tab is wholly in view.
+      final last = find.text('Section number ${longRun().length}');
+      expect(
+        tester.getTopRight(last).dx,
+        lessThanOrEqualTo(tester.getTopRight(bar).dx + 0.5),
+      );
+    });
+
     testWidgets('a fling comes to rest on a tab boundary', (tester) async {
       final settled = await flingAndSettle(tester, snap: true);
 
@@ -259,5 +299,58 @@ void main() {
         reason: 'settled at $settled, which is not a multiple of $first',
       );
     });
+  });
+  testWidgets('the end of a snapping run is a place the bar can rest', (
+    tester,
+  ) async {
+    // Bouncing physics: the pull back from the end is invisible under the
+    // clamping kind, which stops dead at the maximum on its own.
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: material.ThemeData(platform: TargetPlatform.iOS),
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 320,
+              child: Tabs(
+                snap: true,
+                items: [
+                  for (var i = 1; i <= 14; i++)
+                    TabItem(
+                      key: '$i',
+                      label: Text('Section $i'),
+                      content: Text('Panel $i'),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final bar = find.byType(SingleChildScrollView).first;
+    final position =
+        tester.widget<SingleChildScrollView>(bar).controller!.position;
+    // No tab begins at the maximum, so this is the case that used to strand
+    // the last tabs off the trailing edge.
+    expect(
+      position.maxScrollExtent % 100,
+      isNot(0),
+      reason: 'the run must not end on a round boundary for this to bite',
+    );
+
+    for (var i = 0; i < 12; i++) {
+      await tester.fling(bar, const Offset(-300, 0), 3000);
+      await tester.pumpAndSettle();
+    }
+    expect(position.pixels, moreOrLessEquals(position.maxScrollExtent));
+
+    // And having got there, tapping a tab near the end must not haul the bar
+    // back to the last boundary before the maximum.
+    await tester.tap(find.text('Section 13'));
+    await tester.pumpAndSettle();
+    expect(position.pixels, moreOrLessEquals(position.maxScrollExtent));
   });
 }

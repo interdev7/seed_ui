@@ -19,6 +19,17 @@ class _TabsDemoState extends State<TabsDemo> {
   ];
   String _editActive = '1';
   int _newTab = 4;
+  bool _snap = true;
+
+  /// A run long enough to actually scroll, so the difference is visible.
+  static final _longRun = [
+    for (var i = 1; i <= 14; i++)
+      TabItem(
+        key: 'long$i',
+        label: Text('Section number $i'),
+        content: Text('Panel $i'),
+      ),
+  ];
 
   static const _items = [
     TabItem(
@@ -201,6 +212,44 @@ class _TabsDemoState extends State<TabsDemo> {
                   }
                 },
                 child: const Text('Rename active tab'),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Snapping a long run',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Fling the bar sideways. With snapping on it settles with a '
+                'tab against the leading edge; with it off it stops wherever '
+                'the throw ended, often mid-label.',
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Switch(
+                    value: _snap,
+                    onChanged: (v) => setState(() => _snap = v),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(_snap ? 'snap: true' : 'snap: false'),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Boxed narrower than the run so there is something to scroll.
+              SizedBox(
+                width: 320,
+                child: Tabs(
+                  // Rebuild the bar outright when the flag flips: scroll
+                  // physics are read when the view is created, so a live
+                  // change would otherwise not take until the next fling.
+                  key: ValueKey(_snap),
+                  items: _longRun,
+                  size: size,
+                  snap: _snap,
+                ),
               ),
             ],
           ),

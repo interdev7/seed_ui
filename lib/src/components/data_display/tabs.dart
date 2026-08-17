@@ -698,30 +698,57 @@ class _TabsState extends State<Tabs> {
   /// [Tabs.scrollAlign]. Only the bar's own scroll view moves, never the page.
   void _scrollActiveIntoView() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_barController.hasClients) return;
-      final tab =
-          _tabKeys[_active]?.currentContext?.findRenderObject() as RenderBox?;
-      final strip = _stripKey.currentContext?.findRenderObject() as RenderBox?;
-      if (tab == null || strip == null || !tab.hasSize || !strip.hasSize) {
-        return;
-      }
-      final origin = tab.localToGlobal(Offset.zero, ancestor: strip);
-      final start = _horizontal ? origin.dx : origin.dy;
-      final extent = _horizontal ? tab.size.width : tab.size.height;
-      final viewport = _barController.position.viewportDimension;
-      final target = widget.scrollAlign == TabScrollAlign.center
-          ? start - (viewport - extent) / 2
-          : start;
+      final target = _alignTarget();
+      if (target == null) return;
       final token = context.softToken;
-      _barController.animateTo(
-        target.clamp(
-          _barController.position.minScrollExtent,
-          _barController.position.maxScrollExtent,
-        ),
-        duration: token.motionDurationMid,
-        curve: token.motionEaseInOut,
-      );
+      _barController
+          .animateTo(
+            target,
+            duration: token.motionDurationMid,
+            curve: token.motionEaseInOut,
+          )
+          // The label's weight animates from w400 to w500 over the same span,
+          // so the tab that just lost the bold narrows while we are still
+          // travelling and everything after it slides left. The target was
+          // read before any of that, which leaves the tab short of the edge by
+          // the width the label gave up. Re-aim once the type has settled.
+          .then((_) => _correctAlignment());
     });
+  }
+
+  void _correctAlignment() {
+    if (!mounted || !_barController.hasClients) return;
+    final target = _alignTarget();
+    if (target == null || (target - _barController.offset).abs() < 0.5) return;
+    final token = context.softToken;
+    _barController.animateTo(
+      target,
+      duration: token.motionDurationFast,
+      curve: token.motionEaseOut,
+    );
+  }
+
+  /// Where the bar must sit for the active tab to be aligned, or null while
+  /// the geometry is not there to say.
+  double? _alignTarget() {
+    if (!mounted || !_barController.hasClients) return null;
+    final tab =
+        _tabKeys[_active]?.currentContext?.findRenderObject() as RenderBox?;
+    final strip = _stripKey.currentContext?.findRenderObject() as RenderBox?;
+    if (tab == null || strip == null || !tab.hasSize || !strip.hasSize) {
+      return null;
+    }
+    final origin = tab.localToGlobal(Offset.zero, ancestor: strip);
+    final start = _horizontal ? origin.dx : origin.dy;
+    final extent = _horizontal ? tab.size.width : tab.size.height;
+    final viewport = _barController.position.viewportDimension;
+    final target = widget.scrollAlign == TabScrollAlign.center
+        ? start - (viewport - extent) / 2
+        : start;
+    return target.clamp(
+      _barController.position.minScrollExtent,
+      _barController.position.maxScrollExtent,
+    );
   }
 
   void _scheduleMeasure() {
@@ -862,7 +889,7 @@ class _TabsState extends State<Tabs> {
       TabPosition.right => Border(left: baseLineSide),
     };
 
-    final scroll = SingleChildScrollView(
+    final Widget scroll = SingleChildScrollView(
       controller: _barController,
       scrollDirection: _horizontal ? Axis.horizontal : Axis.vertical,
       physics: widget.snap && _tabOffsets.length > 1
@@ -870,6 +897,21 @@ class _TabsState extends State<Tabs> {
           : null,
       child: strip,
     );
+
+    // The boundaries are measured once per build, but the strip can change
+    // width without rebuilding this widget — a webfont arriving late reflows
+    // every label. The metrics change when it does, so re-measure then;
+    // otherwise a fling snaps to where the tabs used to be.
+    final barView = widget.snap
+        ? NotificationListener<ScrollMetricsNotification>(
+            onNotification: (_) {
+              WidgetsBinding.instance
+                  .addPostFrameCallback((_) => _measureOffsets());
+              return false;
+            },
+            child: scroll,
+          )
+        : scroll;
 
     // Extra content sits at the start and/or end of a horizontal bar.
     final extra = widget.tabBarExtraContent;
@@ -883,7 +925,7 @@ class _TabsState extends State<Tabs> {
               child: extra!.left!,
             ),
           if (widget.centered) const Spacer(),
-          Expanded(child: scroll),
+          Expanded(child: barView),
           if (widget.centered) const Spacer(),
           if (extra?.right != null)
             Padding(
@@ -893,7 +935,7 @@ class _TabsState extends State<Tabs> {
         ],
       );
     } else {
-      content = scroll;
+      content = barView;
     }
 
     if (_card) {
@@ -1380,11 +1422,30 @@ class _TabSnapPhysics extends ScrollPhysics {
     return end.clamp(position.minScrollExtent, position.maxScrollExtent);
   }
 
-  double _nearest(double to) {
-    var best = offsets.first;
-    for (final o in offsets) {
-      if ((o - to).abs() < (best - to).abs()) best = o;
+  /// The reachable resting place nearest [to].
+  ///
+  /// Only boundaries the bar can actually rest at are considered. Picking the
+  /// nearest of all of them and clamping afterwards looks the same until the
+  /// end of the run, where the nearest boundary lies past the maximum: the
+  /// clamp then lands between two tabs and cuts the leading one.
+  ///
+  /// Both ends of the run count alongside the tab boundaries. A tab boundary
+  /// is almost never the maximum, so without them the end of the run has no
+  /// reachable place to settle and the bar is dragged back to the last
+  /// boundary before it — far enough to leave the final tabs stranded off the
+  /// trailing edge, with every attempt to reach them pulled back. Once the
+  /// tabs have run out there is nothing left to align, and resting flush
+  /// against the end is the whole of what is wanted.
+  double? _nearestReachable(double to, ScrollMetrics position) {
+    double? best;
+    void consider(double o) {
+      if (o < position.minScrollExtent || o > position.maxScrollExtent) return;
+      if (best == null || (o - to).abs() < (best! - to).abs()) best = o;
     }
+
+    offsets.forEach(consider);
+    consider(position.minScrollExtent);
+    consider(position.maxScrollExtent);
     return best;
   }
 
@@ -1402,8 +1463,12 @@ class _TabSnapPhysics extends ScrollPhysics {
       return super.createBallisticSimulation(position, velocity);
     }
 
-    final target = _nearest(_naturalEnd(position, velocity))
-        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    final target = _nearestReachable(_naturalEnd(position, velocity), position);
+    // Nothing reachable — a run shorter than its viewport — so let the parent
+    // settle it however it would.
+    if (target == null) {
+      return super.createBallisticSimulation(position, velocity);
+    }
     final tol = toleranceFor(position);
     if ((target - position.pixels).abs() < tol.distance) return null;
 

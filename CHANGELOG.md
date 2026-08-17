@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.2
+
+### Fixed
+
+- Tapping a tab in a scrolling bar left it a few pixels past the leading edge.
+  The label's weight animates on selection, so the tab that lost the bold
+  narrowed while the bar was still travelling towards a position read before
+  it did. The bar now re-aims once the type has settled.
+- A snapping bar could not rest at the end of its run. Only tab boundaries
+  counted as resting places and none of them is the maximum, so reaching the
+  end hauled the bar back to the last boundary before it: the final tabs sat
+  stranded past the trailing edge, tapping one near the end jerked the bar
+  left, and every attempt to scroll to them sprang back. Both ends of the run
+  now count too. Visible on bouncing (iOS) physics, where the pull back is not
+  masked by the hard stop clamping physics make at the maximum.
+- Snap boundaries were measured once per build and never again, so a bar that
+  reflowed without rebuilding — a webfont arriving late — snapped to where the
+  tabs used to be.
+
 ## 0.6.1
 
 ### Added

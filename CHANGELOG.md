@@ -5,6 +5,28 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.4
+
+### Added
+
+- `Badge` counts roll their digits into place, each place its own reel, turning
+  the way the count moved. Ticking over takes the short way round: 9 to 10
+  rolls the units one step forward to 0 rather than nine steps back. Each place
+  is a fixed cell, so a turning reel cannot shove its neighbours sideways, and
+  `99+` is drawn still, being no number going anywhere. A count falling to
+  nothing retreats rather than blinking out — keeping the count it was showing
+  as it goes — and leaves the tree once gone.
+
+### Fixed
+
+- A standalone `Badge` took the full width of its row. A container told to
+  align its child takes all the width it is offered.
+- A single-character count is round again: the padding that makes the pill a
+  lozenge belongs only to counts of more than one character.
+- The ring around a count is drawn outside it rather than as a border, which
+  was eating into the height the tokens name and leaving the badge shorter
+  than it asked to be.
+
 ## 0.6.3
 
 ### Added

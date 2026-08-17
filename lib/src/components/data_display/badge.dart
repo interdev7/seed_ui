@@ -211,9 +211,26 @@ class Badge extends StatelessWidget {
 
     if (status != null) return _buildStatus(t, r);
 
-    final indicator = _hasIndicator ? _buildIndicator(t, r) : null;
+    // Standalone there is nothing to hang a vanishing badge off, and an empty
+    // one must take no room at all, so it simply is not built.
+    if (child == null) {
+      return _hasIndicator ? _buildIndicator(t, r) : const SizedBox.shrink();
+    }
 
-    if (child == null) return indicator ?? const SizedBox.shrink();
+    // Pinned to a child it is kept mounted and scaled away instead: a count
+    // reaching zero should retreat into the corner it came from rather than
+    // blink out. Nothing is built for a badge that never had anything to say.
+    final indicator = count != null || dot || content != null
+        ? _Vanishing(
+            visible: _hasIndicator,
+            duration: t.motionDurationSlow,
+            // An overshoot on the way in, so the badge arrives with a small
+            // pop rather than easing politely into place.
+            curve: const Cubic(0.12, 0.4, 0.29, 1.46),
+            reverseCurve: t.motionEaseInOut,
+            child: _buildIndicator(t, r),
+          )
+        : null;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -283,16 +300,25 @@ class Badge extends StatelessWidget {
 
     final height =
         size == SoftSize.small ? r.indicatorHeightSM : r.indicatorHeight;
+    final style = TextStyle(
+      color: r.textColor,
+      fontSize: r.fontSize,
+      fontWeight: FontWeight.w400,
+      height: 1,
+    );
+    // Content stands alone: it is offered without a count as readily as with
+    // one, so there may be no number here to render at all.
+    final n = count;
+    final text =
+        n == null ? null : (n > overflowCount ? '$overflowCount+' : '$n');
+    // Only a plain integer rolls. Past the overflow the badge says `99+`,
+    // which is not a number going anywhere.
+    final rolls =
+        text != null && text.codeUnits.every((c) => c >= 0x30 && c <= 0x39);
     final label = content ??
-        Text(
-          count! > overflowCount ? '$overflowCount+' : '$count',
-          style: TextStyle(
-            color: r.textColor,
-            fontSize: r.fontSize,
-            fontWeight: FontWeight.w400,
-            height: 1,
-          ),
-        );
+        (rolls
+            ? _ScrollNumber(count: n!, text: text, style: style)
+            : Text(text ?? '', style: style));
 
     return Semantics(
       label: title,
@@ -302,14 +328,26 @@ class Badge extends StatelessWidget {
       child: Container(
         height: height,
         constraints: BoxConstraints(minWidth: height),
-        padding: EdgeInsets.symmetric(horizontal: t.sizeXS - 2),
-        alignment: Alignment.center,
+        // A single character keeps the pill a circle. Padding is what turns
+        // it into a lozenge, so it is added only once there is a second
+        // character needing the room.
+        padding: content != null || (text?.length ?? 0) > 1
+            ? EdgeInsets.symmetric(horizontal: t.sizeXS - 2)
+            : EdgeInsets.zero,
         decoration: BoxDecoration(
           color: fill,
           borderRadius: BorderRadius.circular(height / 2),
-          border: Border.all(color: r.ringColor, width: t.lineWidth),
+          // The ring sits outside the pill rather than being a border, which
+          // would eat into the height the tokens name and leave the badge
+          // shorter than it asked to be.
+          boxShadow: [
+            BoxShadow(color: r.ringColor, spreadRadius: t.lineWidth),
+          ],
         ),
-        child: label,
+        // Centred with a factor of one rather than through the container's
+        // alignment: a container told to align its child takes all the width
+        // it is offered, which left a standalone badge as wide as its row.
+        child: Center(widthFactor: 1, heightFactor: 1, child: label),
       ),
     );
   }
@@ -553,4 +591,306 @@ class _RibbonFoldPainter extends CustomPainter {
   @override
   bool shouldRepaint(_RibbonFoldPainter old) =>
       old.color != color || old.atEnd != atEnd;
+}
+
+/// A count whose digits roll into place rather than being swapped out.
+///
+/// Each place is its own reel, so 39 to 40 rolls the units from 9 round to 0
+/// while the tens move 3 to 4 — the two travel together, as a counter does.
+class _ScrollNumber extends StatefulWidget {
+  const _ScrollNumber({
+    required this.count,
+    required this.text,
+    required this.style,
+  });
+
+  /// The number itself, which says which way the reels turn.
+  final int count;
+
+  /// What is actually drawn. Not always the number: past the overflow it
+  /// carries a `+`, and that character does not roll.
+  final String text;
+
+  final TextStyle style;
+
+  @override
+  State<_ScrollNumber> createState() => _ScrollNumberState();
+}
+
+class _ScrollNumberState extends State<_ScrollNumber> {
+  /// Up for a count that grew, down for one that shrank. Held rather than
+  /// derived on the spot because a rebuild for any other reason — a theme
+  /// change mid-roll — must not reverse a reel that is already turning.
+  int _direction = 1;
+
+  @override
+  void didUpdateWidget(_ScrollNumber old) {
+    super.didUpdateWidget(old);
+    if (widget.count != old.count) {
+      _direction = widget.count > old.count ? 1 : -1;
+    }
+  }
+
+  /// The width every reel is given: the widest digit in the face.
+  ///
+  /// Reels are laid out in a row, so a reel sized to whatever digit it happens
+  /// to be showing would change width as it turns and shove its neighbours
+  /// sideways — the tens visibly jogging while only the units were meant to
+  /// move. A fixed cell makes each place independent, which is what a counter
+  /// is. Most interface fonts space their digits equally and this measures the
+  /// same either way; the ones that do not are exactly the case it exists for.
+  double _cellWidth(BuildContext context, TextStyle style) {
+    final scaler = MediaQuery.textScalerOf(context);
+    var widest = 0.0;
+    for (var d = 0; d <= 9; d++) {
+      final painter = TextPainter(
+        text: TextSpan(text: '$d', style: style),
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+      )..layout();
+      widest = widest > painter.width ? widest : painter.width;
+      painter.dispose();
+    }
+    return widest;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.softToken;
+    // Digits have no descenders, so a line box of exactly the font size holds
+    // them: the reel can be clipped to it without shaving anything off.
+    final slot = widget.style.fontSize!;
+    final cell = _cellWidth(context, widget.style);
+
+    return AnimatedSize(
+      duration: t.motionDurationMid,
+      curve: t.motionEaseInOut,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final (i, ch) in widget.text.characters.indexed)
+            if (_digit(ch) case final d?)
+              _Reel(
+                // Keyed by place, counted from the right: the units must stay
+                // the same reel when a number grows a digit, or 9 to 10 would
+                // hand the units reel's 9 to the tens and roll both wrongly.
+                key: ValueKey(widget.text.length - i),
+                digit: d,
+                direction: _direction,
+                slot: slot,
+                cell: cell,
+                style: widget.style,
+              )
+            else
+              Text(ch, style: widget.style),
+        ],
+      ),
+    );
+  }
+
+  static int? _digit(String ch) {
+    final c = ch.codeUnitAt(0);
+    return c >= 0x30 && c <= 0x39 ? c - 0x30 : null;
+  }
+}
+
+/// One place of the counter: a strip of digits translated so the wanted one
+/// sits in the window.
+class _Reel extends StatefulWidget {
+  const _Reel({
+    super.key,
+    required this.digit,
+    required this.direction,
+    required this.slot,
+    required this.cell,
+    required this.style,
+  });
+
+  final int digit;
+  final int direction;
+  final double slot;
+
+  /// The fixed width of this place, so a turning reel never shifts its
+  /// neighbours. See [_ScrollNumberState._cellWidth].
+  final double cell;
+  final TextStyle style;
+
+  @override
+  State<_Reel> createState() => _ReelState();
+}
+
+class _ReelState extends State<_Reel> with SingleTickerProviderStateMixin {
+  /// Where the reel stands, in digits. Deliberately unbounded rather than
+  /// wrapped to 0..9: a reel at 9 going to 0 must land on 10, so that it rolls
+  /// one step forward. Reduced modulo ten it would have to travel nine steps
+  /// backwards to reach the same face, which is the opposite of what a counter
+  /// ticking over looks like.
+  late double _from = widget.digit.toDouble();
+  late double _to = _from;
+
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 300),
+  );
+  late final CurvedAnimation _curved = CurvedAnimation(
+    parent: _c,
+    curve: Curves.easeInOut,
+  );
+
+  double get _position => _from + (_to - _from) * _curved.value;
+
+  @override
+  void didUpdateWidget(_Reel old) {
+    super.didUpdateWidget(old);
+    if (widget.digit == old.digit) return;
+
+    // Step to the nearest position showing the wanted face, in the direction
+    // the count moved — never against it.
+    final face = (_to.round() % 10 + 10) % 10;
+    final forward = widget.direction >= 0;
+    final steps = forward
+        ? (widget.digit - face + 10) % 10
+        : (face - widget.digit + 10) % 10;
+
+    _from = _position;
+    _to = _to + (forward ? steps : -steps);
+    _c
+      ..value = 0
+      ..forward();
+  }
+
+  @override
+  void dispose() {
+    _curved.dispose();
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: SizedBox(
+        height: widget.slot,
+        width: widget.cell,
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (context, _) {
+            final p = _position;
+            final base = p.floor();
+            // At rest the reel shows one face and builds one. The second is
+            // only ever the one rolling in, so a still badge does not leave a
+            // clipped digit in the tree for a screen reader to read out.
+            final rolling = (p - base).abs() > 1e-6;
+            // Translated rather than positioned: a stack of none but
+            // positioned children has no width of its own, and the reel sits
+            // in a row that has none to give it.
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Only the faces that can be in the window are built, so a
+                // reel that has ticked over a thousand times is no heavier
+                // than a fresh one.
+                for (var i = base; i <= (rolling ? base + 1 : base); i++)
+                  Transform.translate(
+                    offset: Offset(0, (i - p) * widget.slot),
+                    child: SizedBox(
+                      width: widget.cell,
+                      child: Text(
+                        '${(i % 10 + 10) % 10}',
+                        style: widget.style,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Scales its child away rather than dropping it, and once it is gone builds
+/// nothing at all.
+///
+/// The second half matters as much as the first: a badge scaled to nothing is
+/// still a badge as far as a screen reader or a test is concerned, and one
+/// that starts out with nothing to say must never have been there.
+class _Vanishing extends StatefulWidget {
+  const _Vanishing({
+    required this.visible,
+    required this.duration,
+    required this.curve,
+    required this.reverseCurve,
+    required this.child,
+  });
+
+  final bool visible;
+  final Duration duration;
+
+  /// Arriving, where the overshoot belongs.
+  final Curve curve;
+
+  /// Leaving. Kept separate rather than running [curve] backwards: an
+  /// overshoot reversed makes the badge swell on its way out, which is the
+  /// opposite of retreating.
+  final Curve reverseCurve;
+
+  final Widget child;
+
+  @override
+  State<_Vanishing> createState() => _VanishingState();
+}
+
+class _VanishingState extends State<_Vanishing>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+    value: widget.visible ? 1 : 0,
+  );
+
+  @override
+  void didUpdateWidget(_Vanishing old) {
+    super.didUpdateWidget(old);
+    _c.duration = widget.duration;
+    if (widget.visible != old.visible) {
+      widget.visible ? _c.forward() : _c.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  /// What was on screen while the badge still had something to say.
+  ///
+  /// A count of 3 falling to 0 is drawn as it retreats, and redrawing it as
+  /// the 0 that hid it would set the reels rolling on the way out — a number
+  /// changing as it leaves, which is not what it is doing.
+  Widget? _lastShown;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.visible) _lastShown = widget.child;
+    final child = widget.visible ? widget.child : (_lastShown ?? widget.child);
+
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        if (_c.value == 0 && !widget.visible) return const SizedBox.shrink();
+        return ScaleTransition(
+          scale: CurvedAnimation(
+            parent: _c,
+            curve: widget.curve,
+            reverseCurve: widget.reverseCurve,
+          ),
+          child: child,
+        );
+      },
+    );
+  }
 }

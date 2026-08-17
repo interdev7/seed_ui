@@ -16,6 +16,15 @@ Iterable<BoxDecoration> _decorations(WidgetTester tester) => tester
     .map((c) => c.decoration)
     .whereType<BoxDecoration>();
 
+/// The count is drawn a digit at a time, each in its own reel, so the number
+/// has to be read back off the row rather than found whole.
+String _number(WidgetTester tester) => tester
+    .widgetList<Text>(
+      find.descendant(of: find.byType(Badge), matching: find.byType(Text)),
+    )
+    .map((t) => t.data ?? '')
+    .join();
+
 void main() {
   group('Badge', () {
     testWidgets('a count of zero is left out, and shown when asked for', (
@@ -35,15 +44,14 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_host(const Badge(count: 100)));
-      expect(find.text('99+'), findsOneWidget);
-      expect(find.text('100'), findsNothing);
+      expect(_number(tester), '99+');
 
       // The boundary itself is still a number: 99 is not more than 99.
       await tester.pumpWidget(_host(const Badge(count: 99)));
-      expect(find.text('99'), findsOneWidget);
+      expect(_number(tester), '99');
 
       await tester.pumpWidget(_host(const Badge(count: 12, overflowCount: 9)));
-      expect(find.text('9+'), findsOneWidget);
+      expect(_number(tester), '9+');
     });
 
     testWidgets('content stands in for the count, overflow and all', (
@@ -53,7 +61,169 @@ void main() {
         _host(const Badge(count: 500, content: Text('new'))),
       );
       expect(find.text('new'), findsOneWidget);
-      expect(find.text('99+'), findsNothing);
+      expect(_number(tester), 'new');
+    });
+
+    testWidgets('content needs no count to go with it', (tester) async {
+      // The commoner way to use it, and the one that has no number to render.
+      await tester.pumpWidget(
+        _host(const Badge(content: Text('new'), child: Icon(Icons.mail))),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.text('new'), findsOneWidget);
+
+      // Standalone too, where there is no child to fall back on either.
+      await tester.pumpWidget(_host(const Badge(content: Text('beta'))));
+      expect(tester.takeException(), isNull);
+      expect(find.text('beta'), findsOneWidget);
+    });
+
+    testWidgets('a dot needs no count either', (tester) async {
+      await tester.pumpWidget(
+        _host(const Badge(dot: true, child: Icon(Icons.mail))),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    group('the digits roll', () {
+      /// Leaves the reels mid-roll, where both faces are on screen.
+      Future<void> rollFrom(WidgetTester tester, int from, int to) async {
+        await tester.pumpWidget(_host(Badge(count: from)));
+        await tester.pumpWidget(_host(Badge(count: to)));
+        await tester.pump(const Duration(milliseconds: 120));
+      }
+
+      testWidgets('a count that grows brings the new digit up from below', (
+        tester,
+      ) async {
+        await rollFrom(tester, 5, 6);
+        expect(_number(tester), contains('5'), reason: 'still on its way out');
+        expect(
+          tester.getTopLeft(find.text('6')).dy,
+          greaterThan(tester.getTopLeft(find.text('5')).dy),
+        );
+        await tester.pumpAndSettle();
+        expect(_number(tester), '6');
+      });
+
+      testWidgets('a count that shrinks brings it down from above', (
+        tester,
+      ) async {
+        await rollFrom(tester, 6, 5);
+        expect(
+          tester.getTopLeft(find.text('5')).dy,
+          lessThan(tester.getTopLeft(find.text('6')).dy),
+        );
+        await tester.pumpAndSettle();
+        expect(_number(tester), '5');
+      });
+
+      testWidgets('ticking over rolls the units on, not nine back', (
+        tester,
+      ) async {
+        await rollFrom(tester, 9, 10);
+        // The units reel goes 9 to 0. Reduced to 0..9 that is nine steps
+        // backwards; a counter ticking over takes one step forward, so the 0
+        // must arrive from below like any other increase.
+        expect(
+          tester.getTopLeft(find.text('0')).dy,
+          greaterThan(tester.getTopLeft(find.text('9')).dy),
+        );
+        await tester.pumpAndSettle();
+        expect(_number(tester), '10');
+      });
+
+      testWidgets('at rest each place shows one digit and builds one', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_host(const Badge(count: 7)));
+        await tester.pumpAndSettle();
+        // The face rolling in is clipped, but it would still be read aloud.
+        expect(_number(tester), '7');
+      });
+    });
+
+    testWidgets('a rolling place never shifts its neighbours', (tester) async {
+      // Every reel is a fixed cell, so the tens must not stir while the units
+      // turn. Under the test font all digits measure the same and this would
+      // hold either way; it is the proportional fonts it is written for.
+      await tester.pumpWidget(_host(const Badge(count: 11)));
+      await tester.pumpAndSettle();
+      final tens = tester.getTopLeft(find.text('1').first);
+
+      await tester.pumpWidget(_host(const Badge(count: 12)));
+      for (final _ in [1, 2, 3]) {
+        await tester.pump(const Duration(milliseconds: 80));
+        expect(tester.getTopLeft(find.text('1').first), tens);
+      }
+      await tester.pumpAndSettle();
+      expect(_number(tester), '12');
+      expect(tester.getTopLeft(find.text('1')), tens);
+    });
+
+    testWidgets('a single digit keeps the pill round', (tester) async {
+      await tester.pumpWidget(_host(const Badge(count: 7)));
+      final round = tester.getSize(find.byType(Badge));
+      expect(round.width, round.height);
+
+      // A second digit is what earns the padding that makes it a lozenge.
+      await tester.pumpWidget(_host(const Badge(count: 77)));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSize(find.byType(Badge)).width,
+        greaterThan(round.width),
+      );
+    });
+
+    testWidgets('a badge on its way out keeps the count it was showing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(const Badge(count: 3, child: Icon(Icons.mail))),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(
+        _host(const Badge(count: 0, child: Icon(Icons.mail))),
+      );
+      await tester.pump(const Duration(milliseconds: 80));
+      // Redrawing it as the 0 that hid it would set the reel rolling as it
+      // left — a number changing while it goes, which it is not doing.
+      expect(_number(tester), '3');
+    });
+
+    testWidgets('a count reaching zero retreats, and then is gone', (
+      tester,
+    ) async {
+      // The pill is measured, not the ScaleTransition: a transform leaves the
+      // box it wraps the size it always was, and only the painted rect shrinks.
+      Rect pill() => tester.getRect(
+            find
+                .descendant(
+                    of: find.byType(Badge), matching: find.byType(Container))
+                .first,
+          );
+
+      await tester.pumpWidget(
+        _host(const Badge(count: 1, child: Icon(Icons.mail))),
+      );
+      await tester.pumpAndSettle();
+      final full = pill().height;
+
+      await tester.pumpWidget(
+        _host(const Badge(count: 0, child: Icon(Icons.mail))),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(
+        pill().height,
+        lessThan(full),
+        reason: 'on its way out, not gone at a stroke',
+      );
+
+      await tester.pumpAndSettle();
+      // And once out it must leave the tree: a badge scaled to nothing is
+      // still read aloud.
+      expect(_number(tester), isEmpty);
     });
 
     testWidgets('a dot says nothing', (tester) async {
@@ -69,9 +239,12 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_host(const Badge(count: 5)));
-      // Nothing to pin it to, so no stacking: the badge is drawn plainly.
+      // Nothing to pin it to, so nothing is offset into a corner.
       expect(
-        find.descendant(of: find.byType(Badge), matching: find.byType(Stack)),
+        find.descendant(
+          of: find.byType(Badge),
+          matching: find.byType(FractionalTranslation),
+        ),
         findsNothing,
       );
       expect(find.text('5'), findsOneWidget);

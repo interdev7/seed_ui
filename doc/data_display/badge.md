@@ -32,6 +32,34 @@ boundary itself is still a number: at the default of 99, `99` is `99` and
 Badge(count: 1200, overflowCount: 999, child: _bell)   // 999+
 ```
 
+### The roll
+
+A count that changes rolls its digits into place rather than swapping them.
+Each place is its own reel, and they turn in the direction the count moved: up
+when it grew, down when it shrank.
+
+Ticking over is the case worth naming. Going 9 to 10 the units reel travels
+one step forward to reach 0 — not nine steps backwards, which is what reducing
+the position to a single digit would force and what a counter never looks
+like.
+
+Each place is a fixed cell, the width of the widest digit. A reel sized to
+whatever digit it happens to show would change width as it turns and shove its
+neighbours sideways — the tens visibly jogging while only the units were meant
+to move.
+
+Only a plain number rolls. Past the overflow the badge reads `99+`, which is
+not a number going anywhere, so it is drawn still.
+
+A count falling to nothing retreats into the corner it came from instead of
+blinking out, and once gone it leaves the tree, so a badge scaled to nothing
+is not left behind for a screen reader to find. It keeps the count it was
+showing as it goes: redrawing it as the zero that hid it would set the reels
+rolling on the way out.
+
+A single-character count keeps the pill round; the padding that makes it a
+lozenge is added only once there is a second character needing the room.
+
 Give a `title` whenever the count is not self-explanatory. Without one a
 screen reader announces the digits exactly as drawn, which says "ninety-nine
 plus" where "over ninety-nine unread messages" was meant.

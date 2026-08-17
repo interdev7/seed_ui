@@ -54,6 +54,94 @@ class _ResolvedCountdownToken {
   final FontWeight fontWeight;
 }
 
+/// A handle on a running [Countdown], for driving it from outside the build.
+///
+/// The moment counted against can be changed by rebuilding the widget with a
+/// new `target`; a controller is not needed for that. What it is needed for is
+/// **pausing** — the count runs on the wall clock, and there is no way to hold
+/// it still by describing it. Everything else here is the same handle used for
+/// the things that go with pausing: adding time, restarting, reading where the
+/// count stands.
+///
+/// ```dart
+/// final controller = CountdownController(
+///   target: DateTime.now().add(const Duration(minutes: 5)),
+/// );
+///
+/// Countdown(controller: controller)
+/// // …later
+/// controller.pause();
+/// controller.add(const Duration(seconds: 30));
+/// ```
+///
+/// Dispose of it with the [State] that made it.
+class CountdownController extends ChangeNotifier {
+  /// Creates a [CountdownController] counting against [target].
+  CountdownController({required DateTime target}) : _target = target;
+
+  DateTime _target;
+  DateTime? _pausedAt;
+  Duration _value = Duration.zero;
+
+  /// The moment being counted towards, or from.
+  DateTime get target => _target;
+
+  /// Counts against a new moment, from wherever the clock now stands.
+  set target(DateTime value) {
+    if (value == _target) return;
+    _target = value;
+    notifyListeners();
+  }
+
+  /// Whether the count is standing still.
+  bool get isPaused => _pausedAt != null;
+
+  /// What the countdown last drew, as a duration.
+  ///
+  /// Written by the widget as it ticks, so it is the value on screen rather
+  /// than a second, separately rounded reading of the clock.
+  Duration get value => _value;
+
+  /// The instant the count should be measured against: frozen while paused.
+  DateTime get now => _pausedAt ?? countdownClock();
+
+  /// Holds the count still. Does nothing if it is already held.
+  void pause() {
+    if (_pausedAt != null) return;
+    _pausedAt = countdownClock();
+    notifyListeners();
+  }
+
+  /// Lets it run on from where it stopped.
+  ///
+  /// The target moves by however long the pause lasted, which is what makes
+  /// the count resume rather than jump forward by the time spent stopped.
+  void resume() {
+    final at = _pausedAt;
+    if (at == null) return;
+    _pausedAt = null;
+    _target = _target.add(countdownClock().difference(at));
+    notifyListeners();
+  }
+
+  /// Moves the target by [delta] — lengthening a countdown, or cutting it
+  /// short with a negative one.
+  void add(Duration delta) {
+    _target = _target.add(delta);
+    notifyListeners();
+  }
+
+  /// Starts again, counting against [from] from now. Releases a pause.
+  void restart(Duration from) {
+    _pausedAt = null;
+    _target = countdownClock().add(from);
+    notifyListeners();
+  }
+
+  /// Records what was drawn. Called by the widget; not part of the handle.
+  void _report(Duration value) => _value = value;
+}
+
 /// A running count of the time to a moment, or since one.
 ///
 /// ```dart
@@ -74,17 +162,26 @@ class Countdown extends StatefulWidget {
   /// Creates a [Countdown].
   const Countdown({
     super.key,
-    required this.target,
+    this.target,
+    this.controller,
     this.type = CountdownType.down,
     this.format = 'HH:mm:ss',
     this.onFinish,
     this.onChange,
     this.builder,
     this.token,
-  });
+  }) : assert(
+          (target == null) != (controller == null),
+          'Give either a target or a controller, not both: two moments to '
+          'count against is one too many.',
+        );
 
-  /// The moment counted towards, or from.
-  final DateTime target;
+  /// The moment counted towards, or from. Null when a [controller] holds it.
+  final DateTime? target;
+
+  /// Drives the count from outside the build — pausing above all, which no
+  /// arrangement of properties can express. See [CountdownController].
+  final CountdownController? controller;
 
   /// Whether the count runs towards [target] or away from it.
   final CountdownType type;
@@ -144,6 +241,14 @@ class _CountdownState extends State<Countdown>
   String _shown = '';
   bool _finished = false;
 
+  CountdownController? get _controller => widget.controller;
+
+  /// The moment counted against, wherever it is kept.
+  DateTime get _target => _controller?.target ?? widget.target!;
+
+  /// The instant to measure from: a controller freezes it while paused.
+  DateTime get _now => _controller?.now ?? countdownClock();
+
   /// The smallest unit the format asks for, in milliseconds. Everything the
   /// widget does is quantised to it: what is displayed, and when to look
   /// again.
@@ -160,25 +265,45 @@ class _CountdownState extends State<Countdown>
   @override
   void initState() {
     super.initState();
+    _controller?.addListener(_onController);
+    _controller?._report(_value());
     _shown = _format(_value());
+    _start();
+  }
+
+  /// The controller changed the target, or paused. Either way the schedule
+  /// that was standing is no longer the right one.
+  void _onController() {
+    if (!mounted) return;
+    _stop();
+    _finished = false;
+    final text = _format(_value());
+    if (text != _shown) setState(() => _shown = text);
+    if (_controller!.isPaused) return;
     _start();
   }
 
   @override
   void didUpdateWidget(Countdown old) {
     super.didUpdateWidget(old);
-    if (widget.target != old.target ||
+    if (widget.controller != old.controller) {
+      old.controller?.removeListener(_onController);
+      widget.controller?.addListener(_onController);
+    }
+    if (_target != (old.controller?.target ?? old.target) ||
         widget.type != old.type ||
         widget.format != old.format) {
       _stop();
       _finished = false;
       _shown = _format(_value());
+      if (_controller?.isPaused ?? false) return;
       _start();
     }
   }
 
   @override
   void dispose() {
+    _controller?.removeListener(_onController);
     _stop();
     super.dispose();
   }
@@ -226,10 +351,10 @@ class _CountdownState extends State<Countdown>
   /// countdown that has run out has run out, rather than going on into
   /// negative time.
   Duration _raw() {
-    final now = countdownClock();
+    final now = _now;
     final d = widget.type == CountdownType.down
-        ? widget.target.difference(now)
-        : now.difference(widget.target);
+        ? _target.difference(now)
+        : now.difference(_target);
     return d.isNegative ? Duration.zero : d;
   }
 
@@ -254,6 +379,7 @@ class _CountdownState extends State<Countdown>
 
     // The clock moves far more often than the drawn text does, so the rebuild
     // is spent only when the text differs.
+    _controller?._report(value);
     if (text != _shown) {
       setState(() => _shown = text);
       widget.onChange?.call(value);

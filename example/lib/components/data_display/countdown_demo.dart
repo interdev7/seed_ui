@@ -28,6 +28,17 @@ class _CountdownDemoState extends State<CountdownDemo> {
   CountdownType _liveType = CountdownType.down;
   late DateTime _liveTarget = _longTarget;
 
+  /// The one thing properties cannot express: a count standing still.
+  late final CountdownController _driven = CountdownController(
+    target: DateTime.now().add(const Duration(minutes: 2)),
+  );
+
+  @override
+  void dispose() {
+    _driven.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -76,6 +87,51 @@ class _CountdownDemoState extends State<CountdownDemo> {
                 _liveType == CountdownType.down
                     ? 'Time left until a moment two days out.'
                     : 'Time since this page opened.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Driven by a controller',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Countdown(controller: _driven, format: 'mm:ss'),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  // Rebuilt with the controller so the label follows the state
+                  // rather than telling the last story it heard.
+                  ListenableBuilder(
+                    listenable: _driven,
+                    builder: (context, _) => Button(
+                      onPressed: () =>
+                          _driven.isPaused ? _driven.resume() : _driven.pause(),
+                      child: Text(_driven.isPaused ? 'Resume' : 'Pause'),
+                    ),
+                  ),
+                  Button(
+                    onPressed: () => _driven.add(const Duration(seconds: 30)),
+                    child: const Text('+30s'),
+                  ),
+                  Button(
+                    onPressed: () => _driven.add(const Duration(seconds: -30)),
+                    child: const Text('−30s'),
+                  ),
+                  Button(
+                    onPressed: () =>
+                        _driven.restart(const Duration(minutes: 2)),
+                    child: const Text('Restart'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Pause holds it still; resume gives the pause back rather '
+                'than charging for it, so it carries on from the figure it '
+                'stopped at.',
               ),
             ],
           ),

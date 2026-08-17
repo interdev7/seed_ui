@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   drawn text is due to change, and measures against the wall clock, so it
   stays right across a suspended app.
 
+  `CountdownController` drives one from outside the build. Changing the moment
+  counted against never needed a handle — a new `target` does that — but
+  pausing does: the count runs on the wall clock, and no arrangement of
+  properties holds it still. Resuming gives the pause back rather than charging
+  for it, and time added while paused is added to the figure on screen rather
+  than to whatever the clock ran down to behind its back.
+
 ## 0.6.4
 
 ### Added

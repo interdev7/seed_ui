@@ -294,4 +294,174 @@ void main() {
       await clock.advance(tester, const Duration(minutes: 6));
     });
   });
+  group('CountdownController', () {
+    testWidgets(
+        'pausing holds the count still, and resuming goes on from '
+        'where it stopped', (tester) async {
+      final c = CountdownController(
+        target: clock.now.add(const Duration(seconds: 30)),
+      );
+      addTearDown(c.dispose);
+
+      await tester.pumpWidget(_host(Countdown(controller: c, format: 'mm:ss')));
+      expect(find.text('00:30'), findsOneWidget);
+
+      await clock.advance(tester, const Duration(seconds: 5));
+      expect(find.text('00:25'), findsOneWidget);
+
+      c.pause();
+      await tester.pump();
+      expect(c.isPaused, isTrue);
+
+      // Ten seconds of wall clock pass with the count held.
+      await clock.advance(tester, const Duration(seconds: 10));
+      expect(find.text('00:25'), findsOneWidget);
+
+      c.resume();
+      await tester.pump();
+      expect(c.isPaused, isFalse);
+      // Twenty-five still left: the pause is given back, not charged.
+      expect(find.text('00:25'), findsOneWidget);
+
+      await clock.advance(tester, const Duration(seconds: 5));
+      expect(find.text('00:20'), findsOneWidget);
+    });
+
+    testWidgets('add lengthens the count, and a negative one cuts it short', (
+      tester,
+    ) async {
+      final c = CountdownController(
+        target: clock.now.add(const Duration(seconds: 30)),
+      );
+      addTearDown(c.dispose);
+
+      await tester.pumpWidget(_host(Countdown(controller: c, format: 'mm:ss')));
+      c.add(const Duration(seconds: 30));
+      await tester.pump();
+      expect(find.text('01:00'), findsOneWidget);
+
+      c.add(const Duration(seconds: -45));
+      await tester.pump();
+      expect(find.text('00:15'), findsOneWidget);
+    });
+
+    testWidgets('time added during a pause is added to where it stopped', (
+      tester,
+    ) async {
+      final c = CountdownController(
+        target: clock.now.add(const Duration(seconds: 30)),
+      );
+      addTearDown(c.dispose);
+
+      await tester.pumpWidget(_host(Countdown(controller: c, format: 'mm:ss')));
+      await clock.advance(tester, const Duration(seconds: 5));
+      c.pause();
+      await tester.pump();
+      expect(find.text('00:25'), findsOneWidget);
+
+      // Ten seconds go by with the count held, then half a minute is added.
+      await clock.advance(tester, const Duration(seconds: 10));
+      c.add(const Duration(seconds: 30));
+      await tester.pump();
+      // Fifty-five: added to the twenty-five it stands at, not to the fifteen
+      // the wall clock has run down to behind its back.
+      expect(find.text('00:55'), findsOneWidget);
+    });
+
+    testWidgets('restart begins again, and releases a pause', (tester) async {
+      var finished = 0;
+      final c = CountdownController(
+        target: clock.now.add(const Duration(seconds: 3)),
+      );
+      addTearDown(c.dispose);
+
+      await tester.pumpWidget(
+        _host(
+          Countdown(
+            controller: c,
+            format: 'mm:ss',
+            onFinish: () => finished++,
+          ),
+        ),
+      );
+      await clock.advance(tester, const Duration(seconds: 4));
+      expect(find.text('00:00'), findsOneWidget);
+      expect(finished, 1);
+
+      c.pause();
+      await tester.pump();
+      c.restart(const Duration(seconds: 10));
+      await tester.pump();
+      expect(c.isPaused, isFalse, reason: 'a fresh start is a running one');
+      expect(find.text('00:10'), findsOneWidget);
+
+      // And it runs, and finishes again.
+      await clock.advance(tester, const Duration(seconds: 5));
+      expect(find.text('00:05'), findsOneWidget);
+      await clock.advance(tester, const Duration(seconds: 6));
+      expect(finished, 2);
+    });
+
+    testWidgets('a new target counts against it', (tester) async {
+      final c = CountdownController(
+        target: clock.now.add(const Duration(seconds: 30)),
+      );
+      addTearDown(c.dispose);
+
+      await tester.pumpWidget(_host(Countdown(controller: c, format: 'mm:ss')));
+      c.target = clock.now.add(const Duration(minutes: 2));
+      await tester.pump();
+      expect(find.text('02:00'), findsOneWidget);
+    });
+
+    testWidgets('value is what is on screen', (tester) async {
+      final c = CountdownController(
+        target: clock.now.add(const Duration(seconds: 30)),
+      );
+      addTearDown(c.dispose);
+
+      await tester.pumpWidget(_host(Countdown(controller: c, format: 'mm:ss')));
+      expect(c.value, const Duration(seconds: 30));
+
+      await clock.advance(tester, const Duration(seconds: 5));
+      expect(c.value, const Duration(seconds: 25));
+    });
+
+    testWidgets('counting up can be paused too', (tester) async {
+      final c = CountdownController(target: clock.now);
+      addTearDown(c.dispose);
+
+      await tester.pumpWidget(
+        _host(
+          Countdown(controller: c, type: CountdownType.up, format: 'mm:ss'),
+        ),
+      );
+      await clock.advance(tester, const Duration(seconds: 5));
+      expect(find.text('00:05'), findsOneWidget);
+
+      c.pause();
+      await tester.pump();
+      await clock.advance(tester, const Duration(seconds: 10));
+      expect(find.text('00:05'), findsOneWidget);
+
+      c.resume();
+      await clock.advance(tester, const Duration(seconds: 2));
+      expect(find.text('00:07'), findsOneWidget);
+    });
+
+    test('a target and a controller are one moment too many', () {
+      expect(
+        () => Countdown(target: DateTime.now(), controller: null),
+        returnsNormally,
+      );
+      expect(
+        () => Countdown(
+          target: DateTime.now(),
+          controller: CountdownController(target: DateTime.now()),
+        ),
+        throwsAssertionError,
+      );
+      expect(Countdown.new, throwsAssertionError);
+    });
+  });
 }

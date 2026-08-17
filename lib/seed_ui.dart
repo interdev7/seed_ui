@@ -29,7 +29,7 @@ export 'src/components/data_display/collapse.dart'
         CollapseIconPosition,
         CollapsibleTrigger;
 export 'src/components/data_display/countdown.dart'
-    show Countdown, CountdownType, CountdownToken;
+    show Countdown, CountdownController, CountdownType, CountdownToken;
 export 'src/components/data_display/empty.dart'
     show Empty, EmptyImage, EmptyToken;
 export 'src/components/data_display/listy.dart'

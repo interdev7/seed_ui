@@ -39,6 +39,7 @@ ControlSize
 CountArgs
 CountConfig
 Countdown
+CountdownController
 CountdownToken
 CountdownType
 CreateTabData

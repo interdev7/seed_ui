@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- **Breaking.** `Upload` gains the layouts its counterparts elsewhere offer:
+  `UploadVariant` is now `text`, `picture`, `cards` and `circleCards`, in
+  place of `list` and `cards`. `picture` is the new default and matches what
+  `list` drew; `text` drops the preview, `circleCards` rounds the tiles.
+- **Breaking.** `Upload.onTap` is now `Upload.onPreview` — it drives the
+  preview button as well as a tap on the row.
+
+### Added
+
+- `UploadItem.id`, and `UploadItem.key` which falls back to the name.
+  Callbacks hand back the item they belong to, and a list is usually rebuilt
+  between a tap and the handler running, so matching on object identity broke
+  the moment `copyWith` made a new object.
+- `Upload.onDownload`, with a button beside retry and remove.
+- `Upload.itemBuilder` and `UploadActions`, for replacing a row or tile while
+  keeping the handlers the built-in one would have wired up.
+
+  Transport stays out: `action`, `headers` and the rest would mean HTTP inside
+  the package, which costs either the web platform or the last of the zero
+  dependencies. Sending bytes remains the app's, as picking them is.
+
 ## 0.5.0
 
 ### Added

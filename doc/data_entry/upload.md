@@ -86,8 +86,20 @@ so the target reads as live before anything is dropped.
 
 ## Variants
 
-`UploadVariant.list` is a column of rows. `UploadVariant.cards` is a grid of
-square tiles with the trigger as the last one, which suits images:
+Four layouts, matching the shapes a file list usually takes:
+
+| | |
+| --- | --- |
+| `text` | Rows with the name, size and progress, no preview |
+| `picture` | Rows with a square preview beside the name — the default |
+| `cards` | A grid of square tiles, trigger last. Suits images |
+| `circleCards` | `cards` with round tiles — avatars |
+
+```dart
+Upload<String>(items: _files, variant: UploadVariant.text)
+```
+
+The grid forms:
 
 ```dart
 Upload<String>(
@@ -116,16 +128,56 @@ Upload<XFile>(
 )
 ```
 
+## Replacing a row
+
+`itemBuilder` takes over what one file looks like; the kit still decides where
+files sit and how the trigger behaves. `UploadActions` carries the handlers the
+built-in row would have wired up, so a replacement keeps them without reaching
+back into `items`:
+
+```dart
+Upload<XFile>(
+  items: _files,
+  onRemove: _remove,
+  itemBuilder: (item, actions) => ListTile(
+    title: Text(item.name),
+    trailing: IconButton(icon: const Icon(Icons.close), onPressed: actions.remove),
+  ),
+)
+```
+
+A null action means the callback was not supplied, or the file is in no state
+to use it — `retry` is offered only to a file that failed.
+
+## Identity
+
+Callbacks hand back the item they belong to, and the list is usually rebuilt —
+new `progress`, new `status` — between a tap and the handler running. Matching
+on object identity breaks the moment `copyWith` makes a new object, so give
+each file an `id` and match on that:
+
+```dart
+setState(() {
+  _files = [
+    for (final f in _files) if (f.key == changed.key) changed else f,
+  ];
+});
+```
+
+`id` falls back to `name`, which is enough while names are unique.
+
 ## Properties
 
 | Property | Type | Default | Description |
 | --- | --- | --- | --- |
 | `items` | `List<UploadItem<T>>` | `[]` | The files to draw, in order |
-| `variant` | `UploadVariant` | `list` | Rows or tiles |
+| `variant` | `UploadVariant` | `picture` | Rows or tiles; see above |
 | `onPick` | `Future<void> Function()?` | `null` | Runs on the trigger; null hides it |
 | `onRemove` | `void Function(UploadItem<T>)?` | `null` | Null hides the remove button |
 | `onRetry` | `void Function(UploadItem<T>)?` | `null` | Offered only to failed files |
-| `onTap` | `void Function(UploadItem<T>)?` | `null` | A tap on a row or tile |
+| `onPreview` | `void Function(UploadItem<T>)?` | `null` | A tap on a row or tile, and its preview button |
+| `onDownload` | `void Function(UploadItem<T>)?` | `null` | Null hides the download button |
+| `itemBuilder` | `Widget Function(UploadItem<T>, UploadActions)?` | `null` | Replaces a whole row or tile |
 | `dragging` | `bool` | `false` | Whether a drag is over the zone |
 | `disabled` | `bool` | `false` | Greys the trigger out |
 | `maxCount` | `int?` | `null` | Retires the trigger once reached |
@@ -143,6 +195,7 @@ Upload<XFile>(
 
 | Property | Type | Default | Description |
 | --- | --- | --- | --- |
+| `id` | `Object?` | `null` | Identifies the file across rebuilds; falls back to `name` |
 | `name` | `String` | required | Shown in the row; drives the extension glyph |
 | `size` | `int?` | `null` | Bytes. Null hides the size |
 | `status` | `UploadStatus` | `pending` | Where the file stands |

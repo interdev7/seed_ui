@@ -140,7 +140,13 @@ export 'src/components/data_entry/select.dart'
 export 'src/components/data_entry/switch.dart'
     show Switch, SwitchSize, SwitchToken;
 export 'src/components/data_entry/upload.dart'
-    show Upload, UploadItem, UploadStatus, UploadToken, UploadVariant;
+    show
+        Upload,
+        UploadActions,
+        UploadItem,
+        UploadStatus,
+        UploadToken,
+        UploadVariant;
 export 'src/components/feedback/alert.dart' show Alert, AlertToken;
 export 'src/components/feedback/drawer.dart'
     show

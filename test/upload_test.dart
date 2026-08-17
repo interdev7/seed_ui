@@ -209,7 +209,8 @@ void main() {
     testWidgets('a tap on a row reports the file', (tester) async {
       UploadItem<String>? tapped;
       await tester.pumpWidget(
-        _wrap(Upload<String>(items: _items, onTap: (item) => tapped = item)),
+        _wrap(
+            Upload<String>(items: _items, onPreview: (item) => tapped = item)),
       );
 
       await tester.tap(find.text('report.pdf'));
@@ -382,6 +383,139 @@ void main() {
       expect(moved.data, 'payload');
       expect(moved.status, UploadStatus.uploading);
       expect(moved.progress, 0.5);
+    });
+  });
+
+  group('Variants', () {
+    testWidgets('text drops the preview, picture keeps it', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(items: _items, variant: UploadVariant.text),
+        ),
+      );
+      expect(find.text('PDF'), findsNothing);
+      expect(find.text('report.pdf'), findsOneWidget);
+
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(items: _items, variant: UploadVariant.picture),
+        ),
+      );
+      expect(find.text('PDF'), findsOneWidget);
+    });
+
+    testWidgets('circleCards lays tiles out like cards', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(
+            items: _items,
+            variant: UploadVariant.circleCards,
+          ),
+        ),
+      );
+
+      expect(find.byType(Wrap), findsOneWidget);
+      expect(find.text('PDF'), findsOneWidget);
+    });
+  });
+
+  group('Identity', () {
+    test('key falls back to the name', () {
+      const named = UploadItem<String>(name: 'a.txt');
+      expect(named.key, 'a.txt');
+      const keyed = UploadItem<String>(name: 'a.txt', id: 7);
+      expect(keyed.key, 7);
+    });
+
+    test('copyWith carries the id', () {
+      const item = UploadItem<String>(name: 'a.txt', id: 'x');
+      expect(item.copyWith(progress: 0.5).key, 'x');
+    });
+  });
+
+  group('Download and preview', () {
+    testWidgets('onDownload raises a button that reports its file',
+        (tester) async {
+      UploadItem<String>? got;
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            items: const [UploadItem<String>(name: 'a.txt')],
+            onDownload: (item) => got = item,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(CustomPaint).last, warnIfMissed: false);
+      await tester.pump();
+      expect(got?.name, 'a.txt');
+    });
+
+    testWidgets('no onDownload, no button', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(items: [UploadItem<String>(name: 'a.txt')]),
+        ),
+      );
+      final without = tester.widgetList(find.byType(CustomPaint)).length;
+
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            items: const [UploadItem<String>(name: 'a.txt')],
+            onDownload: (_) {},
+          ),
+        ),
+      );
+      expect(
+        tester.widgetList(find.byType(CustomPaint)).length,
+        greaterThan(without),
+      );
+    });
+  });
+
+  group('itemBuilder', () {
+    testWidgets('replaces the row and keeps the handlers', (tester) async {
+      UploadItem<String>? removed;
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            items: const [UploadItem<String>(name: 'a.txt')],
+            onRemove: (item) => removed = item,
+            itemBuilder: (item, actions) => GestureDetector(
+              onTap: actions.remove,
+              child: Text('custom ${item.name}'),
+            ),
+          ),
+        ),
+      );
+
+      // The built-in row is gone, the replacement is there.
+      expect(find.text('custom a.txt'), findsOneWidget);
+      expect(find.text('a.txt'), findsNothing);
+
+      // And it can still drive the actions it was handed.
+      await tester.tap(find.text('custom a.txt'));
+      await tester.pump();
+      expect(removed?.name, 'a.txt');
+    });
+
+    testWidgets('retry is null for a file that did not fail', (tester) async {
+      UploadActions? seen;
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            items: const [UploadItem<String>(name: 'a.txt')],
+            onRetry: (_) {},
+            itemBuilder: (item, actions) {
+              seen = actions;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+
+      expect(seen!.retry, isNull);
     });
   });
 }

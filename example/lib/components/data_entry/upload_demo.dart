@@ -147,6 +147,39 @@ class _UploadDemoState extends State<UploadDemo> {
                 setState(() => _cards = [..._cards]..remove(item)),
           ),
         ),
+        Group(
+          'Text only — no preview',
+          Upload<String>(
+            items: _states,
+            variant: UploadVariant.text,
+            onRemove: (_) {},
+          ),
+        ),
+        Group(
+          'Round tiles, for avatars',
+          Upload<String>(
+            items: _cards,
+            variant: UploadVariant.circleCards,
+            maxCount: 4,
+            onPick: () async {},
+            onRemove: (_) {},
+          ),
+        ),
+        Group(
+          'Preview and download',
+          Upload<String>(
+            items: const [
+              UploadItem<String>(
+                id: 'a',
+                name: 'invoice.pdf',
+                size: 88400,
+                status: UploadStatus.done,
+              ),
+            ],
+            onPreview: (item) => message.info('Preview ${item.name}'),
+            onDownload: (item) => message.success('Download ${item.name}'),
+          ),
+        ),
         const Group(
           'Read-only',
           Upload<String>(

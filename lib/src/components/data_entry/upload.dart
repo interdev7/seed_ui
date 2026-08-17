@@ -25,11 +25,18 @@ enum UploadStatus {
 
 /// How the chosen files are laid out.
 enum UploadVariant {
-  /// A vertical list of rows: thumbnail, name, size and progress.
-  list,
+  /// A vertical list of rows: name, size and progress, with no preview.
+  text,
 
-  /// A grid of square tiles, with the trigger as the last tile. Suits images.
+  /// A vertical list of rows carrying a square preview beside the name.
+  picture,
+
+  /// A grid of square tiles, with the trigger as the last one. Suits images.
   cards,
+
+  /// [cards] with round tiles — avatars, and anything else that reads better
+  /// as a circle.
+  circleCards,
 }
 
 /// One file in an [Upload].
@@ -42,6 +49,7 @@ class UploadItem<T> {
   /// Creates an [UploadItem].
   const UploadItem({
     required this.name,
+    this.id,
     this.size,
     this.status = UploadStatus.pending,
     this.progress = 0,
@@ -52,6 +60,19 @@ class UploadItem<T> {
           progress >= 0 && progress <= 1,
           'progress must be between 0 and 1',
         );
+
+  /// Identifies this file across rebuilds.
+  ///
+  /// The callbacks hand back the item they belong to, and a list is usually
+  /// rebuilt — with a new [progress], a new [status] — between a tap and the
+  /// handler running. Matching on identity breaks the moment [copyWith] makes
+  /// a new object, so give each file an id and match on that.
+  ///
+  /// Null falls back to [name], which is enough while names are unique.
+  final Object? id;
+
+  /// What [id] resolves to: the explicit one, or the name.
+  Object get key => id ?? name;
 
   /// The file's name, shown in the row and used for the extension glyph.
   ///
@@ -85,6 +106,7 @@ class UploadItem<T> {
   /// one.
   UploadItem<T> copyWith({
     String? name,
+    Object? id,
     int? size,
     UploadStatus? status,
     double? progress,
@@ -94,6 +116,7 @@ class UploadItem<T> {
   }) =>
       UploadItem<T>(
         name: name ?? this.name,
+        id: id ?? this.id,
         size: size ?? this.size,
         status: status ?? this.status,
         progress: progress ?? this.progress,
@@ -202,6 +225,29 @@ class _ResolvedUploadToken {
   final double gap;
 }
 
+/// The handlers a row or tile would have wired up, handed to
+/// [Upload.itemBuilder] so a replacement can keep them.
+///
+/// A null one means the [Upload] was not given that callback, or the file is
+/// in no state to use it — retry is offered only to a file that failed.
+@immutable
+class UploadActions {
+  /// Creates an [UploadActions].
+  const UploadActions({this.remove, this.retry, this.preview, this.download});
+
+  /// Reports this file's remove button.
+  final VoidCallback? remove;
+
+  /// Reports this file's retry button.
+  final VoidCallback? retry;
+
+  /// Reports a tap on the file, or on its preview button.
+  final VoidCallback? preview;
+
+  /// Reports this file's download button.
+  final VoidCallback? download;
+}
+
 /// A file list with a picker trigger, progress per file, and retry and remove
 /// actions.
 ///
@@ -244,11 +290,13 @@ class Upload<T> extends StatelessWidget {
   const Upload({
     super.key,
     this.items = const [],
-    this.variant = UploadVariant.list,
+    this.variant = UploadVariant.picture,
     this.onPick,
     this.onRemove,
     this.onRetry,
-    this.onTap,
+    this.onPreview,
+    this.onDownload,
+    this.itemBuilder,
     this.dragging = false,
     this.disabled = false,
     this.maxCount,
@@ -277,6 +325,10 @@ class Upload<T> extends StatelessWidget {
 
   /// Called when a file's remove button is used.
   ///
+  /// Only a notification: the app owns [items] and does the removing, so
+  /// there is nothing here to veto. Raise a confirmation inside the handler
+  /// and drop the file only if it is accepted.
+  ///
   /// Null hides the button, whatever [showRemove] says.
   final void Function(UploadItem<T> item)? onRemove;
 
@@ -285,8 +337,22 @@ class Upload<T> extends StatelessWidget {
   /// Null hides the button, whatever [showRetry] says.
   final void Function(UploadItem<T> item)? onRetry;
 
-  /// Called when a file's row or tile is tapped — to preview it, say.
-  final void Function(UploadItem<T> item)? onTap;
+  /// Called when a file's row or tile is tapped, and by its preview button.
+  final void Function(UploadItem<T> item)? onPreview;
+
+  /// Called when a file's download button is used.
+  ///
+  /// Null hides the button. Fetching the bytes is the app's business, as
+  /// ever.
+  final void Function(UploadItem<T> item)? onDownload;
+
+  /// Replaces a whole row or tile.
+  ///
+  /// The kit still decides where files sit and how the trigger behaves; this
+  /// only takes over what one file looks like. `actions` carries the handlers
+  /// the built-in row would have wired up, so a replacement can keep them
+  /// without reaching back into [items].
+  final Widget Function(UploadItem<T> item, UploadActions actions)? itemBuilder;
 
   /// Whether a drag is currently over the drop zone.
   ///
@@ -348,10 +414,21 @@ class Upload<T> extends StatelessWidget {
             const UploadToken())
         ._resolve(t);
 
-    return variant == UploadVariant.cards
-        ? _cards(context, t, r)
-        : _list(context, t, r);
+    return switch (variant) {
+      UploadVariant.cards || UploadVariant.circleCards => _cards(context, t, r),
+      UploadVariant.text || UploadVariant.picture => _list(context, t, r),
+    };
   }
+
+  /// The handlers for [item], with the ones it cannot use left null.
+  UploadActions _actionsFor(UploadItem<T> item) => UploadActions(
+        remove: showRemove && onRemove != null ? () => onRemove!(item) : null,
+        retry: showRetry && onRetry != null && item.status == UploadStatus.error
+            ? () => onRetry!(item)
+            : null,
+        preview: onPreview == null ? null : () => onPreview!(item),
+        download: onDownload == null ? null : () => onDownload!(item),
+      );
 
   Widget _list(BuildContext context, Token t, _ResolvedUploadToken r) {
     return Column(
@@ -363,24 +440,21 @@ class Upload<T> extends StatelessWidget {
           if (_accepting) SizedBox(height: r.gap),
           emptyState!,
         ],
-        for (var i = 0; i < items.length; i++) ...[
-          SizedBox(height: i == 0 && _accepting ? r.gap : r.gap),
-          _UploadRow<T>(
-            item: items[i],
-            token: t,
-            style: r,
-            showSize: showSize,
-            thumbnail: _thumbnailFor(items[i], t, r),
-            onRemove: showRemove && onRemove != null
-                ? () => onRemove!(items[i])
-                : null,
-            onRetry: showRetry &&
-                    onRetry != null &&
-                    items[i].status == UploadStatus.error
-                ? () => onRetry!(items[i])
-                : null,
-            onTap: onTap == null ? null : () => onTap!(items[i]),
-          ),
+        for (final item in items) ...[
+          SizedBox(height: r.gap),
+          itemBuilder?.call(item, _actionsFor(item)) ??
+              _UploadRow<T>(
+                item: item,
+                token: t,
+                style: r,
+                showSize: showSize,
+                // `text` names the file and nothing else; `picture` gives it
+                // a preview beside the name.
+                thumbnail: variant == UploadVariant.picture
+                    ? _thumbnailFor(item, t, r)
+                    : null,
+                actions: _actionsFor(item),
+              ),
         ],
       ],
     );
@@ -392,25 +466,26 @@ class Upload<T> extends StatelessWidget {
       runSpacing: r.gap,
       children: [
         for (final item in items)
-          _UploadCard<T>(
-            item: item,
-            token: t,
-            style: r,
-            thumbnail: _thumbnailFor(item, t, r),
-            onRemove:
-                showRemove && onRemove != null ? () => onRemove!(item) : null,
-            onRetry: showRetry &&
-                    onRetry != null &&
-                    item.status == UploadStatus.error
-                ? () => onRetry!(item)
-                : null,
-            onTap: onTap == null ? null : () => onTap!(item),
-          ),
+          itemBuilder?.call(item, _actionsFor(item)) ??
+              _UploadCard<T>(
+                item: item,
+                token: t,
+                style: r,
+                round: variant == UploadVariant.circleCards,
+                thumbnail: _thumbnailFor(item, t, r),
+                actions: _actionsFor(item),
+              ),
         if (_accepting)
           SizedBox(
             width: r.cardSize,
             height: r.cardSize,
-            child: _dropzone(context, t, r, compact: true),
+            child: _dropzone(
+              context,
+              t,
+              r,
+              compact: true,
+              round: variant == UploadVariant.circleCards,
+            ),
           ),
       ],
     );
@@ -430,6 +505,7 @@ class Upload<T> extends StatelessWidget {
     Token t,
     _ResolvedUploadToken r, {
     bool compact = false,
+    bool round = false,
   }) {
     return _Dropzone(
       token: t,
@@ -437,6 +513,7 @@ class Upload<T> extends StatelessWidget {
       dragging: dragging,
       disabled: disabled,
       compact: compact,
+      round: round,
       onTap: disabled ? null : onPick,
       label: label,
       hint: hint,
@@ -471,6 +548,7 @@ class _Dropzone extends StatefulWidget {
     required this.dragging,
     required this.disabled,
     required this.compact,
+    required this.round,
     required this.onTap,
     required this.label,
     required this.hint,
@@ -482,6 +560,10 @@ class _Dropzone extends StatefulWidget {
   final bool dragging;
   final bool disabled;
   final bool compact;
+
+  /// Draws the zone as a circle, to sit among round tiles.
+  final bool round;
+
   final Future<void> Function()? onTap;
   final Widget? label;
   final Widget? hint;
@@ -561,12 +643,16 @@ class _DropzoneState extends State<_Dropzone> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: widget.dragging ? r.dropzoneActiveBg : r.dropzoneBg,
-            borderRadius: BorderRadius.circular(r.dropzoneRadius),
+            shape: widget.round ? BoxShape.circle : BoxShape.rectangle,
+            borderRadius:
+                widget.round ? null : BorderRadius.circular(r.dropzoneRadius),
           ),
           child: CustomPaint(
             painter: DashedBorderPainter(
               color: widget.disabled ? t.colorBorderSecondary : accent,
-              radius: BorderRadius.circular(r.dropzoneRadius),
+              radius: BorderRadius.circular(
+                widget.round ? r.cardSize : r.dropzoneRadius,
+              ),
               strokeWidth: t.lineWidth,
             ),
             child: Padding(
@@ -588,19 +674,15 @@ class _UploadRow<T> extends StatefulWidget {
     required this.style,
     required this.showSize,
     required this.thumbnail,
-    required this.onRemove,
-    required this.onRetry,
-    required this.onTap,
+    required this.actions,
   });
 
   final UploadItem<T> item;
   final Token token;
   final _ResolvedUploadToken style;
   final bool showSize;
-  final Widget thumbnail;
-  final VoidCallback? onRemove;
-  final VoidCallback? onRetry;
-  final VoidCallback? onTap;
+  final Widget? thumbnail;
+  final UploadActions actions;
 
   @override
   State<_UploadRow<T>> createState() => _UploadRowState<T>();
@@ -617,14 +699,14 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
     final failed = item.status == UploadStatus.error;
 
     return MouseRegion(
-      cursor: widget.onTap == null
+      cursor: widget.actions.preview == null
           ? SystemMouseCursors.basic
           : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
+        onTap: widget.actions.preview,
         child: Container(
           padding: EdgeInsets.all(t.sizeXS),
           decoration: BoxDecoration(
@@ -634,15 +716,17 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: r.thumbnailSize,
-                height: r.thumbnailSize,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(r.itemRadius),
-                  child: widget.thumbnail,
+              if (widget.thumbnail != null) ...[
+                SizedBox(
+                  width: r.thumbnailSize,
+                  height: r.thumbnailSize,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(r.itemRadius),
+                    child: widget.thumbnail,
+                  ),
                 ),
-              ),
-              SizedBox(width: t.sizeXS),
+                SizedBox(width: t.sizeXS),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,19 +792,27 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
                 SizedBox(width: t.sizeXS),
                 StatusIcon(type: StatusType.success, token: t),
               ],
-              if (widget.onRetry != null) ...[
+              if (widget.actions.download != null) ...[
                 SizedBox(width: t.sizeXS),
                 _IconButton(
                   token: t,
-                  onTap: widget.onRetry!,
+                  onTap: widget.actions.download!,
+                  painter: _DownloadPainter(t.colorTextTertiary),
+                ),
+              ],
+              if (widget.actions.retry != null) ...[
+                SizedBox(width: t.sizeXS),
+                _IconButton(
+                  token: t,
+                  onTap: widget.actions.retry!,
                   painter: _RetryPainter(t.colorTextTertiary),
                 ),
               ],
-              if (widget.onRemove != null) ...[
+              if (widget.actions.remove != null) ...[
                 SizedBox(width: t.sizeXXS),
                 _IconButton(
                   token: t,
-                  onTap: widget.onRemove!,
+                  onTap: widget.actions.remove!,
                   painter: CrossPainter(t.colorTextTertiary, inset: 5),
                 ),
               ],
@@ -738,19 +830,20 @@ class _UploadCard<T> extends StatefulWidget {
     required this.item,
     required this.token,
     required this.style,
+    required this.round,
     required this.thumbnail,
-    required this.onRemove,
-    required this.onRetry,
-    required this.onTap,
+    required this.actions,
   });
 
   final UploadItem<T> item;
   final Token token;
   final _ResolvedUploadToken style;
+
+  /// Draws the tile as a circle.
+  final bool round;
+
   final Widget thumbnail;
-  final VoidCallback? onRemove;
-  final VoidCallback? onRetry;
-  final VoidCallback? onTap;
+  final UploadActions actions;
 
   @override
   State<_UploadCard<T>> createState() => _UploadCardState<T>();
@@ -764,17 +857,19 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
     final t = widget.token;
     final r = widget.style;
     final item = widget.item;
-    final radius = BorderRadius.circular(r.dropzoneRadius);
+    final radius = BorderRadius.circular(
+      widget.round ? r.cardSize : r.dropzoneRadius,
+    );
 
     return MouseRegion(
-      cursor: widget.onTap == null
+      cursor: widget.actions.preview == null
           ? SystemMouseCursors.basic
           : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
+        onTap: widget.actions.preview,
         child: SizedBox(
           width: r.cardSize,
           height: r.cardSize,
@@ -808,24 +903,25 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
                 // The actions only surface on hover, so a wall of tiles stays
                 // readable as pictures rather than as a grid of buttons.
                 if (_hovered &&
-                    (widget.onRemove != null || widget.onRetry != null))
+                    (widget.actions.remove != null ||
+                        widget.actions.retry != null))
                   Positioned(
                     top: t.sizeXXS,
                     right: t.sizeXXS,
                     child: Row(
                       children: [
-                        if (widget.onRetry != null)
+                        if (widget.actions.retry != null)
                           _IconButton(
                             token: t,
-                            onTap: widget.onRetry!,
+                            onTap: widget.actions.retry!,
                             painter: _RetryPainter(_onMask),
                             background: t.colorBgMask,
                           ),
-                        if (widget.onRemove != null) ...[
+                        if (widget.actions.remove != null) ...[
                           SizedBox(width: t.sizeXXS),
                           _IconButton(
                             token: t,
-                            onTap: widget.onRemove!,
+                            onTap: widget.actions.remove!,
                             painter: CrossPainter(_onMask, inset: 5),
                             background: t.colorBgMask,
                           ),
@@ -952,6 +1048,44 @@ class _PlusPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_PlusPainter old) => old.color != color;
+}
+
+/// A downward arrow onto a baseline — download.
+class _DownloadPainter extends CustomPainter {
+  _DownloadPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final c = size.center(Offset.zero);
+    final h = size.height * 0.3;
+    canvas.drawLine(
+        Offset(c.dx, c.dy - h), Offset(c.dx, c.dy + h * 0.4), paint);
+    canvas.drawLine(
+      Offset(c.dx - h * 0.5, c.dy - h * 0.1),
+      Offset(c.dx, c.dy + h * 0.4),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(c.dx + h * 0.5, c.dy - h * 0.1),
+      Offset(c.dx, c.dy + h * 0.4),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(c.dx - h * 0.7, c.dy + h),
+      Offset(c.dx + h * 0.7, c.dy + h),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_DownloadPainter old) => old.color != color;
 }
 
 /// A circular arrow — retry.

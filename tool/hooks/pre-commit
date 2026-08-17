@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+#
+# Catches the two failures that reach CI most often and cost a round trip
+# each, both of which are invisible locally until something else runs:
+#
+#   * a file dart format would rewrite — the only check that changes files,
+#     and therefore the one easiest to forget;
+#   * a version bump whose CHANGELOG heading or README constraint was left
+#     behind.
+#
+# Deliberately not here: analyze and test. A hook that takes fifteen seconds
+# gets skipped with --no-verify, and a skipped hook guards nothing. Those two
+# stay in CI, where waiting is free.
+#
+# Install once:
+#
+#   git config core.hooksPath tool/hooks
+#
+# Skip for one commit with `git commit --no-verify`.
+set -uo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+fail=0
+
+if ! dart format --output=none --set-exit-if-changed . >/dev/null 2>&1; then
+  echo "✗ dart format would rewrite some files. Run:"
+  echo "    dart format ."
+  fail=1
+else
+  echo "✓ formatting"
+fi
+
+if [ -x tool/check_version.sh ]; then
+  if ! ./tool/check_version.sh >/dev/null 2>&1; then
+    echo "✗ version references disagree. Run:"
+    echo "    ./tool/check_version.sh"
+    fail=1
+  else
+    echo "✓ version references"
+  fi
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo
+  echo "Commit stopped. Fix the above, or pass --no-verify to skip."
+  exit 1
+fi

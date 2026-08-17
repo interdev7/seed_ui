@@ -21,6 +21,22 @@ version without renaming `## Unreleased` is otherwise only caught by
 `pub publish`, and a stale constraint in the README is caught by nothing at
 all.
 
+### A hook for the two easiest to forget
+
+Formatting and the version references are both cheap to check and invisible
+until something else runs, so a hook is worth installing once:
+
+```sh
+git config core.hooksPath tool/hooks
+```
+
+It refuses a commit that `dart format` would rewrite, or whose version
+references disagree, and prints the command that fixes each. `git commit
+--no-verify` skips it.
+
+Analyze and test are deliberately left out: a hook that takes fifteen seconds
+gets skipped, and a skipped hook guards nothing. Those wait for CI.
+
 `analysis_options.yaml` is deliberately strict. Two rules matter most:
 
 - **`public_member_api_docs`** — every public member carries a doc comment.

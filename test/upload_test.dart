@@ -387,7 +387,8 @@ void main() {
   });
 
   group('Variants', () {
-    testWidgets('text drops the preview, picture keeps it', (tester) async {
+    testWidgets('text marks a file with a clip, picture with a preview',
+        (tester) async {
       await tester.pumpWidget(
         _wrap(
           const Upload<String>(items: _items, variant: UploadVariant.text),
@@ -395,6 +396,13 @@ void main() {
       );
       expect(find.text('PDF'), findsNothing);
       expect(find.text('report.pdf'), findsOneWidget);
+      // A plain row still says "attachment", just without a thumbnail.
+      expect(
+        tester.widgetList<CustomPaint>(find.byType(CustomPaint)).where(
+              (p) => p.painter.runtimeType.toString() == '_PaperclipPainter',
+            ),
+        isNotEmpty,
+      );
 
       await tester.pumpWidget(
         _wrap(
@@ -517,5 +525,161 @@ void main() {
 
       expect(seen!.retry, isNull);
     });
+  });
+
+  group('The drop zone', () {
+    /// The box the dashed outline is painted around.
+    Size dashBox(WidgetTester tester) {
+      final paint = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .firstWhere((p) => p.foregroundPainter is DashedBorderPainter);
+      return tester.getSize(find.byWidget(paint));
+    }
+
+    testWidgets('the dash traces the zone, not the prompt inside it',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            onPick: () async {},
+            label: const Text('Pick'),
+          ),
+        ),
+      );
+
+      // _wrap gives the control a 420px box; the outline should span it
+      // rather than hugging the word in the middle.
+      expect(dashBox(tester).width, 420);
+    });
+
+    testWidgets('a tile is outlined round its whole edge', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            variant: UploadVariant.cards,
+            onPick: () async {},
+          ),
+        ),
+      );
+
+      // The trigger tile is square and card-sized, not glyph-sized.
+      final box = dashBox(tester);
+      expect(box.width, box.height);
+      expect(box.width, greaterThan(80));
+    });
+
+    testWidgets('a long hint wraps instead of running edge to edge',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            onPick: () async {},
+            hint: const Text(
+              'Anything you like — nothing ever leaves your machine, and the '
+              'sentence is long enough to need a second line',
+            ),
+          ),
+        ),
+      );
+
+      final hint = tester.renderObject<RenderBox>(
+        find.textContaining('Anything you like'),
+      );
+      // Wrapped, and clear of the outline on both sides.
+      expect(hint.size.height, greaterThan(20));
+      expect(hint.size.width, lessThan(420));
+    });
+
+    testWidgets('a tile carries a word under its plus', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            variant: UploadVariant.cards,
+            onPick: () async {},
+          ),
+        ),
+      );
+
+      expect(find.text('Upload'), findsOneWidget);
+    });
+
+    testWidgets('a custom label wins in a tile too', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            variant: UploadVariant.cards,
+            onPick: () async {},
+            label: const Text('Add'),
+          ),
+        ),
+      );
+
+      expect(find.text('Add'), findsOneWidget);
+      expect(find.text('Upload'), findsNothing);
+    });
+  });
+
+  group('A file in flight', () {
+    testWidgets('shows a spinner where its extension would be', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(
+            items: [
+              UploadItem<String>(
+                name: 'sending.mp4',
+                status: UploadStatus.uploading,
+                progress: 0.5,
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byType(Spinner), findsOneWidget);
+      expect(find.text('MP4'), findsNothing);
+    });
+
+    testWidgets('a supplied preview is never replaced by one', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(
+            items: [
+              UploadItem<String>(
+                name: 'photo.png',
+                status: UploadStatus.uploading,
+                thumbnail: Text('mine'),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // Hiding the very thing being uploaded would be the wrong trade.
+      expect(find.text('mine'), findsOneWidget);
+      expect(find.byType(Spinner), findsNothing);
+    });
+  });
+
+  testWidgets('a plain row swaps its clip for a spinner in flight',
+      (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        const Upload<String>(
+          variant: UploadVariant.text,
+          items: [
+            UploadItem<String>(
+              name: 'sending.mp4',
+              status: UploadStatus.uploading,
+              progress: 0.5,
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byType(Spinner), findsOneWidget);
   });
 }

@@ -90,7 +90,7 @@ Four layouts, matching the shapes a file list usually takes:
 
 | | |
 | --- | --- |
-| `text` | Rows with the name, size and progress, no preview |
+| `text` | Rows marked with a paperclip: name, size and progress |
 | `picture` | Rows with a square preview beside the name — the default |
 | `cards` | A grid of square tiles, trigger last. Suits images |
 | `circleCards` | `cards` with round tiles — avatars |
@@ -116,8 +116,10 @@ surface on hover, so a wall of pictures stays readable as pictures.
 
 ## Previews
 
-Without one, a file gets a tinted square carrying its extension: `PDF`, `PNG`,
-`?` for a name that has none. Supply your own per file through
+Without one, a `picture` row gets a tinted square carrying the file's
+extension — `PDF`, `PNG`, `?` for a name that has none — and a `text` row a
+paperclip. A file in flight shows a spinner in either, unless it brought a
+preview of its own: replacing that would hide the very thing being uploaded. Supply your own per file through
 `UploadItem.thumbnail`, or for all of them at once through `thumbnailBuilder`;
 the per-file one wins.
 

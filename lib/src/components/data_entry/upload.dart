@@ -448,11 +448,7 @@ class Upload<T> extends StatelessWidget {
                 token: t,
                 style: r,
                 showSize: showSize,
-                // `text` names the file and nothing else; `picture` gives it
-                // a preview beside the name.
-                thumbnail: variant == UploadVariant.picture
-                    ? _thumbnailFor(item, t, r)
-                    : null,
+                leading: _leadingFor(item, t, r),
                 actions: _actionsFor(item),
               ),
         ],
@@ -491,14 +487,55 @@ class Upload<T> extends StatelessWidget {
     );
   }
 
+  /// What sits before the name in a row.
+  ///
+  /// `picture` gives the file a square preview; `text` marks it with a clip
+  /// instead, which is enough to say "attachment" without the weight of a
+  /// thumbnail. Either way a file in flight shows a spinner.
+  Widget _leadingFor(UploadItem<T> item, Token t, _ResolvedUploadToken r) {
+    if (variant == UploadVariant.picture) {
+      return SizedBox(
+        width: r.thumbnailSize,
+        height: r.thumbnailSize,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(r.itemRadius),
+          child: _thumbnailFor(item, t, r),
+        ),
+      );
+    }
+    final glyph = t.fontSizeLG;
+    return SizedBox(
+      width: glyph,
+      height: glyph,
+      child: item.status == UploadStatus.uploading
+          ? Spinner(color: t.primary.base, size: glyph)
+          : CustomPaint(painter: _PaperclipPainter(t.colorTextTertiary)),
+    );
+  }
+
+  /// The preview for [item].
+  ///
+  /// A preview the caller supplied always wins — replacing a real thumbnail
+  /// with a spinner would hide the very thing being uploaded. Only where
+  /// there is none does a file in flight get a spinner instead of its
+  /// extension.
   Widget _thumbnailFor(
     UploadItem<T> item,
     Token t,
     _ResolvedUploadToken r,
-  ) =>
-      item.thumbnail ??
-      thumbnailBuilder?.call(item) ??
-      _ExtensionGlyph(name: item.name, token: t);
+  ) {
+    final supplied = item.thumbnail ?? thumbnailBuilder?.call(item);
+    if (supplied != null) return supplied;
+    if (item.status == UploadStatus.uploading) {
+      return ColoredBox(
+        color: t.colorFillQuaternary,
+        child: Center(
+          child: Spinner(color: t.primary.base, size: t.fontSizeLG),
+        ),
+      );
+    }
+    return _ExtensionGlyph(name: item.name, token: t);
+  }
 
   Widget _dropzone(
     BuildContext context,
@@ -596,19 +633,25 @@ class _DropzoneState extends State<_Dropzone> {
                 widget.disabled ? t.colorTextQuaternary : accent,
               ),
             ),
-            if (!widget.compact) ...[
-              SizedBox(height: t.sizeXS),
-              DefaultTextStyle(
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: widget.disabled ? t.colorTextQuaternary : t.colorText,
-                  fontSize: t.fontSize,
-                  fontFamily: t.fontFamily,
-                  fontFamilyFallback: t.fontFamilyFallback,
-                  decoration: TextDecoration.none,
-                ),
-                child: widget.label ?? const Text('Choose a file'),
+            SizedBox(height: widget.compact ? t.sizeXXS : t.sizeXS),
+            // A tile carries a word under its plus too — the glyph alone
+            // reads as decoration rather than as something to press.
+            DefaultTextStyle(
+              textAlign: TextAlign.center,
+              maxLines: widget.compact ? 1 : null,
+              overflow:
+                  widget.compact ? TextOverflow.ellipsis : TextOverflow.clip,
+              style: TextStyle(
+                color: widget.disabled ? t.colorTextQuaternary : t.colorText,
+                fontSize: widget.compact ? t.fontSizeSM : t.fontSize,
+                fontFamily: t.fontFamily,
+                fontFamilyFallback: t.fontFamilyFallback,
+                decoration: TextDecoration.none,
               ),
+              child: widget.label ??
+                  Text(widget.compact ? 'Upload' : 'Choose a file'),
+            ),
+            if (!widget.compact) ...[
               if (widget.hint != null) ...[
                 SizedBox(height: t.sizeXXS),
                 DefaultTextStyle(
@@ -636,29 +679,32 @@ class _DropzoneState extends State<_Dropzone> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap == null ? null : () => widget.onTap!(),
-        child: AnimatedContainer(
-          duration: t.motionDurationMid,
-          curve: t.motionEaseInOut,
-          padding: widget.compact ? EdgeInsets.zero : r.dropzonePadding,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: widget.dragging ? r.dropzoneActiveBg : r.dropzoneBg,
-            shape: widget.round ? BoxShape.circle : BoxShape.rectangle,
-            borderRadius:
-                widget.round ? null : BorderRadius.circular(r.dropzoneRadius),
+        // The dash traces the zone, not what is inside it: as a foreground
+        // painter it takes the container's own box, so a tile is outlined
+        // round its whole edge and a wide zone round its whole width.
+        child: CustomPaint(
+          foregroundPainter: DashedBorderPainter(
+            color: widget.disabled ? t.colorBorderSecondary : accent,
+            radius: BorderRadius.circular(
+              widget.round ? r.cardSize : r.dropzoneRadius,
+            ),
+            strokeWidth: t.lineWidth,
           ),
-          child: CustomPaint(
-            painter: DashedBorderPainter(
-              color: widget.disabled ? t.colorBorderSecondary : accent,
-              radius: BorderRadius.circular(
-                widget.round ? r.cardSize : r.dropzoneRadius,
-              ),
-              strokeWidth: t.lineWidth,
+          child: AnimatedContainer(
+            duration: t.motionDurationMid,
+            curve: t.motionEaseInOut,
+            // Inside the dash now, so the prompt keeps clear of it and a long
+            // hint wraps instead of running edge to edge.
+            padding:
+                widget.compact ? EdgeInsets.all(t.sizeXS) : r.dropzonePadding,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: widget.dragging ? r.dropzoneActiveBg : r.dropzoneBg,
+              shape: widget.round ? BoxShape.circle : BoxShape.rectangle,
+              borderRadius:
+                  widget.round ? null : BorderRadius.circular(r.dropzoneRadius),
             ),
-            child: Padding(
-              padding: EdgeInsets.all(widget.compact ? t.sizeXS : 0),
-              child: content,
-            ),
+            child: content,
           ),
         ),
       ),
@@ -673,7 +719,7 @@ class _UploadRow<T> extends StatefulWidget {
     required this.token,
     required this.style,
     required this.showSize,
-    required this.thumbnail,
+    required this.leading,
     required this.actions,
   });
 
@@ -681,7 +727,10 @@ class _UploadRow<T> extends StatefulWidget {
   final Token token;
   final _ResolvedUploadToken style;
   final bool showSize;
-  final Widget? thumbnail;
+
+  /// Already sized by the caller: a preview box, or a small glyph.
+  final Widget leading;
+
   final UploadActions actions;
 
   @override
@@ -714,19 +763,9 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
             borderRadius: BorderRadius.circular(r.itemRadius),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.thumbnail != null) ...[
-                SizedBox(
-                  width: r.thumbnailSize,
-                  height: r.thumbnailSize,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(r.itemRadius),
-                    child: widget.thumbnail,
-                  ),
-                ),
-                SizedBox(width: t.sizeXS),
-              ],
+              widget.leading,
+              SizedBox(width: t.sizeXS),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1048,6 +1087,51 @@ class _PlusPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_PlusPainter old) => old.color != color;
+}
+
+/// A paperclip — the mark a plain file row carries in place of a preview.
+///
+/// Drawn rather than imported: an SVG would mean a parser, and a font would
+/// mean an asset. Two strokes and two arcs read as a clip at sixteen pixels,
+/// which is the only size this is used at.
+class _PaperclipPainter extends CustomPainter {
+  _PaperclipPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = math.max(1.2, w * 0.09)
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    // Down the inner side, round the bottom, back up, then over the top and
+    // down the outer side — the path a clip's wire actually takes.
+    final path = Path()
+      ..moveTo(w * 0.64, h * 0.34)
+      ..lineTo(w * 0.64, h * 0.70)
+      ..arcToPoint(
+        Offset(w * 0.36, h * 0.70),
+        radius: Radius.circular(w * 0.14),
+        clockwise: false,
+      )
+      ..lineTo(w * 0.36, h * 0.30)
+      ..arcToPoint(
+        Offset(w * 0.78, h * 0.30),
+        radius: Radius.circular(w * 0.21),
+      )
+      ..lineTo(w * 0.78, h * 0.64);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_PaperclipPainter old) => old.color != color;
 }
 
 /// A downward arrow onto a baseline — download.

@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking.** `Upload.onTap` is now `Upload.onPreview` — it drives the
   preview button as well as a tap on the row.
 
+### Fixed
+
+- `Upload` drew its dashed outline around the prompt inside the drop zone
+  rather than around the zone: a card was ringed about its plus instead of its
+  edge, and a long hint ran flush to the dashes with nowhere to wrap. The dash
+  is a foreground painter now, so it takes the zone's own box.
+- A card's trigger showed a bare plus. It carries a word under it now, which
+  a glyph on its own does not manage — it reads as decoration rather than as
+  something to press.
+
 ### Added
 
 - `UploadItem.id`, and `UploadItem.key` which falls back to the name.
@@ -23,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   between a tap and the handler running, so matching on object identity broke
   the moment `copyWith` made a new object.
 - `Upload.onDownload`, with a button beside retry and remove.
+- A paperclip on `text` rows, and a spinner in place of the preview while a
+  file is in flight — unless it brought one of its own.
 - `Upload.itemBuilder` and `UploadActions`, for replacing a row or tile while
   keeping the handlers the built-in one would have wired up.
 

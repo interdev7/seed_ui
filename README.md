@@ -32,7 +32,7 @@ open a drawer.
 
 ```yaml
 dependencies:
-  seed_ui: ^0.6.4
+  seed_ui: ^0.6.5
 ```
 
 ## Getting started
@@ -77,6 +77,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Alert](doc/feedback/alert.md)                    | Inline status banner                                                           |
 | [Avatar](doc/data_display/avatar.md)              | Represents users or objects; image, icon, text, grouping                       |
 | [Badge](doc/data_display/badge.md)                | Corner count, dot or status — and `Ribbon` across a container's corner         |
+| [Countdown](doc/data_display/countdown.md)        | Time to a moment or since one, counting either way                             |
 | [Button](doc/general/button.md)                   | Pressable button with variant, color, size, shape, loading and danger states   |
 | [Spinner](doc/feedback/spinner.md)                | Indeterminate circular progress indicator                                      |
 | [Spin](doc/feedback/spin.md)                      | Loading state for a region, with tip, delay, percent and fullscreen mask       |

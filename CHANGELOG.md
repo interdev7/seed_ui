@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.5
+
+### Added
+
+- `Countdown`. Time to a moment or since one, counting either way, with antd's
+  format tokens — `Y M D H m s S`, padded to the width of the run, with square
+  brackets kept as written. A unit left out of the format rolls into the next
+  one down, so `HH:mm:ss` reads `26:00:00` where `D[d] HH:mm:ss` reads
+  `1d 02:00:00`.
+
+  Named `Countdown` rather than `Timer`: `dart:async` already has one, and it
+  is needed in the very file that shows this widget.
+
+  A countdown rounds up to the smallest unit its format asks for — three and a
+  half seconds left reads `00:04`, since formatting the remainder as it stands
+  opens a fresh countdown one short of its own length. It wakes only when the
+  drawn text is due to change, and measures against the wall clock, so it
+  stays right across a suspended app.
+
 ## 0.6.4
 
 ### Added

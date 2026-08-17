@@ -10,6 +10,7 @@ import 'components/data_display/badge_demo.dart';
 import 'components/general/button_demo.dart';
 import 'components/data_display/card_demo.dart';
 import 'components/data_display/collapse_demo.dart';
+import 'components/data_display/countdown_demo.dart';
 import 'components/data_display/tree_demo.dart';
 import 'components/data_display/listy_demo.dart';
 import 'components/data_display/reorderable_list_demo.dart';
@@ -264,6 +265,7 @@ final List<Demo> demos = [
   Demo('new_year', 'New Year Theme 🎄', (_) => const NewYearDemo()),
   Demo('avatar', 'Avatar', (_) => const AvatarDemo()),
   Demo('badge', 'Badge', (_) => const BadgeDemo()),
+  Demo('countdown', 'Countdown', (_) => const CountdownDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),
   Demo('message', 'message', (_) => const MessageDemo()),
   Demo('notification', 'notification', (_) => const NotificationDemo()),

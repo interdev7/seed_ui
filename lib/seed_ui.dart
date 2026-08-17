@@ -17,6 +17,8 @@ library seed_ui;
 
 export 'src/components/data_display/avatar.dart'
     show Avatar, AvatarGroup, AvatarShape, AvatarToken;
+export 'src/components/data_display/badge.dart'
+    show Badge, BadgeStatus, BadgeToken, Ribbon, RibbonPlacement, RibbonToken;
 export 'src/components/data_display/card.dart'
     show Card, CardMeta, CardTab, CardToken, CardType, CardVariant;
 export 'src/components/data_display/collapse.dart'

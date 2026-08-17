@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../components/data_display/avatar.dart';
+import '../components/data_display/badge.dart';
 import '../components/data_display/card.dart';
 import '../components/data_display/collapse.dart';
 import '../components/data_display/empty.dart';
@@ -42,6 +43,7 @@ class ComponentsConfig {
   const ComponentsConfig({
     this.alert,
     this.avatar,
+    this.badge,
     this.button,
     this.card,
     this.checkbox,
@@ -60,6 +62,7 @@ class ComponentsConfig {
     this.popover,
     this.progress,
     this.radio,
+    this.ribbon,
     this.result,
     this.segmented,
     this.select,
@@ -81,6 +84,9 @@ class ComponentsConfig {
 
   /// Overrides applied to every [Avatar] under this provider.
   final AvatarToken? avatar;
+
+  /// Overrides applied to every [Badge] under this provider.
+  final BadgeToken? badge;
 
   /// Overrides applied to every [Button] under this provider.
   final ButtonToken? button;
@@ -136,6 +142,9 @@ class ComponentsConfig {
   /// Overrides applied to every [Radio] under this provider.
   final RadioToken? radio;
 
+  /// Overrides applied to every [Ribbon] under this provider.
+  final RibbonToken? ribbon;
+
   /// Overrides applied to every [Result] under this provider.
   final ResultToken? result;
 
@@ -182,6 +191,7 @@ class ComponentsConfig {
   T? of<T>() {
     if (T == AlertToken && alert != null) return alert as T;
     if (T == AvatarToken && avatar != null) return avatar as T;
+    if (T == BadgeToken && badge != null) return badge as T;
     if (T == ButtonToken && button != null) return button as T;
     if (T == CardToken && card != null) return card as T;
     if (T == CheckboxToken && checkbox != null) return checkbox as T;
@@ -202,6 +212,7 @@ class ComponentsConfig {
     if (T == PopoverToken && popover != null) return popover as T;
     if (T == ProgressToken && progress != null) return progress as T;
     if (T == RadioToken && radio != null) return radio as T;
+    if (T == RibbonToken && ribbon != null) return ribbon as T;
     if (T == ResultToken && result != null) return result as T;
     if (T == SegmentedToken && segmented != null) return segmented as T;
     if (T == SelectToken && select != null) return select as T;

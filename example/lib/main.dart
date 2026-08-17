@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'components/feedback/alert_demo.dart';
 import 'components/data_display/avatar_demo.dart';
+import 'components/data_display/badge_demo.dart';
 import 'components/general/button_demo.dart';
 import 'components/data_display/card_demo.dart';
 import 'components/data_display/collapse_demo.dart';
@@ -262,6 +263,7 @@ class Demo {
 final List<Demo> demos = [
   Demo('new_year', 'New Year Theme 🎄', (_) => const NewYearDemo()),
   Demo('avatar', 'Avatar', (_) => const AvatarDemo()),
+  Demo('badge', 'Badge', (_) => const BadgeDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),
   Demo('message', 'message', (_) => const MessageDemo()),
   Demo('notification', 'notification', (_) => const NotificationDemo()),

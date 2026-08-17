@@ -4,6 +4,9 @@ Avatar
 AvatarGroup
 AvatarShape
 AvatarToken
+Badge
+BadgeStatus
+BadgeToken
 Button
 ButtonColor
 ButtonShape
@@ -124,6 +127,9 @@ RailPainter
 RailSegment
 Result
 ResultToken
+Ribbon
+RibbonPlacement
+RibbonToken
 SearchConfig
 SearchIcon
 SeedToken

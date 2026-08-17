@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.3
+
+### Added
+
+- `Badge`. A count, dot or status pinned to a corner, with overflow, a hidden
+  zero, custom content and a `title` for assistive technology, since the digits
+  as drawn are rarely what the count means.
+- `Ribbon`, a label banded across a container's corner. Its own widget rather
+  than a `Badge` constructor: the two share an idea but not a single property.
+  Note it clashes with Material's `Badge`; hide one at the import.
+
 ## 0.6.2
 
 ### Fixed

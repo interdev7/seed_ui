@@ -280,4 +280,86 @@ void main() {
     expect(natural, lessThan(300), reason: 'got $natural of 600');
     expect(filled, 600);
   });
+
+  group('A run wider than its box', () {
+    const many = [
+      SegmentedOption(value: 0, label: 'Overview'),
+      SegmentedOption(value: 1, label: 'Analytics'),
+      SegmentedOption(value: 2, label: 'Reports'),
+      SegmentedOption(value: 3, label: 'Settings'),
+      SegmentedOption(value: 4, label: 'Members'),
+    ];
+
+    testWidgets('scrolls instead of overflowing', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const SizedBox(
+            width: 300,
+            child: Segmented<int>(value: 0, options: many),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // An overflow would have been reported as an exception by the renderer.
+      expect(tester.takeException(), isNull);
+
+      // The control fills the box it was given rather than spilling past it.
+      expect(tester.getSize(find.byType(Segmented<int>)).width, 300);
+
+      // Every segment is still built — reachable by scrolling, not dropped.
+      expect(find.text('Members'), findsOneWidget);
+    });
+
+    testWidgets('the run really does scroll', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const SizedBox(
+            width: 300,
+            child: Segmented<int>(value: 0, options: many),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final before = tester.getTopLeft(find.text('Overview')).dx;
+      await tester.drag(find.text('Overview'), const Offset(-120, 0));
+      await tester.pumpAndSettle();
+
+      expect(tester.getTopLeft(find.text('Overview')).dx, lessThan(before));
+    });
+
+    testWidgets('with room to spare it stays content-sized', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const SizedBox(
+            width: 900,
+            child: Segmented<int>(value: 0, options: many),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Scrolling must not turn the control greedy when it fits.
+      expect(
+        tester.getSize(find.byType(Segmented<int>)).width,
+        lessThan(900),
+      );
+    });
+
+    testWidgets('block still fills the width it is given', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const SizedBox(
+            width: 300,
+            child: Segmented<int>(value: 0, options: many, block: true),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byType(Segmented<int>)).width, 300);
+    });
+  });
 }

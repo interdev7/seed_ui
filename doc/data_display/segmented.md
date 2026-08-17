@@ -112,6 +112,15 @@ equally:
 Segmented(block: true, value: v, options: options, onChanged: onChanged)
 ```
 
+### When it does not fit
+
+A phone is narrower than six segments. Where the options cannot have the width
+they ask for, a horizontal run scrolls rather than overflowing, so no segment
+is left past the edge. With room to spare there is nothing to scroll and the
+control is exactly its options wide, as above.
+
+`block: true` never scrolls — the options share whatever width there is.
+
 ## Design tokens
 
 `SegmentedToken` overrides this component's own tokens. Every field is an override; an

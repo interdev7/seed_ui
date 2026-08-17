@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.3.0
 
+### Fixed
+
+- `Segmented` overflowed instead of scrolling when its options were wider than
+  the box it was given — on a phone, a run of five labels painted the debug
+  stripes and put the last segments past the edge, out of reach. A horizontal
+  run now scrolls. With room to spare there is nothing to scroll and the
+  control is still exactly its options wide, and `block: true` is unaffected.
+
 ### Changed
 
 - **Breaking.** `Progress.size` is typed `ControlSize?` instead of `dynamic`.
@@ -38,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 None of the four were used by the kit, the gallery, the tests or the docs.
 
 ### Added
+
+- Screenshots on the package page. Each pairs the light and dark themes side
+  by side, so one slot carries the theming story and the shape is one a
+  gallery can render — a lone phone screenshot is a sliver.
 
 - **`Upload`** — a file list with a picker trigger, per-file progress, and
   retry and remove actions. Two layouts: rows, or a grid of tiles for images.

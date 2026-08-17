@@ -258,33 +258,35 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
         color: widget.trackColor ?? r.trackBg,
         borderRadius: BorderRadius.circular(_radius(r)),
       ),
-      child: Stack(
-        key: _stackKey,
-        children: [
-          // The thumb slides behind the labels once measured. It is positioned
-          // in the Stack's own coordinates, so the rect is measured relative to
-          // the Stack — not the padded Container.
-          if (rect != null)
-            AnimatedPositioned(
-              duration: token.motionDurationMid,
-              curve: token.motionEaseInOut,
-              left: rect.left,
-              top: rect.top,
-              width: rect.width,
-              height: rect.height,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: _enabled
-                      ? (widget.thumbColor ?? r.itemSelectedBg)
-                      : (widget.thumbColor ?? r.itemSelectedBg)
-                          .withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(_radius(r)),
-                  boxShadow: _enabled ? token.boxShadowSecondary : null,
+      child: _maybeScrollable(
+        Stack(
+          key: _stackKey,
+          children: [
+            // The thumb slides behind the labels once measured. It is positioned
+            // in the Stack's own coordinates, so the rect is measured relative to
+            // the Stack — not the padded Container.
+            if (rect != null)
+              AnimatedPositioned(
+                duration: token.motionDurationMid,
+                curve: token.motionEaseInOut,
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: _enabled
+                        ? (widget.thumbColor ?? r.itemSelectedBg)
+                        : (widget.thumbColor ?? r.itemSelectedBg)
+                            .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(_radius(r)),
+                    boxShadow: _enabled ? token.boxShadowSecondary : null,
+                  ),
                 ),
               ),
-            ),
-          _strip(segmentWidgets),
-        ],
+            _strip(segmentWidgets),
+          ],
+        ),
       ),
     );
 
@@ -298,7 +300,29 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
       alignment: AlignmentDirectional.centerStart,
       widthFactor: 1,
       heightFactor: 1,
-      child: control,
+      // IntrinsicWidth asks the strip how wide it wants to be and then honours
+      // the incoming constraint: room enough, and the control is exactly its
+      // options wide; not enough, and it is clamped, which is what gives the
+      // scroll view below something to scroll inside.
+      child: _vertical ? control : IntrinsicWidth(child: control),
+    );
+  }
+
+  /// Lets a horizontal run scroll rather than overflow.
+  ///
+  /// A content-sized control cannot always have the width it asks for — a
+  /// phone is narrower than six segments. Overflowing paints the debug stripes
+  /// and hides the segments past the edge, so the run scrolls instead. With
+  /// room to spare the viewport is exactly the content's width and there is
+  /// nothing to scroll, so this costs the common case nothing.
+  Widget _maybeScrollable(Widget child) {
+    if (_vertical || block) return child;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      // The thumb is measured against the strip's own coordinates, so it
+      // travels with the content instead of floating over the viewport.
+      physics: const ClampingScrollPhysics(),
+      child: child,
     );
   }
 

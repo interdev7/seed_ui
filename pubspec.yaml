@@ -10,6 +10,39 @@ repository: https://github.com/interdev7/seed_ui
 issue_tracker: https://github.com/interdev7/seed_ui/issues
 documentation: https://github.com/interdev7/seed_ui/blob/main/README.md
 
+# The first entry becomes the package's thumbnail in search results, so it
+# leads with the most recognisable thing in the kit. Each pair puts the light
+# and dark themes side by side: one slot instead of two, and a shape the
+# gallery can actually render — a lone phone screenshot is a sliver.
+screenshots:
+  - description: >-
+      Buttons across every variant and colour: solid, outlined, dashed,
+      filled, text and link, with sizes, loading and disabled states.
+    path: doc/screenshots/buttons.webp
+  - description: >-
+      The same screen in light and dark. Every colour, size and motion value
+      is derived from a small set of seed tokens.
+    path: doc/screenshots/theme.webp
+  - description: >-
+      Notification cards stacked in a screen corner, called without a
+      BuildContext, in light and dark.
+    path: doc/screenshots/notification.webp
+  - description: >-
+      Select with search, multiple selection and tags, in light and dark.
+    path: doc/screenshots/select.webp
+  - description: >-
+      Timeline: modes, colours, custom dots and collapsible groups, in light
+      and dark.
+    path: doc/screenshots/timeline_1.webp
+  - description: >-
+      Timeline on a horizontal axis, with labels across the rail, in light
+      and dark.
+    path: doc/screenshots/timeline_2.webp
+  - description: >-
+      Tour walking through a screen: a spotlight mask over the page with an
+      anchored panel, in light and dark.
+    path: doc/screenshots/tour.webp
+
 topics:
   - ui
   - widgets

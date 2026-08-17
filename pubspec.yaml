@@ -4,7 +4,6 @@ description: >-
   context-free message, notification, modal and drawer APIs. No Material
   dependency.
 version: 0.3.0
-
 homepage: https://github.com/interdev7/seed_ui
 repository: https://github.com/interdev7/seed_ui
 issue_tracker: https://github.com/interdev7/seed_ui/issues
@@ -19,10 +18,6 @@ screenshots:
       Buttons across every variant and colour: solid, outlined, dashed,
       filled, text and link, with sizes, loading and disabled states.
     path: doc/screenshots/buttons.webp
-  - description: >-
-      The same screen in light and dark. Every colour, size and motion value
-      is derived from a small set of seed tokens.
-    path: doc/screenshots/theme.webp
   - description: >-
       Notification cards stacked in a screen corner, called without a
       BuildContext, in light and dark.

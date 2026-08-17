@@ -26,10 +26,6 @@ enum StatusType {
   loading,
 }
 
-/// Former name of [StatusType], kept for source compatibility.
-@Deprecated('Use StatusType')
-typedef MessageType = StatusType;
-
 /// Dismisses an open message ahead of its timeout.
 typedef MessageHandle = void Function();
 

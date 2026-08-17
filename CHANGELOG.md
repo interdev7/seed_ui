@@ -5,7 +5,37 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.3.0
+
+### Changed
+
+- **Breaking.** `Progress.size` is typed `ControlSize?` instead of `dynamic`.
+  It was the only public field in the kit with no type, so `Progress(size:
+  'large')` compiled and failed at run time. Numbers and `Size` become the
+  types the kit already had:
+
+  | Before | Now |
+  | --- | --- |
+  | `size: 20` | `size: ControlSize.fixed(20)` |
+  | `size: Size(200, 10)` | `size: ControlSize.raw(200, 10)` |
+  | `size: SoftSize.small` | unchanged |
+
+- **Breaking.** `ProgressSteps` had three ways to say one thing — a `fill`
+  parameter, a `stepFill` parameter and a `stepFill` getter. Only `fill`
+  remains.
+
+### Removed
+
+- **Breaking.** `ControlSize.from(dynamic)`, whose own doc comment called it
+  legacy. With `Progress.size` typed there is nothing left to convert.
+- **Breaking.** `ProgressBorderRadius.from(dynamic)` — unused anywhere, and
+  untyped.
+- **Breaking.** `Progress.onprogressChange`, an alias for `onProgressChange`
+  whose lower-case `p` read as a typo.
+- **Breaking.** The deprecated `MessageType` typedef. Before 1.0 is when a
+  deprecation gets deleted rather than carried on.
+
+None of the four were used by the kit, the gallery, the tests or the docs.
 
 ### Added
 

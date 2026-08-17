@@ -17,15 +17,6 @@ sealed class ControlSize {
 
   /// Creates an explicit 2D width and height size (e.g. width 200, height 10).
   const factory ControlSize.raw(double width, double height) = ExplicitSize;
-
-  /// Helper to convert a legacy dynamic/num/Size/SoftSize into a [ControlSize].
-  factory ControlSize.from(dynamic value) {
-    if (value is ControlSize) return value;
-    if (value is SoftSize) return value;
-    if (value is num) return ExplicitSquareSize(value.toDouble());
-    if (value is Size) return ExplicitSize(value.width, value.height);
-    return SoftSize.middle;
-  }
 }
 
 /// The shared height preset for the kit's controls — small, middle (the

@@ -174,7 +174,7 @@ class _NewYearDemoState extends State<NewYearDemo> {
                               Progress(
                                 type: ProgressType.dashboard,
                                 percent: _holidayProgress,
-                                size: 90,
+                                size: const ControlSize.fixed(90),
                                 gradient: const SweepGradient(
                                   colors: [
                                     Color(0xFF108EE9),

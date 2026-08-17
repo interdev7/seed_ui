@@ -46,7 +46,7 @@ enum ProgressStepFill {
 /// Detailed step configuration for [Progress.steps].
 ///
 /// Specify the number of step segments [count], pixel spacing [gap],
-/// fill mode [fill]/[stepFill], and custom per-step radius builder [stepRadius].
+/// fill mode [fill], and custom per-step radius builder [stepRadius].
 ///
 /// ```dart
 /// ProgressSteps(
@@ -66,12 +66,10 @@ class ProgressSteps {
   const ProgressSteps(
     this.count, {
     this.gap = 2.0,
-    ProgressStepFill? fill,
-    ProgressStepFill? stepFill,
+    this.fill = ProgressStepFill.gradually,
     this.stepRadius,
     this.onStepChange,
-  })  : assert(count > 0, 'count must be positive'),
-        fill = stepFill ?? fill ?? ProgressStepFill.gradually;
+  }) : assert(count > 0, 'count must be positive');
 
   /// Convenience constructor for count with default settings.
   const ProgressSteps.count(int count) : this(count);
@@ -99,9 +97,6 @@ class ProgressSteps {
   /// - `currentStep`: number of completed/active steps reached (0 to [count]).
   /// - `totalSteps`: total step count ([count]).
   final void Function(int currentStep, int totalSteps)? onStepChange;
-
-  /// Alias for [fill].
-  ProgressStepFill get stepFill => fill;
 
   @override
   bool operator ==(Object other) =>
@@ -173,24 +168,6 @@ class ProgressBorderRadius {
         topRight: Radius.circular(topRight ?? 0),
         bottomRight: Radius.circular(bottomRight ?? 0),
       );
-
-  /// Resolves a [ProgressBorderRadius] from a raw value ([double], [int],
-  /// [BorderRadius], or [ProgressBorderRadius]).
-  static ProgressBorderRadius? from(dynamic value) {
-    if (value == null) return null;
-    if (value is ProgressBorderRadius) return value;
-    if (value is double) return ProgressBorderRadius.all(value);
-    if (value is int) return ProgressBorderRadius.all(value.toDouble());
-    if (value is BorderRadius) {
-      return ProgressBorderRadius(
-        topLeft: value.topLeft.x,
-        bottomLeft: value.bottomLeft.x,
-        topRight: value.topRight.x,
-        bottomRight: value.bottomRight.x,
-      );
-    }
-    return null;
-  }
 
   @override
   bool operator ==(Object other) =>
@@ -384,13 +361,13 @@ class Progress extends StatefulWidget {
   /// Thickness of the track.
   final double? strokeWidth;
 
-  /// Size preset ([SoftSize]), fixed diameter/height ([double]), or explicit [Size].
+  /// How large to draw it. Null takes [SoftSize.middle].
   ///
   /// Examples:
-  /// - `SoftSize.small`
-  /// - `20` (diameter or line height)
-  /// - `Size(200, 10)` or `Size(20, 30)`
-  final dynamic size;
+  /// - `SoftSize.small` — a preset
+  /// - `ControlSize.fixed(20)` — a diameter, or a line height
+  /// - `ControlSize.raw(200, 10)` — an explicit width and height
+  final ControlSize? size;
 
   /// Overrides the fill colour outright.
   final Color? color;
@@ -468,9 +445,6 @@ class Progress extends StatefulWidget {
   /// - `percent`: updated completion fraction (0.0 to 1.0).
   final void Function(double percent)? onProgressChange;
 
-  /// Alias for [onProgressChange].
-  void Function(double percent)? get onprogressChange => onProgressChange;
-
   /// Content shown in place of the percentage label: in the middle of a ring
   /// for [ProgressType.circle] and [ProgressType.dashboard], where the label
   /// would sit for [ProgressType.line].
@@ -494,7 +468,7 @@ class Progress extends StatefulWidget {
     StatusType? status,
     bool? showInfo,
     double? strokeWidth,
-    Object? size,
+    ControlSize? size,
     Color? color,
     Color? trailColor,
     Gradient? gradient,
@@ -667,7 +641,7 @@ class _ProgressState extends State<Progress> {
       widget.format?.call(p) ?? Text('${(p * 100).round()}%');
 
   _ProgressResolvedSize _resolveSize(Token token, _ResolvedProgressToken r) {
-    final effectiveSize = ControlSize.from(widget.size);
+    final effectiveSize = widget.size ?? SoftSize.middle;
     return switch (effectiveSize) {
       SoftSize.small => const _ProgressResolvedSize(width: 80, height: 6),
       SoftSize.middle =>
@@ -887,9 +861,11 @@ class _ProgressState extends State<Progress> {
       );
     }
 
-    final hasCustomWidth = widget.size is Size && !resSize.hasFixedStepWidth;
+    final explicit = widget.size;
+    final hasCustomWidth =
+        explicit is ExplicitSize && !resSize.hasFixedStepWidth;
     final barWidget = hasCustomWidth
-        ? SizedBox(width: (widget.size as Size).width, child: bar)
+        ? SizedBox(width: explicit.width, child: bar)
         : (resSize.hasFixedStepWidth ? bar : Expanded(child: bar));
 
     if (!widget.showInfo || isInner) {
@@ -1170,7 +1146,7 @@ class _ProgressState extends State<Progress> {
   }
 
   Widget _circle(Token token, _ResolvedProgressToken r, double currentPercent) {
-    final effectiveSize = ControlSize.from(widget.size);
+    final effectiveSize = widget.size ?? SoftSize.middle;
     final resSize = _resolveSize(token, r);
     final defaultStroke = effectiveSize == SoftSize.small ? 4.0 : 6.0;
     final stroke = widget.strokeWidth ??

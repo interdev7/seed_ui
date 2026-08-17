@@ -1208,7 +1208,7 @@ class _Marker extends StatelessWidget {
           ? ProgressType.circle
           : template.type,
       // The template's own choices win; these only fill the gaps.
-      size: template.size ?? ringBox,
+      size: template.size ?? ControlSize.fixed(ringBox),
       strokeWidth: template.strokeWidth ?? 3,
       child: marker,
     );

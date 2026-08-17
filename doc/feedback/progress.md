@@ -36,7 +36,7 @@ At 100% a check (success) or cross (error) replaces the text label.
 
 - Preset: `SoftSize.small`, `SoftSize.middle`, `SoftSize.large`
 - Fixed 1D dimension: `ControlSize.fixed(20)` or `ExplicitSquareSize(20)` or `20`
-- Explicit 2D size: `ControlSize.raw(200, 10)` or `ExplicitSize(200, 10)` or `Size(200, 10)`
+- Explicit 2D size: `ControlSize.raw(200, 10)` or `ExplicitSize(200, 10)`
 
 ```dart
 Progress(percent: 0.8, size: SoftSize.small)
@@ -69,7 +69,7 @@ current marker.
 | `status`          | `StatusType?`                | `null`               | Overrides status color (`normal`, `active`, `success`, `error`)                              |
 | `showInfo`        | `bool`                       | `true`               | Show percentage / completion badge                                                           |
 | `strokeWidth`     | `double?`                    | `8` line, `6` circle | Track thickness                                                                              |
-| `size`            | `ControlSize?` / `dynamic`   | `SoftSize.middle`    | Preset (`SoftSize`), `ControlSize.fixed(20)`, or `ExplicitSize(200, 10)`                     |
+| `size`            | `ControlSize?`               | `SoftSize.middle`    | Preset (`SoftSize`), `ControlSize.fixed(20)`, or `ControlSize.raw(200, 10)`                  |
 | `color`           | `Color?`                     | `null`               | Overrides fill color                                                                         |
 | `trailColor`      | `Color?`                     | `null`               | Overrides unfilled track color                                                               |
 | `gradient`        | `Gradient?`                  | `null`               | Linear or sweep gradient fill                                                                |
@@ -137,7 +137,7 @@ Progress(
 `ProgressSteps` parameters:
 - `count`: total number of step segments (`int`)
 - `gap`: spacing between step segments in pixels (default `2.0`)
-- `fill` / `stepFill`: filling mode (`ProgressStepFill.gradually` or `ProgressStepFill.immediately`)
+- `fill`: filling mode (`ProgressStepFill.gradually` or `ProgressStepFill.immediately`)
 - `stepRadius`: custom per-step radius builder `(isFirst, percent) => ProgressBorderRadius`
 - `onStepChange`: callback when active step changes `(currentStep, totalSteps) => void`
 

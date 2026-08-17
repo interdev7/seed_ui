@@ -5,6 +5,36 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.0
+
+### Added
+
+- `MessagePlacement`, so a toast can be anchored to the bottom of the screen
+  as well as the top. Per call — `message.success('Saved', placement:
+  MessagePlacement.bottom)` — or as a default through `message.config`.
+
+  Each edge keeps its own stack, matching how `notification` treats its
+  corners, so a toast at the top never reorders one at the bottom and
+  `maxCount` applies per edge.
+
+### Fixed
+
+- `message.config` and `notification.config` crashed when called from a
+  `dispose` while a card was still on screen: they asked a mounted listener to
+  rebuild during unmount, when the framework has the tree locked. Restoring a
+  global default on the way out of a page is exactly the shape that hit it.
+
+  The stacks now defer that request to the end of the frame when one is in
+  flight, and only then — the common path stays synchronous, so a toast still
+  appears on the very next frame.
+
+### Changed
+
+- **Breaking.** `message.config(top: ...)` is now `message.config(offset:
+  ...)`. With two edges to anchor to, "top" named the wrong thing; `offset` is
+  the distance from whichever edge is in use, and is the word `notification`
+  already used.
+
 ## 0.4.0
 
 ### Removed

@@ -1,3 +1,4 @@
+import 'package:flutter/scheduler.dart' show SchedulerBinding, SchedulerPhase;
 import 'package:flutter/widgets.dart';
 
 /// Entry point for the kit's context-free APIs such as `message` and
@@ -61,7 +62,28 @@ class StackedOverlay<T extends OverlayItem> {
   List<T> get items => List.unmodifiable(_items);
 
   /// Bumped whenever the stack changes so the container can rebuild.
+  ///
+  /// Prefer [markChanged] over writing to this directly: a bare write during
+  /// a build or an unmount asks a mounted listener to rebuild while the
+  /// framework has the tree locked, which is an error.
   final ValueNotifier<int> revision = ValueNotifier<int>(0);
+
+  /// Tells the container to rebuild, waiting for the frame to finish if one
+  /// is in flight.
+  ///
+  /// These APIs are context-free and can therefore be called from anywhere —
+  /// including a `dispose`, which runs while the framework is unmounting and
+  /// will not accept a rebuild request. Deferring only in that case keeps the
+  /// common path synchronous, so a toast still appears on the very next
+  /// frame.
+  void markChanged() {
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => revision.value++);
+      return;
+    }
+    revision.value++;
+  }
 
   OverlayEntry? _entry;
 
@@ -87,14 +109,14 @@ class StackedOverlay<T extends OverlayItem> {
         victim.close();
       }
     }
-    revision.value++;
+    markChanged();
   }
 
   /// Drops [item] from the stack, tearing the overlay entry down when the
   /// last one goes.
   void remove(T item) {
     if (!_items.remove(item)) return;
-    revision.value++;
+    markChanged();
     if (_items.isEmpty) {
       _entry?.remove();
       _entry = null;

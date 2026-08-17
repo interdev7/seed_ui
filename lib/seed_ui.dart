@@ -155,6 +155,7 @@ export 'src/components/feedback/message.dart'
         MessageApi,
         MessageConfig,
         MessageHandle,
+        MessagePlacement,
         MessageToken,
         StatusType,
         message;

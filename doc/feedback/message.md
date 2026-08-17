@@ -77,12 +77,32 @@ message.success('Uploaded', key: 'upload');
 message.config(
   maxCount: 3,                          // evicts the oldest past this many
   duration: const Duration(seconds: 5), // applies to calls without an explicit duration
-  top: 48,                              // distance from the top edge
+  placement: MessagePlacement.bottom,   // which edge to anchor to
+  offset: 48,                           // distance from that edge
 );
 ```
 
 `maxCount` counts toasts on screen; when exceeded, the oldest is dismissed
 with its normal exit animation.
+
+## Placement
+
+Toasts appear near the top. `MessagePlacement.bottom` anchors them to the
+other edge — useful when the top of the screen is already busy, or on a phone
+where the thumb is nearer the bottom.
+
+```dart
+message.success('Saved', placement: MessagePlacement.bottom);
+```
+
+Set it once for the whole app through `message.config(placement: ...)`.
+
+Each edge keeps its own stack, so a toast at the top never reorders one at the
+bottom and `maxCount` applies per edge. Both stack the same way: whatever is
+already on screen keeps its place and the newcomer goes beyond it, so nothing
+jumps while it is being read.
+
+`offset` is the distance from whichever edge is in use.
 
 ## Full configuration
 

@@ -103,63 +103,60 @@ class _UploadDemoState extends State<UploadDemo> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Group(
-            'Live — picks real files',
-            Upload<PlatformFile>(
-              items: _files,
-              onPick: _pick,
-              onRemove: (item) =>
-                  setState(() => _files = [..._files]..remove(item)),
-              onRetry: _send,
-              label: const Text('Choose files'),
-              hint: const Text(
-                'Anything you like — nothing leaves your machine',
-              ),
-              emptyState: const Empty(),
-            ),
+    // The page already scrolls and pads: DemoPage wraps every demo in a
+    // SingleChildScrollView.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Group(
+          'Live — picks real files',
+          Upload<PlatformFile>(
+            items: _files,
+            onPick: _pick,
+            onRemove: (item) =>
+                setState(() => _files = [..._files]..remove(item)),
+            onRetry: _send,
+            label: const Text('Choose files'),
+            hint: const Text('Anything you like — nothing leaves your machine'),
+            emptyState: const Empty(),
           ),
-          Group(
-            'Every status',
-            Upload<String>(items: _states, onRemove: (_) {}, onRetry: (_) {}),
+        ),
+        Group(
+          'Every status',
+          Upload<String>(items: _states, onRemove: (_) {}, onRetry: (_) {}),
+        ),
+        Group(
+          'Cards, for images',
+          Upload<String>(
+            items: _cards,
+            variant: UploadVariant.cards,
+            maxCount: 5,
+            onPick: () async {
+              setState(() {
+                _cards = [
+                  ..._cards,
+                  UploadItem<String>(
+                    name: 'added-${_cards.length + 1}.jpg',
+                    size: 131072,
+                    thumbnail: _Swatch(_cards.length),
+                  ),
+                ];
+              });
+            },
+            onRemove: (item) =>
+                setState(() => _cards = [..._cards]..remove(item)),
           ),
-          Group(
-            'Cards, for images',
-            Upload<String>(
-              items: _cards,
-              variant: UploadVariant.cards,
-              maxCount: 5,
-              onPick: () async {
-                setState(() {
-                  _cards = [
-                    ..._cards,
-                    UploadItem<String>(
-                      name: 'added-${_cards.length + 1}.jpg',
-                      size: 131072,
-                      thumbnail: _Swatch(_cards.length),
-                    ),
-                  ];
-                });
-              },
-              onRemove: (item) =>
-                  setState(() => _cards = [..._cards]..remove(item)),
-            ),
+        ),
+        const Group(
+          'Read-only',
+          Upload<String>(
+            items: [
+              UploadItem<String>(name: 'contract.pdf', size: 409600),
+              UploadItem<String>(name: 'appendix.docx', size: 81920),
+            ],
           ),
-          const Group(
-            'Read-only',
-            Upload<String>(
-              items: [
-                UploadItem<String>(name: 'contract.pdf', size: 409600),
-                UploadItem<String>(name: 'appendix.docx', size: 81920),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

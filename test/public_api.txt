@@ -78,6 +78,7 @@ ListyToken
 MessageApi
 MessageConfig
 MessageHandle
+MessagePlacement
 MessageToken
 Modal
 ModalApi

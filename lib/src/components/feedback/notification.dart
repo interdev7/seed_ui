@@ -392,7 +392,7 @@ class _NotificationStack {
     if (stackThreshold != null) _stackThreshold = stackThreshold;
 
     for (final s in _stacks.values) {
-      s.revision.value++;
+      s.markChanged();
     }
   }
 

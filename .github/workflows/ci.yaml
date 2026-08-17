@@ -115,6 +115,18 @@ jobs:
       - name: Publish dry run
         run: flutter pub publish --dry-run
 
+      # pana shells out to libwebp — cwebp, dwebp, gif2webp, webpinfo, webpmux —
+      # to build the thumbnails pub.dev shows for `screenshots:`. The runner
+      # does not ship them, and without them the screenshot check fails: ten
+      # points lost, and an exit code of 127 from the missing binary.
+      - name: Install the WebP tools pana needs for screenshots
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends webp
+          for tool in cwebp dwebp gif2webp webpinfo webpmux; do
+            command -v "$tool" >/dev/null || { echo "::error::$tool missing"; exit 1; }
+          done
+
       - name: Install pana
         run: dart pub global activate pana
 

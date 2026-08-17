@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.1
+
+### Added
+
+- `Tabs.snap`. A flung bar settles with a tab against its leading edge rather
+  than wherever the throw ended, so a long run cannot stop mid-label. Off by
+  default: a bar of a few tabs has nothing to settle into.
+
+  Snapping is to the measured tab boundaries, not to a fixed stride — tabs are
+  as wide as their labels, so a page-sized step would land in the middle of
+  one.
+- `Upload.progress`, a whole `Progress` used as a template for the in-flight
+  bar. Only its percent is replaced, so its colour, thickness and shape carry
+  through — the same shape `Steps` already uses for its ring.
+- `SegmentedToken.itemHoverBg`, which had been hardcoded.
+
+### Fixed
+
+- `Segmented` drew its track with a translucent fill. In a dark theme that
+  lightens the track above the page, leaving the elevated thumb *darker* than
+  the groove it sits in: the elevation read inverted, and only the shadow
+  separated the two. The track takes the layout background now, widening the
+  dark-theme gap from 17 steps to 31. The shadow stays — it was not the
+  problem.
+
 ## 0.6.0
 
 ### Changed

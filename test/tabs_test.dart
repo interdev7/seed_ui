@@ -173,4 +173,91 @@ void main() {
     expect(controller.items.any((e) => e.key == 'b'), isFalse);
     expect(controller.activeKey, isNotNull);
   });
+
+  group('Snapping', () {
+    List<TabItem> longRun() => [
+          for (var i = 1; i <= 12; i++)
+            TabItem(
+              key: '$i',
+              label: Text('Section number $i'),
+              content: Text('Panel $i'),
+            ),
+        ];
+
+    Future<double> flingAndSettle(WidgetTester tester,
+        {required bool snap}) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 300,
+              child: Tabs(items: longRun(), snap: snap),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.fling(
+          find.text('Section number 1'), const Offset(-140, 0), 600);
+      await tester.pumpAndSettle();
+
+      final bar = tester.widget<SingleChildScrollView>(
+        find.byType(SingleChildScrollView),
+      );
+      return bar.controller!.offset;
+    }
+
+    testWidgets('off by default, so a fling stops where it stops',
+        (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(width: 300, child: Tabs(items: longRun())),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final bar = tester.widget<SingleChildScrollView>(
+        find.byType(SingleChildScrollView),
+      );
+      expect(bar.physics, isNull);
+    });
+
+    testWidgets('snap: true installs the snapping physics', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 300,
+              child: Tabs(items: longRun(), snap: true),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final bar = tester.widget<SingleChildScrollView>(
+        find.byType(SingleChildScrollView),
+      );
+      expect(bar.physics, isNotNull);
+    });
+
+    testWidgets('a fling comes to rest on a tab boundary', (tester) async {
+      final settled = await flingAndSettle(tester, snap: true);
+
+      // Every tab in this run is the same width, so a boundary is a whole
+      // multiple of one. Measure that from the rendered tabs rather than
+      // assuming it.
+      final first = tester.getTopLeft(find.text('Section number 2')).dx -
+          tester.getTopLeft(find.text('Section number 1')).dx;
+      final remainder = settled % first;
+      expect(
+        remainder < 1.0 || (first - remainder) < 1.0,
+        isTrue,
+        reason: 'settled at $settled, which is not a multiple of $first',
+      );
+    });
+  });
 }

@@ -148,7 +148,31 @@ class _UploadDemoState extends State<UploadDemo> {
           ),
         ),
         Group(
-          'Text only — no preview',
+          'Picture rows — the default',
+          Upload<String>(items: _cards, onRemove: (_) {}, onDownload: (_) {}),
+        ),
+        Group(
+          'Your own content in a tile',
+          Upload<String>(
+            variant: UploadVariant.cards,
+            items: const [
+              UploadItem<String>(name: 'chart.png', thumbnail: _Swatch(3)),
+            ],
+            onPick: () async {},
+            // `trigger` owns the empty tile; a file's own tile is `thumbnail`,
+            // or `itemBuilder` for the whole thing.
+            trigger: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.cloud_upload_outlined, size: 22),
+                SizedBox(height: 4),
+                Text('Drop', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+          ),
+        ),
+        Group(
+          'Text only — a paperclip, no preview',
           Upload<String>(
             items: _states,
             variant: UploadVariant.text,

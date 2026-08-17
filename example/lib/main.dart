@@ -57,8 +57,8 @@ class ThemeController extends InheritedWidget {
   final ValueChanged<ThemeModeOption> setTheme;
 
   static ThemeController of(BuildContext context) {
-    final result = context
-        .dependOnInheritedWidgetOfExactType<ThemeController>();
+    final result =
+        context.dependOnInheritedWidgetOfExactType<ThemeController>();
     assert(result != null, 'No ThemeController found in context');
     return result!;
   }
@@ -174,13 +174,23 @@ class MainLayout extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () => context.go('/'),
                       behavior: HitTestBehavior.opaque,
-                      child: Text(
-                        'seed_ui',
-                        style: TextStyle(
-                          fontSize: token.fontSizeXL,
-                          color: token.colorText,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/images/logo.png',
+                            width: 50,
+                            height: 50,
+                          ),
+                          Text(
+                            'seed_ui',
+                            style: TextStyle(
+                              fontSize: token.fontSizeXL,
+                              color: token.colorText,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

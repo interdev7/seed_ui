@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import '../../icons/icons.dart' show CrossPainter;
+import '../../icons/icons.dart' show CrossPainter, PlusPainter;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 
@@ -1214,7 +1214,7 @@ class _AddButtonState extends State<_AddButton> {
           child: widget.icon ??
               CustomPaint(
                 size: const Size.square(14),
-                painter: _PlusPainter(color),
+                painter: PlusPainter(color),
               ),
         ),
       ),
@@ -1302,25 +1302,4 @@ class _CardTabPainter extends CustomPainter {
       old.border != border ||
       old.panelColor != panelColor ||
       old.strokeWidth != strokeWidth;
-}
-
-class _PlusPainter extends CustomPainter {
-  _PlusPainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.4
-      ..strokeCap = StrokeCap.round;
-    final c = size.center(Offset.zero);
-    final r = size.width * 0.32;
-    canvas.drawLine(Offset(c.dx - r, c.dy), Offset(c.dx + r, c.dy), paint);
-    canvas.drawLine(Offset(c.dx, c.dy - r), Offset(c.dx, c.dy + r), paint);
-  }
-
-  @override
-  bool shouldRepaint(_PlusPainter old) => old.color != color;
 }

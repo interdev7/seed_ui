@@ -130,6 +130,25 @@ Upload<XFile>(
 )
 ```
 
+## Your own content in a tile
+
+Three slots, from the narrowest to the widest:
+
+| | |
+| --- | --- |
+| `UploadItem.thumbnail` | What fills one file's tile |
+| `trigger` | What fills the empty tile, in place of the plus and its word |
+| `itemBuilder` | The whole tile, chrome included |
+
+```dart
+Upload<String>(
+  variant: UploadVariant.cards,
+  items: const [UploadItem(name: 'chart.png', thumbnail: MyChart())],
+  onPick: _pick,
+  trigger: const Icon(Icons.cloud_upload_outlined),
+)
+```
+
 ## Replacing a row
 
 `itemBuilder` takes over what one file looks like; the kit still decides where

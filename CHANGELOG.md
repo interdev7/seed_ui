@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.6.0
 
 ### Changed
 
@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rather than around the zone: a card was ringed about its plus instead of its
   edge, and a long hint ran flush to the dashes with nowhere to wrap. The dash
   is a foreground painter now, so it takes the zone's own box.
+- The paperclip's lower loop curved the wrong way, folding the bottom half of
+  the glyph back into the strokes above it — half a clip reached the screen.
 - A card's trigger showed a bare plus. It carries a word under it now, which
   a glyph on its own does not manage — it reads as decoration rather than as
   something to press.
@@ -35,6 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Upload.onDownload`, with a button beside retry and remove.
 - A paperclip on `text` rows, and a spinner in place of the preview while a
   file is in flight — unless it brought one of its own.
+- The glyphs `Upload` draws now live with the rest of the kit's icons, and the
+  plus that `Tabs` had copied is shared rather than duplicated.
+- The gallery declared its image assets at the top level of its pubspec
+  instead of under `flutter:`, where nothing reads them — the logo never
+  reached the bundle.
 - `Upload.itemBuilder` and `UploadActions`, for replacing a row or tile while
   keeping the handlers the built-in one would have wired up.
 

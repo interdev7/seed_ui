@@ -534,3 +534,148 @@ class UserIcon extends StatelessWidget {
     );
   }
 }
+
+/// A plus sign, sized to its paint box.
+class PlusPainter extends CustomPainter {
+  /// Creates a [PlusPainter].
+  PlusPainter(this.color);
+
+  /// The stroke colour.
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = math.max(1.4, size.width * 0.07)
+      ..strokeCap = StrokeCap.round;
+    final c = size.center(Offset.zero);
+    final r = size.width * 0.3;
+    canvas.drawLine(Offset(c.dx - r, c.dy), Offset(c.dx + r, c.dy), paint);
+    canvas.drawLine(Offset(c.dx, c.dy - r), Offset(c.dx, c.dy + r), paint);
+  }
+
+  @override
+  bool shouldRepaint(PlusPainter old) => old.color != color;
+}
+
+/// A paperclip — the mark a plain file row carries in place of a preview.
+///
+/// Drawn rather than imported: an SVG would mean a parser, and a font would
+/// mean an asset. Two strokes and two arcs read as a clip at sixteen pixels,
+/// which is the only size this is used at.
+class PaperclipPainter extends CustomPainter {
+  /// Creates a [PaperclipPainter].
+  PaperclipPainter(this.color);
+
+  /// The stroke colour.
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = math.max(1.2, w * 0.09)
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    // Down the inner side, round the bottom, back up, then over the top and
+    // down the outer side — the path a clip's wire actually takes.
+    final path = Path()
+      ..moveTo(w * 0.64, h * 0.34)
+      ..lineTo(w * 0.64, h * 0.70)
+      ..arcToPoint(
+        Offset(w * 0.36, h * 0.70),
+        radius: Radius.circular(w * 0.14),
+      )
+      ..lineTo(w * 0.36, h * 0.30)
+      ..arcToPoint(
+        Offset(w * 0.78, h * 0.30),
+        radius: Radius.circular(w * 0.21),
+      )
+      ..lineTo(w * 0.78, h * 0.64);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(PaperclipPainter old) => old.color != color;
+}
+
+/// A downward arrow onto a baseline — download.
+class DownloadPainter extends CustomPainter {
+  /// Creates a [DownloadPainter].
+  DownloadPainter(this.color);
+
+  /// The stroke colour.
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final c = size.center(Offset.zero);
+    final h = size.height * 0.3;
+    canvas.drawLine(
+        Offset(c.dx, c.dy - h), Offset(c.dx, c.dy + h * 0.4), paint);
+    canvas.drawLine(
+      Offset(c.dx - h * 0.5, c.dy - h * 0.1),
+      Offset(c.dx, c.dy + h * 0.4),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(c.dx + h * 0.5, c.dy - h * 0.1),
+      Offset(c.dx, c.dy + h * 0.4),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(c.dx - h * 0.7, c.dy + h),
+      Offset(c.dx + h * 0.7, c.dy + h),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(DownloadPainter old) => old.color != color;
+}
+
+/// A circular arrow — retry.
+class RetryPainter extends CustomPainter {
+  /// Creates a [RetryPainter].
+  RetryPainter(this.color);
+
+  /// The stroke colour.
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final c = size.center(Offset.zero);
+    final radius = size.width * 0.28;
+    // An arc left open at the top right, with an arrowhead closing it, so the
+    // glyph reads as a loop rather than a full circle.
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: radius),
+      -0.6,
+      5.2,
+      false,
+      paint,
+    );
+    final tip = Offset(c.dx + radius, c.dy - radius * 0.55);
+    canvas.drawLine(tip, tip.translate(-radius * 0.5, 0.2), paint);
+    canvas.drawLine(tip, tip.translate(0.2, radius * 0.5), paint);
+  }
+
+  @override
+  bool shouldRepaint(RetryPainter old) => old.color != color;
+}

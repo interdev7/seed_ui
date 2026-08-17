@@ -2,6 +2,9 @@ import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
+// The add button's glyph lives with the kit's other icons and is internal to
+// it rather than part of the surface.
+import 'package:seed_ui/src/icons/icons.dart' show PlusPainter;
 
 Widget _host(Widget child) => MaterialApp(
       home: Scaffold(body: Center(child: child)),
@@ -87,9 +90,7 @@ void main() {
 
     // Add button.
     final plus = find.byWidgetPredicate(
-      (w) =>
-          w is CustomPaint &&
-          w.painter.runtimeType.toString() == '_PlusPainter',
+      (w) => w is CustomPaint && w.painter is PlusPainter,
     );
     expect(plus, findsOneWidget);
     await tester.tap(plus);
@@ -148,9 +149,7 @@ void main() {
     );
 
     final plus = find.byWidgetPredicate(
-      (w) =>
-          w is CustomPaint &&
-          w.painter.runtimeType.toString() == '_PlusPainter',
+      (w) => w is CustomPaint && w.painter is PlusPainter,
     );
     await tester.tap(plus);
     await tester.pumpAndSettle();

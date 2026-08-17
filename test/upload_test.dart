@@ -1,6 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
+// The glyph a plain row is marked with lives with the other icons, and is
+// internal to the kit rather than part of its surface.
+import 'package:seed_ui/src/icons/icons.dart' show PaperclipPainter;
 
 Widget _wrap(Widget child) => ConfigProvider(
       child: Directionality(
@@ -398,9 +401,9 @@ void main() {
       expect(find.text('report.pdf'), findsOneWidget);
       // A plain row still says "attachment", just without a thumbnail.
       expect(
-        tester.widgetList<CustomPaint>(find.byType(CustomPaint)).where(
-              (p) => p.painter.runtimeType.toString() == '_PaperclipPainter',
-            ),
+        tester
+            .widgetList<CustomPaint>(find.byType(CustomPaint))
+            .where((p) => p.painter is PaperclipPainter),
         isNotEmpty,
       );
 
@@ -681,5 +684,54 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byType(Spinner), findsOneWidget);
+  });
+
+  group('Your own content in a tile', () {
+    testWidgets('trigger replaces what is inside the empty tile',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            variant: UploadVariant.cards,
+            onPick: () async {},
+            trigger: const Text('drop here'),
+          ),
+        ),
+      );
+
+      expect(find.text('drop here'), findsOneWidget);
+      expect(find.text('Upload'), findsNothing);
+    });
+
+    testWidgets('thumbnail fills a file tile with whatever you give it',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(
+            variant: UploadVariant.circleCards,
+            items: [
+              UploadItem<String>(name: 'a.png', thumbnail: Text('mine')),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('mine'), findsOneWidget);
+    });
+
+    testWidgets('itemBuilder replaces a tile outright', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Upload<String>(
+            variant: UploadVariant.cards,
+            items: const [UploadItem<String>(name: 'a.png')],
+            itemBuilder: (item, actions) => Text('tile ${item.name}'),
+          ),
+        ),
+      );
+
+      expect(find.text('tile a.png'), findsOneWidget);
+      expect(find.text('PNG'), findsNothing);
+    });
   });
 }

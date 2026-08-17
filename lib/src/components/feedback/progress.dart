@@ -143,9 +143,6 @@ class ProgressBorderRadius {
         topRight = radius,
         bottomRight = radius;
 
-  /// Alias for [ProgressBorderRadius.all].
-  const ProgressBorderRadius.fixed(double radius) : this.all(radius);
-
   /// Constant zero radius (square corners).
   static const ProgressBorderRadius zero = ProgressBorderRadius.all(0);
 
@@ -407,7 +404,7 @@ class Progress extends StatefulWidget {
   /// Custom corner radius for line progress bar ([ProgressBorderRadius]).
   ///
   /// Examples:
-  /// - `ProgressBorderRadius.fixed(4)`
+  /// - `ProgressBorderRadius.all(4)`
   /// - `ProgressBorderRadius(topLeft: 8, bottomLeft: 8)`
   final ProgressBorderRadius? borderRadius;
 

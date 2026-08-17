@@ -76,7 +76,7 @@ current marker.
 | `strokeColor`     | `List<Color>?`               | `null`               | Colors for individual steps or line colors                                                   |
 | `rangeColors`     | `Map<ProgressRange, Color>?` | `null`               | Discrete color ranges keyed by start threshold (0–1)                                         |
 | `steps`           | `ProgressSteps?`             | `null`               | Step configuration (`ProgressSteps(count, gap: 7, fill: ...)`)|
-| `borderRadius`    | `ProgressBorderRadius?`      | `null`               | Custom corner radius for line progress (`ProgressBorderRadius.fixed(4)`, etc.) |
+| `borderRadius`    | `ProgressBorderRadius?`      | `null`               | Custom corner radius for line progress (`ProgressBorderRadius.all(4)`, etc.) |
 | `strokeLinecap`   | `StrokeCap?`                 | `round`              | Bar/ring cap shape (`round`, `butt` / `square`)                                              |
 | `gapDegree`       | `double`                     | `75`                 | Open gap angle in degrees for dashboard                                                      |
 | `gapPlacement`    | `GapPlacement`               | `bottom`             | Gap placement (`top`, `bottom`, `left`, `right`)                                             |
@@ -197,7 +197,7 @@ Control corner radius for line progress using `ProgressBorderRadius`, `BorderRad
 Progress(
   percent: 0.6,
   strokeWidth: 14,
-  borderRadius: ProgressBorderRadius.fixed(4),
+  borderRadius: ProgressBorderRadius.all(4),
 )
 
 // Per-corner radius (e.g. rounded left, flat right)

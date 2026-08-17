@@ -599,7 +599,7 @@ class _ProgressDemoState extends State<ProgressDemo> {
                 child: Progress(
                   percent: _percent,
                   strokeWidth: 14,
-                  borderRadius: const ProgressBorderRadius.fixed(4),
+                  borderRadius: const ProgressBorderRadius.all(4),
                 ),
               ),
               const SizedBox(height: 12),
@@ -627,7 +627,7 @@ class _ProgressDemoState extends State<ProgressDemo> {
                     },
                   ),
                   strokeWidth: 14,
-                  borderRadius: const ProgressBorderRadius.fixed(4),
+                  borderRadius: const ProgressBorderRadius.all(4),
                   onProgressChange: (percent) {
                     debugPrint("Progress changed $percent");
                   },

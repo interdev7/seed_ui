@@ -63,6 +63,29 @@ While the package is on `0.x` the API is not stable. A breaking change bumps
 the minor version (`0.1.0` → `0.2.0`) and needs a CHANGELOG entry that says
 what moved and why.
 
+### What the version number promises
+
+From `1.0.0` on, semantic versioning applies to a specific thing, and it is
+worth being exact about which — a promise that covers everything cannot be
+kept.
+
+**Covered.** The exported names and their signatures: the contents of
+`test/public_api.txt`, plus the parameters and types of everything it lists.
+Removing a name, renaming a parameter, narrowing a type or making an optional
+parameter required is a breaking change.
+
+**Not covered.** The values behind the tokens, and what the widgets look like.
+A default radius, a hover tint, an easing curve or a pixel of padding may
+change in any release. Pinning those would mean a major version for every
+visual correction, which serves nobody.
+
+Also not covered: anything under `lib/src` that the barrel does not export.
+Reaching into it is unsupported, and the snapshot test does not guard it.
+
+`test/public_api.txt` is the machine-readable half of this promise. Note its
+limit: it lists names, so it catches one appearing or disappearing, but a
+changed signature passes it silently. Review those by hand.
+
 ## Component documentation
 
 Each component has a page under `doc/`, linked from the README table. A new

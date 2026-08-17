@@ -152,7 +152,7 @@ void main() {
           const Progress(
             percent: 0.4,
             strokeWidth: 14,
-            borderRadius: ProgressBorderRadius.fixed(6),
+            borderRadius: ProgressBorderRadius.all(6),
           ),
         ),
       );

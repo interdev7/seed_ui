@@ -59,6 +59,7 @@ class SegmentedToken {
     this.trackPadding,
     this.itemColor,
     this.itemHoverColor,
+    this.itemHoverBg,
     this.itemSelectedBg,
     this.itemSelectedColor,
     this.borderRadius,
@@ -78,6 +79,10 @@ class SegmentedToken {
   /// Item hover text color (`itemHoverColor`).
   final Color? itemHoverColor;
 
+  /// Fill behind an unselected segment while the pointer is over it
+  /// (`itemHoverBg`).
+  final Color? itemHoverBg;
+
   /// Selected thumb background color (`itemSelectedBg`).
   final Color? itemSelectedBg;
 
@@ -94,10 +99,15 @@ class SegmentedToken {
   final double? borderRadiusLG;
 
   _ResolvedSegmentedToken _resolve(Token t) => _ResolvedSegmentedToken(
-        trackBg: trackBg ?? t.colorFillSecondary,
+        // The layout background, not a translucent fill. A fill lightens the
+        // track in a dark theme, which leaves the elevated thumb *darker* than
+        // the groove it sits in — the elevation reads inverted, and the only
+        // thing separating the two is the shadow.
+        trackBg: trackBg ?? t.colorBgLayout,
         trackPadding: trackPadding ?? t.sizeXXS / 2,
         itemColor: itemColor ?? t.colorTextSecondary,
         itemHoverColor: itemHoverColor ?? t.colorText,
+        itemHoverBg: itemHoverBg ?? t.colorFillSecondary,
         itemSelectedBg: itemSelectedBg ?? t.colorBgElevated,
         itemSelectedColor: itemSelectedColor ?? t.colorText,
         borderRadius: borderRadius ?? t.borderRadius,
@@ -113,6 +123,7 @@ class _ResolvedSegmentedToken {
     required this.trackPadding,
     required this.itemColor,
     required this.itemHoverColor,
+    required this.itemHoverBg,
     required this.itemSelectedBg,
     required this.itemSelectedColor,
     required this.borderRadius,
@@ -124,6 +135,7 @@ class _ResolvedSegmentedToken {
   final double trackPadding;
   final Color itemColor;
   final Color itemHoverColor;
+  final Color itemHoverBg;
   final Color itemSelectedBg;
   final Color itemSelectedColor;
   final double borderRadius;
@@ -446,7 +458,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
             ),
             decoration: BoxDecoration(
               // A faint highlight while hovering an unselected segment.
-              color: hovered ? token.colorFillTertiary : null,
+              color: hovered ? r.itemHoverBg : null,
               borderRadius: BorderRadius.circular(_radius(r)),
             ),
             child: content,

@@ -362,4 +362,65 @@ void main() {
       expect(tester.getSize(find.byType(Segmented<int>)).width, 300);
     });
   });
+
+  group('Elevation in both themes', () {
+    Color trackOf(WidgetTester tester) {
+      final box = tester.widgetList<Container>(find.byType(Container)).first;
+      return (box.decoration! as BoxDecoration).color!;
+    }
+
+    Color thumbOf(WidgetTester tester) {
+      final thumb = tester
+          .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+          .firstWhere((d) => (d.decoration as BoxDecoration).boxShadow != null);
+      return (thumb.decoration as BoxDecoration).color!;
+    }
+
+    double luminance(Color c) => c.computeLuminance();
+
+    for (final dark in [false, true]) {
+      testWidgets(
+          'the thumb sits above the track in a ${dark ? 'dark' : 'light'} theme',
+          (tester) async {
+        await tester.pumpWidget(
+          ConfigProvider(
+            theme: ThemeData(dark: dark),
+            child: _host(
+              Segmented<String>(
+                value: 'list',
+                options: _options,
+                onChanged: (_) {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // "Above" is the same relation in both themes: the elevated surface is
+        // the lighter one. A translucent fill for the track inverted this in
+        // dark, leaving the shadow as the only separation.
+        expect(luminance(thumbOf(tester)),
+            greaterThan(luminance(trackOf(tester))));
+      });
+    }
+
+    testWidgets('and the gap is wider than a hairline in dark', (tester) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(dark: true),
+          child: _host(
+            Segmented<String>(
+              value: 'list',
+              options: _options,
+              onChanged: (_) {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final d = luminance(thumbOf(tester)) - luminance(trackOf(tester));
+      expect(d, greaterThan(0.005));
+    });
+  });
 }

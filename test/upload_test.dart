@@ -734,4 +734,77 @@ void main() {
       expect(find.text('PNG'), findsNothing);
     });
   });
+
+  group('The progress bar', () {
+    Progress barOf(WidgetTester tester) =>
+        tester.widget<Progress>(find.byType(Progress));
+
+    testWidgets('follows the file, with a plain default', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(
+            items: [
+              UploadItem<String>(
+                name: 'a.mp4',
+                status: UploadStatus.uploading,
+                progress: 0.42,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(barOf(tester).percent, 0.42);
+      expect(barOf(tester).showInfo, isFalse);
+    });
+
+    testWidgets('a template keeps everything but the percent', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(
+            items: [
+              UploadItem<String>(
+                name: 'a.mp4',
+                status: UploadStatus.uploading,
+                progress: 0.3,
+              ),
+            ],
+            progress: Progress(
+              percent: 0,
+              strokeWidth: 2,
+              color: Color(0xFF00BFA5),
+              showInfo: false,
+            ),
+          ),
+        ),
+      );
+
+      final bar = barOf(tester);
+      // The file drives the percent; the template drives the look.
+      expect(bar.percent, 0.3);
+      expect(bar.strokeWidth, 2);
+      expect(bar.color, const Color(0xFF00BFA5));
+    });
+
+    testWidgets('a tile uses the template too', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Upload<String>(
+            variant: UploadVariant.cards,
+            items: [
+              UploadItem<String>(
+                name: 'a.png',
+                status: UploadStatus.uploading,
+                progress: 0.6,
+              ),
+            ],
+            progress: Progress(percent: 0, strokeWidth: 6, showInfo: false),
+          ),
+        ),
+      );
+
+      expect(barOf(tester).strokeWidth, 6);
+      expect(barOf(tester).percent, 0.6);
+    });
+  });
 }

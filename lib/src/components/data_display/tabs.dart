@@ -507,6 +507,7 @@ class Tabs extends StatefulWidget {
     this.addIcon,
     this.animated = true,
     this.scrollAlign = TabScrollAlign.top,
+    this.snap = false,
     this.contentPosition = TabContentPosition.left,
     this.token,
   });
@@ -566,6 +567,17 @@ class Tabs extends StatefulWidget {
   /// Where a selected tab lands when the bar scrolls it into view.
   final TabScrollAlign scrollAlign;
 
+  /// Whether a flung bar settles with a tab against its leading edge instead
+  /// of wherever the throw happened to end.
+  ///
+  /// Off by default, because a bar of a few tabs has nothing to settle into.
+  /// It earns its keep on a long run — a browser's worth of tabs on a phone —
+  /// where stopping mid-label leaves a name cut in half.
+  ///
+  /// Snapping is to tab boundaries, not to fixed pages: tabs are as wide as
+  /// their labels, so a page-sized step would land in the middle of one.
+  final bool snap;
+
   /// Horizontal placement of the active tab's content within its panel.
   final TabContentPosition contentPosition;
 
@@ -583,6 +595,10 @@ class _TabsState extends State<Tabs> {
   final GlobalKey _stripKey = GlobalKey();
   final ScrollController _barController = ScrollController();
   Rect? _indicator;
+
+  /// Where each tab starts along the scrolling axis, in the strip's own
+  /// coordinates. Kept only for [Tabs.snap].
+  List<double> _tabOffsets = const [];
 
   @override
   void initState() {
@@ -709,8 +725,30 @@ class _TabsState extends State<Tabs> {
   }
 
   void _scheduleMeasure() {
-    if (widget.type != TabsType.line) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureOffsets();
+      // The ink bar is a line-tab affair; the offsets are needed either way.
+      if (widget.type == TabsType.line) _measure();
+    });
+  }
+
+  /// Records where every tab begins, so a fling can settle against one.
+  void _measureOffsets() {
+    if (!widget.snap) return;
+    final strip = _stripKey.currentContext?.findRenderObject() as RenderBox?;
+    if (strip == null || !strip.hasSize) return;
+    final offsets = <double>[];
+    for (final item in _items) {
+      final box =
+          _tabKeys[item.key]?.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) continue;
+      final origin = box.localToGlobal(Offset.zero, ancestor: strip);
+      offsets.add(_horizontal ? origin.dx : origin.dy);
+    }
+    if (offsets.length != _tabOffsets.length ||
+        !const _Approx().equal(offsets, _tabOffsets)) {
+      if (mounted) setState(() => _tabOffsets = offsets);
+    }
   }
 
   void _measure() {
@@ -827,6 +865,9 @@ class _TabsState extends State<Tabs> {
     final scroll = SingleChildScrollView(
       controller: _barController,
       scrollDirection: _horizontal ? Axis.horizontal : Axis.vertical,
+      physics: widget.snap && _tabOffsets.length > 1
+          ? _TabSnapPhysics(offsets: _tabOffsets)
+          : null,
       child: strip,
     );
 
@@ -1302,4 +1343,81 @@ class _CardTabPainter extends CustomPainter {
       old.border != border ||
       old.panelColor != panelColor ||
       old.strokeWidth != strokeWidth;
+}
+
+/// Compares two lists of offsets without tripping on sub-pixel noise.
+class _Approx {
+  const _Approx();
+
+  bool equal(List<double> a, List<double> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if ((a[i] - b[i]).abs() > 0.5) return false;
+    }
+    return true;
+  }
+}
+
+/// Settles a flung tab bar with a tab against its leading edge.
+///
+/// Snapping is to the recorded tab boundaries rather than to a fixed step:
+/// tabs are as wide as their labels, so a page-sized stride would come to rest
+/// in the middle of one.
+class _TabSnapPhysics extends ScrollPhysics {
+  const _TabSnapPhysics({required this.offsets, super.parent});
+
+  /// Where each tab begins, in scroll coordinates, ascending.
+  final List<double> offsets;
+
+  @override
+  _TabSnapPhysics applyTo(ScrollPhysics? ancestor) =>
+      _TabSnapPhysics(offsets: offsets, parent: buildParent(ancestor));
+
+  /// Where the throw would have ended, had nothing caught it.
+  double _naturalEnd(ScrollMetrics position, double velocity) {
+    final simulation = super.createBallisticSimulation(position, velocity);
+    final end = simulation?.x(double.infinity) ?? position.pixels;
+    return end.clamp(position.minScrollExtent, position.maxScrollExtent);
+  }
+
+  double _nearest(double to) {
+    var best = offsets.first;
+    for (final o in offsets) {
+      if ((o - to).abs() < (best - to).abs()) best = o;
+    }
+    return best;
+  }
+
+  @override
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
+    if (offsets.isEmpty) {
+      return super.createBallisticSimulation(position, velocity);
+    }
+    // Out past an edge is the parent's business: let it rubber-band back
+    // rather than snapping to a tab that is not reachable.
+    if (position.outOfRange) {
+      return super.createBallisticSimulation(position, velocity);
+    }
+
+    final target = _nearest(_naturalEnd(position, velocity))
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    final tol = toleranceFor(position);
+    if ((target - position.pixels).abs() < tol.distance) return null;
+
+    return ScrollSpringSimulation(
+      spring,
+      position.pixels,
+      target,
+      velocity,
+      tolerance: tol,
+    );
+  }
+
+  // A snapping list always has somewhere to settle, so it must be allowed to
+  // run its simulation even when the throw was gentle.
+  @override
+  bool get allowImplicitScrolling => false;
 }

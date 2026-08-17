@@ -66,6 +66,17 @@ Future<void> _send(UploadItem<PlatformFile> item) async {
 `error` is a widget, so it can carry a link to a help page rather than a bare
 sentence.
 
+The bar itself is styled through `progress`, which takes a whole `Progress` as
+a template. Only its percent is replaced, so everything else you set there is
+kept:
+
+```dart
+Upload(
+  items: _files,
+  progress: const Progress(percent: 0, strokeWidth: 2, color: Colors.teal),
+)
+```
+
 ## Drag and drop
 
 The dashed target is drawn here, but the operating system's drag events are
@@ -209,6 +220,7 @@ setState(() {
 | `showRemove` | `bool` | `true` | Ignored when `onRemove` is null |
 | `showRetry` | `bool` | `true` | Ignored when `onRetry` is null |
 | `showSize` | `bool` | `true` | Whether the size sits beside the name |
+| `progress` | `Progress?` | `null` | Template for the in-flight bar; only its percent is overridden |
 | `emptyState` | `Widget?` | `null` | Stands in for an empty list |
 | `token` | `UploadToken?` | `null` | Per-instance token overrides |
 

@@ -305,6 +305,7 @@ class Upload<T> extends StatelessWidget {
     this.showRemove = true,
     this.showRetry = true,
     this.showSize = true,
+    this.progress,
     this.emptyState,
     this.token,
   });
@@ -392,6 +393,17 @@ class Upload<T> extends StatelessWidget {
   /// Whether a file's size is drawn beside its name.
   final bool showSize;
 
+  /// A template for the bar drawn while a file is in flight.
+  ///
+  /// Only [UploadItem.progress] is overridden — everything else you set here
+  /// is kept, so this is where the bar's colour, thickness and shape are
+  /// chosen. Null draws a plain bar in the theme's accent.
+  ///
+  /// ```dart
+  /// Upload(progress: Progress(percent: 0, strokeWidth: 2, color: Colors.teal))
+  /// ```
+  final Progress? progress;
+
   /// Shown in place of the list while [items] is empty.
   ///
   /// Null draws nothing, leaving the trigger on its own.
@@ -447,6 +459,7 @@ class Upload<T> extends StatelessWidget {
                 style: r,
                 showSize: showSize,
                 leading: _leadingFor(item, t, r),
+                progress: _progressFor(item),
                 actions: _actionsFor(item),
               ),
         ],
@@ -467,6 +480,7 @@ class Upload<T> extends StatelessWidget {
                 style: r,
                 round: variant == UploadVariant.circleCards,
                 thumbnail: _thumbnailFor(item, t, r),
+                progress: _progressFor(item),
                 actions: _actionsFor(item),
               ),
         if (_accepting)
@@ -484,6 +498,11 @@ class Upload<T> extends StatelessWidget {
       ],
     );
   }
+
+  /// The bar for [item], from the caller's template or a plain default.
+  Widget _progressFor(UploadItem<T> item) =>
+      (progress ?? const Progress(percent: 0, showInfo: false, strokeWidth: 4))
+          .copyWith(percent: item.progress);
 
   /// What sits before the name in a row.
   ///
@@ -718,6 +737,7 @@ class _UploadRow<T> extends StatefulWidget {
     required this.style,
     required this.showSize,
     required this.leading,
+    required this.progress,
     required this.actions,
   });
 
@@ -728,6 +748,9 @@ class _UploadRow<T> extends StatefulWidget {
 
   /// Already sized by the caller: a preview box, or a small glyph.
   final Widget leading;
+
+  /// The bar to draw while this file is in flight.
+  final Widget progress;
 
   final UploadActions actions;
 
@@ -802,11 +825,7 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
                     ),
                     if (item.status == UploadStatus.uploading) ...[
                       SizedBox(height: t.sizeXXS),
-                      Progress(
-                        percent: item.progress,
-                        showInfo: false,
-                        strokeWidth: 4,
-                      ),
+                      widget.progress,
                     ],
                     if (failed && item.error != null) ...[
                       SizedBox(height: t.sizeXXS),
@@ -869,6 +888,7 @@ class _UploadCard<T> extends StatefulWidget {
     required this.style,
     required this.round,
     required this.thumbnail,
+    required this.progress,
     required this.actions,
   });
 
@@ -880,6 +900,10 @@ class _UploadCard<T> extends StatefulWidget {
   final bool round;
 
   final Widget thumbnail;
+
+  /// The bar to draw while this file is in flight.
+  final Widget progress;
+
   final UploadActions actions;
 
   @override
@@ -922,11 +946,7 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
                     child: Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: t.sizeSM),
-                        child: Progress(
-                          percent: item.progress,
-                          showInfo: false,
-                          strokeWidth: 4,
-                        ),
+                        child: widget.progress,
                       ),
                     ),
                   ),

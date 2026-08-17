@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `Segmented` drew its track with a translucent fill, which in a dark theme
+  lightens it above the page — leaving the elevated thumb *darker* than the
+  groove it sits in, so the elevation read inverted and only the shadow
+  separated the two. The track takes the layout background now: the thumb is
+  the lighter surface in both themes, and in dark the gap widens from 17 steps
+  to 31. `SegmentedToken.itemHoverBg` is exposed alongside it.
 - `Upload` drew its dashed outline around the prompt inside the drop zone
   rather than around the zone: a card was ringed about its plus instead of its
   edge, and a long hint ran flush to the dashes with nowhere to wrap. The dash

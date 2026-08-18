@@ -570,6 +570,21 @@ class _MenuRowState extends State<_MenuRow> {
     super.dispose();
   }
 
+  /// Opens the submenu, or closes it if it is already open.
+  ///
+  /// Hover alone is not enough to reach one: a touch screen has no pointer to
+  /// hover with, and a submenu parent takes no other action, so on a phone the
+  /// row simply did nothing. A tap works for both — on a desktop the menu is
+  /// usually open by then anyway, and tapping closes it again.
+  void _toggleSubmenu() {
+    if (_submenuOpen) {
+      _submenu.close();
+      _submenuOpen = false;
+      return;
+    }
+    _openSubmenu();
+  }
+
   void _openSubmenu() {
     if (_submenuOpen) return;
     final box = context.findRenderObject() as RenderBox?;
@@ -578,7 +593,11 @@ class _MenuRowState extends State<_MenuRow> {
     _submenuOpen = true;
     final token = context.softToken;
     _submenu.open(
-      placement: PopoverPlacement.rightTop,
+      // Out to the side the menu reads towards, so a mirrored layout opens
+      // its submenus away from the parent rather than back over it.
+      placement: Directionality.of(context) == TextDirection.rtl
+          ? PopoverPlacement.leftTop
+          : PopoverPlacement.rightTop,
       anchorRect: anchor,
       gap: token.sizeXXS,
       interactive: true,
@@ -630,8 +649,11 @@ class _MenuRowState extends State<_MenuRow> {
       },
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap:
-            disabled || item._hasChildren ? null : () => widget.onSelect(item),
+        onTap: disabled
+            ? null
+            : item._hasChildren
+                ? _toggleSubmenu
+                : () => widget.onSelect(item),
         child: AnimatedContainer(
           duration: token.motionDurationFast,
           height: token.controlHeight,

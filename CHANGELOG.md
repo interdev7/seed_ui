@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.8
+
+### Fixed
+
+- A `Dropdown` submenu could only be reached by hovering, so on a touch screen
+  a parent row such as `More` did nothing at all: hover has no counterpart
+  there, and the row took no other action. A tap opens it now, and closes it
+  again.
+- A `Dropdown` submenu opened to the right in a right-to-left layout, back
+  over the menu it belongs to rather than away from it.
+
 ## 0.6.7
 
 ### Fixed

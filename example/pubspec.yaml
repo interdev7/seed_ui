@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   go_router: ^17.4.0
-  seed_ui: ^0.6.7
+  seed_ui: ^0.6.8
 
 # The gallery declares a hosted dependency so it reads like a real consumer,
 # but always builds against the working tree — otherwise it would validate

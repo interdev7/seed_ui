@@ -528,11 +528,15 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
     // layer, accent in the overlay.
     final borderColor = overlay ? token.primary.hover : token.colorBorder;
     final r = Radius.circular(token.borderRadius);
-    final borderRadius = BorderRadius.only(
-      topLeft: widget.first ? r : Radius.zero,
-      bottomLeft: widget.first ? r : Radius.zero,
-      topRight: widget.last ? r : Radius.zero,
-      bottomRight: widget.last ? r : Radius.zero,
+    // Rounded at the ends of the run, square where buttons meet. Directional,
+    // so the run reads the same either way: a right-to-left layout puts the
+    // first button on the right, and left corners would round the join
+    // instead of the end — the two rounded edges meeting in the middle.
+    final borderRadius = BorderRadiusDirectional.only(
+      topStart: widget.first ? r : Radius.zero,
+      bottomStart: widget.first ? r : Radius.zero,
+      topEnd: widget.last ? r : Radius.zero,
+      bottomEnd: widget.last ? r : Radius.zero,
     );
 
     Widget content = AnimatedContainer(

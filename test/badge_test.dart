@@ -296,6 +296,7 @@ void main() {
     ) async {
       const cyan = Color(0xFF13C2C2);
       await tester.pumpWidget(_host(const Badge(count: 3, color: cyan)));
+      await tester.pumpAndSettle();
       expect(_decorations(tester).map((d) => d.color), contains(cyan));
 
       await tester.pumpWidget(
@@ -306,10 +307,13 @@ void main() {
 
     testWidgets('small is shorter than the default', (tester) async {
       await tester.pumpWidget(_host(const Badge(count: 8)));
+      await tester.pumpAndSettle();
       final tall = tester.getSize(find.byType(Badge)).height;
 
       await tester
           .pumpWidget(_host(const Badge(count: 8, size: SoftSize.small)));
+      // The pill animates its size now, so this is the size it settles at.
+      await tester.pumpAndSettle();
       expect(tester.getSize(find.byType(Badge)).height, lessThan(tall));
     });
 
@@ -339,9 +343,12 @@ void main() {
           );
 
       await tester.pumpWidget(under(null));
+      await tester.pumpAndSettle();
       expect(_decorations(tester).map((d) => d.color), contains(fromProvider));
 
       await tester.pumpWidget(under(const BadgeToken(bg: fromInstance)));
+      // The pill eases its decoration now, so this is the colour it lands on.
+      await tester.pumpAndSettle();
       expect(_decorations(tester).map((d) => d.color), contains(fromInstance));
     });
   });

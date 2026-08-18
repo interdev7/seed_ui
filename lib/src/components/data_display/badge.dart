@@ -240,13 +240,21 @@ class Badge extends StatelessWidget {
       children: [
         child!,
         if (indicator != null)
-          Positioned(
+          PositionedDirectional(
             top: offset.dy,
-            right: -offset.dx,
+            // The trailing corner, not the right one: in a right-to-left
+            // layout the badge belongs on the left of what it marks.
+            end: -offset.dx,
             // Half of the badge hangs off the corner, which is what keeps it
             // reading as attached to the child rather than stacked on it.
+            // Outwards, so the direction decides the sign: a fixed half-width
+            // to the right would push the badge into the child in a
+            // right-to-left layout instead of off it.
             child: FractionalTranslation(
-              translation: const Offset(0.5, -0.5),
+              translation: Offset(
+                Directionality.of(context) == TextDirection.rtl ? -0.5 : 0.5,
+                -0.5,
+              ),
               child: indicator,
             ),
           ),
@@ -311,7 +319,11 @@ class Badge extends StatelessWidget {
       color: r.textColor,
       fontSize: r.fontSize,
       fontWeight: FontWeight.w400,
-      height: 1,
+      // No forced line height. Latin figures sit squarely in a box of exactly
+      // the font size, having neither ascender nor descender, but Arabic-Indic
+      // ones are fitted to their own metrics and a box squeezed to the font
+      // size pushes them up out of centre. The font is left to say how tall a
+      // line is, and the reel is measured against that.
     );
     // Content stands alone: it is offered without a count as readily as with
     // one, so there may be no number here to render at all.
@@ -332,7 +344,16 @@ class Badge extends StatelessWidget {
       container: title != null,
       // The digits are already spoken by the label when one is given.
       excludeSemantics: title != null,
-      child: Container(
+      // The padding eases rather than appearing whole the moment a second
+      // character does — that step is what made the badge hop as the count
+      // passed nine. Animating the pill's own box instead would clip it: a box
+      // that animates its size lays the child out at the final size and cuts
+      // away what does not fit yet, so the new figure and the rounded end came
+      // in shaved. Nothing is clipped here. The figures ease inside, the
+      // padding eases around them, and between them they carry the width.
+      child: AnimatedContainer(
+        duration: t.motionDurationMid,
+        curve: t.motionEaseInOut,
         height: height,
         constraints: BoxConstraints(minWidth: height),
         // A single character keeps the pill a circle. Padding is what turns
@@ -518,7 +539,14 @@ class Ribbon extends StatelessWidget {
             const RibbonToken())
         ._resolve(t);
     final fill = color ?? r.bg;
-    final atEnd = placement == RibbonPlacement.end;
+    // Which physical side the band runs off. [placement] names a reading end,
+    // and the two agree only in a left-to-right layout — so this is worked out
+    // once, and everything below is placed physically against it. Mixing the
+    // two is what broke the ribbon when the direction turned: the corners were
+    // physical while the column's own alignment was directional, so they
+    // disagreed and the band came apart.
+    final onRight = (placement == RibbonPlacement.end) !=
+        (Directionality.of(context) == TextDirection.rtl);
     final corner = Radius.circular(t.borderRadiusSM);
 
     final band = Container(
@@ -527,11 +555,12 @@ class Ribbon extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: fill,
+        // Square where the band meets the fold; rounded everywhere else.
         borderRadius: BorderRadius.only(
           topLeft: corner,
-          bottomLeft: atEnd ? corner : Radius.zero,
           topRight: corner,
-          bottomRight: atEnd ? Radius.zero : corner,
+          bottomLeft: onRight ? corner : Radius.zero,
+          bottomRight: onRight ? Radius.zero : corner,
         ),
       ),
       child: DefaultTextStyle.merge(
@@ -545,7 +574,7 @@ class Ribbon extends StatelessWidget {
     // shape. Half the height, which is what keeps it a fold and not a tail.
     final fold = CustomPaint(
       size: Size(t.sizeXS, r.height / 2),
-      painter: _RibbonFoldPainter(color: fill, atEnd: atEnd),
+      painter: _RibbonFoldPainter(color: fill, onRight: onRight),
     );
 
     return Stack(
@@ -554,11 +583,19 @@ class Ribbon extends StatelessWidget {
         child,
         Positioned(
           top: t.sizeXS,
-          left: atEnd ? null : -t.sizeXS,
-          right: atEnd ? -t.sizeXS : null,
+          left: onRight ? null : -t.sizeXS,
+          right: onRight ? -t.sizeXS : null,
+          // Each primitive is given the kind of value it expects. The stack
+          // offset, the corners and the fold's own shape are physical, since
+          // they are worked out from [onRight]; this alignment is directional,
+          // because CrossAxisAlignment already means leading and trailing, and
+          // that is exactly what [placement] names. Handing it a physical side
+          // is what sent the fold to the opposite end from its band.
           child: Column(
-            crossAxisAlignment:
-                atEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: placement == RibbonPlacement.end
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [band, fold],
           ),
         ),
@@ -568,10 +605,12 @@ class Ribbon extends StatelessWidget {
 }
 
 class _RibbonFoldPainter extends CustomPainter {
-  const _RibbonFoldPainter({required this.color, required this.atEnd});
+  const _RibbonFoldPainter({required this.color, required this.onRight});
 
   final Color color;
-  final bool atEnd;
+
+  /// Whether the band runs off the right of what it is draped over.
+  final bool onRight;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -579,7 +618,7 @@ class _RibbonFoldPainter extends CustomPainter {
     // where a fixed grey would go muddy on the darker ones.
     final shade = Color.lerp(color, const Color(0xFF000000), 0.25) ?? color;
     final path = Path();
-    if (atEnd) {
+    if (onRight) {
       path
         ..moveTo(0, 0)
         ..lineTo(size.width, 0)
@@ -597,7 +636,7 @@ class _RibbonFoldPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RibbonFoldPainter old) =>
-      old.color != color || old.atEnd != atEnd;
+      old.color != color || old.onRight != onRight;
 }
 
 /// A count whose digits roll into place rather than being swapped out.
@@ -638,37 +677,47 @@ class _ScrollNumberState extends State<_ScrollNumber> {
     }
   }
 
-  /// The width every reel is given: the widest digit in the face.
+  /// The box every reel is given: the widest and tallest of the ten glyphs
+  /// this language actually writes its numbers with.
   ///
-  /// Reels are laid out in a row, so a reel sized to whatever digit it happens
-  /// to be showing would change width as it turns and shove its neighbours
-  /// sideways — the tens visibly jogging while only the units were meant to
-  /// move. A fixed cell makes each place independent, which is what a counter
-  /// is. Most interface fonts space their digits equally and this measures the
-  /// same either way; the ones that do not are exactly the case it exists for.
-  double _cellWidth(BuildContext context, TextStyle style) {
+  /// Measured from those glyphs rather than from `0`–`9`, because they are not
+  /// always the same characters. Arabic writes `٠`–`٩`, whose advance widths
+  /// and vertical extents are its own: a cell sized to the Latin figures
+  /// leaves them off-centre in it, and a line box assumed to be exactly the
+  /// font size — true of Latin digits, which have no descenders — clips them.
+  ///
+  /// Reels sit in a row, so a reel sized to whatever digit it happens to be
+  /// showing would change width as it turns and shove its neighbours sideways.
+  /// A fixed cell makes each place independent, which is what a counter is.
+  ({double width, double height}) _metrics(
+    BuildContext context,
+    TextStyle style,
+    SeedLocalizations l,
+  ) {
     final scaler = MediaQuery.textScalerOf(context);
-    var widest = 0.0;
+    var width = 0.0;
+    var height = 0.0;
     for (var d = 0; d <= 9; d++) {
       final painter = TextPainter(
-        text: TextSpan(text: '$d', style: style),
+        text: TextSpan(text: l.digit(d), style: style),
         textDirection: TextDirection.ltr,
         textScaler: scaler,
       )..layout();
-      widest = widest > painter.width ? widest : painter.width;
+      if (painter.width > width) width = painter.width;
+      if (painter.height > height) height = painter.height;
       painter.dispose();
     }
-    return widest;
+    return (width: width, height: height);
   }
 
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    // Digits have no descenders, so a line box of exactly the font size holds
-    // them: the reel can be clipped to it without shaving anything off.
-    final slot = widget.style.fontSize!;
-    final cell = _cellWidth(context, widget.style);
+    final l = context.seedLocale;
+    final m = _metrics(context, widget.style, l);
 
+    // Only the figures. The pill's padding eases separately, in the badge, so
+    // that nothing here has to be clipped while the width changes.
     return AnimatedSize(
       duration: t.motionDurationMid,
       curve: t.motionEaseInOut,
@@ -684,8 +733,9 @@ class _ScrollNumberState extends State<_ScrollNumber> {
                 key: ValueKey(widget.text.length - i),
                 digit: d,
                 direction: _direction,
-                slot: slot,
-                cell: cell,
+                slot: m.height,
+                cell: m.width,
+                digits: l,
                 style: widget.style,
               )
             else
@@ -710,6 +760,7 @@ class _Reel extends StatefulWidget {
     required this.direction,
     required this.slot,
     required this.cell,
+    required this.digits,
     required this.style,
   });
 
@@ -718,8 +769,11 @@ class _Reel extends StatefulWidget {
   final double slot;
 
   /// The fixed width of this place, so a turning reel never shifts its
-  /// neighbours. See [_ScrollNumberState._cellWidth].
+  /// neighbours. See [_ScrollNumberState._metrics].
   final double cell;
+
+  /// The glyphs this language writes its figures with.
+  final SeedLocalizations digits;
   final TextStyle style;
 
   @override
@@ -806,7 +860,7 @@ class _ReelState extends State<_Reel> with SingleTickerProviderStateMixin {
                         // Only the face is localised; the reel itself counts
                         // in plain numbers, so its arithmetic is unaffected by
                         // which glyphs the language happens to use.
-                        context.seedLocale.digit((i % 10 + 10) % 10),
+                        widget.digits.digit((i % 10 + 10) % 10),
                         style: widget.style,
                         textAlign: TextAlign.center,
                       ),

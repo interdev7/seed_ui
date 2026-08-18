@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.6.7
 
+### Fixed
+
+- A run of `RadioGroup` buttons rounded the wrong corners in a right-to-left
+  layout. The ends were square and the two rounded edges met in the middle,
+  because the first button took the left corners while the row put it on the
+  right. The rounding is directional now.
+- A `Badge` count sat off-centre and high in a language that writes its own
+  figures. The reel measured `0`–`9` while drawing `٠`–`٩`, whose widths are
+  their own, and the line box was forced to exactly the font size — square
+  around Latin digits, which have neither ascender nor descender, and too
+  tight for these, which pushed them up out of centre. The glyphs actually
+  drawn are measured now, and the font is left to say how tall a line is.
+- A `Badge` hung off the right of what it marks rather than the trailing
+  corner, so it stayed on the wrong side in a right-to-left layout — and its
+  overhang was pushed rightwards whichever way the layout read, which left it
+  short of the corner and lying over the child rather than off it.
+- A `Badge` count that grew a digit changed the pill's padding in a single
+  frame while the figures were still easing. The padding eases with them now.
+- `Ribbon` came apart in a right-to-left layout. Its corners, its offset and
+  its fold were placed physically while the column's own alignment was
+  directional, so the two disagreed and the fold left the band it belongs to.
+  Each is now given the kind of value it expects.
+
 ### Added
 
 - Localized figures. `SeedLocalizations.digits` gives the ten glyphs a language

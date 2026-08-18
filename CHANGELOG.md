@@ -5,6 +5,32 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.6
+
+### Added
+
+- Localization. Twelve languages — en, ru, tk, de, fr, es, zh, ja, tr, pt, ar,
+  he — through `SeedLocalizations` and an ordinary `LocalizationsDelegate`, so
+  the kit follows the app's locale and changes with it at runtime. That is what
+  makes it work with `intl`, `easy_localization`, `slang` and the rest while
+  depending on none of them: they all set the app's `Locale`, which is all the
+  delegate reads.
+
+  `ConfigProvider(locale:)` overrides the delegate for a subtree, and
+  `copyWith` replaces a single word without forking a language. A widget
+  property still beats both, and with nothing wired up at all the words fall
+  back to English rather than throwing — a widget kit has to draw in any
+  application.
+
+  Every word but `noMoreItems` is taken from Ant Design's own locale files
+  rather than translated here.
+
+### Changed
+
+- `Modal.okText`, `Modal.cancelText` and the same pair on `Popconfirm` are now
+  nullable, null meaning the word from the locale in scope. Passing a widget
+  works exactly as before.
+
 ## 0.6.5
 
 ### Added

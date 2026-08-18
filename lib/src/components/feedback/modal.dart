@@ -89,8 +89,8 @@ class ModalConfig {
     this.title,
     this.content,
     this.type,
-    this.okText = const Text('OK'),
-    this.cancelText = const Text('Cancel'),
+    this.okText,
+    this.cancelText,
     this.showCancel = true,
     this.onOk,
     this.onCancel,
@@ -123,10 +123,12 @@ class ModalConfig {
   final StatusType? type;
 
   /// Label of the confirming button.
-  final Widget okText;
+  /// Null takes the word from the locale in scope.
+  final Widget? okText;
 
   /// Label of the dismissing button.
-  final Widget cancelText;
+  /// Null takes the word from the locale in scope.
+  final Widget? cancelText;
 
   /// Whether to show the cancel button.
   ///
@@ -225,8 +227,8 @@ class ModalApi {
   Future<bool> confirm({
     String? title,
     String? content,
-    String okText = 'OK',
-    String cancelText = 'Cancel',
+    String? okText,
+    String? cancelText,
     FutureOr<bool?> Function()? onOk,
     VoidCallback? onCancel,
     bool danger = false,
@@ -241,8 +243,8 @@ class ModalApi {
           title: title == null ? null : Text(title),
           content: content == null ? null : Text(content),
           type: type,
-          okText: Text(okText),
-          cancelText: Text(cancelText),
+          okText: okText == null ? null : Text(okText),
+          cancelText: cancelText == null ? null : Text(cancelText),
           onOk: onOk,
           onCancel: onCancel,
           danger: danger,
@@ -257,7 +259,7 @@ class ModalApi {
   Future<bool> info({
     String? title,
     String? content,
-    String okText = 'OK',
+    String? okText,
     bool centered = false,
     double? top,
     Color? barrierColor,
@@ -276,7 +278,7 @@ class ModalApi {
   Future<bool> success({
     String? title,
     String? content,
-    String okText = 'OK',
+    String? okText,
     bool centered = false,
     double? top,
     Color? barrierColor,
@@ -295,7 +297,7 @@ class ModalApi {
   Future<bool> error({
     String? title,
     String? content,
-    String okText = 'OK',
+    String? okText,
     bool centered = false,
     double? top,
     Color? barrierColor,
@@ -314,7 +316,7 @@ class ModalApi {
   Future<bool> warning({
     String? title,
     String? content,
-    String okText = 'OK',
+    String? okText,
     bool centered = false,
     double? top,
     Color? barrierColor,
@@ -333,7 +335,7 @@ class ModalApi {
     StatusType type,
     String? title,
     String? content,
-    String okText,
+    String? okText,
     bool centered,
     double? top,
     Color? barrierColor,
@@ -343,7 +345,7 @@ class ModalApi {
           title: title == null ? null : Text(title),
           content: content == null ? null : Text(content),
           type: type,
-          okText: Text(okText),
+          okText: okText == null ? null : Text(okText),
           showCancel: false,
           centered: centered,
           top: top,
@@ -681,7 +683,7 @@ class _ModalCardState extends State<_ModalCard>
               // Cancelling must stay available while the confirm is running,
               // otherwise a hung request traps the user in the dialog.
               onPressed: () => widget.entry.dismiss(false),
-              child: config.cancelText,
+              child: config.cancelText ?? Text(context.seedLocale.cancel),
             ),
           SizedBox(width: token.sizeXS),
           Button(
@@ -689,7 +691,7 @@ class _ModalCardState extends State<_ModalCard>
             color: config.danger ? ButtonColor.danger : ButtonColor.primary,
             loading: _confirming,
             onPressed: _handleOk,
-            child: config.okText,
+            child: config.okText ?? Text(context.seedLocale.ok),
           ),
         ],
       ],

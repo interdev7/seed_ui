@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
 import 'package:seed_ui/seed_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
+import 'components/localization_demo.dart';
 import 'components/feedback/alert_demo.dart';
 import 'components/data_display/avatar_demo.dart';
 import 'components/data_display/badge_demo.dart';
@@ -69,6 +71,47 @@ class ThemeController extends InheritedWidget {
   bool updateShouldNotify(ThemeController oldWidget) => mode != oldWidget.mode;
 }
 
+/// The language the gallery is in, so the kit's own words can be seen
+/// changing. Beside [ThemeController] rather than folded into it: a language
+/// and a theme are two unrelated choices.
+class LocaleController extends InheritedWidget {
+  const LocaleController({
+    super.key,
+    required this.locale,
+    required this.setLocale,
+    required super.child,
+  });
+
+  final Locale locale;
+  final ValueChanged<Locale> setLocale;
+
+  static LocaleController of(BuildContext context) {
+    final result = context
+        .dependOnInheritedWidgetOfExactType<LocaleController>();
+    assert(result != null, 'No LocaleController found in context');
+    return result!;
+  }
+
+  @override
+  bool updateShouldNotify(LocaleController old) => locale != old.locale;
+}
+
+/// The languages the kit ships, with something readable to show for each.
+const Map<String, String> demoLanguages = {
+  'en': 'English',
+  'ru': 'Русский',
+  'tk': 'Türkmen',
+  'de': 'Deutsch',
+  'fr': 'Français',
+  'es': 'Español',
+  'zh': '中文',
+  'ja': '日本語',
+  'tr': 'Türkçe',
+  'pt': 'Português',
+  'ar': 'العربية',
+  'he': 'עברית',
+};
+
 class DemoApp extends StatefulWidget {
   const DemoApp({super.key});
 
@@ -78,6 +121,7 @@ class DemoApp extends StatefulWidget {
 
 class _DemoAppState extends State<DemoApp> {
   ThemeModeOption _mode = ThemeModeOption.light;
+  Locale _locale = const Locale('en');
 
   ThemeData _getTheme() {
     switch (_mode) {
@@ -123,12 +167,29 @@ class _DemoAppState extends State<DemoApp> {
     return ThemeController(
       mode: _mode,
       setTheme: (mode) => setState(() => _mode = mode),
-      child: ConfigProvider(
-        theme: _getTheme(),
-        child: MaterialApp.router(
-          title: 'seed_ui',
-          debugShowCheckedModeBanner: false,
-          routerConfig: _router,
+      child: LocaleController(
+        locale: _locale,
+        setLocale: (l) => setState(() => _locale = l),
+        // Above MaterialApp, as the kit's docs place it: overlays draw into
+        // the navigator, above anything put inside `home`.
+        child: ConfigProvider(
+          theme: _getTheme(),
+          child: MaterialApp.router(
+            title: 'seed_ui',
+            debugShowCheckedModeBanner: false,
+            locale: _locale,
+            // The kit's delegate is one more in the list, not a scheme of its
+            // own. The global ones are Flutter's requirement: MaterialApp
+            // refuses a non-English locale without them.
+            localizationsDelegates: const [
+              SeedLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: SeedLocalizations.supportedLocales,
+            routerConfig: _router,
+          ),
         ),
       ),
     );
@@ -143,6 +204,7 @@ class MainLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final token = context.softToken;
     final themeController = ThemeController.of(context);
+    final localeController = LocaleController.of(context);
     final themeLabel = switch (themeController.mode) {
       ThemeModeOption.light => 'Light ☀️',
       ThemeModeOption.dark => 'Dark 🌙',
@@ -196,39 +258,72 @@ class MainLayout extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Dropdown(
-                    trigger: const [DropdownTrigger.click],
-                    menu: const [
-                      DropdownItem(
-                        key: ThemeModeOption.light,
-                        label: Text('Light ☀️'),
-                        icon: Icon(Icons.light_mode),
-                      ),
-                      DropdownItem(
-                        key: ThemeModeOption.dark,
-                        label: Text('Dark 🌙'),
-                        icon: Icon(Icons.dark_mode),
-                      ),
-                      DropdownItem(
-                        key: ThemeModeOption.newYear,
-                        label: Text('New Year 🎄'),
-                        icon: Icon(Icons.park),
-                      ),
-                      DropdownItem(
-                        key: ThemeModeOption.newYearNight,
-                        label: Text('New Year night 🌙🎄'),
-                        icon: Icon(Icons.nights_stay),
-                      ),
-                    ],
-                    onItemTap: (key) {
-                      if (key is ThemeModeOption) {
-                        themeController.setTheme(key);
-                      }
-                    },
-                    child: Button(
-                      onPressed: () {},
-                      icon: Icon(themeIcon),
-                      child: Text(themeLabel),
+                  // Grouped, and allowed to shrink: the row is spaceBetween,
+                  // so loose children would spread across it, and on a narrow
+                  // screen two dropdowns side by side overflow.
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Dropdown(
+                          trigger: const [DropdownTrigger.click],
+                          menu: const [
+                            DropdownItem(
+                              key: ThemeModeOption.light,
+                              label: Text('Light ☀️'),
+                              icon: Icon(Icons.light_mode),
+                            ),
+                            DropdownItem(
+                              key: ThemeModeOption.dark,
+                              label: Text('Dark 🌙'),
+                              icon: Icon(Icons.dark_mode),
+                            ),
+                            DropdownItem(
+                              key: ThemeModeOption.newYear,
+                              label: Text('New Year 🎄'),
+                              icon: Icon(Icons.park),
+                            ),
+                            DropdownItem(
+                              key: ThemeModeOption.newYearNight,
+                              label: Text('New Year night 🌙🎄'),
+                              icon: Icon(Icons.nights_stay),
+                            ),
+                          ],
+                          onItemTap: (key) {
+                            if (key is ThemeModeOption) {
+                              themeController.setTheme(key);
+                            }
+                          },
+                          child: Button(
+                            onPressed: () {},
+                            icon: Icon(themeIcon),
+                            child: Text(themeLabel),
+                          ),
+                        ),
+                        SizedBox(width: token.sizeSM),
+                        Dropdown(
+                          trigger: const [DropdownTrigger.click],
+                          menu: [
+                            for (final e in demoLanguages.entries)
+                              DropdownItem(key: e.key, label: Text(e.value)),
+                          ],
+                          onItemTap: (key) {
+                            if (key is String) {
+                              localeController.setLocale(Locale(key));
+                            }
+                          },
+                          child: Button(
+                            onPressed: () {},
+                            icon: const Icon(Icons.translate),
+                            child: Text(
+                              demoLanguages[localeController
+                                      .locale
+                                      .languageCode] ??
+                                  'English',
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -263,6 +358,7 @@ class Demo {
 
 final List<Demo> demos = [
   Demo('new_year', 'New Year Theme 🎄', (_) => const NewYearDemo()),
+  Demo('localization', 'Localization 🌍', (_) => const LocalizationDemo()),
   Demo('avatar', 'Avatar', (_) => const AvatarDemo()),
   Demo('badge', 'Badge', (_) => const BadgeDemo()),
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),

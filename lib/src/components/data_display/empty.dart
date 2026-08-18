@@ -126,7 +126,7 @@ class Empty extends StatelessWidget {
               decoration: TextDecoration.none,
             ),
             textAlign: TextAlign.center,
-            child: description ?? const Text('No data'),
+            child: description ?? Text(context.seedLocale.noData),
           ),
           if (child != null) ...[
             SizedBox(height: t.size),

@@ -222,6 +222,7 @@ export 'src/icons/icons.dart'
         DashedBorderPainter,
         SearchIcon,
         UserIcon;
+export 'src/l10n/seed_localizations.dart' show SeedLocalizations;
 export 'src/theme/config_provider.dart'
     show ConfigProvider, ComponentsConfig, ThemeContext, ThemeData;
 export 'src/theme/design_token.dart'

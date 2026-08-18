@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:flutter/widgets.dart';
 
+import '../l10n/seed_localizations.dart';
 import 'components_config.dart';
 import 'design_token.dart';
 
@@ -61,6 +62,7 @@ class ConfigProvider extends InheritedWidget {
     WidgetBuilder? renderEmpty,
     List<Object> components = const [],
     bool systemOverlayStyle = true,
+    SeedLocalizations? locale,
     required Widget child,
   }) : this._(
           key: key,
@@ -68,6 +70,7 @@ class ConfigProvider extends InheritedWidget {
           renderEmpty: renderEmpty,
           components: components,
           systemOverlayStyle: systemOverlayStyle,
+          locale: locale,
           child: child,
         );
 
@@ -77,6 +80,7 @@ class ConfigProvider extends InheritedWidget {
     required this.renderEmpty,
     required this.components,
     required this.systemOverlayStyle,
+    required this.locale,
     required Widget child,
   }) : super(
           // Declared rather than pushed through `SystemChrome`, so the style
@@ -110,6 +114,13 @@ class ConfigProvider extends InheritedWidget {
   /// app drives the system chrome itself — through `AppBar.systemOverlayStyle`
   /// or its own [AnnotatedRegion].
   final bool systemOverlayStyle;
+
+  /// The words the kit says on its own account, for this subtree.
+  ///
+  /// Overrides whatever `SeedLocalizations.delegate` resolved, which is what
+  /// puts one dialog into another language, or replaces a single word without
+  /// forking a whole language. Null leaves the delegate in charge.
+  final SeedLocalizations? locale;
 
   /// The theme handed to every widget below this point.
   final ThemeData theme;
@@ -156,6 +167,7 @@ class ConfigProvider extends InheritedWidget {
   bool updateShouldNotify(ConfigProvider oldWidget) =>
       oldWidget.theme != theme ||
       oldWidget.renderEmpty != renderEmpty ||
+      oldWidget.locale != locale ||
       !identical(oldWidget.components, components);
 }
 
@@ -166,4 +178,16 @@ extension ThemeContext on BuildContext {
   /// Reading this registers a dependency, so the widget rebuilds when the
   /// theme changes.
   Token get softToken => ConfigProvider.of(this).token;
+
+  /// The words the kit says here.
+  ///
+  /// The nearest [ConfigProvider.locale] wins, then whatever
+  /// `SeedLocalizations.delegate` resolved from the app's locale, then
+  /// English. A provider is the more specific of the two, and the only one
+  /// that can differ from one subtree to the next.
+  SeedLocalizations get seedLocale {
+    final provider =
+        dependOnInheritedWidgetOfExactType<ConfigProvider>()?.locale;
+    return provider ?? SeedLocalizations.of(this);
+  }
 }

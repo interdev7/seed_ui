@@ -1077,7 +1077,7 @@ class _ListyState<T, K extends Object, R extends Object>
                 fontFamilyFallback: t.fontFamilyFallback,
                 decoration: TextDecoration.none,
               ),
-              child: const Text('No more items'),
+              child: Text(context.seedLocale.noMoreItems),
             ),
           );
     }

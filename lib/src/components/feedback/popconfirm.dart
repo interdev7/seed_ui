@@ -97,8 +97,8 @@ class Popconfirm extends StatefulWidget {
     required this.child,
     required this.title,
     this.description,
-    this.okText = const Text('OK'),
-    this.cancelText = const Text('Cancel'),
+    this.okText,
+    this.cancelText,
     this.onOk,
     this.onCancel,
     this.danger = false,
@@ -124,10 +124,12 @@ class Popconfirm extends StatefulWidget {
   final Widget? description;
 
   /// Label of the confirming button.
-  final Widget okText;
+  /// Null takes the word from the locale in scope.
+  final Widget? okText;
 
   /// Label of the dismissing button.
-  final Widget cancelText;
+  /// Null takes the word from the locale in scope.
+  final Widget? cancelText;
 
   /// Called when confirmed.
   ///
@@ -292,7 +294,7 @@ class _SoftPopconfirmState extends State<Popconfirm> {
                 Button(
                   size: SoftSize.small,
                   onPressed: () => _setOpen(false),
-                  child: widget.cancelText,
+                  child: widget.cancelText ?? Text(context.seedLocale.cancel),
                 ),
                 SizedBox(width: token.sizeXS),
               ],
@@ -302,7 +304,7 @@ class _SoftPopconfirmState extends State<Popconfirm> {
                 color: widget.danger ? ButtonColor.danger : ButtonColor.primary,
                 loading: _confirming,
                 onPressed: _confirm,
-                child: widget.okText,
+                child: widget.okText ?? Text(context.seedLocale.ok),
               ),
             ],
           ),

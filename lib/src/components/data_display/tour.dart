@@ -1719,7 +1719,7 @@ class _TourPanel extends StatelessWidget {
               icon: prev?.icon,
               // A disabled button is one the step will not let you leave by.
               onPressed: (prev?.disabled ?? false) ? null : onPrev,
-              child: prev?.label ?? const Text('Previous'),
+              child: prev?.label ?? Text(context.seedLocale.previous),
             ),
           ),
           SizedBox(width: t.sizeXS),
@@ -1736,7 +1736,10 @@ class _TourPanel extends StatelessWidget {
                 (_primary ? ButtonColor.defaultColor : ButtonColor.primary),
             icon: next?.icon,
             onPressed: (next?.disabled ?? false) ? null : onNext,
-            child: next?.label ?? Text(_isLast ? 'Finish' : 'Next'),
+            child: next?.label ??
+                Text(
+                  _isLast ? context.seedLocale.finish : context.seedLocale.next,
+                ),
           ),
         ),
       ],

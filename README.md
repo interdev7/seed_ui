@@ -32,7 +32,7 @@ open a drawer.
 
 ```yaml
 dependencies:
-  seed_ui: ^0.6.5
+  seed_ui: ^0.6.6
 ```
 
 ## Getting started
@@ -62,6 +62,11 @@ class MyApp extends StatelessWidget {
   }
 }
 ```
+
+Twelve languages ship with the kit, and it follows your app's locale through
+an ordinary `LocalizationsDelegate` — so `intl`, `easy_localization` and the
+rest work with it while `seed_ui` depends on none of them. See
+[Localization](doc/localization.md).
 
 `ConfigProvider` supplies the theme. Widgets fall back to the default
 theme without it, so it is optional.

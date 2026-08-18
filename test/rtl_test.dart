@@ -216,4 +216,38 @@ void main() {
       }
     });
   });
+  group('a pagination', () {
+    testWidgets('a run of pages too wide for its room scrolls, not overflows', (
+      tester,
+    ) async {
+      // Wide figures and a narrow box: the case that used to paint the debug
+      // stripes and hide the pages past the edge.
+      await tester.pumpWidget(
+        ConfigProvider(
+          locale: SeedLocalizations.ar,
+          child: _host(
+            const SizedBox(
+              width: 200,
+              child: Pagination(
+                total: 500,
+                pageSize: 10,
+                current: 5,
+                showSizeChanger: true,
+              ),
+            ),
+            TextDirection.rtl,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byType(Pagination),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsWidgets,
+      );
+    });
+  });
 }

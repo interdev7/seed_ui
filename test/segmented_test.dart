@@ -423,4 +423,121 @@ void main() {
       expect(d, greaterThan(0.005));
     });
   });
+  group('when there is not enough room', () {
+    const long = [
+      SegmentedOption(value: 0, label: 'Compact'),
+      SegmentedOption(value: 1, label: 'Cozy'),
+      SegmentedOption(value: 2, label: 'Comfortable'),
+    ];
+
+    testWidgets('a content-sized run keeps its labels whole and scrolls', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 160,
+                child:
+                    Segmented<int>(value: 1, options: long, onChanged: (_) {}),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Squeezed into far less room than it wants, and still no overflow.
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byType(Segmented<int>),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsOneWidget,
+        reason: 'the run scrolls rather than shrinking its segments',
+      );
+
+      // Every label at its natural width: a segment is as wide as its text.
+      final wide = tester.getSize(find.text('Comfortable')).width;
+      final narrow = tester.getSize(find.text('Cozy')).width;
+      expect(wide, greaterThan(narrow));
+    });
+
+    testWidgets('a block run shares the width instead, and cuts what spills', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 160,
+                child: Segmented<int>(
+                  value: 1,
+                  block: true,
+                  options: long,
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      // Block is the deliberate opposite: equal shares of the width, and what
+      // will not fit is cut with an ellipsis rather than the run scrolling.
+      expect(
+        find.descendant(
+          of: find.byType(Segmented<int>),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsNothing,
+      );
+      expect(tester.getSize(find.byType(Segmented<int>)).width, 160);
+
+      // One line, whatever the label. Wrapping made the whole strip grow a
+      // second line to suit its longest word.
+      final label = tester.widget<Text>(find.text('Comfortable'));
+      expect(label.maxLines, 1);
+      expect(label.overflow, TextOverflow.ellipsis);
+    });
+
+    testWidgets('a block run stays one control tall however long the label', (
+      tester,
+    ) async {
+      Future<double> heightFor(String longest) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 150,
+                  child: Segmented<int>(
+                    value: 1,
+                    block: true,
+                    onChanged: (_) {},
+                    options: [
+                      const SegmentedOption(value: 0, label: 'A'),
+                      const SegmentedOption(value: 1, label: 'B'),
+                      SegmentedOption(value: 2, label: longest),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        return tester.getSize(find.byType(Segmented<int>)).height;
+      }
+
+      final short = await heightFor('C');
+      final long = await heightFor('An extremely long label indeed');
+      expect(long, short, reason: 'the strip does not grow a second line');
+    });
+  });
 }

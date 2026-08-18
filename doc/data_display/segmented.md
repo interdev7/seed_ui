@@ -140,3 +140,10 @@ ConfigProvider(
 ```
 
 A per-instance `token` wins over the `ConfigProvider` one.
+
+## Long labels
+
+A segment is one line, always. A content-sized run is as wide as its labels
+and scrolls when the row will not fit; a block run shares the width equally
+and cuts what spills with an ellipsis, so the strip stays one control tall
+however long a label is.

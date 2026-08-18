@@ -354,8 +354,9 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
       );
     }
     if (block) {
-      // Equal-width segments filling the width; IntrinsicHeight keeps them the
-      // same height even if one wraps to two lines.
+      // Equal-width segments filling the width. IntrinsicHeight keeps them all
+      // the height of the tallest, which matters when one carries an icon and
+      // another does not.
       return IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -401,9 +402,14 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
         : Text(
             option.label!,
             textAlign: TextAlign.center,
-            // Block segments have a bounded width, so let a long label wrap
-            // rather than clip; content-sized segments never need to.
-            softWrap: block,
+            // A segment is one line, always. Content-sized ones are as wide as
+            // their label and never need more; a block one shares the width
+            // equally and cuts what will not fit, which keeps the run one
+            // control tall however long a label is. Wrapping instead made the
+            // whole strip grow a second line to suit its longest word.
+            softWrap: false,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: color,
               fontSize: _fontSize(token),
@@ -427,9 +433,10 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
               if (label != null) SizedBox(width: token.sizeXXS),
             ],
             if (label != null)
-              // In block mode the row is width-bounded, so Flexible lets the
-              // label wrap. Elsewhere the row is unbounded and Flexible would
-              // be illegal, so use the label directly.
+              // In block mode the row is width-bounded, and Flexible is what
+              // lets the label shrink below its natural width so the ellipsis
+              // has somewhere to happen. Elsewhere the row is unbounded and
+              // Flexible would be illegal, so the label goes in directly.
               block ? Flexible(child: label) : label,
           ],
         );

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A `Segmented` in `block` mode wrapped a label that would not fit, growing
+  the whole strip a second line to suit its longest word. A segment is one
+  line: what spills is cut with an ellipsis, as it is in Ant Design, where the
+  label carries `text-overflow: ellipsis` and the item `min-width: 0`.
+- A `Pagination` whose run of pages was too wide for its room overflowed
+  rather than fitting. The run is atomic by design, so it cannot be given less
+  space than it needs; it scrolls now, as a long row of segments does. Widest
+  where the figures are — Arabic-Indic ones, or a longer word for `/ page` —
+  but a narrow screen was enough on its own.
 - A run of `RadioGroup` buttons rounded the wrong corners in a right-to-left
   layout. The ends were square and the two rounded edges met in the middle,
   because the first button took the left corners while the row put it on the

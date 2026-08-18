@@ -316,7 +316,20 @@ class _PaginationState extends State<Pagination> {
 
     final children = <Widget>[
       if (widget.showTotal != null) _total(token, fontSize),
-      pager,
+      // The run of pages is atomic on purpose, so it cannot be given less room
+      // than it needs — a narrow screen, or figures wider than the Latin ones
+      // it was measured against, and it simply overflowed. It scrolls instead,
+      // the way a long row of segments does. IntrinsicWidth asks the row how
+      // wide it wants to be and then honours the incoming constraint: room
+      // enough and the viewport is exactly the row, with nothing to scroll, so
+      // the common case is unchanged.
+      IntrinsicWidth(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const ClampingScrollPhysics(),
+          child: pager,
+        ),
+      ),
       if (widget.showSizeChanger) _sizeChanger(token),
       if (widget.showQuickJumper && !_simpleMode)
         _quickJumper(token, fontSize, height),

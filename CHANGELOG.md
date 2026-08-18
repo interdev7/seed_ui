@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.7
+
+### Added
+
+- Localized figures. `SeedLocalizations.digits` gives the ten glyphs a language
+  writes its numbers with, and Arabic ships the Arabic-Indic ones — CLDR's
+  default for the language — so a badge counts `٤٢` and a countdown reads
+  `٠١:٠٢`. Only the figures the kit writes itself are rewritten; numbers inside
+  your own text stay yours. Glyph substitution, not number formatting: grouping
+  and decimal marks need locale data the kit does not carry.
+
+  The Maghreb writes Arabic with Latin figures, and matching on language alone
+  cannot tell, so `copyWith(digits: SeedLocalizations.latinDigits)` says so.
+- `SeedLocalizations.perPage`, the `/ page` that follows a size in
+  `Pagination`'s size picker. Missed when the rest of the words were gathered.
+
 ## 0.6.6
 
 ### Added

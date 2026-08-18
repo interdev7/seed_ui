@@ -118,6 +118,33 @@ Pull requests adding one to the kit are welcome.
 | `finish` | Finish | `Tour`, on the last step |
 | `noData` | No data | `Empty` |
 | `noMoreItems` | No more items | `Listy`, at the end of a list |
+| `perPage` | / page | `Pagination`, in the size picker |
+
+## Figures
+
+Some languages write their numbers with their own glyphs. `digits` gives the
+ten, and Arabic ships the Arabic-Indic figures — what CLDR gives as the
+language's default — so a badge counts `٤٢` and a countdown reads `٠١:٠٢`.
+
+Only the figures the kit writes itself are rewritten: a badge's count, a
+countdown, page numbers, a step's number. Numbers inside your own text are
+yours to format.
+
+This is glyph substitution, not number formatting. There is no grouping and no
+decimal mark, because those need locale data the kit does not carry — reach
+for `intl` when you need them.
+
+The Maghreb writes Arabic with Latin figures. The kit matches on language
+alone and cannot tell, so an app there says:
+
+```dart
+ConfigProvider(
+  locale: SeedLocalizations.ar.copyWith(
+    digits: SeedLocalizations.latinDigits,
+  ),
+  child: MyApp(),
+)
+```
 
 ## On the translations
 

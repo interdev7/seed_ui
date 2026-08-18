@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 
@@ -214,7 +215,9 @@ class Badge extends StatelessWidget {
     // Standalone there is nothing to hang a vanishing badge off, and an empty
     // one must take no room at all, so it simply is not built.
     if (child == null) {
-      return _hasIndicator ? _buildIndicator(t, r) : const SizedBox.shrink();
+      return _hasIndicator
+          ? _buildIndicator(t, r, context.seedLocale)
+          : const SizedBox.shrink();
     }
 
     // Pinned to a child it is kept mounted and scaled away instead: a count
@@ -228,7 +231,7 @@ class Badge extends StatelessWidget {
             // pop rather than easing politely into place.
             curve: const Cubic(0.12, 0.4, 0.29, 1.46),
             reverseCurve: t.motionEaseInOut,
-            child: _buildIndicator(t, r),
+            child: _buildIndicator(t, r, context.seedLocale),
           )
         : null;
 
@@ -278,7 +281,11 @@ class Badge extends StatelessWidget {
         BadgeStatus.error => t.error.base,
       };
 
-  Widget _buildIndicator(Token t, _ResolvedBadgeToken r) {
+  Widget _buildIndicator(
+    Token t,
+    _ResolvedBadgeToken r,
+    SeedLocalizations l,
+  ) {
     final fill = color ?? r.bg;
     final ring = BoxDecoration(
       color: fill,
@@ -318,7 +325,7 @@ class Badge extends StatelessWidget {
     final label = content ??
         (rolls
             ? _ScrollNumber(count: n!, text: text, style: style)
-            : Text(text ?? '', style: style));
+            : Text(l.figures(text ?? ''), style: style));
 
     return Semantics(
       label: title,
@@ -796,7 +803,10 @@ class _ReelState extends State<_Reel> with SingleTickerProviderStateMixin {
                     child: SizedBox(
                       width: widget.cell,
                       child: Text(
-                        '${(i % 10 + 10) % 10}',
+                        // Only the face is localised; the reel itself counts
+                        // in plain numbers, so its arithmetic is unaffected by
+                        // which glyphs the language happens to use.
+                        context.seedLocale.digit((i % 10 + 10) % 10),
                         style: widget.style,
                         textAlign: TextAlign.center,
                       ),

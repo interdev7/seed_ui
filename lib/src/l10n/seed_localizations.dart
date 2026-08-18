@@ -67,7 +67,12 @@ class SeedLocalizations {
     this.finish = 'Finish',
     this.noData = 'No data',
     this.noMoreItems = 'No more items',
-  });
+    this.perPage = '/ page',
+    this.digits = latinDigits,
+  }) : assert(
+          digits.length == 10,
+          'digits must give exactly one glyph for each of 0 to 9',
+        );
 
   /// Which language this is, for identifying it. Not used for matching.
   final String localeName;
@@ -93,6 +98,45 @@ class SeedLocalizations {
   /// What a list says once it has been scrolled to its end.
   final String noMoreItems;
 
+  /// Follows a page size in a pagination's size picker: `20 / page`.
+  final String perPage;
+
+  /// The ten glyphs for 0 to 9, in order.
+  ///
+  /// Only the figures the kit writes itself are rewritten — a badge's count, a
+  /// countdown, page numbers. Numbers inside your own text are yours.
+  ///
+  /// This is a glyph substitution, not number formatting: no grouping, no
+  /// decimal marks, nothing needing locale data the kit does not carry.
+  ///
+  /// Arabic ships the Arabic-Indic figures, which is what CLDR gives as the
+  /// default for the language. The Maghreb writes Arabic with Latin figures,
+  /// and since the kit matches on language alone it cannot tell: an app there
+  /// wants `copyWith(digits: SeedLocalizations.latinDigits)`.
+  final String digits;
+
+  /// `0123456789`. What most languages use, and the default.
+  static const String latinDigits = '0123456789';
+
+  /// `٠١٢٣٤٥٦٧٨٩`, used across much of the Arabic-writing world.
+  static const String arabicIndicDigits = '٠١٢٣٤٥٦٧٨٩';
+
+  /// The glyph this language writes [d] with. [d] must be 0 to 9.
+  String digit(int d) => digits.characters.elementAt(d);
+
+  /// Rewrites the ASCII figures in [text] in this language's own, leaving
+  /// everything else — separators, a `+`, a `/` — as it stands.
+  String figures(String text) {
+    if (digits == latinDigits) return text;
+    final out = StringBuffer();
+    for (final ch in text.codeUnits) {
+      out.write(
+        ch >= 0x30 && ch <= 0x39 ? digit(ch - 0x30) : String.fromCharCode(ch),
+      );
+    }
+    return out.toString();
+  }
+
   /// A copy with the given words replaced.
   SeedLocalizations copyWith({
     String? localeName,
@@ -103,6 +147,8 @@ class SeedLocalizations {
     String? finish,
     String? noData,
     String? noMoreItems,
+    String? perPage,
+    String? digits,
   }) =>
       SeedLocalizations(
         localeName: localeName ?? this.localeName,
@@ -113,6 +159,8 @@ class SeedLocalizations {
         finish: finish ?? this.finish,
         noData: noData ?? this.noData,
         noMoreItems: noMoreItems ?? this.noMoreItems,
+        perPage: perPage ?? this.perPage,
+        digits: digits ?? this.digits,
       );
 
   @override
@@ -125,7 +173,9 @@ class SeedLocalizations {
       other.next == next &&
       other.finish == finish &&
       other.noData == noData &&
-      other.noMoreItems == noMoreItems;
+      other.noMoreItems == noMoreItems &&
+      other.perPage == perPage &&
+      other.digits == digits;
 
   @override
   int get hashCode => Object.hash(
@@ -160,6 +210,7 @@ class SeedLocalizations {
     finish: 'Завершить',
     noData: 'Нет данных',
     noMoreItems: 'Больше ничего нет',
+    perPage: '/ стр.',
   );
 
   /// Turkmen.
@@ -172,6 +223,7 @@ class SeedLocalizations {
     finish: 'Tamamla',
     noData: 'Maglumat ýok',
     noMoreItems: 'Başga zat ýok',
+    perPage: '/ sahypa',
   );
 
   /// German.
@@ -183,6 +235,7 @@ class SeedLocalizations {
     finish: 'Fertig',
     noData: 'Keine Daten',
     noMoreItems: 'Keine weiteren Einträge',
+    perPage: '/ Seite',
   );
 
   /// French.
@@ -194,6 +247,7 @@ class SeedLocalizations {
     finish: 'Fin de la visite guidée',
     noData: 'Aucune donnée',
     noMoreItems: 'Aucun élément supplémentaire',
+    perPage: '/ page',
   );
 
   /// Spanish.
@@ -206,6 +260,7 @@ class SeedLocalizations {
     finish: 'Finalizar',
     noData: 'Sin datos',
     noMoreItems: 'No hay más elementos',
+    perPage: '/ página',
   );
 
   /// Chinese, simplified.
@@ -218,6 +273,7 @@ class SeedLocalizations {
     finish: '结束导览',
     noData: '暂无数据',
     noMoreItems: '没有更多了',
+    perPage: '条/页',
   );
 
   /// Japanese.
@@ -229,6 +285,7 @@ class SeedLocalizations {
     finish: '仕上げる',
     noData: 'データなし',
     noMoreItems: 'これ以上ありません',
+    perPage: '件/ページ',
   );
 
   /// Turkish.
@@ -241,6 +298,7 @@ class SeedLocalizations {
     finish: 'Bitir',
     noData: 'Veri yok',
     noMoreItems: 'Başka öğe yok',
+    perPage: '/ sayfa',
   );
 
   /// Portuguese.
@@ -252,6 +310,7 @@ class SeedLocalizations {
     finish: 'Finalizar',
     noData: 'Sem conteúdo',
     noMoreItems: 'Não há mais itens',
+    perPage: '/ página',
   );
 
   /// Arabic. Read right to left.
@@ -264,6 +323,8 @@ class SeedLocalizations {
     finish: 'إنهاء',
     noData: 'لا توجد بيانات',
     noMoreItems: 'لا مزيد من العناصر',
+    perPage: '/ صفحة',
+    digits: arabicIndicDigits,
   );
 
   /// Hebrew. Read right to left.
@@ -276,6 +337,7 @@ class SeedLocalizations {
     finish: 'סיום',
     noData: 'אין נתונים',
     noMoreItems: 'אין פריטים נוספים',
+    perPage: '/ עמוד',
   );
 
   /// Every language the kit ships, by language code.

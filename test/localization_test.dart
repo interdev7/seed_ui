@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer;
+    hide Badge, ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -183,6 +183,72 @@ void main() {
         ),
       );
       expect(find.text('Keine Daten'), findsOneWidget);
+    });
+  });
+  group('figures', () {
+    test('most languages leave the figures alone', () {
+      expect(SeedLocalizations.en.figures('99+'), '99+');
+      expect(SeedLocalizations.ru.figures('01:30'), '01:30');
+      // Hebrew reads right to left but writes Latin figures.
+      expect(SeedLocalizations.he.figures('42'), '42');
+    });
+
+    test('Arabic writes its own, and only the figures', () {
+      expect(SeedLocalizations.ar.figures('2024'), '٢٠٢٤');
+      // Separators, a plus, a slash: untouched.
+      expect(SeedLocalizations.ar.figures('01:30:45'), '٠١:٣٠:٤٥');
+      expect(SeedLocalizations.ar.figures('99+'), '٩٩+');
+    });
+
+    test('a language can be given other figures, or told to keep Latin', () {
+      final maghreb = SeedLocalizations.ar.copyWith(
+        digits: SeedLocalizations.latinDigits,
+      );
+      expect(maghreb.figures('2024'), '2024', reason: 'the Maghreb case');
+      expect(maghreb.cancel, 'إلغاء', reason: 'still Arabic in every word');
+    });
+
+    test('a language must give exactly ten glyphs', () {
+      expect(
+        () => SeedLocalizations(digits: '012'),
+        throwsAssertionError,
+      );
+    });
+  });
+
+  group('figures on screen', () {
+    Widget arabic(Widget child) => ConfigProvider(
+          locale: SeedLocalizations.ar,
+          child: MaterialApp(home: Scaffold(body: Center(child: child))),
+        );
+
+    testWidgets('a badge counts in the language it is drawn in', (
+      tester,
+    ) async {
+      await tester.pumpWidget(arabic(const Badge(count: 42)));
+      await tester.pumpAndSettle();
+      expect(find.text('٤'), findsOneWidget);
+      expect(find.text('٢'), findsOneWidget);
+      expect(find.text('4'), findsNothing);
+    });
+
+    testWidgets('past the overflow too, the plus left as it is', (
+      tester,
+    ) async {
+      await tester.pumpWidget(arabic(const Badge(count: 200)));
+      expect(find.text('٩٩+'), findsOneWidget);
+    });
+
+    testWidgets('and a countdown', (tester) async {
+      await tester.pumpWidget(
+        arabic(
+          Countdown(
+            target: DateTime.now().add(const Duration(hours: 1, minutes: 2)),
+            format: 'HH:mm',
+          ),
+        ),
+      );
+      expect(find.text('٠١:٠٢'), findsOneWidget);
     });
   });
 }

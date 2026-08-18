@@ -377,7 +377,7 @@ class _PaginationState extends State<Pagination> {
             height: height,
             size: widget.size,
             fontSize: fontSize,
-            label: '${entry.page}',
+            label: context.seedLocale.figures('${entry.page}'),
             active: entry.page == _page,
             enabled: _enabled,
             onTap: () => _goTo(entry.page!),
@@ -403,7 +403,7 @@ class _PaginationState extends State<Pagination> {
         : Input(
             key: ValueKey(_page),
             size: widget.size,
-            defaultValue: '$_page',
+            defaultValue: context.seedLocale.figures('$_page'),
             disabled: !_enabled || readOnly,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
@@ -422,7 +422,7 @@ class _PaginationState extends State<Pagination> {
     // without a text field's asymmetric insets.
     final Widget field = readOnly
         ? Text(
-            '$_page',
+            context.seedLocale.figures('$_page'),
             style: TextStyle(
               color: token.colorText,
               fontSize: fontSize,
@@ -452,7 +452,7 @@ class _PaginationState extends State<Pagination> {
           ),
         ),
         Text(
-          '$_pageCount',
+          context.seedLocale.figures('$_pageCount'),
           style: TextStyle(
             color: token.colorText,
             fontSize: fontSize,
@@ -472,7 +472,11 @@ class _PaginationState extends State<Pagination> {
         disabled: !_enabled,
         options: [
           for (final s in widget.pageSizeOptions)
-            SelectOption(value: s, filterText: '$s / page'),
+            SelectOption(
+              value: s,
+              filterText: '${context.seedLocale.figures('$s')} '
+                  '${context.seedLocale.perPage}',
+            ),
         ],
         onChanged: (v) {
           if (v.isNotEmpty) _changeSize(v.first);

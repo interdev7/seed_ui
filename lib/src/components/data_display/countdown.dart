@@ -412,9 +412,10 @@ class _CountdownState extends State<Countdown>
             const CountdownToken())
         ._resolve(t);
 
-    return widget.builder?.call(context, _shown) ??
+    final shown = context.seedLocale.figures(_shown);
+    return widget.builder?.call(context, shown) ??
         Text(
-          _shown,
+          shown,
           style: TextStyle(
             fontSize: r.fontSize,
             color: r.color,

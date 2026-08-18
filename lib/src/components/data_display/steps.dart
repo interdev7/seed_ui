@@ -1145,7 +1145,7 @@ class _Marker extends StatelessWidget {
     } else {
       glyph = easeInk(
         (c) => Text(
-          '$number',
+          context.seedLocale.figures('$number'),
           textAlign: TextAlign.center,
           style: TextStyle(
             color: c,

@@ -75,7 +75,15 @@ class Group extends StatelessWidget {
                 borderRadius: BorderRadius.circular(token.borderRadiusLG),
                 border: Border.all(color: token.colorBorderSecondary),
               ),
-              child: _InGroup(child: body),
+              // The card spans the page; its contents must not. A container
+              // given a width hands the child a tight one, which stretched
+              // every button in the gallery across the whole viewport. Align
+              // passes the width down loose and puts the content at the
+              // leading edge, where it was before the card existed.
+              child: Align(
+                alignment: AlignmentDirectional.topStart,
+                child: _InGroup(child: body),
+              ),
             ),
         ],
       ),

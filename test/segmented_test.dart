@@ -506,6 +506,36 @@ void main() {
       expect(label.overflow, TextOverflow.ellipsis);
     });
 
+    testWidgets('a block run fills loose constraints, not only tight ones', (
+      tester,
+    ) async {
+      // How a demo card hands its contents down: room to the edge, but not an
+      // instruction to reach it. Block still means the full width.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 400,
+              child: Align(
+                alignment: AlignmentDirectional.topStart,
+                child: Segmented<int>(
+                  value: 1,
+                  block: true,
+                  onChanged: (_) {},
+                  options: const [
+                    SegmentedOption(value: 0, label: 'A'),
+                    SegmentedOption(value: 1, label: 'B'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(Segmented<int>)).width, 400);
+    });
+
     testWidgets('a block run stays one control tall however long the label', (
       tester,
     ) async {

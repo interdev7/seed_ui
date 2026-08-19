@@ -2292,4 +2292,66 @@ void main() {
       expect(roomy, greaterThan(tight));
     });
   });
+  group('a panel run floor', () {
+    /// The width of the painted strip, which is what the floor decides once
+    /// the panels have run out of room to share.
+    Future<double> strip(
+        WidgetTester tester, double width, double floor) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Align(
+              alignment: AlignmentDirectional.topStart,
+              child: SizedBox(
+                width: width,
+                child: Steps(
+                  type: StepsType.panel,
+                  current: 1,
+                  items: const [
+                    StepItem(title: Text('One')),
+                    StepItem(title: Text('Two')),
+                    StepItem(title: Text('Three')),
+                  ],
+                  token: StepsToken(panelMinWidth: floor),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (final element in find.byType(CustomPaint).evaluate()) {
+        final painter = (element.widget as CustomPaint).painter;
+        if (painter == null) continue;
+        if (!painter.runtimeType.toString().contains('PanelStrip')) continue;
+        return tester.getRect(find.byWidget(element.widget)).width;
+      }
+      throw StateError('no panel strip was painted');
+    }
+
+    testWidgets('raises the panels once the room runs out', (tester) async {
+      // Three panels in three hundred pixels is a hundred each, under every
+      // floor here, so each setting lifts them and the strip grows past the
+      // box — which is what gives it something to scroll.
+      final low = await strip(tester, 300, 100);
+      final middling = await strip(tester, 300, 160);
+      final high = await strip(tester, 300, 260);
+      expect(middling, greaterThan(low));
+      expect(high, greaterThan(middling));
+      expect(low, greaterThanOrEqualTo(300));
+    });
+
+    testWidgets('does nothing where the panels are already wider', (
+      tester,
+    ) async {
+      // Given room to share, the panels are past every floor on their own and
+      // it has nothing to raise. A demo that shows the setting here looks
+      // broken while behaving correctly.
+      expect(
+        await strip(tester, 900, 260),
+        await strip(tester, 900, 100),
+      );
+    });
+  });
 }

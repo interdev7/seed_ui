@@ -417,6 +417,37 @@ class _StepsDemoState extends State<StepsDemo> {
                 ],
               ),
               const SizedBox(height: 12),
+              // Short panels in a narrow box, which is the only place a floor
+              // can be seen at all: a panel is never narrower than its own
+              // text, so a run whose content already asks for more than the
+              // floor ignores it entirely. Squeezed below it the strip
+              // scrolls rather than crushing the panels.
+              Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  width: 300,
+                  child: Steps(
+                    type: StepsType.panel,
+                    variant: _variant,
+                    current: _clickable,
+                    onChange: (i) => setState(() => _clickable = i),
+                    items: const [
+                      StepItem(title: Text('One')),
+                      StepItem(title: Text('Two')),
+                      StepItem(title: Text('Three')),
+                    ],
+                    token: StepsToken(panelMinWidth: _panelMinWidth),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'The checkout run at the same setting: its panels carry enough '
+                'text to be wider than every floor offered, so the setting has '
+                'nothing to raise and the strip does not move.',
+                style: TextStyle(color: t.colorTextTertiary),
+              ),
+              const SizedBox(height: 8),
               Steps(
                 type: StepsType.panel,
                 variant: _variant,
@@ -424,30 +455,6 @@ class _StepsDemoState extends State<StepsDemo> {
                 onChange: (i) => setState(() => _clickable = i),
                 items: _checkout,
                 token: StepsToken(panelMinWidth: _panelMinWidth),
-              ),
-              const SizedBox(height: 12),
-              // The floor only bites where the room runs out: on a wide
-              // window all three settings fit, and the panels simply share
-              // it. Here is the same run at phone width, where they don't —
-              // above the floor the strip scrolls rather than crushing them.
-              Text(
-                'the same run at 360 px',
-                style: TextStyle(color: t.colorTextTertiary),
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: SizedBox(
-                  width: 360,
-                  child: Steps(
-                    type: StepsType.panel,
-                    variant: _variant,
-                    current: _clickable,
-                    onChange: (i) => setState(() => _clickable = i),
-                    items: _checkout,
-                    token: StepsToken(panelMinWidth: _panelMinWidth),
-                  ),
-                ),
               ),
               const SizedBox(height: 16),
               // Panels take their size from the longest title/content, so a

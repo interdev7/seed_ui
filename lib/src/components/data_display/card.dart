@@ -598,7 +598,9 @@ class _Skeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bar(double widthFactor) => FractionallySizedBox(
-          alignment: Alignment.centerLeft,
+          // A stand-in for a line of text, so it fills from where the reading
+          // would start.
+          alignment: AlignmentDirectional.centerStart,
           widthFactor: widthFactor,
           child: Container(
             height: t.fontSize,

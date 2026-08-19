@@ -1129,7 +1129,7 @@ class _ListyState<T, K extends Object, R extends Object>
   Widget _groupHeader(Token t, _ResolvedListyToken r, _Slot<T, K> slot) {
     return Container(
       width: double.infinity,
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       padding: widget.styles?.groupHeaderPadding ??
           EdgeInsets.symmetric(
             vertical: t.sizeXS,

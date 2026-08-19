@@ -1104,4 +1104,103 @@ void main() {
       }
     });
   });
+  group('a run of rails', () {
+    /// The gaps in the ink along the rail's own row, as (start, width) pairs
+    /// measured from the edge the run starts at.
+    ///
+    /// Read from the painted pixels because this is about where the line
+    /// breaks, which no rectangle reports: the halves either meet or they do
+    /// not.
+    Future<List<String>> breaks(
+      WidgetTester tester,
+      TextDirection direction,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          const RepaintBoundary(
+            child: SizedBox(
+              width: 340,
+              child: Steps(
+                size: SoftSize.small,
+                responsive: false,
+                current: 1,
+                token: StepsToken(railInset: RailInsets.all(3)),
+                items: [
+                  StepItem(title: Text('Account')),
+                  StepItem(title: Text('Card')),
+                  StepItem(title: Text('Ship')),
+                ],
+              ),
+            ),
+          ),
+          direction,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find
+            .descendant(
+              of: find.byType(Center),
+              matching: find.byType(RepaintBoundary),
+            )
+            .first,
+      );
+
+      final out = <String>[];
+      await tester.runAsync(() async {
+        final image = await boundary.toImage();
+        final data = await image.toByteData(format: ImageByteFormat.rawRgba);
+        int at(int x, int y) {
+          final i = (y * image.width + x) * 4;
+          return (data!.getUint8(i) << 16) |
+              (data.getUint8(i + 1) << 8) |
+              data.getUint8(i + 2);
+        }
+
+        final background = at(0, 0);
+        // The row carrying the most ink is the one the rails run along.
+        var row = 0;
+        var most = 0;
+        for (var y = 0; y < image.height; y++) {
+          var n = 0;
+          for (var x = 0; x < image.width; x++) {
+            if (at(x, y) != background) n++;
+          }
+          if (n > most) {
+            most = n;
+            row = y;
+          }
+        }
+
+        var lastInk = -1;
+        for (var x = 0; x < image.width; x++) {
+          if (at(x, row) == background) continue;
+          if (lastInk >= 0 && x - lastInk > 1) {
+            final from =
+                direction == TextDirection.ltr ? lastInk + 1 : image.width - x;
+            out.add('$from+${x - lastInk - 1}');
+          }
+          lastInk = x;
+        }
+        image.dispose();
+      });
+      out.sort();
+      return out;
+    }
+
+    testWidgets('the halves of a rail meet at the same places either way', (
+      tester,
+    ) async {
+      // Each rail between two markers is drawn as two halves, and each half
+      // keeps its gap on the side facing a marker. The painter insets by side
+      // while the row orders by reading direction; where those disagreed the
+      // gap turned inward, breaking the line in the middle and running the
+      // ends flush into the markers instead.
+      expect(
+        await breaks(tester, TextDirection.rtl),
+        await breaks(tester, TextDirection.ltr),
+      );
+    });
+  });
 }

@@ -1520,7 +1520,7 @@ class _TourPanel extends StatelessWidget {
                 switchInCurve: curve,
                 switchOutCurve: curve,
                 layoutBuilder: (current, previous) => Stack(
-                  alignment: Alignment.topLeft,
+                  alignment: AlignmentDirectional.topStart,
                   clipBehavior: Clip.none,
                   children: [
                     // The outgoing copy keeps its own size and the card clips
@@ -1532,7 +1532,7 @@ class _TourPanel extends StatelessWidget {
                     for (final child in previous)
                       Positioned.fill(
                         child: OverflowBox(
-                          alignment: Alignment.topLeft,
+                          alignment: AlignmentDirectional.topStart,
                           minWidth: 0,
                           maxWidth: double.infinity,
                           minHeight: 0,
@@ -1560,10 +1560,12 @@ class _TourPanel extends StatelessWidget {
                       ),
                     if (step.title != null)
                       Padding(
-                        padding: EdgeInsets.fromLTRB(
+                        // Clear of the close button, which sits in the panel's
+                        // trailing corner — the left one when the panel reads
+                        // right to left, so the room has to follow it.
+                        padding: EdgeInsetsDirectional.fromSTEB(
                           t.size,
                           t.size,
-                          // Clear of the close button.
                           t.size + (closable ? r.closeBtnSize : 0),
                           t.sizeXS,
                         ),
@@ -1618,7 +1620,11 @@ class _TourPanel extends StatelessWidget {
                               else
                                 const SizedBox.shrink(),
                               Padding(
-                                padding: EdgeInsets.only(left: t.size),
+                                // Between the indicators and the buttons that
+                                // follow them, whichever way the row runs.
+                                padding: EdgeInsetsDirectional.only(
+                                  start: t.size,
+                                ),
                                 child: actionsBuilder?.call(
                                       context,
                                       actions,
@@ -1636,9 +1642,9 @@ class _TourPanel extends StatelessWidget {
                 ),
               ),
               if (closable)
-                Positioned(
+                PositionedDirectional(
                   top: t.size,
-                  right: t.size,
+                  end: t.size,
                   child: _CloseButton(
                     key: const Key('softTourClose'),
                     size: r.closeBtnSize,
@@ -1669,7 +1675,7 @@ class _TourPanel extends StatelessWidget {
         : AnimatedSize(
             duration: duration,
             curve: curve,
-            alignment: Alignment.topLeft,
+            alignment: AlignmentDirectional.topStart,
             child: measured,
           );
   }
@@ -1679,7 +1685,9 @@ class _TourPanel extends StatelessWidget {
         children: [
           for (var i = 0; i < total; i++)
             Padding(
-              padding: EdgeInsets.only(right: i == total - 1 ? 0 : t.sizeXXS),
+              padding: EdgeInsetsDirectional.only(
+                end: i == total - 1 ? 0 : t.sizeXXS,
+              ),
               child: AnimatedContainer(
                 duration: t.motionDurationMid,
                 curve: t.motionEaseInOut,

@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the far edge instead of against the line, leaving one column touching it
   and the other pushed away twice over. A collapsed item also revealed itself
   from the left rather than from where its text begins.
+- A `Tour` panel was built by side throughout: its close button sat in the
+  right corner rather than the trailing one, the room reserved for it in the
+  title cleared the wrong edge, the gap between the step dots and the buttons
+  fell on the wrong side of them, and the panel grew — and held its outgoing
+  copy — from the top left rather than from where it starts.
 - A `Timeline` item's title, description and content always read towards the
   start of their block, so in the column standing before the axis the lines
   drifted away from the line they belong to instead of meeting it. Text faces

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart'
     hide Badge, ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
 import 'package:flutter/rendering.dart' show RenderParagraph;
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
@@ -729,6 +730,72 @@ void main() {
         );
         // And that way is towards the axis. This item sits before it.
         expect(alignOf('Planning'), TextAlign.end, reason: why);
+      }
+    });
+  });
+  group('a tour panel', () {
+    /// The direction comes from the app's locale, not from a Directionality
+    /// wrapped round it: MaterialApp installs its own from the localizations,
+    /// and without the global delegates that is always left to right. It is
+    /// also the only way to reach the panel, which draws into the navigator's
+    /// overlay — above anything placed inside `home`.
+    Widget tour(TextDirection direction, GlobalKey target) => MaterialApp(
+          locale: Locale(direction == TextDirection.rtl ? 'ar' : 'en'),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('ar')],
+          home: Scaffold(
+            body: Stack(
+              children: [
+                Positioned(
+                  left: 60,
+                  top: 200,
+                  child: SizedBox(key: target, width: 120, height: 40),
+                ),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: Tour(
+                    open: true,
+                    steps: [
+                      TourStep(
+                        target: target,
+                        title: const Text('A step with a fairly long title'),
+                        description: const Text('And a description under it.'),
+                      ),
+                      TourStep(target: target, title: const Text('Second')),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+    testWidgets('closes from the trailing corner, clear of the title', (
+      tester,
+    ) async {
+      for (final direction in TextDirection.values) {
+        final target = GlobalKey();
+        await tester.pumpWidget(tour(direction, target));
+        await tester.pumpAndSettle();
+
+        final close = tester.getRect(find.byKey(const Key('softTourClose')));
+        final title = tester.getRect(
+          find.text('A step with a fairly long title'),
+        );
+        final why = '$direction';
+
+        // The cross sits in the panel's trailing corner, and the title stops
+        // short of it rather than running underneath.
+        if (direction == TextDirection.ltr) {
+          expect(close.left, greaterThan(title.right - 1), reason: why);
+        } else {
+          expect(close.right, lessThan(title.left + 1), reason: why);
+        }
       }
     });
   });

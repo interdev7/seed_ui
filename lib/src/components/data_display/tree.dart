@@ -878,6 +878,7 @@ class _NodeRowState extends State<_NodeRow> {
               child: CustomPaint(
                 painter: _TreeLinePainter(
                   color: t.colorBorder,
+                  direction: Directionality.of(context),
                   indent: indent,
                   level: widget.level,
                   ancestorsLast: widget.ancestorsLast,
@@ -887,8 +888,9 @@ class _NodeRowState extends State<_NodeRow> {
                 ),
               ),
             ),
-          Positioned(
-            left: widget.level * indent,
+          PositionedDirectional(
+            // The node's own depth, counted from the edge the tree starts at.
+            start: widget.level * indent,
             top: 0,
             bottom: 0,
             width: indent,
@@ -915,7 +917,7 @@ class _NodeRowState extends State<_NodeRow> {
 
     Widget titleRegion = Container(
       height: r.titleHeight,
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       padding: EdgeInsets.symmetric(horizontal: t.sizeXS),
       decoration: BoxDecoration(
         color: selectedBg ?? hoverBg,
@@ -956,7 +958,8 @@ class _NodeRowState extends State<_NodeRow> {
         // A grip handle marks the row as draggable.
         if (widget.draggable) ...[
           Padding(
-            padding: EdgeInsets.only(right: t.sizeXXS),
+            // Between the grip and what comes after it in reading order.
+            padding: EdgeInsetsDirectional.only(end: t.sizeXXS),
             child: CustomPaint(
               size: Size.square(t.fontSize),
               painter: HolderPainter(t.colorTextTertiary),
@@ -1068,9 +1071,10 @@ class _NodeRowState extends State<_NodeRow> {
       );
     }
     final left = (widget.level + 1) * indent;
-    final line = Positioned(
-      left: left,
-      right: 0,
+    final line = PositionedDirectional(
+      // Inset to where the node would land, from the edge the tree starts at.
+      start: left,
+      end: 0,
       top: pos == TreeDropPosition.before ? 0 : null,
       bottom: pos == TreeDropPosition.after ? 0 : null,
       child: IgnorePointer(
@@ -1173,6 +1177,7 @@ class TreeLeafIconPainter extends CustomPainter {
 class _TreeLinePainter extends CustomPainter {
   _TreeLinePainter({
     required this.color,
+    required this.direction,
     required this.indent,
     required this.level,
     required this.ancestorsLast,
@@ -1182,6 +1187,12 @@ class _TreeLinePainter extends CustomPainter {
   });
 
   final Color color;
+
+  /// Which way the tree reads. The guides step inward from the edge the
+  /// reading starts at, so a mirrored tree wants them stepping in from the
+  /// other side; reflecting the canvas moves every one of them at once.
+  final TextDirection direction;
+
   final double indent;
   final int level;
   final List<bool> ancestorsLast;
@@ -1191,6 +1202,17 @@ class _TreeLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Reflected rather than re-derived: every guide is a fixed step in from
+    // the leading edge, so turning the canvas over moves them all together
+    // and keeps the arithmetic below in one coordinate system.
+    final mirrored = direction == TextDirection.rtl;
+    if (mirrored) {
+      canvas
+        ..save()
+        ..translate(size.width, 0)
+        ..scale(-1, 1);
+    }
+
     final paint = Paint()
       ..color = color
       ..strokeWidth = 1
@@ -1229,11 +1251,14 @@ class _TreeLinePainter extends CustomPainter {
       final x = level * indent + indent / 2;
       canvas.drawLine(Offset(x, midY), Offset(x, size.height), paint);
     }
+
+    if (mirrored) canvas.restore();
   }
 
   @override
   bool shouldRepaint(_TreeLinePainter old) =>
       old.color != color ||
+      old.direction != direction ||
       old.indent != indent ||
       old.level != level ||
       old.isFirst != isFirst ||

@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the far edge instead of against the line, leaving one column touching it
   and the other pushed away twice over. A collapsed item also revealed itself
   from the left rather than from where its text begins.
+- A `Tree` was built by side throughout, so a mirrored one turned its rows
+  over while leaving everything inside them behind: the depth guides and the
+  expand switcher stayed at the left, the title read from the left of its own
+  row, the drag grip's gap fell on the wrong side of it, and the drop
+  indicator was inset from the left rather than from where the node would
+  land.
 - A `Steps` rail broke in the middle of a right-to-left run. The line between
   two markers is drawn as two halves, each keeping its gap on the side facing
   a marker, but the painter insets by side while the row hands the halves over

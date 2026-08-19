@@ -1203,4 +1203,88 @@ void main() {
       );
     });
   });
+  group('a tree', () {
+    testWidgets('steps its guides in from the edge it starts at', (
+      tester,
+    ) async {
+      /// Where the depth guides cross the row of a leaf three levels down,
+      /// measured from the edge the tree starts at.
+      ///
+      /// A leaf row is chosen because it carries no switcher: the chevron is a
+      /// glyph and never mirrors itself, and it would drown the very lines
+      /// this is looking for.
+      Future<List<int>> guideColumns(TextDirection direction) async {
+        await tester.pumpWidget(
+          _host(
+            const RepaintBoundary(
+              child: SizedBox(
+                width: 320,
+                child: Tree(
+                  showLine: true,
+                  defaultExpandedKeys: ['a', 'a2'],
+                  nodes: [
+                    TreeNode(
+                      key: 'a',
+                      title: Text('Alpha'),
+                      children: [
+                        TreeNode(
+                          key: 'a2',
+                          title: Text('Two'),
+                          children: [
+                            TreeNode(key: 'a2x', title: Text('Deep')),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            direction,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find
+              .descendant(
+                of: find.byType(Center),
+                matching: find.byType(RepaintBoundary),
+              )
+              .first,
+        );
+        final panel = tester.getRect(find.byType(Tree));
+        final row = tester.getRect(find.text('Deep')).center.dy - panel.top;
+
+        final out = <int>[];
+        await tester.runAsync(() async {
+          final image = await boundary.toImage();
+          final data = await image.toByteData(format: ImageByteFormat.rawRgba);
+          final y = row.round().clamp(0, image.height - 1);
+          int at(int x) {
+            final i = (y * image.width + x) * 4;
+            return (data!.getUint8(i) << 16) |
+                (data.getUint8(i + 1) << 8) |
+                data.getUint8(i + 2);
+          }
+
+          final background = at(image.width ~/ 2);
+          for (var x = 0; x < image.width; x++) {
+            final lead =
+                direction == TextDirection.ltr ? x : image.width - 1 - x;
+            if (at(lead) != background) out.add(x);
+          }
+          image.dispose();
+        });
+        return out;
+      }
+
+      // Each guide is one indent further in than the last. Placed by side
+      // rather than by reading order they stayed on the left of a mirrored
+      // tree while the rows themselves turned over.
+      final ltr = await guideColumns(TextDirection.ltr);
+      expect(ltr, isNotEmpty, reason: 'no guides were drawn to compare');
+      expect(await guideColumns(TextDirection.rtl), ltr);
+    });
+  });
 }

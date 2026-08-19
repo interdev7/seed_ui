@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the far edge instead of against the line, leaving one column touching it
   and the other pushed away twice over. A collapsed item also revealed itself
   from the left rather than from where its text begins.
+- `ProgressBorderRadius` could only name a side, which left
+  `ProgressSteps.stepRadius` with no way to say what it means: it is handed
+  `isFirst`, a place in the run, and the first step is on the right when the
+  bar reads that way. Added `ProgressBorderRadius.directional` and
+  `.horizontalDirectional`, whose corners follow the reading order.
+  `toBorderRadius` takes the direction to resolve against; the existing
+  constructors are unchanged and still mean the side they name.
 - A `Tour` panel was built by side throughout: its close button sat in the
   right corner rather than the trailing one, the room reserved for it in the
   title cleared the wrong edge, the gap between the step dots and the buttons

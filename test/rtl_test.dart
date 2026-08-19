@@ -799,4 +799,157 @@ void main() {
       }
     });
   });
+  group('a progress bar', () {
+    /// The filled part of the bar, and the percent beside it, measured from
+    /// each direction's own leading edge.
+    Future<(double fillFromLeading, double textFromTrailing)> measure(
+      WidgetTester tester,
+      Widget bar,
+      TextDirection direction,
+    ) async {
+      await tester.pumpWidget(
+        _host(SizedBox(width: 400, child: bar), direction),
+      );
+      await tester.pumpAndSettle();
+
+      final box = tester.getRect(find.byType(Progress));
+      var fill = double.infinity;
+      for (final element in find.byType(DecoratedBox).evaluate()) {
+        final r = tester.getRect(find.byWidget(element.widget));
+        if (r.width <= 1) continue;
+        final edge = direction == TextDirection.ltr
+            ? r.left - box.left
+            : box.right - r.right;
+        if (edge < fill) fill = edge;
+      }
+      final text = tester.getRect(find.textContaining('%').first);
+      return (
+        fill,
+        direction == TextDirection.ltr
+            ? box.right - text.right
+            : text.left - box.left,
+      );
+    }
+
+    testWidgets('fills from the leading edge, either way round', (
+      tester,
+    ) async {
+      for (final bar in <Widget>[
+        const Progress(percent: 0.3),
+        const Progress(percent: 0.4, steps: ProgressSteps(5)),
+      ]) {
+        final ltr = await measure(tester, bar, TextDirection.ltr);
+        final rtl = await measure(tester, bar, TextDirection.rtl);
+        // Read from each direction's own leading edge the two must agree: the
+        // bar grows away from where the reading starts, and the percent
+        // follows it on the far side.
+        expect(rtl.$1, moreOrLessEquals(ltr.$1, epsilon: 1));
+        expect(rtl.$2, moreOrLessEquals(ltr.$2, epsilon: 1));
+      }
+    });
+
+    testWidgets('a circle is deliberately not mirrored', (tester) async {
+      Future<Rect> circle(TextDirection direction) async {
+        await tester.pumpWidget(
+          _host(
+            const SizedBox(
+              width: 200,
+              child: Progress(percent: 0.3, type: ProgressType.circle),
+            ),
+            direction,
+          ),
+        );
+        await tester.pumpAndSettle();
+        return tester.getRect(find.textContaining('%').first);
+      }
+
+      // Ant Design mirrors the line and the text that follows it, and leaves
+      // the arc alone: it starts at the top and runs clockwise in either
+      // language. Nothing here should move.
+      expect(await circle(TextDirection.rtl), await circle(TextDirection.ltr));
+    });
+  });
+  group('a progress radius', () {
+    test('named by side, it is that side whichever way the bar reads', () {
+      const bySide = ProgressBorderRadius.horizontal(left: 8);
+      for (final direction in TextDirection.values) {
+        final r = bySide.toBorderRadius(direction);
+        expect(r.topLeft.x, 8, reason: '$direction');
+        expect(r.topRight.x, 0, reason: '$direction');
+      }
+    });
+
+    test('named by reading order, it follows the reading order', () {
+      const leading = ProgressBorderRadius.horizontalDirectional(start: 8);
+
+      final ltr = leading.toBorderRadius(TextDirection.ltr);
+      expect(ltr.topLeft.x, 8);
+      expect(ltr.topRight.x, 0);
+
+      // The bar grows the other way, so its leading corners are the right
+      // ones. This is what `isFirst` in a stepRadius callback means, and a
+      // radius named by side cannot say it.
+      final rtl = leading.toBorderRadius(TextDirection.rtl);
+      expect(rtl.topRight.x, 8);
+      expect(rtl.topLeft.x, 0);
+    });
+
+    test('two radii that name the corners differently are not equal', () {
+      expect(
+        const ProgressBorderRadius.horizontal(left: 8),
+        isNot(const ProgressBorderRadius.horizontalDirectional(start: 8)),
+      );
+    });
+
+    testWidgets('a step run rounds the end it starts from', (tester) async {
+      Future<BorderRadius> firstStep(TextDirection direction) async {
+        await tester.pumpWidget(
+          _host(
+            SizedBox(
+              width: 320,
+              child: Progress(
+                percent: 1,
+                strokeWidth: 16,
+                steps: ProgressSteps(
+                  4,
+                  gap: 6,
+                  stepRadius: (isFirst, percent) => isFirst == true
+                      ? const ProgressBorderRadius.horizontalDirectional(
+                          start: 8,
+                        )
+                      : ProgressBorderRadius.zero,
+                ),
+              ),
+            ),
+            direction,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final box = tester.getRect(find.byType(Progress));
+        // The step nearest the edge the run starts from.
+        // Each segment is clipped to its own corners, so the clip is where
+        // the radius actually lands.
+        BorderRadius? nearest;
+        var best = double.infinity;
+        for (final element in find.byType(ClipRRect).evaluate()) {
+          final radius = (element.widget as ClipRRect).borderRadius;
+          if (radius is! BorderRadius) continue;
+          final r = tester.getRect(find.byWidget(element.widget));
+          if (r.width <= 1) continue;
+          final edge = direction == TextDirection.ltr
+              ? r.left - box.left
+              : box.right - r.right;
+          if (edge < best) {
+            best = edge;
+            nearest = radius;
+          }
+        }
+        return nearest!;
+      }
+
+      expect((await firstStep(TextDirection.ltr)).topLeft.x, 8);
+      expect((await firstStep(TextDirection.rtl)).topRight.x, 8);
+    });
+  });
 }

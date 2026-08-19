@@ -1030,4 +1030,78 @@ void main() {
       expect(rtl.$1, isNot(filled));
     });
   });
+  group('a rail inset', () {
+    /// The drawn length of each horizontal rail, read from the painter that
+    /// draws it: the line is the slot less the gaps it keeps at either end.
+    Future<List<double>> lines(
+      WidgetTester tester,
+      double inset,
+      TextDirection direction,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 700,
+            child: Steps(
+              current: 1,
+              items: const [
+                StepItem(title: Text('One')),
+                StepItem(title: Text('Two')),
+                StepItem(title: Text('Three')),
+              ],
+              token: StepsToken(railInset: RailInsets.all(inset)),
+            ),
+          ),
+          direction,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final out = <double>[];
+      for (final element in find.byType(CustomPaint).evaluate()) {
+        final painter = (element.widget as CustomPaint).painter;
+        if (painter is! RailPainter || painter.axis != Axis.horizontal) {
+          continue;
+        }
+        final slot = tester.getRect(find.byWidget(element.widget));
+        out.add(slot.width - painter.startInset - painter.endInset);
+      }
+      return out;
+    }
+
+    testWidgets('shortens the line, by the same amount either way round', (
+      tester,
+    ) async {
+      for (final direction in TextDirection.values) {
+        final flush = await lines(tester, 0, direction);
+        final inset = await lines(tester, 8, direction);
+        expect(flush, isNotEmpty, reason: '$direction drew no rails');
+        expect(inset.length, flush.length, reason: '$direction');
+
+        for (var i = 0; i < flush.length; i++) {
+          // Eight at each end, so sixteen off a line that has it to give. A
+          // line already at its floor keeps it — that is the floor's job.
+          expect(
+            inset[i],
+            anyOf(moreOrLessEquals(flush[i] - 16, epsilon: 1), flush[i]),
+            reason: '$direction rail $i: ${flush[i]} then ${inset[i]}',
+          );
+        }
+      }
+    });
+
+    testWidgets('takes the same room whichever way the run reads', (
+      tester,
+    ) async {
+      // The gaps are the same at both ends here, so the two directions must
+      // produce the same set of lengths.
+      for (final inset in [0.0, 8.0, 16.0]) {
+        expect(
+          await lines(tester, inset, TextDirection.rtl),
+          await lines(tester, inset, TextDirection.ltr),
+          reason: 'inset $inset',
+        );
+      }
+    });
+  });
 }

@@ -1498,7 +1498,22 @@ class _RailRun extends StatelessWidget {
     bool half = false,
   }) {
     final fixed = _fixedRail;
-    if (fixed == null) return Expanded(child: child);
+    if (fixed == null) {
+      // Still the give in the layout, but never squeezed below the gaps it
+      // must keep plus the least line that still reads as one. Left to take
+      // only the leftover, a rail beside a short step had its whole slot eaten
+      // by the insets and vanished — every inset past a small one looked the
+      // same because there was nothing left to look at. The SizedBox is what
+      // the intrinsic pass measures, so the step grows to fit its own rail.
+      final floor = (gaps + r.railMinLength).clamp(0.0, double.infinity);
+      return Expanded(
+        child: SizedBox(
+          width: axis == Axis.horizontal ? floor : null,
+          height: axis == Axis.vertical ? floor : null,
+          child: child,
+        ),
+      );
+    }
     final length = (half ? fixed / 2 : fixed) + gaps;
     // Expanded so it can still grow; the SizedBox is what the intrinsic pass
     // measures, which is how the step comes out wide enough in the first place.

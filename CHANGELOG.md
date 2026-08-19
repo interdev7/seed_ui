@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the far edge instead of against the line, leaving one column touching it
   and the other pushed away twice over. A collapsed item also revealed itself
   from the left rather than from where its text begins.
+- A `Steps` rail could be swallowed by its own inset. The rail takes whatever
+  the steps leave it, so beside a short step — a vertical run on a phone, say
+  — a `railInset` of any size ate the whole slot and the line came out
+  negative, drawn as nothing. Every inset past a small one then looked alike,
+  because there was no line left to look at. The slot now keeps room for its
+  gaps and the least line that still reads as one, and the step grows to fit.
 - A `Steps` panel run pointed the same way whichever way it read: the strip is
   painted, and the painter knew its axis but not the direction, so the arrows
   faced right in a mirrored layout while the content beside them ran the other

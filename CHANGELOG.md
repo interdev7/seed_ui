@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the far edge instead of against the line, leaving one column touching it
   and the other pushed away twice over. A collapsed item also revealed itself
   from the left rather than from where its text begins.
+- A `Steps` rail broke in the middle of a right-to-left run. The line between
+  two markers is drawn as two halves, each keeping its gap on the side facing
+  a marker, but the painter insets by side while the row hands the halves over
+  in reading order. Where those disagreed the gap turned inward: the ends ran
+  flush into the markers and a five-pixel void opened where the halves should
+  meet.
 - A `Steps` rail could be swallowed by its own inset. The rail takes whatever
   the steps leave it, so beside a short step — a vertical run on a phone, say
   — a `railInset` of any size ate the whole slot and the line came out

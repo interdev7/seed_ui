@@ -899,6 +899,7 @@ class _StepsState extends State<Steps> {
               palette: palette,
               orientation: orientation,
               scale: widget.type == StepsType.inline ? _Scale.small : r.scale,
+              direction: Directionality.of(context),
             ),
         };
 
@@ -1423,6 +1424,7 @@ class _RailRun extends StatelessWidget {
     required this.palette,
     required this.orientation,
     required this.scale,
+    required this.direction,
   });
 
   final _StepsState state;
@@ -1431,6 +1433,10 @@ class _RailRun extends StatelessWidget {
   final _Palette palette;
   final StepsOrientation orientation;
   final _Scale scale;
+
+  /// Which way the run reads. Carried rather than looked up, because the parts
+  /// that need it are built outside any build method of their own.
+  final TextDirection direction;
 
   bool get _inline => state.widget.type == StepsType.inline;
 
@@ -1822,6 +1828,13 @@ class _RailRun extends StatelessWidget {
 
     // `leadingGap` keeps the rail clear of the marker it starts beside, and
     // `trailingGap` of the one it runs towards.
+    // The painter insets from the box's left and right; the row hands the two
+    // halves over in reading order. Reading right to left the two disagree, so
+    // the gap meant for the marker turns inward and opens a break in the
+    // middle of the line while the ends run flush into the markers — the very
+    // void the halves are split to avoid.
+    final railsMirrored = direction == TextDirection.rtl;
+
     Widget rail({
       required Color color,
       required double leadingGap,
@@ -1835,8 +1848,8 @@ class _RailRun extends StatelessWidget {
             axis: Axis.horizontal,
             thickness: r.railThickness,
             minLength: r.railMinLength,
-            startInset: leadingGap,
-            endInset: trailingGap,
+            startInset: railsMirrored ? trailingGap : leadingGap,
+            endInset: railsMirrored ? leadingGap : trailingGap,
             segments: [
               RailSegment(start: 0, end: double.infinity, color: color),
             ],
@@ -1955,6 +1968,10 @@ class _RailRun extends StatelessWidget {
           part: part,
         );
 
+    // See the other rail helper: the painter insets by side, the row orders by
+    // reading direction, and the two have to be reconciled.
+    final railsMirrored = direction == TextDirection.rtl;
+
     Widget rail({
       required Color color,
       required double leadingGap,
@@ -1966,8 +1983,8 @@ class _RailRun extends StatelessWidget {
             axis: Axis.horizontal,
             thickness: r.railThickness,
             minLength: r.railMinLength,
-            startInset: leadingGap,
-            endInset: trailingGap,
+            startInset: railsMirrored ? trailingGap : leadingGap,
+            endInset: railsMirrored ? leadingGap : trailingGap,
             segments: [
               RailSegment(start: 0, end: double.infinity, color: color),
             ],

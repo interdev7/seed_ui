@@ -573,12 +573,19 @@ class _ProgressDemoState extends State<ProgressDemo> {
               steps: ProgressSteps(
                 5,
                 gap: 6,
+                // Named by reading order, not by side: `isFirst` is a place
+                // in the run, and the first step is on the right when the bar
+                // reads that way.
                 stepRadius: (isFirst, percent) {
                   if (isFirst == true) {
-                    return const ProgressBorderRadius.horizontal(left: 8);
+                    return const ProgressBorderRadius.horizontalDirectional(
+                      start: 8,
+                    );
                   }
                   if (isFirst == false) {
-                    return const ProgressBorderRadius.horizontal(right: 8);
+                    return const ProgressBorderRadius.horizontalDirectional(
+                      end: 8,
+                    );
                   }
                   return ProgressBorderRadius.zero;
                 },
@@ -608,9 +615,12 @@ class _ProgressDemoState extends State<ProgressDemo> {
                 child: Progress(
                   percent: _percent,
                   strokeWidth: 14,
-                  borderRadius: const ProgressBorderRadius(
-                    topLeft: 10,
-                    bottomLeft: 10,
+                  // The end the bar grows from, which follows the reading
+                  // direction. Name the corners outright with the plain
+                  // constructor when a side is what is meant.
+                  borderRadius: const ProgressBorderRadius.directional(
+                    topStart: 10,
+                    bottomStart: 10,
                   ),
                 ),
               ),

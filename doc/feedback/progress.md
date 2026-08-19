@@ -241,3 +241,22 @@ ConfigProvider(
 ```
 
 A per-instance `token` wins over the `ConfigProvider` one.
+
+## Corners, and which end is which
+
+`ProgressBorderRadius` comes in two forms. The plain constructors name a side —
+`topLeft`, `horizontal(left:)` — and that side is what you get, whichever way
+the bar reads. The directional ones name a reading end:
+
+```dart
+const ProgressBorderRadius.horizontalDirectional(start: 8)
+const ProgressBorderRadius.directional(topStart: 10, bottomStart: 10)
+```
+
+`start` is the end the bar grows from, so the pair swaps over in a
+right-to-left layout.
+
+The directional form is usually what `ProgressSteps.stepRadius` wants. It is
+handed `isFirst` — a place in the run, not a side — and the first step sits on
+the right when the bar reads that way, so a radius named by side rounds the
+wrong end of it.

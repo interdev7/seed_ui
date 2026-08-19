@@ -589,19 +589,28 @@ class _SoftInputState extends State<Input> {
       enableInteractiveSelection: _enabled,
     );
 
+    // Where the placeholder sits, to match where the typed text will.
+    //
+    // `left` and `right` are the two the caller asked for by side and stay
+    // physical; `start`, `end` and `justify` name a reading end, and follow
+    // the direction. Mapping start onto the left is what kept the placeholder
+    // on the wrong side of a mirrored field while the text itself moved.
+    final y = _multiline ? -1.0 : 0.0;
+    final AlignmentGeometry placeholderAlign = switch (widget.textAlign) {
+      TextAlign.center => AlignmentDirectional(0, y),
+      TextAlign.left => Alignment(-1, y),
+      TextAlign.right => Alignment(1, y),
+      TextAlign.end => AlignmentDirectional(1, y),
+      _ => AlignmentDirectional(-1, y),
+    };
+
     // The placeholder sits behind the field and shows through while empty.
     final withPlaceholder = Stack(
       children: [
         if (widget.placeholder != null && _controller.text.isEmpty)
           Positioned.fill(
             child: Align(
-              alignment: _multiline
-                  ? Alignment.topLeft
-                  : switch (widget.textAlign) {
-                      TextAlign.center => Alignment.center,
-                      TextAlign.right || TextAlign.end => Alignment.centerRight,
-                      _ => Alignment.centerLeft,
-                    },
+              alignment: placeholderAlign,
               child: IgnorePointer(
                 child: Text(
                   widget.placeholder!,
@@ -615,7 +624,7 @@ class _SoftInputState extends State<Input> {
           ),
         _multiline
             ? field
-            : Align(alignment: Alignment.centerLeft, child: field),
+            : Align(alignment: AlignmentDirectional.centerStart, child: field),
       ],
     );
 
@@ -631,9 +640,12 @@ class _SoftInputState extends State<Input> {
           // Flush affix on the leading side; clipped to the box's own corner
           // for the same reason as a flush suffix.
           ClipRRect(
-            borderRadius: BorderRadius.only(
-              topLeft: _innerRadius(token, r),
-              bottomLeft: _innerRadius(token, r),
+            // The prefix sits at the start of the field, so it takes the
+            // start corners — the right-hand ones when the field reads that
+            // way.
+            borderRadius: BorderRadiusDirectional.only(
+              topStart: _innerRadius(token, r),
+              bottomStart: _innerRadius(token, r),
             ),
             child: widget.prefix!,
           )
@@ -678,9 +690,11 @@ class _SoftInputState extends State<Input> {
           // corner — a square hover or pressed fill would otherwise spill past
           // the rounded top-right and bottom-right, outside the border.
           ClipRRect(
-            borderRadius: BorderRadius.only(
-              topRight: attached ? Radius.zero : _innerRadius(token, r),
-              bottomRight: attached ? Radius.zero : _innerRadius(token, r),
+            // …and the suffix the end corners, unless something is attached
+            // beyond it, where the two must meet square.
+            borderRadius: BorderRadiusDirectional.only(
+              topEnd: attached ? Radius.zero : _innerRadius(token, r),
+              bottomEnd: attached ? Radius.zero : _innerRadius(token, r),
             ),
             child: widget.suffix!,
           )
@@ -760,7 +774,10 @@ class _SoftInputState extends State<Input> {
             minHeight: _multiline ? _height(token) : 0,
           ),
           height: _multiline ? null : _height(token),
-          padding: EdgeInsets.fromLTRB(
+          // Start and end rather than left and right: the inset belongs to
+          // the prefix's side and the suffix's side, which swap over when the
+          // field reads the other way.
+          padding: EdgeInsetsDirectional.fromSTEB(
             widget.prefixFlush ? 0 : inlinePad,
             _multiline ? blockPad : 0,
             widget.suffixFlush ? 0 : inlinePad,
@@ -768,11 +785,12 @@ class _SoftInputState extends State<Input> {
           ),
           decoration: BoxDecoration(
             color: _enabled ? r.colorBgContainer : token.colorFillTertiary,
-            borderRadius: BorderRadius.only(
-              topLeft: radius,
-              bottomLeft: radius,
-              topRight: flatRight ? Radius.zero : radius,
-              bottomRight: flatRight ? Radius.zero : radius,
+            // Square where an addon is joined on, rounded at the free end.
+            borderRadius: BorderRadiusDirectional.only(
+              topStart: radius,
+              bottomStart: radius,
+              topEnd: flatRight ? Radius.zero : radius,
+              bottomEnd: flatRight ? Radius.zero : radius,
             ),
             border: Border.all(
               color: _borderColor(token),
@@ -1060,9 +1078,10 @@ class _SearchButtonState extends State<_SearchButton> {
           padding: EdgeInsets.symmetric(horizontal: token.sizeMD),
           decoration: BoxDecoration(
             color: fill,
-            borderRadius: BorderRadius.only(
-              topRight: radius,
-              bottomRight: radius,
+            // The addon caps the far end of the field.
+            borderRadius: BorderRadiusDirectional.only(
+              topEnd: radius,
+              bottomEnd: radius,
             ),
           ),
           alignment: Alignment.center,

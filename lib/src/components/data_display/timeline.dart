@@ -551,7 +551,20 @@ class Timeline extends StatelessWidget {
   /// Composes an item's body out of [TimelineItem.title],
   /// [TimelineItem.description] and [TimelineItem.content], any of which may be
   /// absent. Returns null when the item has no body at all.
-  Widget? _buildContent(Token t, TimelineItem item) {
+  /// Builds an item's title, description and content.
+  ///
+  /// [facing] is the edge the block's lines are drawn towards, which is always
+  /// the axis: a column standing before the line reads towards its end, one
+  /// standing after it towards its start. Ant Design does the same, swapping
+  /// the two over with the item's placement. Aligning everything to the start
+  /// regardless leaves the text of the near column drifting away from the line
+  /// it belongs to, which a mirrored layout makes plain.
+  Widget? _buildContent(
+    Token t,
+    TimelineItem item, {
+    CrossAxisAlignment facing = CrossAxisAlignment.start,
+    TextAlign lines = TextAlign.start,
+  }) {
     if (item.title == null &&
         item.description == null &&
         item.content == null) {
@@ -560,11 +573,15 @@ class Timeline extends StatelessWidget {
 
     final titled = item.title != null || item.description != null;
     final body = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: facing,
       mainAxisSize: MainAxisSize.min,
       children: [
         if (item.title != null)
           DefaultTextStyle(
+            // Restated rather than inherited: DefaultTextStyle replaces the
+            // ambient one outright, so an inner block that names no alignment
+            // silently resets it to reading from the start.
+            textAlign: lines,
             style: TextStyle(
               color: t.colorText,
               fontSize: t.fontSize,
@@ -578,6 +595,7 @@ class Timeline extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(top: item.title != null ? t.sizeXXS : 0),
             child: DefaultTextStyle(
+              textAlign: lines,
               style: TextStyle(
                 color: t.colorTextSecondary,
                 fontSize: t.fontSizeSM,
@@ -598,6 +616,9 @@ class Timeline extends StatelessWidget {
     return _opacity(
       item.contentOpacity,
       DefaultTextStyle(
+        // Inherited by the title and the description alike, so a block that
+        // wraps reads the same way as one that does not.
+        textAlign: lines,
         style: TextStyle(
           color: t.colorText,
           fontSize: t.fontSize,
@@ -637,10 +658,25 @@ class Timeline extends StatelessWidget {
             TimelineItemPosition.left;
     }
 
-    final content = _buildContent(t, item);
+    // Both blocks read towards the axis: the one before it towards its end,
+    // the one after it towards its start.
+    //
+    // Two settings are needed, not one. The box alignment places a block that
+    // is narrower than its column, but a block as wide as the column — any
+    // text long enough to wrap — is placed by nothing, and its lines fall back
+    // to reading from the start. That is what left a short title against the
+    // axis and the description below it against the far edge. Ant Design has
+    // the one `text-align` doing both jobs.
+    final content = _buildContent(
+      t,
+      item,
+      facing: contentOnLeft ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      lines: contentOnLeft ? TextAlign.end : TextAlign.start,
+    );
     final label = item.label == null
         ? null
         : DefaultTextStyle(
+            textAlign: contentOnLeft ? TextAlign.start : TextAlign.end,
             style: TextStyle(
               color: t.colorTextSecondary,
               fontSize: t.fontSize,
@@ -668,16 +704,25 @@ class Timeline extends StatelessWidget {
     );
 
     // Pad the content away from the axis and add the inter-item gap below it.
-    Widget? pad(Widget? child, {required bool left}) {
+    //
+    // [leading] is the column's place in the row, not a side: the row reverses
+    // itself when the language does, so the first column is on the right of a
+    // mirrored timeline. Naming the sides outright put the gap on the far edge
+    // instead of against the axis, which left the content of one column
+    // touching the line and the other adrift.
+    Widget? pad(Widget? child, {required bool leading}) {
       if (child == null) return null;
       return Padding(
-        padding: EdgeInsets.only(
-          left: left ? 0 : gap,
-          right: left ? gap : 0,
+        padding: EdgeInsetsDirectional.only(
+          start: leading ? 0 : gap,
+          end: leading ? gap : 0,
           bottom: r.itemPaddingBottom,
         ),
         child: Align(
-          alignment: left ? Alignment.topRight : Alignment.topLeft,
+          // Up against the axis, which is the inner edge of either column.
+          alignment: leading
+              ? AlignmentDirectional.topEnd
+              : AlignmentDirectional.topStart,
           child: child,
         ),
       );
@@ -687,19 +732,19 @@ class Timeline extends StatelessWidget {
     if (twoSided) {
       children.add(
         Expanded(
-          child: pad(leftChild, left: true) ?? const SizedBox.shrink(),
+          child: pad(leftChild, leading: true) ?? const SizedBox.shrink(),
         ),
       );
       children.add(axis);
       children.add(
         Expanded(
-          child: pad(rightChild, left: false) ?? const SizedBox.shrink(),
+          child: pad(rightChild, leading: false) ?? const SizedBox.shrink(),
         ),
       );
     } else if (mode == TimelineMode.right) {
       children.add(
         Expanded(
-          child: pad(content, left: true) ?? const SizedBox.shrink(),
+          child: pad(content, leading: true) ?? const SizedBox.shrink(),
         ),
       );
       children.add(axis);
@@ -707,7 +752,7 @@ class Timeline extends StatelessWidget {
       children.add(axis);
       children.add(
         Expanded(
-          child: pad(content, left: false) ?? const SizedBox.shrink(),
+          child: pad(content, leading: false) ?? const SizedBox.shrink(),
         ),
       );
     }
@@ -916,7 +961,9 @@ class _TimelineGroupSectionState extends State<_TimelineGroupSection> {
           ? child!
           : ClipRect(
               child: Align(
-                alignment: Alignment.centerLeft,
+                // Revealed from the edge the reading starts at, so the text
+                // grows out of its own beginning rather than into it.
+                alignment: AlignmentDirectional.centerStart,
                 widthFactor: factor,
                 child: child,
               ),
@@ -1106,28 +1153,46 @@ class _AxisHorizontal extends StatelessWidget {
                 double gap(double? inset) => inset == null || inset == 0
                     ? 0.0
                     : math.min(size / 2 + inset, centre);
-                final gapLeft = gap(token.railInset.left);
-                final gapRight = gap(token.railInset.right);
+
+                // The rail is painted in screen coordinates, but the run of
+                // items is a row, and a row reverses itself when the language
+                // does: the first item is then the rightmost. So which end of
+                // this cell is the run's beginning has to be worked out, or
+                // the first item paints its thread off the outer edge and the
+                // items stop joining up.
+                final rtl = Directionality.of(context) == TextDirection.rtl;
+                final firstOnTheLeft = rtl ? isLast : isFirst;
+                final lastOnTheLeft = rtl ? isFirst : isLast;
+                final dashedTowardsLeft = rtl ? dashedRight : dashedLeft;
+                final dashedTowardsRight = rtl ? dashedLeft : dashedRight;
+
+                final gapLeft = gap(
+                  rtl ? token.railInset.right : token.railInset.left,
+                );
+                final gapRight = gap(
+                  rtl ? token.railInset.left : token.railInset.right,
+                );
                 return CustomPaint(
                   painter: RailPainter(
                     axis: Axis.horizontal,
                     thickness: token.tailWidth,
-                    startInset: linePadding.left,
-                    endInset: linePadding.right,
+                    startInset: rtl ? linePadding.right : linePadding.left,
+                    endInset: rtl ? linePadding.left : linePadding.right,
                     segments: [
-                      if ((!isFirst || dashedLeft) && centre - gapLeft > 0)
+                      if ((!firstOnTheLeft || dashedTowardsLeft) &&
+                          centre - gapLeft > 0)
                         RailSegment(
                           start: 0,
                           end: centre - gapLeft,
                           color: token.tailColor,
-                          dashed: dashedLeft,
+                          dashed: dashedTowardsLeft,
                         ),
-                      if (!isLast || dashedRight)
+                      if (!lastOnTheLeft || dashedTowardsRight)
                         RailSegment(
                           start: centre + gapRight,
                           end: double.infinity,
                           color: token.tailColor,
-                          dashed: dashedRight,
+                          dashed: dashedTowardsRight,
                         ),
                     ],
                   ),

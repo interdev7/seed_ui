@@ -767,7 +767,8 @@ class _SelectState<T> extends State<Select<T>> {
       final hintColor = typing ? token.colorTextTertiary : textStyle.color;
       valueArea = Stack(
         clipBehavior: Clip.none,
-        alignment: Alignment.centerLeft,
+        // The value and its placeholder start where the language starts.
+        alignment: AlignmentDirectional.centerStart,
         children: [
           // Always non-positioned, so the Stack takes its height from here even
           // while the (positioned) search field is showing. Hidden once the
@@ -825,9 +826,15 @@ class _SelectState<T> extends State<Select<T>> {
       duration: token.motionDurationFast,
       curve: token.motionEaseInOut,
       constraints: BoxConstraints(minHeight: _height(token)),
-      // Horizontal padding is kept close to the vertical breathing room, so the
-      // text isn't pushed in further from the left than from top and bottom.
-      padding: EdgeInsets.only(left: leftPadding, right: token.sizeSM),
+      // Horizontal padding is kept close to the vertical breathing room, so
+      // the text isn't pushed in further from the edge than from top and
+      // bottom. Directional: the wider inset belongs where the content starts
+      // and the narrower where the arrow sits, and swapping them is what a
+      // mirrored layout did with a physical pair.
+      padding: EdgeInsetsDirectional.only(
+        start: leftPadding,
+        end: token.sizeSM,
+      ),
       decoration: BoxDecoration(
         color: fill,
         borderRadius: BorderRadius.circular(token.borderRadius),
@@ -932,7 +939,7 @@ class _SelectState<T> extends State<Select<T>> {
     final field = SizedBox(
       height: token.controlHeightSM,
       child: Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         widthFactor: 1,
         child: fieldChild,
       ),
@@ -1367,7 +1374,8 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
           height: t.controlHeight,
           margin: const EdgeInsets.symmetric(vertical: 1),
           padding: r.optionPadding,
-          alignment: Alignment.centerLeft,
+          // An option's label reads from the leading edge of its row.
+          alignment: AlignmentDirectional.centerStart,
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(t.borderRadiusSM),
@@ -1400,9 +1408,11 @@ class _Tag extends StatelessWidget {
     final color = enabled ? token.colorText : token.colorTextQuaternary;
     return Container(
       height: token.controlHeightSM,
-      padding: EdgeInsets.only(
-        left: token.sizeXS,
-        right: onRemove == null ? token.sizeXS : token.sizeXXS,
+      // The label's own inset, and a narrower one where the remove button
+      // sits — which end that is depends on the reading direction.
+      padding: EdgeInsetsDirectional.only(
+        start: token.sizeXS,
+        end: onRemove == null ? token.sizeXS : token.sizeXXS,
       ),
       decoration: BoxDecoration(
         color: token.colorFillSecondary,

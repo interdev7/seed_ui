@@ -106,9 +106,11 @@ class TimelineDemo extends StatelessWidget {
     Widget span(double w) => SizedBox(width: w, height: 0);
 
     // A label at the top with the box height setting the vertical line length.
+    // Aligned to where the reading starts, or a mirrored run throws every
+    // label to the far side and the column reads as though it were spaced out.
     Widget labelSpan(String text, double h) => SizedBox(
       height: h,
-      child: Align(alignment: Alignment.topLeft, child: Text(text)),
+      child: Align(alignment: AlignmentDirectional.topStart, child: Text(text)),
     );
 
     return Column(

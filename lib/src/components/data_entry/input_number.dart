@@ -481,8 +481,10 @@ class _SpinnerState extends State<_Spinner> {
       height: inner,
       width: r.controlWidth,
       decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(color: r.handleBorderColor, width: token.lineWidth),
+        // The rule divides the field from the handles, so it belongs on the
+        // handles' leading edge rather than their left one.
+        border: BorderDirectional(
+          start: BorderSide(color: r.handleBorderColor, width: token.lineWidth),
         ),
       ),
       child: Column(
@@ -601,11 +603,13 @@ class _StepButtonState extends State<_StepButton> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: _pressed && active ? r.handleActiveBg : null,
-            border: Border(
-              left: widget.trailing
+            // The rule goes between the handle and the field, whichever side
+            // the handle was put on.
+            border: BorderDirectional(
+              start: widget.trailing
                   ? BorderSide(color: r.handleBorderColor, width: t.lineWidth)
                   : BorderSide.none,
-              right: widget.trailing
+              end: widget.trailing
                   ? BorderSide.none
                   : BorderSide(color: r.handleBorderColor, width: t.lineWidth),
             ),

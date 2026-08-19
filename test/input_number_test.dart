@@ -43,7 +43,9 @@ void main() {
     final clip = tester.widget<ClipRRect>(
       find.ancestor(of: _carets().first, matching: find.byType(ClipRRect)).last,
     );
-    final radius = clip.borderRadius as BorderRadius;
+    // Resolved, not cast: the radius is directional now, so it means the
+    // stepper's own end of the field whichever way that field reads.
+    final radius = clip.borderRadius.resolve(TextDirection.ltr);
     expect(radius.topRight.x, greaterThan(0));
     expect(radius.bottomRight.x, greaterThan(0));
     // Inside the border, so a touch tighter than the box's own corner.

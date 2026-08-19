@@ -125,7 +125,7 @@ class ProgressBorderRadius {
     this.bottomLeft,
     this.topRight,
     this.bottomRight,
-  });
+  }) : _directional = false;
 
   /// Creates a border radius with distinct left and right radii.
   const ProgressBorderRadius.horizontal({
@@ -134,14 +134,44 @@ class ProgressBorderRadius {
   })  : topLeft = left,
         bottomLeft = left,
         topRight = right,
-        bottomRight = right;
+        bottomRight = right,
+        _directional = false;
+
+  /// Creates a border radius named by reading order rather than by side.
+  ///
+  /// `start` is the end the bar grows from and `end` the one it grows
+  /// towards, so they swap over when the bar reads right to left. This is what
+  /// [ProgressSteps.stepRadius] usually wants: it is handed `isFirst`, which
+  /// is a place in the run, and a radius named by side does not follow it.
+  const ProgressBorderRadius.directional({
+    double? topStart,
+    double? bottomStart,
+    double? topEnd,
+    double? bottomEnd,
+  })  : topLeft = topStart,
+        bottomLeft = bottomStart,
+        topRight = topEnd,
+        bottomRight = bottomEnd,
+        _directional = true;
+
+  /// Creates a border radius with distinct leading and trailing radii.
+  const ProgressBorderRadius.horizontalDirectional({
+    double start = 0,
+    double end = 0,
+  })  : topLeft = start,
+        bottomLeft = start,
+        topRight = end,
+        bottomRight = end,
+        _directional = true;
 
   /// Creates a uniform border radius for all corners.
   const ProgressBorderRadius.all(double radius)
       : topLeft = radius,
         bottomLeft = radius,
         topRight = radius,
-        bottomRight = radius;
+        bottomRight = radius,
+        // The same on every corner, so there is nothing to swap.
+        _directional = false;
 
   /// Constant zero radius (square corners).
   static const ProgressBorderRadius zero = ProgressBorderRadius.all(0);
@@ -156,15 +186,29 @@ class ProgressBorderRadius {
   final double? topRight;
 
   /// Radius for bottom-right corner.
+  ///
+  /// Under the directional constructors this field holds the *trailing*
+  /// radius, which [toBorderRadius] puts on the left when the bar reads right
+  /// to left. Same for the other three.
   final double? bottomRight;
 
-  /// Converts to Flutter [BorderRadius].
-  BorderRadius toBorderRadius() => BorderRadius.only(
-        topLeft: Radius.circular(topLeft ?? 0),
-        bottomLeft: Radius.circular(bottomLeft ?? 0),
-        topRight: Radius.circular(topRight ?? 0),
-        bottomRight: Radius.circular(bottomRight ?? 0),
-      );
+  /// Whether the four were named by reading order rather than by side.
+  final bool _directional;
+
+  /// Converts to Flutter [BorderRadius], for a bar reading in [direction].
+  ///
+  /// A radius named by side is that side, whatever the direction — a caller
+  /// who asked for the left corners meant the left ones. One named by reading
+  /// order swaps over.
+  BorderRadius toBorderRadius([TextDirection direction = TextDirection.ltr]) {
+    final swap = _directional && direction == TextDirection.rtl;
+    return BorderRadius.only(
+      topLeft: Radius.circular((swap ? topRight : topLeft) ?? 0),
+      bottomLeft: Radius.circular((swap ? bottomRight : bottomLeft) ?? 0),
+      topRight: Radius.circular((swap ? topLeft : topRight) ?? 0),
+      bottomRight: Radius.circular((swap ? bottomLeft : bottomRight) ?? 0),
+    );
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -174,10 +218,12 @@ class ProgressBorderRadius {
           topLeft == other.topLeft &&
           bottomLeft == other.bottomLeft &&
           topRight == other.topRight &&
-          bottomRight == other.bottomRight;
+          bottomRight == other.bottomRight &&
+          _directional == other._directional;
 
   @override
-  int get hashCode => Object.hash(topLeft, bottomLeft, topRight, bottomRight);
+  int get hashCode =>
+      Object.hash(topLeft, bottomLeft, topRight, bottomRight, _directional);
 }
 
 /// A percentage range for [Progress.rangeColors].
@@ -696,7 +742,7 @@ class _ProgressState extends State<Progress> {
     final fill = _fill(token, currentPercent);
     final cap = _effectiveCap;
 
-    final customRadius = widget.borderRadius?.toBorderRadius();
+    final customRadius = widget.borderRadius?.toBorderRadius(dir);
     final defaultRadius = cap == StrokeCap.round
         ? BorderRadius.circular(stroke)
         : BorderRadius.zero;
@@ -753,7 +799,7 @@ class _ProgressState extends State<Progress> {
           final bool? isFirst =
               (i == 0) ? true : ((i == stepCount - 1) ? false : null);
           stepBorderRadius =
-              stepRadiusFn(isFirst, stepProgress).toBorderRadius();
+              stepRadiusFn(isFirst, stepProgress).toBorderRadius(dir);
         } else {
           stepBorderRadius = fallbackRadius;
         }

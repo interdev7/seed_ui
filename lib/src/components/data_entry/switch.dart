@@ -202,7 +202,12 @@ class _SoftSwitchState extends State<Switch> {
               AnimatedAlign(
                 duration: token.motionDurationMid,
                 curve: token.motionEaseInOut,
-                alignment: on ? Alignment.centerRight : Alignment.centerLeft,
+                // The thumb rests at the start when off and travels to the
+                // end when on — a direction of travel, not a side, so it
+                // turns over with the language as Material's own switch does.
+                alignment: on
+                    ? AlignmentDirectional.centerEnd
+                    : AlignmentDirectional.centerStart,
                 child: AnimatedContainer(
                   duration: token.motionDurationFast,
                   curve: token.motionEaseInOut,
@@ -238,12 +243,15 @@ class _SoftSwitchState extends State<Switch> {
     // The active label hugs the side away from the thumb, so it stays visible.
     return Positioned.fill(
       child: Padding(
-        padding: EdgeInsets.only(
-          left: on ? 6 : thumbSize + 4,
-          right: on ? thumbSize + 4 : 6,
+        // Clear of wherever the thumb is resting.
+        padding: EdgeInsetsDirectional.only(
+          start: on ? 6 : thumbSize + 4,
+          end: on ? thumbSize + 4 : 6,
         ),
         child: Align(
-          alignment: on ? Alignment.centerLeft : Alignment.centerRight,
+          alignment: on
+              ? AlignmentDirectional.centerStart
+              : AlignmentDirectional.centerEnd,
           child: DefaultTextStyle.merge(
             style: TextStyle(
               color: const Color(0xFFFFFFFF),

@@ -209,9 +209,11 @@ class SortableList extends StatelessWidget {
     // Spacing between items (not after the last one).
     if (gap > 0 && index != children.length - 1) {
       content = Padding(
+        // After each item in turn, which across the page means the end of the
+        // row rather than its right.
         padding: _vertical
             ? EdgeInsets.only(bottom: gap)
-            : EdgeInsets.only(right: gap),
+            : EdgeInsetsDirectional.only(end: gap),
         child: content,
       );
     }

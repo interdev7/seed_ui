@@ -1287,4 +1287,197 @@ void main() {
       expect(await guideColumns(TextDirection.rtl), ltr);
     });
   });
+  group('a switch', () {
+    /// Where the thumb rests, as a distance from the track's leading edge.
+    Future<double> thumb(
+      WidgetTester tester,
+      TextDirection direction, {
+      required bool on,
+    }) async {
+      await tester.pumpWidget(
+        _host(Switch(value: on, onChanged: (_) {}), direction),
+      );
+      await tester.pumpAndSettle();
+
+      final track = tester.getRect(find.byType(Switch));
+      // The thumb is the white disc inside the track.
+      Rect? knob;
+      for (final element in find.byType(AnimatedContainer).evaluate()) {
+        final r = tester.getRect(find.byWidget(element.widget));
+        if (r.width >= track.width - 1) continue;
+        if (knob == null || r.width < knob.width) knob = r;
+      }
+      return direction == TextDirection.ltr
+          ? knob!.left - track.left
+          : track.right - knob!.right;
+    }
+
+    testWidgets('rests at the start and travels to the end', (tester) async {
+      for (final direction in TextDirection.values) {
+        final off = await thumb(tester, direction, on: false);
+        final on = await thumb(tester, direction, on: true);
+        // Measured from each direction's own leading edge the two agree: the
+        // thumb sits at the start when off and has moved along when on.
+        expect(off, lessThan(on), reason: '$direction');
+      }
+
+      // And the same distances either way round, which a side-named thumb
+      // cannot manage — it would sit at the far end of a mirrored track.
+      expect(
+        await thumb(tester, TextDirection.rtl, on: false),
+        moreOrLessEquals(
+          await thumb(tester, TextDirection.ltr, on: false),
+          epsilon: 1,
+        ),
+      );
+    });
+  });
+  group('a run of avatars', () {
+    testWidgets('laps the way it reads', (tester) async {
+      /// How far the second face follows the first, in reading order.
+      Future<double> lap(TextDirection direction) async {
+        await tester.pumpWidget(
+          _host(
+            const AvatarGroup(
+              children: [
+                Avatar(child: Text('A')),
+                Avatar(child: Text('B')),
+              ],
+            ),
+            direction,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final first = tester.getRect(find.text('A'));
+        final second = tester.getRect(find.text('B'));
+        return direction == TextDirection.ltr
+            ? second.center.dx - first.center.dx
+            : first.center.dx - second.center.dx;
+      }
+
+      // Each face is clipped back towards the edge the run starts at, so the
+      // overlap has to fall the way the row reads — clipped leftwards in a
+      // mirrored run, the faces lap the wrong one over the other.
+      final ltr = await lap(TextDirection.ltr);
+      expect(ltr, greaterThan(0));
+      expect(await lap(TextDirection.rtl), moreOrLessEquals(ltr, epsilon: 1));
+    });
+  });
+  group('a horizontal sortable list', () {
+    testWidgets('spaces its items after each, not to the right of each', (
+      tester,
+    ) async {
+      /// The gap between the first two items, and which side of the first one
+      /// it falls on, in reading order.
+      Future<double> gapAfterFirst(TextDirection direction) async {
+        await tester.pumpWidget(
+          _host(
+            SizedBox(
+              height: 60,
+              child: SortableList(
+                direction: Axis.horizontal,
+                gap: 20,
+                onReorder: (_, __) {},
+                children: const [
+                  SizedBox(key: ValueKey('a'), width: 40, child: Text('A')),
+                  SizedBox(key: ValueKey('b'), width: 40, child: Text('B')),
+                ],
+              ),
+            ),
+            direction,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final first = tester.getRect(find.text('A'));
+        final second = tester.getRect(find.text('B'));
+        // Positive when B follows A the way the row reads.
+        return direction == TextDirection.ltr
+            ? second.left - first.right
+            : first.left - second.right;
+      }
+
+      // Twenty either way round. Placed by side, the gap lands between the
+      // first item and the edge behind it in a mirrored row, and the two items
+      // come out touching.
+      expect(await gapAfterFirst(TextDirection.ltr),
+          moreOrLessEquals(20, epsilon: 1));
+      expect(await gapAfterFirst(TextDirection.rtl),
+          moreOrLessEquals(20, epsilon: 1));
+    });
+
+    testWidgets('a column is spaced below each item, not beside it', (
+      tester,
+    ) async {
+      // The other arm of the same choice: down the page there is no leading
+      // edge to reckon with, and the gap simply falls under each item.
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 200,
+            child: SortableList(
+              gap: 20,
+              onReorder: (_, __) {},
+              children: const [
+                SizedBox(key: ValueKey('a'), height: 40, child: Text('A')),
+                SizedBox(key: ValueKey('b'), height: 40, child: Text('B')),
+              ],
+            ),
+          ),
+          TextDirection.ltr,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.getRect(find.text('B')).top -
+            tester.getRect(find.text('A')).bottom,
+        moreOrLessEquals(20, epsilon: 1),
+      );
+    });
+  });
+
+  group('a switch with labels', () {
+    testWidgets('keeps its label clear of wherever the thumb rests', (
+      tester,
+    ) async {
+      /// How far the label sits from the track's leading edge.
+      Future<double> label(TextDirection direction, {required bool on}) async {
+        await tester.pumpWidget(
+          _host(
+            Switch(
+              value: on,
+              onChanged: (_) {},
+              checkedChild: const Text('I'),
+              uncheckedChild: const Text('O'),
+            ),
+            direction,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final track = tester.getRect(find.byType(Switch));
+        final text = tester.getRect(find.text(on ? 'I' : 'O'));
+        return direction == TextDirection.ltr
+            ? text.left - track.left
+            : track.right - text.right;
+      }
+
+      for (final on in [true, false]) {
+        // Read from each direction's own leading edge the two agree: the
+        // label sits the same distance in whichever way the track reads.
+        expect(
+          await label(TextDirection.rtl, on: on),
+          moreOrLessEquals(await label(TextDirection.ltr, on: on), epsilon: 1),
+          reason: on ? 'on' : 'off',
+        );
+      }
+
+      // And the two states put it on opposite sides, since it hugs the end
+      // away from the thumb.
+      expect(
+        await label(TextDirection.ltr, on: true),
+        lessThan(await label(TextDirection.ltr, on: false)),
+      );
+    });
+  });
 }

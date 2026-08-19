@@ -543,7 +543,9 @@ class _OverlapRow extends StatelessWidget {
         final isLast = index == children.length - 1;
 
         return Align(
-          alignment: Alignment.centerLeft,
+          // Each face is clipped back towards the edge the run starts at, so
+          // the overlap falls the way the row reads.
+          alignment: AlignmentDirectional.centerStart,
           widthFactor: isLast ? 1.0 : widthFactor,
           heightFactor: 1.0,
           child: entry.value,

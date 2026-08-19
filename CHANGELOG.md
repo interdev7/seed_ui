@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the far edge instead of against the line, leaving one column touching it
   and the other pushed away twice over. A collapsed item also revealed itself
   from the left rather than from where its text begins.
+- A `Switch` kept its thumb on the right when on and the left when off, so a
+  mirrored one travelled backwards. The thumb rests at the start and moves to
+  the end, as Material's own does, and the label inside the track keeps clear
+  of wherever it is resting.
+- `AvatarGroup` clipped each face leftwards, which lapped the wrong one over
+  the other in a mirrored run; `Listy` group headings and `Card`'s skeleton
+  bars read from the left rather than from where the line begins; and
+  `SortableList` spaced its items by the right of each rather than after it.
 - A `Tree` was built by side throughout, so a mirrored one turned its rows
   over while leaving everything inside them behind: the depth guides and the
   expand switcher stayed at the left, the title read from the left of its own

@@ -44,6 +44,14 @@ class _StepsDemoState extends State<StepsDemo> {
     super.dispose();
   }
 
+  /// Short titles, so the rails keep room to give: see the rail-inset group.
+  static const _spacious = [
+    StepItem(title: Text('One')),
+    StepItem(title: Text('Two')),
+    StepItem(title: Text('Three')),
+    StepItem(title: Text('Four')),
+  ];
+
   static const _checkout = [
     StepItem(title: Text('Cart'), content: Text('3 items · \$4200')),
     StepItem(title: Text('Delivery'), content: Text('Pick a date')),
@@ -208,6 +216,24 @@ class _StepsDemoState extends State<StepsDemo> {
                 onChanged: (v) => setState(() => _railInset = v),
               ),
               const SizedBox(height: 12),
+              // Short titles on purpose. The rail is the give in the layout,
+              // and it has a floor it will not go below; a run whose steps
+              // already fill the width leaves every rail sitting on that floor,
+              // where a bigger inset has no room left to take and the line
+              // stops changing. The checkout run above is exactly that case.
+              Steps(
+                current: 1,
+                items: _spacious,
+                token: StepsToken(railInset: RailInsets.all(_railInset)),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'The same run with the long checkout titles: its rails are '
+                'already at their shortest, so the inset has nothing left to '
+                'take and only the roomiest line still moves.',
+                style: TextStyle(color: t.colorTextTertiary),
+              ),
+              const SizedBox(height: 8),
               Steps(
                 current: 1,
                 items: _checkout,
@@ -217,7 +243,7 @@ class _StepsDemoState extends State<StepsDemo> {
               Steps(
                 orientation: StepsOrientation.vertical,
                 current: 1,
-                items: _checkout,
+                items: _spacious,
                 token: StepsToken(railInset: RailInsets.all(_railInset)),
               ),
             ],

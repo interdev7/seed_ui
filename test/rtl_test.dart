@@ -1,6 +1,9 @@
+import 'dart:ui' show ImageByteFormat;
+
 import 'package:flutter/material.dart'
     hide Badge, ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
-import 'package:flutter/rendering.dart' show RenderParagraph;
+import 'package:flutter/rendering.dart'
+    show RenderParagraph, RenderRepaintBoundary;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -950,6 +953,155 @@ void main() {
 
       expect((await firstStep(TextDirection.ltr)).topLeft.x, 8);
       expect((await firstStep(TextDirection.rtl)).topRight.x, 8);
+    });
+  });
+  group('a run of panels', () {
+    testWidgets('points the way the run reads', (tester) async {
+      /// The colour on the strip's centre line, a little either side of the
+      /// middle, read from the painted pixels — the shape is drawn, not laid
+      /// out, so nothing else can see it.
+      Future<(int before, int after)> acrossTheSeam(
+        TextDirection direction,
+      ) async {
+        await tester.pumpWidget(
+          _host(
+            const RepaintBoundary(
+              child: SizedBox(
+                width: 400,
+                child: Steps(
+                  type: StepsType.panel,
+                  current: 0,
+                  items: [
+                    StepItem(title: Text('One')),
+                    StepItem(title: Text('Two')),
+                  ],
+                ),
+              ),
+            ),
+            direction,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byType(RepaintBoundary).first,
+        );
+
+        late int before;
+        late int after;
+        // Rasterising is real async work, which a widget test's fake clock
+        // does not resolve on its own.
+        await tester.runAsync(() async {
+          final image = await boundary.toImage();
+          final data = await image.toByteData(format: ImageByteFormat.rawRgba);
+
+          int at(double fraction) {
+            final x = (image.width * fraction).round();
+            final y = image.height ~/ 2;
+            final i = (y * image.width + x) * 4;
+            return (data!.getUint8(i) << 16) |
+                (data.getUint8(i + 1) << 8) |
+                data.getUint8(i + 2);
+          }
+
+          before = at(0.40);
+          after = at(0.60);
+          image.dispose();
+        });
+        return (before, after);
+      }
+
+      // The current panel is filled and the one ahead is not, so the two sides
+      // of the strip differ. Which side carries the fill is the whole question:
+      // the run starts where the reading starts.
+      final ltr = await acrossTheSeam(TextDirection.ltr);
+      final rtl = await acrossTheSeam(TextDirection.rtl);
+
+      // Not an exact mirror pixel for pixel — the first panel has no notch
+      // and the last no point — so what is asserted is which side carries the
+      // fill, which is the whole question.
+      final filled = ltr.$1;
+      expect(ltr.$2, isNot(filled), reason: 'the step ahead is not filled');
+      expect(
+        rtl.$2,
+        filled,
+        reason: 'the run starts where the reading starts',
+      );
+      expect(rtl.$1, isNot(filled));
+    });
+  });
+  group('a rail inset', () {
+    /// The drawn length of each horizontal rail, read from the painter that
+    /// draws it: the line is the slot less the gaps it keeps at either end.
+    Future<List<double>> lines(
+      WidgetTester tester,
+      double inset,
+      TextDirection direction,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 700,
+            child: Steps(
+              current: 1,
+              items: const [
+                StepItem(title: Text('One')),
+                StepItem(title: Text('Two')),
+                StepItem(title: Text('Three')),
+              ],
+              token: StepsToken(railInset: RailInsets.all(inset)),
+            ),
+          ),
+          direction,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final out = <double>[];
+      for (final element in find.byType(CustomPaint).evaluate()) {
+        final painter = (element.widget as CustomPaint).painter;
+        if (painter is! RailPainter || painter.axis != Axis.horizontal) {
+          continue;
+        }
+        final slot = tester.getRect(find.byWidget(element.widget));
+        out.add(slot.width - painter.startInset - painter.endInset);
+      }
+      return out;
+    }
+
+    testWidgets('shortens the line, by the same amount either way round', (
+      tester,
+    ) async {
+      for (final direction in TextDirection.values) {
+        final flush = await lines(tester, 0, direction);
+        final inset = await lines(tester, 8, direction);
+        expect(flush, isNotEmpty, reason: '$direction drew no rails');
+        expect(inset.length, flush.length, reason: '$direction');
+
+        for (var i = 0; i < flush.length; i++) {
+          // Eight at each end, so sixteen off a line that has it to give. A
+          // line already at its floor keeps it — that is the floor's job.
+          expect(
+            inset[i],
+            anyOf(moreOrLessEquals(flush[i] - 16, epsilon: 1), flush[i]),
+            reason: '$direction rail $i: ${flush[i]} then ${inset[i]}',
+          );
+        }
+      }
+    });
+
+    testWidgets('takes the same room whichever way the run reads', (
+      tester,
+    ) async {
+      // The gaps are the same at both ends here, so the two directions must
+      // produce the same set of lengths.
+      for (final inset in [0.0, 8.0, 16.0]) {
+        expect(
+          await lines(tester, inset, TextDirection.rtl),
+          await lines(tester, inset, TextDirection.ltr),
+          reason: 'inset $inset',
+        );
+      }
     });
   });
 }

@@ -2231,4 +2231,65 @@ void main() {
     expect(rects.single.bottom, rects.single.bottom.roundToDouble());
     expect(rects.single.height, 1);
   });
+  group('the rail keeps room for its own gaps', () {
+    /// The drawn length of each rail in a vertical run, and the run's height.
+    Future<(List<double> lines, double height)> run(
+      WidgetTester tester,
+      double inset,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 320,
+              child: Steps(
+                orientation: StepsOrientation.vertical,
+                current: 1,
+                items: const [
+                  StepItem(title: Text('One')),
+                  StepItem(title: Text('Two')),
+                  StepItem(title: Text('Three')),
+                ],
+                token: StepsToken(railInset: RailInsets.all(inset)),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final lines = <double>[];
+      for (final element in find.byType(CustomPaint).evaluate()) {
+        final painter = (element.widget as CustomPaint).painter;
+        if (painter is! RailPainter || painter.axis != Axis.vertical) continue;
+        final slot = tester.getRect(find.byWidget(element.widget));
+        lines.add(slot.height - painter.startInset - painter.endInset);
+      }
+      return (lines, tester.getRect(find.byType(Steps)).height);
+    }
+
+    testWidgets('a generous inset does not swallow the line', (tester) async {
+      for (final inset in [0.0, 8.0, 16.0, 32.0, 64.0]) {
+        final (lines, _) = await run(tester, inset);
+        expect(lines, isNotEmpty, reason: 'inset $inset drew no rail');
+        for (final line in lines) {
+          // Taking only the leftover, a rail beside a short step had its whole
+          // slot eaten by the gaps and came out negative — drawn as nothing,
+          // which is why every inset past a small one looked alike.
+          expect(
+            line,
+            greaterThan(0),
+            reason: 'inset $inset left a line of $line',
+          );
+        }
+      }
+    });
+
+    testWidgets('the run grows to make room for a wider gap', (tester) async {
+      final (_, tight) = await run(tester, 0);
+      final (_, roomy) = await run(tester, 32);
+      // The line cannot shrink past its floor, so the step lengthens instead.
+      expect(roomy, greaterThan(tight));
+    });
+  });
 }

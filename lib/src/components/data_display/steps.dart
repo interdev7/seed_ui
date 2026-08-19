@@ -2294,6 +2294,7 @@ class _PanelRun extends StatelessWidget {
                 child: CustomPaint(
                   painter: _PanelStripPainter(
                     axis: horizontal ? Axis.horizontal : Axis.vertical,
+                    direction: Directionality.of(context),
                     count: items.length,
                     arrow: r.panelArrowWidth,
                     radius: r.panelRadius,
@@ -2481,6 +2482,7 @@ class _HoverIndexState extends State<_HoverIndex> {
 class _PanelStripPainter extends CustomPainter {
   const _PanelStripPainter({
     required this.axis,
+    required this.direction,
     required this.count,
     required this.arrow,
     required this.radius,
@@ -2489,6 +2491,14 @@ class _PanelStripPainter extends CustomPainter {
     required this.seams,
     required this.strokeWidth,
   });
+
+  /// Which way the run reads.
+  ///
+  /// A horizontal strip that reads right to left is the same shape mirrored:
+  /// every panel points the way the eye travels, and the first is drawn at the
+  /// right. Reflecting the canvas does both at once — the shapes and their
+  /// order — and matches the row of content above it, which mirrors itself.
+  final TextDirection direction;
 
   /// Which way the strip runs. A vertical strip is the same shape turned a
   /// quarter: its panels point down into the next.
@@ -2635,6 +2645,13 @@ class _PanelStripPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final logical = _logical(size);
+    final mirrored = axis == Axis.horizontal && direction == TextDirection.rtl;
+    if (mirrored) {
+      canvas
+        ..save()
+        ..translate(size.width, 0)
+        ..scale(-1, 1);
+    }
 
     // Fills in order, so each point laps over the notch of the panel behind it.
     for (var i = 0; i < count; i++) {
@@ -2657,11 +2674,14 @@ class _PanelStripPainter extends CustomPainter {
         canvas.drawPath(_oriented(_seamPath(i, logical)), _pen(colour));
       }
     }
+
+    if (mirrored) canvas.restore();
   }
 
   @override
   bool shouldRepaint(_PanelStripPainter old) =>
       old.axis != axis ||
+      old.direction != direction ||
       old.count != count ||
       old.arrow != arrow ||
       old.radius != radius ||

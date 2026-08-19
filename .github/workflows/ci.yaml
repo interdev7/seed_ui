@@ -129,6 +129,8 @@ jobs:
       # does not ship them, and without them the screenshot check fails: ten
       # points lost, and an exit code of 127 from the missing binary.
       - name: Install the WebP tools pana needs for screenshots
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends webp

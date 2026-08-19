@@ -1,6 +1,9 @@
+import 'dart:ui' show ImageByteFormat;
+
 import 'package:flutter/material.dart'
     hide Badge, ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
-import 'package:flutter/rendering.dart' show RenderParagraph;
+import 'package:flutter/rendering.dart'
+    show RenderParagraph, RenderRepaintBoundary;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -950,6 +953,81 @@ void main() {
 
       expect((await firstStep(TextDirection.ltr)).topLeft.x, 8);
       expect((await firstStep(TextDirection.rtl)).topRight.x, 8);
+    });
+  });
+  group('a run of panels', () {
+    testWidgets('points the way the run reads', (tester) async {
+      /// The colour on the strip's centre line, a little either side of the
+      /// middle, read from the painted pixels — the shape is drawn, not laid
+      /// out, so nothing else can see it.
+      Future<(int before, int after)> acrossTheSeam(
+        TextDirection direction,
+      ) async {
+        await tester.pumpWidget(
+          _host(
+            const RepaintBoundary(
+              child: SizedBox(
+                width: 400,
+                child: Steps(
+                  type: StepsType.panel,
+                  current: 0,
+                  items: [
+                    StepItem(title: Text('One')),
+                    StepItem(title: Text('Two')),
+                  ],
+                ),
+              ),
+            ),
+            direction,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byType(RepaintBoundary).first,
+        );
+
+        late int before;
+        late int after;
+        // Rasterising is real async work, which a widget test's fake clock
+        // does not resolve on its own.
+        await tester.runAsync(() async {
+          final image = await boundary.toImage();
+          final data = await image.toByteData(format: ImageByteFormat.rawRgba);
+
+          int at(double fraction) {
+            final x = (image.width * fraction).round();
+            final y = image.height ~/ 2;
+            final i = (y * image.width + x) * 4;
+            return (data!.getUint8(i) << 16) |
+                (data.getUint8(i + 1) << 8) |
+                data.getUint8(i + 2);
+          }
+
+          before = at(0.40);
+          after = at(0.60);
+          image.dispose();
+        });
+        return (before, after);
+      }
+
+      // The current panel is filled and the one ahead is not, so the two sides
+      // of the strip differ. Which side carries the fill is the whole question:
+      // the run starts where the reading starts.
+      final ltr = await acrossTheSeam(TextDirection.ltr);
+      final rtl = await acrossTheSeam(TextDirection.rtl);
+
+      // Not an exact mirror pixel for pixel — the first panel has no notch
+      // and the last no point — so what is asserted is which side carries the
+      // fill, which is the whole question.
+      final filled = ltr.$1;
+      expect(ltr.$2, isNot(filled), reason: 'the step ahead is not filled');
+      expect(
+        rtl.$2,
+        filled,
+        reason: 'the run starts where the reading starts',
+      );
+      expect(rtl.$1, isNot(filled));
     });
   });
 }

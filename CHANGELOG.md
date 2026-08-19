@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the far edge instead of against the line, leaving one column touching it
   and the other pushed away twice over. A collapsed item also revealed itself
   from the left rather than from where its text begins.
+- A `Steps` panel run pointed the same way whichever way it read: the strip is
+  painted, and the painter knew its axis but not the direction, so the arrows
+  faced right in a mirrored layout while the content beside them ran the other
+  way. The canvas is reflected for a right-to-left run, which turns the shapes
+  and their order together.
 - `ProgressBorderRadius` could only name a side, which left
   `ProgressSteps.stepRadius` with no way to say what it means: it is handed
   `isFirst`, a place in the run, and the first step is on the right when the

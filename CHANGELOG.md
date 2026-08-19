@@ -5,6 +5,53 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.9
+
+### Fixed
+
+- `Timeline` set its content adrift from the axis in a right-to-left layout.
+  The columns are laid out in a row, which reverses itself when the language
+  does, but their padding and alignment named sides outright — so the gap went
+  to the far edge instead of against the line, leaving one column touching it
+  and the other pushed away twice over. A collapsed item also revealed itself
+  from the left rather than from where its text begins.
+- A `Timeline` item's title, description and content always read towards the
+  start of their block, so in the column standing before the axis the lines
+  drifted away from the line they belong to instead of meeting it. Text faces
+  the axis now — end for the near column, start for the far one, swapping with
+  the item's placement, as Ant Design does. Labels follow the same rule.
+
+  Two settings are needed, not one: the box alignment places a block narrower
+  than its column, but a block as wide as the column — any text long enough to
+  wrap — is placed by its paragraph alignment alone. Setting only the first
+  left a short title against the axis with the description below it against
+  the far edge.
+- A horizontal `Timeline` painted its thread rightwards from every dot, so in
+  a right-to-left run — which a row reverses on its own — the first item sent
+  its thread off the outer edge and the items stopped joining up. Which way
+  the thread runs is now read off the direction, along with the rail insets
+  and which end is dashed.
+- `Tabs` scrolled to the mirror image of where it meant to in a right-to-left
+  layout. Both the snap boundaries and the jump to the active tab took a tab's
+  offset inside the strip as its distance along the scroll, but a horizontal
+  bar that reads right to left starts at the far end: an offset of zero shows
+  the content's right edge, and distances are measured from there.
+- `Select` laid itself out physically: the wider inset belonged to the label
+  and the narrower to the arrow, and a mirrored layout swapped the two. Its
+  value, its placeholder and each option in the list were pinned to the left
+  rather than to the edge the language starts at. Tags took their padding the
+  same way round.
+- An `Input`'s placeholder stayed on the left of a mirrored field while the
+  typed text moved: it is drawn separately, and `TextAlign.start` was mapped
+  onto a physical left. `start`, `end` and `justify` follow the reading
+  direction now; `left` and `right` name a side outright and still do not
+  mirror.
+- `Input` rounded the corners the addon is joined to by side rather than by
+  reading order, so an attached button met a rounded end and the free end came
+  out square. Its prefix and suffix insets followed suit.
+- `InputNumber` drew the rule between the field and its handles on their left
+  rather than between the two.
+
 ## 0.6.8
 
 ### Fixed

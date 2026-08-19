@@ -730,6 +730,21 @@ class _TabsState extends State<Tabs> {
 
   /// Where the bar must sit for the active tab to be aligned, or null while
   /// the geometry is not there to say.
+  /// How far along the bar's own scroll a tab sits.
+  ///
+  /// Not simply its offset inside the strip: a horizontal bar that reads right
+  /// to left starts at the far end, where a scroll offset of zero shows the
+  /// content's right edge. A tab's distance along the scroll is then measured
+  /// from that edge, not from the left one. Getting this wrong sends every
+  /// scroll — the snap boundaries and the jump to the active tab alike — to
+  /// the mirror image of where it was meant to go.
+  double _scrollOffsetOf(RenderBox tab, RenderBox strip) {
+    final origin = tab.localToGlobal(Offset.zero, ancestor: strip);
+    if (!_horizontal) return origin.dy;
+    if (Directionality.of(context) == TextDirection.ltr) return origin.dx;
+    return strip.size.width - (origin.dx + tab.size.width);
+  }
+
   double? _alignTarget() {
     if (!mounted || !_barController.hasClients) return null;
     final tab =
@@ -738,8 +753,7 @@ class _TabsState extends State<Tabs> {
     if (tab == null || strip == null || !tab.hasSize || !strip.hasSize) {
       return null;
     }
-    final origin = tab.localToGlobal(Offset.zero, ancestor: strip);
-    final start = _horizontal ? origin.dx : origin.dy;
+    final start = _scrollOffsetOf(tab, strip);
     final extent = _horizontal ? tab.size.width : tab.size.height;
     final viewport = _barController.position.viewportDimension;
     final target = widget.scrollAlign == TabScrollAlign.center
@@ -769,8 +783,7 @@ class _TabsState extends State<Tabs> {
       final box =
           _tabKeys[item.key]?.currentContext?.findRenderObject() as RenderBox?;
       if (box == null || !box.hasSize) continue;
-      final origin = box.localToGlobal(Offset.zero, ancestor: strip);
-      offsets.add(_horizontal ? origin.dx : origin.dy);
+      offsets.add(_scrollOffsetOf(box, strip));
     }
     if (offsets.length != _tabOffsets.length ||
         !const _Approx().equal(offsets, _tabOffsets)) {

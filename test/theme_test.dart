@@ -295,4 +295,100 @@ void main() {
       expect(styleOf(tester), isNull);
     });
   });
+  group('providers nest', () {
+    Widget button() => Button(
+          size: SoftSize.large,
+          onPressed: () {},
+          child: const Text('Pay'),
+        );
+
+    Future<double> heightUnder(WidgetTester tester, Widget tree) async {
+      await tester.pumpWidget(tree);
+      await tester.pumpAndSettle();
+      return tester.getRect(find.byType(Button)).height;
+    }
+
+    testWidgets(
+        'an inner provider silent about a component keeps the outer '
+        "one's token", (tester) async {
+      const outer = ComponentsConfig(button: ButtonToken(controlHeightLG: 52));
+
+      final alone = await heightUnder(
+        tester,
+        ConfigProvider(
+          theme: ThemeData(components: outer),
+          child: MaterialApp(home: Scaffold(body: Center(child: button()))),
+        ),
+      );
+
+      // A second provider deeper — a theme switcher, a corner that recolours
+      // itself — carrying a theme and nothing else. Stopping the search at the
+      // nearest provider is what made a token set once at the top of an app
+      // fail to reach a button two providers down.
+      final nested = await heightUnder(
+        tester,
+        ConfigProvider(
+          theme: ThemeData(components: outer),
+          child: MaterialApp(
+            home: ConfigProvider(
+              theme: ThemeData(),
+              child: Scaffold(body: Center(child: button())),
+            ),
+          ),
+        ),
+      );
+
+      expect(alone, 52);
+      expect(nested, alone, reason: 'the inner one said nothing about buttons');
+    });
+
+    testWidgets('an inner provider that does name one still wins', (
+      tester,
+    ) async {
+      final height = await heightUnder(
+        tester,
+        ConfigProvider(
+          theme: ThemeData(
+            components: const ComponentsConfig(
+              button: ButtonToken(controlHeightLG: 52),
+            ),
+          ),
+          child: MaterialApp(
+            home: ConfigProvider(
+              theme: ThemeData(
+                components: const ComponentsConfig(
+                  button: ButtonToken(controlHeightLG: 64),
+                ),
+              ),
+              child: Scaffold(body: Center(child: button())),
+            ),
+          ),
+        ),
+      );
+      expect(height, 64, reason: 'the nearer word on the matter');
+    });
+
+    testWidgets('a change to the outer one reaches through the inner', (
+      tester,
+    ) async {
+      Widget tree(double height) => ConfigProvider(
+            theme: ThemeData(
+              components: ComponentsConfig(
+                button: ButtonToken(controlHeightLG: height),
+              ),
+            ),
+            child: MaterialApp(
+              home: ConfigProvider(
+                theme: ThemeData(),
+                child: Scaffold(body: Center(child: button())),
+              ),
+            ),
+          );
+
+      expect(await heightUnder(tester, tree(52)), 52);
+      // Depending on every provider consulted, not merely the nearest, is what
+      // makes this rebuild.
+      expect(await heightUnder(tester, tree(60)), 60);
+    });
+  });
 }

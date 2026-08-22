@@ -144,19 +144,51 @@ class ConfigProvider extends InheritedWidget {
   static WidgetBuilder? renderEmptyOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ConfigProvider>()?.renderEmpty;
 
-  /// The nearest component token of type [T] supplied via [theme.components] or [components], or null.
+  /// The component token of type [T] in scope, or null when none is set.
+  ///
+  /// Searched from the nearest provider outwards rather than stopping at the
+  /// first one. Providers nest — a theme switcher, a screen that recolours a
+  /// corner — and one that says nothing about a component should leave it as
+  /// the provider above it had it, not silently reset it to the defaults.
+  /// Stopping at the nearest is what makes a token set once at the top of an
+  /// app fail to reach a button two providers down.
   static T? componentOf<T>(BuildContext context) {
-    final provider =
-        context.dependOnInheritedWidgetOfExactType<ConfigProvider>();
-    if (provider == null) return null;
+    T? found;
+    _visitProviders(context, (provider) {
+      final fromConfig = provider.theme.components.of<T>();
+      if (fromConfig != null) {
+        found = fromConfig;
+        return false;
+      }
+      for (final c in provider.components) {
+        if (c is T) {
+          found = c as T;
+          return false;
+        }
+      }
+      return true;
+    });
+    return found;
+  }
 
-    final fromConfig = provider.theme.components.of<T>();
-    if (fromConfig != null) return fromConfig;
-
-    for (final c in provider.components) {
-      if (c is T) return c as T;
-    }
-    return null;
+  /// Calls [visit] with each provider above [context], nearest first, until it
+  /// returns false or they run out.
+  ///
+  /// Every one visited is depended on, so a change to any of them rebuilds the
+  /// widget that asked — including the outer provider that supplied the token
+  /// the nearer ones were silent about.
+  static void _visitProviders(
+    BuildContext context,
+    bool Function(ConfigProvider provider) visit,
+  ) {
+    var carryOn = true;
+    context.visitAncestorElements((element) {
+      if (element is InheritedElement && element.widget is ConfigProvider) {
+        context.dependOnInheritedElement(element);
+        carryOn = visit(element.widget as ConfigProvider);
+      }
+      return carryOn;
+    });
   }
 
   /// Components must render even when the app never installed a provider,

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.6.10
 
+### Fixed
+
+- A component token set on one `ConfigProvider` was lost under any provider
+  nested inside it — a theme switcher, a screen that recolours a corner — even
+  when the inner one said nothing about that component. The search stopped at
+  the nearest provider and fell back to the defaults, which is why a token set
+  once at the top of an app still had to be repeated on every widget. It now
+  carries on outwards until it finds one, and depends on each provider it
+  consults so a change to the outer one still reaches through.
+
 ### Added
 
 - `Slider` and `RangeSlider`. A groove with one handle or two, with `min`,

@@ -11,6 +11,7 @@ import 'components/data_display/avatar_demo.dart';
 import 'components/data_display/badge_demo.dart';
 import 'components/general/button_demo.dart';
 import 'components/data_display/card_demo.dart';
+import 'components/data_entry/slider_demo.dart';
 import 'components/data_display/collapse_demo.dart';
 import 'components/data_display/countdown_demo.dart';
 import 'components/data_display/tree_demo.dart';
@@ -361,6 +362,7 @@ final List<Demo> demos = [
   Demo('localization', 'Localization 🌍', (_) => const LocalizationDemo()),
   Demo('avatar', 'Avatar', (_) => const AvatarDemo()),
   Demo('badge', 'Badge', (_) => const BadgeDemo()),
+  Demo('slider', 'Slider', (_) => const SliderDemo()),
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),
   Demo('message', 'message', (_) => const MessageDemo()),

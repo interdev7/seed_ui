@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.10
+
+### Added
+
+- `Slider` and `RangeSlider`. A groove with one handle or two, with `min`,
+  `max`, `step`, `marks`, `dots`, `included`, `vertical` and `reverse`, and
+  both `onChanged` and `onChangeComplete`. A null `step` lets the handle rest
+  only on the marks and the ends of the scale.
+
+  Two widgets rather than one behind a flag: what they carry differs in type,
+  and a single one would take a value that is sometimes a number and sometimes
+  a pair.
+
+  Reading right to left turns the scale round on its own, and `reverse` flips
+  it back rather than naming a side — the rule Ant Design applies, and the
+  only one under which `reverse` means the same thing in both languages. The
+  arrow keys move a handle one step, and the key that points along the groove
+  is the one that advances the value, so a mirrored scale answers the same key
+  the other way.
+
+  A handle being moved carries its value above it, styled as the kit's tooltip
+  is; `tooltip` decides what that says and may say nothing. It is drawn inside
+  the slider rather than in an overlay, since it has to follow a handle that
+  moves every frame — an ancestor that clips will clip it too.
+
+  Ant Design's editable range nodes are not here.
+
 ## 0.6.9
 
 ### Fixed

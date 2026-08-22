@@ -22,6 +22,7 @@ import '../components/data_entry/input.dart';
 import '../components/data_entry/input_number.dart';
 import '../components/data_entry/radio.dart';
 import '../components/data_entry/select.dart';
+import '../components/data_entry/slider.dart';
 import '../components/data_entry/switch.dart';
 import '../components/data_entry/upload.dart';
 import '../components/feedback/alert.dart';
@@ -68,6 +69,7 @@ class ComponentsConfig {
     this.result,
     this.segmented,
     this.select,
+    this.slider,
     this.sortableList,
     this.spin,
     this.steps,
@@ -159,6 +161,10 @@ class ComponentsConfig {
   /// Overrides applied to every [Select] under this provider.
   final SelectToken? select;
 
+  /// Overrides applied to every [Slider] and [RangeSlider] under this
+  /// provider.
+  final SliderToken? slider;
+
   /// Overrides applied to every [SortableList] under this provider.
   final SortableListToken? sortableList;
 
@@ -225,6 +231,7 @@ class ComponentsConfig {
     if (T == SortableListToken && sortableList != null) {
       return sortableList as T;
     }
+    if (T == SliderToken && slider != null) return slider as T;
     if (T == SpinToken && spin != null) return spin as T;
     if (T == StepsToken && steps != null) return steps as T;
     if (T == SwitchToken && switchToken != null) return switchToken as T;

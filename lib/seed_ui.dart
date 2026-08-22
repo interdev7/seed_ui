@@ -141,6 +141,8 @@ export 'src/components/data_entry/select.dart'
         SelectStatus,
         SelectToken,
         SelectVariant;
+export 'src/components/data_entry/slider.dart'
+    show Slider, RangeSlider, SliderMark, SliderToken;
 export 'src/components/data_entry/switch.dart'
     show Switch, SwitchSize, SwitchToken;
 export 'src/components/data_entry/upload.dart'

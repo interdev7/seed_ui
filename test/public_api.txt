@@ -129,6 +129,7 @@ RadioToken
 RailInsets
 RailPainter
 RailSegment
+RangeSlider
 Result
 ResultToken
 Ribbon
@@ -149,6 +150,9 @@ SelectSearch
 SelectStatus
 SelectToken
 SelectVariant
+Slider
+SliderMark
+SliderToken
 SoftSize
 SortableList
 SortableListToken

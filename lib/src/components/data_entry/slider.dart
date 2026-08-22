@@ -632,13 +632,21 @@ class _SliderCoreState extends State<_SliderCore> {
   String _plain(double value) =>
       value == value.roundToDouble() ? '${value.round()}' : '$value';
 
+  /// How far along the groove a point [fraction] of the way sits, in pixels
+  /// from the top or the left of a groove [extent] long.
+  ///
+  /// Down the page the scale starts at the bottom, as a measure does, so the
+  /// fraction counts back from the far end. Everything placed along the
+  /// groove goes through here: the painter, the bubble and the marks each
+  /// worked this out for themselves once, and the marks had it upside down.
+  double _alongFor(double fraction, double extent) =>
+      widget.vertical ? (1 - fraction) * extent : fraction * extent;
+
   /// Where the bubble sits along the groove.
-  double _bubbleAlong(Size size) {
-    final fraction = _fractionOf(widget.values[_dragging ?? 0]);
-    return widget.vertical
-        ? (1 - fraction) * size.height
-        : fraction * size.width;
-  }
+  double _bubbleAlong(Size size) => _alongFor(
+        _fractionOf(widget.values[_dragging ?? 0]),
+        widget.vertical ? size.height : size.width,
+      );
 
   void _dragStart(DragStartDetails details) {
     if (!_enabled) return;
@@ -756,8 +764,12 @@ class _SliderCoreState extends State<_SliderCore> {
           children: [
             for (final mark in widget.marks)
               Positioned(
-                left: widget.vertical ? 0 : _fractionOf(mark.value) * extent,
-                top: widget.vertical ? _fractionOf(mark.value) * extent : 0,
+                left: widget.vertical
+                    ? 0
+                    : _alongFor(_fractionOf(mark.value), extent),
+                top: widget.vertical
+                    ? _alongFor(_fractionOf(mark.value), extent)
+                    : 0,
                 child: FractionalTranslation(
                   translation: widget.vertical
                       ? const Offset(0, -0.5)
@@ -780,16 +792,51 @@ class _SliderCoreState extends State<_SliderCore> {
     );
 
     if (widget.vertical) {
-      return SizedBox(
-        width: thickness,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(width: thickness, child: groove),
-            SizedBox(width: t.sizeXS),
-            Expanded(child: marked),
-          ],
-        ),
+      // As wide as the groove, the gap and the widest label together — not as
+      // wide as the groove alone, which left the labels with nowhere to go and
+      // overflowed by exactly the gap between them.
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(width: thickness, child: groove),
+          SizedBox(width: t.sizeXS),
+          Stack(
+            children: [
+              // A silent copy, laid out but never seen. The labels themselves
+              // are positioned, and a stack of nothing but positioned children
+              // has no width of its own; this is what gives it one, measured
+              // from the labels rather than guessed at.
+              // Kept out of the semantics tree and out of hit testing: it is
+              // a duplicate of every label, and a screen reader would read the
+              // marks twice over.
+              ExcludeSemantics(
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: 0,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final mark in widget.marks)
+                          DefaultTextStyle.merge(
+                            style: TextStyle(
+                              fontSize: t.fontSize,
+                              fontFamily: t.fontFamily,
+                              fontFamilyFallback: t.fontFamilyFallback,
+                              decoration: TextDecoration.none,
+                            ).merge(mark.style),
+                            child: mark.label,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(child: marked),
+            ],
+          ),
+        ],
       );
     }
     return Column(

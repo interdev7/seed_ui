@@ -389,4 +389,121 @@ void main() {
       expect(find.textContaining('30'), findsNothing);
     });
   });
+  group('a vertical slider', () {
+    testWidgets('keeps room for its marks beside the groove', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              height: 240,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Slider(
+                    value: 60,
+                    vertical: true,
+                    marks: const [
+                      SliderMark(0, Text('cold')),
+                      SliderMark(100, Text('hot')),
+                    ],
+                    onChanged: (_) {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Sized to the groove alone, the labels had nowhere to go and the row
+      // overflowed by exactly the gap between them.
+      expect(tester.takeException(), isNull);
+
+      final slider = tester.getRect(find.byType(Slider));
+      final label = tester.getRect(find.text('hot').last);
+      expect(
+        label.right,
+        lessThanOrEqualTo(slider.right + 0.5),
+        reason: 'the label is inside the slider, not hanging off it',
+      );
+      expect(label.left, greaterThan(slider.left));
+    });
+
+    testWidgets('writes each mark beside its own dot, not opposite it', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              height: 240,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Slider(
+                    value: 50,
+                    vertical: true,
+                    marks: const [
+                      SliderMark(0, Text('bottom')),
+                      SliderMark(100, Text('top')),
+                    ],
+                    onChanged: (_) {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final slider = tester.getRect(find.byType(Slider));
+      final low = tester.getRect(find.text('bottom').last).center.dy;
+      final high = tester.getRect(find.text('top').last).center.dy;
+
+      // The scale runs up the page, as a measure does, so the bottom of it is
+      // at the bottom. The labels were laid out from the top while the dots
+      // were laid out from the bottom, which put every one of them opposite
+      // the point it names.
+      expect(low, greaterThan(high));
+      expect(low, moreOrLessEquals(slider.bottom, epsilon: 2));
+      expect(high, moreOrLessEquals(slider.top, epsilon: 2));
+    });
+
+    testWidgets('the copy it measures with is neither read nor tapped', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              height: 200,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Slider(
+                    value: 50,
+                    vertical: true,
+                    marks: const [SliderMark(50, Text('half'))],
+                    onChanged: (_) {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The width comes from a silent duplicate of the labels. It is in the
+      // tree, so a finder sees two, but a screen reader must not.
+      final semantics = tester.getSemantics(find.byType(Slider));
+      expect(
+        semantics.toString().split('half').length - 1,
+        lessThanOrEqualTo(1),
+        reason: 'the marks must not be announced twice',
+      );
+    });
+  });
 }

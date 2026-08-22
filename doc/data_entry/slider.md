@@ -59,6 +59,9 @@ handed over halfway. The pair is always reported low first.
 ## Which way it runs
 
 `vertical` runs the scale down the page, from the bottom as a measure does.
+With marks it is as wide as the groove, the gap and the widest label together,
+measured from the labels themselves — so it takes real room in a row rather
+than overflowing it.
 
 `reverse` starts it at the far end. Reading right to left already turns the
 scale round, so `reverse` flips it back rather than naming a side — the rule

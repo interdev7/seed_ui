@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.11
+
+### Fixed
+
+- A vertical `Slider` wrote each mark opposite the dot it names. The scale runs
+  up the page, as a measure does, but the labels were laid out from the top
+  while the dots were laid out from the bottom. Both now go through one
+  reckoning, so they cannot drift apart again.
+- A vertical `Slider` with marks clamped itself to the width of its groove and
+  overflowed the row it sat in by the gap beside it. It is now as wide as the
+  groove, the gap and its widest label together, measured from the labels
+  themselves rather than guessed at.
+
 ## 0.6.10
 
 ### Fixed

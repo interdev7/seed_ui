@@ -122,7 +122,22 @@ form.
 Commits use a `type: summary` prefix (`feat:`, `fix:`, `docs:`, `ci:`,
 `test:`, `refactor:`).
 
-Releases are tag-driven: pushing `v1.2.3` runs the checks, verifies the tag
-matches `pubspec.yaml` and that `CHANGELOG.md` has a matching section, then
-opens the GitHub release. **Publishing to pub.dev is done by hand** and is not
-part of any workflow.
+Releases are version-driven, not tag-driven: bump `version:` in `pubspec.yaml`
+and merge to main. The workflow checks that `CHANGELOG.md` has a matching
+section, analyzes, tests and dry-runs the publish, and only then creates the
+`v<version>` tag and opens the GitHub release. You never push the tag yourself.
+
+Because the tag comes last, a run that fails leaves the version untagged. It
+opens an issue saying so rather than failing quietly, and comments on that
+issue instead of opening another if it fails again.
+
+A version that was skipped while the workflow was broken does not get picked
+up later: the run only ever looks at the version `pubspec.yaml` carries at that
+moment. Tag a skipped one by hand:
+
+```sh
+git tag v<version> <the commit that carried it>
+git push origin v<version>
+```
+
+**Publishing to pub.dev is done by hand** and is not part of any workflow.

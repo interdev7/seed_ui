@@ -11,6 +11,10 @@ name: Release
 #
 #   flutter pub publish
 #
+# A run that fails opens an issue saying so, and comments on it rather than
+# opening another if it fails again. Nothing is tagged or released until every
+# check has passed, so a failure means the version is still waiting.
+#
 # Runs on the built-in GITHUB_TOKEN, so there is no secret to set up. The
 # trade-off is attribution: the GitHub release is credited to
 # `github-actions[bot]`, because that is the identity the token carries. The
@@ -28,6 +32,8 @@ on:
 
 permissions:
   contents: write
+  # Only so a failed run can say so out loud; see the last step.
+  issues: write
 
 concurrency:
   group: release
@@ -152,3 +158,55 @@ jobs:
             --title "${{ steps.version.outputs.tag }}" \
             --notes-file RELEASE_NOTES.md \
             $prerelease
+
+      # A release that dies quietly is a release nobody notices. Versions
+      # 0.6.10 and 0.6.11 both failed at the analyze step and went untagged for
+      # days, while pub.dev had them, because the only word of it was an e-mail
+      # nobody was watching for.
+      #
+      # An issue is used rather than a webhook because it needs no secret, the
+      # workflow already holds a token that can open one, and it stays open
+      # until somebody deals with it.
+      - name: Say so if the release failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Empty when the run died before it could read the version.
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          title="Release failed${VERSION:+ for v$VERSION}"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+          # One issue per stuck release, not one per re-run.
+          existing="$(gh issue list --state open --limit 50 \
+            --json number,title \
+            --jq ".[] | select(.title == \"$title\") | .number" | head -n1)"
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Failed again: $run_url"
+            echo "Commented on #$existing."
+            exit 0
+          fi
+
+          # Built with printf rather than a heredoc: a heredoc inside a YAML
+          # block keeps the indentation, and ten leading spaces would make the
+          # whole body a code block.
+          printf '%s\n' \
+            'The release workflow did not finish, so this version has no tag and no' \
+            'GitHub release. Anything already on pub.dev stays there — publishing is' \
+            'a separate, manual step.' \
+            '' \
+            "Run: $run_url" \
+            "Commit: \`$GITHUB_SHA\`" \
+            '' \
+            'Once the cause is fixed and merged, the workflow tags whatever version' \
+            '`pubspec.yaml` carries at that moment. A version skipped in the meantime' \
+            'needs its tag by hand:' \
+            '' \
+            '```sh' \
+            'git tag v<version> <the commit that carried it>' \
+            'git push origin v<version>' \
+            '```' > issue-body.md
+
+          gh issue create --title "$title" --body-file issue-body.md

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.6.11
 
+### Removed
+
+- `lib/main.dart`, a Flutter starter file that had been sitting in the package
+  since before the first release. It put a `main()` and a `MainApp` widget into
+  everyone's dependency — 0.6.10 shipped it — and it was the only thing failing
+  `flutter analyze --fatal-infos`. Nothing referenced it.
+
 ### Fixed
 
 - A vertical `Slider` wrote each mark opposite the dot it names. The scale runs

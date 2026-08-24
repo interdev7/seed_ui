@@ -299,8 +299,12 @@ class ConfigProvider extends StatefulWidget {
   /// The defaults of type [T] in scope, or null when none are set.
   ///
   /// A component resolves its own prop first:
-  /// `widget.shape ?? ConfigProvider.defaultsOf<ButtonDefaults>(context)?.shape
-  /// ?? ButtonShape.defaultShape`.
+  ///
+  /// ```dart
+  /// widget.shape ??
+  ///     ConfigProvider.defaultsOf<ButtonDefaults>(context)?.shape ??
+  ///     ButtonShape.defaultShape
+  /// ```
   static T? defaultsOf<T>(BuildContext context) =>
       _configOf(context).defaults.of<T>();
 

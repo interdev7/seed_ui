@@ -33,6 +33,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nested providers. `ConfigProvider.defaultsOf<T>` reads them for a widget of
   your own. The full table is in [doc/theming.md](doc/theming.md).
 
+- **`unintended_html_in_doc_comment`** added to the lint set. An inline code
+  span that opens on one line and closes on the next is not a code span, so
+  `defaultsOf<ButtonDefaults>` in one doc comment reached pub.dev as an HTML
+  tag and cost ten points on the score. `flutter_lints` does not carry that
+  rule, so nothing local caught it; now `flutter analyze` does.
+
 - **The gallery shows its version** beside the logo, generated from
   `pubspec.yaml` by `tool/sync_version.sh` and guarded by
   `tool/check_version.sh` — a screenshot now says which version it is.

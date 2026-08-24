@@ -126,8 +126,8 @@ jobs:
 
       # pana shells out to libwebp — cwebp, dwebp, gif2webp, webpinfo, webpmux —
       # to build the thumbnails pub.dev shows for `screenshots:`. The runner
-      # does not ship them, and without them the screenshot check fails: ten
-      # points lost, and an exit code of 127 from the missing binary.
+      # does not ship them, and without them the screenshot check fails and
+      # ten points go with it.
       - name: Install the WebP tools pana needs for screenshots
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -141,6 +141,10 @@ jobs:
       - name: Install pana
         run: dart pub global activate pana
 
+      # `--exit-code-threshold 0` fails the job the moment a single point is
+      # missing. pana signals that with exit code 127 — not a missing binary,
+      # which is what 127 usually means and what it was mistaken for here
+      # once. The report printed above the failure names the lost points.
       - name: Score the package
         run: |
           dart pub global run pana --no-warning --exit-code-threshold 0 .

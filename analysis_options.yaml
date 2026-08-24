@@ -24,6 +24,11 @@ linter:
     # built without.
     - public_member_api_docs
 
+    # Angle brackets outside a code span become HTML tags on pub.dev, which
+    # swallows the text. flutter_lints does not carry this one, so it reached
+    # the published score report instead of CI.
+    - unintended_html_in_doc_comment
+
     # API hygiene for a published library.
     - always_declare_return_types
     - prefer_final_locals

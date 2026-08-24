@@ -275,7 +275,8 @@ class ListyStyles {
   final BoxDecoration? root;
 
   /// A row at rest. Replaces the default hairline separator outright, so an
-  /// empty `BoxDecoration()` is how you drop the dividers.
+  /// empty `BoxDecoration()` is how you drop the dividers. For a separator that
+  /// is a widget rather than a border, see [Listy.separatorRender].
   final BoxDecoration? item;
 
   /// A row under the pointer. Null tints [item] with `colorFillTertiary`, so
@@ -358,6 +359,7 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
     super.key,
     required this.items,
     required this.itemRender,
+    this.separatorRender,
     this.rowKey,
     this.groupKey,
     this.groupTitle,
@@ -384,6 +386,25 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
 
   /// Builds a single row.
   final Widget Function(T item, int index) itemRender;
+
+  /// Builds what goes between two rows, drawn after [item].
+  ///
+  /// Null keeps the default hairline, which the list draws as part of the row's
+  /// own decoration. Supplying one takes that hairline away — the separator is
+  /// a replacement, not something laid on top — so this is the way to a dashed
+  /// rule, an inset one, a gap, or anything else a `BoxDecoration` cannot say:
+  ///
+  /// ```dart
+  /// separatorRender: (item, index) => const SizedBox(height: 8),
+  /// ```
+  ///
+  /// It runs *between* rows only: never after the last one, and never between
+  /// a section's last row and the next section's header. The separator is
+  /// stretched to the list's width, so a bare `Container(height: 1)` spans it.
+  ///
+  /// For a plain hairline in another colour or thickness, `ListyStyles.item`
+  /// is the shorter road; reach for this when a decoration will not do.
+  final Widget Function(T item, int index)? separatorRender;
 
   /// Identity of an item, needed by [ListyScrollTo.item].
   ///
@@ -1092,6 +1113,11 @@ class _ListyState<T, K extends Object, R extends Object>
         child: Center(child: child),
       );
 
+  /// Whether the slot after [index] is another row of the same section — the
+  /// only place a separator belongs.
+  bool _hasRowAfter(int index) =>
+      index + 1 < _slots.length && !_slots[index + 1].isHeader;
+
   GlobalKey _keyFor(int index) => _slotKeys.putIfAbsent(index, GlobalKey.new);
 
   Widget _buildSlot(Token t, _ResolvedListyToken r, int index) {
@@ -1100,17 +1126,22 @@ class _ListyState<T, K extends Object, R extends Object>
 
     // Default chrome: a hairline under each row, a tint under the pointer.
     // A supplied `item` replaces it outright, and `itemHovered` falls back to
-    // that same look with the tint laid over it.
+    // that same look with the tint laid over it. A separator of your own also
+    // takes the hairline away — otherwise both would be drawn, one under the
+    // other.
+    final separator = widget.separatorRender;
     final decoration = styles?.item ??
-        BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: t.colorSplit, width: t.lineWidth),
-          ),
-        );
+        (separator != null
+            ? const BoxDecoration()
+            : BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: t.colorSplit, width: t.lineWidth),
+                ),
+              ));
     final hovered =
         styles?.itemHovered ?? decoration.copyWith(color: t.colorFillTertiary);
 
-    final child = slot.isHeader
+    var child = slot.isHeader
         ? _groupHeader(t, r, slot)
         : _ListyItem(
             token: t,
@@ -1123,6 +1154,17 @@ class _ListyState<T, K extends Object, R extends Object>
             hoveredDecoration: hovered,
             child: widget.itemRender(slot.item as T, slot.itemIndex),
           );
+
+    // Between rows only: not after the last, and not where a section ends and
+    // the next header begins. Outside the row itself, so the hover tint stops
+    // at the row and does not wash over the separator.
+    if (!slot.isHeader && separator != null && _hasRowAfter(index)) {
+      child = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [child, separator(slot.item as T, slot.itemIndex)],
+      );
+    }
     return KeyedSubtree(key: _keyFor(index), child: child);
   }
 

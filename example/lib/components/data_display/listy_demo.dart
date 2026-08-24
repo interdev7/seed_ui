@@ -176,6 +176,25 @@ class _ListyDemoState extends State<ListyDemo> {
           ),
         ),
 
+        // A separator of your own replaces the hairline the list draws by
+        // default — this one is dashed and inset past the avatar, which no
+        // BoxDecoration border can say.
+        Group(
+          'A separator of your own',
+          framed(
+            Listy(
+              height: 260,
+              items: _contacts,
+              rowKey: (c) => c.id,
+              itemRender: (c, index) => row(c),
+              separatorRender: (c, index) => Padding(
+                padding: const EdgeInsetsDirectional.only(start: 52),
+                child: _DashedRule(color: t.colorSplit),
+              ),
+            ),
+          ),
+        ),
+
         Group(
           'Grouping with sticky headers',
           framed(
@@ -549,4 +568,32 @@ class _ListyDemoState extends State<ListyDemo> {
       ],
     );
   }
+}
+
+/// A dashed hairline that fills the width it is given — the kind of separator
+/// a `BoxDecoration` border cannot draw.
+class _DashedRule extends StatelessWidget {
+  const _DashedRule({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      const dash = 4.0;
+      const gap = 3.0;
+      final count = (constraints.maxWidth / (dash + gap)).floor().clamp(1, 400);
+      return Row(
+        children: [
+          for (var i = 0; i < count; i++)
+            Container(
+              width: dash,
+              height: 1,
+              color: color,
+              margin: const EdgeInsetsDirectional.only(end: gap),
+            ),
+        ],
+      );
+    },
+  );
 }

@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.12
+
+### Added
+
+- `Listy.separatorRender`, a separator that is a widget rather than a border.
+  The list draws a hairline under each row as part of the row's decoration, and
+  `ListyStyles.item` could restyle or drop it — but only as a
+  `BoxDecoration`, which cannot say dashed, inset, or a gap. Supplying one takes
+  the default hairline away, so the two are never drawn one over the other. It
+  runs between rows only: never after the last, and never between a section's
+  last row and the next header.
+
 ## 0.6.11
 
 ### Removed

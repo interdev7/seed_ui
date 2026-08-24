@@ -33,6 +33,7 @@ when it needs grouped sections. For a short list of drag-to-reorder rows use
 | ------------------- | ---------------------------------------- | -------- | -------------------------------------------------- |
 | `items`             | `List<T>`                                | required | The data source                                    |
 | `itemRender`        | `Widget Function(T item, int index)`     | required | Builds a single row                                |
+| `separatorRender`   | `Widget Function(T item, int index)?`    | `null`   | What goes between two rows; null keeps the hairline |
 | `rowKey`            | `R Function(T item)?`                    | `null`   | Item identity, needed by `ListyScrollTo.item`      |
 | `groupKey`          | `K Function(T item)?`                    | `null`   | The section an item belongs to                     |
 | `groupTitle`        | `Widget Function(K key, List<T> items)?` | `null`   | Builds a section header; null prints the key       |
@@ -277,6 +278,48 @@ ListyLoadMore(
 For anything else driven by scroll position, `onScroll` still reports the raw
 `ScrollMetrics`.
 
+## Separating the rows
+
+By default the list draws a hairline under each row, as part of the row's own
+decoration. Two ways to change it, and which you want depends on what the
+separator *is*.
+
+For a hairline in another colour, weight or none at all, it is a border —
+`ListyStyles.item` replaces the row's decoration outright:
+
+```dart
+// No dividers.
+styles: const ListyStyles(item: BoxDecoration()),
+```
+
+For anything a border cannot draw, `separatorRender` builds a widget between
+the rows. Supplying one takes the default hairline away, so the two are never
+drawn one under the other:
+
+```dart
+Listy(
+  items: contacts,
+  itemRender: (contact, index) => ContactRow(contact),
+  // Dashed, and inset past the avatar.
+  separatorRender: (contact, index) => Padding(
+    padding: const EdgeInsetsDirectional.only(start: 52),
+    child: DashedRule(color: token.colorSplit),
+  ),
+)
+```
+
+It runs **between** rows only: never after the last one, and never between a
+section's last row and the next section's header — the header brings its own
+surface, and a rule leaning against it reads as a mistake.
+
+The separator is stretched to the list's width, so a bare `Container(height: 1,
+color: ...)` spans it without being told to. It sits outside the row, so the
+hover tint stops at the row and does not wash over it.
+
+The item and its index come through, so the separator can vary — a heavier rule
+before every tenth row, a date between two messages. Per-row *content*, though,
+still belongs in `itemRender`.
+
 ## Restyling the surfaces
 
 `styles` replaces the chrome the list draws around your content — the
@@ -292,7 +335,8 @@ semantic `styles` (`root`, `item`, `groupHeader`), as Flutter decorations.
 | `groupHeaderPadding` | `EdgeInsets?` | Section header padding |
 
 Dropping the dividers is an empty decoration — `item` is a replacement, not a
-merge:
+merge (and for a separator that is a widget rather than a border, see
+[Separating the rows](#separating-the-rows)):
 
 ```dart
 styles: const ListyStyles(item: BoxDecoration()),

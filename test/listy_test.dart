@@ -703,6 +703,114 @@ void main() {
       );
     });
 
+    testWidgets('separatorRender goes between rows, never after the last',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Listy(
+            height: 400,
+            items: _rows(4),
+            rowKey: (r) => r.id,
+            itemRender: (r, index) => Text(r.name),
+            separatorRender: (r, index) => Text('sep-$index'),
+          ),
+        ),
+      );
+
+      // Four rows, three gaps between them.
+      expect(find.textContaining('sep-'), findsNWidgets(3));
+      for (final i in [0, 1, 2]) {
+        expect(find.text('sep-$i'), findsOneWidget);
+      }
+      expect(
+        find.text('sep-3'),
+        findsNothing,
+        reason: 'nothing separates the last row from the end of the list',
+      );
+    });
+
+    testWidgets('a separator of your own takes the default hairline away',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Listy(
+            height: 400,
+            items: _rows(3),
+            rowKey: (r) => r.id,
+            itemRender: (r, index) => Text(r.name),
+            separatorRender: (r, index) => const Text('sep'),
+          ),
+        ),
+      );
+
+      final row = tester.widget<AnimatedContainer>(
+        find
+            .ancestor(
+              of: find.text('Row 0'),
+              matching: find.byType(AnimatedContainer),
+            )
+            .first,
+      );
+      expect(
+        (row.decoration as BoxDecoration).border,
+        isNull,
+        reason: 'the hairline and the separator would otherwise both be drawn',
+      );
+    });
+
+    testWidgets('without one, the default hairline is still there',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Listy(
+            height: 400,
+            items: _rows(3),
+            rowKey: (r) => r.id,
+            itemRender: (r, index) => Text(r.name),
+          ),
+        ),
+      );
+
+      final row = tester.widget<AnimatedContainer>(
+        find
+            .ancestor(
+              of: find.text('Row 0'),
+              matching: find.byType(AnimatedContainer),
+            )
+            .first,
+      );
+      expect((row.decoration as BoxDecoration).border, isNotNull);
+    });
+
+    testWidgets('no separator where a section ends and a header begins',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Listy(
+            height: 600,
+            items: _rows(4),
+            rowKey: (r) => r.id,
+            groupKey: (r) => r.group,
+            groupTitle: (key, items) => Text('G:$key'),
+            itemRender: (r, index) => Text(r.name),
+            separatorRender: (r, index) => Text('sep-$index'),
+          ),
+        ),
+      );
+
+      // Even holds rows 0 and 2, Odd rows 1 and 3. One separator inside each
+      // section, none between the last row of a section and the next header.
+      expect(find.text('sep-0'), findsOneWidget);
+      expect(find.text('sep-1'), findsOneWidget);
+      expect(
+        find.text('sep-2'),
+        findsNothing,
+        reason: 'row 2 ends its section — the Odd header comes next',
+      );
+      expect(find.text('sep-3'), findsNothing);
+      expect(find.textContaining('sep-'), findsNWidgets(2));
+    });
+
     testWidgets('token overrides the row padding', (tester) async {
       await tester.pumpWidget(
         _host(

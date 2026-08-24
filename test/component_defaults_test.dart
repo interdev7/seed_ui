@@ -345,6 +345,114 @@ void main() {
       expect(refused, base, reason: 'the input said no');
     });
 
+    // The stateless widgets were the ones that broke silently: a prop turned
+    // nullable still compiles in `prop == Something`, and simply reads false
+    // ever after. These check the reading, not the type.
+    testWidgets('a stateless widget reads its default, not a stale null',
+        (tester) async {
+      Future<Axis> axisOf(ComponentDefaults? defaults) async {
+        await tester.pumpWidget(
+          host(
+            defaults,
+            SizedBox(
+              height: 300,
+              width: 300,
+              child: SortableList(
+                onReorder: (_, __) {},
+                children: const [
+                  SizedBox(key: ValueKey('a'), height: 40, child: Text('a')),
+                  SizedBox(key: ValueKey('b'), height: 40, child: Text('b')),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        return tester
+            .widget<CustomScrollView>(find.byType(CustomScrollView))
+            .scrollDirection;
+      }
+
+      expect(await axisOf(null), Axis.vertical, reason: 'the kit default');
+      expect(
+        await axisOf(
+          const ComponentDefaults(
+            sortableList: SortableListDefaults(direction: Axis.horizontal),
+          ),
+        ),
+        Axis.horizontal,
+      );
+    });
+
+    testWidgets('a Timeline takes its mode from the subtree', (tester) async {
+      Future<Offset> firstTitle(ComponentDefaults? defaults) async {
+        await tester.pumpWidget(
+          host(
+            defaults,
+            const SizedBox(
+              width: 400,
+              child: Timeline(
+                items: [
+                  TimelineItem(title: Text('one')),
+                  TimelineItem(title: Text('two')),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        return tester.getTopLeft(find.text('one'));
+      }
+
+      final left = await firstTitle(null);
+      final right = await firstTitle(
+        const ComponentDefaults(
+          timeline: TimelineDefaults(mode: TimelineMode.right),
+        ),
+      );
+      expect(
+        right.dx,
+        isNot(left.dx),
+        reason: 'the entries changed sides',
+      );
+    });
+
+    testWidgets('every registered slot answers its own lookup', (tester) async {
+      // A slot that is stored but never returned by of<T>() would leave a
+      // component silently on the kit's default.
+      late bool ok;
+      await tester.pumpWidget(
+        host(
+          const ComponentDefaults(
+            avatar: AvatarDefaults(shape: AvatarShape.square),
+            ribbon: RibbonDefaults(placement: RibbonPlacement.start),
+            upload: UploadDefaults(showSize: false),
+            tabs: TabsDefaults(hideAdd: true),
+            steps: StepsDefaults(responsive: false),
+          ),
+          Builder(
+            builder: (context) {
+              ok = ConfigProvider.defaultsOf<AvatarDefaults>(context)?.shape ==
+                      AvatarShape.square &&
+                  ConfigProvider.defaultsOf<RibbonDefaults>(context)
+                          ?.placement ==
+                      RibbonPlacement.start &&
+                  ConfigProvider.defaultsOf<UploadDefaults>(context)
+                          ?.showSize ==
+                      false &&
+                  ConfigProvider.defaultsOf<TabsDefaults>(context)?.hideAdd ==
+                      true &&
+                  ConfigProvider.defaultsOf<StepsDefaults>(context)
+                          ?.responsive ==
+                      false;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      expect(ok, isTrue);
+    });
+
     testWidgets('defaults merge slot by slot through nested providers',
         (tester) async {
       late ButtonDefaults? button;

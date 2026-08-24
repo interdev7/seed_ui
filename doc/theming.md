@@ -508,18 +508,46 @@ A widget's own prop always wins, and defaults are inherited and merged slot by
 slot like everything else on the provider: a nested provider that names one
 component leaves the others as the provider above had them.
 
-What can be set so far:
+What can be set so far — the list grew to cover every prop that is a
+house-style decision rather than the state of one instance:
 
 | Component | Defaults |
 | --- | --- |
+| `Alert` | `showIcon`, `closable` |
+| `Avatar` | `shape` |
 | `Button` | `variant`, `color`, `shape` |
-| `Input` | `allowClear` |
-| `Select` | `variant`, `allowClear`, `showSearch` |
-| `Tag` | `variant`, `closable` |
+| `Card` | `hoverable`, `variant`, `type` |
+| `CheckableTagGroup` | `multiple` |
+| `CheckboxGroup` | `direction` |
+| `Collapse` | `accordion`, `bordered`, `ghost`, `expandIconPosition`, `collapsible` |
+| `Countdown` | `type` |
+| `Dropdown` | `placement`, `arrow`, `closeOnSelect`, `trigger` |
 | `Empty` | `image` |
+| `Input` | `allowClear` |
+| `InputNumber` | `controls`, `keyboard`, `mode` |
+| `Pagination` | `showSizeChanger`, `showQuickJumper`, `hideOnSinglePage`, `showLessItems`, `align` |
+| `Popconfirm` | `placement`, `arrow`, `showCancel` |
+| `Popover` | `placement`, `trigger`, `arrow`, `animation`, `dismissOnOutsideTap` |
+| `Progress` | `showInfo`, `gapPlacement` |
+| `RadioGroup` | `direction`, `optionType`, `buttonStyle` |
+| `Ribbon` | `placement` |
+| `Segmented` | `direction` |
+| `Select` | `variant`, `allowClear`, `showSearch` |
+| `Slider` | `dots`, `included` |
+| `SortableList` | `direction`, `showHandle` |
+| `Steps` | `orientation`, `type`, `variant`, `responsive`, `overflow` |
+| `Tabs` | `type`, `tabPosition`, `hideAdd`, `animated`, `scrollAlign`, `snap`, `contentPosition` |
+| `Tag` | `variant`, `closable` |
+| `Timeline` | `mode`, `orientation`, `variant` |
+| `Tooltip` | `placement`, `arrow` |
+| `Tour` | `placement`, `arrow`, `closable` |
+| `Tree` | `showLine`, `showLeafIcon`, `showIcon`, `blockNode` |
+| `Upload` | `variant`, `showRemove`, `showRetry`, `showSize` |
 
-The list grows a component at a time, the way antd's did; a prop joins it when
-it makes sense to say once for a whole app.
+A prop belongs here when it is a decision about the house rather than the
+occupant. `Alert.showIcon` is house style; `Alert.type` — success or error — is
+about that one message, and stays where it is. So do the props that describe
+what a widget is *doing*: `loading`, `dragging`, `indeterminate`.
 
 For a widget of your own that should follow along:
 

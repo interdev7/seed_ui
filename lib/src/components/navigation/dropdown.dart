@@ -139,6 +139,28 @@ class _ResolvedDropdownToken {
   final Color? barrierColor;
 }
 
+/// Defaults for every [Dropdown] under a `ConfigProvider`.
+///
+/// House style for dropdown menus: where they sit and what opens them.
+@immutable
+class DropdownDefaults {
+  /// Creates a [DropdownDefaults].
+  const DropdownDefaults(
+      {this.placement, this.arrow, this.closeOnSelect, this.trigger});
+
+  /// Where menus sit against their anchor.
+  final PopoverPlacement? placement;
+
+  /// Whether menus draw a pointer.
+  final bool? arrow;
+
+  /// Whether picking an item closes the menu.
+  final bool? closeOnSelect;
+
+  /// What opens a menu.
+  final List<DropdownTrigger>? trigger;
+}
+
 /// A menu that floats from a trigger.
 ///
 /// Wrap any widget and describe the [menu]; the menu opens on the configured
@@ -163,14 +185,14 @@ class Dropdown extends StatefulWidget {
     required this.child,
     this.menu,
     this.content,
-    this.trigger = const [DropdownTrigger.hover],
-    this.placement = PopoverPlacement.bottomLeft,
+    this.trigger,
+    this.placement,
     this.disabled,
     this.open,
     this.onOpenChange,
-    this.arrow = false,
+    this.arrow,
     this.onItemTap,
-    this.closeOnSelect = true,
+    this.closeOnSelect,
     this.popupRender,
     this.barrierColor,
     this.token,
@@ -196,10 +218,10 @@ class Dropdown extends StatefulWidget {
   final Widget Function(BuildContext context, Widget menu)? popupRender;
 
   /// Which gestures open the menu.
-  final List<DropdownTrigger> trigger;
+  final List<DropdownTrigger>? trigger;
 
   /// Which side of the trigger the menu prefers.
-  final PopoverPlacement placement;
+  final PopoverPlacement? placement;
 
   /// Greys the trigger out and blocks opening.
   final bool? disabled;
@@ -211,13 +233,13 @@ class Dropdown extends StatefulWidget {
   final ValueChanged<bool>? onOpenChange;
 
   /// Draws a caret pointing at the trigger.
-  final bool arrow;
+  final bool? arrow;
 
   /// Called with an item's `key` when it is tapped.
   final ValueChanged<Object?>? onItemTap;
 
   /// Whether tapping an item closes the menu (ignored for submenu parents).
-  final bool closeOnSelect;
+  final bool? closeOnSelect;
 
   /// Background color of the dismiss barrier.
   final Color? barrierColor;
@@ -230,6 +252,25 @@ class Dropdown extends StatefulWidget {
 }
 
 class _DropdownState extends State<Dropdown> {
+  /// The defaults set for this component in the subtree, if any.
+  DropdownDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<DropdownDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  PopoverPlacement get _placement =>
+      widget.placement ?? _defaults?.placement ?? PopoverPlacement.bottomLeft;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _arrow => widget.arrow ?? _defaults?.arrow ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _closeOnSelect =>
+      widget.closeOnSelect ?? _defaults?.closeOnSelect ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  List<DropdownTrigger> get _trigger =>
+      widget.trigger ?? _defaults?.trigger ?? const [DropdownTrigger.hover];
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -248,7 +289,7 @@ class _DropdownState extends State<Dropdown> {
   /// the trigger is not mistaken for a tap.
   Offset? _tapOrigin;
 
-  bool get _hoverMode => widget.trigger.contains(DropdownTrigger.hover);
+  bool get _hoverMode => _trigger.contains(DropdownTrigger.hover);
 
   bool _suppressedBrowserMenu = false;
 
@@ -256,13 +297,23 @@ class _DropdownState extends State<Dropdown> {
   final ValueNotifier<int> _rev = ValueNotifier<int>(0);
 
   @override
-  void initState() {
-    super.initState();
-    // On web a secondary tap otherwise pops the native browser menu over ours.
-    if (kIsWeb && widget.trigger.contains(DropdownTrigger.contextMenu)) {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // On web a secondary tap otherwise pops the native browser menu over
+    // ours. Settled here rather than in initState: the trigger may come from
+    // the provider's defaults, and inherited widgets cannot be read that
+    // early.
+    if (kIsWeb &&
+        !_suppressedBrowserMenu &&
+        _trigger.contains(DropdownTrigger.contextMenu)) {
       BrowserContextMenu.disableContextMenu();
       _suppressedBrowserMenu = true;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
     // Honour an initial controlled-open state.
     if (widget.open ?? false) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -319,15 +370,15 @@ class _DropdownState extends State<Dropdown> {
             const DropdownToken())
         ._resolve(token);
     _popover.open(
-      placement: widget.placement,
+      placement: _placement,
       anchorRect: anchor,
       gap: token.sizeXXS,
       // Hover menus have no dismiss barrier, so hovering elsewhere still works;
       // click/context menus close on an outside tap.
       onDismiss: _hoverMode ? null : () => _requestOpen(false),
       interactive: true,
-      arrowColor: widget.arrow ? token.colorBgElevated : null,
-      arrowShadow: widget.arrow ? token.boxShadowSecondary : null,
+      arrowColor: _arrow ? token.colorBgElevated : null,
+      arrowShadow: _arrow ? token.boxShadowSecondary : null,
       barrierColor: widget.barrierColor ?? r.barrierColor,
       anchorContext: context,
       onScrollDismiss: () => _requestOpen(false),
@@ -356,7 +407,7 @@ class _DropdownState extends State<Dropdown> {
       onSelect: (item) {
         widget.onItemTap?.call(item.key);
         item.onTap?.call();
-        if (widget.closeOnSelect) _requestOpen(false);
+        if (_closeOnSelect) _requestOpen(false);
       },
     );
     return DropdownPanel(
@@ -386,7 +437,7 @@ class _DropdownState extends State<Dropdown> {
   Widget build(BuildContext context) {
     Widget trigger = KeyedSubtree(key: _anchorKey, child: widget.child);
 
-    if (widget.trigger.contains(DropdownTrigger.click)) {
+    if (_trigger.contains(DropdownTrigger.click)) {
       // Deliberately a Listener, not a GestureDetector: the child is often a
       // Button or another tappable, whose own recognizer sits deeper in the
       // tree and would win the gesture arena outright, leaving the menu dead.
@@ -410,7 +461,7 @@ class _DropdownState extends State<Dropdown> {
       );
     }
 
-    if (widget.trigger.contains(DropdownTrigger.contextMenu)) {
+    if (_trigger.contains(DropdownTrigger.contextMenu)) {
       trigger = GestureDetector(
         behavior: HitTestBehavior.opaque,
         onSecondaryTap: () => _requestOpen(!_open),

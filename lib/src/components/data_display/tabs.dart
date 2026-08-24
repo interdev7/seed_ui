@@ -471,6 +471,43 @@ class TabsController extends ChangeNotifier {
   }
 }
 
+/// Defaults for every [Tabs] under a `ConfigProvider`.
+///
+/// House style for tab strips.
+@immutable
+class TabsDefaults {
+  /// Creates a [TabsDefaults].
+  const TabsDefaults(
+      {this.type,
+      this.tabPosition,
+      this.hideAdd,
+      this.animated,
+      this.scrollAlign,
+      this.snap,
+      this.contentPosition});
+
+  /// Which shape the tabs take.
+  final TabsType? type;
+
+  /// Which side the strip sits on.
+  final TabPosition? tabPosition;
+
+  /// Whether the add button is hidden on editable tabs.
+  final bool? hideAdd;
+
+  /// Whether switching tabs is animated.
+  final bool? animated;
+
+  /// Where a scrolled-to tab comes to rest.
+  final TabScrollAlign? scrollAlign;
+
+  /// Whether the strip settles on a tab boundary.
+  final bool? snap;
+
+  /// Which end the extra content sits at.
+  final TabContentPosition? contentPosition;
+}
+
 /// A tabbed panel.
 ///
 /// ```dart
@@ -497,18 +534,18 @@ class Tabs extends StatefulWidget {
     this.onChange,
     this.onTabClick,
     this.onCreateTab,
-    this.type = TabsType.line,
+    this.type,
     this.size,
-    this.tabPosition = TabPosition.top,
+    this.tabPosition,
     this.centered = false,
     this.tabBarExtraContent,
     this.onEdit,
-    this.hideAdd = false,
+    this.hideAdd,
     this.addIcon,
-    this.animated = true,
-    this.scrollAlign = TabScrollAlign.top,
-    this.snap = false,
-    this.contentPosition = TabContentPosition.left,
+    this.animated,
+    this.scrollAlign,
+    this.snap,
+    this.contentPosition,
     this.token,
   });
 
@@ -538,13 +575,13 @@ class Tabs extends StatefulWidget {
   final CreateTabData? Function(int index)? onCreateTab;
 
   /// Underline, card or editable-card style.
-  final TabsType type;
+  final TabsType? type;
 
   /// Which height preset to use.
   final SoftSize? size;
 
   /// Which edge the bar sits on.
-  final TabPosition tabPosition;
+  final TabPosition? tabPosition;
 
   /// Centres the tabs within the bar (horizontal positions only).
   final bool centered;
@@ -556,16 +593,16 @@ class Tabs extends StatefulWidget {
   final void Function(String? key, TabEditAction action)? onEdit;
 
   /// Hides the add button of an editable-card.
-  final bool hideAdd;
+  final bool? hideAdd;
 
   /// Replaces the add button's glyph.
   final Widget? addIcon;
 
   /// Whether switching panels cross-fades.
-  final bool animated;
+  final bool? animated;
 
   /// Where a selected tab lands when the bar scrolls it into view.
-  final TabScrollAlign scrollAlign;
+  final TabScrollAlign? scrollAlign;
 
   /// Whether a flung bar settles with a tab against its leading edge instead
   /// of wherever the throw happened to end.
@@ -576,10 +613,10 @@ class Tabs extends StatefulWidget {
   ///
   /// Snapping is to tab boundaries, not to fixed pages: tabs are as wide as
   /// their labels, so a page-sized step would land in the middle of one.
-  final bool snap;
+  final bool? snap;
 
   /// Horizontal placement of the active tab's content within its panel.
-  final TabContentPosition contentPosition;
+  final TabContentPosition? contentPosition;
 
   /// Per-instance token override, taking precedence over any supplied through
   /// `ThemeData(components: ComponentsConfig(tabs: TabsToken(...)))`.
@@ -590,6 +627,36 @@ class Tabs extends StatefulWidget {
 }
 
 class _TabsState extends State<Tabs> {
+  /// The defaults set for this component in the subtree, if any.
+  TabsDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<TabsDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  TabsType get _type => widget.type ?? _defaults?.type ?? TabsType.line;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  TabPosition get _tabPosition =>
+      widget.tabPosition ?? _defaults?.tabPosition ?? TabPosition.top;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _hideAdd => widget.hideAdd ?? _defaults?.hideAdd ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _animated => widget.animated ?? _defaults?.animated ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  TabScrollAlign get _scrollAlign =>
+      widget.scrollAlign ?? _defaults?.scrollAlign ?? TabScrollAlign.top;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _snap => widget.snap ?? _defaults?.snap ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  TabContentPosition get _contentPosition =>
+      widget.contentPosition ??
+      _defaults?.contentPosition ??
+      TabContentPosition.left;
+
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
@@ -636,10 +703,9 @@ class _TabsState extends State<Tabs> {
   }
 
   bool get _horizontal =>
-      widget.tabPosition == TabPosition.top ||
-      widget.tabPosition == TabPosition.bottom;
-  bool get _card => widget.type != TabsType.line;
-  bool get _editable => widget.type == TabsType.editableCard;
+      _tabPosition == TabPosition.top || _tabPosition == TabPosition.bottom;
+  bool get _card => _type != TabsType.line;
+  bool get _editable => _type == TabsType.editableCard;
 
   /// The effective tab list — the controller's when attached, else [Tabs.items].
   List<TabItem> get _items => widget.controller?.items ?? widget.items;
@@ -761,7 +827,7 @@ class _TabsState extends State<Tabs> {
     final start = _scrollOffsetOf(tab, strip);
     final extent = _horizontal ? tab.size.width : tab.size.height;
     final viewport = _barController.position.viewportDimension;
-    final target = widget.scrollAlign == TabScrollAlign.center
+    final target = _scrollAlign == TabScrollAlign.center
         ? start - (viewport - extent) / 2
         : start;
     return target.clamp(
@@ -774,13 +840,13 @@ class _TabsState extends State<Tabs> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureOffsets();
       // The ink bar is a line-tab affair; the offsets are needed either way.
-      if (widget.type == TabsType.line) _measure();
+      if (_type == TabsType.line) _measure();
     });
   }
 
   /// Records where every tab begins, so a fling can settle against one.
   void _measureOffsets() {
-    if (!widget.snap) return;
+    if (!_snap) return;
     final strip = _stripKey.currentContext?.findRenderObject() as RenderBox?;
     if (strip == null || !strip.hasSize) return;
     final offsets = <double>[];
@@ -822,7 +888,7 @@ class _TabsState extends State<Tabs> {
     if (_horizontal) {
       // The panel sizes to its content, so Tabs works in an unbounded-height
       // context (a scroll view) as well as a bounded one.
-      final children = widget.tabPosition == TabPosition.top
+      final children = _tabPosition == TabPosition.top
           ? [
               bar,
               if (panel != null) panel,
@@ -837,7 +903,7 @@ class _TabsState extends State<Tabs> {
         children: children,
       );
     }
-    final children = widget.tabPosition == TabPosition.left
+    final children = _tabPosition == TabPosition.left
         ? [
             bar,
             if (panel != null) Expanded(child: panel),
@@ -867,7 +933,7 @@ class _TabsState extends State<Tabs> {
           _horizontal ? SizedBox(width: gutter) : SizedBox(height: gutter),
         _buildTab(token, items[i]),
       ],
-      if (_editable && !widget.hideAdd) ...[
+      if (_editable && !_hideAdd) ...[
         SizedBox(width: _r.cardGutter),
         _buildAddButton(token),
       ],
@@ -889,7 +955,7 @@ class _TabsState extends State<Tabs> {
               children: tabs,
             ),
           ),
-        if (widget.type == TabsType.line && _indicator != null)
+        if (_type == TabsType.line && _indicator != null)
           _buildIndicator(token),
       ],
     );
@@ -900,7 +966,7 @@ class _TabsState extends State<Tabs> {
     // grey when inactive, panel colour when active — without any shift.
     final baseLineSide =
         BorderSide(color: token.colorBorderSecondary, width: token.lineWidth);
-    final border = switch (widget.tabPosition) {
+    final border = switch (_tabPosition) {
       TabPosition.top => Border(bottom: baseLineSide),
       TabPosition.bottom => Border(top: baseLineSide),
       TabPosition.left => Border(right: baseLineSide),
@@ -910,7 +976,7 @@ class _TabsState extends State<Tabs> {
     final Widget scroll = SingleChildScrollView(
       controller: _barController,
       scrollDirection: _horizontal ? Axis.horizontal : Axis.vertical,
-      physics: widget.snap && _tabOffsets.length > 1
+      physics: _snap && _tabOffsets.length > 1
           ? _TabSnapPhysics(offsets: _tabOffsets)
           : null,
       child: strip,
@@ -920,7 +986,7 @@ class _TabsState extends State<Tabs> {
     // width without rebuilding this widget — a webfont arriving late reflows
     // every label. The metrics change when it does, so re-measure then;
     // otherwise a fling snaps to where the tabs used to be.
-    final barView = widget.snap
+    final barView = _snap
         ? NotificationListener<ScrollMetricsNotification>(
             onNotification: (_) {
               WidgetsBinding.instance
@@ -961,7 +1027,7 @@ class _TabsState extends State<Tabs> {
       // its own slice (see _CardTabPainter).
       final w = token.lineWidth;
       final c = token.colorBorderSecondary;
-      final line = switch (widget.tabPosition) {
+      final line = switch (_tabPosition) {
         TabPosition.top => Positioned(
             left: 0,
             right: 0,
@@ -1005,7 +1071,7 @@ class _TabsState extends State<Tabs> {
       color: _r.inkBarColor,
     );
     // The ink bar hugs the base-line edge, matching the active tab's extent.
-    return switch (widget.tabPosition) {
+    return switch (_tabPosition) {
       TabPosition.top => AnimatedPositioned(
           duration: token.motionDurationMid,
           curve: token.motionEaseInOut,
@@ -1057,7 +1123,7 @@ class _TabsState extends State<Tabs> {
         card: _card,
         editable: _editable && item.closable,
         horizontal: _horizontal,
-        position: widget.tabPosition,
+        position: _tabPosition,
         fontSize: _r.fontSize(_size),
         padding: _tabPadding(),
         icon: item.icon,
@@ -1092,7 +1158,7 @@ class _TabsState extends State<Tabs> {
         ? const SizedBox.shrink()
         : (active.first.content ?? const SizedBox.shrink());
 
-    final align = switch (widget.contentPosition) {
+    final align = switch (_contentPosition) {
       TabContentPosition.left => Alignment.centerLeft,
       TabContentPosition.center => Alignment.center,
       TabContentPosition.right => Alignment.centerRight,
@@ -1106,7 +1172,7 @@ class _TabsState extends State<Tabs> {
       ),
     );
 
-    if (!widget.animated) return padded;
+    if (!_animated) return padded;
     return AnimatedSwitcher(
       duration: token.motionDurationMid,
       switchInCurve: token.motionEaseOut,

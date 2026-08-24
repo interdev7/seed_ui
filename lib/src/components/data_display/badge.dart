@@ -494,6 +494,18 @@ class _ResolvedRibbonToken {
   final Color textColor;
 }
 
+/// Defaults for every [Ribbon] under a `ConfigProvider`.
+///
+/// House style for ribbons.
+@immutable
+class RibbonDefaults {
+  /// Creates a [RibbonDefaults].
+  const RibbonDefaults({this.placement});
+
+  /// Which end the ribbon sits at.
+  final RibbonPlacement? placement;
+}
+
 /// A label banded across the top corner of what it describes.
 ///
 /// ```dart
@@ -513,7 +525,7 @@ class Ribbon extends StatelessWidget {
     required this.child,
     this.text,
     this.color,
-    this.placement = RibbonPlacement.end,
+    this.placement,
     this.token,
   });
 
@@ -527,7 +539,7 @@ class Ribbon extends StatelessWidget {
   final Color? color;
 
   /// Which corner the band runs off. Defaults to [RibbonPlacement.end].
-  final RibbonPlacement placement;
+  final RibbonPlacement? placement;
 
   /// Per-instance token overrides.
   final RibbonToken? token;
@@ -546,7 +558,8 @@ class Ribbon extends StatelessWidget {
     // two is what broke the ribbon when the direction turned: the corners were
     // physical while the column's own alignment was directional, so they
     // disagreed and the band came apart.
-    final onRight = (placement == RibbonPlacement.end) !=
+    final resolvedPlacement = _placementIn(context);
+    final onRight = (resolvedPlacement == RibbonPlacement.end) !=
         (Directionality.of(context) == TextDirection.rtl);
     final corner = Radius.circular(t.borderRadiusSM);
 
@@ -594,7 +607,7 @@ class Ribbon extends StatelessWidget {
           // is what sent the fold to the opposite end from its band.
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: placement == RibbonPlacement.end
+            crossAxisAlignment: resolvedPlacement == RibbonPlacement.end
                 ? CrossAxisAlignment.end
                 : CrossAxisAlignment.start,
             children: [band, fold],
@@ -603,6 +616,12 @@ class Ribbon extends StatelessWidget {
       ],
     );
   }
+
+  /// This widget's word, then the subtree's, then the kit's.
+  RibbonPlacement _placementIn(BuildContext context) =>
+      placement ??
+      ConfigProvider.defaultsOf<RibbonDefaults>(context)?.placement ??
+      RibbonPlacement.end;
 }
 
 class _RibbonFoldPainter extends CustomPainter {

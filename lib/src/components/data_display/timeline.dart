@@ -304,6 +304,24 @@ class TimelineGroupItem extends TimelineEntry {
   final int collapsedCount;
 }
 
+/// Defaults for every [Timeline] under a `ConfigProvider`.
+///
+/// House style for timelines.
+@immutable
+class TimelineDefaults {
+  /// Creates a [TimelineDefaults].
+  const TimelineDefaults({this.mode, this.orientation, this.variant});
+
+  /// Which side the entries sit on.
+  final TimelineMode? mode;
+
+  /// Which way the line runs.
+  final TimelineOrientation? orientation;
+
+  /// How the beads are filled.
+  final TimelineVariant? variant;
+}
+
 /// A vertical list of events.
 ///
 /// ```dart
@@ -323,14 +341,14 @@ class Timeline extends StatelessWidget {
   const Timeline({
     super.key,
     required this.items,
-    this.mode = TimelineMode.left,
-    this.orientation = TimelineOrientation.vertical,
+    this.mode,
+    this.orientation,
     this.pending,
     this.pendingDot,
     this.reverse = false,
     this.linePadding,
     this.token,
-    this.variant = TimelineVariant.outlined,
+    this.variant,
     this.titleSpan,
   });
 
@@ -338,10 +356,10 @@ class Timeline extends StatelessWidget {
   final List<TimelineEntry> items;
 
   /// How the axis and content are laid out.
-  final TimelineMode mode;
+  final TimelineMode? mode;
 
   /// Orientation of the timeline (vertical or horizontal).
-  final TimelineOrientation orientation;
+  final TimelineOrientation? orientation;
 
   /// A trailing "in progress" node. Its widget is the node's content.
   final Widget? pending;
@@ -361,7 +379,7 @@ class Timeline extends StatelessWidget {
   final TimelineToken? token;
 
   /// Variant style for the dots (outlined or filled).
-  final TimelineVariant variant;
+  final TimelineVariant? variant;
 
   /// Distance from the dot to the content, in logical pixels. Null keeps the
   /// default of 12.
@@ -419,10 +437,10 @@ class Timeline extends StatelessWidget {
       }
     }
 
-    final twoSided = mode == TimelineMode.alternate ||
+    final twoSided = _modeIn(context) == TimelineMode.alternate ||
         nodes.any((n) => n.item.label != null);
 
-    if (orientation == TimelineOrientation.horizontal) {
+    if (_orientationIn(context) == TimelineOrientation.horizontal) {
       return _buildHorizontal(context, t, r, nodes, twoSided);
     }
 
@@ -646,7 +664,7 @@ class Timeline extends StatelessWidget {
 
     // Decide which side the content and label take.
     late final bool contentOnLeft;
-    switch (mode) {
+    switch (_modeIn(context)) {
       case TimelineMode.left:
         contentOnLeft = false;
       case TimelineMode.right:
@@ -699,7 +717,7 @@ class Timeline extends StatelessWidget {
       dashedBottom: node.dashedTail,
       dashedTop: dashedTop,
       linePadding: linePadding ?? EdgeInsets.zero,
-      variant: item.dotVariant ?? variant,
+      variant: item.dotVariant ?? _variantIn(context),
       loading: item.loading,
       defaultColor: r.defaultColor,
     );
@@ -742,7 +760,7 @@ class Timeline extends StatelessWidget {
           child: pad(rightChild, leading: false) ?? const SizedBox.shrink(),
         ),
       );
-    } else if (mode == TimelineMode.right) {
+    } else if (_modeIn(context) == TimelineMode.right) {
       children.add(
         Expanded(
           child: pad(content, leading: true) ?? const SizedBox.shrink(),
@@ -784,7 +802,7 @@ class Timeline extends StatelessWidget {
 
     // For horizontal, we need to decide top/bottom instead of left/right
     late final bool contentOnTop;
-    switch (mode) {
+    switch (_modeIn(context)) {
       case TimelineMode.left:
         contentOnTop = false; // content below axis
       case TimelineMode.right:
@@ -822,7 +840,7 @@ class Timeline extends StatelessWidget {
       dashedRight: node.dashedTail,
       dashedLeft: dashedLeft,
       linePadding: linePadding ?? EdgeInsets.zero,
-      variant: item.dotVariant ?? variant,
+      variant: item.dotVariant ?? _variantIn(context),
       loading: item.loading,
       defaultColor: r.defaultColor,
     );
@@ -860,7 +878,7 @@ class Timeline extends StatelessWidget {
           child: pad(bottomChild, top: false) ?? const SizedBox.shrink(),
         ),
       );
-    } else if (mode == TimelineMode.right) {
+    } else if (_modeIn(context) == TimelineMode.right) {
       children.add(
         Expanded(
           child: pad(content, top: true) ?? const SizedBox.shrink(),
@@ -889,6 +907,24 @@ class Timeline extends StatelessWidget {
       child: IntrinsicWidth(child: column),
     );
   }
+
+  /// This widget's word, then the subtree's, then the kit's.
+  TimelineMode _modeIn(BuildContext context) =>
+      mode ??
+      ConfigProvider.defaultsOf<TimelineDefaults>(context)?.mode ??
+      TimelineMode.left;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  TimelineOrientation _orientationIn(BuildContext context) =>
+      orientation ??
+      ConfigProvider.defaultsOf<TimelineDefaults>(context)?.orientation ??
+      TimelineOrientation.vertical;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  TimelineVariant _variantIn(BuildContext context) =>
+      variant ??
+      ConfigProvider.defaultsOf<TimelineDefaults>(context)?.variant ??
+      TimelineVariant.outlined;
 }
 
 /// Reveals a group's collapsible nodes along the axis.

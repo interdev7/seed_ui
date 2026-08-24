@@ -65,6 +65,21 @@ class _ResolvedAlertToken {
   final double fontSize;
 }
 
+/// Defaults for every [Alert] under a `ConfigProvider`.
+///
+/// House style for alerts.
+@immutable
+class AlertDefaults {
+  /// Creates a [AlertDefaults].
+  const AlertDefaults({this.showIcon, this.closable});
+
+  /// Whether alerts carry their status icon.
+  final bool? showIcon;
+
+  /// Whether alerts can be dismissed.
+  final bool? closable;
+}
+
 /// An inline banner conveying a status message, shown in the page flow rather
 /// than floating over it.
 ///
@@ -93,8 +108,8 @@ class Alert extends StatefulWidget {
     required this.message,
     this.description,
     this.type = StatusType.info,
-    this.showIcon = false,
-    this.closable = false,
+    this.showIcon,
+    this.closable,
     this.icon,
     this.action,
     this.banner = false,
@@ -118,10 +133,10 @@ class Alert extends StatefulWidget {
   final StatusType type;
 
   /// Whether to show the leading status icon.
-  final bool showIcon;
+  final bool? showIcon;
 
   /// Whether to show a close button that dismisses the alert.
-  final bool closable;
+  final bool? closable;
 
   /// Replaces the status icon when [showIcon] is true.
   final Widget? icon;
@@ -144,6 +159,16 @@ class Alert extends StatefulWidget {
 }
 
 class _SoftAlertState extends State<Alert> {
+  /// The defaults set for this component in the subtree, if any.
+  AlertDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<AlertDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _showIcon => widget.showIcon ?? _defaults?.showIcon ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _closable => widget.closable ?? _defaults?.closable ?? false;
+
   bool _closed = false;
 
   ColorGroup _group(Token token) => switch (widget.type) {
@@ -185,7 +210,7 @@ class _SoftAlertState extends State<Alert> {
             ? CrossAxisAlignment.start
             : CrossAxisAlignment.center,
         children: [
-          if (widget.showIcon) ...[
+          if (_showIcon) ...[
             // The icon aligns to the message baseline; nudge it down beside a
             // taller two-line body.
             Padding(
@@ -200,7 +225,7 @@ class _SoftAlertState extends State<Alert> {
             SizedBox(width: token.sizeXS),
             widget.action!,
           ],
-          if (widget.closable) ...[
+          if (_closable) ...[
             SizedBox(width: token.sizeXS),
             _CloseButton(
               token: token,

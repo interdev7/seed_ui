@@ -209,6 +209,28 @@ class TreeDropDetails {
   final TreeDropPosition position;
 }
 
+/// Defaults for every [Tree] under a `ConfigProvider`.
+///
+/// House style for trees.
+@immutable
+class TreeDefaults {
+  /// Creates a [TreeDefaults].
+  const TreeDefaults(
+      {this.showLine, this.showLeafIcon, this.showIcon, this.blockNode});
+
+  /// Whether guide lines are drawn.
+  final bool? showLine;
+
+  /// Whether leaves carry an icon.
+  final bool? showLeafIcon;
+
+  /// Whether nodes carry an icon.
+  final bool? showIcon;
+
+  /// Whether a row spans the full width.
+  final bool? blockNode;
+}
+
 /// A hierarchical list.
 ///
 /// ```dart
@@ -235,10 +257,10 @@ class Tree extends StatefulWidget {
     this.selectable = true,
     this.multiple = false,
     this.checkStrictly = false,
-    this.blockNode = false,
-    this.showLine = false,
-    this.showLeafIcon = true,
-    this.showIcon = false,
+    this.blockNode,
+    this.showLine,
+    this.showLeafIcon,
+    this.showIcon,
     this.disabled,
     this.loadData,
     this.checkedKeys,
@@ -277,16 +299,16 @@ class Tree extends StatefulWidget {
   final bool checkStrictly;
 
   /// Stretches the selectable/hover highlight to the full row width.
-  final bool blockNode;
+  final bool? blockNode;
 
   /// Draws connector guide lines.
-  final bool showLine;
+  final bool? showLine;
 
   /// Shows a leaf marker for childless nodes when [showLine] is on.
-  final bool showLeafIcon;
+  final bool? showLeafIcon;
 
   /// Shows each node's [TreeNode.icon].
-  final bool showIcon;
+  final bool? showIcon;
 
   /// Disables the whole tree.
   final bool? disabled;
@@ -360,6 +382,23 @@ class Tree extends StatefulWidget {
 }
 
 class _TreeState extends State<Tree> {
+  /// The defaults set for this component in the subtree, if any.
+  TreeDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<TreeDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _showLine => widget.showLine ?? _defaults?.showLine ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _showLeafIcon =>
+      widget.showLeafIcon ?? _defaults?.showLeafIcon ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _showIcon => widget.showIcon ?? _defaults?.showIcon ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _blockNode => widget.blockNode ?? _defaults?.blockNode ?? false;
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -721,10 +760,10 @@ class _TreeState extends State<Tree> {
       expanded: isExpanded,
       hasChildren: hasChildren,
       loading: _loading.contains(node.key),
-      showLine: widget.showLine,
-      showLeafIcon: widget.showLeafIcon,
-      showIcon: widget.showIcon,
-      blockNode: widget.blockNode,
+      showLine: _showLine,
+      showLeafIcon: _showLeafIcon,
+      showIcon: _showIcon,
+      blockNode: _blockNode,
       // A disabled node still *shows* a checkbox (rendered disabled); only
       // `checkable: false` hides it. Disabled nodes are excluded from the
       // cascade separately, via [_checkableNode].

@@ -1,6 +1,8 @@
 Alert
+AlertDefaults
 AlertToken
 Avatar
+AvatarDefaults
 AvatarGroup
 AvatarShape
 AvatarToken
@@ -14,6 +16,7 @@ ButtonShape
 ButtonToken
 ButtonVariant
 Card
+CardDefaults
 CardMeta
 CardTab
 CardToken
@@ -22,13 +25,16 @@ CardVariant
 CheckPainter
 CheckableTag
 CheckableTagGroup
+CheckableTagGroupDefaults
 CheckableTagOption
 Checkbox
 CheckboxGroup
+CheckboxGroupDefaults
 CheckboxOption
 CheckboxToken
 ChevronPainter
 Collapse
+CollapseDefaults
 CollapseIconPosition
 CollapseItem
 CollapseToken
@@ -42,6 +48,7 @@ CountArgs
 CountConfig
 Countdown
 CountdownController
+CountdownDefaults
 CountdownToken
 CountdownType
 CreateTabData
@@ -54,6 +61,7 @@ DrawerHandle
 DrawerPlacement
 DrawerToken
 Dropdown
+DropdownDefaults
 DropdownDivider
 DropdownEntry
 DropdownGroup
@@ -75,6 +83,7 @@ HolderPainter
 Input
 InputDefaults
 InputNumber
+InputNumberDefaults
 InputNumberMode
 InputNumberToken
 InputStatus
@@ -104,6 +113,7 @@ NotificationHandle
 NotificationPlacement
 NotificationToken
 Pagination
+PaginationDefaults
 PaginationSimple
 PaginationToken
 PasswordConfig
@@ -111,16 +121,19 @@ PercentInfoAlign
 PercentInfoType
 PercentPosition
 Popconfirm
+PopconfirmDefaults
 PopconfirmToken
 Popover
 PopoverAnimation
 PopoverController
+PopoverDefaults
 PopoverLayer
 PopoverPlacement
 PopoverToken
 PopoverTrigger
 Progress
 ProgressBorderRadius
+ProgressDefaults
 ProgressRange
 ProgressStepFill
 ProgressSteps
@@ -129,6 +142,7 @@ ProgressType
 Radio
 RadioButtonStyle
 RadioGroup
+RadioGroupDefaults
 RadioOption
 RadioOptionType
 RadioToken
@@ -139,6 +153,7 @@ RangeSlider
 Result
 ResultToken
 Ribbon
+RibbonDefaults
 RibbonPlacement
 RibbonToken
 SearchConfig
@@ -146,6 +161,7 @@ SearchIcon
 SeedLocalizations
 SeedToken
 Segmented
+SegmentedDefaults
 SegmentedDirection
 SegmentedOption
 SegmentedToken
@@ -158,10 +174,12 @@ SelectStatus
 SelectToken
 SelectVariant
 Slider
+SliderDefaults
 SliderMark
 SliderToken
 SoftSize
 SortableList
+SortableListDefaults
 SortableListToken
 Spin
 SpinDirection
@@ -175,6 +193,7 @@ StepStatus
 StepTitlePlacement
 Steps
 StepsController
+StepsDefaults
 StepsOrientation
 StepsOverflow
 StepsToken
@@ -191,6 +210,7 @@ TabPosition
 TabScrollAlign
 Tabs
 TabsController
+TabsDefaults
 TabsToken
 TabsType
 Tag
@@ -201,6 +221,7 @@ TagVariant
 ThemeContext
 ThemeData
 Timeline
+TimelineDefaults
 TimelineEntry
 TimelineGroupController
 TimelineGroupItem
@@ -212,11 +233,13 @@ TimelineToken
 TimelineVariant
 Token
 Tooltip
+TooltipDefaults
 TooltipToken
 TooltipTrigger
 Tour
 TourButton
 TourController
+TourDefaults
 TourGap
 TourMask
 TourPlacement
@@ -224,6 +247,7 @@ TourStep
 TourToken
 TourType
 Tree
+TreeDefaults
 TreeDropDetails
 TreeDropPosition
 TreeNode
@@ -231,6 +255,7 @@ TreeToken
 UiKit
 Upload
 UploadActions
+UploadDefaults
 UploadItem
 UploadStatus
 UploadToken

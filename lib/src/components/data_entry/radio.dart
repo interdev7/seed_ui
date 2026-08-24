@@ -294,6 +294,24 @@ class RadioOption<T> {
   final bool disabled;
 }
 
+/// Defaults for every [RadioGroup] under a `ConfigProvider`.
+///
+/// House style for radio groups.
+@immutable
+class RadioGroupDefaults {
+  /// Creates a [RadioGroupDefaults].
+  const RadioGroupDefaults({this.direction, this.optionType, this.buttonStyle});
+
+  /// Which way the options run.
+  final Axis? direction;
+
+  /// Whether options are dots or buttons.
+  final RadioOptionType? optionType;
+
+  /// How button-style options are filled.
+  final RadioButtonStyle? buttonStyle;
+}
+
 /// A set of radio buttons selecting one value from a list.
 ///
 /// ```dart
@@ -317,11 +335,11 @@ class RadioGroup<T> extends StatelessWidget {
     required this.options,
     this.onChanged,
     this.disabled,
-    this.direction = Axis.horizontal,
+    this.direction,
     this.spacing = 16,
     this.runSpacing = 8,
-    this.optionType = RadioOptionType.radio,
-    this.buttonStyle = RadioButtonStyle.outline,
+    this.optionType,
+    this.buttonStyle,
     this.size,
     this.block = false,
   });
@@ -345,7 +363,7 @@ class RadioGroup<T> extends StatelessWidget {
 
   /// Whether dot-style options run in a row (wrapping) or a column. Ignored
   /// for [RadioOptionType.button], which is always a row.
-  final Axis direction;
+  final Axis? direction;
 
   /// Gap between options along the run, in logical pixels.
   final double spacing;
@@ -354,11 +372,11 @@ class RadioGroup<T> extends StatelessWidget {
   final double runSpacing;
 
   /// Dots or connected buttons.
-  final RadioOptionType optionType;
+  final RadioOptionType? optionType;
 
   /// Fill treatment for the selected button. Only used with
   /// [RadioOptionType.button].
-  final RadioButtonStyle buttonStyle;
+  final RadioButtonStyle? buttonStyle;
 
   /// Height preset for button-style options.
   final SoftSize? size;
@@ -372,7 +390,7 @@ class RadioGroup<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (optionType == RadioOptionType.button) {
+    if (_optionTypeIn(context) == RadioOptionType.button) {
       return _buildButtons(context);
     }
     return _buildDots(context);
@@ -391,7 +409,7 @@ class RadioGroup<T> extends StatelessWidget {
         ),
     ];
 
-    if (direction == Axis.vertical) {
+    if (_directionIn(context) == Axis.vertical) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -420,7 +438,7 @@ class RadioGroup<T> extends StatelessWidget {
           enabled: !_disabledIn(context) &&
               !options[i].disabled &&
               onChanged != null,
-          style: buttonStyle,
+          style: _buttonStyleIn(context),
           size: resolvedSize,
           block: block,
           token: token,
@@ -461,6 +479,24 @@ class RadioGroup<T> extends StatelessWidget {
       ],
     );
   }
+
+  /// This widget's word, then the subtree's, then the kit's.
+  Axis _directionIn(BuildContext context) =>
+      direction ??
+      ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.direction ??
+      Axis.horizontal;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  RadioOptionType _optionTypeIn(BuildContext context) =>
+      optionType ??
+      ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.optionType ??
+      RadioOptionType.radio;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  RadioButtonStyle _buttonStyleIn(BuildContext context) =>
+      buttonStyle ??
+      ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.buttonStyle ??
+      RadioButtonStyle.outline;
 }
 
 /// Which layer a button is drawn in — see the button layer stack.

@@ -16,20 +16,40 @@
 library seed_ui;
 
 export 'src/components/data_display/avatar.dart'
-    show Avatar, AvatarGroup, AvatarShape, AvatarToken;
+    show AvatarDefaults, Avatar, AvatarGroup, AvatarShape, AvatarToken;
 export 'src/components/data_display/badge.dart'
-    show Badge, BadgeStatus, BadgeToken, Ribbon, RibbonPlacement, RibbonToken;
+    show
+        RibbonDefaults,
+        Badge,
+        BadgeStatus,
+        BadgeToken,
+        Ribbon,
+        RibbonPlacement,
+        RibbonToken;
 export 'src/components/data_display/card.dart'
-    show Card, CardMeta, CardTab, CardToken, CardType, CardVariant;
+    show
+        CardDefaults,
+        Card,
+        CardMeta,
+        CardTab,
+        CardToken,
+        CardType,
+        CardVariant;
 export 'src/components/data_display/collapse.dart'
     show
+        CollapseDefaults,
         Collapse,
         CollapseItem,
         CollapseToken,
         CollapseIconPosition,
         CollapsibleTrigger;
 export 'src/components/data_display/countdown.dart'
-    show Countdown, CountdownController, CountdownType, CountdownToken;
+    show
+        CountdownDefaults,
+        Countdown,
+        CountdownController,
+        CountdownType,
+        CountdownToken;
 export 'src/components/data_display/empty.dart'
     show EmptyDefaults, Empty, EmptyImage, EmptyToken;
 export 'src/components/data_display/listy.dart'
@@ -44,13 +64,19 @@ export 'src/components/data_display/listy.dart'
         ListyScrollAlign,
         ListyToken;
 export 'src/components/data_display/popover.dart'
-    show Popover, PopoverToken, PopoverTrigger;
+    show PopoverDefaults, Popover, PopoverToken, PopoverTrigger;
 export 'src/components/data_display/segmented.dart'
-    show Segmented, SegmentedDirection, SegmentedOption, SegmentedToken;
+    show
+        SegmentedDefaults,
+        Segmented,
+        SegmentedDirection,
+        SegmentedOption,
+        SegmentedToken;
 export 'src/components/data_display/sortable_list.dart'
-    show SortableList, SortableListToken;
+    show SortableListDefaults, SortableList, SortableListToken;
 export 'src/components/data_display/steps.dart'
     show
+        StepsDefaults,
         Steps,
         StepItem,
         stepsRingPadding,
@@ -64,6 +90,7 @@ export 'src/components/data_display/steps.dart'
         StepTitlePlacement;
 export 'src/components/data_display/tabs.dart'
     show
+        TabsDefaults,
         Tabs,
         TabItem,
         TabsController,
@@ -77,6 +104,7 @@ export 'src/components/data_display/tabs.dart'
         TabBarExtra;
 export 'src/components/data_display/tag.dart'
     show
+        CheckableTagGroupDefaults,
         TagDefaults,
         Tag,
         TagColor,
@@ -87,6 +115,7 @@ export 'src/components/data_display/tag.dart'
         CheckableTagOption;
 export 'src/components/data_display/timeline.dart'
     show
+        TimelineDefaults,
         Timeline,
         TimelineEntry,
         TimelineItem,
@@ -98,9 +127,10 @@ export 'src/components/data_display/timeline.dart'
         TimelineOrientation,
         TimelineItemPosition;
 export 'src/components/data_display/tooltip.dart'
-    show Tooltip, TooltipToken, TooltipTrigger;
+    show TooltipDefaults, Tooltip, TooltipToken, TooltipTrigger;
 export 'src/components/data_display/tour.dart'
     show
+        TourDefaults,
         Tour,
         TourStep,
         TourButton,
@@ -111,9 +141,20 @@ export 'src/components/data_display/tour.dart'
         TourToken,
         TourType;
 export 'src/components/data_display/tree.dart'
-    show Tree, TreeNode, TreeToken, TreeDropPosition, TreeDropDetails;
+    show
+        TreeDefaults,
+        Tree,
+        TreeNode,
+        TreeToken,
+        TreeDropPosition,
+        TreeDropDetails;
 export 'src/components/data_entry/checkbox.dart'
-    show Checkbox, CheckboxGroup, CheckboxOption, CheckboxToken;
+    show
+        CheckboxGroupDefaults,
+        Checkbox,
+        CheckboxGroup,
+        CheckboxOption,
+        CheckboxToken;
 export 'src/components/data_entry/input.dart'
     show
         InputDefaults,
@@ -125,9 +166,15 @@ export 'src/components/data_entry/input.dart'
         PasswordConfig,
         CountArgs;
 export 'src/components/data_entry/input_number.dart'
-    show InputNumber, InputNumberMode, InputNumberToken, SpinDirection;
+    show
+        InputNumberDefaults,
+        InputNumber,
+        InputNumberMode,
+        InputNumberToken,
+        SpinDirection;
 export 'src/components/data_entry/radio.dart'
     show
+        RadioGroupDefaults,
         Radio,
         RadioButtonStyle,
         RadioGroup,
@@ -145,18 +192,20 @@ export 'src/components/data_entry/select.dart'
         SelectToken,
         SelectVariant;
 export 'src/components/data_entry/slider.dart'
-    show Slider, RangeSlider, SliderMark, SliderToken;
+    show SliderDefaults, Slider, RangeSlider, SliderMark, SliderToken;
 export 'src/components/data_entry/switch.dart'
     show Switch, SwitchSize, SwitchToken;
 export 'src/components/data_entry/upload.dart'
     show
+        UploadDefaults,
         Upload,
         UploadActions,
         UploadItem,
         UploadStatus,
         UploadToken,
         UploadVariant;
-export 'src/components/feedback/alert.dart' show Alert, AlertToken;
+export 'src/components/feedback/alert.dart'
+    show AlertDefaults, Alert, AlertToken;
 export 'src/components/feedback/drawer.dart'
     show
         Drawer,
@@ -185,9 +234,10 @@ export 'src/components/feedback/notification.dart'
         NotificationToken,
         notification;
 export 'src/components/feedback/popconfirm.dart'
-    show Popconfirm, PopconfirmToken;
+    show PopconfirmDefaults, Popconfirm, PopconfirmToken;
 export 'src/components/feedback/progress.dart'
     show
+        ProgressDefaults,
         GapPlacement,
         PercentInfoAlign,
         PercentInfoType,
@@ -211,6 +261,7 @@ export 'src/components/general/button.dart'
         ButtonVariant;
 export 'src/components/navigation/dropdown.dart'
     show
+        DropdownDefaults,
         Dropdown,
         DropdownDivider,
         DropdownEntry,
@@ -221,7 +272,7 @@ export 'src/components/navigation/dropdown.dart'
         DropdownToken,
         DropdownTrigger;
 export 'src/components/navigation/pagination.dart'
-    show Pagination, PaginationSimple, PaginationToken;
+    show PaginationDefaults, Pagination, PaginationSimple, PaginationToken;
 export 'src/icons/icons.dart'
     show
         Spinner,

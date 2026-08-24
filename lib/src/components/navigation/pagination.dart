@@ -92,6 +92,35 @@ class _ResolvedPaginationToken {
   final double borderRadius;
 }
 
+/// Defaults for every [Pagination] under a `ConfigProvider`.
+///
+/// House style for pagination.
+@immutable
+class PaginationDefaults {
+  /// Creates a [PaginationDefaults].
+  const PaginationDefaults(
+      {this.showSizeChanger,
+      this.showQuickJumper,
+      this.hideOnSinglePage,
+      this.showLessItems,
+      this.align});
+
+  /// Whether the page-size picker is offered.
+  final bool? showSizeChanger;
+
+  /// Whether the jump-to-page box is offered.
+  final bool? showQuickJumper;
+
+  /// Whether a single page hides the control.
+  final bool? hideOnSinglePage;
+
+  /// Whether fewer page buttons are shown.
+  final bool? showLessItems;
+
+  /// Which way the control is aligned.
+  final MainAxisAlignment? align;
+}
+
 /// A pager for splitting a long list across pages.
 ///
 /// ```dart
@@ -116,17 +145,17 @@ class Pagination extends StatefulWidget {
     this.pageSize,
     this.defaultPageSize = 10,
     this.onChange,
-    this.showSizeChanger = false,
+    this.showSizeChanger,
     this.pageSizeOptions = const [10, 20, 50, 100],
     this.onShowSizeChange,
-    this.showQuickJumper = false,
+    this.showQuickJumper,
     this.showTotal,
     this.simple,
     this.size,
     this.disabled,
-    this.hideOnSinglePage = false,
-    this.showLessItems = false,
-    this.align = MainAxisAlignment.start,
+    this.hideOnSinglePage,
+    this.showLessItems,
+    this.align,
     this.token,
   });
 
@@ -149,7 +178,7 @@ class Pagination extends StatefulWidget {
   final void Function(int page, int pageSize)? onChange;
 
   /// Shows a selector for the page size.
-  final bool showSizeChanger;
+  final bool? showSizeChanger;
 
   /// The page sizes offered by the size changer.
   final List<int> pageSizeOptions;
@@ -158,7 +187,7 @@ class Pagination extends StatefulWidget {
   final void Function(int page, int pageSize)? onShowSizeChange;
 
   /// Shows an input to jump straight to a page.
-  final bool showQuickJumper;
+  final bool? showQuickJumper;
 
   /// Builds a summary such as "1-10 of 235 items". Given the total and the
   /// `[from, to]` range of the current page.
@@ -175,13 +204,13 @@ class Pagination extends StatefulWidget {
   final bool? disabled;
 
   /// Renders nothing when there is only a single page.
-  final bool hideOnSinglePage;
+  final bool? hideOnSinglePage;
 
   /// Shows fewer page numbers around the current one.
-  final bool showLessItems;
+  final bool? showLessItems;
 
   /// How the row is aligned within its width.
-  final MainAxisAlignment align;
+  final MainAxisAlignment? align;
 
   /// Per-instance token overrides.
   final PaginationToken? token;
@@ -191,6 +220,30 @@ class Pagination extends StatefulWidget {
 }
 
 class _PaginationState extends State<Pagination> {
+  /// The defaults set for this component in the subtree, if any.
+  PaginationDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<PaginationDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _showSizeChanger =>
+      widget.showSizeChanger ?? _defaults?.showSizeChanger ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _showQuickJumper =>
+      widget.showQuickJumper ?? _defaults?.showQuickJumper ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _hideOnSinglePage =>
+      widget.hideOnSinglePage ?? _defaults?.hideOnSinglePage ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _showLessItems =>
+      widget.showLessItems ?? _defaults?.showLessItems ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  MainAxisAlignment get _align =>
+      widget.align ?? _defaults?.align ?? MainAxisAlignment.start;
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -247,7 +300,7 @@ class _PaginationState extends State<Pagination> {
   /// just the current page and its neighbours, with an ellipsis on each side.
   List<_PagerEntry> _entries() {
     final last = _pageCount;
-    final near = widget.showLessItems ? 3 : 4; // "near an edge" threshold
+    final near = _showLessItems ? 3 : 4; // "near an edge" threshold
     final out = <_PagerEntry>[];
     void page(int p) => out.add(_PagerEntry.page(p));
     void jump(bool forward) => out.add(_PagerEntry.jump(forward));
@@ -290,7 +343,7 @@ class _PaginationState extends State<Pagination> {
             ConfigProvider.componentOf<PaginationToken>(context) ??
             const PaginationToken())
         ._resolve(token);
-    if (widget.hideOnSinglePage && _pageCount <= 1) {
+    if (_hideOnSinglePage && _pageCount <= 1) {
       return const SizedBox.shrink();
     }
     final height = _controlHeight(token);
@@ -342,15 +395,15 @@ class _PaginationState extends State<Pagination> {
           child: pager,
         ),
       ),
-      if (widget.showSizeChanger) _sizeChanger(token),
-      if (widget.showQuickJumper && !_simpleMode)
+      if (_showSizeChanger) _sizeChanger(token),
+      if (_showQuickJumper && !_simpleMode)
         _quickJumper(token, fontSize, height),
     ];
 
     return Wrap(
       spacing: token.sizeSM,
       runSpacing: token.sizeXS,
-      alignment: switch (widget.align) {
+      alignment: switch (_align) {
         MainAxisAlignment.center => WrapAlignment.center,
         MainAxisAlignment.end => WrapAlignment.end,
         MainAxisAlignment.spaceBetween => WrapAlignment.spaceBetween,

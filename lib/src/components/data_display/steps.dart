@@ -599,6 +599,35 @@ class _EllipsisPainter extends CustomPainter {
   bool shouldRepaint(_EllipsisPainter old) => old.color != color;
 }
 
+/// Defaults for every [Steps] under a `ConfigProvider`.
+///
+/// House style for step runs.
+@immutable
+class StepsDefaults {
+  /// Creates a [StepsDefaults].
+  const StepsDefaults(
+      {this.orientation,
+      this.type,
+      this.variant,
+      this.responsive,
+      this.overflow});
+
+  /// Which way the run goes.
+  final StepsOrientation? orientation;
+
+  /// Which shape the markers take.
+  final StepsType? type;
+
+  /// How the markers are filled.
+  final StepsVariant? variant;
+
+  /// Whether a narrow screen turns the run upright.
+  final bool? responsive;
+
+  /// What happens when the run will not fit.
+  final StepsOverflow? overflow;
+}
+
 /// A progress indicator for a task with stages.
 ///
 /// ```dart
@@ -630,17 +659,17 @@ class Steps extends StatefulWidget {
     this.controller,
     this.onChange,
     this.initial = 0,
-    this.orientation = StepsOrientation.horizontal,
-    this.type = StepsType.standard,
-    this.variant = StepsVariant.filled,
+    this.orientation,
+    this.type,
+    this.variant,
     this.size,
     this.status = StepStatus.process,
     this.titlePlacement,
     this.percent,
     this.progress,
-    this.responsive = true,
+    this.responsive,
     this.maxCount,
-    this.overflow = StepsOverflow.scroll,
+    this.overflow,
     this.token,
   }) : assert(
           percent == null || (percent >= 0 && percent <= 1),
@@ -667,13 +696,13 @@ class Steps extends StatefulWidget {
   final int initial;
 
   /// Which way the steps run.
-  final StepsOrientation orientation;
+  final StepsOrientation? orientation;
 
   /// How the steps are drawn.
-  final StepsType type;
+  final StepsType? type;
 
   /// Filled or outlined markers.
-  final StepsVariant variant;
+  final StepsVariant? variant;
 
   /// How big the run is drawn.
   ///
@@ -714,7 +743,7 @@ class Steps extends StatefulWidget {
 
   /// Falls back to a vertical run when the space is too narrow for a
   /// horizontal one.
-  final bool responsive;
+  final bool? responsive;
 
   /// The most steps to show at once.
   ///
@@ -732,7 +761,7 @@ class Steps extends StatefulWidget {
   /// [StepsOverflow.scroll] keeps them all and scrolls. [StepsOverflow.fold]
   /// works [maxCount] out from the room instead, so the run always fits and
   /// never scrolls — an explicit [maxCount] still wins.
-  final StepsOverflow overflow;
+  final StepsOverflow? overflow;
 
   /// Per-instance token overrides.
   final StepsToken? token;
@@ -745,6 +774,30 @@ class Steps extends StatefulWidget {
 }
 
 class _StepsState extends State<Steps> {
+  /// The defaults set for this component in the subtree, if any.
+  StepsDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<StepsDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  StepsOrientation get _orientation =>
+      widget.orientation ??
+      _defaults?.orientation ??
+      StepsOrientation.horizontal;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  StepsType get _type => widget.type ?? _defaults?.type ?? StepsType.standard;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  StepsVariant get _variant =>
+      widget.variant ?? _defaults?.variant ?? StepsVariant.filled;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _responsive => widget.responsive ?? _defaults?.responsive ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  StepsOverflow get _overflow =>
+      widget.overflow ?? _defaults?.overflow ?? StepsOverflow.scroll;
+
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   ControlSize get _size =>
@@ -837,14 +890,14 @@ class _StepsState extends State<Steps> {
     _ResolvedStepsToken r,
     StepsOrientation orientation,
   ) {
-    if (widget.overflow != StepsOverflow.fold) return null;
+    if (_overflow != StepsOverflow.fold) return null;
 
-    final marker = widget.type == StepsType.dot ? r.dotCurrentSize : r.iconSize;
+    final marker = _type == StepsType.dot ? r.dotCurrentSize : r.iconSize;
     final text = _headerFloor(t, widget.items);
 
     if (orientation == StepsOrientation.horizontal) {
       if (!constraints.hasBoundedWidth) return null;
-      final floor = switch (widget.type) {
+      final floor = switch (_type) {
         StepsType.panel => r.panelWidth ?? r.panelMinWidth,
         StepsType.navigation => r.iconSize + r.itemGap + text + t.sizeXS * 2,
         // A rail long enough to read as one, plus its gaps.
@@ -868,7 +921,7 @@ class _StepsState extends State<Steps> {
   }
 
   _Scale scaleOf(_ResolvedStepsToken r) =>
-      widget.type == StepsType.inline ? _Scale.small : r.scale;
+      _type == StepsType.inline ? _Scale.small : r.scale;
 
   @override
   Widget build(BuildContext context) {
@@ -878,9 +931,9 @@ class _StepsState extends State<Steps> {
             const StepsToken())
         ._resolve(t, _size);
 
-    final palette = _Palette(t, widget.variant);
+    final palette = _Palette(t, _variant);
 
-    Widget build(StepsOrientation orientation) => switch (widget.type) {
+    Widget build(StepsOrientation orientation) => switch (_type) {
           StepsType.panel => _PanelRun(
               state: this,
               t: t,
@@ -904,7 +957,7 @@ class _StepsState extends State<Steps> {
               r: r,
               palette: palette,
               orientation: orientation,
-              scale: widget.type == StepsType.inline ? _Scale.small : r.scale,
+              scale: _type == StepsType.inline ? _Scale.small : r.scale,
               direction: Directionality.of(context),
             ),
         };
@@ -914,15 +967,14 @@ class _StepsState extends State<Steps> {
     // vertical, which still need the width to count what fits.
     return LayoutBuilder(
       builder: (context, constraints) {
-        final stands = widget.responsive &&
-            widget.orientation == StepsOrientation.horizontal &&
-            widget.type != StepsType.inline &&
-            widget.type != StepsType.panel &&
-            widget.type != StepsType.navigation &&
+        final stands = _responsive &&
+            _orientation == StepsOrientation.horizontal &&
+            _type != StepsType.inline &&
+            _type != StepsType.panel &&
+            _type != StepsType.navigation &&
             constraints.maxWidth < Steps.responsiveBreakpoint;
 
-        final orientation =
-            stands ? StepsOrientation.vertical : widget.orientation;
+        final orientation = stands ? StepsOrientation.vertical : _orientation;
 
         _shown = _Shown.of(
           widget.items,

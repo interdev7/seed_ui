@@ -423,6 +423,18 @@ class CheckableTagOption<T> {
   final bool disabled;
 }
 
+/// Defaults for every [CheckableTagGroup] under a `ConfigProvider`.
+///
+/// House style for checkable tag groups.
+@immutable
+class CheckableTagGroupDefaults {
+  /// Creates a [CheckableTagGroupDefaults].
+  const CheckableTagGroupDefaults({this.multiple});
+
+  /// Whether more than one chip can be chosen.
+  final bool? multiple;
+}
+
 /// A set of [CheckableTag]s selecting one or several values.
 ///
 /// ```dart
@@ -445,7 +457,7 @@ class CheckableTagGroup<T> extends StatefulWidget {
     this.defaultValue,
     this.onChanged,
     this.disabled,
-    this.multiple = false,
+    this.multiple,
     this.spacing = 8,
     this.runSpacing = 8,
   });
@@ -468,7 +480,7 @@ class CheckableTagGroup<T> extends StatefulWidget {
 
   /// Whether several tags can be checked at once. When false, checking one
   /// unchecks the rest.
-  final bool multiple;
+  final bool? multiple;
 
   /// Gap between tags along the run, in logical pixels.
   final double spacing;
@@ -481,6 +493,13 @@ class CheckableTagGroup<T> extends StatefulWidget {
 }
 
 class _CheckableTagGroupState<T> extends State<CheckableTagGroup<T>> {
+  /// The defaults set for this component in the subtree, if any.
+  CheckableTagGroupDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<CheckableTagGroupDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _multiple => widget.multiple ?? _defaults?.multiple ?? false;
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -494,7 +513,7 @@ class _CheckableTagGroupState<T> extends State<CheckableTagGroup<T>> {
   void _toggle(T value) {
     final current = _current;
     final List<T> next;
-    if (widget.multiple) {
+    if (_multiple) {
       next = List<T>.of(current);
       current.contains(value) ? next.remove(value) : next.add(value);
     } else {

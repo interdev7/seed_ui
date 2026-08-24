@@ -434,6 +434,24 @@ class _ResolvedTourToken {
   final Curve travelCurve;
 }
 
+/// Defaults for every [Tour] under a `ConfigProvider`.
+///
+/// House style for tours: where the steps sit and whether they can be left.
+@immutable
+class TourDefaults {
+  /// Creates a [TourDefaults].
+  const TourDefaults({this.placement, this.arrow, this.closable});
+
+  /// Where a step sits against its target.
+  final TourPlacement? placement;
+
+  /// Whether a step draws a pointer.
+  final bool? arrow;
+
+  /// Whether a step can be dismissed.
+  final bool? closable;
+}
+
 /// A guided walk through a screen.
 ///
 /// Each step points at a widget of yours, given by its [GlobalKey]: the page
@@ -466,11 +484,11 @@ class Tour extends StatefulWidget {
     this.onClose,
     this.onFinish,
     this.type = TourType.normal,
-    this.placement = TourPlacement.bottom,
+    this.placement,
     this.mask = const TourMask(),
     this.gap = const TourGap(),
-    this.arrow = true,
-    this.closable = true,
+    this.arrow,
+    this.closable,
     this.closeIcon,
     this.dismissible = true,
     this.scrollIntoView = true,
@@ -509,7 +527,7 @@ class Tour extends StatefulWidget {
   final TourType type;
 
   /// Where a panel sits relative to its target.
-  final TourPlacement placement;
+  final TourPlacement? placement;
 
   /// Whether the page behind is dimmed, and in what colour.
   final TourMask mask;
@@ -518,10 +536,10 @@ class Tour extends StatefulWidget {
   final TourGap gap;
 
   /// Whether a caret points at the target.
-  final bool arrow;
+  final bool? arrow;
 
   /// Whether panels carry a close button.
-  final bool closable;
+  final bool? closable;
 
   /// The close button's icon. Null draws the kit's own cross; a step may take
   /// one of its own through [TourStep.closeIcon].
@@ -576,6 +594,20 @@ class Tour extends StatefulWidget {
 }
 
 class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
+  /// The defaults set for this component in the subtree, if any.
+  TourDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<TourDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  TourPlacement get _placement =>
+      widget.placement ?? _defaults?.placement ?? TourPlacement.bottom;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _arrow => widget.arrow ?? _defaults?.arrow ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _closable => widget.closable ?? _defaults?.closable ?? true;
+
   OverlayEntry? _entry;
 
   /// Kept from the moment the entry goes in, so the watch never has to look it
@@ -835,7 +867,7 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
     // token where it belongs to a theme; the widget wins.
     final travelDuration = widget.duration ?? r.travelDuration;
     final travelCurve = widget.curve ?? r.travelCurve;
-    final placement = step.placement ?? widget.placement;
+    final placement = step.placement ?? _placement;
     final mask = step.mask ?? widget.mask;
     final gap = step.gap ?? widget.gap;
 
@@ -912,7 +944,7 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
         type: step.type ?? widget.type,
         current: _current,
         total: widget.steps.length,
-        closable: step.closable ?? widget.closable,
+        closable: step.closable ?? _closable,
         closeIcon: step.closeIcon ?? widget.closeIcon,
         indicatorsBuilder: widget.indicatorsBuilder,
         actionsBuilder: widget.actionsBuilder,
@@ -959,7 +991,7 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
             placement: hasTarget ? placement._popover : null,
             arrow: hasTarget &&
                 placement != TourPlacement.center &&
-                (step.arrow ?? widget.arrow),
+                (step.arrow ?? _arrow),
             arrowColour: (step.type ?? widget.type) == TourType.primary
                 ? t.primary.base
                 : t.colorBgElevated,

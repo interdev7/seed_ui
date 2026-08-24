@@ -143,6 +143,18 @@ class CountdownController extends ChangeNotifier {
   void _report(Duration value) => _value = value;
 }
 
+/// Defaults for every [Countdown] under a `ConfigProvider`.
+///
+/// House style for countdowns.
+@immutable
+class CountdownDefaults {
+  /// Creates a [CountdownDefaults].
+  const CountdownDefaults({this.type});
+
+  /// Whether time runs down or up.
+  final CountdownType? type;
+}
+
 /// A running count of the time to a moment, or since one.
 ///
 /// ```dart
@@ -165,7 +177,7 @@ class Countdown extends StatefulWidget {
     super.key,
     this.target,
     this.controller,
-    this.type = CountdownType.down,
+    this.type,
     this.format = 'HH:mm:ss',
     this.onFinish,
     this.onChange,
@@ -185,7 +197,7 @@ class Countdown extends StatefulWidget {
   final CountdownController? controller;
 
   /// Whether the count runs towards [target] or away from it.
-  final CountdownType type;
+  final CountdownType? type;
 
   /// How the remaining time is written out.
   ///
@@ -230,6 +242,14 @@ class Countdown extends StatefulWidget {
 
 class _CountdownState extends State<Countdown>
     with SingleTickerProviderStateMixin {
+  /// The defaults set for this component in the subtree, if any.
+  CountdownDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<CountdownDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  CountdownType get _type =>
+      widget.type ?? _defaults?.type ?? CountdownType.down;
+
   /// Frames, for a format that shows fractions of a second.
   Ticker? _ticker;
 
@@ -267,8 +287,28 @@ class _CountdownState extends State<Countdown>
   void initState() {
     super.initState();
     _controller?.addListener(_onController);
-    _controller?._report(_value());
+  }
+
+  /// The type the clock is running under, as of the last settled dependency.
+  ///
+  /// The first tick is set up here rather than in [initState]: the type may
+  /// come from the provider's defaults, and inherited widgets cannot be read
+  /// that early. A later change of the ambient default lands here too, and
+  /// restarts the clock the same way a changed prop would.
+  CountdownType? _running;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final type = _type;
+    if (_running == type) return;
+    final first = _running == null;
+    _running = type;
+    _stop();
+    _finished = false;
+    if (first) _controller?._report(_value());
     _shown = _format(_value());
+    if (_controller?.isPaused ?? false) return;
     _start();
   }
 
@@ -310,7 +350,7 @@ class _CountdownState extends State<Countdown>
   }
 
   void _start() {
-    if (_raw() == Duration.zero && widget.type == CountdownType.down) {
+    if (_raw() == Duration.zero && _type == CountdownType.down) {
       _finish();
       return;
     }
@@ -339,7 +379,7 @@ class _CountdownState extends State<Countdown>
   Duration _untilChange() {
     final ms = _raw().inMilliseconds;
     final step = _step;
-    final next = widget.type == CountdownType.down
+    final next = _type == CountdownType.down
         // Counting down, the text turns over as the remainder falls through
         // the multiple of the step below the one now displayed.
         ? ms - ((ms + step - 1) ~/ step - 1) * step
@@ -353,7 +393,7 @@ class _CountdownState extends State<Countdown>
   /// negative time.
   Duration _raw() {
     final now = _now;
-    final d = widget.type == CountdownType.down
+    final d = _type == CountdownType.down
         ? _target.difference(now)
         : now.difference(_target);
     return d.isNegative ? Duration.zero : d;
@@ -368,7 +408,7 @@ class _CountdownState extends State<Countdown>
   /// half seconds elapsed is two.
   Duration _value() {
     final ms = _raw().inMilliseconds;
-    if (widget.type == CountdownType.up) return Duration(milliseconds: ms);
+    if (_type == CountdownType.up) return Duration(milliseconds: ms);
     final step = _step;
     return Duration(milliseconds: ((ms + step - 1) ~/ step) * step);
   }
@@ -386,7 +426,7 @@ class _CountdownState extends State<Countdown>
       widget.onChange?.call(value);
     }
 
-    if (widget.type == CountdownType.down && _raw() == Duration.zero) {
+    if (_type == CountdownType.down && _raw() == Duration.zero) {
       _finish();
     }
   }

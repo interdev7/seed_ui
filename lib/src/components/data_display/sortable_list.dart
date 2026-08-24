@@ -49,6 +49,21 @@ class _ResolvedSortableListToken {
   final Color? backgroundColor;
 }
 
+/// Defaults for every [SortableList] under a `ConfigProvider`.
+///
+/// House style for sortable lists.
+@immutable
+class SortableListDefaults {
+  /// Creates a [SortableListDefaults].
+  const SortableListDefaults({this.direction, this.showHandle});
+
+  /// Which way the rows run.
+  final Axis? direction;
+
+  /// Whether rows carry a drag handle.
+  final bool? showHandle;
+}
+
 /// A list whose items can be dragged to reorder, with the others sliding
 /// smoothly out of the way in both directions.
 ///
@@ -78,8 +93,8 @@ class SortableList extends StatelessWidget {
     super.key,
     required this.children,
     required this.onReorder,
-    this.direction = Axis.vertical,
-    this.showHandle = true,
+    this.direction,
+    this.showHandle,
     this.handle,
     this.gap = 0,
     this.padding = EdgeInsets.zero,
@@ -99,11 +114,11 @@ class SortableList extends StatelessWidget {
   final void Function(int from, int to) onReorder;
 
   /// Whether the list runs down the page or across it.
-  final Axis direction;
+  final Axis? direction;
 
   /// Shows a drag handle that starts the drag. When false, an item is dragged
   /// after a long-press anywhere on it.
-  final bool showHandle;
+  final bool? showHandle;
 
   /// A custom drag handle, replacing the default grip. Only used when
   /// [showHandle] is true.
@@ -140,7 +155,8 @@ class SortableList extends StatelessWidget {
   /// Per-instance token overrides.
   final SortableListToken? token;
 
-  bool get _vertical => direction == Axis.vertical;
+  bool _verticalIn(BuildContext context) =>
+      _directionIn(context) == Axis.vertical;
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +167,7 @@ class SortableList extends StatelessWidget {
         ._resolve(t);
 
     return CustomScrollView(
-      scrollDirection: direction,
+      scrollDirection: _directionIn(context),
       shrinkWrap: shrinkWrap,
       controller: controller,
       physics:
@@ -186,7 +202,7 @@ class SortableList extends StatelessWidget {
     final key = child.key ?? ValueKey('sortable_$index');
 
     Widget content = child;
-    if (showHandle) {
+    if (_showHandleIn(context)) {
       final grip = handle ??
           Padding(
             padding: EdgeInsets.all(t.sizeXXS),
@@ -199,7 +215,7 @@ class SortableList extends StatelessWidget {
         cursor: SystemMouseCursors.grab,
         child: ReorderableDragStartListener(index: index, child: grip),
       );
-      content = _vertical
+      content = _verticalIn(context)
           ? Row(children: [draggableHandle, Expanded(child: child)])
           : Column(children: [draggableHandle, Expanded(child: child)]);
     } else {
@@ -211,7 +227,7 @@ class SortableList extends StatelessWidget {
       content = Padding(
         // After each item in turn, which across the page means the end of the
         // row rather than its right.
-        padding: _vertical
+        padding: _verticalIn(context)
             ? EdgeInsets.only(bottom: gap)
             : EdgeInsetsDirectional.only(end: gap),
         child: content,
@@ -266,4 +282,16 @@ class SortableList extends StatelessWidget {
       },
     );
   }
+
+  /// This widget's word, then the subtree's, then the kit's.
+  Axis _directionIn(BuildContext context) =>
+      direction ??
+      ConfigProvider.defaultsOf<SortableListDefaults>(context)?.direction ??
+      Axis.vertical;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool _showHandleIn(BuildContext context) =>
+      showHandle ??
+      ConfigProvider.defaultsOf<SortableListDefaults>(context)?.showHandle ??
+      true;
 }

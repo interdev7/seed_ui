@@ -247,6 +247,28 @@ class UploadActions {
   final VoidCallback? download;
 }
 
+/// Defaults for every [Upload] under a `ConfigProvider`.
+///
+/// House style for uploaders.
+@immutable
+class UploadDefaults {
+  /// Creates a [UploadDefaults].
+  const UploadDefaults(
+      {this.variant, this.showRemove, this.showRetry, this.showSize});
+
+  /// Which shape the uploader takes.
+  final UploadVariant? variant;
+
+  /// Whether a file can be removed.
+  final bool? showRemove;
+
+  /// Whether a failed upload offers a retry.
+  final bool? showRetry;
+
+  /// Whether a file lists its size.
+  final bool? showSize;
+}
+
 /// A file list with a picker trigger, progress per file, and retry and remove
 /// actions.
 ///
@@ -289,7 +311,7 @@ class Upload<T> extends StatelessWidget {
   const Upload({
     super.key,
     this.items = const [],
-    this.variant = UploadVariant.picture,
+    this.variant,
     this.onPick,
     this.onRemove,
     this.onRetry,
@@ -303,9 +325,9 @@ class Upload<T> extends StatelessWidget {
     this.label,
     this.hint,
     this.thumbnailBuilder,
-    this.showRemove = true,
-    this.showRetry = true,
-    this.showSize = true,
+    this.showRemove,
+    this.showRetry,
+    this.showSize,
     this.progress,
     this.emptyState,
     this.token,
@@ -315,7 +337,7 @@ class Upload<T> extends StatelessWidget {
   final List<UploadItem<T>> items;
 
   /// Rows or tiles.
-  final UploadVariant variant;
+  final UploadVariant? variant;
 
   /// Called when the trigger is used. Open your picker here and add whatever
   /// it returns to [items].
@@ -390,14 +412,14 @@ class Upload<T> extends StatelessWidget {
   final Widget Function(UploadItem<T> item)? thumbnailBuilder;
 
   /// Whether files carry a remove button. Ignored when [onRemove] is null.
-  final bool showRemove;
+  final bool? showRemove;
 
   /// Whether failed files carry a retry button. Ignored when [onRetry] is
   /// null.
-  final bool showRetry;
+  final bool? showRetry;
 
   /// Whether a file's size is drawn beside its name.
-  final bool showSize;
+  final bool? showSize;
 
   /// A template for the bar drawn while a file is in flight.
   ///
@@ -430,16 +452,21 @@ class Upload<T> extends StatelessWidget {
             const UploadToken())
         ._resolve(t);
 
-    return switch (variant) {
+    return switch (_variantIn(context)) {
       UploadVariant.cards || UploadVariant.circleCards => _cards(context, t, r),
       UploadVariant.text || UploadVariant.picture => _list(context, t, r),
     };
   }
 
   /// The handlers for [item], with the ones it cannot use left null.
-  UploadActions _actionsFor(UploadItem<T> item) => UploadActions(
-        remove: showRemove && onRemove != null ? () => onRemove!(item) : null,
-        retry: showRetry && onRetry != null && item.status == UploadStatus.error
+  UploadActions _actionsFor(BuildContext context, UploadItem<T> item) =>
+      UploadActions(
+        remove: _showRemoveIn(context) && onRemove != null
+            ? () => onRemove!(item)
+            : null,
+        retry: _showRetryIn(context) &&
+                onRetry != null &&
+                item.status == UploadStatus.error
             ? () => onRetry!(item)
             : null,
         preview: onPreview == null ? null : () => onPreview!(item),
@@ -458,15 +485,15 @@ class Upload<T> extends StatelessWidget {
         ],
         for (final item in items) ...[
           SizedBox(height: r.gap),
-          itemBuilder?.call(item, _actionsFor(item)) ??
+          itemBuilder?.call(item, _actionsFor(context, item)) ??
               _UploadRow<T>(
                 item: item,
                 token: t,
                 style: r,
-                showSize: showSize,
-                leading: _leadingFor(item, t, r),
+                showSize: _showSizeIn(context),
+                leading: _leadingFor(context, item, t, r),
                 progress: _progressFor(item),
-                actions: _actionsFor(item),
+                actions: _actionsFor(context, item),
               ),
         ],
       ],
@@ -479,15 +506,15 @@ class Upload<T> extends StatelessWidget {
       runSpacing: r.gap,
       children: [
         for (final item in items)
-          itemBuilder?.call(item, _actionsFor(item)) ??
+          itemBuilder?.call(item, _actionsFor(context, item)) ??
               _UploadCard<T>(
                 item: item,
                 token: t,
                 style: r,
-                round: variant == UploadVariant.circleCards,
+                round: _variantIn(context) == UploadVariant.circleCards,
                 thumbnail: _thumbnailFor(item, t, r),
                 progress: _progressFor(item),
-                actions: _actionsFor(item),
+                actions: _actionsFor(context, item),
               ),
         if (_accepting)
           SizedBox(
@@ -498,7 +525,7 @@ class Upload<T> extends StatelessWidget {
               t,
               r,
               compact: true,
-              round: variant == UploadVariant.circleCards,
+              round: _variantIn(context) == UploadVariant.circleCards,
             ),
           ),
       ],
@@ -515,8 +542,13 @@ class Upload<T> extends StatelessWidget {
   /// `picture` gives the file a square preview; `text` marks it with a clip
   /// instead, which is enough to say "attachment" without the weight of a
   /// thumbnail. Either way a file in flight shows a spinner.
-  Widget _leadingFor(UploadItem<T> item, Token t, _ResolvedUploadToken r) {
-    if (variant == UploadVariant.picture) {
+  Widget _leadingFor(
+    BuildContext context,
+    UploadItem<T> item,
+    Token t,
+    _ResolvedUploadToken r,
+  ) {
+    if (_variantIn(context) == UploadVariant.picture) {
       return SizedBox(
         width: r.thumbnailSize,
         height: r.thumbnailSize,
@@ -580,6 +612,30 @@ class Upload<T> extends StatelessWidget {
       trigger: trigger,
     );
   }
+
+  /// This widget's word, then the subtree's, then the kit's.
+  UploadVariant _variantIn(BuildContext context) =>
+      variant ??
+      ConfigProvider.defaultsOf<UploadDefaults>(context)?.variant ??
+      UploadVariant.picture;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool _showRemoveIn(BuildContext context) =>
+      showRemove ??
+      ConfigProvider.defaultsOf<UploadDefaults>(context)?.showRemove ??
+      true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool _showRetryIn(BuildContext context) =>
+      showRetry ??
+      ConfigProvider.defaultsOf<UploadDefaults>(context)?.showRetry ??
+      true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool _showSizeIn(BuildContext context) =>
+      showSize ??
+      ConfigProvider.defaultsOf<UploadDefaults>(context)?.showSize ??
+      true;
 }
 
 // --------------------------------------------------------------------------

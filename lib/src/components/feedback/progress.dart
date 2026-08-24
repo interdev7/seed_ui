@@ -350,6 +350,21 @@ class _ResolvedProgressToken {
   final double circleSize;
 }
 
+/// Defaults for every [Progress] under a `ConfigProvider`.
+///
+/// House style for progress bars.
+@immutable
+class ProgressDefaults {
+  /// Creates a [ProgressDefaults].
+  const ProgressDefaults({this.showInfo, this.gapPlacement});
+
+  /// Whether the figure is shown beside the bar.
+  final bool? showInfo;
+
+  /// Where a dashboard gauge opens its gap.
+  final GapPlacement? gapPlacement;
+}
+
 /// A progress indicator for a task whose completion is known, as a bar or a
 /// ring — matching `Progress`.
 ///
@@ -368,7 +383,7 @@ class Progress extends StatefulWidget {
     required this.percent,
     this.type = ProgressType.line,
     this.status,
-    this.showInfo = true,
+    this.showInfo,
     this.strokeWidth,
     this.size,
     this.color,
@@ -380,7 +395,7 @@ class Progress extends StatefulWidget {
     this.borderRadius,
     this.strokeLinecap,
     this.gapDegree = 75,
-    this.gapPlacement = GapPlacement.bottom,
+    this.gapPlacement,
     this.percentPosition,
     this.format,
     this.direction,
@@ -400,7 +415,7 @@ class Progress extends StatefulWidget {
   final StatusType? status;
 
   /// Whether to show the percentage or custom label.
-  final bool showInfo;
+  final bool? showInfo;
 
   /// Thickness of the track.
   final double? strokeWidth;
@@ -464,7 +479,7 @@ class Progress extends StatefulWidget {
   final double gapDegree;
 
   /// Placement of the gap for [ProgressType.dashboard] (top, bottom, left, right).
-  final GapPlacement gapPlacement;
+  final GapPlacement? gapPlacement;
 
   /// Position and alignment of the percentage label ([PercentPosition]).
   final PercentPosition? percentPosition;
@@ -563,6 +578,17 @@ class Progress extends StatefulWidget {
 }
 
 class _ProgressState extends State<Progress> {
+  /// The defaults set for this component in the subtree, if any.
+  ProgressDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<ProgressDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _showInfo => widget.showInfo ?? _defaults?.showInfo ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  GapPlacement get _gapPlacement =>
+      widget.gapPlacement ?? _defaults?.gapPlacement ?? GapPlacement.bottom;
+
   bool _doneFired = false;
   double? _lastPercent;
   int? _lastStep;
@@ -856,7 +882,7 @@ class _ProgressState extends State<Progress> {
                   ),
                 ),
               ),
-              if (isInner && widget.showInfo)
+              if (isInner && _showInfo)
                 pos.align == PercentInfoAlign.follow
                     ? Positioned.fill(
                         child: LayoutBuilder(
@@ -912,7 +938,7 @@ class _ProgressState extends State<Progress> {
         ? SizedBox(width: explicit.width, child: bar)
         : (resSize.hasFixedStepWidth ? bar : Expanded(child: bar));
 
-    if (!widget.showInfo || isInner) {
+    if (!_showInfo || isInner) {
       return Row(
         textDirection: dir,
         mainAxisSize: (hasCustomWidth || resSize.hasFixedStepWidth)
@@ -1215,14 +1241,14 @@ class _ProgressState extends State<Progress> {
           steps: widget.steps,
           type: widget.type,
           gapDegree: widget.gapDegree,
-          gapPlacement: widget.gapPlacement,
+          gapPlacement: _gapPlacement,
           strokeLinecap: cap,
         ),
         // The child owns the middle of the ring; the percentage label only
         // gets it when there is no child.
         child: widget.child != null
             ? Center(child: widget.child)
-            : (widget.showInfo
+            : (_showInfo
                 ? Center(child: _circleInfo(token, fill, currentPercent))
                 : null),
       ),

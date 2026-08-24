@@ -140,6 +140,35 @@ class CollapseItem {
   final bool forceRender;
 }
 
+/// Defaults for every [Collapse] under a `ConfigProvider`.
+///
+/// House style for collapses.
+@immutable
+class CollapseDefaults {
+  /// Creates a [CollapseDefaults].
+  const CollapseDefaults(
+      {this.accordion,
+      this.bordered,
+      this.ghost,
+      this.expandIconPosition,
+      this.collapsible});
+
+  /// Whether only one panel opens at a time.
+  final bool? accordion;
+
+  /// Whether panels are bordered.
+  final bool? bordered;
+
+  /// Whether panels drop their background.
+  final bool? ghost;
+
+  /// Which end the chevron sits at.
+  final CollapseIconPosition? expandIconPosition;
+
+  /// What opens a panel.
+  final CollapsibleTrigger? collapsible;
+}
+
 /// A set of collapsible panels.
 ///
 /// ```dart
@@ -163,12 +192,12 @@ class Collapse extends StatefulWidget {
     this.activeKeys,
     this.defaultActiveKeys,
     this.onChange,
-    this.accordion = false,
-    this.bordered = true,
-    this.ghost = false,
+    this.accordion,
+    this.bordered,
+    this.ghost,
     this.size,
-    this.expandIconPosition = CollapseIconPosition.start,
-    this.collapsible = CollapsibleTrigger.header,
+    this.expandIconPosition,
+    this.collapsible,
     this.expandIcon,
     this.destroyInactivePanel = false,
     this.token,
@@ -187,22 +216,22 @@ class Collapse extends StatefulWidget {
   final ValueChanged<List<String>>? onChange;
 
   /// Allows at most one open panel at a time.
-  final bool accordion;
+  final bool? accordion;
 
   /// Draws the outer border and inter-panel dividers.
-  final bool bordered;
+  final bool? bordered;
 
   /// Borderless and transparent — panels blend into the page.
-  final bool ghost;
+  final bool? ghost;
 
   /// Header/content padding preset.
   final SoftSize? size;
 
   /// Which side the expand icon sits on.
-  final CollapseIconPosition expandIconPosition;
+  final CollapseIconPosition? expandIconPosition;
 
   /// Default trigger for every panel; a panel may override it.
-  final CollapsibleTrigger collapsible;
+  final CollapsibleTrigger? collapsible;
 
   /// Builds a custom expand icon from the panel's open state. When null, a
   /// chevron that turns a quarter-turn on open is used.
@@ -219,6 +248,29 @@ class Collapse extends StatefulWidget {
 }
 
 class _CollapseState extends State<Collapse> {
+  /// The defaults set for this component in the subtree, if any.
+  CollapseDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<CollapseDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _accordion => widget.accordion ?? _defaults?.accordion ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _bordered => widget.bordered ?? _defaults?.bordered ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _ghost => widget.ghost ?? _defaults?.ghost ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  CollapseIconPosition get _expandIconPosition =>
+      widget.expandIconPosition ??
+      _defaults?.expandIconPosition ??
+      CollapseIconPosition.start;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  CollapsibleTrigger get _collapsible =>
+      widget.collapsible ?? _defaults?.collapsible ?? CollapsibleTrigger.header;
+
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
@@ -232,7 +284,7 @@ class _CollapseState extends State<Collapse> {
     final current = _active;
     final open = current.contains(key);
     final Set<String> next;
-    if (widget.accordion) {
+    if (_accordion) {
       next = open ? <String>{} : {key};
     } else {
       next = {...current};
@@ -260,15 +312,15 @@ class _CollapseState extends State<Collapse> {
           item: item,
           size: _size,
           active: _active.contains(item.key),
-          ghost: widget.ghost,
-          bordered: widget.bordered,
+          ghost: _ghost,
+          bordered: _bordered,
           // Every panel but the first carries the divider on its own header, so
           // the separator is always present regardless of the neighbour's state
           // and never doubles with an open panel's content border. Borderless
           // keeps the dividers; only ghost drops them.
-          showTopBorder: !widget.ghost && i > 0,
-          iconPosition: widget.expandIconPosition,
-          collapsible: item.collapsible ?? widget.collapsible,
+          showTopBorder: !_ghost && i > 0,
+          iconPosition: _expandIconPosition,
+          collapsible: item.collapsible ?? _collapsible,
           expandIcon: widget.expandIcon,
           destroyInactive: widget.destroyInactivePanel,
           onToggle: () => _toggle(item.key),
@@ -283,7 +335,7 @@ class _CollapseState extends State<Collapse> {
     );
 
     // Ghost blends into the page — no frame, no rounding, no background.
-    if (widget.ghost) return column;
+    if (_ghost) return column;
 
     // Both bordered and borderless keep the rounded frame and background; only
     // the border line itself is dropped when borderless. The border is a
@@ -293,7 +345,7 @@ class _CollapseState extends State<Collapse> {
     final radius = BorderRadius.circular(r.borderRadius);
     return Container(
       decoration: BoxDecoration(color: r.contentBg, borderRadius: radius),
-      foregroundDecoration: widget.bordered
+      foregroundDecoration: _bordered
           ? BoxDecoration(
               border: Border.all(color: t.colorBorder, width: t.lineWidth),
               borderRadius: radius,

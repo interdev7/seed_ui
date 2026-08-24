@@ -271,6 +271,18 @@ class CheckboxOption<T> {
   final bool disabled;
 }
 
+/// Defaults for every [CheckboxGroup] under a `ConfigProvider`.
+///
+/// House style for checkbox groups.
+@immutable
+class CheckboxGroupDefaults {
+  /// Creates a [CheckboxGroupDefaults].
+  const CheckboxGroupDefaults({this.direction});
+
+  /// Which way the boxes run.
+  final Axis? direction;
+}
+
 /// A set of checkboxes selecting several values from a list.
 ///
 /// ```dart
@@ -291,7 +303,7 @@ class CheckboxGroup<T> extends StatelessWidget {
     required this.options,
     this.onChanged,
     this.disabled,
-    this.direction = Axis.horizontal,
+    this.direction,
     this.spacing = 16,
     this.runSpacing = 8,
   });
@@ -314,7 +326,7 @@ class CheckboxGroup<T> extends StatelessWidget {
       disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
 
   /// Whether the options run in a row (wrapping) or a column.
-  final Axis direction;
+  final Axis? direction;
 
   /// Gap between options along the run, in logical pixels.
   final double spacing;
@@ -345,7 +357,7 @@ class CheckboxGroup<T> extends StatelessWidget {
         ),
     ];
 
-    if (direction == Axis.vertical) {
+    if (_directionIn(context) == Axis.vertical) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -358,4 +370,10 @@ class CheckboxGroup<T> extends StatelessWidget {
     }
     return Wrap(spacing: spacing, runSpacing: runSpacing, children: boxes);
   }
+
+  /// This widget's word, then the subtree's, then the kit's.
+  Axis _directionIn(BuildContext context) =>
+      direction ??
+      ConfigProvider.defaultsOf<CheckboxGroupDefaults>(context)?.direction ??
+      Axis.horizontal;
 }

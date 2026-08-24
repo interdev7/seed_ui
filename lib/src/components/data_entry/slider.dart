@@ -162,6 +162,21 @@ class _ResolvedSliderToken {
   final Color dotActiveBorderColor;
 }
 
+/// Defaults for every [Slider] under a `ConfigProvider`.
+///
+/// House style for sliders.
+@immutable
+class SliderDefaults {
+  /// Creates a [SliderDefaults].
+  const SliderDefaults({this.dots, this.included});
+
+  /// Whether the marks are drawn as dots.
+  final bool? dots;
+
+  /// Whether the track fills up to the handle.
+  final bool? included;
+}
+
 /// A groove with a handle, for choosing a number by dragging.
 ///
 /// ```dart
@@ -183,8 +198,8 @@ class Slider extends StatefulWidget {
     this.max = 100,
     this.step = 1,
     this.marks = const [],
-    this.dots = false,
-    this.included = true,
+    this.dots,
+    this.included,
     this.disabled,
     this.vertical = false,
     this.reverse = false,
@@ -217,13 +232,13 @@ class Slider extends StatefulWidget {
   final List<SliderMark> marks;
 
   /// Whether every step is dotted, not only the marked ones.
-  final bool dots;
+  final bool? dots;
 
   /// Whether the groove is filled up to the handle, or only marked at it.
   ///
   /// False leaves the groove plain and greys the marks the handle has passed —
   /// for a slider that names a point rather than an amount.
-  final bool included;
+  final bool? included;
 
   /// Greys the slider out and blocks dragging.
   final bool? disabled;
@@ -250,6 +265,16 @@ class Slider extends StatefulWidget {
 }
 
 class _SliderState extends State<Slider> {
+  /// The defaults set for this component in the subtree, if any.
+  SliderDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<SliderDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _dots => widget.dots ?? _defaults?.dots ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _included => widget.included ?? _defaults?.included ?? true;
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -269,8 +294,8 @@ class _SliderState extends State<Slider> {
       max: widget.max,
       step: widget.step,
       marks: widget.marks,
-      dots: widget.dots,
-      included: widget.included,
+      dots: _dots,
+      included: _included,
       disabled: _disabled,
       vertical: widget.vertical,
       reverse: widget.reverse,
@@ -306,8 +331,8 @@ class RangeSlider extends StatefulWidget {
     this.max = 100,
     this.step = 1,
     this.marks = const [],
-    this.dots = false,
-    this.included = true,
+    this.dots,
+    this.included,
     this.disabled,
     this.vertical = false,
     this.reverse = false,
@@ -338,10 +363,10 @@ class RangeSlider extends StatefulWidget {
   final List<SliderMark> marks;
 
   /// Whether every step is dotted.
-  final bool dots;
+  final bool? dots;
 
   /// Whether the span between the handles is filled.
-  final bool included;
+  final bool? included;
 
   /// Greys the slider out and blocks dragging.
   final bool? disabled;
@@ -363,6 +388,16 @@ class RangeSlider extends StatefulWidget {
 }
 
 class _RangeSliderState extends State<RangeSlider> {
+  /// The defaults set for this component in the subtree, if any.
+  SliderDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<SliderDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _dots => widget.dots ?? _defaults?.dots ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _included => widget.included ?? _defaults?.included ?? true;
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -382,8 +417,8 @@ class _RangeSliderState extends State<RangeSlider> {
       max: widget.max,
       step: widget.step,
       marks: widget.marks,
-      dots: widget.dots,
-      included: widget.included,
+      dots: _dots,
+      included: _included,
       disabled: _disabled,
       vertical: widget.vertical,
       reverse: widget.reverse,

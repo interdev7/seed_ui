@@ -100,6 +100,21 @@ class _ResolvedTooltipToken {
   final double fontSize;
 }
 
+/// Defaults for every [Tooltip] under a `ConfigProvider`.
+///
+/// House style for tooltips: where they sit and whether they point.
+@immutable
+class TooltipDefaults {
+  /// Creates a [TooltipDefaults].
+  const TooltipDefaults({this.placement, this.arrow});
+
+  /// Where tooltips sit against their anchor.
+  final PopoverPlacement? placement;
+
+  /// Whether tooltips draw a pointer.
+  final bool? arrow;
+}
+
 /// A short text hint that surfaces on hover, tap or long-press.
 ///
 /// Shares its name with Material's `Tooltip`; when importing both, hide one:
@@ -110,9 +125,9 @@ class Tooltip extends StatefulWidget {
     super.key,
     required this.message,
     required this.child,
-    this.placement = PopoverPlacement.top,
+    this.placement,
     this.trigger = TooltipTrigger.hover,
-    this.arrow = true,
+    this.arrow,
     this.waitDuration = const Duration(milliseconds: 100),
     this.showDuration = const Duration(milliseconds: 1500),
     this.token,
@@ -129,13 +144,13 @@ class Tooltip extends StatefulWidget {
 
   /// Which side of the child the bubble prefers. It flips and shifts to stay
   /// on screen.
-  final PopoverPlacement placement;
+  final PopoverPlacement? placement;
 
   /// What reveals the tooltip. See [TooltipTrigger].
   final TooltipTrigger trigger;
 
   /// Whether to draw a caret pointing at the trigger.
-  final bool arrow;
+  final bool? arrow;
 
   /// How long the pointer must rest before the tooltip appears on hover.
   final Duration waitDuration;
@@ -155,6 +170,17 @@ class Tooltip extends StatefulWidget {
 }
 
 class _SoftTooltipState extends State<Tooltip> {
+  /// The defaults set for this component in the subtree, if any.
+  TooltipDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<TooltipDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  PopoverPlacement get _placement =>
+      widget.placement ?? _defaults?.placement ?? PopoverPlacement.top;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _arrow => widget.arrow ?? _defaults?.arrow ?? true;
+
   final PopoverController _controller = PopoverController();
   Timer? _showTimer;
   Timer? _hideTimer;
@@ -174,14 +200,14 @@ class _SoftTooltipState extends State<Tooltip> {
     if (box == null || !box.hasSize) return;
     _controller.open(
       builder: _buildBubble,
-      placement: widget.placement,
+      placement: _placement,
       anchorRect: box.localToGlobal(Offset.zero) & box.size,
       gap: 8,
       // A tooltip must not intercept pointer events, or hovering it would pull
       // focus off the trigger and the pair would flicker.
       interactive: false,
-      arrowColor: widget.arrow ? context.softToken.colorBgSpotlight : null,
-      arrowShadow: widget.arrow ? context.softToken.boxShadowSecondary : null,
+      arrowColor: _arrow ? context.softToken.colorBgSpotlight : null,
+      arrowShadow: _arrow ? context.softToken.boxShadowSecondary : null,
       anchorContext: context,
       onScrollDismiss: _hide,
     );

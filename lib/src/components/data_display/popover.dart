@@ -93,6 +93,35 @@ class _ResolvedPopoverToken {
   final double maxWidth;
 }
 
+/// Defaults for every [Popover] under a `ConfigProvider`.
+///
+/// House style for popovers: where they sit, what opens them, how they move.
+@immutable
+class PopoverDefaults {
+  /// Creates a [PopoverDefaults].
+  const PopoverDefaults(
+      {this.placement,
+      this.trigger,
+      this.arrow,
+      this.animation,
+      this.dismissOnOutsideTap});
+
+  /// Where popovers sit against their anchor.
+  final PopoverPlacement? placement;
+
+  /// What opens a popover.
+  final PopoverTrigger? trigger;
+
+  /// Whether popovers draw a pointer.
+  final bool? arrow;
+
+  /// How popovers come and go.
+  final PopoverAnimation? animation;
+
+  /// Whether a tap outside closes them.
+  final bool? dismissOnOutsideTap;
+}
+
 /// A floating card with a title and a body.
 ///
 /// Where a [Tooltip] explains in a line of text, a popover holds a card: it can
@@ -116,19 +145,19 @@ class Popover extends StatefulWidget {
     required this.child,
     this.title,
     this.content,
-    this.placement = PopoverPlacement.top,
-    this.trigger = PopoverTrigger.hover,
+    this.placement,
+    this.trigger,
     this.open,
     this.defaultOpen = false,
     this.onOpenChange,
-    this.arrow = true,
-    this.animation = PopoverAnimation.simple,
+    this.arrow,
+    this.animation,
     this.duration,
     this.curve,
     this.color,
     this.mouseEnterDelay = const Duration(milliseconds: 100),
     this.mouseLeaveDelay = const Duration(milliseconds: 100),
-    this.dismissOnOutsideTap = true,
+    this.dismissOnOutsideTap,
     this.token,
   });
 
@@ -143,10 +172,10 @@ class Popover extends StatefulWidget {
 
   /// Which side of the trigger the card prefers. It flips and shifts to stay
   /// on screen.
-  final PopoverPlacement placement;
+  final PopoverPlacement? placement;
 
   /// What opens it.
-  final PopoverTrigger trigger;
+  final PopoverTrigger? trigger;
 
   /// Whether the card is open (controlled). Null lets the popover manage it.
   final bool? open;
@@ -158,7 +187,7 @@ class Popover extends StatefulWidget {
   final ValueChanged<bool>? onOpenChange;
 
   /// Whether a caret points at the trigger.
-  final bool arrow;
+  final bool? arrow;
 
   /// How the card arrives.
   ///
@@ -166,7 +195,7 @@ class Popover extends StatefulWidget {
   /// trigger. [PopoverAnimation.genie] pours it out of the trigger, macOS
   /// style — a showpiece, and it rasterises the card for the length of the
   /// animation, so it is not what a popover that opens on every hover wants.
-  final PopoverAnimation animation;
+  final PopoverAnimation? animation;
 
   /// How long the card takes to arrive, and on what curve.
   ///
@@ -191,7 +220,7 @@ class Popover extends StatefulWidget {
   final Duration mouseLeaveDelay;
 
   /// Whether a tap outside puts it away.
-  final bool dismissOnOutsideTap;
+  final bool? dismissOnOutsideTap;
 
   /// Per-instance token overrides.
   final PopoverToken? token;
@@ -201,6 +230,29 @@ class Popover extends StatefulWidget {
 }
 
 class _PopoverState extends State<Popover> {
+  /// The defaults set for this component in the subtree, if any.
+  PopoverDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<PopoverDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  PopoverPlacement get _placement =>
+      widget.placement ?? _defaults?.placement ?? PopoverPlacement.top;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  PopoverTrigger get _trigger =>
+      widget.trigger ?? _defaults?.trigger ?? PopoverTrigger.hover;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _arrow => widget.arrow ?? _defaults?.arrow ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  PopoverAnimation get _animation =>
+      widget.animation ?? _defaults?.animation ?? PopoverAnimation.simple;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _dismissOnOutsideTap =>
+      widget.dismissOnOutsideTap ?? _defaults?.dismissOnOutsideTap ?? true;
+
   late bool _uncontrolled = widget.defaultOpen;
   Timer? _pending;
 
@@ -210,7 +262,7 @@ class _PopoverState extends State<Popover> {
   bool _onCard = false;
 
   bool get _isOpen => widget.open ?? _uncontrolled;
-  bool get _byHover => widget.trigger == PopoverTrigger.hover;
+  bool get _byHover => _trigger == PopoverTrigger.hover;
 
   @override
   void dispose() {
@@ -271,11 +323,9 @@ class _PopoverState extends State<Popover> {
     } else {
       trigger = GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onTap:
-            widget.trigger == PopoverTrigger.tap ? () => _set(!_isOpen) : null,
-        onLongPress: widget.trigger == PopoverTrigger.longPress
-            ? () => _set(!_isOpen)
-            : null,
+        onTap: _trigger == PopoverTrigger.tap ? () => _set(!_isOpen) : null,
+        onLongPress:
+            _trigger == PopoverTrigger.longPress ? () => _set(!_isOpen) : null,
         child: trigger,
       );
     }
@@ -283,12 +333,12 @@ class _PopoverState extends State<Popover> {
     return PopoverLayer(
       open: _isOpen,
       onOpenChanged: _set,
-      placement: widget.placement,
-      dismissOnOutsideTap: widget.dismissOnOutsideTap,
-      animation: widget.animation,
+      placement: _placement,
+      dismissOnOutsideTap: _dismissOnOutsideTap,
+      animation: _animation,
       duration: widget.duration,
       curve: widget.curve,
-      arrowColor: widget.arrow ? background : null,
+      arrowColor: _arrow ? background : null,
       arrowShadow: t.boxShadowSecondary,
       content: (context) => _card(context, t, r, background),
       child: trigger,

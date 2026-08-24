@@ -74,6 +74,24 @@ class _ResolvedPopconfirmToken {
   final Color? barrierColor;
 }
 
+/// Defaults for every [Popconfirm] under a `ConfigProvider`.
+///
+/// House style for confirmations: where they sit and what they offer.
+@immutable
+class PopconfirmDefaults {
+  /// Creates a [PopconfirmDefaults].
+  const PopconfirmDefaults({this.placement, this.arrow, this.showCancel});
+
+  /// Where the confirmation sits.
+  final PopoverPlacement? placement;
+
+  /// Whether it draws a pointer.
+  final bool? arrow;
+
+  /// Whether a cancel button is offered.
+  final bool? showCancel;
+}
+
 /// A lightweight confirmation bubble anchored to its trigger.
 ///
 /// Use it for a low-stakes yes/no — deleting a single row, discarding a
@@ -103,10 +121,10 @@ class Popconfirm extends StatefulWidget {
     this.onOk,
     this.onCancel,
     this.danger = false,
-    this.placement = PopoverPlacement.top,
-    this.arrow = true,
+    this.placement,
+    this.arrow,
     this.icon,
-    this.showCancel = true,
+    this.showCancel,
     this.disabled = false,
     this.barrierColor,
     this.token,
@@ -145,16 +163,16 @@ class Popconfirm extends StatefulWidget {
   final bool danger;
 
   /// Which side of the trigger the bubble appears on.
-  final PopoverPlacement placement;
+  final PopoverPlacement? placement;
 
   /// Whether to draw a caret pointing at the trigger.
-  final bool arrow;
+  final bool? arrow;
 
   /// Replaces the warning icon. Provide `SizedBox.shrink()` to hide it.
   final Widget? icon;
 
   /// Whether to show the cancel button.
-  final bool showCancel;
+  final bool? showCancel;
 
   /// When true, the trigger behaves normally and never opens the bubble.
   final bool disabled;
@@ -170,6 +188,20 @@ class Popconfirm extends StatefulWidget {
 }
 
 class _SoftPopconfirmState extends State<Popconfirm> {
+  /// The defaults set for this component in the subtree, if any.
+  PopconfirmDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<PopconfirmDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  PopoverPlacement get _placement =>
+      widget.placement ?? _defaults?.placement ?? PopoverPlacement.top;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _arrow => widget.arrow ?? _defaults?.arrow ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _showCancel => widget.showCancel ?? _defaults?.showCancel ?? true;
+
   bool _open = false;
   bool _confirming = false;
 
@@ -203,14 +235,14 @@ class _SoftPopconfirmState extends State<Popconfirm> {
         ._resolve(token);
 
     return PopoverLayer(
-      placement: widget.placement,
+      placement: _placement,
       open: _open,
       onOpenChanged: _setOpen,
       content: _buildBubble,
       // Match the bubble's own surface and shadow so the caret reads as part
       // of it.
-      arrowColor: widget.arrow ? r.colorBgElevated : null,
-      arrowShadow: widget.arrow ? token.boxShadowSecondary : null,
+      arrowColor: _arrow ? r.colorBgElevated : null,
+      arrowShadow: _arrow ? token.boxShadowSecondary : null,
       barrierColor: widget.barrierColor ?? r.barrierColor,
       // A Listener rather than a GestureDetector: the trigger is usually an
       // interactive control (a Button) whose own gesture detector wins the
@@ -291,7 +323,7 @@ class _SoftPopconfirmState extends State<Popconfirm> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              if (widget.showCancel) ...[
+              if (_showCancel) ...[
                 Button(
                   size: SoftSize.small,
                   onPressed: () => _setOpen(false),

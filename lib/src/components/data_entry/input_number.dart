@@ -95,6 +95,24 @@ class _ResolvedInputNumberToken {
   final Color handleBorderColor;
 }
 
+/// Defaults for every [InputNumber] under a `ConfigProvider`.
+///
+/// House style for number fields.
+@immutable
+class InputNumberDefaults {
+  /// Creates a [InputNumberDefaults].
+  const InputNumberDefaults({this.controls, this.keyboard, this.mode});
+
+  /// Whether the stepper is shown.
+  final bool? controls;
+
+  /// Whether the arrow keys step the value.
+  final bool? keyboard;
+
+  /// Which stepper shape is used.
+  final InputNumberMode? mode;
+}
+
 /// A numeric input with stepper buttons.
 ///
 /// ```dart
@@ -122,9 +140,9 @@ class InputNumber extends StatefulWidget {
     this.precision,
     this.disabled,
     this.readOnly = false,
-    this.controls = true,
-    this.mode = InputNumberMode.handles,
-    this.keyboard = true,
+    this.controls,
+    this.mode,
+    this.keyboard,
     this.size,
     this.status,
     this.placeholder,
@@ -168,13 +186,13 @@ class InputNumber extends StatefulWidget {
   final bool readOnly;
 
   /// Shows the up/down stepper buttons.
-  final bool controls;
+  final bool? controls;
 
   /// Handles at the edge, or a minus/plus pair around a centred value.
-  final InputNumberMode mode;
+  final InputNumberMode? mode;
 
   /// Whether ↑/↓ arrow keys step the value.
-  final bool keyboard;
+  final bool? keyboard;
 
   /// Which height preset to use.
   final SoftSize? size;
@@ -208,6 +226,20 @@ class InputNumber extends StatefulWidget {
 }
 
 class _InputNumberState extends State<InputNumber> {
+  /// The defaults set for this component in the subtree, if any.
+  InputNumberDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<InputNumberDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _controls => widget.controls ?? _defaults?.controls ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _keyboard => widget.keyboard ?? _defaults?.keyboard ?? true;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  InputNumberMode get _mode =>
+      widget.mode ?? _defaults?.mode ?? InputNumberMode.handles;
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -328,7 +360,7 @@ class _InputNumberState extends State<InputNumber> {
       (widget.min == null || (_current ?? widget.max ?? 0) > widget.min!);
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
-    if (!widget.keyboard || event is KeyUpEvent) return KeyEventResult.ignored;
+    if (!_keyboard || event is KeyUpEvent) return KeyEventResult.ignored;
     if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
       _step(1);
       return KeyEventResult.handled;
@@ -347,7 +379,7 @@ class _InputNumberState extends State<InputNumber> {
             ConfigProvider.componentOf<InputNumberToken>(context) ??
             const InputNumberToken())
         ._resolve(token);
-    final spinner = widget.controls && widget.mode == InputNumberMode.spinner;
+    final spinner = _controls && _mode == InputNumberMode.spinner;
 
     final field = MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -385,7 +417,7 @@ class _InputNumberState extends State<InputNumber> {
                 trailing: false,
               )
             : widget.prefix,
-        suffixFlush: widget.controls,
+        suffixFlush: _controls,
         suffix: spinner
             ? _StepButton(
                 token: token,
@@ -396,7 +428,7 @@ class _InputNumberState extends State<InputNumber> {
                 onPressed: () => _step(1),
                 trailing: true,
               )
-            : widget.controls
+            : _controls
                 ? _Spinner(
                     token: token,
                     componentToken: r,

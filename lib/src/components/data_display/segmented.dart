@@ -144,6 +144,18 @@ class _ResolvedSegmentedToken {
   final double borderRadiusLG;
 }
 
+/// Defaults for every [Segmented] under a `ConfigProvider`.
+///
+/// House style for segmented controls.
+@immutable
+class SegmentedDefaults {
+  /// Creates a [SegmentedDefaults].
+  const SegmentedDefaults({this.direction});
+
+  /// Which way the segments run.
+  final Axis? direction;
+}
+
 /// A single-select control laid out as a strip of segments, with a thumb that
 /// slides to the chosen one — for switching between a few mutually exclusive
 /// options in place.
@@ -171,7 +183,7 @@ class Segmented<T> extends StatefulWidget {
     required this.options,
     this.onChanged,
     this.size,
-    this.direction = Axis.horizontal,
+    this.direction,
     this.block = false,
     this.disabled,
     this.trackColor,
@@ -193,7 +205,7 @@ class Segmented<T> extends StatefulWidget {
   final SoftSize? size;
 
   /// Whether the segments run in a row or a column.
-  final Axis direction;
+  final Axis? direction;
 
   /// Stretch the segments to fill the available space equally.
   final bool block;
@@ -215,6 +227,14 @@ class Segmented<T> extends StatefulWidget {
 }
 
 class _SoftSegmentedState<T> extends State<Segmented<T>> {
+  /// The defaults set for this component in the subtree, if any.
+  SegmentedDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<SegmentedDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  Axis get _direction =>
+      widget.direction ?? _defaults?.direction ?? Axis.horizontal;
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -231,7 +251,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
   int? _hoveredIndex;
 
   bool get _enabled => !_disabled && widget.onChanged != null;
-  bool get _vertical => widget.direction == Axis.vertical;
+  bool get _vertical => _direction == Axis.vertical;
 
   int get _selectedIndex {
     final i = widget.options.indexWhere((o) => o.value == widget.value);

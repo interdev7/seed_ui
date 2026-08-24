@@ -24,12 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   )
   ```
 
-  The first slice follows antd's own picks: `Button` (`variant`, `color`,
-  `shape`), `Input` (`allowClear`), `Select` (`variant`, `allowClear`,
-  `showSearch`), `Tag` (`variant`, `closable`) and `Empty` (`image`). A
-  widget's own prop always wins, and the sets merge slot by slot through
+  It covers **30 components and 83 props** — every prop that is a house-style
+  decision rather than the state of one instance. `Alert.showIcon` is house
+  style; `Alert.type`, success or error, is about that one message and stays
+  where it is, as do `loading`, `dragging` and `indeterminate`.
+
+  A widget's own prop always wins, and the sets merge slot by slot through
   nested providers. `ConfigProvider.defaultsOf<T>` reads them for a widget of
-  your own.
+  your own. The full table is in [doc/theming.md](doc/theming.md).
 
 - **The gallery shows its version** beside the logo, generated from
   `pubspec.yaml` by `tool/sync_version.sh` and guarded by
@@ -63,10 +65,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   final off = button.disabled ?? false;
   ```
 
-  The same applies to the props that now follow `ConfigProvider.defaults`:
-  `Button.variant`, `Button.color`, `Button.shape`, `Input.allowClear`,
-  `Select.variant`, `Select.allowClear`, `Select.showSearch`, `Tag.variant`,
-  `Tag.closable` and `Empty.image`.
+  The same applies to the 83 props that now follow `ConfigProvider.defaults`;
+  the table in [doc/theming.md](doc/theming.md) lists them. Passing a value is
+  unaffected — only reading one back off a widget instance sees the change.
 
   `size` changed on `Avatar`, `AvatarGroup`, `Badge`, `Button`, `Card`,
   `Collapse`, `Input`, `InputNumber`, `Pagination`, `RadioGroup`, `Segmented`,

@@ -156,6 +156,24 @@ class CardTab {
   final bool disabled;
 }
 
+/// Defaults for every [Card] under a `ConfigProvider`.
+///
+/// House style for cards.
+@immutable
+class CardDefaults {
+  /// Creates a [CardDefaults].
+  const CardDefaults({this.hoverable, this.variant, this.type});
+
+  /// Whether cards lift under the pointer.
+  final bool? hoverable;
+
+  /// How cards are bordered.
+  final CardVariant? variant;
+
+  /// Whether cards nest inside another.
+  final CardType? type;
+}
+
 /// A content container.
 ///
 /// ```dart
@@ -180,10 +198,10 @@ class Card extends StatefulWidget {
     this.child,
     this.cover,
     this.actions,
-    this.hoverable = false,
+    this.hoverable,
     this.loading = false,
-    this.variant = CardVariant.outlined,
-    this.type = CardType.outer,
+    this.variant,
+    this.type,
     this.size,
     this.tabList,
     this.activeTabKey,
@@ -213,16 +231,16 @@ class Card extends StatefulWidget {
   final List<Widget>? actions;
 
   /// Lifts the card with a shadow while the pointer is over it.
-  final bool hoverable;
+  final bool? hoverable;
 
   /// Replaces the body with a shimmering placeholder.
   final bool loading;
 
   /// Whether the card draws a border.
-  final CardVariant variant;
+  final CardVariant? variant;
 
   /// Standalone or nested-inner style.
-  final CardType type;
+  final CardType? type;
 
   /// `small` tightens the header and body padding; `middle`/`large` are the
   /// default size.
@@ -251,6 +269,20 @@ class Card extends StatefulWidget {
 }
 
 class _CardState extends State<Card> {
+  /// The defaults set for this component in the subtree, if any.
+  CardDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<CardDefaults>(context);
+
+  /// This widget's word, then the subtree's, then the kit's.
+  bool get _hoverable => widget.hoverable ?? _defaults?.hoverable ?? false;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  CardVariant get _variant =>
+      widget.variant ?? _defaults?.variant ?? CardVariant.outlined;
+
+  /// This widget's word, then the subtree's, then the kit's.
+  CardType get _type => widget.type ?? _defaults?.type ?? CardType.outer;
+
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
@@ -290,7 +322,7 @@ class _CardState extends State<Card> {
       children.add(_buildActions(t, r));
     }
 
-    final elevated = widget.hoverable && _hover;
+    final elevated = _hoverable && _hover;
     Widget card = AnimatedContainer(
       duration: t.motionDurationMid,
       curve: t.motionEaseInOut,
@@ -298,10 +330,9 @@ class _CardState extends State<Card> {
         color: widget.gradient == null ? t.colorBgContainer : null,
         gradient: widget.gradient,
         borderRadius: radius,
-        border:
-            widget.variant == CardVariant.outlined && widget.gradient == null
-                ? Border.all(color: t.colorBorderSecondary, width: t.lineWidth)
-                : null,
+        border: _variant == CardVariant.outlined && widget.gradient == null
+            ? Border.all(color: t.colorBorderSecondary, width: t.lineWidth)
+            : null,
         boxShadow: elevated ? t.boxShadow : null,
       ),
       child: ClipRRect(
@@ -314,7 +345,7 @@ class _CardState extends State<Card> {
       ),
     );
 
-    if (widget.hoverable) {
+    if (_hoverable) {
       card = MouseRegion(
         cursor: SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hover = true),
@@ -326,7 +357,7 @@ class _CardState extends State<Card> {
   }
 
   Widget _buildHeader(Token t, _ResolvedCardToken r) {
-    final inner = widget.type == CardType.inner;
+    final inner = _type == CardType.inner;
     final pad = _small ? r.headerPaddingSM : r.headerPadding;
     final minH = _small ? r.headerHeightSM : r.headerHeight;
     final fontSize = _small ? r.headerFontSizeSM : r.headerFontSize;

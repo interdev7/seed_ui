@@ -144,6 +144,19 @@ class _GroupContext extends InheritedWidget {
       border != oldWidget.border;
 }
 
+/// Defaults for every [Avatar] under a `ConfigProvider`.
+///
+/// House style for avatars. An enclosing [AvatarGroup] is nearer than the
+/// provider and still outranks it.
+@immutable
+class AvatarDefaults {
+  /// Creates an [AvatarDefaults].
+  const AvatarDefaults({this.shape});
+
+  /// The shape avatars take.
+  final AvatarShape? shape;
+}
+
 /// A component for representing users or objects.
 class Avatar extends StatelessWidget {
   /// Creates an [Avatar].
@@ -151,7 +164,7 @@ class Avatar extends StatelessWidget {
     super.key,
     this.size,
     this.customSize,
-    this.shape = AvatarShape.circle,
+    this.shape,
     this.image,
     this.icon,
     this.child,
@@ -174,7 +187,7 @@ class Avatar extends StatelessWidget {
   final double? customSize;
 
   /// The shape of the avatar.
-  final AvatarShape shape;
+  final AvatarShape? shape;
 
   /// An image to display.
   final ImageProvider? image;
@@ -224,7 +237,12 @@ class Avatar extends StatelessWidget {
         size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
-    final resolvedShape = group?.shape ?? shape;
+    // Same order as the size above: the enclosing group first, then this
+    // avatar, then the subtree, then the kit's own default.
+    final resolvedShape = group?.shape ??
+        shape ??
+        ConfigProvider.defaultsOf<AvatarDefaults>(context)?.shape ??
+        AvatarShape.circle;
 
     final dimension = customSize ??
         switch (resolvedSize) {

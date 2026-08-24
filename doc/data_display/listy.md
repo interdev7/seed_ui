@@ -34,6 +34,7 @@ when it needs grouped sections. For a short list of drag-to-reorder rows use
 | `items`             | `List<T>`                                | required | The data source                                    |
 | `itemRender`        | `Widget Function(T item, int index)`     | required | Builds a single row                                |
 | `separatorRender`   | `Widget Function(T item, int index)?`    | `null`   | What goes between two rows; null keeps the hairline |
+| `emptyContent`      | `Widget?`                                | `null`   | Shown in place of the rows when there are none      |
 | `rowKey`            | `R Function(T item)?`                    | `null`   | Item identity, needed by `ListyScrollTo.item`      |
 | `groupKey`          | `K Function(T item)?`                    | `null`   | The section an item belongs to                     |
 | `groupTitle`        | `Widget Function(K key, List<T> items)?` | `null`   | Builds a section header; null prints the key       |
@@ -319,6 +320,35 @@ hover tint stops at the row and does not wash over it.
 The item and its index come through, so the separator can vary — a heavier rule
 before every tenth row, a date between two messages. Per-row *content*, though,
 still belongs in `itemRender`.
+
+## When there is nothing
+
+A list with no rows shows a placeholder instead of an empty scroll area:
+`emptyContent` if you gave one, otherwise whatever the `ConfigProvider`'s
+`emptyBuilder` returns for `EmptySlot.listy`, otherwise the kit's
+[Empty](empty.md).
+
+```dart
+Listy(
+  items: results,
+  itemRender: (item, index) => ResultRow(item),
+  emptyContent: const Empty(description: Text('No results')),
+)
+```
+
+Two things it deliberately does not do.
+
+**A list still fetching its first page is not empty.** While
+`loadMore.loading` is true, or while `hasMore` says another page is coming, no
+placeholder appears — "No data" flashing up a moment before the rows arrive is
+worse than a blank.
+
+**The end marker stands down.** `loadMore.endIndicator` (or its default "No
+more items") is suppressed while the placeholder is up, so an empty list does
+not say the same thing twice.
+
+The header stays put either way. Pull to refresh has to work on a list that
+came back with nothing — which is exactly when it is wanted.
 
 ## Restyling the surfaces
 

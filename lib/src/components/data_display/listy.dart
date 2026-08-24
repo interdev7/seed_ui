@@ -361,6 +361,7 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
     required this.items,
     required this.itemRender,
     this.separatorRender,
+    this.emptyContent,
     this.rowKey,
     this.groupKey,
     this.groupTitle,
@@ -406,6 +407,17 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
   /// For a plain hairline in another colour or thickness, `ListyStyles.item`
   /// is the shorter road; reach for this when a decoration will not do.
   final Widget Function(T item, int index)? separatorRender;
+
+  /// Shown in place of the rows when there are none.
+  ///
+  /// Null asks the [ConfigProvider] through [EmptySlot.listy], which falls back
+  /// to the kit's [Empty]. A list still fetching its first page is not empty,
+  /// so nothing is shown while [ListyLoadMore.loading] is true or more pages
+  /// are still expected.
+  ///
+  /// The header stays put either way — pull to refresh has to work on a list
+  /// that came back with nothing, which is exactly when it is needed.
+  final Widget? emptyContent;
 
   /// Identity of an item, needed by [ListyScrollTo.item].
   ///
@@ -953,6 +965,16 @@ class _ListyState<T, K extends Object, R extends Object>
         : SizedBox(height: widget.height, child: list);
   }
 
+  /// Whether the list has nothing to show and nothing on the way.
+  ///
+  /// A first page still in flight is not the same as having no rows, so a list
+  /// that is loading — or that expects more — says nothing yet.
+  bool get _showsEmpty {
+    if (_slots.isNotEmpty) return false;
+    final more = widget.loadMore;
+    return more == null || (!more.loading && !more.hasMore);
+  }
+
   /// A short list still has to be draggable, or there would be no pull to
   /// answer to.
   ScrollPhysics? get _physics =>
@@ -968,6 +990,20 @@ class _ListyState<T, K extends Object, R extends Object>
       );
 
   Widget _buildScrollView(Token t, _ResolvedListyToken r) {
+    if (_showsEmpty) {
+      // Through the assembler rather than on its own, so the header — and the
+      // pull that goes with it — survives an empty result.
+      return _assemble(t, r, [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: widget.emptyContent ??
+                ConfigProvider.emptyFor(context, EmptySlot.listy),
+          ),
+        ),
+      ]);
+    }
+
     // Sticky headers need one sliver group per section; everything else is a
     // single lazy list over the flattened order.
     if (widget.header == null && (widget.groupKey == null || !widget.sticky)) {
@@ -1077,6 +1113,8 @@ class _ListyState<T, K extends Object, R extends Object>
   Widget? _footer(Token t, _ResolvedListyToken r) {
     final config = widget.loadMore;
     if (config == null) return null;
+    // "No data" and "No more items" one under the other says it twice.
+    if (_showsEmpty) return null;
 
     // A supplied footer is rendered exactly as given — no padding or centring
     // of ours to fight. Only the built-in ones get the house treatment.

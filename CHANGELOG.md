@@ -7,7 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.7.0
 
+### Added
+
+- **`Listy` shows a placeholder when it has no rows**, instead of an empty
+  scroll area — `emptyContent` if you name one, otherwise the app's
+  `emptyBuilder`, otherwise `Empty`. A list still fetching its first page is not
+  empty: nothing appears while `loadMore.loading` is true or another page is
+  expected. The end marker stands down while the placeholder is up, so an empty
+  list does not say the same thing twice, and the header stays put, because
+  pull to refresh is wanted exactly when nothing came back.
+
 ### Changed
+
+- **`ConfigProvider.renderEmpty` is now `emptyBuilder`, and it is told which
+  component is asking.** The old name said how the thing was called rather than
+  what it makes, and the callback took only a context — so a single app-wide
+  builder had no way to tell a dropdown from a page-sized list and had to hand
+  both the same placeholder. It now takes an `EmptySlot` alongside the context.
+  `Select` asks with `EmptySlot.select`, `Listy` with `EmptySlot.listy`.
+
+  ```dart
+  // before
+  renderEmpty: (context) => const Text('Nothing'),
+  // after
+  emptyBuilder: (context, slot) => const Text('Nothing'),
+  ```
+
+  Until now `renderEmpty` was consulted by exactly one component in the whole
+  kit.
+
+  The accessor moved with it: `ConfigProvider.renderEmptyOf` is now
+  `ConfigProvider.emptyBuilderOf`. Components should reach for
+  `ConfigProvider.emptyFor(context, slot)` instead — it falls back to the kit's
+  `Empty` rather than handing back a null to deal with.
 
 - **Nested `ConfigProvider`s now inherit.** A provider inside another one used
   to hand down its own theme whole, so one placed to say a single thing —
@@ -18,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the colours stay, say only a seed and the brightness stays, say only
   `dark:` and the palette it is flipped on stays. `ThemeData.raw` is still taken
   as final.
-- `renderEmpty` and the `locale` are inherited the same way. Both used to be
+- `emptyBuilder` and the `locale` are inherited the same way. Both used to be
   read from the nearest provider alone, so any provider between them and the
   widget — one carrying nothing but a theme — erased them.
 - Each provider now merges once, when it builds, instead of every reader
@@ -45,9 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   )
   ```
 
-- `ConfigProvider` is a `StatefulWidget` rather than an `InheritedWidget`. Its
-  statics (`of`, `componentOf`, `renderEmptyOf`) and `context.softToken` are
-  unchanged; only a direct
+- `ConfigProvider` is a `StatefulWidget` rather than an `InheritedWidget`.
+  `of`, `componentOf` and `context.softToken` are unchanged; only a direct
   `dependOnInheritedWidgetOfExactType<ConfigProvider>()` would notice.
 
 ## 0.6.12

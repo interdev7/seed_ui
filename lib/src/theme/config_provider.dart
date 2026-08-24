@@ -1,11 +1,29 @@
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:flutter/widgets.dart';
 
+import '../components/data_display/empty.dart';
 import '../l10n/seed_localizations.dart';
 import 'components_config.dart';
 import 'design_token.dart';
 
 export 'components_config.dart';
+
+/// Which component is asking for the "no data" placeholder.
+///
+/// Handed to [ConfigProvider.emptyBuilder] so one builder can answer for the
+/// whole app and still tell a dropdown apart from a page-sized list — the two
+/// want very different placeholders, and without the slot a global builder has
+/// to give them the same one.
+enum EmptySlot {
+  /// A [Select] whose dropdown has no options left to show.
+  select,
+
+  /// A [Listy] with no rows.
+  listy,
+}
+
+/// Builds the "no data" placeholder for [slot].
+typedef EmptyBuilder = Widget Function(BuildContext context, EmptySlot slot);
 
 /// A resolved theme for the kit.
 ///
@@ -120,10 +138,10 @@ class ThemeData {
 /// inheriting from the provider above.
 @immutable
 class _Config {
-  const _Config({required this.theme, this.renderEmpty, this.locale});
+  const _Config({required this.theme, this.emptyBuilder, this.locale});
 
   final ThemeData theme;
-  final WidgetBuilder? renderEmpty;
+  final EmptyBuilder? emptyBuilder;
   final SeedLocalizations? locale;
 }
 
@@ -169,7 +187,7 @@ class ConfigProvider extends StatefulWidget {
   const ConfigProvider({
     super.key,
     this.theme,
-    this.renderEmpty,
+    this.emptyBuilder,
     this.systemOverlayStyle = true,
     this.locale,
     required this.child,
@@ -178,10 +196,21 @@ class ConfigProvider extends StatefulWidget {
   /// The theme for this subtree. Null inherits the one above unchanged.
   final ThemeData? theme;
 
-  /// Global default for the "no data" placeholder. Null inherits the one
-  /// above; a per-component override (such as a `Select`'s `notFoundContent`)
-  /// still wins over both.
-  final WidgetBuilder? renderEmpty;
+  /// Global default for the "no data" placeholder.
+  ///
+  /// Called with the [EmptySlot] that wants one, so a single builder can serve
+  /// the whole app and still answer differently for a dropdown and a list:
+  ///
+  /// ```dart
+  /// emptyBuilder: (context, slot) => switch (slot) {
+  ///   EmptySlot.select => const Text('Nothing matches'),
+  ///   EmptySlot.listy => const Empty(description: Text('No records yet')),
+  /// },
+  /// ```
+  ///
+  /// Null inherits the one above; a per-component override (a [Select]'s
+  /// `notFoundContent`, a [Listy]'s `emptyContent`) still wins over both.
+  final EmptyBuilder? emptyBuilder;
 
   /// Whether this provider states a status-bar style matching its theme.
   ///
@@ -218,8 +247,18 @@ class ConfigProvider extends StatefulWidget {
   static ThemeData of(BuildContext context) => _configOf(context).theme;
 
   /// The nearest configured empty-state builder, or null when none is set.
-  static WidgetBuilder? renderEmptyOf(BuildContext context) =>
-      _configOf(context).renderEmpty;
+  ///
+  /// Most callers want [emptyFor], which falls back to the kit's own
+  /// placeholder rather than handing back a null to deal with.
+  static EmptyBuilder? emptyBuilderOf(BuildContext context) =>
+      _configOf(context).emptyBuilder;
+
+  /// The placeholder [slot] should show when it has nothing.
+  ///
+  /// The configured [emptyBuilder] if there is one, and the kit's [Empty]
+  /// otherwise — so a component never has to spell out that fallback itself.
+  static Widget emptyFor(BuildContext context, EmptySlot slot) =>
+      emptyBuilderOf(context)?.call(context, slot) ?? const Empty();
 
   /// The component token of type [T] in scope, or null when none is set.
   ///
@@ -265,7 +304,7 @@ class _ConfigProviderState extends State<ConfigProvider> {
   void didUpdateWidget(ConfigProvider old) {
     super.didUpdateWidget(old);
     if (!identical(old.theme, widget.theme) ||
-        old.renderEmpty != widget.renderEmpty ||
+        old.emptyBuilder != widget.emptyBuilder ||
         old.locale != widget.locale) {
       _resolve();
     }
@@ -278,7 +317,7 @@ class _ConfigProviderState extends State<ConfigProvider> {
       theme: theme == null
           ? (parent?.theme ?? ConfigProvider._fallback.theme)
           : (parent == null ? theme : theme._inherit(parent.theme)),
-      renderEmpty: widget.renderEmpty ?? parent?.renderEmpty,
+      emptyBuilder: widget.emptyBuilder ?? parent?.emptyBuilder,
       locale: widget.locale ?? parent?.locale,
     );
   }

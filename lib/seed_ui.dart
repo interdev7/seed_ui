@@ -226,7 +226,13 @@ export 'src/icons/icons.dart'
         UserIcon;
 export 'src/l10n/seed_localizations.dart' show SeedLocalizations;
 export 'src/theme/config_provider.dart'
-    show ConfigProvider, ComponentsConfig, ThemeContext, ThemeData;
+    show
+        ConfigProvider,
+        ComponentsConfig,
+        EmptyBuilder,
+        EmptySlot,
+        ThemeContext,
+        ThemeData;
 export 'src/theme/design_token.dart'
     show
         ColorGroup,

@@ -26,25 +26,47 @@ Pass `imageWidget` for a fully custom illustration.
 
 ## As the default "no data" state
 
-`Empty` is what the kit falls back to for empty states such as a
-[Select](../data_entry/select.md) with no matching options. There are two override points,
-as follows:
+`Empty` is what the kit falls back to wherever a component has nothing to show:
+a [Select](../data_entry/select.md) with no matching options, a
+[Listy](listy.md) with no rows. There are two override points.
 
-- **Globally** — set `ConfigProvider.renderEmpty`, a `WidgetBuilder` used
-  wherever a component would otherwise show its default empty state:
+- **Globally** — set `ConfigProvider.emptyBuilder`. It is called with the
+  `EmptySlot` that is asking, so one builder serves the whole app and can still
+  tell a dropdown apart from a page-sized list:
 
   ```dart
   ConfigProvider(
-    renderEmpty: (context) => const Empty(description: Text('Nothing here')),
+    emptyBuilder: (context, slot) => switch (slot) {
+      EmptySlot.select => const Text('Nothing matches'),
+      EmptySlot.listy => const Empty(description: Text('No records yet')),
+    },
     child: MaterialApp(...),
   )
   ```
 
-- **Per component** — a component's own override (for example a `Select`'s
-  `notFoundContent`) always wins over the global `renderEmpty`.
+  Ignore the slot and every empty state gets the same placeholder:
 
-The resolution order is: the component's own override → `renderEmpty` →
+  ```dart
+  emptyBuilder: (context, slot) => const Empty(
+    description: Text('Nothing here'),
+  ),
+  ```
+
+- **Per component** — a component's own override always wins over the global
+  builder: a `Select`'s `notFoundContent`, a `Listy`'s `emptyContent`.
+
+The resolution order is: the component's own override → `emptyBuilder` →
 a default `Empty`.
+
+### The slots
+
+| Slot | Asked by |
+| --- | --- |
+| `EmptySlot.select` | a [Select](../data_entry/select.md) whose dropdown has no options left |
+| `EmptySlot.listy` | a [Listy](listy.md) with no rows |
+
+The enum grows as components gain empty states; a slot is only listed once
+something actually asks with it.
 
 ## Illustration
 

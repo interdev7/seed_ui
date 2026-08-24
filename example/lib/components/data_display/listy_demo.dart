@@ -195,6 +195,40 @@ class _ListyDemoState extends State<ListyDemo> {
           ),
         ),
 
+        // Nothing to show: the placeholder the list falls back to, and the
+        // one it is given. A ConfigProvider's emptyBuilder would sit between
+        // the two, answering for EmptySlot.listy.
+        Group(
+          'When there is nothing',
+          Row(
+            children: [
+              Expanded(
+                child: framed(
+                  Listy<String, String, String>(
+                    height: 180,
+                    items: const [],
+                    itemRender: (item, index) => Text(item),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: framed(
+                  Listy<String, String, String>(
+                    height: 180,
+                    items: const [],
+                    itemRender: (item, index) => Text(item),
+                    emptyContent: const Empty(
+                      image: EmptyImage.simple,
+                      description: Text('No contacts yet'),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
         Group(
           'Grouping with sticky headers',
           framed(

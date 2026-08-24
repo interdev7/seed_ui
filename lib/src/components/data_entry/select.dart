@@ -6,7 +6,6 @@ import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/popover.dart';
-import '../data_display/empty.dart' show Empty;
 import '../navigation/dropdown.dart' show DropdownPanel;
 
 /// How a [Select] behaves: pick one value, several, or freely create new ones.
@@ -1218,11 +1217,11 @@ class _Dropdown<T> extends StatelessWidget {
         ),
       );
     } else if (options.isEmpty && !showCreate) {
-      // notFoundContent wins; else the app-wide renderEmpty; else a default
-      // Empty. heightFactor keeps the panel from filling the viewport.
+      // notFoundContent wins; else the app-wide emptyBuilder for this slot,
+      // which falls back to a default Empty. heightFactor keeps the panel from
+      // filling the viewport.
       final empty = state.widget.notFoundContent ??
-          ConfigProvider.renderEmptyOf(context)?.call(context) ??
-          const Empty();
+          ConfigProvider.emptyFor(context, EmptySlot.select);
       body = Align(heightFactor: 1, child: empty);
     } else {
       body = ConstrainedBox(

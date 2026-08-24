@@ -130,7 +130,7 @@ multiple/tags modes.
 | --- | --- |
 | `listHeight` | Max dropdown height before scrolling (default 256) |
 | `popupMatchSelectWidth` | Match the trigger's width (default true); otherwise sizes to content, never narrower than the trigger |
-| `notFoundContent` | Shown when no option matches; defaults to [Empty](../data_display/empty.md) (or the app-wide `ConfigProvider.renderEmpty`). In `tags` mode a typed query instead offers a "Create" row |
+| `notFoundContent` | Shown when no option matches; defaults to [Empty](../data_display/empty.md) (or the app-wide `ConfigProvider.emptyBuilder`). In `tags` mode a typed query instead offers a "Create" row |
 | `open` / `onOpenChange` | Drive dropdown visibility externally |
 
 ## Customisation

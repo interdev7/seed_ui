@@ -413,7 +413,7 @@ What a nested theme inherits depends on what it states:
 | `ThemeData.raw(...)` | nothing; the token is taken as final |
 
 Component tokens merge slot by slot, the nearer provider winning where the two
-name the same component. `renderEmpty` and `locale` are inherited the same way:
+name the same component. `emptyBuilder` and `locale` are inherited the same way:
 the nearest provider that states one wins, and a provider silent about it
 passes down whatever it inherited.
 

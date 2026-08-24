@@ -61,7 +61,7 @@ class _ResolvedEmptyToken {
 ///
 /// It is the default content the kit shows for "no data" states (for example a
 /// [Select] with no matching options). Override that globally with
-/// [ConfigProvider]'s `renderEmpty`, or per component with its own
+/// [ConfigProvider]'s `emptyBuilder`, or per component with its own
 /// `notFoundContent`.
 ///
 /// ```dart

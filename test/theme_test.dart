@@ -508,17 +508,17 @@ void main() {
       expect(tokens.$2, 30);
     });
 
-    testWidgets('renderEmpty carries through a provider silent about it',
+    testWidgets('emptyBuilder carries through a provider silent about it',
         (tester) async {
-      late WidgetBuilder? seen;
+      late EmptyBuilder? seen;
       await tester.pumpWidget(
         ConfigProvider(
-          renderEmpty: (context) => const Text('nothing here'),
+          emptyBuilder: (context, slot) => const Text('nothing here'),
           child: ConfigProvider(
             theme: ThemeData(),
             child: Builder(
               builder: (context) {
-                seen = ConfigProvider.renderEmptyOf(context);
+                seen = ConfigProvider.emptyBuilderOf(context);
                 return const SizedBox();
               },
             ),

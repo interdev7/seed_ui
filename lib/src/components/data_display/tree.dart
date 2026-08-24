@@ -239,7 +239,7 @@ class Tree extends StatefulWidget {
     this.showLine = false,
     this.showLeafIcon = true,
     this.showIcon = false,
-    this.disabled = false,
+    this.disabled,
     this.loadData,
     this.checkedKeys,
     this.defaultCheckedKeys,
@@ -289,7 +289,7 @@ class Tree extends StatefulWidget {
   final bool showIcon;
 
   /// Disables the whole tree.
-  final bool disabled;
+  final bool? disabled;
 
   /// Lazily loads a node's children the first time it expands. Return a future
   /// that completes once the parent has updated [nodes] with the children.
@@ -360,6 +360,11 @@ class Tree extends StatefulWidget {
 }
 
 class _TreeState extends State<Tree> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
   late final KeyedSet _expanded;
   late final KeyedSet _selected = KeyedSet(widget.defaultSelectedKeys);
   late final KeyedSet _checked = KeyedSet(widget.defaultCheckedKeys);
@@ -434,7 +439,7 @@ class _TreeState extends State<Tree> {
       (n.checkable ?? true) &&
       !n.disableCheckbox &&
       !n.disabled &&
-      !widget.disabled;
+      !_disabled;
 
   // --- expansion ---
 
@@ -554,9 +559,7 @@ class _TreeState extends State<Tree> {
   // --- selection ---
 
   void _select(TreeNode node) {
-    if (widget.disabled ||
-        node.disabled ||
-        !(node.selectable ?? widget.selectable)) {
+    if (_disabled || node.disabled || !(node.selectable ?? widget.selectable)) {
       return;
     }
     final cur = _selected.effective(widget.selectedKeys);
@@ -726,13 +729,13 @@ class _TreeState extends State<Tree> {
       // `checkable: false` hides it. Disabled nodes are excluded from the
       // cascade separately, via [_checkableNode].
       checkable: widget.checkable && (node.checkable ?? true),
-      selectable: !widget.disabled &&
+      selectable: !_disabled &&
           !node.disabled &&
           (node.selectable ?? widget.selectable),
       selected: selected.contains(node.key),
       checked: checked.contains(node.key),
       halfChecked: half.contains(node.key),
-      disabled: widget.disabled || node.disabled,
+      disabled: _disabled || node.disabled,
       switcherIcon: node.switcherIcon ??
           (widget.switcherIcon == null
               ? null
@@ -740,7 +743,7 @@ class _TreeState extends State<Tree> {
       onExpand: () => _toggleExpand(node.key),
       onSelect: () => _select(node),
       onCheck: (v) => _check(node, v),
-      draggable: widget.draggable && !widget.disabled && !node.disabled,
+      draggable: widget.draggable && !_disabled && !node.disabled,
       dragging: _dragKey == node.key,
       dropIndicator: _dropKey == node.key ? _dropPos : null,
       onDragStart: () => _startDrag(node.key),

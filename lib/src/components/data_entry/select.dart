@@ -214,14 +214,14 @@ class Select<T> extends StatefulWidget {
     required this.options,
     this.mode = SelectMode.single,
     this.placeholder,
-    this.disabled = false,
+    this.disabled,
     this.loading = false,
     this.allowClear = false,
     this.showSearch = false,
     this.search,
     this.filterOption,
     this.onSearch,
-    this.size = SoftSize.middle,
+    this.size,
     this.status,
     this.variant = SelectVariant.outlined,
     this.open,
@@ -262,7 +262,7 @@ class Select<T> extends StatefulWidget {
   final String? placeholder;
 
   /// Greys the field out and blocks interaction.
-  final bool disabled;
+  final bool? disabled;
 
   /// Shows a spinner in place of the arrow and a loading row in the dropdown.
   final bool loading;
@@ -285,7 +285,7 @@ class Select<T> extends StatefulWidget {
   final ValueChanged<String>? onSearch;
 
   /// Which height preset to use.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// A validation status that recolours the border.
   final SelectStatus? status;
@@ -339,6 +339,16 @@ class Select<T> extends StatefulWidget {
 }
 
 class _SelectState<T> extends State<Select<T>> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  SoftSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   final PopoverController _popover = PopoverController();
   final TextEditingController _searchCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
@@ -359,7 +369,7 @@ class _SelectState<T> extends State<Select<T>> {
   int _highlight = -1;
 
   bool get _multi => widget.mode != SelectMode.single;
-  bool get _enabled => !widget.disabled;
+  bool get _enabled => !_disabled;
 
   @override
   void initState() {
@@ -664,14 +674,14 @@ class _SelectState<T> extends State<Select<T>> {
 
   // --- sizing ---
 
-  double _height(Token t) => switch (widget.size) {
+  double _height(Token t) => switch (_size) {
         SoftSize.small => t.controlHeightSM,
         SoftSize.middle => t.controlHeight,
         SoftSize.large => t.controlHeightLG,
       };
 
   double _fontSize(Token t) =>
-      widget.size == SoftSize.large ? t.fontSizeLG : t.fontSize;
+      _size == SoftSize.large ? t.fontSizeLG : t.fontSize;
 
   Color _borderColor(Token t) {
     if (!_enabled) return t.colorBorder;

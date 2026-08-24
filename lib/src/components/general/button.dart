@@ -187,12 +187,12 @@ class Button extends StatefulWidget {
     this.onPressed,
     this.variant = ButtonVariant.outlined,
     this.color = ButtonColor.defaultColor,
-    this.size = SoftSize.middle,
+    this.size,
     this.shape = ButtonShape.defaultShape,
     this.icon,
     this.loading = false,
     this.block = false,
-    this.disabled = false,
+    this.disabled,
     this.gradient,
     this.token,
   });
@@ -213,7 +213,7 @@ class Button extends StatefulWidget {
   final ButtonColor color;
 
   /// Which control height to use.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// The outline shape. Use [ButtonShape.circle] for icon-only buttons.
   final ButtonShape shape;
@@ -228,12 +228,10 @@ class Button extends StatefulWidget {
   final bool block;
 
   /// Greys the button out and blocks taps.
-  final bool disabled;
+  final bool? disabled;
 
   /// Per-instance token overrides.
   final ButtonToken? token;
-
-  bool get _enabled => !disabled && !loading && onPressed != null;
 
   bool get _iconOnly => child == null && (icon != null || loading);
 
@@ -242,16 +240,30 @@ class Button extends StatefulWidget {
 }
 
 class _SoftButtonState extends State<Button> {
+  /// Whether this button is disabled: its own word, else the one set for the
+  /// subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
+  /// Whether the button answers to a press at all.
+  bool get _enabled =>
+      !_disabled && !widget.loading && widget.onPressed != null;
+
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  SoftSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   bool _hovered = false;
   bool _pressed = false;
 
-  double _height(_ResolvedButtonToken r) => switch (widget.size) {
+  double _height(_ResolvedButtonToken r) => switch (_size) {
         SoftSize.small => r.controlHeightSM,
         SoftSize.middle => r.controlHeight,
         SoftSize.large => r.controlHeightLG,
       };
 
-  double _fontSize(_ResolvedButtonToken r) => switch (widget.size) {
+  double _fontSize(_ResolvedButtonToken r) => switch (_size) {
         SoftSize.small => r.fontSizeSM,
         SoftSize.middle => r.fontSize,
         SoftSize.large => r.fontSizeLG,
@@ -262,7 +274,7 @@ class _SoftButtonState extends State<Button> {
         ButtonShape.round =>
           BorderRadius.circular(_height(r) / 2),
         ButtonShape.defaultShape => BorderRadius.circular(
-            switch (widget.size) {
+            switch (_size) {
               SoftSize.small => r.borderRadiusSM,
               SoftSize.middle => r.borderRadius,
               SoftSize.large => r.borderRadiusLG,
@@ -292,7 +304,7 @@ class _SoftButtonState extends State<Button> {
     final g = _group(token);
     final active = _hovered || _pressed;
 
-    if (!widget._enabled) {
+    if (!_enabled) {
       final flat = widget.variant == ButtonVariant.text ||
           widget.variant == ButtonVariant.link;
       final noBorder = flat ||
@@ -420,7 +432,7 @@ class _SoftButtonState extends State<Button> {
 
     final horizontalPadding = widget._iconOnly
         ? 0.0
-        : switch (widget.size) {
+        : switch (_size) {
             SoftSize.small => r.paddingInlineSM,
             SoftSize.middle => r.paddingInline,
             SoftSize.large => r.paddingInlineLG,
@@ -462,20 +474,16 @@ class _SoftButtonState extends State<Button> {
     }
 
     return MouseRegion(
-      cursor: widget._enabled
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.forbidden,
+      cursor:
+          _enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTapDown:
-            widget._enabled ? (_) => setState(() => _pressed = true) : null,
-        onTapUp:
-            widget._enabled ? (_) => setState(() => _pressed = false) : null,
-        onTapCancel:
-            widget._enabled ? () => setState(() => _pressed = false) : null,
-        onTap: widget._enabled ? widget.onPressed : null,
+        onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
+        onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
+        onTapCancel: _enabled ? () => setState(() => _pressed = false) : null,
+        onTap: _enabled ? widget.onPressed : null,
         child: widget.block
             ? SizedBox(width: double.infinity, child: button)
             : button,

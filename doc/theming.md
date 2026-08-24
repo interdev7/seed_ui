@@ -429,3 +429,50 @@ ConfigProvider(
   ),
 )
 ```
+
+### One size, one switch, for a whole subtree
+
+Two settings on `ConfigProvider` are defaults for the widgets under it rather
+than colours: `componentSize` and `componentDisabled`.
+
+```dart
+ConfigProvider(
+  componentSize: SoftSize.small,   // a dense screen
+  componentDisabled: saving,       // the form is read-only while it saves
+  child: ...,
+)
+```
+
+`componentSize` is the size every component takes when it does not name its
+own — buttons, inputs, selects, tabs, avatars, the lot. `componentDisabled` is
+the same idea for controls: one flag instead of a `disabled:` threaded through
+every field.
+
+What a widget states for itself always wins, so a control can stay live in a
+disabled subtree:
+
+```dart
+Button(disabled: false, onPressed: _cancel, child: const Text('Cancel'))
+```
+
+Both are inherited like everything else on the provider: a nested provider
+silent about them passes down whatever it received, and one that names them
+overrides for its own subtree.
+
+Two boundaries worth knowing.
+
+**A nearer container outranks the screen.** An `Avatar` inside an
+`AvatarGroup` takes the group's size, not the provider's — the group is the
+more specific word about it.
+
+**A per-item flag is not the screen speaking.** `componentDisabled` reaches the
+controls a person operates. The `disabled` on one `SelectOption`, `TreeNode`,
+`TabItem` or `CheckboxOption` is about that item and is left alone, as is
+`Popconfirm.disabled`, which means "do not ask" rather than "cannot be used".
+
+Reading them yourself, for a widget of your own that should follow along:
+
+```dart
+final size = ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+final off = ConfigProvider.componentDisabledOf(context) ?? false;
+```

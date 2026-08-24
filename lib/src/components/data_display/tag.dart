@@ -416,7 +416,7 @@ class CheckableTagGroup<T> extends StatefulWidget {
     this.value,
     this.defaultValue,
     this.onChanged,
-    this.disabled = false,
+    this.disabled,
     this.multiple = false,
     this.spacing = 8,
     this.runSpacing = 8,
@@ -436,7 +436,7 @@ class CheckableTagGroup<T> extends StatefulWidget {
   final ValueChanged<List<T>>? onChanged;
 
   /// Greys the whole group out and blocks toggling.
-  final bool disabled;
+  final bool? disabled;
 
   /// Whether several tags can be checked at once. When false, checking one
   /// unchecks the rest.
@@ -453,6 +453,11 @@ class CheckableTagGroup<T> extends StatefulWidget {
 }
 
 class _CheckableTagGroupState<T> extends State<CheckableTagGroup<T>> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
   List<T>? _internal;
 
   List<T> get _current =>
@@ -481,7 +486,7 @@ class _CheckableTagGroupState<T> extends State<CheckableTagGroup<T>> {
         for (final option in widget.options)
           CheckableTag(
             checked: current.contains(option.value),
-            onChanged: widget.disabled || option.disabled
+            onChanged: _disabled || option.disabled
                 ? null
                 : (_) => _toggle(option.value),
             child: option.label ?? Text('${option.value}'),

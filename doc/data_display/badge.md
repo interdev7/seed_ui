@@ -162,7 +162,7 @@ reads as shadow on every hue rather than going muddy on the darker ones.
 | `overflowCount` | `int` | `99` | The largest number drawn in full |
 | `color` | `Color?` | `null` | Overrides the fill, status included |
 | `offset` | `Offset` | `Offset.zero` | Nudge from the corner; ignored standalone |
-| `size` | `SoftSize` | `middle` | `small` gives a shorter pill |
+| `size` | `SoftSize?` | `null` | Follows the provider's `componentSize`, else `middle`; `small` gives a shorter pill |
 | `title` | `String?` | `null` | What assistive technology hears |
 | `token` | `BadgeToken?` | `null` | Per-instance token overrides |
 

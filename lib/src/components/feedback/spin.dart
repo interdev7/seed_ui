@@ -127,7 +127,7 @@ class Spin extends StatefulWidget {
   const Spin({
     super.key,
     this.spinning = true,
-    this.size = SoftSize.middle,
+    this.size,
     this.tip,
     this.delay,
     this.indicator,
@@ -149,7 +149,7 @@ class Spin extends StatefulWidget {
   /// - `SoftSize.small` (14px)
   /// - `SoftSize.middle` (20px)
   /// - `SoftSize.large` (32px)
-  final ControlSize size;
+  final ControlSize? size;
 
   /// Optional description text or widget shown below the indicator.
   final Widget? tip;
@@ -189,6 +189,11 @@ class Spin extends StatefulWidget {
 }
 
 class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  ControlSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   late AnimationController _controller;
   bool _delaySpinning = true;
   Timer? _delayTimer;
@@ -352,9 +357,9 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
       return detectedFromAncestor;
     }
 
-    if (widget.size is SoftSize) {
+    if (_size is SoftSize) {
       return BorderRadius.circular(
-        switch (widget.size as SoftSize) {
+        switch (_size as SoftSize) {
           SoftSize.small => token.borderRadiusSM,
           SoftSize.middle => token.borderRadius,
           SoftSize.large => token.borderRadiusLG,
@@ -365,7 +370,7 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
   }
 
   double _resolveSize(Token token, _ResolvedSpinToken r) {
-    return widget.size.resolve1D(
+    return _size.resolve1D(
       small: r.dotSizeSM,
       middle: r.dotSize,
       large: r.dotSizeLG,

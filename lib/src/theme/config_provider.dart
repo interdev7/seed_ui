@@ -138,11 +138,19 @@ class ThemeData {
 /// inheriting from the provider above.
 @immutable
 class _Config {
-  const _Config({required this.theme, this.emptyBuilder, this.locale});
+  const _Config({
+    required this.theme,
+    this.emptyBuilder,
+    this.locale,
+    this.componentSize,
+    this.componentDisabled,
+  });
 
   final ThemeData theme;
   final EmptyBuilder? emptyBuilder;
   final SeedLocalizations? locale;
+  final SoftSize? componentSize;
+  final bool? componentDisabled;
 }
 
 /// Carries the resolved [_Config] down the tree.
@@ -190,6 +198,8 @@ class ConfigProvider extends StatefulWidget {
     this.emptyBuilder,
     this.systemOverlayStyle = true,
     this.locale,
+    this.componentSize,
+    this.componentDisabled,
     required this.child,
   });
 
@@ -227,6 +237,25 @@ class ConfigProvider extends StatefulWidget {
   /// forking a whole language. Null inherits the words above.
   final SeedLocalizations? locale;
 
+  /// The size every component below takes unless it names its own.
+  ///
+  /// One word for a whole screen: a dense table view sets `SoftSize.small` and
+  /// every button, input and select in it follows. What a widget states for
+  /// itself still wins. Null inherits the size above; nothing anywhere leaves
+  /// each component on `SoftSize.middle`.
+  final SoftSize? componentSize;
+
+  /// Whether every control below is disabled unless it says otherwise.
+  ///
+  /// A form that goes read-only while it saves is one flag here rather than a
+  /// `disabled:` threaded through every field. A widget that names its own
+  /// still wins, so a control can stay live in a disabled subtree.
+  ///
+  /// Only controls follow it — the things a person operates. A per-item
+  /// `disabled` (a [SelectOption], a [TreeNode], one [TabItem]) is about that
+  /// item, not about the screen, and is left alone.
+  final bool? componentDisabled;
+
   /// The subtree this configuration applies to.
   final Widget child;
 
@@ -252,6 +281,18 @@ class ConfigProvider extends StatefulWidget {
   /// placeholder rather than handing back a null to deal with.
   static EmptyBuilder? emptyBuilderOf(BuildContext context) =>
       _configOf(context).emptyBuilder;
+
+  /// The ambient size in scope, or null when nothing set one.
+  ///
+  /// Components resolve their own first:
+  /// `widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle`.
+  static SoftSize? componentSizeOf(BuildContext context) =>
+      _configOf(context).componentSize;
+
+  /// Whether controls in scope are disabled from above, or null when nothing
+  /// said either way.
+  static bool? componentDisabledOf(BuildContext context) =>
+      _configOf(context).componentDisabled;
 
   /// The placeholder [slot] should show when it has nothing.
   ///
@@ -305,7 +346,9 @@ class _ConfigProviderState extends State<ConfigProvider> {
     super.didUpdateWidget(old);
     if (!identical(old.theme, widget.theme) ||
         old.emptyBuilder != widget.emptyBuilder ||
-        old.locale != widget.locale) {
+        old.locale != widget.locale ||
+        old.componentSize != widget.componentSize ||
+        old.componentDisabled != widget.componentDisabled) {
       _resolve();
     }
   }
@@ -319,6 +362,8 @@ class _ConfigProviderState extends State<ConfigProvider> {
           : (parent == null ? theme : theme._inherit(parent.theme)),
       emptyBuilder: widget.emptyBuilder ?? parent?.emptyBuilder,
       locale: widget.locale ?? parent?.locale,
+      componentSize: widget.componentSize ?? parent?.componentSize,
+      componentDisabled: widget.componentDisabled ?? parent?.componentDisabled,
     );
   }
 

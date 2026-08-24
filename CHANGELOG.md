@@ -5,6 +5,51 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.0
+
+### Added
+
+- **`ConfigProvider.componentSize` and `ConfigProvider.componentDisabled`** —
+  one word for a whole subtree, the way antd's `SizeContext` and
+  `DisabledContext` work. A dense screen sets `componentSize: SoftSize.small`
+  and every button, input, select and tab in it follows; a form that goes
+  read-only while it saves sets `componentDisabled: saving` instead of
+  threading `disabled:` through every field. Both inherit through nested
+  providers like the rest of the configuration, and both are read by
+  `componentSizeOf` / `componentDisabledOf` for widgets of your own.
+
+  What a widget states for itself always wins, so a control can stay live in a
+  disabled subtree. A nearer container still outranks the screen: an `Avatar`
+  inside an `AvatarGroup` takes the group's size.
+
+### Changed
+
+- **`size` and `disabled` are now nullable on the components that follow the
+  provider.** They had concrete defaults (`SoftSize.middle`, `false`), which
+  left a component unable to tell "nobody said" from "somebody said the
+  default" — and so nothing could be layered underneath. Passing a value is
+  unaffected; only reading one back off a widget instance sees the change:
+
+  ```dart
+  // before
+  final off = button.disabled;
+  // after
+  final off = button.disabled ?? false;
+  ```
+
+  `size` changed on `Avatar`, `AvatarGroup`, `Badge`, `Button`, `Card`,
+  `Collapse`, `Input`, `InputNumber`, `Pagination`, `RadioGroup`, `Segmented`,
+  `Select`, `Spin`, `Steps` and `Tabs`. `disabled` changed on `Button`,
+  `Checkbox`, `CheckboxGroup`, `Dropdown`, `Input`, `InputNumber`,
+  `Pagination`, `Radio`, `RadioGroup`, `RangeSlider`, `Segmented`, `Select`,
+  `Slider`, `Switch`, `CheckableTagGroup`, `Tree` and `Upload`.
+
+  Per-item flags kept their concrete defaults, because they are about the item
+  rather than the screen: `SelectOption`, `RadioOption`, `CheckboxOption`,
+  `SegmentedOption`, `CheckableTagOption`, `DropdownItem`, `TreeNode`,
+  `StepItem`, `TabItem`, `CardTab` and `TourButton`. So did
+  `Popconfirm.disabled`, which means "do not ask", not "cannot be used".
+
 ## 0.7.0
 
 ### Added

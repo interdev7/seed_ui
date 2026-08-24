@@ -297,7 +297,7 @@ class Upload<T> extends StatelessWidget {
     this.onDownload,
     this.itemBuilder,
     this.dragging = false,
-    this.disabled = false,
+    this.disabled,
     this.maxCount,
     this.trigger,
     this.label,
@@ -361,7 +361,12 @@ class Upload<T> extends StatelessWidget {
   final bool dragging;
 
   /// Greys the trigger out and stops it answering.
-  final bool disabled;
+  final bool? disabled;
+
+  /// Whether this control is disabled: its own word, else the one set for
+  /// the subtree, else no.
+  bool _disabledIn(BuildContext context) =>
+      disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
 
   /// The most files to accept. Once [items] reaches it the trigger goes away.
   ///
@@ -566,10 +571,10 @@ class Upload<T> extends StatelessWidget {
       token: t,
       style: r,
       dragging: dragging,
-      disabled: disabled,
+      disabled: _disabledIn(context),
       compact: compact,
       round: round,
-      onTap: disabled ? null : onPick,
+      onTap: _disabledIn(context) ? null : onPick,
       label: label,
       hint: hint,
       trigger: trigger,

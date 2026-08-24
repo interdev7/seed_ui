@@ -633,7 +633,7 @@ class Steps extends StatefulWidget {
     this.orientation = StepsOrientation.horizontal,
     this.type = StepsType.standard,
     this.variant = StepsVariant.filled,
-    this.size = SoftSize.middle,
+    this.size,
     this.status = StepStatus.process,
     this.titlePlacement,
     this.percent,
@@ -681,7 +681,7 @@ class Steps extends StatefulWidget {
   /// `middle` its default, `large` the kit's third step. A number sets the
   /// marker's diameter outright (`ControlSize.fixed(48)`), and the type scale
   /// follows the marker it sits beside.
-  final ControlSize size;
+  final ControlSize? size;
 
   /// Status of the current step — set [StepStatus.error] to stop the run here.
   final StepStatus status;
@@ -745,6 +745,11 @@ class Steps extends StatefulWidget {
 }
 
 class _StepsState extends State<Steps> {
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  ControlSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   late int _uncontrolled = widget.defaultCurrent;
 
   @override
@@ -871,7 +876,7 @@ class _StepsState extends State<Steps> {
     final r = (widget.token ??
             ConfigProvider.componentOf<StepsToken>(context) ??
             const StepsToken())
-        ._resolve(t, widget.size);
+        ._resolve(t, _size);
 
     final palette = _Palette(t, widget.variant);
 

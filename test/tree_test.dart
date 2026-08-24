@@ -151,7 +151,7 @@ void main() {
     expect(find.byType(Checkbox), findsNWidgets(3));
     final disabled = tester
         .widgetList<Checkbox>(find.byType(Checkbox))
-        .where((c) => c.disabled);
+        .where((c) => c.disabled ?? false);
     expect(disabled.length, 1);
   });
 

@@ -89,7 +89,7 @@ class Checkbox extends StatefulWidget {
     required this.checked,
     this.onChanged,
     this.label,
-    this.disabled = false,
+    this.disabled,
     this.indeterminate = false,
     this.token,
   });
@@ -104,7 +104,7 @@ class Checkbox extends StatefulWidget {
   final Widget? label;
 
   /// Greys the checkbox out and blocks toggling.
-  final bool disabled;
+  final bool? disabled;
 
   /// Shows a dash rather than a tick — the "some but not all" state of a
   /// parent checkbox. Toggling still reports the opposite of [checked].
@@ -120,7 +120,12 @@ class Checkbox extends StatefulWidget {
 class _SoftCheckboxState extends State<Checkbox> {
   bool _hovered = false;
 
-  bool get _enabled => !widget.disabled && widget.onChanged != null;
+  /// Whether this control is disabled: its own word, else the one set for the
+  /// subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
+  bool get _enabled => !_disabled && widget.onChanged != null;
 
   void _toggle() {
     if (_enabled) widget.onChanged!(!widget.checked);
@@ -285,7 +290,7 @@ class CheckboxGroup<T> extends StatelessWidget {
     required this.value,
     required this.options,
     this.onChanged,
-    this.disabled = false,
+    this.disabled,
     this.direction = Axis.horizontal,
     this.spacing = 16,
     this.runSpacing = 8,
@@ -301,7 +306,12 @@ class CheckboxGroup<T> extends StatelessWidget {
   final ValueChanged<List<T>>? onChanged;
 
   /// Greys the whole group out.
-  final bool disabled;
+  final bool? disabled;
+
+  /// Whether this control is disabled: its own word, else the one set for
+  /// the subtree, else no.
+  bool _disabledIn(BuildContext context) =>
+      disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
 
   /// Whether the options run in a row (wrapping) or a column.
   final Axis direction;
@@ -328,7 +338,8 @@ class CheckboxGroup<T> extends StatelessWidget {
       for (final option in options)
         Checkbox(
           checked: value.contains(option.value),
-          disabled: disabled || option.disabled || onChanged == null,
+          disabled:
+              _disabledIn(context) || option.disabled || onChanged == null,
           onChanged: (checked) => _toggle(option.value, checked),
           label: option.label,
         ),

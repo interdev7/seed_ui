@@ -120,12 +120,12 @@ class InputNumber extends StatefulWidget {
     this.max,
     this.step = 1,
     this.precision,
-    this.disabled = false,
+    this.disabled,
     this.readOnly = false,
     this.controls = true,
     this.mode = InputNumberMode.handles,
     this.keyboard = true,
-    this.size = SoftSize.middle,
+    this.size,
     this.status,
     this.placeholder,
     this.prefix,
@@ -162,7 +162,7 @@ class InputNumber extends StatefulWidget {
   final int? precision;
 
   /// Greys the field out and blocks interaction.
-  final bool disabled;
+  final bool? disabled;
 
   /// Shows the value but blocks editing (steppers still work).
   final bool readOnly;
@@ -177,7 +177,7 @@ class InputNumber extends StatefulWidget {
   final bool keyboard;
 
   /// Which height preset to use.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// A validation status that recolours the border.
   final InputStatus? status;
@@ -208,6 +208,16 @@ class InputNumber extends StatefulWidget {
 }
 
 class _InputNumberState extends State<InputNumber> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  SoftSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   final TextEditingController _controller = TextEditingController();
   FocusNode? _ownFocus;
   FocusNode get _focusNode => widget.focusNode ?? (_ownFocus ??= FocusNode());
@@ -215,7 +225,7 @@ class _InputNumberState extends State<InputNumber> {
   num? _internal;
   num? get _current => widget.value ?? _internal ?? widget.defaultValue;
 
-  bool get _enabled => !widget.disabled;
+  bool get _enabled => !_disabled;
 
   bool _hovered = false;
   bool _focused = false;
@@ -349,9 +359,9 @@ class _InputNumberState extends State<InputNumber> {
         textAlign: spinner ? TextAlign.center : TextAlign.start,
         prefixFlush: spinner,
         focusNode: _focusNode,
-        size: widget.size,
+        size: _size,
         status: widget.status,
-        disabled: widget.disabled,
+        disabled: _disabled,
         readOnly: widget.readOnly,
         placeholder: widget.placeholder,
         keyboardType:
@@ -416,7 +426,7 @@ class _InputNumberState extends State<InputNumber> {
     );
   }
 
-  double _controlHeight(Token t) => switch (widget.size) {
+  double _controlHeight(Token t) => switch (_size) {
         SoftSize.small => t.controlHeightSM,
         SoftSize.middle => t.controlHeight,
         SoftSize.large => t.controlHeightLG,

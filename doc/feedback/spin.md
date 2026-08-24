@@ -34,7 +34,7 @@ Spin(size: SoftSize.large)
 | Property     | Type         | Default           | Description                                                                       |
 | ------------ | ------------ | ----------------- | --------------------------------------------------------------------------------- |
 | `spinning`   | `bool`       | `true`            | Controls active loading state                                                     |
-| `size`       | `SoftSize`   | `SoftSize.middle` | Preset size (`SoftSize.small`/`middle`/`large`)                                   |
+| `size`       | `ControlSize?` | `null` | Follows the provider's `componentSize`, else `SoftSize.middle`                   |
 | `tip`        | `Widget?`    | `null`            | Optional widget (e.g. `Text`) rendered below the indicator, automatically styled  |
 | `delay`      | `Duration?`  | `null`            | Delays displaying indicator when `spinning` turns true (prevents loading flicker) |
 | `indicator`  | `Widget?`    | `null`            | Custom indicator widget overriding default 4-dot rotating animation               |

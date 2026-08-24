@@ -143,7 +143,7 @@ class Badge extends StatelessWidget {
     this.overflowCount = 99,
     this.color,
     this.offset = Offset.zero,
-    this.size = SoftSize.middle,
+    this.size,
     this.title,
     this.token,
   });
@@ -183,7 +183,7 @@ class Badge extends StatelessWidget {
 
   /// [SoftSize.small] gives a shorter pill. [SoftSize.large] reads as
   /// [SoftSize.middle]; a badge has only the two heights.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// A description of the count for assistive technology.
   ///

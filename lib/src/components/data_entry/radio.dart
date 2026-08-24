@@ -128,7 +128,7 @@ class Radio<T> extends StatefulWidget {
     required this.groupValue,
     this.onChanged,
     this.child,
-    this.disabled = false,
+    this.disabled,
     this.token,
   });
 
@@ -145,7 +145,7 @@ class Radio<T> extends StatefulWidget {
   final Widget? child;
 
   /// Greys the button out and blocks selection.
-  final bool disabled;
+  final bool? disabled;
 
   /// Per-instance token overrides.
   final RadioToken? token;
@@ -157,9 +157,14 @@ class Radio<T> extends StatefulWidget {
 }
 
 class _SoftRadioState<T> extends State<Radio<T>> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
   bool _hovered = false;
 
-  bool get _enabled => !widget.disabled && widget.onChanged != null;
+  bool get _enabled => !_disabled && widget.onChanged != null;
 
   void _select() {
     if (_enabled && !widget._selected) widget.onChanged!(widget.value);
@@ -311,13 +316,13 @@ class RadioGroup<T> extends StatelessWidget {
     required this.value,
     required this.options,
     this.onChanged,
-    this.disabled = false,
+    this.disabled,
     this.direction = Axis.horizontal,
     this.spacing = 16,
     this.runSpacing = 8,
     this.optionType = RadioOptionType.radio,
     this.buttonStyle = RadioButtonStyle.outline,
-    this.size = SoftSize.middle,
+    this.size,
     this.block = false,
   });
 
@@ -331,7 +336,12 @@ class RadioGroup<T> extends StatelessWidget {
   final ValueChanged<T>? onChanged;
 
   /// Greys the whole group out.
-  final bool disabled;
+  final bool? disabled;
+
+  /// Whether this control is disabled: its own word, else the one set for
+  /// the subtree, else no.
+  bool _disabledIn(BuildContext context) =>
+      disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
 
   /// Whether dot-style options run in a row (wrapping) or a column. Ignored
   /// for [RadioOptionType.button], which is always a row.
@@ -351,7 +361,7 @@ class RadioGroup<T> extends StatelessWidget {
   final RadioButtonStyle buttonStyle;
 
   /// Height preset for button-style options.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// Stretch button-style options to fill the width equally.
   final bool block;
@@ -365,16 +375,17 @@ class RadioGroup<T> extends StatelessWidget {
     if (optionType == RadioOptionType.button) {
       return _buildButtons(context);
     }
-    return _buildDots();
+    return _buildDots(context);
   }
 
-  Widget _buildDots() {
+  Widget _buildDots(BuildContext context) {
     final dots = [
       for (final option in options)
         Radio<T>(
           value: option.value,
           groupValue: value,
-          disabled: disabled || option.disabled || onChanged == null,
+          disabled:
+              _disabledIn(context) || option.disabled || onChanged == null,
           onChanged: onChanged,
           child: option.label ?? const SizedBox.shrink(),
         ),
@@ -396,6 +407,8 @@ class RadioGroup<T> extends StatelessWidget {
 
   Widget _buildButtons(BuildContext context) {
     final token = context.softToken;
+    final resolvedSize =
+        size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
     final selectedIndex = options.indexWhere((o) => o.value == value);
 
     _RadioButton<T> button(int i, _ButtonRole role) => _RadioButton<T>(
@@ -404,9 +417,11 @@ class RadioGroup<T> extends StatelessWidget {
           selected: i == selectedIndex,
           first: i == 0,
           last: i == options.length - 1,
-          enabled: !disabled && !options[i].disabled && onChanged != null,
+          enabled: !_disabledIn(context) &&
+              !options[i].disabled &&
+              onChanged != null,
           style: buttonStyle,
-          size: size,
+          size: resolvedSize,
           block: block,
           token: token,
           onTap: () => _select(options[i].value),

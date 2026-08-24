@@ -149,7 +149,7 @@ class Avatar extends StatelessWidget {
   /// Creates an [Avatar].
   const Avatar({
     super.key,
-    this.size = SoftSize.middle,
+    this.size,
     this.customSize,
     this.shape = AvatarShape.circle,
     this.image,
@@ -168,7 +168,7 @@ class Avatar extends StatelessWidget {
   final Gradient? gradient;
 
   /// The size preset. Ignored if [customSize] is provided.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// Custom diameter/width/height in logical pixels.
   final double? customSize;
@@ -218,7 +218,12 @@ class Avatar extends StatelessWidget {
                 const AvatarToken())
             ._resolve(t);
 
-    final resolvedSize = group?.size ?? size;
+    // The enclosing group is nearer than the screen, so it wins over the
+    // ambient size; the screen wins over nothing at all.
+    final resolvedSize = group?.size ??
+        size ??
+        ConfigProvider.componentSizeOf(context) ??
+        SoftSize.middle;
     final resolvedShape = group?.shape ?? shape;
 
     final dimension = customSize ??
@@ -349,7 +354,7 @@ class AvatarGroup extends StatelessWidget {
     super.key,
     required this.children,
     this.maxCount,
-    this.size = SoftSize.middle,
+    this.size,
     this.shape,
     this.maxStyle,
     this.maxPopoverPlacement = PopoverPlacement.top,
@@ -369,7 +374,7 @@ class AvatarGroup extends StatelessWidget {
   final int? maxCount;
 
   /// The size of the avatars in the group.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// The shape of the avatars in the group.
   final AvatarShape? shape;
@@ -470,7 +475,9 @@ class AvatarGroup extends StatelessWidget {
       strokeAlign: BorderSide.strokeAlignOutside,
     );
 
-    final dimension = switch (size) {
+    final resolvedSize =
+        size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+    final dimension = switch (resolvedSize) {
       SoftSize.small => rt.containerSizeSM,
       SoftSize.middle => rt.containerSize,
       SoftSize.large => rt.containerSizeLG,

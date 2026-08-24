@@ -166,7 +166,7 @@ class Collapse extends StatefulWidget {
     this.accordion = false,
     this.bordered = true,
     this.ghost = false,
-    this.size = SoftSize.middle,
+    this.size,
     this.expandIconPosition = CollapseIconPosition.start,
     this.collapsible = CollapsibleTrigger.header,
     this.expandIcon,
@@ -196,7 +196,7 @@ class Collapse extends StatefulWidget {
   final bool ghost;
 
   /// Header/content padding preset.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// Which side the expand icon sits on.
   final CollapseIconPosition expandIconPosition;
@@ -219,6 +219,11 @@ class Collapse extends StatefulWidget {
 }
 
 class _CollapseState extends State<Collapse> {
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  SoftSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   late final KeyedSet _open = KeyedSet(widget.defaultActiveKeys);
 
   Set<String> get _active => _open.effective(widget.activeKeys);
@@ -253,7 +258,7 @@ class _CollapseState extends State<Collapse> {
           token: t,
           style: r,
           item: item,
-          size: widget.size,
+          size: _size,
           active: _active.contains(item.key),
           ghost: widget.ghost,
           bordered: widget.bordered,

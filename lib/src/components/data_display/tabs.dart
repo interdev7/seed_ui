@@ -498,7 +498,7 @@ class Tabs extends StatefulWidget {
     this.onTabClick,
     this.onCreateTab,
     this.type = TabsType.line,
-    this.size = SoftSize.middle,
+    this.size,
     this.tabPosition = TabPosition.top,
     this.centered = false,
     this.tabBarExtraContent,
@@ -541,7 +541,7 @@ class Tabs extends StatefulWidget {
   final TabsType type;
 
   /// Which height preset to use.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// Which edge the bar sits on.
   final TabPosition tabPosition;
@@ -590,6 +590,11 @@ class Tabs extends StatefulWidget {
 }
 
 class _TabsState extends State<Tabs> {
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  SoftSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   String? _internal;
   final Map<String, GlobalKey> _tabKeys = {};
   final GlobalKey _stripKey = GlobalKey();
@@ -655,8 +660,8 @@ class _TabsState extends State<Tabs> {
   late _ResolvedTabsToken _r;
 
   EdgeInsets _tabPadding() {
-    if (_card) return _r.cardPaddingFor(widget.size);
-    return _horizontal ? _r.linePadding(widget.size) : _r.verticalItemPadding;
+    if (_card) return _r.cardPaddingFor(_size);
+    return _horizontal ? _r.linePadding(_size) : _r.verticalItemPadding;
   }
 
   void _select(String key) {
@@ -1053,7 +1058,7 @@ class _TabsState extends State<Tabs> {
         editable: _editable && item.closable,
         horizontal: _horizontal,
         position: widget.tabPosition,
-        fontSize: _r.fontSize(widget.size),
+        fontSize: _r.fontSize(_size),
         padding: _tabPadding(),
         icon: item.icon,
         label: item.label,
@@ -1067,8 +1072,8 @@ class _TabsState extends State<Tabs> {
   Widget _buildAddButton(Token token) {
     // Match a card tab's full height: its top border + vertical padding + label.
     final height = token.lineWidth +
-        _r.cardPaddingFor(widget.size).vertical +
-        _r.fontSize(widget.size);
+        _r.cardPaddingFor(_size).vertical +
+        _r.fontSize(_size);
     return _AddButton(
       token: token,
       height: height,

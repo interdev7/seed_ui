@@ -304,7 +304,7 @@ class Input extends StatefulWidget {
     this.defaultValue,
     this.onChanged,
     this.onSubmitted,
-    this.disabled = false,
+    this.disabled,
     this.readOnly = false,
     this.allowClear = false,
     this.autofocus = false,
@@ -312,7 +312,7 @@ class Input extends StatefulWidget {
     this.suffix,
     this.suffixFlush = false,
     this.prefixFlush = false,
-    this.size = SoftSize.middle,
+    this.size,
     this.status,
     this.maxLines = 1,
     this.minLines,
@@ -348,7 +348,7 @@ class Input extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
 
   /// Greys the field out and blocks editing and focus.
-  final bool disabled;
+  final bool? disabled;
 
   /// Shows the value but blocks editing. Unlike [disabled] it keeps normal
   /// colours and stays focusable and selectable.
@@ -377,7 +377,7 @@ class Input extends StatefulWidget {
   final bool prefixFlush;
 
   /// Which height preset to use.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// A validation status that recolours the border. Null is the normal state.
   final InputStatus? status;
@@ -422,6 +422,16 @@ class Input extends StatefulWidget {
 }
 
 class _SoftInputState extends State<Input> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  SoftSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   TextEditingController? _ownController;
   TextEditingController get _controller =>
       widget.controller ??
@@ -479,17 +489,17 @@ class _SoftInputState extends State<Input> {
     }
   }
 
-  bool get _enabled => !widget.disabled;
+  bool get _enabled => !_disabled;
 
   bool get _obscure => widget.password != null && _obscured;
 
-  double _height(Token token) => switch (widget.size) {
+  double _height(Token token) => switch (_size) {
         SoftSize.small => token.controlHeightSM,
         SoftSize.middle => token.controlHeight,
         SoftSize.large => token.controlHeightLG,
       };
 
-  double _fontSize(_ResolvedInputToken r) => switch (widget.size) {
+  double _fontSize(_ResolvedInputToken r) => switch (_size) {
         SoftSize.small => r.fontSizeSM,
         SoftSize.middle => r.fontSize,
         SoftSize.large => r.fontSizeLG,
@@ -727,19 +737,19 @@ class _SoftInputState extends State<Input> {
     );
   }
 
-  double _paddingInline(_ResolvedInputToken r) => switch (widget.size) {
+  double _paddingInline(_ResolvedInputToken r) => switch (_size) {
         SoftSize.small => r.paddingInlineSM,
         SoftSize.middle => r.paddingInline,
         SoftSize.large => r.paddingInlineLG,
       };
 
-  double _paddingBlock(_ResolvedInputToken r) => switch (widget.size) {
+  double _paddingBlock(_ResolvedInputToken r) => switch (_size) {
         SoftSize.small => r.paddingBlockSM,
         SoftSize.middle => r.paddingBlock,
         SoftSize.large => r.paddingBlockLG,
       };
 
-  double _radiusVal(_ResolvedInputToken r) => switch (widget.size) {
+  double _radiusVal(_ResolvedInputToken r) => switch (_size) {
         SoftSize.small => r.borderRadiusSM,
         SoftSize.middle => r.borderRadius,
         SoftSize.large => r.borderRadiusLG,

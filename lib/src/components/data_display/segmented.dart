@@ -170,10 +170,10 @@ class Segmented<T> extends StatefulWidget {
     required this.value,
     required this.options,
     this.onChanged,
-    this.size = SoftSize.middle,
+    this.size,
     this.direction = Axis.horizontal,
     this.block = false,
-    this.disabled = false,
+    this.disabled,
     this.trackColor,
     this.thumbColor,
     this.token,
@@ -190,7 +190,7 @@ class Segmented<T> extends StatefulWidget {
   final ValueChanged<T>? onChanged;
 
   /// Which height preset to use.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// Whether the segments run in a row or a column.
   final Axis direction;
@@ -199,7 +199,7 @@ class Segmented<T> extends StatefulWidget {
   final bool block;
 
   /// Greys the whole control out and blocks selection.
-  final bool disabled;
+  final bool? disabled;
 
   /// Overrides the track (background) colour.
   final Color? trackColor;
@@ -215,12 +215,22 @@ class Segmented<T> extends StatefulWidget {
 }
 
 class _SoftSegmentedState<T> extends State<Segmented<T>> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  SoftSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   final GlobalKey _stackKey = GlobalKey();
   final Map<int, GlobalKey> _segmentKeys = {};
   Rect? _thumbRect;
   int? _hoveredIndex;
 
-  bool get _enabled => !widget.disabled && widget.onChanged != null;
+  bool get _enabled => !_disabled && widget.onChanged != null;
   bool get _vertical => widget.direction == Axis.vertical;
 
   int get _selectedIndex {
@@ -230,19 +240,19 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
 
   GlobalKey _keyFor(int i) => _segmentKeys.putIfAbsent(i, GlobalKey.new);
 
-  double _height(Token token) => switch (widget.size) {
+  double _height(Token token) => switch (_size) {
         SoftSize.small => token.controlHeightSM,
         SoftSize.middle => token.controlHeight,
         SoftSize.large => token.controlHeightLG,
       };
 
-  double _radius(_ResolvedSegmentedToken r) => switch (widget.size) {
+  double _radius(_ResolvedSegmentedToken r) => switch (_size) {
         SoftSize.small => r.borderRadiusSM,
         SoftSize.middle => r.borderRadius,
         SoftSize.large => r.borderRadiusLG,
       };
 
-  double _fontSize(Token token) => switch (widget.size) {
+  double _fontSize(Token token) => switch (_size) {
         SoftSize.small => token.fontSizeSM,
         SoftSize.middle => token.fontSize,
         SoftSize.large => token.fontSizeLG,

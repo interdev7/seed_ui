@@ -122,8 +122,8 @@ class Pagination extends StatefulWidget {
     this.showQuickJumper = false,
     this.showTotal,
     this.simple,
-    this.size = SoftSize.middle,
-    this.disabled = false,
+    this.size,
+    this.disabled,
     this.hideOnSinglePage = false,
     this.showLessItems = false,
     this.align = MainAxisAlignment.start,
@@ -169,10 +169,10 @@ class Pagination extends StatefulWidget {
   final PaginationSimple? simple;
 
   /// Which height preset to use.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// Greys the whole pager out and blocks interaction.
-  final bool disabled;
+  final bool? disabled;
 
   /// Renders nothing when there is only a single page.
   final bool hideOnSinglePage;
@@ -191,6 +191,17 @@ class Pagination extends StatefulWidget {
 }
 
 class _PaginationState extends State<Pagination> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset. Named apart from `_size`, which is
+  /// this component's page size.
+  SoftSize get _controlSize =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   int? _current;
   int? _pageSize;
 
@@ -199,7 +210,7 @@ class _PaginationState extends State<Pagination> {
 
   int get _pageCount => (widget.total / _size).ceil().clamp(1, 1 << 31);
 
-  bool get _enabled => !widget.disabled;
+  bool get _enabled => !_disabled;
   bool get _simpleMode => widget.simple != null;
 
   void _goTo(int page) {
@@ -219,13 +230,13 @@ class _PaginationState extends State<Pagination> {
     widget.onChange?.call(nextPage, size);
   }
 
-  double _controlHeight(Token t) => switch (widget.size) {
+  double _controlHeight(Token t) => switch (_controlSize) {
         SoftSize.small => t.controlHeightSM,
         SoftSize.middle => t.controlHeight,
         SoftSize.large => t.controlHeightLG,
       };
 
-  double _fontSize(Token t) => switch (widget.size) {
+  double _fontSize(Token t) => switch (_controlSize) {
         SoftSize.small => t.fontSizeSM,
         SoftSize.middle => t.fontSize,
         SoftSize.large => t.fontSizeLG,
@@ -293,7 +304,7 @@ class _PaginationState extends State<Pagination> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _Arrow(
-          size: widget.size,
+          size: _controlSize,
           token: token,
           direction: _ArrowDir.prev,
           enabled: _enabled && _page > 1,
@@ -306,7 +317,7 @@ class _PaginationState extends State<Pagination> {
         ] else
           for (final w in _numbers(token, pt, fontSize, height)) ...[w, gap],
         _Arrow(
-          size: widget.size,
+          size: _controlSize,
           token: token,
           direction: _ArrowDir.next,
           enabled: _enabled && _page < _pageCount,
@@ -389,7 +400,7 @@ class _PaginationState extends State<Pagination> {
             token: token,
             paginationToken: pt,
             height: height,
-            size: widget.size,
+            size: _controlSize,
             fontSize: fontSize,
             label: context.seedLocale.figures('${entry.page}'),
             active: entry.page == _page,
@@ -406,7 +417,7 @@ class _PaginationState extends State<Pagination> {
     final inputWidget = kIsWeb
         ? InputNumber(
             key: ValueKey(_page),
-            size: widget.size,
+            size: _controlSize,
             defaultValue: _page,
             disabled: !_enabled || readOnly,
             onSubmitted: (v) {
@@ -416,7 +427,7 @@ class _PaginationState extends State<Pagination> {
           )
         : Input(
             key: ValueKey(_page),
-            size: widget.size,
+            size: _controlSize,
             defaultValue: context.seedLocale.figures('$_page'),
             disabled: !_enabled || readOnly,
             textAlign: TextAlign.center,
@@ -482,7 +493,7 @@ class _PaginationState extends State<Pagination> {
       width: 110,
       child: Select<int>(
         value: [_size],
-        size: widget.size,
+        size: _controlSize,
         disabled: !_enabled,
         options: [
           for (final s in widget.pageSizeOptions)
@@ -515,7 +526,7 @@ class _PaginationState extends State<Pagination> {
         SizedBox(
           width: height + token.sizeXL,
           child: Input(
-            size: widget.size,
+            size: _controlSize,
             disabled: !_enabled,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,

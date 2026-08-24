@@ -185,7 +185,7 @@ class Slider extends StatefulWidget {
     this.marks = const [],
     this.dots = false,
     this.included = true,
-    this.disabled = false,
+    this.disabled,
     this.vertical = false,
     this.reverse = false,
     this.tooltip,
@@ -226,7 +226,7 @@ class Slider extends StatefulWidget {
   final bool included;
 
   /// Greys the slider out and blocks dragging.
-  final bool disabled;
+  final bool? disabled;
 
   /// Runs the scale down the page instead of across it.
   final bool vertical;
@@ -250,6 +250,11 @@ class Slider extends StatefulWidget {
 }
 
 class _SliderState extends State<Slider> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
   @override
   Widget build(BuildContext context) {
     return _SliderCore(
@@ -266,7 +271,7 @@ class _SliderState extends State<Slider> {
       marks: widget.marks,
       dots: widget.dots,
       included: widget.included,
-      disabled: widget.disabled,
+      disabled: _disabled,
       vertical: widget.vertical,
       reverse: widget.reverse,
       tooltip: widget.tooltip,
@@ -303,7 +308,7 @@ class RangeSlider extends StatefulWidget {
     this.marks = const [],
     this.dots = false,
     this.included = true,
-    this.disabled = false,
+    this.disabled,
     this.vertical = false,
     this.reverse = false,
     this.tooltip,
@@ -339,7 +344,7 @@ class RangeSlider extends StatefulWidget {
   final bool included;
 
   /// Greys the slider out and blocks dragging.
-  final bool disabled;
+  final bool? disabled;
 
   /// Runs the scale down the page.
   final bool vertical;
@@ -358,6 +363,11 @@ class RangeSlider extends StatefulWidget {
 }
 
 class _RangeSliderState extends State<RangeSlider> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
   @override
   Widget build(BuildContext context) {
     final (low, high) = widget.values;
@@ -374,7 +384,7 @@ class _RangeSliderState extends State<RangeSlider> {
       marks: widget.marks,
       dots: widget.dots,
       included: widget.included,
-      disabled: widget.disabled,
+      disabled: _disabled,
       vertical: widget.vertical,
       reverse: widget.reverse,
       tooltip: widget.tooltip,

@@ -110,7 +110,7 @@ class Switch extends StatefulWidget {
     required this.value,
     this.onChanged,
     this.size = SwitchSize.defaultSize,
-    this.disabled = false,
+    this.disabled,
     this.loading = false,
     this.checkedChild,
     this.uncheckedChild,
@@ -127,7 +127,7 @@ class Switch extends StatefulWidget {
   final SwitchSize size;
 
   /// Greys the switch out and blocks toggling.
-  final bool disabled;
+  final bool? disabled;
 
   /// Shows a spinner on the thumb and blocks toggling — for a setting whose
   /// change is being persisted.
@@ -147,10 +147,15 @@ class Switch extends StatefulWidget {
 }
 
 class _SoftSwitchState extends State<Switch> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
   bool _pressed = false;
 
   bool get _enabled =>
-      !widget.disabled && !widget.loading && widget.onChanged != null;
+      !_disabled && !widget.loading && widget.onChanged != null;
 
   bool get _small => widget.size == SwitchSize.small;
 

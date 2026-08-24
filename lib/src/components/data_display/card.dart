@@ -184,7 +184,7 @@ class Card extends StatefulWidget {
     this.loading = false,
     this.variant = CardVariant.outlined,
     this.type = CardType.outer,
-    this.size = SoftSize.middle,
+    this.size,
     this.tabList,
     this.activeTabKey,
     this.defaultActiveTabKey,
@@ -226,7 +226,7 @@ class Card extends StatefulWidget {
 
   /// `small` tightens the header and body padding; `middle`/`large` are the
   /// default size.
-  final SoftSize size;
+  final SoftSize? size;
 
   /// Navigation tabs rendered in the header.
   final List<CardTab>? tabList;
@@ -251,9 +251,14 @@ class Card extends StatefulWidget {
 }
 
 class _CardState extends State<Card> {
+  /// The size in force: this widget's own, else the one set for the
+  /// subtree, else the standard preset.
+  SoftSize get _size =>
+      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+
   bool _hover = false;
 
-  bool get _small => widget.size == SoftSize.small;
+  bool get _small => _size == SoftSize.small;
 
   @override
   Widget build(BuildContext context) {

@@ -33,7 +33,7 @@ measures a journey that is still going. The two share only their rail — the sa
 | `orientation` | `StepsOrientation` | `horizontal` | Which way the run goes |
 | `type` | `StepsType` | `standard` | How it is drawn |
 | `variant` | `StepsVariant` | `filled` | Filled or outlined markers |
-| `size` | `ControlSize` | `SoftSize.middle` | Preset, or a number for the marker's diameter |
+| `size` | `ControlSize?` | `null` | Follows the provider's `componentSize`, else `SoftSize.middle`; or a number for the marker's diameter |
 | `status` | `StepStatus` | `process` | Status of the current step |
 | `titlePlacement` | `StepTitlePlacement?` | `null` | Title beside the marker or under it |
 | `percent` | `double?` | `null` | Progress ring on the current marker, 0..1 |

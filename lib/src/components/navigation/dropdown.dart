@@ -165,7 +165,7 @@ class Dropdown extends StatefulWidget {
     this.content,
     this.trigger = const [DropdownTrigger.hover],
     this.placement = PopoverPlacement.bottomLeft,
-    this.disabled = false,
+    this.disabled,
     this.open,
     this.onOpenChange,
     this.arrow = false,
@@ -202,7 +202,7 @@ class Dropdown extends StatefulWidget {
   final PopoverPlacement placement;
 
   /// Greys the trigger out and blocks opening.
-  final bool disabled;
+  final bool? disabled;
 
   /// Drives visibility externally. Null lets the dropdown manage its own state.
   final bool? open;
@@ -230,6 +230,11 @@ class Dropdown extends StatefulWidget {
 }
 
 class _DropdownState extends State<Dropdown> {
+  /// Whether this control is disabled: its own word, else the one set
+  /// for the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+
   final PopoverController _popover = PopoverController();
   final GlobalKey _anchorKey = GlobalKey();
   bool _open = false;
@@ -295,7 +300,7 @@ class _DropdownState extends State<Dropdown> {
   }
 
   void _requestOpen(bool next) {
-    if (widget.disabled) return;
+    if (_disabled) return;
     if (widget.onOpenChange != null) widget.onOpenChange!(next);
     if (widget.open == null) {
       next ? _show() : _hide();
@@ -303,7 +308,7 @@ class _DropdownState extends State<Dropdown> {
   }
 
   void _show() {
-    if (_open || widget.disabled) return;
+    if (_open || _disabled) return;
     final box = _anchorKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     final anchor = box.localToGlobal(Offset.zero) & box.size;

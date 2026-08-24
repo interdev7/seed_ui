@@ -59,7 +59,7 @@ Button(variant: ButtonVariant.outlined, onPressed: () {}, child: const Text('Def
 | `loading` | `bool` | `false` | Swaps the icon for a spinner and blocks taps |
 | `gradient` | `Gradient?` | `null` | Optional background gradient (e.g. `LinearGradient`) |
 | `block` | `bool` | `false` | Stretches to the parent's full width |
-| `disabled` | `bool` | `false` | Greys out and blocks taps |
+| `disabled` | `bool?` | `null` | Follows the provider's `componentDisabled`, else `false`. Greys out and blocks taps |
 
 ## Sizes
 

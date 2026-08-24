@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui_example/main.dart';
+import 'package:seed_ui_example/version.dart';
 
 void main() {
   testWidgets('the demo app boots and lists its pages', (tester) async {
@@ -7,6 +8,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('seed_ui'), findsOneWidget);
+    // Built from pubspec.yaml, so a screenshot says which version it shows.
+    expect(find.text('v$seedUiVersion'), findsOneWidget);
     expect(find.text('New Year Theme 🎄'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

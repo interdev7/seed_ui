@@ -476,3 +476,53 @@ Reading them yourself, for a widget of your own that should follow along:
 final size = ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
 final off = ConfigProvider.componentDisabledOf(context) ?? false;
 ```
+
+### Tokens, and defaults
+
+Two different things can be set for a component, and they are not the same
+knob.
+
+| | Where | What it carries |
+| --- | --- | --- |
+| **Tokens** | `ThemeData(components: ComponentsConfig(...))` | The numbers and colours a component draws with — `ButtonToken(borderRadius: 16)` |
+| **Defaults** | `ConfigProvider(defaults: ComponentDefaults(...))` | The component's own props, where a widget did not name one — `ButtonDefaults(shape: ButtonShape.round)` |
+
+A token says *how a button is drawn*. A default says *what a button is, unless
+it says otherwise*. Some things can only be said the second way: a shape, a
+variant, whether a tag closes, which illustration an empty state uses.
+
+```dart
+ConfigProvider(
+  theme: ThemeData(
+    components: ComponentsConfig(button: ButtonToken(borderRadius: 16)),
+  ),
+  defaults: const ComponentDefaults(
+    button: ButtonDefaults(shape: ButtonShape.round, variant: ButtonVariant.solid),
+    tag: TagDefaults(closable: true),
+  ),
+  child: ...,
+)
+```
+
+A widget's own prop always wins, and defaults are inherited and merged slot by
+slot like everything else on the provider: a nested provider that names one
+component leaves the others as the provider above had them.
+
+What can be set so far:
+
+| Component | Defaults |
+| --- | --- |
+| `Button` | `variant`, `color`, `shape` |
+| `Input` | `allowClear` |
+| `Select` | `variant`, `allowClear`, `showSearch` |
+| `Tag` | `variant`, `closable` |
+| `Empty` | `image` |
+
+The list grows a component at a time, the way antd's did; a prop joins it when
+it makes sense to say once for a whole app.
+
+For a widget of your own that should follow along:
+
+```dart
+final shape = ConfigProvider.defaultsOf<ButtonDefaults>(context)?.shape;
+```

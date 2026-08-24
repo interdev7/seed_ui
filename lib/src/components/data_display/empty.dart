@@ -56,6 +56,19 @@ class _ResolvedEmptyToken {
   final double fontSize;
 }
 
+/// Defaults for every [Empty] under a `ConfigProvider`.
+///
+/// The placeholder's own props, not its [EmptyToken] numbers. For different
+/// *content* per component, see `ConfigProvider.emptyBuilder` and [EmptySlot].
+@immutable
+class EmptyDefaults {
+  /// Creates an [EmptyDefaults].
+  const EmptyDefaults({this.image});
+
+  /// Which built-in illustration empty states draw.
+  final EmptyImage? image;
+}
+
 /// An empty-state placeholder. Shows an illustration,
 /// a description and optional actions when there is nothing to display.
 ///
@@ -74,7 +87,7 @@ class Empty extends StatelessWidget {
   /// Creates an [Empty].
   const Empty({
     super.key,
-    this.image = EmptyImage.standard,
+    this.image,
     this.imageWidget,
     this.description,
     this.child,
@@ -82,7 +95,7 @@ class Empty extends StatelessWidget {
   });
 
   /// Which built-in illustration to draw. Ignored when [imageWidget] is set.
-  final EmptyImage image;
+  final EmptyImage? image;
 
   /// A custom illustration, replacing the built-in one.
   final Widget? imageWidget;
@@ -104,7 +117,10 @@ class Empty extends StatelessWidget {
             ConfigProvider.componentOf<EmptyToken>(context) ??
             const EmptyToken())
         ._resolve(t);
-    final simple = image == EmptyImage.simple;
+    final resolvedImage = image ??
+        ConfigProvider.defaultsOf<EmptyDefaults>(context)?.image ??
+        EmptyImage.standard;
+    final simple = resolvedImage == EmptyImage.simple;
     final art = imageWidget ??
         CustomPaint(
           size: Size(64, r.imageHeight),

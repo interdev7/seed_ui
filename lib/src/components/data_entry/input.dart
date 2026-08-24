@@ -277,6 +277,18 @@ class _ResolvedInputToken {
   final double fontSizeLG;
 }
 
+/// Defaults for every [Input] under a `ConfigProvider`.
+///
+/// The input's own props, not its [InputToken] numbers.
+@immutable
+class InputDefaults {
+  /// Creates an [InputDefaults].
+  const InputDefaults({this.allowClear});
+
+  /// Whether inputs carry a clear button once they hold text.
+  final bool? allowClear;
+}
+
 /// A single- or multi-line text field with the kit's styling: a bordered box
 /// that brightens to the primary colour on focus, with optional affixes and a
 /// clear button.
@@ -306,7 +318,7 @@ class Input extends StatefulWidget {
     this.onSubmitted,
     this.disabled,
     this.readOnly = false,
-    this.allowClear = false,
+    this.allowClear,
     this.autofocus = false,
     this.prefix,
     this.suffix,
@@ -355,7 +367,7 @@ class Input extends StatefulWidget {
   final bool readOnly;
 
   /// Shows a clear button while the field is non-empty and focused.
-  final bool allowClear;
+  final bool? allowClear;
 
   /// Focuses the field when it first appears.
   final bool autofocus;
@@ -422,6 +434,13 @@ class Input extends StatefulWidget {
 }
 
 class _SoftInputState extends State<Input> {
+  /// Whether a clear button appears: this input's word, then the subtree's,
+  /// then no.
+  bool get _allowClear =>
+      widget.allowClear ??
+      ConfigProvider.defaultsOf<InputDefaults>(context)?.allowClear ??
+      false;
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -482,7 +501,7 @@ class _SoftInputState extends State<Input> {
     // The placeholder, clear button and counter all depend on the current
     // text, so rebuild when any of them is in use.
     if ((widget.placeholder != null ||
-            widget.allowClear ||
+            _allowClear ||
             widget.count?.show == true) &&
         mounted) {
       setState(() {});
@@ -548,8 +567,7 @@ class _SoftInputState extends State<Input> {
             const InputToken())
         ._resolve(token);
     final fontSize = _fontSize(r);
-    final showClear =
-        widget.allowClear && _enabled && _controller.text.isNotEmpty;
+    final showClear = _allowClear && _enabled && _controller.text.isNotEmpty;
     final search = widget.search;
     final password = widget.password;
     final showReveal = password != null && password.visibilityToggle;

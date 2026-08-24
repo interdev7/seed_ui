@@ -5,6 +5,7 @@ import 'package:seed_ui/seed_ui.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
+import 'version.dart';
 import 'components/localization_demo.dart';
 import 'components/feedback/alert_demo.dart';
 import 'components/data_display/avatar_demo.dart';
@@ -247,13 +248,27 @@ class MainLayout extends StatelessWidget {
                             width: 50,
                             height: 50,
                           ),
-                          Text(
-                            'seed_ui',
-                            style: TextStyle(
-                              fontSize: token.fontSizeXL,
-                              color: token.colorText,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'seed_ui',
+                                style: TextStyle(
+                                  fontSize: token.fontSizeXL,
+                                  color: token.colorText,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              // Which version this gallery was built against, so a
+                              // screenshot or a deployed page says what it is.
+                              // The constant is generated from pubspec.yaml by
+                              // tool/sync_version.sh.
+                              const Tag(
+                                color: TagColor.processing,
+                                child: Text('v$seedUiVersion'),
+                              ),
+                            ],
                           ),
                         ],
                       ),

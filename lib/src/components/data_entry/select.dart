@@ -184,6 +184,24 @@ class _ResolvedSelectToken {
   final double borderRadiusLG;
 }
 
+/// Defaults for every [Select] under a `ConfigProvider`.
+///
+/// The select's own props, not its [SelectToken] numbers.
+@immutable
+class SelectDefaults {
+  /// Creates a [SelectDefaults].
+  const SelectDefaults({this.variant, this.allowClear, this.showSearch});
+
+  /// How selects are filled and bordered.
+  final SelectVariant? variant;
+
+  /// Whether selects carry a clear button once something is chosen.
+  final bool? allowClear;
+
+  /// Whether typing filters the options.
+  final bool? showSearch;
+}
+
 /// A dropdown for choosing one or more values from a list.
 ///
 /// The value is always a `List<T>` — a single-select simply holds at most one
@@ -216,14 +234,14 @@ class Select<T> extends StatefulWidget {
     this.placeholder,
     this.disabled,
     this.loading = false,
-    this.allowClear = false,
-    this.showSearch = false,
+    this.allowClear,
+    this.showSearch,
     this.search,
     this.filterOption,
     this.onSearch,
     this.size,
     this.status,
-    this.variant = SelectVariant.outlined,
+    this.variant,
     this.open,
     this.onOpenChange,
     this.maxTagCount,
@@ -268,10 +286,10 @@ class Select<T> extends StatefulWidget {
   final bool loading;
 
   /// Shows a clear button while there is a selection.
-  final bool allowClear;
+  final bool? allowClear;
 
   /// Lets the user filter the options by typing.
-  final bool showSearch;
+  final bool? showSearch;
 
   /// Search configuration (filter, sort, onSearch) — the `showSearch`
   /// object. Non-null also enables search, like [showSearch].
@@ -291,7 +309,7 @@ class Select<T> extends StatefulWidget {
   final SelectStatus? status;
 
   /// The box style.
-  final SelectVariant variant;
+  final SelectVariant? variant;
 
   /// Drives dropdown visibility externally. Null lets the field manage it.
   final bool? open;
@@ -339,6 +357,18 @@ class Select<T> extends StatefulWidget {
 }
 
 class _SelectState<T> extends State<Select<T>> {
+  /// The defaults set for selects in this subtree, if any.
+  SelectDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<SelectDefaults>(context);
+
+  /// Each follows the same order: this select, then the subtree, then the kit.
+  bool get _allowClear => widget.allowClear ?? _defaults?.allowClear ?? false;
+
+  bool get _showSearch => widget.showSearch ?? _defaults?.showSearch ?? false;
+
+  SelectVariant get _variant =>
+      widget.variant ?? _defaults?.variant ?? SelectVariant.outlined;
+
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
@@ -432,9 +462,7 @@ class _SelectState<T> extends State<Select<T>> {
 
   /// Whether the user can filter the options by typing.
   bool get _searchable =>
-      widget.showSearch ||
-      widget.search != null ||
-      widget.mode == SelectMode.tags;
+      _showSearch || widget.search != null || widget.mode == SelectMode.tags;
 
   List<SelectOption<T>> get _visibleOptions {
     final search = widget.search;
@@ -718,17 +746,17 @@ class _SelectState<T> extends State<Select<T>> {
     final searching = _searchable;
     _syncAnchor();
     final showClear =
-        widget.allowClear && _enabled && hasValue && (_hovered || _open);
+        _allowClear && _enabled && hasValue && (_hovered || _open);
 
-    final bordered = widget.variant != SelectVariant.borderless;
+    final bordered = _variant != SelectVariant.borderless;
     final Color fill;
     if (!_enabled) {
       fill = token.colorFillTertiary;
-    } else if (widget.variant == SelectVariant.filled) {
+    } else if (_variant == SelectVariant.filled) {
       fill = _hovered || _open || _focused
           ? token.colorFillSecondary
           : token.colorFillTertiary;
-    } else if (widget.variant == SelectVariant.borderless) {
+    } else if (_variant == SelectVariant.borderless) {
       fill = const Color(0x00000000);
     } else {
       fill = token.colorBgContainer;
@@ -822,7 +850,7 @@ class _SelectState<T> extends State<Select<T>> {
       suffix = _ClearButton(token: token, onTap: _clearAll);
     } else if (widget.suffixIcon != null) {
       suffix = widget.suffixIcon!;
-    } else if (widget.showSearch && _open) {
+    } else if (_showSearch && _open) {
       // A searchable, open select shows a magnifier rather than the arrow.
       suffix = SearchIcon(color: token.colorTextTertiary);
     } else {

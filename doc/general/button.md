@@ -51,10 +51,10 @@ Button(variant: ButtonVariant.outlined, onPressed: () {}, child: const Text('Def
 | --- | --- | --- | --- |
 | `child` | `Widget?` | `null` | Label; omit with `icon` set for an icon-only button |
 | `onPressed` | `VoidCallback?` | `null` | Tap handler; null disables the button |
-| `variant` | `ButtonVariant` | `outlined` | How the button is filled |
-| `color` | `ButtonColor` | `defaultColor` | Which palette it uses |
+| `variant` | `ButtonVariant?` | `null` | Follows `ButtonDefaults.variant`, else `outlined`. How the button is filled |
+| `color` | `ButtonColor?` | `null` | Follows `ButtonDefaults.color`, else `defaultColor`. Which palette it uses |
 | `size` | `SoftSize` | `middle` | `small` (24), `middle` (32), `large` (40) |
-| `shape` | `ButtonShape` | `defaultShape` | `defaultShape`, `circle`, `round` |
+| `shape` | `ButtonShape?` | `null` | Follows `ButtonDefaults.shape`, else `defaultShape`. `defaultShape`, `circle`, `round` |
 | `icon` | `Widget?` | `null` | Leading icon, tinted and sized to the label |
 | `loading` | `bool` | `false` | Swaps the icon for a spinner and blocks taps |
 | `gradient` | `Gradient?` | `null` | Optional background gradient (e.g. `LinearGradient`) |

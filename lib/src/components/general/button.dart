@@ -164,6 +164,35 @@ class _ResolvedButtonToken {
   final double paddingInlineLG;
 }
 
+/// Defaults for every [Button] under a `ConfigProvider`.
+///
+/// Not tokens — those are numbers and colours, and live in [ButtonToken].
+/// These are the button's own props, applied wherever a button does not name
+/// one for itself: a kit where every button is round and filled says so once.
+///
+/// ```dart
+/// ConfigProvider(
+///   defaults: const ComponentDefaults(
+///     button: ButtonDefaults(shape: ButtonShape.round),
+///   ),
+///   child: ...,
+/// )
+/// ```
+@immutable
+class ButtonDefaults {
+  /// Creates a [ButtonDefaults].
+  const ButtonDefaults({this.variant, this.color, this.shape});
+
+  /// How buttons are filled and bordered.
+  final ButtonVariant? variant;
+
+  /// Which palette buttons draw from.
+  final ButtonColor? color;
+
+  /// The outline shape buttons take.
+  final ButtonShape? shape;
+}
+
 /// A pressable button with hover, press, loading and disabled states.
 ///
 /// Its look is a [variant] (how it is filled) crossed with a [color] (which
@@ -185,10 +214,10 @@ class Button extends StatefulWidget {
     super.key,
     this.child,
     this.onPressed,
-    this.variant = ButtonVariant.outlined,
-    this.color = ButtonColor.defaultColor,
+    this.variant,
+    this.color,
     this.size,
-    this.shape = ButtonShape.defaultShape,
+    this.shape,
     this.icon,
     this.loading = false,
     this.block = false,
@@ -207,16 +236,16 @@ class Button extends StatefulWidget {
   final VoidCallback? onPressed;
 
   /// How the button is filled and bordered.
-  final ButtonVariant variant;
+  final ButtonVariant? variant;
 
   /// Which palette the button draws from.
-  final ButtonColor color;
+  final ButtonColor? color;
 
   /// Which control height to use.
   final SoftSize? size;
 
   /// The outline shape. Use [ButtonShape.circle] for icon-only buttons.
-  final ButtonShape shape;
+  final ButtonShape? shape;
 
   /// Leading icon, tinted and sized to match the label.
   final Widget? icon;
@@ -240,6 +269,21 @@ class Button extends StatefulWidget {
 }
 
 class _SoftButtonState extends State<Button> {
+  /// The defaults set for buttons in this subtree, if any.
+  ButtonDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<ButtonDefaults>(context);
+
+  /// Each of the three follows the same order: what this button says, then
+  /// what the subtree says, then the kit's own default.
+  ButtonVariant get _variant =>
+      widget.variant ?? _defaults?.variant ?? ButtonVariant.outlined;
+
+  ButtonColor get _color =>
+      widget.color ?? _defaults?.color ?? ButtonColor.defaultColor;
+
+  ButtonShape get _shape =>
+      widget.shape ?? _defaults?.shape ?? ButtonShape.defaultShape;
+
   /// Whether this button is disabled: its own word, else the one set for the
   /// subtree, else no.
   bool get _disabled =>
@@ -269,7 +313,7 @@ class _SoftButtonState extends State<Button> {
         SoftSize.large => r.fontSizeLG,
       };
 
-  BorderRadius _radius(_ResolvedButtonToken r) => switch (widget.shape) {
+  BorderRadius _radius(_ResolvedButtonToken r) => switch (_shape) {
         ButtonShape.circle ||
         ButtonShape.round =>
           BorderRadius.circular(_height(r) / 2),
@@ -282,12 +326,12 @@ class _SoftButtonState extends State<Button> {
           ),
       };
 
-  bool get _isDefault => widget.color == ButtonColor.defaultColor;
+  bool get _isDefault => _color == ButtonColor.defaultColor;
 
   /// The palette the button's accents come from. Default colour borrows the
   /// primary for its hover/pressed accents, the way the default
   /// button turns blue on hover.
-  ColorGroup _group(Token token) => switch (widget.color) {
+  ColorGroup _group(Token token) => switch (_color) {
         ButtonColor.primary || ButtonColor.defaultColor => token.primary,
         ButtonColor.danger => token.error,
         ButtonColor.success => token.success,
@@ -305,11 +349,11 @@ class _SoftButtonState extends State<Button> {
     final active = _hovered || _pressed;
 
     if (!_enabled) {
-      final flat = widget.variant == ButtonVariant.text ||
-          widget.variant == ButtonVariant.link;
+      final flat =
+          _variant == ButtonVariant.text || _variant == ButtonVariant.link;
       final noBorder = flat ||
-          widget.variant == ButtonVariant.solid ||
-          widget.variant == ButtonVariant.filled;
+          _variant == ButtonVariant.solid ||
+          _variant == ButtonVariant.filled;
       return _ButtonStyle(
         // Composited rather than left translucent. The disabled fill is 4% of
         // black; a button that becomes enabled animates it to an opaque colour,
@@ -321,7 +365,7 @@ class _SoftButtonState extends State<Button> {
             : Color.alphaBlend(token.colorFillTertiary, token.colorBgContainer),
         border: noBorder ? null : token.colorBorder,
         foreground: token.colorTextQuaternary,
-        dashed: widget.variant == ButtonVariant.dashed,
+        dashed: _variant == ButtonVariant.dashed,
       );
     }
 
@@ -334,7 +378,7 @@ class _SoftButtonState extends State<Button> {
       );
     }
 
-    switch (widget.variant) {
+    switch (_variant) {
       case ButtonVariant.solid:
         final bg = _isDefault
             ? token.colorText
@@ -354,7 +398,7 @@ class _SoftButtonState extends State<Button> {
           background: token.colorBgContainer,
           border: accented ? _stateful(g) : token.colorBorder,
           foreground: accented ? _stateful(g) : token.colorText,
-          dashed: widget.variant == ButtonVariant.dashed,
+          dashed: _variant == ButtonVariant.dashed,
           shadow: true,
         );
       case ButtonVariant.filled:
@@ -447,10 +491,9 @@ class _SoftButtonState extends State<Button> {
       decoration: BoxDecoration(
         color: widget.gradient == null ? style.background : null,
         gradient: widget.gradient,
-        borderRadius: widget.shape == ButtonShape.circle ? null : _radius(r),
-        shape: widget.shape == ButtonShape.circle
-            ? BoxShape.circle
-            : BoxShape.rectangle,
+        borderRadius: _shape == ButtonShape.circle ? null : _radius(r),
+        shape:
+            _shape == ButtonShape.circle ? BoxShape.circle : BoxShape.rectangle,
         border: style.border == null || style.dashed
             ? null
             : Border.all(

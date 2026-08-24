@@ -3,9 +3,11 @@ import 'package:flutter/widgets.dart';
 
 import '../components/data_display/empty.dart';
 import '../l10n/seed_localizations.dart';
+import 'component_defaults.dart';
 import 'components_config.dart';
 import 'design_token.dart';
 
+export 'component_defaults.dart';
 export 'components_config.dart';
 
 /// Which component is asking for the "no data" placeholder.
@@ -144,6 +146,7 @@ class _Config {
     this.locale,
     this.componentSize,
     this.componentDisabled,
+    this.defaults = const ComponentDefaults(),
   });
 
   final ThemeData theme;
@@ -151,6 +154,7 @@ class _Config {
   final SeedLocalizations? locale;
   final SoftSize? componentSize;
   final bool? componentDisabled;
+  final ComponentDefaults defaults;
 }
 
 /// Carries the resolved [_Config] down the tree.
@@ -200,6 +204,7 @@ class ConfigProvider extends StatefulWidget {
     this.locale,
     this.componentSize,
     this.componentDisabled,
+    this.defaults,
     required this.child,
   });
 
@@ -256,6 +261,15 @@ class ConfigProvider extends StatefulWidget {
   /// item, not about the screen, and is left alone.
   final bool? componentDisabled;
 
+  /// Default props for the components below — the second half of configuring
+  /// one, beside `theme.components`.
+  ///
+  /// That carries tokens, the numbers and colours a component draws with; this
+  /// carries the component's own props, applied wherever a widget does not
+  /// name one itself. Merged slot by slot with the defaults above, this
+  /// provider winning where the two overlap.
+  final ComponentDefaults? defaults;
+
   /// The subtree this configuration applies to.
   final Widget child;
 
@@ -281,6 +295,14 @@ class ConfigProvider extends StatefulWidget {
   /// placeholder rather than handing back a null to deal with.
   static EmptyBuilder? emptyBuilderOf(BuildContext context) =>
       _configOf(context).emptyBuilder;
+
+  /// The defaults of type [T] in scope, or null when none are set.
+  ///
+  /// A component resolves its own prop first:
+  /// `widget.shape ?? ConfigProvider.defaultsOf<ButtonDefaults>(context)?.shape
+  /// ?? ButtonShape.defaultShape`.
+  static T? defaultsOf<T>(BuildContext context) =>
+      _configOf(context).defaults.of<T>();
 
   /// The ambient size in scope, or null when nothing set one.
   ///
@@ -348,7 +370,8 @@ class _ConfigProviderState extends State<ConfigProvider> {
         old.emptyBuilder != widget.emptyBuilder ||
         old.locale != widget.locale ||
         old.componentSize != widget.componentSize ||
-        old.componentDisabled != widget.componentDisabled) {
+        old.componentDisabled != widget.componentDisabled ||
+        !identical(old.defaults, widget.defaults)) {
       _resolve();
     }
   }
@@ -364,6 +387,8 @@ class _ConfigProviderState extends State<ConfigProvider> {
       locale: widget.locale ?? parent?.locale,
       componentSize: widget.componentSize ?? parent?.componentSize,
       componentDisabled: widget.componentDisabled ?? parent?.componentDisabled,
+      defaults: (parent?.defaults ?? const ComponentDefaults())
+          .merge(widget.defaults ?? const ComponentDefaults()),
     );
   }
 

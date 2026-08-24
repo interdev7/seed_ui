@@ -60,6 +60,19 @@ check_constraint() {
 check_constraint README.md
 check_constraint example/pubspec.yaml
 
+# The gallery prints its version in the header, from a constant generated out
+# of pubspec.yaml. Nothing else would notice it going stale — a screenshot
+# would simply claim the wrong version.
+constant_file="example/lib/version.dart"
+if [ -f "$constant_file" ]; then
+  found="$(grep -oE "seedUiVersion = '[^']+'" "$constant_file" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" || true)"
+  if [ "$found" = "$version" ]; then
+    echo "✓ $constant_file declares $version"
+  else
+    note "$constant_file says '$found' but pubspec.yaml is $version. Regenerate it with ./tool/sync_version.sh"
+  fi
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo
   echo "Version references disagree. Fix them before merging."

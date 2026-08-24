@@ -31,7 +31,7 @@ export 'src/components/data_display/collapse.dart'
 export 'src/components/data_display/countdown.dart'
     show Countdown, CountdownController, CountdownType, CountdownToken;
 export 'src/components/data_display/empty.dart'
-    show Empty, EmptyImage, EmptyToken;
+    show EmptyDefaults, Empty, EmptyImage, EmptyToken;
 export 'src/components/data_display/listy.dart'
     show
         Listy,
@@ -77,6 +77,7 @@ export 'src/components/data_display/tabs.dart'
         TabBarExtra;
 export 'src/components/data_display/tag.dart'
     show
+        TagDefaults,
         Tag,
         TagColor,
         TagToken,
@@ -115,6 +116,7 @@ export 'src/components/data_entry/checkbox.dart'
     show Checkbox, CheckboxGroup, CheckboxOption, CheckboxToken;
 export 'src/components/data_entry/input.dart'
     show
+        InputDefaults,
         Input,
         InputStatus,
         InputToken,
@@ -134,6 +136,7 @@ export 'src/components/data_entry/radio.dart'
         RadioToken;
 export 'src/components/data_entry/select.dart'
     show
+        SelectDefaults,
         Select,
         SelectMode,
         SelectOption,
@@ -199,7 +202,13 @@ export 'src/components/feedback/progress.dart'
 export 'src/components/feedback/result.dart' show Result, ResultToken;
 export 'src/components/feedback/spin.dart' show Spin, SpinPosition, SpinToken;
 export 'src/components/general/button.dart'
-    show Button, ButtonColor, ButtonShape, ButtonToken, ButtonVariant;
+    show
+        ButtonDefaults,
+        Button,
+        ButtonColor,
+        ButtonShape,
+        ButtonToken,
+        ButtonVariant;
 export 'src/components/navigation/dropdown.dart'
     show
         Dropdown,
@@ -228,6 +237,7 @@ export 'src/l10n/seed_localizations.dart' show SeedLocalizations;
 export 'src/theme/config_provider.dart'
     show
         ConfigProvider,
+        ComponentDefaults,
         ComponentsConfig,
         EmptyBuilder,
         EmptySlot,

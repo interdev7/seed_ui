@@ -1,7 +1,14 @@
+import 'dart:typed_data';
+import 'dart:ui' show ImageByteFormat;
+
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
+
+/// Anchors the boundary the illustration is captured from.
+const _art = ValueKey('art');
 
 Widget _host({
   SoftSize? componentSize,
@@ -237,6 +244,160 @@ void main() {
           .widgetList<Checkbox>(find.byType(Checkbox))
           .where((c) => c.disabled ?? false);
       expect(off.length, 1);
+    });
+  });
+  group('ComponentDefaults', () {
+    Widget host(ComponentDefaults? defaults, Widget child) => ConfigProvider(
+          defaults: defaults,
+          child: MaterialApp(home: Scaffold(body: Center(child: child))),
+        );
+
+    testWidgets('a default reaches every widget that did not say', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          const ComponentDefaults(
+            tag: TagDefaults(closable: true),
+          ),
+          const Tag(child: Text('beta')),
+        ),
+      );
+      // closable adds the close button; nothing else would.
+      expect(find.byType(Tag), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Tag),
+          matching: find.byType(GestureDetector),
+        ),
+        findsWidgets,
+        reason: 'a closable tag carries something to tap',
+      );
+    });
+
+    testWidgets("a widget's own prop wins over the default", (tester) async {
+      // The two illustrations differ only in what is painted, so the pixels
+      // are the only honest witness.
+      Future<Uint8List> paint(ComponentDefaults? defaults, Widget empty) async {
+        await tester.pumpWidget(
+          host(defaults, RepaintBoundary(key: _art, child: empty)),
+        );
+        await tester.pumpAndSettle();
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byKey(_art),
+        );
+        // Encoding is real async work, so it has to run outside the fake
+        // clock or the future never completes.
+        return (await tester.runAsync(() async {
+          final image = await boundary.toImage();
+          final data = await image.toByteData(format: ImageByteFormat.png);
+          return data!.buffer.asUint8List();
+        }))!;
+      }
+
+      const simpleEverywhere = ComponentDefaults(
+        empty: EmptyDefaults(image: EmptyImage.simple),
+      );
+
+      final plain = await paint(null, const Empty());
+      final defaulted = await paint(simpleEverywhere, const Empty());
+      final overridden = await paint(
+        simpleEverywhere,
+        const Empty(image: EmptyImage.standard),
+      );
+
+      expect(defaulted, isNot(plain),
+          reason: 'the default changed the drawing');
+      expect(
+        overridden,
+        plain,
+        reason: 'the widget asked for the standard one and got it',
+      );
+    });
+
+    testWidgets('an Input takes allowClear from the subtree', (tester) async {
+      // The clear button is a painted glyph of its own, so it shows up as one
+      // more CustomPaint inside the field.
+      Future<int> paints(ComponentDefaults? defaults, Widget input) async {
+        await tester.pumpWidget(
+          host(defaults, SizedBox(width: 300, child: input)),
+        );
+        await tester.enterText(find.byType(EditableText), 'typed');
+        await tester.pumpAndSettle();
+        return find
+            .descendant(
+              of: find.byType(Input),
+              matching: find.byType(CustomPaint),
+            )
+            .evaluate()
+            .length;
+      }
+
+      const clearing = ComponentDefaults(
+        input: InputDefaults(allowClear: true),
+      );
+
+      final base = await paints(null, const Input());
+      final defaulted = await paints(clearing, const Input());
+      final refused = await paints(clearing, const Input(allowClear: false));
+
+      expect(defaulted, greaterThan(base), reason: 'the subtree added it');
+      expect(refused, base, reason: 'the input said no');
+    });
+
+    testWidgets('defaults merge slot by slot through nested providers',
+        (tester) async {
+      late ButtonDefaults? button;
+      late TagDefaults? tag;
+      await tester.pumpWidget(
+        ConfigProvider(
+          defaults: const ComponentDefaults(
+            button: ButtonDefaults(shape: ButtonShape.round),
+          ),
+          child: MaterialApp(
+            home: ConfigProvider(
+              defaults: const ComponentDefaults(
+                tag: TagDefaults(closable: true),
+              ),
+              child: Builder(
+                builder: (context) {
+                  button = ConfigProvider.defaultsOf<ButtonDefaults>(context);
+                  tag = ConfigProvider.defaultsOf<TagDefaults>(context);
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(button?.shape, ButtonShape.round, reason: 'the outer one stands');
+      expect(tag?.closable, isTrue);
+    });
+
+    testWidgets('the nearer provider wins where both name a component',
+        (tester) async {
+      late ButtonDefaults? seen;
+      await tester.pumpWidget(
+        ConfigProvider(
+          defaults: const ComponentDefaults(
+            button: ButtonDefaults(shape: ButtonShape.round),
+          ),
+          child: MaterialApp(
+            home: ConfigProvider(
+              defaults: const ComponentDefaults(
+                button: ButtonDefaults(shape: ButtonShape.circle),
+              ),
+              child: Builder(
+                builder: (context) {
+                  seen = ConfigProvider.defaultsOf<ButtonDefaults>(context);
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(seen?.shape, ButtonShape.circle);
     });
   });
 }

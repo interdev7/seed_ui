@@ -95,6 +95,21 @@ class _ResolvedTagToken {
   final double borderRadius;
 }
 
+/// Defaults for every [Tag] under a `ConfigProvider`.
+///
+/// The tag's own props, not its [TagToken] numbers.
+@immutable
+class TagDefaults {
+  /// Creates a [TagDefaults].
+  const TagDefaults({this.variant, this.closable});
+
+  /// How tags are filled and bordered.
+  final TagVariant? variant;
+
+  /// Whether tags carry a close button.
+  final bool? closable;
+}
+
 /// A small label for categorising or marking content.
 ///
 /// ```dart
@@ -113,9 +128,9 @@ class Tag extends StatelessWidget {
     this.child,
     this.color,
     this.customColor,
-    this.variant = TagVariant.outlined,
+    this.variant,
     this.icon,
-    this.closable = false,
+    this.closable,
     this.onClose,
     this.closeIcon,
     this.gradient,
@@ -135,13 +150,13 @@ class Tag extends StatelessWidget {
   final Color? customColor;
 
   /// How the tag is filled and bordered.
-  final TagVariant variant;
+  final TagVariant? variant;
 
   /// Optional leading icon.
   final Widget? icon;
 
   /// Shows a close button.
-  final bool closable;
+  final bool? closable;
 
   /// Called when the close button is tapped.
   final VoidCallback? onClose;
@@ -152,7 +167,20 @@ class Tag extends StatelessWidget {
   /// Per-instance token overrides.
   final TagToken? token;
 
-  _TagStyle _style(Token t) {
+  /// Each follows the same order: this tag's word, then the subtree's, then
+  /// the kit's own default.
+  TagVariant _variantIn(BuildContext context) =>
+      variant ??
+      ConfigProvider.defaultsOf<TagDefaults>(context)?.variant ??
+      TagVariant.outlined;
+
+  bool _closableIn(BuildContext context) =>
+      closable ??
+      ConfigProvider.defaultsOf<TagDefaults>(context)?.closable ??
+      false;
+
+  _TagStyle _style(BuildContext context, Token t) {
+    final variant = _variantIn(context);
     if (gradient != null && color == null && customColor == null) {
       return const _TagStyle(
         bg: Color(0x00000000),
@@ -226,7 +254,7 @@ class Tag extends StatelessWidget {
             ConfigProvider.componentOf<TagToken>(context) ??
             const TagToken())
         ._resolve(token);
-    final style = _style(token);
+    final style = _style(context, token);
     final fontSize = r.fontSize;
 
     return Container(
@@ -265,7 +293,7 @@ class Tag extends StatelessWidget {
             ),
             child: child ?? const SizedBox.shrink(),
           ),
-          if (closable) ...[
+          if (_closableIn(context)) ...[
             SizedBox(width: token.sizeXXS),
             MouseRegion(
               cursor: SystemMouseCursors.click,

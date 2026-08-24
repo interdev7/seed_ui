@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`ConfigProvider.defaults`** — default *props* for components, beside the
+  tokens in `ThemeData.components`. A token says how a button is drawn; a
+  default says what a button is unless it says otherwise, which is the only way
+  to state a shape, a variant, or whether a tag closes:
+
+  ```dart
+  ConfigProvider(
+    defaults: const ComponentDefaults(
+      button: ButtonDefaults(shape: ButtonShape.round),
+      tag: TagDefaults(closable: true),
+    ),
+    child: ...,
+  )
+  ```
+
+  The first slice follows antd's own picks: `Button` (`variant`, `color`,
+  `shape`), `Input` (`allowClear`), `Select` (`variant`, `allowClear`,
+  `showSearch`), `Tag` (`variant`, `closable`) and `Empty` (`image`). A
+  widget's own prop always wins, and the sets merge slot by slot through
+  nested providers. `ConfigProvider.defaultsOf<T>` reads them for a widget of
+  your own.
+
+- **The gallery shows its version** beside the logo, generated from
+  `pubspec.yaml` by `tool/sync_version.sh` and guarded by
+  `tool/check_version.sh` — a screenshot now says which version it is.
+
 - **`ConfigProvider.componentSize` and `ConfigProvider.componentDisabled`** —
   one word for a whole subtree, the way antd's `SizeContext` and
   `DisabledContext` work. A dense screen sets `componentSize: SoftSize.small`
@@ -36,6 +62,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   // after
   final off = button.disabled ?? false;
   ```
+
+  The same applies to the props that now follow `ConfigProvider.defaults`:
+  `Button.variant`, `Button.color`, `Button.shape`, `Input.allowClear`,
+  `Select.variant`, `Select.allowClear`, `Select.showSearch`, `Tag.variant`,
+  `Tag.closable` and `Empty.image`.
 
   `size` changed on `Avatar`, `AvatarGroup`, `Badge`, `Button`, `Card`,
   `Collapse`, `Input`, `InputNumber`, `Pagination`, `RadioGroup`, `Segmented`,

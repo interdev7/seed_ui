@@ -15,11 +15,18 @@ cd example && flutter analyze && flutter test
 ./tool/check_version.sh  # only matters when you touched pubspec.yaml
 ```
 
-`check_version.sh` compares `pubspec.yaml` against the CHANGELOG heading and
-against the constraint quoted in the README and the gallery. Bumping the
-version without renaming `## Unreleased` is otherwise only caught by
-`pub publish`, and a stale constraint in the README is caught by nothing at
-all.
+`check_version.sh` compares `pubspec.yaml` against the CHANGELOG heading, the
+constraint quoted in the README and the gallery, and the version the gallery
+prints beside its logo. Bumping the version without renaming `## Unreleased` is
+otherwise only caught by `pub publish`; a stale constraint in the README, or a
+gallery screenshot claiming the wrong version, is caught by nothing at all.
+
+The gallery's version lives in `example/lib/version.dart`, generated from
+`pubspec.yaml`. After a bump, regenerate it:
+
+```sh
+./tool/sync_version.sh
+```
 
 ### A hook for the two easiest to forget
 

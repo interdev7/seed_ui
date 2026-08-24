@@ -9,6 +9,7 @@ BadgeStatus
 BadgeToken
 Button
 ButtonColor
+ButtonDefaults
 ButtonShape
 ButtonToken
 ButtonVariant
@@ -33,6 +34,7 @@ CollapseItem
 CollapseToken
 CollapsibleTrigger
 ColorGroup
+ComponentDefaults
 ComponentsConfig
 ConfigProvider
 ControlSize
@@ -62,6 +64,7 @@ DropdownToken
 DropdownTrigger
 Empty
 EmptyBuilder
+EmptyDefaults
 EmptyImage
 EmptySlot
 EmptyToken
@@ -70,6 +73,7 @@ ExplicitSquareSize
 GapPlacement
 HolderPainter
 Input
+InputDefaults
 InputNumber
 InputNumberMode
 InputNumberToken
@@ -146,6 +150,7 @@ SegmentedDirection
 SegmentedOption
 SegmentedToken
 Select
+SelectDefaults
 SelectMode
 SelectOption
 SelectSearch
@@ -190,6 +195,7 @@ TabsToken
 TabsType
 Tag
 TagColor
+TagDefaults
 TagToken
 TagVariant
 ThemeContext

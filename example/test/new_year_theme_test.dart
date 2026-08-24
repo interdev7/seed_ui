@@ -10,7 +10,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ConfigProvider(
+        const ConfigProvider(
           theme: newYearTheme(dark: dark),
           child: MaterialApp(
             home: Scaffold(
@@ -18,11 +18,11 @@ void main() {
                 child: Column(
                   children: [
                     Button(onPressed: () {}, child: const Text('Open gifts')),
-                    const Tag(child: Text('tag')),
-                    const Alert(message: Text('alert'), showIcon: true),
-                    const Card(title: Text('card'), child: Text('body')),
-                    const Progress(percent: 0.6),
-                    const Input(placeholder: 'wish'),
+                    Tag(child: Text('tag')),
+                    Alert(message: Text('alert'), showIcon: true),
+                    Card(title: Text('card'), child: Text('body')),
+                    Progress(percent: 0.6),
+                    Input(placeholder: 'wish'),
                     Checkbox(checked: true, onChanged: (_) {}),
                     Switch(value: true, onChanged: (_) {}),
                     Segmented<int>(
@@ -33,7 +33,7 @@ void main() {
                       ],
                       onChanged: (_) {},
                     ),
-                    const Timeline(items: [TimelineItem(title: Text('node'))]),
+                    Timeline(items: [TimelineItem(title: Text('node'))]),
                     SizedBox(
                       height: 120,
                       child: Listy(
@@ -43,7 +43,7 @@ void main() {
                       ),
                     ),
                     Pagination(total: 50, onChange: (_, __) {}),
-                    const Empty(),
+                    Empty(),
                   ],
                 ),
               ),

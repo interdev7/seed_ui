@@ -11,8 +11,8 @@ Future<void> _pumpDemo(WidgetTester tester) async {
   addTearDown(tester.view.reset);
 
   await tester.pumpWidget(
-    ConfigProvider(
-      child: const MaterialApp(
+    const ConfigProvider(
+      child: MaterialApp(
         home: Scaffold(body: SingleChildScrollView(child: TourDemo())),
       ),
     ),

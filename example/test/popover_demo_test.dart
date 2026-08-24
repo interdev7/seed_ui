@@ -13,10 +13,10 @@ Future<void> _pump(WidgetTester tester) async {
   // The kit renders floating layers into one overlay, reached through this
   // key — the same wiring a real app does in main().
   await tester.pumpWidget(
-    const ConfigProvider(
+    ConfigProvider(
       child: MaterialApp(
         navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(body: SingleChildScrollView(child: PopoverDemo())),
+        home: const Scaffold(body: SingleChildScrollView(child: PopoverDemo())),
       ),
     ),
   );

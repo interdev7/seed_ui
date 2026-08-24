@@ -104,6 +104,8 @@ export 'src/components/data_display/tabs.dart'
         TabBarExtra;
 export 'src/components/data_display/tag.dart'
     show
+        TagCustomColor,
+        TagPreset,
         CheckableTagGroupDefaults,
         TagDefaults,
         Tag,
@@ -253,6 +255,8 @@ export 'src/components/feedback/result.dart' show Result, ResultToken;
 export 'src/components/feedback/spin.dart' show Spin, SpinPosition, SpinToken;
 export 'src/components/general/button.dart'
     show
+        ButtonCustomColor,
+        ButtonPreset,
         ButtonDefaults,
         Button,
         ButtonColor,
@@ -304,6 +308,7 @@ export 'src/theme/design_token.dart'
         SoftSize,
         Token;
 export 'src/theme/palette.dart' show generate;
+export 'src/utils/hex_color.dart' show parseHexColor;
 export 'src/utils/overlay_host.dart' show UiKit;
 export 'src/utils/popover.dart'
     show PopoverAnimation, PopoverLayer, PopoverController, PopoverPlacement;

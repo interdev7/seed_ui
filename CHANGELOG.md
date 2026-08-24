@@ -33,6 +33,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nested providers. `ConfigProvider.defaultsOf<T>` reads them for a widget of
   your own. The full table is in [doc/theming.md](doc/theming.md).
 
+- **`ButtonColor` and `TagColor` take a colour of your own**, not just a
+  preset. The colour twin of `ControlSize`, and the same three call shapes:
+
+  ```dart
+  Button(color: ButtonColor.primary, ...)              // follows the theme
+  Button(color: const ButtonColor(Colors.white), ...)  // a colour of your own
+  Button(color: ButtonColor.fromString('#fff'), ...)   // as CSS writes it
+  ```
+
+  Each is now a sealed class: the presets moved to `ButtonPreset` / `TagPreset`
+  and are still reachable by their old names, so existing code is unaffected
+  and `switch` stays exhaustive. A colour of your own is shaded into the same
+  hover, press and disabled states a preset gets.
+
+  `parseHexColor` is exported for the same job elsewhere. It reads `#rgb`,
+  `#rgba`, `#rrggbb` and `#rrggbbaa` — **alpha last, as CSS writes it**, not
+  first as `Color(0xAARRGGBB)` does — and throws `FormatException` naming what
+  it got rather than quietly returning black.
+
 - **`unintended_html_in_doc_comment`** added to the lint set. An inline code
   span that opens on one line and closes on the next is not a code span, so
   `defaultsOf<ButtonDefaults>` in one doc comment reached pub.dev as an HTML
@@ -69,6 +88,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   final off = button.disabled;
   // after
   final off = button.disabled ?? false;
+  ```
+
+- **`Tag.customColor` is gone**; its `color` slot now takes a colour directly.
+  Two props for one idea meant `color` and `customColor` could disagree, and
+  only one of them could win.
+
+  ```dart
+  // before
+  Tag(customColor: const Color(0xFF722ED1), ...)
+  // after
+  Tag(color: const TagColor(Color(0xFF722ED1)), ...)
   ```
 
   The same applies to the 83 props that now follow `ConfigProvider.defaults`;

@@ -30,6 +30,34 @@ fill, and only while hovered or pressed.
 ## Colors
 
 | `ButtonColor` | Accent |
+
+### A colour of your own
+
+`color` takes a preset or any colour. A preset follows the theme, so a palette
+change carries every button with it; a colour of your own is taken as given and
+shaded into the same hover, press and disabled states.
+
+```dart
+Button(color: ButtonColor.primary, ...)              // follows the theme
+Button(color: const ButtonColor(Colors.white), ...)  // a colour of your own
+Button(color: ButtonColor.fromString('#fff'), ...)   // the same, as CSS writes it
+```
+
+`fromString` accepts `#rgb`, `#rgba`, `#rrggbb` and `#rrggbbaa`, with or
+without the `#`. **Alpha goes last**, as CSS writes it — not first, as
+`Color(0xAARRGGBB)` does. Anything else throws a `FormatException` naming what
+it got, rather than quietly coming out black.
+
+The presets live on `ButtonPreset`, so they can still be switched over
+exhaustively:
+
+```dart
+final name = switch (color) {
+  ButtonCustomColor(:final color) => '$color',
+  ButtonPreset.danger => 'danger',
+  ButtonPreset() => 'a preset',
+};
+```
 | --- | --- |
 | `defaultColor` | Neutral (grey outline, dark solid); hovers to the primary colour |
 | `primary` | The theme's primary |
@@ -52,7 +80,7 @@ Button(variant: ButtonVariant.outlined, onPressed: () {}, child: const Text('Def
 | `child` | `Widget?` | `null` | Label; omit with `icon` set for an icon-only button |
 | `onPressed` | `VoidCallback?` | `null` | Tap handler; null disables the button |
 | `variant` | `ButtonVariant?` | `null` | Follows `ButtonDefaults.variant`, else `outlined`. How the button is filled |
-| `color` | `ButtonColor?` | `null` | Follows `ButtonDefaults.color`, else `defaultColor`. Which palette it uses |
+| `color` | `ButtonColor?` | `null` | A preset, or a colour of your own. Follows `ButtonDefaults.color`, else `defaultColor` |
 | `size` | `SoftSize` | `middle` | `small` (24), `middle` (32), `large` (40) |
 | `shape` | `ButtonShape?` | `null` | Follows `ButtonDefaults.shape`, else `defaultShape`. `defaultShape`, `circle`, `round` |
 | `icon` | `Widget?` | `null` | Leading icon, tinted and sized to the label |

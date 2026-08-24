@@ -4,9 +4,50 @@ import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
+import '../../utils/hex_color.dart';
 
 /// A preset colour for a [Tag], mapping to the theme's status palettes.
-enum TagColor {
+/// The colour a [Tag] draws from: one of the kit's presets, or any colour you
+/// name.
+///
+/// ```dart
+/// Tag(color: TagColor.success, child: const Text('Done'))
+/// Tag(color: TagColor(Colors.teal), child: const Text('Mine'))
+/// Tag(color: TagColor.fromString('#0e7'), child: const Text('Mine'))
+/// ```
+sealed class TagColor {
+  /// Any colour of your own. The kit shades it into a tint, an outline and a
+  /// strong colour, the way it shades a preset.
+  const factory TagColor(Color color) = TagCustomColor;
+
+  const TagColor._();
+
+  /// Any colour of your own, written the way CSS writes it. See
+  /// [parseHexColor]; alpha goes last.
+  factory TagColor.fromString(String value) =>
+      TagCustomColor(parseHexColor(value));
+
+  /// The neutral tag, drawn from the theme's greys.
+  static const TagColor defaultColor = TagPreset.defaultColor;
+
+  /// The theme's primary accent.
+  static const TagColor primary = TagPreset.primary;
+
+  /// Green — a completed or healthy state.
+  static const TagColor success = TagPreset.success;
+
+  /// Blue — work that is still under way.
+  static const TagColor processing = TagPreset.processing;
+
+  /// Amber — something that needs attention.
+  static const TagColor warning = TagPreset.warning;
+
+  /// Red — a failure.
+  static const TagColor error = TagPreset.error;
+}
+
+/// The presets [TagColor] offers, as an enum you can switch over.
+enum TagPreset implements TagColor {
   /// The neutral tag, drawn from the theme's greys.
   defaultColor,
 
@@ -23,7 +64,24 @@ enum TagColor {
   warning,
 
   /// Red — a failure.
-  error
+  error,
+}
+
+/// A [TagColor] naming a colour outright, rather than a theme preset.
+final class TagCustomColor extends TagColor {
+  /// Creates a [TagCustomColor].
+  const TagCustomColor(this.color) : super._();
+
+  /// The colour the tag is built from.
+  final Color color;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TagCustomColor && other.color == color);
+
+  @override
+  int get hashCode => color.hashCode;
 }
 
 /// How a [Tag] is filled and bordered.
@@ -127,7 +185,6 @@ class Tag extends StatelessWidget {
     super.key,
     this.child,
     this.color,
-    this.customColor,
     this.variant,
     this.icon,
     this.closable,
@@ -145,9 +202,6 @@ class Tag extends StatelessWidget {
 
   /// A preset status colour. Ignored when [customColor] is set.
   final TagColor? color;
-
-  /// Any colour, expanded into a palette. Takes precedence over [color].
-  final Color? customColor;
 
   /// How the tag is filled and bordered.
   final TagVariant? variant;
@@ -181,7 +235,7 @@ class Tag extends StatelessWidget {
 
   _TagStyle _style(BuildContext context, Token t) {
     final variant = _variantIn(context);
-    if (gradient != null && color == null && customColor == null) {
+    if (gradient != null && color == null) {
       return const _TagStyle(
         bg: Color(0x00000000),
         border: Color(0x00000000),
@@ -194,9 +248,10 @@ class Tag extends StatelessWidget {
     // Resolve the three shades a coloured tag draws from: a light tint, an
     // outline and a strong (text / solid-fill) colour.
     Color tint, outline, strong;
-    if (customColor != null) {
+    final chosen = color;
+    if (chosen is TagCustomColor) {
       final p = generate(
-        customColor!,
+        chosen.color,
         dark: t.isDark,
         background: t.colorBgContainer,
       );
@@ -204,12 +259,12 @@ class Tag extends StatelessWidget {
       outline = p[2];
       strong = p[5];
     } else {
-      final g = switch (color) {
-        TagColor.primary => t.primary,
-        TagColor.success => t.success,
-        TagColor.processing => t.info,
-        TagColor.warning => t.warning,
-        TagColor.error => t.error,
+      final g = switch (chosen) {
+        TagPreset.primary => t.primary,
+        TagPreset.success => t.success,
+        TagPreset.processing => t.info,
+        TagPreset.warning => t.warning,
+        TagPreset.error => t.error,
         _ => null,
       };
       if (g == null) {

@@ -11,7 +11,8 @@ Tag(color: TagColor.success, child: const Text('Done'))
 A tag's look is a **colour** crossed with a **variant**.
 
 Use a `TagColor` preset — `defaultColor`, `primary`, `success`, `processing`,
-`warning`, `error` — or pass any `customColor` (expanded into a palette, like
+`warning`, `error` — or name any colour in the same slot, `TagColor(...)` or
+`TagColor.fromString('#722ed1')` (expanded into a palette, like
 the named preset colours).
 
 `TagVariant` chooses the fill:
@@ -24,8 +25,8 @@ the named preset colours).
 
 ```dart
 Tag(color: TagColor.error, child: const Text('error'))
-Tag(customColor: const Color(0xFF722ED1), variant: TagVariant.filled, child: const Text('purple'))
-Tag(customColor: const Color(0xFFFA541C), variant: TagVariant.solid, child: const Text('solid'))
+Tag(color: const TagColor(Color(0xFF722ED1)), variant: TagVariant.filled, child: const Text('purple'))
+Tag(color: TagColor.fromString('#fa541c'), variant: TagVariant.solid, child: const Text('solid'))
 Tag(gradient: LinearGradient(colors: [Color(0xFF87D068), Color(0xFF108EE9)]), child: const Text('gradient'))
 ```
 

@@ -11,7 +11,9 @@ BadgeStatus
 BadgeToken
 Button
 ButtonColor
+ButtonCustomColor
 ButtonDefaults
+ButtonPreset
 ButtonShape
 ButtonToken
 ButtonVariant
@@ -215,7 +217,9 @@ TabsToken
 TabsType
 Tag
 TagColor
+TagCustomColor
 TagDefaults
+TagPreset
 TagToken
 TagVariant
 ThemeContext
@@ -264,4 +268,5 @@ UserIcon
 generate
 message
 notification
+parseHexColor
 stepsRingPadding

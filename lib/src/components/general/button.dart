@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
+import '../../utils/hex_color.dart';
 
 /// How a [Button] is filled and bordered.
 enum ButtonVariant {
@@ -26,7 +28,49 @@ enum ButtonVariant {
 }
 
 /// The colour family a [Button] draws from.
-enum ButtonColor {
+/// The colour a [Button] draws from: one of the kit's presets, or any colour
+/// you name.
+///
+/// The colour twin of [ControlSize]. A preset follows the theme, so a palette
+/// change carries every button with it; a colour of your own is taken as
+/// given and shaded into a full set of states.
+///
+/// ```dart
+/// Button(color: ButtonColor.primary, ...)          // follows the theme
+/// Button(color: ButtonColor(Colors.white), ...)    // a colour of your own
+/// Button(color: ButtonColor.fromString('#fff'), ...)
+/// ```
+sealed class ButtonColor {
+  /// Any colour of your own. The kit shades it into the hover, press and
+  /// disabled states the way it shades a preset.
+  const factory ButtonColor(Color color) = ButtonCustomColor;
+
+  const ButtonColor._();
+
+  /// Any colour of your own, written the way CSS writes it — `#fff`,
+  /// `1677ff`, `#ff000080`. See [parseHexColor] for the exact grammar, and
+  /// note that alpha goes last.
+  factory ButtonColor.fromString(String value) =>
+      ButtonCustomColor(parseHexColor(value));
+
+  /// The neutral button, drawn from the theme's greys.
+  static const ButtonColor defaultColor = ButtonPreset.defaultColor;
+
+  /// The theme's primary accent.
+  static const ButtonColor primary = ButtonPreset.primary;
+
+  /// Red — a destructive action.
+  static const ButtonColor danger = ButtonPreset.danger;
+
+  /// Green — a confirming action.
+  static const ButtonColor success = ButtonPreset.success;
+
+  /// Amber — an action that needs care.
+  static const ButtonColor warning = ButtonPreset.warning;
+}
+
+/// The presets [ButtonColor] offers, as an enum you can switch over.
+enum ButtonPreset implements ButtonColor {
   /// The neutral button, drawn from the theme's greys.
   defaultColor,
 
@@ -40,7 +84,24 @@ enum ButtonColor {
   success,
 
   /// Amber — an action that needs care.
-  warning
+  warning,
+}
+
+/// A [ButtonColor] naming a colour outright, rather than a theme preset.
+final class ButtonCustomColor extends ButtonColor {
+  /// Creates a [ButtonCustomColor].
+  const ButtonCustomColor(this.color) : super._();
+
+  /// The colour the button is built from.
+  final Color color;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ButtonCustomColor && other.color == color);
+
+  @override
+  int get hashCode => color.hashCode;
 }
 
 /// Control height preset for a [Button].
@@ -328,14 +389,21 @@ class _SoftButtonState extends State<Button> {
 
   bool get _isDefault => _color == ButtonColor.defaultColor;
 
+  /// A colour of your own, shaded into the same set of states a preset has —
+  /// so hover, press and disabled behave as they do everywhere else.
+  ColorGroup _customGroup(Token token, Color color) => ColorGroup.fromPalette(
+        generate(color, dark: token.isDark, background: token.colorBgContainer),
+      );
+
   /// The palette the button's accents come from. Default colour borrows the
   /// primary for its hover/pressed accents, the way the default
   /// button turns blue on hover.
   ColorGroup _group(Token token) => switch (_color) {
-        ButtonColor.primary || ButtonColor.defaultColor => token.primary,
-        ButtonColor.danger => token.error,
-        ButtonColor.success => token.success,
-        ButtonColor.warning => token.warning,
+        ButtonCustomColor(:final color) => _customGroup(token, color),
+        ButtonPreset.primary || ButtonPreset.defaultColor => token.primary,
+        ButtonPreset.danger => token.error,
+        ButtonPreset.success => token.success,
+        ButtonPreset.warning => token.warning,
       };
 
   Color _stateful(ColorGroup g) {

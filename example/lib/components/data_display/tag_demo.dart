@@ -142,7 +142,7 @@ class _TagDemoState extends State<TagDemo> {
               children: [
                 for (final e in _presets.entries)
                   Tag(
-                    customColor: e.value,
+                    color: TagColor(e.value),
                     variant: variant,
                     child: Text(e.key),
                   ),
@@ -158,7 +158,7 @@ class _TagDemoState extends State<TagDemo> {
               children: [
                 for (final e in _customs.entries)
                   Tag(
-                    customColor: e.value,
+                    color: TagColor(e.value),
                     variant: variant,
                     child: Text(e.key),
                   ),

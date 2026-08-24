@@ -33,6 +33,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nested providers. `ConfigProvider.defaultsOf<T>` reads them for a widget of
   your own. The full table is in [doc/theming.md](doc/theming.md).
 
+- **Duration unit letters in every language** — `dayUnit`, `hourUnit`,
+  `minuteUnit`, `secondUnit` on `SeedLocalizations`. `Countdown` already
+  translated its figures, but the letters in `format: 'D[d] HH:mm'` are
+  literal text inside a pattern the app owns, so they stayed English beside
+  Arabic-Indic or Chinese figures — which reads as a bug rather than a
+  default. The kit cannot translate a pattern handed to it; it now ships the
+  words to build one:
+
+  ```dart
+  final l = context.seedLocale;
+  Countdown(target: deadline, format: 'D[${l.dayUnit}] HH[${l.hourUnit}]')
+  ```
+
+  Filled for all twelve languages, and the gallery's countdown page now
+  follows its language picker.
+
 - **`ButtonColor` and `TagColor` take a colour of your own**, not just a
   preset. The colour twin of `ControlSize`, and the same three call shapes:
 

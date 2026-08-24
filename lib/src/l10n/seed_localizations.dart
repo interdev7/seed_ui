@@ -68,6 +68,10 @@ class SeedLocalizations {
     this.noData = 'No data',
     this.noMoreItems = 'No more items',
     this.perPage = '/ page',
+    this.dayUnit = 'd',
+    this.hourUnit = 'h',
+    this.minuteUnit = 'm',
+    this.secondUnit = 's',
     this.digits = latinDigits,
   }) : assert(
           digits.length == 10,
@@ -76,6 +80,32 @@ class SeedLocalizations {
 
   /// Which language this is, for identifying it. Not used for matching.
   final String localeName;
+
+  /// Short unit letters for a duration, as a [Countdown] format writes them.
+  ///
+  /// A `format` is a pattern the app owns, so the kit cannot translate one
+  /// that was handed to it. These are the words to build one from:
+  ///
+  /// ```dart
+  /// final l = context.seedLocale;
+  /// Countdown(
+  ///   target: deadline,
+  ///   format: 'D[${l.dayUnit}] HH[${l.hourUnit}] mm[${l.minuteUnit}]',
+  /// )
+  /// ```
+  ///
+  /// Short forms, because a countdown is read at a glance and a spelled-out
+  /// "minutes" would be wider than the figure it labels.
+  final String dayUnit;
+
+  /// Short unit letter for hours. See [dayUnit].
+  final String hourUnit;
+
+  /// Short unit letter for minutes. See [dayUnit].
+  final String minuteUnit;
+
+  /// Short unit letter for seconds. See [dayUnit].
+  final String secondUnit;
 
   /// Confirms a modal or a popconfirm.
   final String ok;
@@ -148,6 +178,10 @@ class SeedLocalizations {
     String? noData,
     String? noMoreItems,
     String? perPage,
+    String? dayUnit,
+    String? hourUnit,
+    String? minuteUnit,
+    String? secondUnit,
     String? digits,
   }) =>
       SeedLocalizations(
@@ -160,6 +194,10 @@ class SeedLocalizations {
         noData: noData ?? this.noData,
         noMoreItems: noMoreItems ?? this.noMoreItems,
         perPage: perPage ?? this.perPage,
+        dayUnit: dayUnit ?? this.dayUnit,
+        hourUnit: hourUnit ?? this.hourUnit,
+        minuteUnit: minuteUnit ?? this.minuteUnit,
+        secondUnit: secondUnit ?? this.secondUnit,
         digits: digits ?? this.digits,
       );
 
@@ -175,6 +213,10 @@ class SeedLocalizations {
       other.noData == noData &&
       other.noMoreItems == noMoreItems &&
       other.perPage == perPage &&
+      other.dayUnit == dayUnit &&
+      other.hourUnit == hourUnit &&
+      other.minuteUnit == minuteUnit &&
+      other.secondUnit == secondUnit &&
       other.digits == digits;
 
   @override
@@ -204,6 +246,10 @@ class SeedLocalizations {
   /// Russian.
   static const SeedLocalizations ru = SeedLocalizations(
     localeName: 'ru',
+    dayUnit: 'д',
+    hourUnit: 'ч',
+    minuteUnit: 'м',
+    secondUnit: 'с',
     cancel: 'Отмена',
     previous: 'Назад',
     next: 'Далее',
@@ -216,6 +262,10 @@ class SeedLocalizations {
   /// Turkmen.
   static const SeedLocalizations tk = SeedLocalizations(
     localeName: 'tk',
+    dayUnit: 'g',
+    hourUnit: 'sag',
+    minuteUnit: 'min',
+    secondUnit: 'sek',
     ok: 'Bolýar',
     cancel: 'Ýatyr',
     previous: 'Öňki',
@@ -229,6 +279,10 @@ class SeedLocalizations {
   /// German.
   static const SeedLocalizations de = SeedLocalizations(
     localeName: 'de',
+    dayUnit: 'T',
+    hourUnit: 'Std',
+    minuteUnit: 'Min',
+    secondUnit: 'Sek',
     cancel: 'Abbrechen',
     previous: 'Zurück',
     next: 'Weiter',
@@ -241,6 +295,10 @@ class SeedLocalizations {
   /// French.
   static const SeedLocalizations fr = SeedLocalizations(
     localeName: 'fr',
+    dayUnit: 'j',
+    hourUnit: 'h',
+    minuteUnit: 'min',
+    secondUnit: 's',
     cancel: 'Annuler',
     previous: 'Étape précédente',
     next: 'Étape suivante',
@@ -253,6 +311,10 @@ class SeedLocalizations {
   /// Spanish.
   static const SeedLocalizations es = SeedLocalizations(
     localeName: 'es',
+    dayUnit: 'd',
+    hourUnit: 'h',
+    minuteUnit: 'min',
+    secondUnit: 's',
     ok: 'Aceptar',
     cancel: 'Cancelar',
     previous: 'Anterior',
@@ -266,6 +328,10 @@ class SeedLocalizations {
   /// Chinese, simplified.
   static const SeedLocalizations zh = SeedLocalizations(
     localeName: 'zh',
+    dayUnit: '天',
+    hourUnit: '时',
+    minuteUnit: '分',
+    secondUnit: '秒',
     ok: '确定',
     cancel: '取消',
     previous: '上一步',
@@ -279,6 +345,10 @@ class SeedLocalizations {
   /// Japanese.
   static const SeedLocalizations ja = SeedLocalizations(
     localeName: 'ja',
+    dayUnit: '日',
+    hourUnit: '時',
+    minuteUnit: '分',
+    secondUnit: '秒',
     cancel: 'キャンセル',
     previous: '前の',
     next: '次',
@@ -291,6 +361,10 @@ class SeedLocalizations {
   /// Turkish.
   static const SeedLocalizations tr = SeedLocalizations(
     localeName: 'tr',
+    dayUnit: 'g',
+    hourUnit: 'sa',
+    minuteUnit: 'dk',
+    secondUnit: 'sn',
     ok: 'Tamam',
     cancel: 'İptal',
     previous: 'Önceki',
@@ -304,6 +378,10 @@ class SeedLocalizations {
   /// Portuguese.
   static const SeedLocalizations pt = SeedLocalizations(
     localeName: 'pt',
+    dayUnit: 'd',
+    hourUnit: 'h',
+    minuteUnit: 'min',
+    secondUnit: 's',
     cancel: 'Cancelar',
     previous: 'Anterior',
     next: 'Próximo',
@@ -316,6 +394,10 @@ class SeedLocalizations {
   /// Arabic. Read right to left.
   static const SeedLocalizations ar = SeedLocalizations(
     localeName: 'ar',
+    dayUnit: 'ي',
+    hourUnit: 'س',
+    minuteUnit: 'د',
+    secondUnit: 'ث',
     ok: 'تأكيد',
     cancel: 'إلغاء',
     previous: 'السابق',
@@ -330,6 +412,10 @@ class SeedLocalizations {
   /// Hebrew. Read right to left.
   static const SeedLocalizations he = SeedLocalizations(
     localeName: 'he',
+    dayUnit: 'י',
+    hourUnit: 'ש',
+    minuteUnit: 'ד',
+    secondUnit: 'שנ',
     ok: 'אישור',
     cancel: 'ביטול',
     previous: 'הקודם',

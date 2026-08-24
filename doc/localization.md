@@ -158,3 +158,14 @@ still awaiting a native reader — corrections are welcome.
 Arabic and Hebrew ship as languages. Mirroring the layout for them is a
 separate matter from the words, and is not finished: see the note in the
 README.
+
+## Duration units
+
+`dayUnit`, `hourUnit`, `minuteUnit` and `secondUnit` are the short letters a
+[Countdown](data_display/countdown.md) format is built from. The kit cannot
+translate a pattern you handed it, so it ships the words instead:
+
+```dart
+final l = context.seedLocale;
+Countdown(target: deadline, format: 'HH[${l.hourUnit}] mm[${l.minuteUnit}]')
+```

@@ -41,12 +41,19 @@ class _CountdownDemoState extends State<CountdownDemo> {
 
   @override
   Widget build(BuildContext context) {
+    // A format is a pattern the app owns, so the letters inside it are
+    // the app's to translate. The kit ships the words; the pattern is
+    // built here, so it follows the picker in the header.
+    final l = context.seedLocale;
+    final withDays = 'D[${l.dayUnit}] HH:mm:ss';
+    final spelledOut = 'H[${l.hourUnit}] m[${l.minuteUnit}] s[${l.secondUnit}]';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Group(
           'Counting down',
-          Countdown(target: _longTarget, format: 'D[d] HH:mm:ss'),
+          Countdown(target: _longTarget, format: withDays),
         ),
         Group(
           'Counting up, since this page opened',
@@ -80,7 +87,7 @@ class _CountdownDemoState extends State<CountdownDemo> {
                 key: ValueKey(_liveType),
                 target: _liveTarget,
                 type: _liveType,
-                format: 'D[d] HH:mm:ss',
+                format: withDays,
               ),
               const SizedBox(height: 8),
               Text(
@@ -141,10 +148,10 @@ class _CountdownDemoState extends State<CountdownDemo> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final f in const [
+              for (final f in [
                 'HH:mm:ss',
-                'D[d] HH:mm:ss',
-                'H[h] m[m] s[s]',
+                withDays,
+                spelledOut,
                 'mm:ss.SSS',
                 's',
               ])

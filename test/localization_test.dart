@@ -251,4 +251,89 @@ void main() {
       expect(find.text('٠١:٠٢'), findsOneWidget);
     });
   });
+  testWidgets('the unit letters follow the language, as the figures do',
+      (tester) async {
+    Future<String> shown(SeedLocalizations locale) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          locale: locale,
+          child: MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  final l = context.seedLocale;
+                  return Countdown(
+                    target: DateTime.now().add(const Duration(hours: 5)),
+                    format: 'H[${l.hourUnit}] m[${l.minuteUnit}]',
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      return tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data ?? '')
+          .join();
+    }
+
+    final english = await shown(SeedLocalizations.en);
+    final russian = await shown(SeedLocalizations.ru);
+    final chinese = await shown(SeedLocalizations.zh);
+
+    expect(english, contains('h'));
+    expect(russian, contains('ч'));
+    expect(russian, isNot(contains('h')), reason: 'the English letter stayed');
+    expect(chinese, contains('时'));
+  });
+
+  test('copyWith carries the unit letters through', () {
+    // Changing one word must not quietly reset the rest to English.
+    final tweaked = SeedLocalizations.ru.copyWith(ok: 'Ладно');
+    expect(tweaked.ok, 'Ладно');
+    expect(tweaked.dayUnit, SeedLocalizations.ru.dayUnit);
+    expect(tweaked.hourUnit, SeedLocalizations.ru.hourUnit);
+    expect(tweaked.minuteUnit, SeedLocalizations.ru.minuteUnit);
+    expect(tweaked.secondUnit, SeedLocalizations.ru.secondUnit);
+
+    final custom = SeedLocalizations.en.copyWith(minuteUnit: 'min');
+    expect(custom.minuteUnit, 'min');
+    expect(custom.hourUnit, 'h');
+  });
+
+  test('every language names its own unit letters', () {
+    // A language that forgot them silently falls back to English letters
+    // beside its own figures, which reads as a bug rather than a default.
+    const languages = {
+      'ru': SeedLocalizations.ru,
+      'tk': SeedLocalizations.tk,
+      'de': SeedLocalizations.de,
+      'fr': SeedLocalizations.fr,
+      'es': SeedLocalizations.es,
+      'zh': SeedLocalizations.zh,
+      'ja': SeedLocalizations.ja,
+      'tr': SeedLocalizations.tr,
+      'pt': SeedLocalizations.pt,
+      'ar': SeedLocalizations.ar,
+      'he': SeedLocalizations.he,
+    };
+    for (final entry in languages.entries) {
+      final l = entry.value;
+      for (final unit in [l.dayUnit, l.hourUnit, l.minuteUnit, l.secondUnit]) {
+        expect(unit, isNotEmpty, reason: '${entry.key} has an empty unit');
+      }
+    }
+    // Latin-script languages legitimately share letters with English; the
+    // others must not.
+    for (final code in ['ru', 'zh', 'ja', 'ar', 'he']) {
+      final l = languages[code]!;
+      expect(
+        [l.dayUnit, l.hourUnit, l.minuteUnit, l.secondUnit],
+        isNot(['d', 'h', 'm', 's']),
+        reason: '$code still carries the English letters',
+      );
+    }
+  });
 }

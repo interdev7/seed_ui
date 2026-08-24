@@ -155,3 +155,34 @@ ConfigProvider(
   child: const MyApp(),
 )
 ```
+
+## The unit letters, in the reader's language
+
+`Countdown` translates its **figures** — Arabic-Indic digits under `ar`, and so
+on — but a `format` is a pattern your app owns, so the literal text inside
+`[...]` is yours to translate. The kit ships the words for it:
+
+```dart
+final l = context.seedLocale;
+
+Countdown(
+  target: deadline,
+  format: 'D[${l.dayUnit}] HH[${l.hourUnit}] mm[${l.minuteUnit}]',
+)
+```
+
+| Locale | day | hour | minute | second |
+| --- | --- | --- | --- | --- |
+| en | `d` | `h` | `m` | `s` |
+| ru | `д` | `ч` | `м` | `с` |
+| de | `T` | `Std` | `Min` | `Sek` |
+| fr | `j` | `h` | `min` | `s` |
+| zh | `天` | `时` | `分` | `秒` |
+| ja | `日` | `時` | `分` | `秒` |
+| tr | `g` | `sa` | `dk` | `sn` |
+| ar | `ي` | `س` | `د` | `ث` |
+
+Short forms, because a countdown is read at a glance: a spelled-out "minutes"
+would be wider than the figure it labels. `copyWith(minuteUnit: 'min')`
+changes one without forking a language.
+

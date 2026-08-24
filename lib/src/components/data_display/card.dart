@@ -25,8 +25,8 @@ enum CardType {
 /// Per-component design tokens for [Card] — its own token table.
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [CardToken(...)])`, or per instance via [Card.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(card: CardToken(...)))`, or per instance via [Card.token].
 @immutable
 class CardToken {
   /// Creates a [CardToken].

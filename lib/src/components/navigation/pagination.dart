@@ -37,8 +37,9 @@ class _PagerEntry {
 /// Per-component design tokens for [Pagination].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [PaginationToken(...)])`, or per instance via [Pagination.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(pagination: PaginationToken(...)))`,
+/// or per instance via [Pagination.token].
 @immutable
 class PaginationToken {
   /// Creates a [PaginationToken].

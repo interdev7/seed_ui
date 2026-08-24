@@ -504,12 +504,14 @@ class _ListyDemoState extends State<ListyDemo> {
                 // Tokens set on a ConfigProvider reach every Listy in the
                 // subtree; a `token` on the widget itself would win over this.
                 ConfigProvider(
-                  components: [
-                    ListyToken(
-                      itemPaddingBlock: _density,
-                      itemPaddingInline: 16,
+                  theme: ThemeData(
+                    components: ComponentsConfig(
+                      listy: ListyToken(
+                        itemPaddingBlock: _density,
+                        itemPaddingInline: 16,
+                      ),
                     ),
-                  ],
+                  ),
                   child: Listy(
                     height: 320,
                     sticky: true,

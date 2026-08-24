@@ -127,8 +127,9 @@ class UploadItem<T> {
 /// Per-component design tokens for [Upload].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [UploadToken(...)])`, or per instance via [Upload.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(upload: UploadToken(...)))`,
+/// or per instance via [Upload.token].
 @immutable
 class UploadToken {
   /// Creates an [UploadToken].

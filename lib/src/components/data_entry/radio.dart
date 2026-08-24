@@ -26,8 +26,9 @@ enum RadioButtonStyle {
 /// Per-component design tokens for [Radio].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [RadioToken(...)])`, or per instance via [Radio.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(radio: RadioToken(...)))`,
+/// or per instance via [Radio.token].
 @immutable
 class RadioToken {
   /// Creates a [RadioToken].

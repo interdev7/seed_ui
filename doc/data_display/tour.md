@@ -235,8 +235,9 @@ Tour(steps: steps, duration: Duration.zero); // no travel at all
 ```
 
 The same pair lives on the token as `travelDuration` and `travelCurve`, for a
-theme that wants every tour to move alike — `ConfigProvider(components: const
-[TourToken(travelDuration: …)])`. What is named on the widget wins.
+theme that wants every tour to move alike — `ThemeData(components:
+ComponentsConfig(tour: TourToken(travelDuration: …)))`. What is named on the
+widget wins.
 
 The dimming is painted as the page and the hole in **one shape**, filled
 even-odd: the hole is the part the rule leaves out, so its edge is the fill's

@@ -44,8 +44,9 @@ typedef MessageHandle = void Function();
 /// Per-component design tokens for [MessageConfig].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [MessageToken(...)])`, or per instance via [MessageConfig.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(message: MessageToken(...)))`,
+/// or per instance via [MessageConfig.token].
 @immutable
 class MessageToken {
   /// Creates a [MessageToken].

@@ -9,8 +9,9 @@ import 'message.dart' show StatusType;
 /// Per-component design tokens for [Result].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [ResultToken(...)])`, or per instance via [Result.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(result: ResultToken(...)))`,
+/// or per instance via [Result.token].
 @immutable
 class ResultToken {
   /// Creates a [ResultToken].

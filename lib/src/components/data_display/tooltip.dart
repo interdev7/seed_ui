@@ -40,8 +40,9 @@ enum TooltipTrigger {
 /// Per-component design tokens for [Tooltip].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [TooltipToken(...)])`, or per instance via [Tooltip.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(tooltip: TooltipToken(...)))`,
+/// or per instance via [Tooltip.token].
 @immutable
 class TooltipToken {
   /// Creates a [TooltipToken].

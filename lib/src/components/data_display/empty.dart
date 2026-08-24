@@ -15,8 +15,9 @@ enum EmptyImage {
 /// Per-component design tokens for [Empty].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [EmptyToken(...)])`, or per instance via [Empty.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(empty: EmptyToken(...)))`,
+/// or per instance via [Empty.token].
 @immutable
 class EmptyToken {
   /// Creates an [EmptyToken].

@@ -297,8 +297,9 @@ class ListyStyles {
 /// Per-component design tokens for [Listy] — its own token table.
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [ListyToken(...)])`, or per instance via [Listy.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(listy: ListyToken(...)))`,
+/// or per instance via [Listy.token].
 @immutable
 class ListyToken {
   /// Creates a [ListyToken].

@@ -49,8 +49,9 @@ class SegmentedOption<T> {
 /// Per-component design tokens for [Segmented].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [SegmentedToken(...)])`, or per instance via [Segmented.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(segmented: SegmentedToken(...)))`,
+/// or per instance via [Segmented.token].
 @immutable
 class SegmentedToken {
   /// Creates a [SegmentedToken].

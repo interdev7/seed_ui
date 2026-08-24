@@ -16,8 +16,9 @@ enum SwitchSize {
 /// Per-component design tokens for [Switch].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [SwitchToken(...)])`, or per instance via [Switch.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(switchToken: SwitchToken(...)))`,
+/// or per instance via [Switch.token].
 @immutable
 class SwitchToken {
   /// Creates a [SwitchToken].

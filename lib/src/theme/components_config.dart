@@ -198,6 +198,53 @@ class ComponentsConfig {
   /// Overrides applied to every [Upload] under this provider.
   final UploadToken? upload;
 
+  /// This config with [other] laid over it: every slot [other] names wins, the
+  /// rest are kept.
+  ///
+  /// How a nested [ConfigProvider] inherits — one that speaks about a single
+  /// component leaves every other component as the provider above it had it,
+  /// rather than resetting the lot to the defaults.
+  ComponentsConfig merge(ComponentsConfig other) => ComponentsConfig(
+        alert: other.alert ?? alert,
+        avatar: other.avatar ?? avatar,
+        badge: other.badge ?? badge,
+        button: other.button ?? button,
+        card: other.card ?? card,
+        checkbox: other.checkbox ?? checkbox,
+        collapse: other.collapse ?? collapse,
+        countdown: other.countdown ?? countdown,
+        drawer: other.drawer ?? drawer,
+        dropdown: other.dropdown ?? dropdown,
+        empty: other.empty ?? empty,
+        input: other.input ?? input,
+        inputNumber: other.inputNumber ?? inputNumber,
+        listy: other.listy ?? listy,
+        message: other.message ?? message,
+        modal: other.modal ?? modal,
+        notification: other.notification ?? notification,
+        pagination: other.pagination ?? pagination,
+        popconfirm: other.popconfirm ?? popconfirm,
+        popover: other.popover ?? popover,
+        progress: other.progress ?? progress,
+        radio: other.radio ?? radio,
+        ribbon: other.ribbon ?? ribbon,
+        result: other.result ?? result,
+        segmented: other.segmented ?? segmented,
+        select: other.select ?? select,
+        slider: other.slider ?? slider,
+        sortableList: other.sortableList ?? sortableList,
+        spin: other.spin ?? spin,
+        steps: other.steps ?? steps,
+        switchToken: other.switchToken ?? switchToken,
+        tabs: other.tabs ?? tabs,
+        tag: other.tag ?? tag,
+        timeline: other.timeline ?? timeline,
+        tour: other.tour ?? tour,
+        tooltip: other.tooltip ?? tooltip,
+        tree: other.tree ?? tree,
+        upload: other.upload ?? upload,
+      );
+
   /// Fast lookup for a specific component token type [T].
   T? of<T>() {
     if (T == AlertToken && alert != null) return alert as T;

@@ -384,3 +384,48 @@ Button(
   child: const Text('Delete'),
 )
 ```
+
+### Nesting providers
+
+Providers nest, and a nested one **inherits**. It changes what it names and
+leaves everything else as the provider above it had it — the palette, the
+brightness, the other components' tokens, the language, the empty state.
+
+So a screen that wants rounder buttons says only that:
+
+```dart
+ConfigProvider(
+  theme: ThemeData(
+    components: ComponentsConfig(button: ButtonToken(borderRadius: 16)),
+  ),
+  child: ...,  // keeps the app's colours, language and everything else
+)
+```
+
+What a nested theme inherits depends on what it states:
+
+| The nested theme states | What it takes from above |
+| --- | --- |
+| only `components` | the whole token set |
+| only a seed (`token:`) | the brightness |
+| only `dark:` | the palette the brightness is flipped on |
+| both | nothing — it is fully specified |
+| `ThemeData.raw(...)` | nothing; the token is taken as final |
+
+Component tokens merge slot by slot, the nearer provider winning where the two
+name the same component. `renderEmpty` and `locale` are inherited the same way:
+the nearest provider that states one wins, and a provider silent about it
+passes down whatever it inherited.
+
+This is why `ThemeData.dark` nested inside a themed provider turns the lights
+out without discarding your colours:
+
+```dart
+ConfigProvider(
+  theme: ThemeData(token: SeedToken(colorPrimary: Color(0xFFEB2F96))),
+  child: ConfigProvider(
+    theme: ThemeData.dark,  // pink, in the dark
+    child: ...,
+  ),
+)
+```

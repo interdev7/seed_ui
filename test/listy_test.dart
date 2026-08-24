@@ -597,8 +597,11 @@ void main() {
       await tester.pumpWidget(
         _host(
           ConfigProvider(
-            theme: ThemeData.light,
-            components: const [ListyToken(itemPaddingBlock: 6)],
+            theme: ThemeData(
+              components: const ComponentsConfig(
+                listy: ListyToken(itemPaddingBlock: 6),
+              ),
+            ),
             child: Listy(
               height: 240,
               sticky: true,

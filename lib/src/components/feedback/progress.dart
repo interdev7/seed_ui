@@ -302,8 +302,9 @@ class PercentPosition {
 /// Per-component design tokens for [Progress].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [ProgressToken(...)])`, or per instance via [Progress.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(progress: ProgressToken(...)))`,
+/// or per instance via [Progress.token].
 @immutable
 class ProgressToken {
   /// Creates a [ProgressToken].

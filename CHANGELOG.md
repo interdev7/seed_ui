@@ -5,6 +5,51 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.0
+
+### Changed
+
+- **Nested `ConfigProvider`s now inherit.** A provider inside another one used
+  to hand down its own theme whole, so one placed to say a single thing —
+  rounder buttons on this screen — silently reset the palette to the stock blue
+  and reverted every other component to the defaults. The kit's own Listy demo
+  had that bug: its density block ignored the theme picker. A nested theme now
+  takes what it does not state from the theme above it: say only `components`
+  and the colours stay, say only a seed and the brightness stays, say only
+  `dark:` and the palette it is flipped on stays. `ThemeData.raw` is still taken
+  as final.
+- `renderEmpty` and the `locale` are inherited the same way. Both used to be
+  read from the nearest provider alone, so any provider between them and the
+  widget — one carrying nothing but a theme — erased them.
+- Each provider now merges once, when it builds, instead of every reader
+  searching the tree outwards. Widgets under a provider that rebuilds for
+  reasons of its own are no longer woken.
+
+### Removed
+
+- **`ConfigProvider(components: [...])`**, the parallel list of loose token
+  objects. `ThemeData(components: ComponentsConfig(...))` says the same thing
+  with the type checker watching, and a test already guarantees every token
+  has a slot there. The 38 token dartdocs that pointed at the list now point at
+  `ComponentsConfig`.
+
+  ```dart
+  // before
+  ConfigProvider(components: const [ButtonToken(borderRadius: 16)], ...)
+  // after
+  ConfigProvider(
+    theme: ThemeData(
+      components: const ComponentsConfig(button: ButtonToken(borderRadius: 16)),
+    ),
+    ...
+  )
+  ```
+
+- `ConfigProvider` is a `StatefulWidget` rather than an `InheritedWidget`. Its
+  statics (`of`, `componentOf`, `renderEmptyOf`) and `context.softToken` are
+  unchanged; only a direct
+  `dependOnInheritedWidgetOfExactType<ConfigProvider>()` would notice.
+
 ## 0.6.12
 
 ### Added

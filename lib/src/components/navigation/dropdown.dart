@@ -84,8 +84,9 @@ class DropdownGroup extends DropdownEntry {
 /// Per-component design tokens for [Dropdown].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [DropdownToken(...)])`, or per instance via [Dropdown.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(dropdown: DropdownToken(...)))`,
+/// or per instance via [Dropdown.token].
 @immutable
 class DropdownToken {
   /// Creates a [DropdownToken].

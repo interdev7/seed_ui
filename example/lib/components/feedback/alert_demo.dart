@@ -181,7 +181,7 @@ class AlertDemo extends StatelessWidget {
         ),
 
         // Per-instance token overrides; pass the same AlertToken to
-        // ConfigProvider(components: ...) to restyle every alert at once.
+        // ThemeData(components: ...) to restyle every alert at once.
         const Group(
           'Token override',
           Alert(

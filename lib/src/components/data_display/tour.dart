@@ -363,8 +363,8 @@ class TourController extends ChangeNotifier {
 /// Per-component design tokens for [Tour] — its own token table.
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [TourToken(...)])`, or per instance via [Tour.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(tour: TourToken(...)))`, or per instance via [Tour.token].
 @immutable
 class TourToken {
   /// Creates a [TourToken].

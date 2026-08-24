@@ -118,7 +118,7 @@ Alert(
 `AlertToken` overrides `padding`, `withDescriptionPadding`,
 `withDescriptionIconSize`, `borderRadius` and `fontSize` — per instance through
 `token`, or for a whole subtree through
-`ConfigProvider(components: [AlertToken(...)])`.
+`ThemeData(components: ComponentsConfig(alert: AlertToken(...)))`.
 
 ```dart
 Alert(

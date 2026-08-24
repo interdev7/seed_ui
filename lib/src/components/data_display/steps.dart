@@ -210,8 +210,9 @@ class StepsController extends ChangeNotifier {
 /// Per-component design tokens for [Steps] — its own token table.
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [StepsToken(...)])`, or per instance via [Steps.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(steps: StepsToken(...)))`,
+/// or per instance via [Steps.token].
 @immutable
 class StepsToken {
   /// Creates a [StepsToken].

@@ -94,8 +94,8 @@ class TabBarExtra {
 /// Per-component design tokens for [Tabs] — its own token table.
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [TabsToken(...)])`, or per instance via [Tabs.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(tabs: TabsToken(...)))`, or per instance via [Tabs.token].
 @immutable
 class TabsToken {
   /// Creates a [TabsToken].
@@ -582,7 +582,7 @@ class Tabs extends StatefulWidget {
   final TabContentPosition contentPosition;
 
   /// Per-instance token override, taking precedence over any supplied through
-  /// `ConfigProvider(components: [TabsToken(...)])`.
+  /// `ThemeData(components: ComponentsConfig(tabs: TabsToken(...)))`.
   final TabsToken? token;
 
   @override

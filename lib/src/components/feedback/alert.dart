@@ -8,8 +8,9 @@ import 'message.dart' show StatusType;
 /// Per-component design tokens for [Alert].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [AlertToken(...)])`, or per instance via [Alert.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(alert: AlertToken(...)))`,
+/// or per instance via [Alert.token].
 @immutable
 class AlertToken {
   /// Creates an [AlertToken].

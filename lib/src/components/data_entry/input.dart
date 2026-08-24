@@ -131,8 +131,9 @@ class PasswordConfig {
 /// Per-component design tokens for [Input].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [InputToken(...)])`, or per instance via [Input.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(input: InputToken(...)))`,
+/// or per instance via [Input.token].
 @immutable
 class InputToken {
   /// Creates an [InputToken].

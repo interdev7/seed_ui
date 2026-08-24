@@ -26,8 +26,8 @@ class SliderMark {
 /// Per-component design tokens for [Slider] and [RangeSlider].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [SliderToken(...)])`, or per instance via `token`.
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(slider: SliderToken(...)))`, or per instance via `token`.
 @immutable
 class SliderToken {
   /// Creates a [SliderToken].

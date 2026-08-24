@@ -10,8 +10,8 @@ import '../data_entry/checkbox.dart' show Checkbox;
 /// Per-component design tokens for [Tree] — its own token table.
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [TreeToken(...)])`, or per instance via [Tree.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(tree: TreeToken(...)))`, or per instance via [Tree.token].
 @immutable
 class TreeToken {
   /// Creates a [TreeToken].

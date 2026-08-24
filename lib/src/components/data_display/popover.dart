@@ -22,8 +22,9 @@ enum PopoverTrigger {
 /// Per-component design tokens for [Popover].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [PopoverToken(...)])`, or per instance via [Popover.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(popover: PopoverToken(...)))`,
+/// or per instance via [Popover.token].
 @immutable
 class PopoverToken {
   /// Creates a [PopoverToken].

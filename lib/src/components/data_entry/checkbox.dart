@@ -7,8 +7,9 @@ import '../../theme/design_token.dart';
 /// Per-component design tokens for [Checkbox].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [CheckboxToken(...)])`, or per instance via [Checkbox.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(checkbox: CheckboxToken(...)))`,
+/// or per instance via [Checkbox.token].
 @immutable
 class CheckboxToken {
   /// Creates a [CheckboxToken].

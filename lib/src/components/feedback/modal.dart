@@ -17,8 +17,9 @@ typedef ModalHandle = void Function();
 /// Per-component design tokens for [ModalConfig].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [ModalToken(...)])`, or per instance via [ModalConfig.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(modal: ModalToken(...)))`,
+/// or per instance via [ModalConfig.token].
 @immutable
 class ModalToken {
   /// Creates a [ModalToken].

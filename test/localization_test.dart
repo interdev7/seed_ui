@@ -175,9 +175,9 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ConfigProvider(
+        const ConfigProvider(
           locale: SeedLocalizations.de,
-          child: const MaterialApp(
+          child: MaterialApp(
             home: Scaffold(body: Center(child: Empty())),
           ),
         ),

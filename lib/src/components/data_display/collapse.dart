@@ -31,8 +31,9 @@ enum CollapsibleTrigger {
 /// table.
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [CollapseToken(...)])`, or per instance via [Collapse.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(collapse: CollapseToken(...)))`,
+/// or per instance via [Collapse.token].
 @immutable
 class CollapseToken {
   /// Creates a [CollapseToken].

@@ -18,8 +18,9 @@ enum CountdownType {
 /// Per-component design tokens for [Countdown].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [CountdownToken(...)])`, or per instance via [Countdown.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(countdown: CountdownToken(...)))`,
+/// or per instance via [Countdown.token].
 @immutable
 class CountdownToken {
   /// Creates a [CountdownToken].

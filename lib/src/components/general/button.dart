@@ -60,8 +60,9 @@ enum ButtonShape {
 /// Per-component design tokens for [Button].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [ButtonToken(...)])`, or per instance via [Button.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(button: ButtonToken(...)))`,
+/// or per instance via [Button.token].
 @immutable
 class ButtonToken {
   /// Creates a [ButtonToken].

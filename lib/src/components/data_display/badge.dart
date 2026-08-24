@@ -37,8 +37,9 @@ enum RibbonPlacement {
 /// Per-component design tokens for [Badge].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [BadgeToken(...)])`, or per instance via [Badge.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(badge: BadgeToken(...)))`,
+/// or per instance via [Badge.token].
 @immutable
 class BadgeToken {
   /// Creates a [BadgeToken].

@@ -29,8 +29,9 @@ typedef DrawerHandle = void Function();
 /// Per-component design tokens for [Drawer].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [DrawerToken(...)])`, or per instance via [DrawerConfig.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(drawer: DrawerToken(...)))`,
+/// or per instance via [DrawerConfig.token].
 @immutable
 class DrawerToken {
   /// Creates a [DrawerToken].

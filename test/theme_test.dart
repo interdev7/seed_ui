@@ -261,7 +261,7 @@ void main() {
 
     testWidgets('a light theme asks for dark status-bar icons', (tester) async {
       await tester.pumpWidget(
-        ConfigProvider(child: const SizedBox()),
+        const ConfigProvider(child: SizedBox()),
       );
 
       final style = styleOf(tester);
@@ -389,6 +389,178 @@ void main() {
       // Depending on every provider consulted, not merely the nearest, is what
       // makes this rebuild.
       expect(await heightUnder(tester, tree(60)), 60);
+    });
+  });
+
+  group('a nested theme inherits', () {
+    const pink = Color(0xFFEB2F96);
+
+    /// Reads the resolved config from inside [inner], nested under [outer].
+    Future<T> under<T>(
+      WidgetTester tester,
+      ThemeData? outer,
+      ThemeData? inner,
+      T Function(BuildContext context) read,
+    ) async {
+      late T seen;
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: outer,
+          child: ConfigProvider(
+            theme: inner,
+            child: Builder(
+              builder: (context) {
+                seen = read(context);
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+      return seen;
+    }
+
+    testWidgets('a theme naming only components keeps the palette above it',
+        (tester) async {
+      final colour = await under(
+        tester,
+        ThemeData(token: const SeedToken(colorPrimary: pink)),
+        ThemeData(
+          components: const ComponentsConfig(
+            button: ButtonToken(borderRadius: 16),
+          ),
+        ),
+        (context) => context.softToken.primary.base,
+      );
+      expect(
+        colour,
+        pink,
+        reason: 'saying something about buttons is not a word about colour',
+      );
+    });
+
+    testWidgets('a theme naming only a palette keeps the brightness above it',
+        (tester) async {
+      final dark = await under(
+        tester,
+        ThemeData.dark,
+        ThemeData(token: const SeedToken(colorPrimary: pink)),
+        (context) => context.softToken.isDark,
+      );
+      expect(dark, isTrue, reason: 'the lights were never asked to come on');
+    });
+
+    testWidgets('a theme naming only the brightness keeps the palette',
+        (tester) async {
+      final token = await under(
+        tester,
+        ThemeData(token: const SeedToken(colorPrimary: pink)),
+        ThemeData.dark,
+        (context) => context.softToken,
+      );
+      expect(token.isDark, isTrue);
+      expect(
+        token.primary.base,
+        isNot(ThemeData(token: const SeedToken(colorPrimary: pink))
+            .token
+            .primary
+            .base),
+        reason: 'the same seed in the dark is a different shade',
+      );
+      // Derived from the inherited seed rather than the default blue.
+      expect(
+        token.primary.base,
+        Token.derive(const SeedToken(colorPrimary: pink), dark: true)
+            .primary
+            .base,
+      );
+    });
+
+    testWidgets('a ready-made token is taken as final', (tester) async {
+      final ready = ThemeData(token: const SeedToken(colorPrimary: pink)).token;
+      final dark = await under(
+        tester,
+        ThemeData.dark,
+        ThemeData.raw(ready),
+        (context) => context.softToken.isDark,
+      );
+      expect(dark, isFalse, reason: 'ThemeData.raw does not re-derive');
+    });
+
+    testWidgets('component tokens from both providers are in scope',
+        (tester) async {
+      final tokens = await under(
+        tester,
+        ThemeData(
+          components: const ComponentsConfig(
+            button: ButtonToken(controlHeightLG: 52),
+          ),
+        ),
+        ThemeData(
+          components: const ComponentsConfig(card: CardToken(headerHeight: 30)),
+        ),
+        (context) => (
+          ConfigProvider.componentOf<ButtonToken>(context)?.controlHeightLG,
+          ConfigProvider.componentOf<CardToken>(context)?.headerHeight,
+        ),
+      );
+      expect(tokens.$1, 52, reason: 'the outer one is still there');
+      expect(tokens.$2, 30);
+    });
+
+    testWidgets('renderEmpty carries through a provider silent about it',
+        (tester) async {
+      late WidgetBuilder? seen;
+      await tester.pumpWidget(
+        ConfigProvider(
+          renderEmpty: (context) => const Text('nothing here'),
+          child: ConfigProvider(
+            theme: ThemeData(),
+            child: Builder(
+              builder: (context) {
+                seen = ConfigProvider.renderEmptyOf(context);
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+      expect(seen, isNotNull);
+    });
+
+    testWidgets('the locale carries through, and the nearer one still wins',
+        (tester) async {
+      late String inherited;
+      late String nearer;
+      await tester.pumpWidget(
+        ConfigProvider(
+          locale: const SeedLocalizations().copyWith(noData: 'OUTER'),
+          child: Column(
+            children: [
+              ConfigProvider(
+                theme: ThemeData(),
+                child: Builder(
+                  builder: (context) {
+                    inherited = context.seedLocale.noData;
+                    return const SizedBox();
+                  },
+                ),
+              ),
+              ConfigProvider(
+                locale: const SeedLocalizations().copyWith(noData: 'INNER'),
+                child: Builder(
+                  builder: (context) {
+                    nearer = context.seedLocale.noData;
+                    return const SizedBox();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(inherited, 'OUTER');
+      expect(nearer, 'INNER');
     });
   });
 }

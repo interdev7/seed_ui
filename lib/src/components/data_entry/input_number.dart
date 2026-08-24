@@ -8,8 +8,9 @@ import 'input.dart';
 /// Per-component design tokens for [InputNumber].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [InputNumberToken(...)])`, or per instance via [InputNumber.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(inputNumber: InputNumberToken(...)))`,
+/// or per instance via [InputNumber.token].
 @immutable
 class InputNumberToken {
   /// Creates an [InputNumberToken].

@@ -12,8 +12,9 @@ import 'message.dart' show StatusType;
 /// Per-component design tokens for [Popconfirm].
 ///
 /// Every field is an override; a null one falls back to the value derived from
-/// the global theme. Supply one globally through `ConfigProvider(components:
-/// [PopconfirmToken(...)])`, or per instance via [Popconfirm.token].
+/// the global theme. Supply one globally through `ThemeData(components:
+/// ComponentsConfig(popconfirm: PopconfirmToken(...)))`,
+/// or per instance via [Popconfirm.token].
 @immutable
 class PopconfirmToken {
   /// Creates a [PopconfirmToken].

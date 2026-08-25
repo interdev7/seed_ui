@@ -168,13 +168,23 @@ class _ResolvedSliderToken {
 @immutable
 class SliderDefaults {
   /// Creates a [SliderDefaults].
-  const SliderDefaults({this.dots, this.included});
+  const SliderDefaults({
+    this.dots,
+    this.included,
+    this.disabled,
+  });
 
   /// Whether the marks are drawn as dots.
   final bool? dots;
 
   /// Whether the track fills up to the handle.
   final bool? included;
+
+  /// Whether a [Slider] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A groove with a handle, for choosing a number by dragging.
@@ -278,7 +288,10 @@ class _SliderState extends State<Slider> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   @override
   Widget build(BuildContext context) {
@@ -401,7 +414,10 @@ class _RangeSliderState extends State<RangeSlider> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      ConfigProvider.defaultsOf<SliderDefaults>(context)?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   @override
   Widget build(BuildContext context) {

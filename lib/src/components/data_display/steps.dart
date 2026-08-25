@@ -605,12 +605,14 @@ class _EllipsisPainter extends CustomPainter {
 @immutable
 class StepsDefaults {
   /// Creates a [StepsDefaults].
-  const StepsDefaults(
-      {this.orientation,
-      this.type,
-      this.variant,
-      this.responsive,
-      this.overflow});
+  const StepsDefaults({
+    this.orientation,
+    this.type,
+    this.variant,
+    this.responsive,
+    this.overflow,
+    this.size,
+  });
 
   /// Which way the run goes.
   final StepsOrientation? orientation;
@@ -626,6 +628,12 @@ class StepsDefaults {
 
   /// What happens when the run will not fit.
   final StepsOverflow? overflow;
+
+  /// Which control height a [Steps] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final ControlSize? size;
 }
 
 /// A progress indicator for a task with stages.
@@ -801,7 +809,10 @@ class _StepsState extends State<Steps> {
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   ControlSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   late int _uncontrolled = widget.defaultCurrent;
 

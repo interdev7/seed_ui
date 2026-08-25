@@ -145,8 +145,13 @@ class _ResolvedDropdownToken {
 @immutable
 class DropdownDefaults {
   /// Creates a [DropdownDefaults].
-  const DropdownDefaults(
-      {this.placement, this.arrow, this.closeOnSelect, this.trigger});
+  const DropdownDefaults({
+    this.placement,
+    this.arrow,
+    this.closeOnSelect,
+    this.trigger,
+    this.disabled,
+  });
 
   /// Where menus sit against their anchor.
   final PopoverPlacement? placement;
@@ -159,6 +164,12 @@ class DropdownDefaults {
 
   /// What opens a menu.
   final List<DropdownTrigger>? trigger;
+
+  /// Whether a [Dropdown] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A menu that floats from a trigger.
@@ -274,7 +285,10 @@ class _DropdownState extends State<Dropdown> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   final PopoverController _popover = PopoverController();
   final GlobalKey _anchorKey = GlobalKey();

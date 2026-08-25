@@ -477,14 +477,16 @@ class TabsController extends ChangeNotifier {
 @immutable
 class TabsDefaults {
   /// Creates a [TabsDefaults].
-  const TabsDefaults(
-      {this.type,
-      this.tabPosition,
-      this.hideAdd,
-      this.animated,
-      this.scrollAlign,
-      this.snap,
-      this.contentPosition});
+  const TabsDefaults({
+    this.type,
+    this.tabPosition,
+    this.hideAdd,
+    this.animated,
+    this.scrollAlign,
+    this.snap,
+    this.contentPosition,
+    this.size,
+  });
 
   /// Which shape the tabs take.
   final TabsType? type;
@@ -506,6 +508,12 @@ class TabsDefaults {
 
   /// Which end the extra content sits at.
   final TabContentPosition? contentPosition;
+
+  /// Which control height a [Tabs] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
 }
 
 /// A tabbed panel.
@@ -660,7 +668,10 @@ class _TabsState extends State<Tabs> {
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   String? _internal;
   final Map<String, GlobalKey> _tabKeys = {};

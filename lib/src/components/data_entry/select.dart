@@ -190,7 +190,13 @@ class _ResolvedSelectToken {
 @immutable
 class SelectDefaults {
   /// Creates a [SelectDefaults].
-  const SelectDefaults({this.variant, this.allowClear, this.showSearch});
+  const SelectDefaults({
+    this.variant,
+    this.allowClear,
+    this.showSearch,
+    this.size,
+    this.disabled,
+  });
 
   /// How selects are filled and bordered.
   final SelectVariant? variant;
@@ -200,6 +206,18 @@ class SelectDefaults {
 
   /// Whether typing filters the options.
   final bool? showSearch;
+
+  /// Which control height a [Select] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
+
+  /// Whether a [Select] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A dropdown for choosing one or more values from a list.
@@ -372,12 +390,18 @@ class _SelectState<T> extends State<Select<T>> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   final PopoverController _popover = PopoverController();
   final TextEditingController _searchCtrl = TextEditingController();

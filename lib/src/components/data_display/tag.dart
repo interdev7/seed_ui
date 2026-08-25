@@ -484,10 +484,19 @@ class CheckableTagOption<T> {
 @immutable
 class CheckableTagGroupDefaults {
   /// Creates a [CheckableTagGroupDefaults].
-  const CheckableTagGroupDefaults({this.multiple});
+  const CheckableTagGroupDefaults({
+    this.multiple,
+    this.disabled,
+  });
 
   /// Whether more than one chip can be chosen.
   final bool? multiple;
+
+  /// Whether a [CheckableTagGroup] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A set of [CheckableTag]s selecting one or several values.
@@ -558,7 +567,10 @@ class _CheckableTagGroupState<T> extends State<CheckableTagGroup<T>> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   List<T>? _internal;
 

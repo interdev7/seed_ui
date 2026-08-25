@@ -283,10 +283,26 @@ class _ResolvedInputToken {
 @immutable
 class InputDefaults {
   /// Creates an [InputDefaults].
-  const InputDefaults({this.allowClear});
+  const InputDefaults({
+    this.allowClear,
+    this.size,
+    this.disabled,
+  });
 
   /// Whether inputs carry a clear button once they hold text.
   final bool? allowClear;
+
+  /// Which control height a [Input] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
+
+  /// Whether a [Input] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A single- or multi-line text field with the kit's styling: a bordered box
@@ -434,6 +450,10 @@ class Input extends StatefulWidget {
 }
 
 class _SoftInputState extends State<Input> {
+  /// The defaults set for this component in the subtree, if any.
+  InputDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<InputDefaults>(context);
+
   /// Whether a clear button appears: this input's word, then the subtree's,
   /// then no.
   bool get _allowClear =>
@@ -444,12 +464,18 @@ class _SoftInputState extends State<Input> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   TextEditingController? _ownController;
   TextEditingController get _controller =>

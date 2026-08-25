@@ -101,7 +101,13 @@ class _ResolvedInputNumberToken {
 @immutable
 class InputNumberDefaults {
   /// Creates a [InputNumberDefaults].
-  const InputNumberDefaults({this.controls, this.keyboard, this.mode});
+  const InputNumberDefaults({
+    this.controls,
+    this.keyboard,
+    this.mode,
+    this.size,
+    this.disabled,
+  });
 
   /// Whether the stepper is shown.
   final bool? controls;
@@ -111,6 +117,18 @@ class InputNumberDefaults {
 
   /// Which stepper shape is used.
   final InputNumberMode? mode;
+
+  /// Which control height a [InputNumber] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
+
+  /// Whether a [InputNumber] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A numeric input with stepper buttons.
@@ -243,12 +261,18 @@ class _InputNumberState extends State<InputNumber> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   final TextEditingController _controller = TextEditingController();
   FocusNode? _ownFocus;

@@ -151,10 +151,19 @@ class _GroupContext extends InheritedWidget {
 @immutable
 class AvatarDefaults {
   /// Creates an [AvatarDefaults].
-  const AvatarDefaults({this.shape});
+  const AvatarDefaults({
+    this.shape,
+    this.size,
+  });
 
   /// The shape avatars take.
   final AvatarShape? shape;
+
+  /// Which control height a [Avatar] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
 }
 
 /// A component for representing users or objects.
@@ -235,6 +244,7 @@ class Avatar extends StatelessWidget {
     // ambient size; the screen wins over nothing at all.
     final resolvedSize = group?.size ??
         size ??
+        ConfigProvider.defaultsOf<AvatarDefaults>(context)?.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
     // Same order as the size above: the enclosing group first, then this
@@ -493,8 +503,10 @@ class AvatarGroup extends StatelessWidget {
       strokeAlign: BorderSide.strokeAlignOutside,
     );
 
-    final resolvedSize =
-        size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+    final resolvedSize = size ??
+        ConfigProvider.defaultsOf<AvatarDefaults>(context)?.size ??
+        ConfigProvider.componentSizeOf(context) ??
+        SoftSize.middle;
     final dimension = switch (resolvedSize) {
       SoftSize.small => rt.containerSizeSM,
       SoftSize.middle => rt.containerSize,

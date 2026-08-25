@@ -242,7 +242,13 @@ class _ResolvedButtonToken {
 @immutable
 class ButtonDefaults {
   /// Creates a [ButtonDefaults].
-  const ButtonDefaults({this.variant, this.color, this.shape});
+  const ButtonDefaults({
+    this.variant,
+    this.color,
+    this.shape,
+    this.size,
+    this.disabled,
+  });
 
   /// How buttons are filled and bordered.
   final ButtonVariant? variant;
@@ -252,6 +258,18 @@ class ButtonDefaults {
 
   /// The outline shape buttons take.
   final ButtonShape? shape;
+
+  /// Which control height Button takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where
+  /// both are set — 'small buttons on an otherwise normal screen'.
+  final SoftSize? size;
+
+  /// Whether Button is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten by the
+  /// widget's own word.
+  final bool? disabled;
 }
 
 /// A pressable button with hover, press, loading and disabled states.
@@ -348,7 +366,10 @@ class _SoftButtonState extends State<Button> {
   /// Whether this button is disabled: its own word, else the one set for the
   /// subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   /// Whether the button answers to a press at all.
   bool get _enabled =>
@@ -357,7 +378,10 @@ class _SoftButtonState extends State<Button> {
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   bool _hovered = false;
   bool _pressed = false;

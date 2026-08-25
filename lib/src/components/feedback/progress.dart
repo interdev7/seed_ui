@@ -356,13 +356,23 @@ class _ResolvedProgressToken {
 @immutable
 class ProgressDefaults {
   /// Creates a [ProgressDefaults].
-  const ProgressDefaults({this.showInfo, this.gapPlacement});
+  const ProgressDefaults({
+    this.showInfo,
+    this.gapPlacement,
+    this.size,
+  });
 
   /// Whether the figure is shown beside the bar.
   final bool? showInfo;
 
   /// Where a dashboard gauge opens its gap.
   final GapPlacement? gapPlacement;
+
+  /// Which control height a [Progress] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final ControlSize? size;
 }
 
 /// A progress indicator for a task whose completion is known, as a bar or a
@@ -711,7 +721,10 @@ class _ProgressState extends State<Progress> {
       widget.format?.call(p) ?? Text('${(p * 100).round()}%');
 
   _ProgressResolvedSize _resolveSize(Token token, _ResolvedProgressToken r) {
-    final effectiveSize = widget.size ?? SoftSize.middle;
+    final effectiveSize = widget.size ??
+        ConfigProvider.defaultsOf<ProgressDefaults>(context)?.size ??
+        ConfigProvider.componentSizeOf(context) ??
+        SoftSize.middle;
     return switch (effectiveSize) {
       SoftSize.small => const _ProgressResolvedSize(width: 80, height: 6),
       SoftSize.middle =>
@@ -1216,7 +1229,10 @@ class _ProgressState extends State<Progress> {
   }
 
   Widget _circle(Token token, _ResolvedProgressToken r, double currentPercent) {
-    final effectiveSize = widget.size ?? SoftSize.middle;
+    final effectiveSize = widget.size ??
+        ConfigProvider.defaultsOf<ProgressDefaults>(context)?.size ??
+        ConfigProvider.componentSizeOf(context) ??
+        SoftSize.middle;
     final resSize = _resolveSize(token, r);
     final defaultStroke = effectiveSize == SoftSize.small ? 4.0 : 6.0;
     final stroke = widget.strokeWidth ??

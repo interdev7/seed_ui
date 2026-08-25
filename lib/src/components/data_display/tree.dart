@@ -215,8 +215,13 @@ class TreeDropDetails {
 @immutable
 class TreeDefaults {
   /// Creates a [TreeDefaults].
-  const TreeDefaults(
-      {this.showLine, this.showLeafIcon, this.showIcon, this.blockNode});
+  const TreeDefaults({
+    this.showLine,
+    this.showLeafIcon,
+    this.showIcon,
+    this.blockNode,
+    this.disabled,
+  });
 
   /// Whether guide lines are drawn.
   final bool? showLine;
@@ -229,6 +234,12 @@ class TreeDefaults {
 
   /// Whether a row spans the full width.
   final bool? blockNode;
+
+  /// Whether a [Tree] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A hierarchical list.
@@ -402,7 +413,10 @@ class _TreeState extends State<Tree> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   late final KeyedSet _expanded;
   late final KeyedSet _selected = KeyedSet(widget.defaultSelectedKeys);

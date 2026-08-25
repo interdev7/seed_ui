@@ -81,13 +81,13 @@ Button(variant: ButtonVariant.outlined, onPressed: () {}, child: const Text('Def
 | `onPressed` | `VoidCallback?` | `null` | Tap handler; null disables the button |
 | `variant` | `ButtonVariant?` | `null` | Follows `ButtonDefaults.variant`, else `outlined`. How the button is filled |
 | `color` | `ButtonColor?` | `null` | A preset, or a colour of your own. Follows `ButtonDefaults.color`, else `defaultColor` |
-| `size` | `SoftSize` | `middle` | `small` (24), `middle` (32), `large` (40) |
+| `size` | `SoftSize?` | `null` | `small` (24), `middle` (32), `large` (40). Follows `ButtonDefaults.size`, then `componentSize`, else `middle` |
 | `shape` | `ButtonShape?` | `null` | Follows `ButtonDefaults.shape`, else `defaultShape`. `defaultShape`, `circle`, `round` |
 | `icon` | `Widget?` | `null` | Leading icon, tinted and sized to the label |
 | `loading` | `bool` | `false` | Swaps the icon for a spinner and blocks taps |
 | `gradient` | `Gradient?` | `null` | Optional background gradient (e.g. `LinearGradient`) |
 | `block` | `bool` | `false` | Stretches to the parent's full width |
-| `disabled` | `bool?` | `null` | Follows the provider's `componentDisabled`, else `false`. Greys out and blocks taps |
+| `disabled` | `bool?` | `null` | Follows `ButtonDefaults.disabled`, then `componentDisabled`, else `false`. Greys out and blocks taps |
 
 ## Sizes
 

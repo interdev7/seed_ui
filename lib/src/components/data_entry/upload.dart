@@ -253,8 +253,13 @@ class UploadActions {
 @immutable
 class UploadDefaults {
   /// Creates a [UploadDefaults].
-  const UploadDefaults(
-      {this.variant, this.showRemove, this.showRetry, this.showSize});
+  const UploadDefaults({
+    this.variant,
+    this.showRemove,
+    this.showRetry,
+    this.showSize,
+    this.disabled,
+  });
 
   /// Which shape the uploader takes.
   final UploadVariant? variant;
@@ -267,6 +272,12 @@ class UploadDefaults {
 
   /// Whether a file lists its size.
   final bool? showSize;
+
+  /// Whether a [Upload] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A file list with a picker trigger, progress per file, and retry and remove
@@ -388,7 +399,10 @@ class Upload<T> extends StatelessWidget {
   /// Whether this control is disabled: its own word, else the one set for
   /// the subtree, else no.
   bool _disabledIn(BuildContext context) =>
-      disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      disabled ??
+      ConfigProvider.defaultsOf<UploadDefaults>(context)?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   /// The most files to accept. Once [items] reaches it the trigger goes away.
   ///

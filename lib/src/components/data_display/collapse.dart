@@ -146,12 +146,14 @@ class CollapseItem {
 @immutable
 class CollapseDefaults {
   /// Creates a [CollapseDefaults].
-  const CollapseDefaults(
-      {this.accordion,
-      this.bordered,
-      this.ghost,
-      this.expandIconPosition,
-      this.collapsible});
+  const CollapseDefaults({
+    this.accordion,
+    this.bordered,
+    this.ghost,
+    this.expandIconPosition,
+    this.collapsible,
+    this.size,
+  });
 
   /// Whether only one panel opens at a time.
   final bool? accordion;
@@ -167,6 +169,12 @@ class CollapseDefaults {
 
   /// What opens a panel.
   final CollapsibleTrigger? collapsible;
+
+  /// Which control height a [Collapse] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
 }
 
 /// A set of collapsible panels.
@@ -274,7 +282,10 @@ class _CollapseState extends State<Collapse> {
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   late final KeyedSet _open = KeyedSet(widget.defaultActiveKeys);
 

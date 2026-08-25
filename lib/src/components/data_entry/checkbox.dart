@@ -277,10 +277,19 @@ class CheckboxOption<T> {
 @immutable
 class CheckboxGroupDefaults {
   /// Creates a [CheckboxGroupDefaults].
-  const CheckboxGroupDefaults({this.direction});
+  const CheckboxGroupDefaults({
+    this.direction,
+    this.disabled,
+  });
 
   /// Which way the boxes run.
   final Axis? direction;
+
+  /// Whether a [CheckboxGroup] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A set of checkboxes selecting several values from a list.
@@ -323,7 +332,10 @@ class CheckboxGroup<T> extends StatelessWidget {
   /// Whether this control is disabled: its own word, else the one set for
   /// the subtree, else no.
   bool _disabledIn(BuildContext context) =>
-      disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      disabled ??
+      ConfigProvider.defaultsOf<CheckboxGroupDefaults>(context)?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   /// Whether the options run in a row (wrapping) or a column.
   final Axis? direction;

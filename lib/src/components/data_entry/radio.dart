@@ -300,7 +300,13 @@ class RadioOption<T> {
 @immutable
 class RadioGroupDefaults {
   /// Creates a [RadioGroupDefaults].
-  const RadioGroupDefaults({this.direction, this.optionType, this.buttonStyle});
+  const RadioGroupDefaults({
+    this.direction,
+    this.optionType,
+    this.buttonStyle,
+    this.size,
+    this.disabled,
+  });
 
   /// Which way the options run.
   final Axis? direction;
@@ -310,6 +316,18 @@ class RadioGroupDefaults {
 
   /// How button-style options are filled.
   final RadioButtonStyle? buttonStyle;
+
+  /// Which control height a [RadioGroup] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
+
+  /// Whether a [RadioGroup] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A set of radio buttons selecting one value from a list.
@@ -359,7 +377,10 @@ class RadioGroup<T> extends StatelessWidget {
   /// Whether this control is disabled: its own word, else the one set for
   /// the subtree, else no.
   bool _disabledIn(BuildContext context) =>
-      disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      disabled ??
+      ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   /// Whether dot-style options run in a row (wrapping) or a column. Ignored
   /// for [RadioOptionType.button], which is always a row.
@@ -425,8 +446,10 @@ class RadioGroup<T> extends StatelessWidget {
 
   Widget _buildButtons(BuildContext context) {
     final token = context.softToken;
-    final resolvedSize =
-        size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+    final resolvedSize = size ??
+        ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.size ??
+        ConfigProvider.componentSizeOf(context) ??
+        SoftSize.middle;
     final selectedIndex = options.indexWhere((o) => o.value == value);
 
     _RadioButton<T> button(int i, _ButtonRole role) => _RadioButton<T>(

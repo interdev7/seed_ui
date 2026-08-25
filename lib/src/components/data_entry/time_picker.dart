@@ -57,6 +57,8 @@ class TimePickerDefaults {
     this.allowClear,
     this.showNow,
     this.needConfirm,
+    this.size,
+    this.disabled,
   });
 
   /// How pickers are filled and bordered.
@@ -70,6 +72,18 @@ class TimePickerDefaults {
 
   /// Whether a choice is only committed on OK.
   final bool? needConfirm;
+
+  /// Which control height a [TimePicker] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
+
+  /// Whether a [TimePicker] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// Per-component design tokens for [TimePicker].
@@ -261,10 +275,16 @@ class _TimePickerState extends State<TimePicker> {
       ConfigProvider.defaultsOf<TimePickerDefaults>(context);
 
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   SoftSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   TimePickerVariant get _variant =>
       widget.variant ?? _defaults?.variant ?? TimePickerVariant.outlined;

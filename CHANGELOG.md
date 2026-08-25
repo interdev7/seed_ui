@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`size` and `disabled` in the per-component defaults.** They could only be
+  said for a whole screen, through `ConfigProvider.componentSize` and
+  `componentDisabled` — so "small buttons on an otherwise normal screen" could
+  not be said at all. antd cannot say it either; that is a poor reason to keep
+  the gap when the mechanism was already there.
+
+  They resolve nearest first, and `componentSize` keeps working exactly as
+  before:
+
+  ```dart
+  widget.size                                   // 1. this widget said so
+    ?? defaults.button?.size                    // 2. said about buttons
+    ?? ConfigProvider.componentSizeOf(context)  // 3. said about the screen
+    ?? SoftSize.middle                          // 4. the kit's own default
+  ```
+
+  Added to every defaults class whose component has the prop — fourteen for
+  `size`, fourteen for `disabled`.
+
+  Two things surfaced while wiring it. `Progress` never consulted
+  `componentSize` at all: its `size` was already nullable, so the earlier
+  migration passed it by. And the docs never pointed from one mechanism to the
+  other, which is how you go looking for a size in `ButtonDefaults` and come
+  away thinking it cannot be set.
+
 - **`TimePicker`** — the kit's first picker, and the shape a `DatePicker` will
   follow. A time of day is a `Duration` since midnight: Dart has no
   time-of-day type outside Material, which this package is built without, and a

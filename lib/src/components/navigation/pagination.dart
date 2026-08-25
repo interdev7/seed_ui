@@ -98,12 +98,15 @@ class _ResolvedPaginationToken {
 @immutable
 class PaginationDefaults {
   /// Creates a [PaginationDefaults].
-  const PaginationDefaults(
-      {this.showSizeChanger,
-      this.showQuickJumper,
-      this.hideOnSinglePage,
-      this.showLessItems,
-      this.align});
+  const PaginationDefaults({
+    this.showSizeChanger,
+    this.showQuickJumper,
+    this.hideOnSinglePage,
+    this.showLessItems,
+    this.align,
+    this.size,
+    this.disabled,
+  });
 
   /// Whether the page-size picker is offered.
   final bool? showSizeChanger;
@@ -119,6 +122,18 @@ class PaginationDefaults {
 
   /// Which way the control is aligned.
   final MainAxisAlignment? align;
+
+  /// Which control height a [Pagination] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
+
+  /// Whether a [Pagination] is disabled, unless it says otherwise.
+  ///
+  /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
+  /// the widget's own word.
+  final bool? disabled;
 }
 
 /// A pager for splitting a long list across pages.
@@ -247,13 +262,19 @@ class _PaginationState extends State<Pagination> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      _defaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset. Named apart from `_size`, which is
   /// this component's page size.
   SoftSize get _controlSize =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   int? _current;
   int? _pageSize;

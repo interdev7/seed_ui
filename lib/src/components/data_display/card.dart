@@ -162,7 +162,12 @@ class CardTab {
 @immutable
 class CardDefaults {
   /// Creates a [CardDefaults].
-  const CardDefaults({this.hoverable, this.variant, this.type});
+  const CardDefaults({
+    this.hoverable,
+    this.variant,
+    this.type,
+    this.size,
+  });
 
   /// Whether cards lift under the pointer.
   final bool? hoverable;
@@ -172,6 +177,12 @@ class CardDefaults {
 
   /// Whether cards nest inside another.
   final CardType? type;
+
+  /// Which control height a [Card] takes, unless it names one.
+  ///
+  /// Nearer than `ConfigProvider.componentSize`, so this wins where both
+  /// are set: small buttons on an otherwise normal screen.
+  final SoftSize? size;
 }
 
 /// A content container.
@@ -286,7 +297,10 @@ class _CardState extends State<Card> {
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   SoftSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
   bool _hover = false;
 

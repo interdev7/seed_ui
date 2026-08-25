@@ -448,6 +448,19 @@ own — buttons, inputs, selects, tabs, avatars, the lot. `componentDisabled` is
 the same idea for controls: one flag instead of a `disabled:` threaded through
 every field.
 
+For **one component only**, say it in that component's defaults instead — see
+[Tokens, and defaults](#tokens-and-defaults) below:
+
+```dart
+ConfigProvider(
+  componentSize: SoftSize.large,                    // the screen
+  defaults: const ComponentDefaults(
+    button: ButtonDefaults(size: SoftSize.small),   // but the buttons
+  ),
+  child: ...,
+)
+```
+
 What a widget states for itself always wins, so a control can stay live in a
 disabled subtree:
 
@@ -507,6 +520,29 @@ ConfigProvider(
 A widget's own prop always wins, and defaults are inherited and merged slot by
 slot like everything else on the provider: a nested provider that names one
 component leaves the others as the provider above had them.
+
+#### Which of the three wins
+
+`size` and `disabled` can be said in three places. They resolve **nearest
+first** — the closer the word is to the widget, the stronger it is:
+
+```dart
+widget.size                                   // 1. this widget said so
+  ?? defaults.button?.size                    // 2. said about buttons
+  ?? ConfigProvider.componentSizeOf(context)  // 3. said about the screen
+  ?? SoftSize.middle                          // 4. the kit's own default
+```
+
+`componentSize` keeps working exactly as before; it is simply no longer the
+only way to say it. The same ladder governs `disabled`.
+
+Every component whose `size` or `disabled` is nullable carries the matching
+field in its defaults: `Avatar`, `Button`, `Card`, `Collapse`, `Input`,
+`InputNumber`, `Pagination`, `Progress`, `RadioGroup`, `Segmented`, `Select`,
+`Steps`, `Tabs`, `TimePicker` for `size`; `Button`, `CheckableTagGroup`,
+`CheckboxGroup`, `Dropdown`, `Input`, `InputNumber`, `Pagination`,
+`RadioGroup`, `Segmented`, `Select`, `Slider`, `TimePicker`, `Tree`, `Upload`
+for `disabled`.
 
 What can be set so far — the list grew to cover every prop that is a
 house-style decision rather than the state of one instance:

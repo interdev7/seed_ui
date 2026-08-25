@@ -5,6 +5,63 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.0
+
+### Added
+
+- **`TimePicker`** — the kit's first picker, and the shape a `DatePicker` will
+  follow. A time of day is a `Duration` since midnight: Dart has no
+  time-of-day type outside Material, which this package is built without, and a
+  `Duration` needs no conversion to be compared or handed to `formatDuration`,
+  the format engine `Countdown` already uses. One convention for the package,
+  and no new name to collide with Material's `TimeOfDay`.
+
+  **The format decides the columns.** `'HH:mm'` offers hours and minutes and
+  hands back a value with no seconds in it; `'h:mm a'` grows a meridiem column
+  and reads as a 12-hour clock. A panel offering a column the format would then
+  discard would be collecting something it does not keep.
+
+  ```dart
+  TimePicker(
+    value: _opensAt,
+    format: 'HH:mm',
+    onChanged: (time) => setState(() => _opensAt = time),
+  )
+  ```
+
+  Typed as well as picked; an entry that is not a time leaves the value alone
+  rather than clearing it, and a 12-hour format refuses `9:00` rather than
+  guessing which half of the day it means. A multi-column panel waits for OK,
+  since an hour with no minute yet is not a time worth reporting. `hourStep`,
+  `minuteStep`, `secondStep`, `DisabledTime`, `hideDisabledOptions`, `showNow`,
+  `needConfirm`, `allowClear`, a controlled `open`, and the usual `size`,
+  `variant` and `disabled` — which follow `ConfigProvider` like every other
+  control.
+
+  `TimeFields`, `formatTime`, `parseTime` and `normalizeTime` are exported on
+  their own: the awkward cases — midnight on a 12-hour clock, a half-typed
+  entry, a format naming no minutes — are all reachable without a picker on
+  screen.
+
+- **`selectTime`, `now`, `am` and `pm`** on `SeedLocalizations`, filled for all
+  twelve languages.
+
+- **Duration unit letters in every language** — `dayUnit`, `hourUnit`,
+  `minuteUnit`, `secondUnit` on `SeedLocalizations`. `Countdown` already
+  translated its figures, but the letters in `format: 'D[d] HH:mm'` are
+  literal text inside a pattern the app owns, so they stayed English beside
+  Arabic-Indic or Chinese figures — which reads as a bug rather than a
+  default. The kit cannot translate a pattern handed to it; it now ships the
+  words to build one:
+
+  ```dart
+  final l = context.seedLocale;
+  Countdown(target: deadline, format: 'D[${l.dayUnit}] HH[${l.hourUnit}]')
+  ```
+
+  Filled for all twelve languages, and the gallery's countdown page now
+  follows its language picker.
+
 ## 0.8.0
 
 ### Added
@@ -32,22 +89,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   A widget's own prop always wins, and the sets merge slot by slot through
   nested providers. `ConfigProvider.defaultsOf<T>` reads them for a widget of
   your own. The full table is in [doc/theming.md](doc/theming.md).
-
-- **Duration unit letters in every language** — `dayUnit`, `hourUnit`,
-  `minuteUnit`, `secondUnit` on `SeedLocalizations`. `Countdown` already
-  translated its figures, but the letters in `format: 'D[d] HH:mm'` are
-  literal text inside a pattern the app owns, so they stayed English beside
-  Arabic-Indic or Chinese figures — which reads as a bug rather than a
-  default. The kit cannot translate a pattern handed to it; it now ships the
-  words to build one:
-
-  ```dart
-  final l = context.seedLocale;
-  Countdown(target: deadline, format: 'D[${l.dayUnit}] HH[${l.hourUnit}]')
-  ```
-
-  Filled for all twelve languages, and the gallery's countdown page now
-  follows its language picker.
 
 - **`ButtonColor` and `TagColor` take a colour of your own**, not just a
   preset. The colour twin of `ControlSize`, and the same three call shapes:

@@ -197,6 +197,13 @@ export 'src/components/data_entry/slider.dart'
     show SliderDefaults, Slider, RangeSlider, SliderMark, SliderToken;
 export 'src/components/data_entry/switch.dart'
     show Switch, SwitchSize, SwitchToken;
+export 'src/components/data_entry/time_picker.dart'
+    show
+        DisabledTime,
+        TimePicker,
+        TimePickerDefaults,
+        TimePickerToken,
+        TimePickerVariant;
 export 'src/components/data_entry/upload.dart'
     show
         UploadDefaults,
@@ -313,3 +320,5 @@ export 'src/utils/overlay_host.dart' show UiKit;
 export 'src/utils/popover.dart'
     show PopoverAnimation, PopoverLayer, PopoverController, PopoverPlacement;
 export 'src/utils/rail.dart' show RailInsets, RailPainter, RailSegment;
+export 'src/utils/time_format.dart'
+    show TimeFields, formatTime, normalizeTime, parseTime;

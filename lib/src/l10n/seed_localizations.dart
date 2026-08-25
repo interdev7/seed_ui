@@ -68,6 +68,10 @@ class SeedLocalizations {
     this.noData = 'No data',
     this.noMoreItems = 'No more items',
     this.perPage = '/ page',
+    this.selectTime = 'Select time',
+    this.now = 'Now',
+    this.am = 'AM',
+    this.pm = 'PM',
     this.dayUnit = 'd',
     this.hourUnit = 'h',
     this.minuteUnit = 'm',
@@ -80,6 +84,22 @@ class SeedLocalizations {
 
   /// Which language this is, for identifying it. Not used for matching.
   final String localeName;
+
+  /// Placeholder of an empty `TimePicker`.
+  final String selectTime;
+
+  /// Jumps a `TimePicker` to the current time.
+  final String now;
+
+  /// The first half of the day, on a 12-hour clock.
+  ///
+  /// Used only by a format naming `a` or `A`. Languages that never write a
+  /// 12-hour clock keep the Latin letters, which is what their own software
+  /// shows when a 12-hour format is forced.
+  final String am;
+
+  /// The second half of the day, on a 12-hour clock. See [am].
+  final String pm;
 
   /// Short unit letters for a duration, as a [Countdown] format writes them.
   ///
@@ -178,6 +198,10 @@ class SeedLocalizations {
     String? noData,
     String? noMoreItems,
     String? perPage,
+    String? selectTime,
+    String? now,
+    String? am,
+    String? pm,
     String? dayUnit,
     String? hourUnit,
     String? minuteUnit,
@@ -194,6 +218,10 @@ class SeedLocalizations {
         noData: noData ?? this.noData,
         noMoreItems: noMoreItems ?? this.noMoreItems,
         perPage: perPage ?? this.perPage,
+        selectTime: selectTime ?? this.selectTime,
+        now: now ?? this.now,
+        am: am ?? this.am,
+        pm: pm ?? this.pm,
         dayUnit: dayUnit ?? this.dayUnit,
         hourUnit: hourUnit ?? this.hourUnit,
         minuteUnit: minuteUnit ?? this.minuteUnit,
@@ -213,6 +241,10 @@ class SeedLocalizations {
       other.noData == noData &&
       other.noMoreItems == noMoreItems &&
       other.perPage == perPage &&
+      other.selectTime == selectTime &&
+      other.now == now &&
+      other.am == am &&
+      other.pm == pm &&
       other.dayUnit == dayUnit &&
       other.hourUnit == hourUnit &&
       other.minuteUnit == minuteUnit &&
@@ -246,6 +278,10 @@ class SeedLocalizations {
   /// Russian.
   static const SeedLocalizations ru = SeedLocalizations(
     localeName: 'ru',
+    selectTime: 'Выберите время',
+    now: 'Сейчас',
+    am: 'AM',
+    pm: 'PM',
     dayUnit: 'д',
     hourUnit: 'ч',
     minuteUnit: 'м',
@@ -262,6 +298,10 @@ class SeedLocalizations {
   /// Turkmen.
   static const SeedLocalizations tk = SeedLocalizations(
     localeName: 'tk',
+    selectTime: 'Wagty saýlaň',
+    now: 'Häzir',
+    am: 'AM',
+    pm: 'PM',
     dayUnit: 'g',
     hourUnit: 'sag',
     minuteUnit: 'min',
@@ -279,6 +319,10 @@ class SeedLocalizations {
   /// German.
   static const SeedLocalizations de = SeedLocalizations(
     localeName: 'de',
+    selectTime: 'Zeit auswählen',
+    now: 'Jetzt',
+    am: 'AM',
+    pm: 'PM',
     dayUnit: 'T',
     hourUnit: 'Std',
     minuteUnit: 'Min',
@@ -295,6 +339,10 @@ class SeedLocalizations {
   /// French.
   static const SeedLocalizations fr = SeedLocalizations(
     localeName: 'fr',
+    selectTime: 'Sélectionner l\'heure',
+    now: 'Maintenant',
+    am: 'AM',
+    pm: 'PM',
     dayUnit: 'j',
     hourUnit: 'h',
     minuteUnit: 'min',
@@ -311,6 +359,10 @@ class SeedLocalizations {
   /// Spanish.
   static const SeedLocalizations es = SeedLocalizations(
     localeName: 'es',
+    selectTime: 'Seleccionar hora',
+    now: 'Ahora',
+    am: 'AM',
+    pm: 'PM',
     dayUnit: 'd',
     hourUnit: 'h',
     minuteUnit: 'min',
@@ -328,6 +380,10 @@ class SeedLocalizations {
   /// Chinese, simplified.
   static const SeedLocalizations zh = SeedLocalizations(
     localeName: 'zh',
+    selectTime: '请选择时间',
+    now: '此刻',
+    am: '上午',
+    pm: '下午',
     dayUnit: '天',
     hourUnit: '时',
     minuteUnit: '分',
@@ -345,6 +401,10 @@ class SeedLocalizations {
   /// Japanese.
   static const SeedLocalizations ja = SeedLocalizations(
     localeName: 'ja',
+    selectTime: '時間を選択',
+    now: '現在',
+    am: '午前',
+    pm: '午後',
     dayUnit: '日',
     hourUnit: '時',
     minuteUnit: '分',
@@ -361,6 +421,10 @@ class SeedLocalizations {
   /// Turkish.
   static const SeedLocalizations tr = SeedLocalizations(
     localeName: 'tr',
+    selectTime: 'Saat seçin',
+    now: 'Şimdi',
+    am: 'ÖÖ',
+    pm: 'ÖS',
     dayUnit: 'g',
     hourUnit: 'sa',
     minuteUnit: 'dk',
@@ -378,6 +442,10 @@ class SeedLocalizations {
   /// Portuguese.
   static const SeedLocalizations pt = SeedLocalizations(
     localeName: 'pt',
+    selectTime: 'Selecionar hora',
+    now: 'Agora',
+    am: 'AM',
+    pm: 'PM',
     dayUnit: 'd',
     hourUnit: 'h',
     minuteUnit: 'min',
@@ -394,6 +462,10 @@ class SeedLocalizations {
   /// Arabic. Read right to left.
   static const SeedLocalizations ar = SeedLocalizations(
     localeName: 'ar',
+    selectTime: 'اختر الوقت',
+    now: 'الآن',
+    am: 'ص',
+    pm: 'م',
     dayUnit: 'ي',
     hourUnit: 'س',
     minuteUnit: 'د',
@@ -412,6 +484,10 @@ class SeedLocalizations {
   /// Hebrew. Read right to left.
   static const SeedLocalizations he = SeedLocalizations(
     localeName: 'he',
+    selectTime: 'בחר שעה',
+    now: 'עכשיו',
+    am: 'AM',
+    pm: 'PM',
     dayUnit: 'י',
     hourUnit: 'ש',
     minuteUnit: 'ד',

@@ -24,6 +24,7 @@ import '../components/data_entry/radio.dart';
 import '../components/data_entry/select.dart';
 import '../components/data_entry/slider.dart';
 import '../components/data_entry/switch.dart';
+import '../components/data_entry/time_picker.dart';
 import '../components/data_entry/upload.dart';
 import '../components/feedback/alert.dart';
 import '../components/feedback/drawer.dart';
@@ -76,6 +77,7 @@ class ComponentsConfig {
     this.switchToken,
     this.tabs,
     this.tag,
+    this.timePicker,
     this.timeline,
     this.tooltip,
     this.tour,
@@ -183,6 +185,9 @@ class ComponentsConfig {
   /// Overrides applied to every [Tag] under this provider.
   final TagToken? tag;
 
+  /// Overrides for [TimePicker].
+  final TimePickerToken? timePicker;
+
   /// Overrides applied to every [Timeline] under this provider.
   final TimelineToken? timeline;
 
@@ -284,6 +289,9 @@ class ComponentsConfig {
     if (T == SwitchToken && switchToken != null) return switchToken as T;
     if (T == TabsToken && tabs != null) return tabs as T;
     if (T == TagToken && tag != null) return tag as T;
+    if (T == TimePickerToken && timePicker != null) {
+      return timePicker as T;
+    }
     if (T == TimelineToken && timeline != null) return timeline as T;
     if (T == TourToken && tour != null) return tour as T;
     if (T == TooltipToken && tooltip != null) return tooltip as T;

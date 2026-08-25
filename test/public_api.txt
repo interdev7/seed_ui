@@ -56,6 +56,7 @@ CountdownType
 CreateTabData
 CrossPainter
 DashedBorderPainter
+DisabledTime
 Drawer
 DrawerApi
 DrawerConfig
@@ -224,6 +225,11 @@ TagToken
 TagVariant
 ThemeContext
 ThemeData
+TimeFields
+TimePicker
+TimePickerDefaults
+TimePickerToken
+TimePickerVariant
 Timeline
 TimelineDefaults
 TimelineEntry
@@ -265,8 +271,11 @@ UploadStatus
 UploadToken
 UploadVariant
 UserIcon
+formatTime
 generate
 message
+normalizeTime
 notification
 parseHexColor
+parseTime
 stepsRingPadding

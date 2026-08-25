@@ -22,6 +22,7 @@ import '../components/data_entry/input_number.dart';
 import '../components/data_entry/radio.dart';
 import '../components/data_entry/select.dart';
 import '../components/data_entry/slider.dart';
+import '../components/data_entry/time_picker.dart';
 import '../components/data_entry/upload.dart';
 import '../components/feedback/alert.dart';
 import '../components/feedback/popconfirm.dart';
@@ -86,6 +87,7 @@ class ComponentDefaults {
     this.popover,
     this.select,
     this.tag,
+    this.timePicker,
     this.tooltip,
     this.tour,
   });
@@ -174,6 +176,9 @@ class ComponentDefaults {
   /// Applied to every [Tag] under this provider.
   final TagDefaults? tag;
 
+  /// Applied to every [TimePicker] under this provider.
+  final TimePickerDefaults? timePicker;
+
   /// Applied to every [Tooltip] under this provider.
   final TooltipDefaults? tooltip;
 
@@ -211,6 +216,7 @@ class ComponentDefaults {
         popconfirm: other.popconfirm ?? popconfirm,
         popover: other.popover ?? popover,
         tag: other.tag ?? tag,
+        timePicker: other.timePicker ?? timePicker,
         tooltip: other.tooltip ?? tooltip,
         tour: other.tour ?? tour,
       );
@@ -227,6 +233,9 @@ class ComponentDefaults {
       return popconfirm as T;
     }
     if (T == PopoverDefaults && popover != null) return popover as T;
+    if (T == TimePickerDefaults && timePicker != null) {
+      return timePicker as T;
+    }
     if (T == TooltipDefaults && tooltip != null) return tooltip as T;
     if (T == TourDefaults && tour != null) return tour as T;
     if (T == AvatarDefaults && avatar != null) return avatar as T;

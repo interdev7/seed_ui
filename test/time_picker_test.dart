@@ -412,4 +412,94 @@ void main() {
     expect(pill, lessThan(columnWidth), reason: 'inset on both sides');
     expect(pill, greaterThan(columnWidth / 2), reason: 'but not squeezed');
   });
+
+  testWidgets('the chosen value glides to the top of its column', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH:mm')));
+    await _openPanel(tester);
+
+    ScrollPosition hourColumn() => tester
+        .state<ScrollableState>(
+          find
+              .descendant(
+                of: find.byType(ListView).first,
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        )
+        .position;
+
+    expect(hourColumn().pixels, 0);
+    await tester.tap(find.text('05').first);
+    await tester.pumpAndSettle();
+
+    // Five rows up: the chosen hour now sits against the top of the column.
+    expect(hourColumn().pixels, greaterThan(0));
+  });
+
+  testWidgets('even the last value can reach the top', (tester) async {
+    // Without room below the run the late hours can only ever sit at the
+    // bottom of the column, which reads as the panel refusing to move.
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH:mm')));
+    await _openPanel(tester);
+
+    final pos = tester
+        .state<ScrollableState>(
+          find
+              .descendant(
+                of: find.byType(ListView).first,
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        )
+        .position;
+
+    final rowHeight = tester.getSize(find.text('00').first).height;
+    expect(rowHeight, greaterThan(0));
+    // 23 rows of travel for a 24-hour column.
+    expect(pos.maxScrollExtent, greaterThanOrEqualTo(23 * 28.0));
+  });
+
+  testWidgets('the panel is inset from its own top edge', (tester) async {
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH:mm')));
+    await _openPanel(tester);
+
+    final panel = find.ancestor(
+      of: find.byType(ListView).first,
+      matching: find.byType(DecoratedBox),
+    );
+    final panelTop = tester.getRect(panel.first).top;
+    final columnTop = tester.getRect(find.byType(ListView).first).top;
+
+    expect(
+      columnTop - panelTop,
+      greaterThan(0),
+      reason: 'the first value must not sit against the panel edge',
+    );
+  });
+
+  testWidgets('the default format offers seconds', (tester) async {
+    await tester.pumpWidget(_host(const TimePicker()));
+    await _openPanel(tester);
+    expect(find.byType(ListView), findsNWidgets(3));
+  });
+
+  testWidgets('the field text is centred in its box', (tester) async {
+    // A line height of 1 with no even leading split puts the glyphs above the
+    // middle of the box, and "12:00" reads as sitting too high in the field.
+    //
+    // Asserted on the style: the test font has symmetric metrics, so the
+    // fault is invisible to a measurement here but plain on a real face.
+    await tester.pumpWidget(
+      _host(
+        const TimePicker(format: 'HH:mm', value: Duration(hours: 12)),
+      ),
+    );
+    await tester.pump();
+
+    final style = tester.widget<EditableText>(find.byType(EditableText)).style;
+    expect(style.height, 1.0);
+    expect(style.leadingDistribution, TextLeadingDistribution.even);
+  });
 }

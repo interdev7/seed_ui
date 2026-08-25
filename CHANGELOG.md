@@ -24,7 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   same primary tint a chosen row takes in a `Select`'s list.
 
   Picking writes the field at once even where the value itself waits for OK —
-  a panel showing a choice above a blank field reads as broken.
+  a panel showing a choice above a blank field reads as broken — and the
+  chosen value glides to the top of its column, with room below the run so
+  even the last hour can get there. The field's own text carries the even
+  leading split the rest of the kit uses, without which the glyphs sit above
+  the middle of the box; `Select`'s field had the same fault and is fixed with
+  it.
 
 - **`fontWeight` and `fontWeightStrong` in the theme.** Weight was the one
   piece of typography the kit had no lever for: twenty widgets wrote

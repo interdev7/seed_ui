@@ -792,6 +792,10 @@ class _SelectState<T> extends State<Select<T>> {
       fontFamily: token.fontFamily,
       fontFamilyFallback: token.fontFamilyFallback,
       height: 1.0,
+      // Pin the line box to the font size and split its leading evenly.
+      // Without the even split the glyphs sit above the middle of the
+      // box, and the whole field reads as set too high.
+      leadingDistribution: TextLeadingDistribution.even,
       decoration: TextDecoration.none,
     );
 

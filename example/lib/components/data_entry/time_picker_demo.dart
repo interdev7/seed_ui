@@ -13,6 +13,7 @@ class TimePickerDemo extends StatefulWidget {
 
 class _TimePickerDemoState extends State<TimePickerDemo> {
   Duration? _basic = const Duration(hours: 9, minutes: 30);
+  Duration? _seconds;
   Duration? _twelve;
   Duration? _stepped;
   Duration? _blocked;
@@ -52,6 +53,18 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
               onChanged: (v) => setState(() => _basic = v),
             ),
             _basic,
+          ),
+        ),
+        Group(
+          'Hours, minutes and seconds',
+          // The default format: three columns, and the value keeps its
+          // seconds.
+          row(
+            TimePicker(
+              value: _seconds,
+              onChanged: (v) => setState(() => _seconds = v),
+            ),
+            _seconds,
           ),
         ),
         Group(
@@ -128,7 +141,8 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
         ),
         Group(
           'Sizes',
-          Row(
+          Column(
+            spacing: 10,
             children: [
               for (final size in SoftSize.values) ...[
                 SizedBox(
@@ -142,7 +156,8 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
         ),
         Group(
           'Variants',
-          Row(
+          Column(
+            spacing: 10,
             children: [
               for (final variant in TimePickerVariant.values) ...[
                 SizedBox(

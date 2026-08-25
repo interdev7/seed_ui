@@ -566,6 +566,10 @@ class _TimePickerState extends State<TimePicker> {
       fontFamily: t.fontFamily,
       fontFamilyFallback: t.fontFamilyFallback,
       height: 1.0,
+      // Pin the line box to the font size and split its leading evenly.
+      // Without the even split the glyphs sit above the middle of the
+      // box, and the whole field reads as set too high.
+      leadingDistribution: TextLeadingDistribution.even,
       decoration: TextDecoration.none,
     );
 
@@ -747,17 +751,22 @@ class _TimePanel extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              height: r.cellHeight * r.visibleRows,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < columns.length; i++) ...[
-                    if (i > 0)
-                      Container(width: t.lineWidth, color: t.colorSplit),
-                    columns[i],
+            // The columns are inset from the panel's own top and bottom, so
+            // the first value does not sit against its edge.
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: t.sizeXXS),
+              child: SizedBox(
+                height: r.cellHeight * r.visibleRows,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < columns.length; i++) ...[
+                      if (i > 0)
+                        Container(width: t.lineWidth, color: t.colorSplit),
+                      columns[i],
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
             Container(height: t.lineWidth, color: t.colorSplit),
@@ -834,7 +843,8 @@ class _ColumnState extends State<_Column> {
   void initState() {
     super.initState();
     // Bring the current value into view once the column has a size to scroll.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _revealSelected());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _revealSelected(instant: true));
   }
 
   @override
@@ -843,7 +853,12 @@ class _ColumnState extends State<_Column> {
     if (old.selected != widget.selected) _revealSelected();
   }
 
-  void _revealSelected() {
+  /// Brings the chosen value to the top of the column.
+  ///
+  /// [instant] on the first build, where there is nothing to animate from;
+  /// a glide afterwards, so a pick reads as the column moving rather than
+  /// the values jumping under the finger.
+  void _revealSelected({bool instant = false}) {
     if (!mounted || !_scroll.hasClients) return;
     final index = _shown.indexOf(widget.selected ?? -1);
     if (index < 0) return;
@@ -851,7 +866,17 @@ class _ColumnState extends State<_Column> {
       _scroll.position.minScrollExtent,
       _scroll.position.maxScrollExtent,
     );
-    _scroll.jumpTo(target);
+    if ((target - _scroll.offset).abs() < 0.5) return;
+    if (instant) {
+      _scroll.jumpTo(target);
+      return;
+    }
+    final t = context.softToken;
+    _scroll.animateTo(
+      target,
+      duration: t.motionDurationMid,
+      curve: t.motionEaseInOut,
+    );
   }
 
   @override
@@ -868,23 +893,29 @@ class _ColumnState extends State<_Column> {
       width: widget.token.columnWidth,
       child: ListView.builder(
         controller: _scroll,
-        padding: EdgeInsets.zero,
+        // Room below the run, so even the last value can come to rest at the
+        // top of the column.
+        padding: EdgeInsets.only(
+          bottom: widget.token.cellHeight * (widget.token.visibleRows - 1),
+        ),
         itemCount: values.length,
-        itemExtent: widget.token.cellHeight,
         itemBuilder: (context, i) {
           final value = values[i];
           final chosen = value == widget.selected;
           final blocked = widget.disabled.contains(value);
-          return _Cell(
-            label: widget.label(value),
-            chosen: chosen,
-            disabled: blocked,
+          return SizedBox(
             height: widget.token.cellHeight,
-            radius: t.borderRadiusSM,
-            textInset:
-                (widget.token.columnWidth - widget.token.cellHeight) / 2 -
-                    t.sizeXXS,
-            onTap: blocked ? null : () => widget.onPick(value),
+            child: _Cell(
+              label: widget.label(value),
+              chosen: chosen,
+              disabled: blocked,
+              height: widget.token.cellHeight,
+              radius: t.borderRadiusSM,
+              textInset:
+                  (widget.token.columnWidth - widget.token.cellHeight) / 2 -
+                      t.sizeXXS,
+              onTap: blocked ? null : () => widget.onPick(value),
+            ),
           );
         },
       ),

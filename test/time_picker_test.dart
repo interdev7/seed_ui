@@ -685,4 +685,56 @@ void main() {
     await _openPanel(tester);
     expect(find.text('a note'), findsOneWidget);
   });
+
+  group('the field sizes itself', () {
+    Future<double> widthIn(WidgetTester tester, String format) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(
+              body: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [TimePicker(format: format)],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      return tester.getSize(find.byType(TimePicker)).width;
+    }
+
+    testWidgets('a picker can stand in a Row without being measured', (
+      tester,
+    ) async {
+      // It used to throw here: the value area was Expanded, which needs a
+      // width from above.
+      final width = await widthIn(tester, 'HH:mm');
+      expect(tester.takeException(), isNull);
+      expect(width, greaterThan(0));
+      expect(width, lessThan(400), reason: 'sized to the format, not the page');
+    });
+
+    testWidgets('a longer format asks for more room', (tester) async {
+      final short = await widthIn(tester, 'HH');
+      final medium = await widthIn(tester, 'HH:mm');
+      final long = await widthIn(tester, 'HH:mm:ss');
+
+      expect(short, lessThan(medium));
+      expect(medium, lessThan(long));
+    });
+
+    testWidgets('given a width it still fills it', (tester) async {
+      // A form field lines up with its neighbours; sizing to content there
+      // would leave a ragged column.
+      await tester.pumpWidget(
+        _host(const TimePicker(format: 'HH:mm')),
+      );
+      await tester.pump();
+      expect(tester.getSize(find.byType(TimePicker)).width, 320);
+    });
+  });
 }

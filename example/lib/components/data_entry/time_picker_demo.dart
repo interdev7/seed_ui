@@ -46,6 +46,19 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Group(
+          'It sizes itself to the format',
+          // No SizedBox: with no width from above the field takes what the
+          // format needs. Given one — a form column — it fills it instead.
+          Row(
+            children: [
+              for (final f in ['HH', 'HH:mm', 'HH:mm:ss']) ...[
+                TimePicker(format: f),
+                const SizedBox(width: 12),
+              ],
+            ],
+          ),
+        ),
+        Group(
           'Hours and minutes',
           row(
             TimePicker(

@@ -26,7 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Picking writes the field at once even where the value itself waits for OK —
   a panel showing a choice above a blank field reads as broken — and the
   chosen value glides to the top of its column, with room below the run so
-  even the last hour can get there. Chosen values land at once rather than easing up from the hover grey, which
+  even the last hour can get there.
+
+  **The field sizes itself to the format.** A picker in a `Row` used to throw
+  outright — its value area was `Expanded`, which needs a width from above — so
+  every one had to be wrapped in a `SizedBox` measured by hand. The format
+  already says what the field can ever hold, so it now says how wide it needs
+  to be; given a width it still fills it, as a form field should.
+
+  Chosen values land at once rather than easing up from the hover grey, which
   showed as a flash under the finger. The figures follow the locale, and a time
   typed back in those figures is read correctly. A picker with no `value` keeps
   what it is given, from an optional `defaultValue`, the way `Select` does —

@@ -573,6 +573,49 @@ class _TimePickerState extends State<TimePicker> {
   double _fontSize(Token t) =>
       _size == SoftSize.large ? t.fontSizeLG : t.fontSize;
 
+  /// How wide the value area has to be for this format, whatever the time.
+  ///
+  /// The format says exactly what the field can ever hold, so the picker can
+  /// size itself: `'HH:mm'` needs room for `00:00` and no more. Measured with
+  /// the widest digit the face draws, since a proportional font does not give
+  /// every figure the same width.
+  double _valueWidth(TextStyle style, SeedLocalizations words) {
+    double widthOf(String text) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      return painter.width;
+    }
+
+    var widest = '0';
+    var widestWidth = 0.0;
+    for (var d = 0; d < 10; d++) {
+      final glyph = words.digit(d);
+      final w = widthOf(glyph);
+      if (w > widestWidth) {
+        widestWidth = w;
+        widest = glyph;
+      }
+    }
+
+    // A time with every field at its longest, then every figure swapped for
+    // the widest one the face has.
+    final sample = words.figures(
+      formatTime(
+        const Duration(hours: 23, minutes: 58, seconds: 59),
+        widget.format,
+        am: words.am,
+        pm: words.pm,
+      ),
+    );
+    final padded = sample
+        .split('')
+        .map((ch) => words.digits.contains(ch) ? widest : ch)
+        .join();
+    return widthOf(padded);
+  }
+
   void _syncAnchor() {
     if (!_open) return;
     final box = context.findRenderObject() as RenderBox?;
@@ -657,6 +700,11 @@ class _TimePickerState extends State<TimePicker> {
       enableInteractiveSelection: !widget.inputReadOnly,
     );
 
+    // Given a width the field fills it, as a form field should; left
+    // unbounded it takes what the format needs, so a picker can stand in a
+    // Row without being measured by hand.
+    final valueWidth = _valueWidth(textStyle, words);
+
     return MouseRegion(
       cursor:
           _enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
@@ -675,47 +723,56 @@ class _TimePickerState extends State<TimePicker> {
             borderRadius: BorderRadius.circular(r.borderRadius),
             border: Border.all(color: border, width: t.lineWidth),
           ),
-          child: Row(
-            children: [
-              if (widget.prefix != null) ...[
-                widget.prefix!,
-                SizedBox(width: t.sizeXS),
-              ],
-              Expanded(
-                child: Stack(
-                  alignment: AlignmentDirectional.centerStart,
-                  children: [
-                    if (_text.text.isEmpty)
-                      Text(
-                        widget.placeholder ?? words.selectTime,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: textStyle.copyWith(
-                          color: t.colorTextTertiary,
-                        ),
-                      ),
-                    field,
-                  ],
-                ),
-              ),
-              SizedBox(width: t.sizeXS),
-              if (showClear)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _clear,
-                  child: CustomPaint(
-                    size: Size.square(fontSize),
-                    painter: ClearIconPainter(t.colorTextTertiary),
-                  ),
-                )
-              else
-                widget.suffixIcon ??
-                    CustomPaint(
-                      size: Size.square(fontSize),
-                      painter: _ClockIconPainter(
-                          statusColor ?? t.colorTextQuaternary),
+          child: LayoutBuilder(
+            builder: (context, available) {
+              final valueArea = Stack(
+                alignment: AlignmentDirectional.centerStart,
+                children: [
+                  if (_text.text.isEmpty)
+                    Text(
+                      widget.placeholder ?? words.selectTime,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textStyle.copyWith(color: t.colorTextTertiary),
                     ),
-            ],
+                  field,
+                ],
+              );
+
+              return Row(
+                // Given a width the field fills it, as a form field should —
+                // Expanded sees to that. Left unbounded the row shrinks to its
+                // children, and the value area takes what the format needs.
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.prefix != null) ...[
+                    widget.prefix!,
+                    SizedBox(width: t.sizeXS),
+                  ],
+                  if (available.hasBoundedWidth)
+                    Expanded(child: valueArea)
+                  else
+                    SizedBox(width: valueWidth, child: valueArea),
+                  SizedBox(width: t.sizeXS),
+                  if (showClear)
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _clear,
+                      child: CustomPaint(
+                        size: Size.square(fontSize),
+                        painter: ClearIconPainter(t.colorTextTertiary),
+                      ),
+                    )
+                  else
+                    widget.suffixIcon ??
+                        CustomPaint(
+                          size: Size.square(fontSize),
+                          painter: _ClockIconPainter(
+                              statusColor ?? t.colorTextQuaternary),
+                        ),
+                ],
+              );
+            },
           ),
         ),
       ),

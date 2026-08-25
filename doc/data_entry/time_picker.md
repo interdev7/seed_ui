@@ -53,6 +53,18 @@ The grammar is `TimeFields`:
 | `A` / `a` | meridiem, upper or lower | `AM`, `am` |
 | `[...]` | literal text | `[at]` |
 
+## Width
+
+The field sizes itself to the format. `TimePicker(format: 'HH:mm')` in a `Row`
+takes exactly the room `00:00` needs — no `SizedBox` to work out by hand.
+
+Given a width it fills it instead, so a picker in a form column lines up with
+the fields around it. A `SizedBox` still wins, as always.
+
+The measurement uses the widest figure the face draws, since a proportional
+font does not give every digit the same width, and it follows the locale's own
+figures.
+
 ## Typing
 
 The field is typed as well as picked. An entry that is not a time leaves the

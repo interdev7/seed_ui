@@ -26,7 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Picking writes the field at once even where the value itself waits for OK —
   a panel showing a choice above a blank field reads as broken — and the
   chosen value glides to the top of its column, with room below the run so
-  even the last hour can get there. The field's own text carries the even
+  even the last hour can get there. Chosen values land at once rather than easing up from the hover grey, which
+  showed as a flash under the finger. The figures follow the locale, and a time
+  typed back in those figures is read correctly. A picker with no `value` keeps
+  what it is given, from an optional `defaultValue`, the way `Select` does —
+  before this it forgot the choice the moment the panel closed. Added `status`,
+  `prefix`, `suffixIcon`, `onClear` and `footerBuilder`.
+
+  The field's own text carries the even
   leading split the rest of the kit uses, without which the glyphs sit above
   the middle of the box; `Select`'s field had the same fault and is fixed with
   it.

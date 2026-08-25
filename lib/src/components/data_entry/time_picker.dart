@@ -1,9 +1,11 @@
 import 'package:flutter/widgets.dart';
 
+import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/popover.dart';
 import '../../utils/time_format.dart';
+import '../data_entry/input.dart' show InputStatus;
 import '../data_entry/select.dart' show ClearIconPainter;
 
 /// How a [TimePicker] is filled and bordered.
@@ -159,6 +161,7 @@ class TimePicker extends StatefulWidget {
   const TimePicker({
     super.key,
     this.value,
+    this.defaultValue,
     this.onChanged,
     this.format = 'HH:mm:ss',
     this.hourStep = 1,
@@ -177,6 +180,11 @@ class TimePicker extends StatefulWidget {
     this.open,
     this.onOpenChange,
     this.inputReadOnly = false,
+    this.status,
+    this.prefix,
+    this.suffixIcon,
+    this.onClear,
+    this.footerBuilder,
     this.token,
   })  : assert(hourStep > 0 && 24 % hourStep == 0,
             'hourStep must divide 24 evenly'),
@@ -185,8 +193,14 @@ class TimePicker extends StatefulWidget {
         assert(secondStep > 0 && 60 % secondStep == 0,
             'secondStep must divide 60 evenly');
 
-  /// The time shown, as a duration since midnight. Null shows the placeholder.
+  /// The time shown, as a duration since midnight.
+  ///
+  /// Null hands the picker to itself: it keeps what is chosen, starting from
+  /// [defaultValue]. Supply this to drive it from outside instead.
   final Duration? value;
+
+  /// What an uncontrolled picker starts with. Ignored when [value] is set.
+  final Duration? defaultValue;
 
   /// Called with the chosen time, or null when it is cleared.
   final ValueChanged<Duration?>? onChanged;
@@ -248,6 +262,25 @@ class TimePicker extends StatefulWidget {
   /// Whether the field refuses typing, leaving the panel the only way in.
   final bool inputReadOnly;
 
+  /// Marks the field as questionable or wrong.
+  ///
+  /// The same two states the kit's other fields carry, drawn the same way —
+  /// see [InputStatus].
+  final InputStatus? status;
+
+  /// Sits before the value, inside the field.
+  final Widget? prefix;
+
+  /// Replaces the clock face on the trailing edge.
+  final Widget? suffixIcon;
+
+  /// Called when the clear button is pressed, after the value is dropped.
+  final VoidCallback? onClear;
+
+  /// Adds a row of your own beneath the panel's footer — a preset time, a
+  /// note, whatever the screen needs.
+  final WidgetBuilder? footerBuilder;
+
   /// Per-instance token overrides.
   final TimePickerToken? token;
 
@@ -266,6 +299,13 @@ class _TimePickerState extends State<TimePicker> {
 
   bool _open = false;
   bool _hovered = false;
+
+  /// What an uncontrolled picker is holding. Unused once [TimePicker.value]
+  /// is supplied.
+  Duration? _internal;
+
+  /// The time in force, whoever is keeping it.
+  Duration? get _value => widget.value ?? _internal;
 
   /// What the panel is showing while it is being worked on. Committed to
   /// [TimePicker.onChanged] on OK, or immediately when no confirmation is
@@ -311,7 +351,8 @@ class _TimePickerState extends State<TimePicker> {
   @override
   void initState() {
     super.initState();
-    _draft = widget.value;
+    _internal = widget.defaultValue;
+    _draft = _value;
     // Reports a layer that closed itself — an outside tap, a route change.
     // It must not close the layer again: it is already gone, and asking twice
     // takes the overlay entry out from under itself.
@@ -335,7 +376,7 @@ class _TimePickerState extends State<TimePicker> {
   void didUpdateWidget(TimePicker old) {
     super.didUpdateWidget(old);
     if (old.value != widget.value || old.format != widget.format) {
-      _draft = widget.value;
+      _draft = _value;
       _syncText();
     }
     if (widget.open != null && widget.open != old.open) {
@@ -363,15 +404,29 @@ class _TimePickerState extends State<TimePicker> {
   /// the committed value back.
   void _syncText() {
     final words = context.seedLocale;
-    final value = _open ? (_draft ?? widget.value) : widget.value;
+    final value = _open ? (_draft ?? _value) : _value;
     final next = value == null
         ? ''
-        : formatTime(value, widget.format, am: words.am, pm: words.pm);
+        : words.figures(
+            formatTime(value, widget.format, am: words.am, pm: words.pm),
+          );
     if (_text.text != next) _text.text = next;
   }
 
+  /// Turns the locale's own figures back into plain digits.
+  String _plainFigures(String text, SeedLocalizations words) {
+    if (words.digits == SeedLocalizations.latinDigits) return text;
+    final out = StringBuffer();
+    for (final ch in text.split('')) {
+      final at = words.digits.indexOf(ch);
+      out.write(at >= 0 ? '$at' : ch);
+    }
+    return out.toString();
+  }
+
   void _commit(Duration? time) {
-    if (time == widget.value) return;
+    if (time == _value) return;
+    if (widget.value == null) setState(() => _internal = time);
     widget.onChanged?.call(time);
   }
 
@@ -384,7 +439,10 @@ class _TimePickerState extends State<TimePicker> {
       _requestOpen(false);
       return;
     }
-    final parsed = parseTime(text, widget.format, am: words.am, pm: words.pm);
+    // The field shows the locale's own figures, so they have to come back
+    // to plain digits before the parser — which counts on ASCII — sees them.
+    final plain = _plainFigures(text, words);
+    final parsed = parseTime(plain, widget.format, am: words.am, pm: words.pm);
     if (parsed == null) {
       _syncText();
       return;
@@ -438,7 +496,7 @@ class _TimePickerState extends State<TimePicker> {
     final anchor = box.localToGlobal(Offset.zero) & box.size;
     setState(() {
       _open = true;
-      _draft = widget.value;
+      _draft = _value;
     });
     final token = context.softToken;
     _popover.open(
@@ -499,6 +557,7 @@ class _TimePickerState extends State<TimePicker> {
     setState(() => _draft = null);
     _text.clear();
     _commit(null);
+    widget.onClear?.call();
   }
 
   // --------------------------------------------------------------------------
@@ -533,8 +592,7 @@ class _TimePickerState extends State<TimePicker> {
     _syncAnchor();
 
     final fontSize = _fontSize(t);
-    final showClear =
-        _allowClear && _enabled && widget.value != null && _hovered;
+    final showClear = _allowClear && _enabled && _value != null && _hovered;
 
     final Color fill;
     if (!_enabled) {
@@ -547,9 +605,17 @@ class _TimePickerState extends State<TimePicker> {
       fill = t.colorBgContainer;
     }
 
+    final statusColor = switch (widget.status) {
+      InputStatus.error => t.error.base,
+      InputStatus.warning => t.warning.base,
+      null => null,
+    };
+
     final Color border;
     if (_variant != TimePickerVariant.outlined) {
       border = const Color(0x00000000);
+    } else if (statusColor != null) {
+      border = statusColor;
     } else if (!_enabled) {
       border = t.colorBorder;
     } else if (_open) {
@@ -611,6 +677,10 @@ class _TimePickerState extends State<TimePicker> {
           ),
           child: Row(
             children: [
+              if (widget.prefix != null) ...[
+                widget.prefix!,
+                SizedBox(width: t.sizeXS),
+              ],
               Expanded(
                 child: Stack(
                   alignment: AlignmentDirectional.centerStart,
@@ -639,12 +709,12 @@ class _TimePickerState extends State<TimePicker> {
                   ),
                 )
               else
-                CustomPaint(
-                  size: Size.square(fontSize),
-                  painter: _ClockIconPainter(
-                    _enabled ? t.colorTextQuaternary : t.colorTextQuaternary,
-                  ),
-                ),
+                widget.suffixIcon ??
+                    CustomPaint(
+                      size: Size.square(fontSize),
+                      painter: _ClockIconPainter(
+                          statusColor ?? t.colorTextQuaternary),
+                    ),
             ],
           ),
         ),
@@ -690,8 +760,10 @@ class _TimePanel extends StatelessWidget {
           ],
           selected: hour,
           label: fields.meridiem
-              ? (h) => '${h % 12 == 0 ? 12 : h % 12}'.padLeft(2, '0')
-              : (h) => '$h'.padLeft(2, '0'),
+              ? (h) => words.figures(
+                    '${h % 12 == 0 ? 12 : h % 12}'.padLeft(2, '0'),
+                  )
+              : (h) => words.figures('$h'.padLeft(2, '0')),
           // A 12-hour panel splits the day across two columns, so the hour
           // column shows one half at a time.
           keep: fields.meridiem
@@ -708,7 +780,7 @@ class _TimePanel extends StatelessWidget {
             for (var m = 0; m < 60; m += state.widget.minuteStep) m,
           ],
           selected: minute,
-          label: (m) => '$m'.padLeft(2, '0'),
+          label: (m) => words.figures('$m'.padLeft(2, '0')),
           disabled: state._blockedMinutes(hour ?? 0),
           hideDisabled: state.widget.hideDisabledOptions,
           onPick: (m) => state._pick(compose(m: m)),
@@ -720,7 +792,7 @@ class _TimePanel extends StatelessWidget {
             for (var s = 0; s < 60; s += state.widget.secondStep) s,
           ],
           selected: second,
-          label: (s) => '$s'.padLeft(2, '0'),
+          label: (s) => words.figures('$s'.padLeft(2, '0')),
           disabled: state._blockedSeconds(hour ?? 0, minute ?? 0),
           hideDisabled: state.widget.hideDisabledOptions,
           onPick: (s) => state._pick(compose(s: s)),
@@ -794,6 +866,10 @@ class _TimePanel extends StatelessWidget {
                 ],
               ),
             ),
+            if (state.widget.footerBuilder != null) ...[
+              Container(height: t.lineWidth, color: t.colorSplit),
+              state.widget.footerBuilder!(context),
+            ],
           ],
         ),
       ),
@@ -983,7 +1059,10 @@ class _CellState extends State<_Cell> {
           // inset from the column's sides, and the rows sit flush.
           padding: EdgeInsets.symmetric(horizontal: t.sizeXXS),
           child: AnimatedContainer(
-            duration: t.motionDurationMid,
+            // Hover fades in, but a pick lands at once: easing from the hover
+            // grey to the chosen tint shows a grey stage on the way, which
+            // reads as a flash under the finger.
+            duration: widget.chosen ? Duration.zero : t.motionDurationMid,
             curve: t.motionEaseInOut,
             decoration: BoxDecoration(
               color: background,

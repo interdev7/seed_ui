@@ -502,4 +502,187 @@ void main() {
     expect(style.height, 1.0);
     expect(style.leadingDistribution, TextLeadingDistribution.even);
   });
+
+  testWidgets('the figures follow the language, as elsewhere in the kit', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ConfigProvider(
+        locale: SeedLocalizations.ar,
+        child: MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          home: const Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              body: Center(
+                child: SizedBox(width: 220, child: TimePicker(format: 'HH:mm')),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byType(TimePicker));
+    await tester.pumpAndSettle();
+
+    // Arabic-Indic, the way Countdown and Badge already render their figures.
+    expect(find.text('٠٠'), findsWidgets);
+    expect(find.text('00'), findsNothing);
+  });
+
+  testWidgets('a typed time is read back in the locale it is shown in', (
+    tester,
+  ) async {
+    // The field shows the locale's figures, so the parser has to accept them
+    // back — a plain \\d would not.
+    Duration? chosen;
+    await tester.pumpWidget(
+      ConfigProvider(
+        locale: SeedLocalizations.ar,
+        child: MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 220,
+                  child: TimePicker(
+                    format: 'HH:mm',
+                    onChanged: (v) => chosen = v,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(EditableText), '١٤:٤٥');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(chosen, const Duration(hours: 14, minutes: 45));
+  });
+
+  testWidgets('without a value of its own it keeps what is picked', (
+    tester,
+  ) async {
+    // An uncontrolled picker, as Select is: no value, no onChanged, and the
+    // choice still survives the panel closing.
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH')));
+    await _openPanel(tester);
+    await tester.tap(find.text('03'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).controller.text,
+      '03',
+    );
+  });
+
+  testWidgets('defaultValue starts an uncontrolled picker off', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        const TimePicker(
+          format: 'HH:mm',
+          defaultValue: Duration(hours: 7, minutes: 15),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).controller.text,
+      '07:15',
+    );
+  });
+
+  testWidgets('a chosen value lands at once, without a grey stage', (
+    tester,
+  ) async {
+    // Easing from the hover grey to the chosen tint shows the grey on the way,
+    // which reads as a flash under the finger.
+    // Two columns, so the panel stays open after the pick.
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH:mm')));
+    await _openPanel(tester);
+    await tester.tap(find.text('03').first);
+    await tester.pumpAndSettle();
+
+    final pill = tester.widget<AnimatedContainer>(
+      find
+          .ancestor(
+            of: find.text('03').first,
+            matching: find.byType(AnimatedContainer),
+          )
+          .first,
+    );
+    expect(pill.duration, Duration.zero);
+  });
+
+  testWidgets('status paints the border', (tester) async {
+    Color borderOf() {
+      final box = tester.widget<AnimatedContainer>(
+        find
+            .descendant(
+              of: find.byType(TimePicker),
+              matching: find.byType(AnimatedContainer),
+            )
+            .first,
+      );
+      return ((box.decoration! as BoxDecoration).border! as Border).top.color;
+    }
+
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH')));
+    await tester.pumpAndSettle();
+    final plain = borderOf();
+
+    await tester.pumpWidget(
+      _host(const TimePicker(format: 'HH', status: InputStatus.error)),
+    );
+    await tester.pumpAndSettle();
+    expect(borderOf(), isNot(plain));
+  });
+
+  testWidgets('onClear fires when the value is dropped', (tester) async {
+    var cleared = 0;
+    await tester.pumpWidget(
+      _host(
+        TimePicker(
+          format: 'HH',
+          defaultValue: const Duration(hours: 9),
+          onClear: () => cleared++,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    await gesture.moveTo(tester.getCenter(find.byType(TimePicker)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(CustomPaint).last);
+    await tester.pumpAndSettle();
+
+    expect(cleared, 1);
+  });
+
+  testWidgets('a prefix, a suffix and a footer of your own', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        TimePicker(
+          format: 'HH',
+          prefix: const Text('from'),
+          suffixIcon: const Text('*'),
+          footerBuilder: (context) => const Text('a note'),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('from'), findsOneWidget);
+    expect(find.text('*'), findsOneWidget);
+
+    await _openPanel(tester);
+    expect(find.text('a note'), findsOneWidget);
+  });
 }

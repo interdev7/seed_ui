@@ -99,7 +99,8 @@ instead of greying them out.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `value` | `Duration?` | `null` | Since midnight |
+| `value` | `Duration?` | `null` | Since midnight. Null lets the picker keep its own |
+| `defaultValue` | `Duration?` | `null` | What an uncontrolled picker starts with |
 | `onChanged` | `ValueChanged<Duration?>?` | — | Null when cleared |
 | `format` | `String` | `'HH:mm:ss'` | Also decides the columns |
 | `hourStep` / `minuteStep` / `secondStep` | `int` | `1` | Must divide evenly |
@@ -115,6 +116,11 @@ instead of greying them out.
 | `placement` | `PopoverPlacement` | `bottomLeft` | Where the panel opens |
 | `open` / `onOpenChange` | `bool?` / `ValueChanged<bool>?` | — | Controlled panel |
 | `inputReadOnly` | `bool` | `false` | Panel only |
+| `status` | `InputStatus?` | `null` | `warning` or `error`, drawn as on the kit's other fields |
+| `prefix` | `Widget?` | — | Sits before the value |
+| `suffixIcon` | `Widget?` | — | Replaces the clock face |
+| `onClear` | `VoidCallback?` | — | After the value is dropped |
+| `footerBuilder` | `WidgetBuilder?` | — | A row of your own under the panel's footer |
 | `token` | `TimePickerToken?` | — | Per-instance tokens |
 
 ## Design tokens
@@ -142,5 +148,9 @@ ConfigProvider(
 
 ## Localization
 
-The placeholder, **Now** and **OK**, and the meridiem words all come from the
-locale. See [localization](../localization.md).
+The placeholder, **Now** and **OK**, and the meridiem words come from the
+locale — and so do the **figures**: under a locale with its own digits the
+panel and the field show them, the way `Countdown` and `Badge` already do, and
+a time typed back in those figures is read correctly.
+
+See [localization](../localization.md).

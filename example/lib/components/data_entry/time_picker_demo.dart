@@ -14,6 +14,7 @@ class TimePickerDemo extends StatefulWidget {
 class _TimePickerDemoState extends State<TimePickerDemo> {
   Duration? _basic = const Duration(hours: 9, minutes: 30);
   Duration? _seconds;
+  int _cleared = 0;
   Duration? _twelve;
   Duration? _stepped;
   Duration? _blocked;
@@ -185,6 +186,124 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
           SizedBox(
             width: 220,
             child: TimePicker(format: 'HH:mm', inputReadOnly: true),
+          ),
+        ),
+        const Group(
+          'Left to itself',
+          // No value and no onChanged: the picker keeps what it is given,
+          // starting from defaultValue.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 220,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  defaultValue: Duration(hours: 7, minutes: 15),
+                ),
+              ),
+              SizedBox(height: 8),
+              Text('Nothing above is holding this one — it keeps its own.'),
+            ],
+          ),
+        ),
+        const Group(
+          'Marked as questionable or wrong',
+          Column(
+            spacing: 10,
+            children: [
+              SizedBox(
+                width: 200,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  defaultValue: Duration(hours: 3),
+                  status: InputStatus.warning,
+                ),
+              ),
+              SizedBox(width: 12),
+              SizedBox(
+                width: 200,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  defaultValue: Duration(hours: 2),
+                  status: InputStatus.error,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A prefix, a suffix and a footer of your own',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 260,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  prefix: Text(
+                    'from',
+                    style: TextStyle(color: t.colorTextSecondary),
+                  ),
+                  suffixIcon: Icon(
+                    Icons.schedule,
+                    size: 16,
+                    color: t.colorTextQuaternary,
+                  ),
+                  footerBuilder: (context) => Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Text(
+                      'Opening hours are 09:00 to 18:00',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: t.colorTextSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text('The footer sits under the panel\'s own row.'),
+            ],
+          ),
+        ),
+        Group(
+          'onClear',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 220,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  defaultValue: const Duration(hours: 12),
+                  onClear: () => setState(() => _cleared++),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _cleared == 0
+                    ? 'Hover the field and press the cross.'
+                    : 'Cleared \$_cleared time(s).',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'In another language',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(width: 220, child: TimePicker(format: 'HH:mm')),
+              const SizedBox(height: 8),
+              Text(
+                'Switch the language in the header. The words and the figures '
+                'both follow — under Arabic the panel counts in '
+                'Arabic-Indic digits, and a time typed back in them is read '
+                'correctly.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
           ),
         ),
       ],

@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`TimePicker`'s panel is laid out properly.** Five faults in the first cut,
+  all found on screen before it shipped: it filled the viewport (a stretched
+  `Column` takes whatever width it is given, and the overlay gives it the
+  screen); tapping a value changed nothing visible (the panel lives in the
+  overlay, a tree of its own, so `setState` on the picker never reached it);
+  the digits sat crooked (a line height of 1 with no even leading split);
+  values had no gap between them; and the field stayed blank until OK.
+
+  The layout now follows the reference it was modelled on: a column the width
+  of 1.4 control heights, cells one control height less four, eight rows deep,
+  the digits set in from the start rather than centred, and the pill inset
+  horizontally so the gap between values is real. A chosen value takes the
+  same primary tint a chosen row takes in a `Select`'s list.
+
+  Picking writes the field at once even where the value itself waits for OK —
+  a panel showing a choice above a blank field reads as broken.
+
 - **`fontWeight` and `fontWeightStrong` in the theme.** Weight was the one
   piece of typography the kit had no lever for: twenty widgets wrote
   `FontWeight.w400` or `w600` into their own text styles, and the only way to

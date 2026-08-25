@@ -115,9 +115,9 @@ class TimePickerToken {
 
   _ResolvedTimePickerToken _resolve(Token t) => _ResolvedTimePickerToken(
         borderRadius: borderRadius ?? t.borderRadius,
-        cellHeight: cellHeight ?? t.controlHeightSM,
-        columnWidth: columnWidth ?? 56,
-        visibleRows: visibleRows ?? 7,
+        cellHeight: cellHeight ?? t.controlHeight - t.sizeXXS,
+        columnWidth: columnWidth ?? t.controlHeightLG * 1.4,
+        visibleRows: visibleRows ?? 8,
       );
 }
 
@@ -257,6 +257,10 @@ class TimePicker extends StatefulWidget {
 
 class _TimePickerState extends State<TimePicker> {
   final PopoverController _popover = PopoverController();
+
+  /// Bumped whenever the panel's contents change. The panel is built into the
+  /// overlay, a tree of its own, so `setState` here does not reach it.
+  final ValueNotifier<int> _panelRevision = ValueNotifier<int>(0);
   final TextEditingController _text = TextEditingController();
   final FocusNode _focus = FocusNode();
 
@@ -342,6 +346,7 @@ class _TimePickerState extends State<TimePicker> {
   @override
   void dispose() {
     _popover.dispose();
+    _panelRevision.dispose();
     _text.dispose();
     _focus.dispose();
     super.dispose();
@@ -351,9 +356,14 @@ class _TimePickerState extends State<TimePicker> {
   // Value
   // --------------------------------------------------------------------------
 
+  /// Writes the field from what the panel is showing.
+  ///
+  /// While the panel is open that is the draft, so a pick reads back at once
+  /// even when the value itself waits for OK. Closing without confirming puts
+  /// the committed value back.
   void _syncText() {
     final words = context.seedLocale;
-    final value = widget.value;
+    final value = _open ? (_draft ?? widget.value) : widget.value;
     final next = value == null
         ? ''
         : formatTime(value, widget.format, am: words.am, pm: words.pm);
@@ -439,7 +449,10 @@ class _TimePickerState extends State<TimePicker> {
       dismissExcludesAnchor: true,
       anchorContext: context,
       onScrollDismiss: () => _requestOpen(false),
-      builder: (context) => _TimePanel(state: this),
+      builder: (context) => ListenableBuilder(
+        listenable: _panelRevision,
+        builder: (context, _) => _TimePanel(state: this),
+      ),
     );
   }
 
@@ -453,6 +466,8 @@ class _TimePickerState extends State<TimePicker> {
   /// A column's choice. Commits straight away unless OK is being waited for.
   void _pick(Duration time) {
     setState(() => _draft = time);
+    _panelRevision.value++;
+    _syncText();
     if (!_needConfirm) {
       _commit(time);
       if (!_fields.minute && !_fields.second) _requestOpen(false);
@@ -472,6 +487,8 @@ class _TimePickerState extends State<TimePicker> {
       _fields,
     );
     setState(() => _draft = time);
+    _panelRevision.value++;
+    _syncText();
     if (!_needConfirm) {
       _commit(time);
       _requestOpen(false);
@@ -719,54 +736,57 @@ class _TimePanel extends StatelessWidget {
         ),
     ];
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: t.colorBgElevated,
-        borderRadius: BorderRadius.circular(r.borderRadius),
-        boxShadow: t.boxShadowSecondary,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            height: r.cellHeight * r.visibleRows,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (var i = 0; i < columns.length; i++) ...[
-                  if (i > 0) Container(width: t.lineWidth, color: t.colorSplit),
-                  columns[i],
+    return IntrinsicWidth(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: t.colorBgElevated,
+          borderRadius: BorderRadius.circular(r.borderRadius),
+          boxShadow: t.boxShadowSecondary,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: r.cellHeight * r.visibleRows,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < columns.length; i++) ...[
+                    if (i > 0)
+                      Container(width: t.lineWidth, color: t.colorSplit),
+                    columns[i],
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          Container(height: t.lineWidth, color: t.colorSplit),
-          Padding(
-            padding: EdgeInsets.all(t.sizeXS),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (state._showNow)
-                  _FooterAction(
-                    label: words.now,
-                    onTap: state._now,
-                    accent: true,
-                  )
-                else
-                  const SizedBox.shrink(),
-                if (state._needConfirm)
-                  _FooterAction(
-                    label: words.ok,
-                    onTap: state._confirm,
-                    accent: false,
-                  )
-                else
-                  const SizedBox.shrink(),
-              ],
+            Container(height: t.lineWidth, color: t.colorSplit),
+            Padding(
+              padding: EdgeInsets.all(t.sizeXS),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (state._showNow)
+                    _FooterAction(
+                      label: words.now,
+                      onTap: state._now,
+                      accent: true,
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  if (state._needConfirm)
+                    _FooterAction(
+                      label: words.ok,
+                      onTap: state._confirm,
+                      accent: false,
+                    )
+                  else
+                    const SizedBox.shrink(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -861,6 +881,9 @@ class _ColumnState extends State<_Column> {
             disabled: blocked,
             height: widget.token.cellHeight,
             radius: t.borderRadiusSM,
+            textInset:
+                (widget.token.columnWidth - widget.token.cellHeight) / 2 -
+                    t.sizeXXS,
             onTap: blocked ? null : () => widget.onPick(value),
           );
         },
@@ -876,6 +899,7 @@ class _Cell extends StatefulWidget {
     required this.disabled,
     required this.height,
     required this.radius,
+    required this.textInset,
     required this.onTap,
   });
 
@@ -884,6 +908,11 @@ class _Cell extends StatefulWidget {
   final bool disabled;
   final double height;
   final double radius;
+
+  /// How far in from the pill's start the digits begin, so a column reads as
+  /// one straight edge rather than a centred ragged one.
+  final double textInset;
+
   final VoidCallback? onTap;
 
   @override
@@ -897,9 +926,13 @@ class _CellState extends State<_Cell> {
   Widget build(BuildContext context) {
     final t = context.softToken;
     final Color background;
-    if (widget.chosen) {
-      background = t.colorFillSecondary;
-    } else if (_hovered && !widget.disabled) {
+    if (widget.disabled) {
+      background = const Color(0x00000000);
+    } else if (widget.chosen) {
+      // The same tint a chosen row takes in a Select's list, so a panel and a
+      // dropdown do not disagree about what "chosen" looks like.
+      background = t.primary.bg;
+    } else if (_hovered) {
       background = t.colorFillTertiary;
     } else {
       background = const Color(0x00000000);
@@ -915,24 +948,31 @@ class _CellState extends State<_Cell> {
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: t.sizeXXS / 2),
-          child: DecoratedBox(
+          // The gap between one value and the next is horizontal: the pill is
+          // inset from the column's sides, and the rows sit flush.
+          padding: EdgeInsets.symmetric(horizontal: t.sizeXXS),
+          child: AnimatedContainer(
+            duration: t.motionDurationMid,
+            curve: t.motionEaseInOut,
             decoration: BoxDecoration(
               color: background,
               borderRadius: BorderRadius.circular(widget.radius),
             ),
-            child: Center(
-              child: Text(
-                widget.label,
-                style: TextStyle(
-                  color: widget.disabled ? t.colorTextQuaternary : t.colorText,
-                  fontSize: t.fontSize,
-                  fontFamily: t.fontFamily,
-                  fontFamilyFallback: t.fontFamilyFallback,
-                  fontWeight: widget.chosen ? t.fontWeightStrong : t.fontWeight,
-                  height: 1.0,
-                  decoration: TextDecoration.none,
-                ),
+            alignment: AlignmentDirectional.centerStart,
+            padding: EdgeInsetsDirectional.only(start: widget.textInset),
+            child: Text(
+              widget.label,
+              style: TextStyle(
+                color: widget.disabled ? t.colorTextQuaternary : t.colorText,
+                fontSize: t.fontSize,
+                fontFamily: t.fontFamily,
+                fontFamilyFallback: t.fontFamilyFallback,
+                fontWeight: t.fontWeight,
+                height: 1.0,
+                // Without an even split the glyphs sit off the row's centre —
+                // the whole column then reads as crooked.
+                leadingDistribution: TextLeadingDistribution.even,
+                decoration: TextDecoration.none,
               ),
             ),
           ),

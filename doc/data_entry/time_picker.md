@@ -74,6 +74,11 @@ single-column panel commits as soon as you pick.
 
 `needConfirm` overrides that either way.
 
+Either way the **field follows the panel at once**: pick an hour and it shows,
+even while the value itself waits for OK. A panel showing a choice above a
+blank field reads as broken. Closing without confirming puts the committed
+value back.
+
 ## Blocking times
 
 ```dart
@@ -117,9 +122,9 @@ instead of greying them out.
 | Token | Default |
 | --- | --- |
 | `borderRadius` | `borderRadius` |
-| `cellHeight` | `controlHeightSM` |
-| `columnWidth` | `56` |
-| `visibleRows` | `7` |
+| `cellHeight` | `controlHeight - sizeXXS` (28) |
+| `columnWidth` | `controlHeightLG * 1.4` (56) |
+| `visibleRows` | `8` |
 
 ## Defaults for a whole app
 

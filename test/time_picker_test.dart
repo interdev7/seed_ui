@@ -294,4 +294,122 @@ void main() {
     expect(find.text('AM'), findsOneWidget);
     expect(find.text('PM'), findsOneWidget);
   });
+
+  testWidgets('the panel is only as wide as its columns', (tester) async {
+    // It once filled the viewport: a stretched Column takes whatever width it
+    // is given, and the overlay gives it the screen.
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH:mm')));
+    await _openPanel(tester);
+
+    final panel = find.ancestor(
+      of: find.byType(ListView).first,
+      matching: find.byType(DecoratedBox),
+    );
+    final panelWidth = tester.getSize(panel.first).width;
+    final columnWidth = tester.getSize(find.byType(ListView).first).width;
+
+    expect(columnWidth, greaterThan(0));
+    expect(
+      panelWidth,
+      lessThan(columnWidth * 4),
+      reason: 'two columns and a divider, not the whole screen',
+    );
+    expect(
+        panelWidth, lessThan(tester.getSize(find.byType(MaterialApp)).width));
+  });
+
+  testWidgets('picking shows in the panel straight away', (tester) async {
+    // The panel is built into the overlay, a tree of its own, so setState on
+    // the picker does not reach it. Without a nudge nothing at all happened
+    // on screen when a value was tapped.
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH:mm')));
+    await _openPanel(tester);
+
+    Color? pillOf(String label) {
+      final box = find
+          .ancestor(
+            of: find.text(label).first,
+            matching: find.byType(AnimatedContainer),
+          )
+          .first;
+      return (tester.widget<AnimatedContainer>(box).decoration
+              as BoxDecoration?)
+          ?.color;
+    }
+
+    final before = pillOf('03');
+    await tester.tap(find.text('03').first);
+    await tester.pumpAndSettle();
+
+    expect(pillOf('03'), isNot(before), reason: 'the chosen hour is lit');
+  });
+
+  testWidgets('picking shows in the field before OK is pressed', (
+    tester,
+  ) async {
+    // The value still waits for OK, but the field must not sit blank while
+    // the panel already shows a choice.
+    Duration? committed;
+    await tester.pumpWidget(
+      _host(TimePicker(format: 'HH:mm', onChanged: (v) => committed = v)),
+    );
+    await _openPanel(tester);
+
+    String fieldText() =>
+        tester.widget<EditableText>(find.byType(EditableText)).controller.text;
+
+    expect(fieldText(), isEmpty);
+
+    await tester.tap(find.text('03').first);
+    await tester.pumpAndSettle();
+
+    expect(fieldText(), startsWith('03'), reason: 'the field followed at once');
+    expect(committed, isNull, reason: 'but the value still waits for OK');
+  });
+
+  testWidgets('digits are set in from the start, not centred', (tester) async {
+    // Centring looks even only while every label is the same width; setting
+    // the digits in from the start keeps a column straight whatever it holds.
+    //
+    // Asserted on the layout rather than on pixels: the test font gives every
+    // glyph the same width, which makes a centred cell and an inset one
+    // measure alike.
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH:mm')));
+    await _openPanel(tester);
+
+    final pill = tester.widget<AnimatedContainer>(
+      find
+          .ancestor(
+            of: find.text('00').first,
+            matching: find.byType(AnimatedContainer),
+          )
+          .first,
+    );
+
+    expect(pill.alignment, AlignmentDirectional.centerStart);
+    final inset = pill.padding! as EdgeInsetsDirectional;
+    expect(inset.start, greaterThan(0), reason: 'the digits are set in');
+  });
+
+  testWidgets('a value is inset from the sides of its column', (tester) async {
+    // The gap between one value and the next is what makes the panel legible;
+    // a pill filling the column edge to edge reads as a solid block.
+    await tester.pumpWidget(_host(const TimePicker(format: 'HH:mm')));
+    await _openPanel(tester);
+
+    final columnWidth = tester.getSize(find.byType(ListView).first).width;
+    final pill = tester
+        .getSize(
+          find
+              .ancestor(
+                of: find.text('00').first,
+                matching: find.byType(AnimatedContainer),
+              )
+              .first,
+        )
+        .width;
+
+    expect(pill, lessThan(columnWidth), reason: 'inset on both sides');
+    expect(pill, greaterThan(columnWidth / 2), reason: 'but not squeezed');
+  });
 }

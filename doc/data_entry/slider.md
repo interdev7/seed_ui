@@ -64,9 +64,8 @@ measured from the labels themselves — so it takes real room in a row rather
 than overflowing it.
 
 `reverse` starts it at the far end. Reading right to left already turns the
-scale round, so `reverse` flips it back rather than naming a side — the rule
-Ant Design applies, and the only one under which `reverse` means the same
-thing in both languages.
+scale round, so `reverse` flips it back rather than naming a side — the only
+rule under which `reverse` means the same thing in both reading directions.
 
 | | `reverse: false` | `reverse: true` |
 | --- | --- | --- |
@@ -122,9 +121,9 @@ rebuilt for each one. An ancestor that clips will clip it too.
 `trackHoverBg`, `handleColor`, `handleActiveColor`, `handleColorDisabled`,
 `trackBgDisabled`, `dotBorderColor`, `dotActiveBorderColor`.
 
-The handle is a quarter of the large control height, as it is in Ant Design,
-so it grows with the theme's own scale rather than a number of its own. Its
-ring is drawn outside the disc — their `box-shadow` — so the handle keeps the
+The handle is a quarter of the large control height, so it grows with the
+theme's own scale rather than carrying a number of its own. Its ring is drawn
+outside the disc, the way a focus shadow sits, so the handle keeps the
 diameter its token names.
 
 ```dart
@@ -144,5 +143,5 @@ ConfigProvider(
 
 ## Not yet
 
-Ant Design's editable range nodes — `minCount`, `maxCount` and a draggable
-track — are not here.
+Editable range nodes — `minCount`, `maxCount` and a draggable track — are not
+here.

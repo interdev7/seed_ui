@@ -99,8 +99,8 @@ class SliderToken {
   final Color? dotActiveBorderColor;
 
   _ResolvedSliderToken _resolve(Token t) {
-    // The handle is a quarter of the large control, as it is in Ant Design,
-    // so it grows with the theme's own scale rather than a number of its own.
+    // The handle is a quarter of the large control height, so it grows with
+    // the theme's own scale rather than carrying a number of its own.
     final size = t.controlHeightLG / 4;
     return _ResolvedSliderToken(
       railSize: railSize ?? 4,
@@ -259,7 +259,7 @@ class Slider extends StatefulWidget {
   /// Starts the scale at the far end.
   ///
   /// Reading right to left already turns the scale round, so this flips it
-  /// back — the same rule Ant Design applies.
+  /// back rather than forcing a side.
   final bool reverse;
 
   /// What to show above the handle while it is being moved.
@@ -506,8 +506,8 @@ class _SliderCoreState extends State<_SliderCore> {
   /// Whether the scale runs from the far end.
   ///
   /// A right-to-left layout already turns the scale round, so `reverse` flips
-  /// it back rather than forcing a side — the rule Ant Design applies, and the
-  /// only one under which `reverse` means the same thing in both languages.
+  /// it back rather than forcing a side — the only rule under which `reverse`
+  /// means the same thing in both reading directions.
   bool get _reversed {
     if (widget.vertical) return widget.reverse;
     final rtl = Directionality.of(context) == TextDirection.rtl;
@@ -998,7 +998,7 @@ class _SliderPainter extends CustomPainter {
               ? token.handleActiveColor
               : token.handleColor);
       canvas
-        // The ring is drawn outside the disc, as Ant Design's box-shadow is,
+        // The ring is drawn outside the disc, the way a focus shadow sits,
         // so the handle keeps the diameter its token names.
         ..drawCircle(
           centre,

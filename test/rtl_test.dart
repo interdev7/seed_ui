@@ -866,9 +866,9 @@ void main() {
         return tester.getRect(find.textContaining('%').first);
       }
 
-      // Ant Design mirrors the line and the text that follows it, and leaves
-      // the arc alone: it starts at the top and runs clockwise in either
-      // language. Nothing here should move.
+      // The line and the text that follows it are mirrored; the arc is left
+      // alone, starting at the top and running clockwise in either language.
+      // Nothing here should move.
       expect(await circle(TextDirection.rtl), await circle(TextDirection.ltr));
     });
   });

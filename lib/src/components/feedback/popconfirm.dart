@@ -295,7 +295,7 @@ class _SoftPopconfirmState extends State<Popconfirm> {
                         fontSize: r.titleFontSize,
                         fontFamily: token.fontFamily,
                         fontFamilyFallback: token.fontFamilyFallback,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: token.fontWeightStrong,
                         decoration: TextDecoration.none,
                       ),
                       child: widget.title,

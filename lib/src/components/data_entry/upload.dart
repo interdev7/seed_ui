@@ -1150,7 +1150,7 @@ class _ExtensionGlyph extends StatelessWidget {
           style: TextStyle(
             color: token.colorTextTertiary,
             fontSize: token.fontSizeSM,
-            fontWeight: FontWeight.w600,
+            fontWeight: token.fontWeightStrong,
             fontFamily: token.fontFamily,
             fontFamilyFallback: token.fontFamilyFallback,
             decoration: TextDecoration.none,

@@ -430,6 +430,40 @@ ConfigProvider(
 )
 ```
 
+### Font weight
+
+Two seeds carry weight, and every component reads one of them:
+
+```dart
+ConfigProvider(
+  theme: ThemeData(
+    token: const SeedToken(
+      fontWeight: FontWeight.w300,        // ordinary text
+      fontWeightStrong: FontWeight.w700,  // titles and the chosen row
+    ),
+  ),
+  child: ...,
+)
+```
+
+`fontWeight` is labels, body copy, a button's own words. `fontWeightStrong` is
+what a component draws when something should stand out from the copy around
+it: a card or modal title, a section header, the selected option in a list.
+
+Said once, they reach the whole kit. Before this existed, every weight was
+written into the widget that drew it and could only be changed by wrapping
+each one.
+
+A component whose weight is its own affair carries a token for it, so it can
+differ without moving the rest:
+
+| Token | Default |
+| --- | --- |
+| `ButtonToken.fontWeight` | the theme's `fontWeight` |
+| `ResultToken.fontWeight` | `w500` |
+| `TabsToken.fontWeightActive` | `w500` |
+| `CountdownToken.fontWeight` | the theme's `fontWeight` |
+
 ### One size, one switch, for a whole subtree
 
 Two settings on `ConfigProvider` are defaults for the widgets under it rather

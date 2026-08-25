@@ -148,10 +148,11 @@ ConfigProvider(
 
 ## On the translations
 
-Every word but `noMoreItems` is taken from Ant Design's own locale files rather
-than translated here, so the kit says what the library it is modelled on says.
-`noMoreItems` has no counterpart there and is the one line in each language
-still awaiting a native reader — corrections are welcome.
+Every word but `noMoreItems` is taken from the locale files of the library
+this kit is modelled on, rather than translated here, so each language says
+what its own speakers already read elsewhere. `noMoreItems` has no counterpart
+there and is the one line in each language still awaiting a native reader —
+corrections are welcome.
 
 ## Right-to-left
 

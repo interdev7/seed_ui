@@ -383,7 +383,7 @@ class _CardState extends State<Card> {
             style: TextStyle(
               color: t.colorText,
               fontSize: fontSize,
-              fontWeight: FontWeight.w600,
+              fontWeight: t.fontWeightStrong,
               height: 1.0,
             ),
             overflow: TextOverflow.ellipsis,
@@ -579,7 +579,7 @@ class CardMeta extends StatelessWidget {
           style: TextStyle(
             color: t.colorText,
             fontSize: t.fontSizeLG,
-            fontWeight: FontWeight.w600,
+            fontWeight: t.fontWeightStrong,
             // Pin the line box and centre the glyphs in it. Left to the font's
             // metrics the title's box is taller than its ink and lopsided, so it
             // never lines up with the avatar next to it.

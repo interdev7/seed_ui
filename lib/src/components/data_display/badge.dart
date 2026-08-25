@@ -319,7 +319,7 @@ class Badge extends StatelessWidget {
     final style = TextStyle(
       color: r.textColor,
       fontSize: r.fontSize,
-      fontWeight: FontWeight.w400,
+      fontWeight: t.fontWeight,
       // No forced line height. Latin figures sit squarely in a box of exactly
       // the font size, having neither ascender nor descender, but Arabic-Indic
       // ones are fitted to their own metrics and a box squeezed to the font

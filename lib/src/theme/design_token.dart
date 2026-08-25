@@ -73,6 +73,8 @@ class SeedToken {
     this.fontFamily,
     this.fontFamilyFallback,
     this.fontSize = 14,
+    this.fontWeight = FontWeight.w400,
+    this.fontWeightStrong = FontWeight.w600,
     this.borderRadius = 6,
     this.sizeUnit = 4,
     this.sizeStep = 4,
@@ -126,6 +128,18 @@ class SeedToken {
   /// Base font size. Every other size in [Token] is an offset from it.
   final double fontSize;
 
+  /// Weight of ordinary text — labels, body copy, a button's own words.
+  ///
+  /// One place to make the whole kit lighter or heavier. A brand that sets
+  /// its buttons in medium says so here rather than in every widget.
+  final FontWeight fontWeight;
+
+  /// Weight of text that carries: titles, headings, the chosen row in a list.
+  ///
+  /// Used wherever a component draws something that should stand out from the
+  /// copy around it.
+  final FontWeight fontWeightStrong;
+
   /// Base corner radius. Smaller and larger radii are derived from it.
   final double borderRadius;
 
@@ -157,6 +171,8 @@ class SeedToken {
     String? fontFamily,
     List<String>? fontFamilyFallback,
     double? fontSize,
+    FontWeight? fontWeight,
+    FontWeight? fontWeightStrong,
     double? borderRadius,
     double? sizeUnit,
     double? sizeStep,
@@ -175,6 +191,8 @@ class SeedToken {
       fontFamily: fontFamily ?? this.fontFamily,
       fontFamilyFallback: fontFamilyFallback ?? this.fontFamilyFallback,
       fontSize: fontSize ?? this.fontSize,
+      fontWeight: fontWeight ?? this.fontWeight,
+      fontWeightStrong: fontWeightStrong ?? this.fontWeightStrong,
       borderRadius: borderRadius ?? this.borderRadius,
       sizeUnit: sizeUnit ?? this.sizeUnit,
       sizeStep: sizeStep ?? this.sizeStep,
@@ -575,6 +593,13 @@ class Token {
 
   /// Size for headings. Defaults to 20.
   double get fontSizeXL => seed.fontSize + 6;
+
+  /// Weight of ordinary text. Defaults to `FontWeight.w400`.
+  FontWeight get fontWeight => seed.fontWeight;
+
+  /// Weight of titles and other text that carries. Defaults to
+  /// `FontWeight.w600`.
+  FontWeight get fontWeightStrong => seed.fontWeightStrong;
 
   /// Line height for multi-line body copy.
   ///

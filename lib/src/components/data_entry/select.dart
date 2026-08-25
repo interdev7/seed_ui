@@ -1397,7 +1397,7 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
                     color: color,
                     fontSize: widget.fontSize,
                     fontWeight:
-                        widget.selected ? FontWeight.w600 : FontWeight.w400,
+                        widget.selected ? t.fontWeightStrong : t.fontWeight,
                     fontFamily: t.fontFamily,
                     fontFamilyFallback: t.fontFamilyFallback,
                     decoration: TextDecoration.none,

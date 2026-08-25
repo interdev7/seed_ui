@@ -166,7 +166,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       // The scale starts at the right, so a quarter in from the left is three
-      // quarters along it. Ant Design flips `reverse` for this same reason.
+      // quarters along it, which is why `reverse` flips in a mirrored layout.
       expect(changed, moreOrLessEquals(75, epsilon: 1));
     });
 

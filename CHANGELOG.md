@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`fontWeight` and `fontWeightStrong` in the theme.** Weight was the one
+  piece of typography the kit had no lever for: twenty widgets wrote
+  `FontWeight.w400` or `w600` into their own text styles, and the only way to
+  change one was to wrap that widget. `SeedToken` now carries both, and every
+  one of those twenty reads a token instead.
+
+  ```dart
+  ThemeData(
+    token: SeedToken(
+      fontWeight: FontWeight.w300,        // ordinary text
+      fontWeightStrong: FontWeight.w700,  // titles, the chosen row
+    ),
+  )
+  ```
+
+  Defaults are `w400` and `w600`, so nothing changes on screen.
+
+  Three components draw a weight that is their own affair and now carry a
+  token for it: `ButtonToken.fontWeight`, `ResultToken.fontWeight` and
+  `TabsToken.fontWeightActive`.
+
 - **`Avatar.customSize` is gone**; its `size` slot now takes a diameter
   directly, as `Spin`, `Progress` and `Steps` already did:
 
@@ -23,8 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`size` and `disabled` in the per-component defaults.** They could only be
   said for a whole screen, through `ConfigProvider.componentSize` and
   `componentDisabled` — so "small buttons on an otherwise normal screen" could
-  not be said at all. antd cannot say it either; that is a poor reason to keep
-  the gap when the mechanism was already there.
+  not be said at all, even though the mechanism for it was already there.
 
   They resolve nearest first, and `componentSize` keeps working exactly as
   before:

@@ -746,7 +746,7 @@ class _PageItemState extends State<_PageItem> {
         style: TextStyle(
           color: color,
           fontSize: widget.fontSize,
-          fontWeight: widget.active ? FontWeight.w600 : FontWeight.w400,
+          fontWeight: widget.active ? t.fontWeightStrong : t.fontWeight,
           fontFamily: t.fontFamily,
           fontFamilyFallback: t.fontFamilyFallback,
           height: 1.0,

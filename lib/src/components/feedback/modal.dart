@@ -620,7 +620,7 @@ class _ModalCardState extends State<_ModalCard>
                             fontSize: r.titleFontSize,
                             fontFamily: token.fontFamily,
                             fontFamilyFallback: token.fontFamilyFallback,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: token.fontWeightStrong,
                             decoration: TextDecoration.none,
                           ),
                           child: config.title!,

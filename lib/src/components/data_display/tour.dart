@@ -1605,7 +1605,7 @@ class _TourPanel extends StatelessWidget {
                           style: TextStyle(
                             color: _ink,
                             fontSize: t.fontSize,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: t.fontWeightStrong,
                             height: t.lineHeight,
                             leadingDistribution: TextLeadingDistribution.even,
                             decoration: TextDecoration.none,

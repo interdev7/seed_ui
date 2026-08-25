@@ -128,6 +128,7 @@ enum ButtonShape {
 class ButtonToken {
   /// Creates a [ButtonToken].
   const ButtonToken({
+    this.fontWeight,
     this.borderRadius,
     this.borderRadiusSM,
     this.borderRadiusLG,
@@ -178,7 +179,11 @@ class ButtonToken {
   /// Horizontal padding for large button.
   final double? paddingInlineLG;
 
+  /// Weight of the button's label. Falls back to the theme's `fontWeight`.
+  final FontWeight? fontWeight;
+
   _ResolvedButtonToken _resolve(Token t) => _ResolvedButtonToken(
+        fontWeight: fontWeight ?? t.fontWeight,
         borderRadius: borderRadius ?? t.borderRadius,
         borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
         borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
@@ -197,6 +202,7 @@ class ButtonToken {
 @immutable
 class _ResolvedButtonToken {
   const _ResolvedButtonToken({
+    required this.fontWeight,
     required this.borderRadius,
     required this.borderRadiusSM,
     required this.borderRadiusLG,
@@ -210,6 +216,8 @@ class _ResolvedButtonToken {
     required this.paddingInlineSM,
     required this.paddingInlineLG,
   });
+
+  final FontWeight fontWeight;
 
   final double borderRadius;
   final double borderRadiusSM;
@@ -544,7 +552,7 @@ class _SoftButtonState extends State<Button> {
         fontSize: fontSize,
         fontFamily: token.fontFamily,
         fontFamilyFallback: token.fontFamilyFallback,
-        fontWeight: FontWeight.w400,
+        fontWeight: r.fontWeight,
         decoration: TextDecoration.none,
         // Pin the line box to the font size and split its leading evenly.
         // Left to the font's own metrics, a fallback face with lopsided

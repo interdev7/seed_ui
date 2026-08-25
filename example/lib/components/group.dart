@@ -26,7 +26,7 @@ class Group extends StatelessWidget {
   Widget build(BuildContext context) {
     final token = context.softToken;
     // Several components stand on the layout colour by design — a Segmented's
-    // track is that colour, as it is in Ant Design — and a page painted the
+    // track is that colour by design — and a page painted the
     // same hides them. So the block gets a container surface of its own.
     //
     // Only the outermost, though: demos nest groups to caption their parts,

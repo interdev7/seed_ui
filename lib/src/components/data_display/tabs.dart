@@ -100,6 +100,7 @@ class TabBarExtra {
 class TabsToken {
   /// Creates a [TabsToken].
   const TabsToken({
+    this.fontWeightActive,
     this.inkBarColor,
     this.itemColor,
     this.itemHoverColor,
@@ -184,7 +185,11 @@ class TabsToken {
 
   /// Fills in every unset field from the global [t], producing the effective
   /// tokens the widget draws with.
+  /// Weight of the active tab. Inactive tabs take the theme's `fontWeight`.
+  final FontWeight? fontWeightActive;
+
   _ResolvedTabsToken _resolve(Token t) => _ResolvedTabsToken(
+        fontWeightActive: fontWeightActive ?? FontWeight.w500,
         inkBarColor: inkBarColor ?? t.primary.base,
         itemColor: itemColor ?? t.colorText,
         itemHoverColor: itemHoverColor ?? t.primary.hover,
@@ -222,6 +227,7 @@ class TabsToken {
 @immutable
 class _ResolvedTabsToken {
   const _ResolvedTabsToken({
+    required this.fontWeightActive,
     required this.inkBarColor,
     required this.itemColor,
     required this.itemHoverColor,
@@ -244,6 +250,8 @@ class _ResolvedTabsToken {
     required this.verticalItemPadding,
     required this.verticalItemMargin,
   });
+
+  final FontWeight fontWeightActive;
 
   final Color inkBarColor;
   final Color itemColor;
@@ -1136,6 +1144,7 @@ class _TabsState extends State<Tabs> {
         horizontal: _horizontal,
         position: _tabPosition,
         fontSize: _r.fontSize(_size),
+        fontWeightActive: _r.fontWeightActive,
         padding: _tabPadding(),
         icon: item.icon,
         label: item.label,
@@ -1205,6 +1214,7 @@ class _TabButton extends StatefulWidget {
     required this.horizontal,
     required this.position,
     required this.fontSize,
+    required this.fontWeightActive,
     required this.padding,
     required this.onTap,
     this.icon,
@@ -1221,6 +1231,9 @@ class _TabButton extends StatefulWidget {
   final bool horizontal;
   final TabPosition position;
   final double fontSize;
+
+  /// Weight of this tab while it is the active one.
+  final FontWeight fontWeightActive;
   final EdgeInsets padding;
   final VoidCallback? onTap;
   final Widget? icon;
@@ -1270,7 +1283,7 @@ class _TabButtonState extends State<_TabButton> {
           style: TextStyle(
             color: color,
             fontSize: widget.fontSize,
-            fontWeight: widget.active ? FontWeight.w500 : FontWeight.w400,
+            fontWeight: widget.active ? widget.fontWeightActive : t.fontWeight,
             fontFamily: t.fontFamily,
             fontFamilyFallback: t.fontFamilyFallback,
             height: 1.0,

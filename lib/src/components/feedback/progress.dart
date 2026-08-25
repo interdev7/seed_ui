@@ -1103,7 +1103,7 @@ class _ProgressState extends State<Progress> {
                   style: TextStyle(
                     color: const Color(0xFFFFFFFF),
                     fontSize: token.fontSizeSM,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: token.fontWeightStrong,
                     fontFamily: token.fontFamily,
                     fontFamilyFallback: token.fontFamilyFallback,
                     height: 1.0,
@@ -1159,7 +1159,7 @@ class _ProgressState extends State<Progress> {
                   style: TextStyle(
                     color: const Color(0xFFFFFFFF),
                     fontSize: token.fontSizeSM,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: token.fontWeightStrong,
                     fontFamily: token.fontFamily,
                     fontFamilyFallback: token.fontFamilyFallback,
                     height: 1.0,

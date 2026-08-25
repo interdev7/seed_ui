@@ -574,10 +574,10 @@ class Timeline extends StatelessWidget {
   ///
   /// [facing] is the edge the block's lines are drawn towards, which is always
   /// the axis: a column standing before the line reads towards its end, one
-  /// standing after it towards its start. Ant Design does the same, swapping
-  /// the two over with the item's placement. Aligning everything to the start
-  /// regardless leaves the text of the near column drifting away from the line
-  /// it belongs to, which a mirrored layout makes plain.
+  /// standing after it towards its start — the two swapping over with the
+  /// item's placement. Aligning everything to the start regardless leaves the
+  /// text of the near column drifting away from the line it belongs to, which
+  /// a mirrored layout makes plain.
   Widget? _buildContent(
     Token t,
     TimelineItem item, {
@@ -604,7 +604,7 @@ class Timeline extends StatelessWidget {
             style: TextStyle(
               color: t.colorText,
               fontSize: t.fontSize,
-              fontWeight: FontWeight.w600,
+              fontWeight: t.fontWeightStrong,
               height: t.lineHeight,
               leadingDistribution: TextLeadingDistribution.even,
             ),
@@ -684,8 +684,8 @@ class Timeline extends StatelessWidget {
     // is narrower than its column, but a block as wide as the column — any
     // text long enough to wrap — is placed by nothing, and its lines fall back
     // to reading from the start. That is what left a short title against the
-    // axis and the description below it against the far edge. Ant Design has
-    // the one `text-align` doing both jobs.
+    // axis and the description below it against the far edge: the box
+    // alignment and the text alignment have to be set together.
     final content = _buildContent(
       t,
       item,

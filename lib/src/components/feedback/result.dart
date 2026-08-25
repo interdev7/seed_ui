@@ -16,6 +16,7 @@ import 'message.dart' show StatusType;
 class ResultToken {
   /// Creates a [ResultToken].
   const ResultToken({
+    this.fontWeight,
     this.titleFontSize,
     this.subtitleFontSize,
     this.iconSize,
@@ -34,7 +35,11 @@ class ResultToken {
   /// Container padding (`padding`).
   final EdgeInsets? padding;
 
+  /// Weight of the result's title.
+  final FontWeight? fontWeight;
+
   _ResolvedResultToken _resolve(Token t) => _ResolvedResultToken(
+        fontWeight: fontWeight ?? FontWeight.w500,
         titleFontSize: titleFontSize ?? t.fontSizeXL + 4,
         subtitleFontSize: subtitleFontSize ?? t.fontSize,
         iconSize: iconSize ?? 72,
@@ -46,11 +51,14 @@ class ResultToken {
 @immutable
 class _ResolvedResultToken {
   const _ResolvedResultToken({
+    required this.fontWeight,
     required this.titleFontSize,
     required this.subtitleFontSize,
     required this.iconSize,
     required this.padding,
   });
+
+  final FontWeight fontWeight;
 
   final double titleFontSize;
   final double subtitleFontSize;
@@ -134,7 +142,7 @@ class Result extends StatelessWidget {
               fontSize: r.titleFontSize,
               fontFamily: token.fontFamily,
               fontFamilyFallback: token.fontFamilyFallback,
-              fontWeight: FontWeight.w500,
+              fontWeight: r.fontWeight,
               decoration: TextDecoration.none,
             ),
             child: title,

@@ -20,10 +20,9 @@ enum TimePickerVariant {
 
 /// Which times a [TimePicker] refuses to offer.
 ///
-/// Mirrors antd's `disabledTime`: each callback names the values that are
-/// **not** available, and the later ones are told what has been chosen so far,
-/// so "no minutes before half past, but only in the opening hour" is
-/// expressible.
+/// Each callback names the values that are **not** available, and the later
+/// ones are told what has been chosen so far, so "no minutes before half past,
+/// but only in the opening hour" is expressible.
 ///
 /// ```dart
 /// DisabledTime(
@@ -930,7 +929,7 @@ class _CellState extends State<_Cell> {
                   fontSize: t.fontSize,
                   fontFamily: t.fontFamily,
                   fontFamilyFallback: t.fontFamilyFallback,
-                  fontWeight: widget.chosen ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: widget.chosen ? t.fontWeightStrong : t.fontWeight,
                   height: 1.0,
                   decoration: TextDecoration.none,
                 ),

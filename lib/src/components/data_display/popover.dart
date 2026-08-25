@@ -377,7 +377,7 @@ class _PopoverState extends State<Popover> {
               style: TextStyle(
                 color: r.titleColor,
                 fontSize: t.fontSize,
-                fontWeight: FontWeight.w600,
+                fontWeight: t.fontWeightStrong,
                 height: t.lineHeight,
                 leadingDistribution: TextLeadingDistribution.even,
                 decoration: TextDecoration.none,

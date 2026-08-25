@@ -1229,7 +1229,7 @@ class _ListyState<T, K extends Object, R extends Object>
           fontSize: t.fontSize,
           fontFamily: t.fontFamily,
           fontFamilyFallback: t.fontFamilyFallback,
-          fontWeight: FontWeight.w600,
+          fontWeight: t.fontWeightStrong,
           height: t.lineHeight,
           leadingDistribution: TextLeadingDistribution.even,
           decoration: TextDecoration.none,

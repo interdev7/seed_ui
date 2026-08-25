@@ -414,7 +414,7 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
                     fontSize: token.fontSizeLG,
                     fontFamily: token.fontFamily,
                     fontFamilyFallback: token.fontFamilyFallback,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: token.fontWeightStrong,
                     decoration: TextDecoration.none,
                   ),
                   child: _config.title!,

@@ -38,7 +38,7 @@ class CountdownToken {
   _ResolvedCountdownToken _resolve(Token t) => _ResolvedCountdownToken(
         fontSize: fontSize ?? t.fontSizeXL,
         color: color ?? t.colorText,
-        fontWeight: fontWeight ?? FontWeight.w400,
+        fontWeight: fontWeight ?? t.fontWeight,
       );
 }
 

@@ -160,7 +160,10 @@ class _ProgressDemoState extends State<ProgressDemo> {
                 percent: _percent,
                 size: const ControlSize.fixed(96),
                 strokeWidth: 6,
-                child: const Avatar(customSize: 56, child: Text('AS')),
+                child: const Avatar(
+                  size: ControlSize.fixed(56),
+                  child: Text('AS'),
+                ),
               ),
               // On a bar the child stands where the label would.
               SizedBox(

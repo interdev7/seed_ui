@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/popover.dart' show PopoverPlacement;
+import '../../utils/size_resolver.dart';
 import '../navigation/dropdown.dart';
 
 /// The shape of an [Avatar].
@@ -172,7 +173,6 @@ class Avatar extends StatelessWidget {
   const Avatar({
     super.key,
     this.size,
-    this.customSize,
     this.shape,
     this.image,
     this.icon,
@@ -189,11 +189,13 @@ class Avatar extends StatelessWidget {
   /// Custom background gradient override.
   final Gradient? gradient;
 
-  /// The size preset. Ignored if [customSize] is provided.
-  final SoftSize? size;
-
-  /// Custom diameter/width/height in logical pixels.
-  final double? customSize;
+  /// How big the avatar is: a preset, or a diameter of your own.
+  ///
+  /// `SoftSize.large` follows the theme's avatar scale;
+  /// `ControlSize.fixed(64)` names a diameter outright. One slot for both —
+  /// a diameter is the whole story for a circle, so there is nothing a
+  /// preset carries that a number leaves unsaid.
+  final ControlSize? size;
 
   /// The shape of the avatar.
   final AvatarShape? shape;
@@ -254,20 +256,21 @@ class Avatar extends StatelessWidget {
         ConfigProvider.defaultsOf<AvatarDefaults>(context)?.shape ??
         AvatarShape.circle;
 
-    final dimension = customSize ??
-        switch (resolvedSize) {
-          SoftSize.small => rt.containerSizeSM,
-          SoftSize.middle => rt.containerSize,
-          SoftSize.large => rt.containerSizeLG,
-        };
+    final dimension = resolvedSize.resolve1D(
+      small: rt.containerSizeSM,
+      middle: rt.containerSize,
+      large: rt.containerSizeLG,
+    );
 
-    final fontSize = customSize != null
-        ? (customSize! / 2).roundToDouble()
-        : switch (resolvedSize) {
+    // A preset carries a font size of its own; a diameter names only itself,
+    // so the initials are scaled to half of it.
+    final fontSize = resolvedSize is SoftSize
+        ? switch (resolvedSize) {
             SoftSize.small => rt.textFontSizeSM,
             SoftSize.middle => rt.textFontSize,
             SoftSize.large => rt.textFontSizeLG,
-          };
+          }
+        : (dimension / 2).roundToDouble();
 
     final bg = backgroundColor ??
         (image == null ? const Color(0xFFCCCCCC) : const Color(0x00000000));

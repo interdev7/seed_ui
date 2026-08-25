@@ -10,6 +10,7 @@ Widget _wrap(Widget child) => ConfigProvider(
     );
 
 void main() {
+  _sizeSlot();
   group('Avatar', () {
     testWidgets('renders an icon properly', (tester) async {
       await tester.pumpWidget(
@@ -104,6 +105,37 @@ void main() {
       expect(find.text('+2'), findsOneWidget);
       expect(find.text('3'), findsNothing);
       expect(find.text('4'), findsNothing);
+    });
+  });
+}
+
+void _sizeSlot() {
+  group('the size slot takes a preset or a diameter', () {
+    testWidgets('a preset follows the theme scale', (tester) async {
+      await tester.pumpWidget(
+        _wrap(const Avatar(size: SoftSize.large, child: Text('A'))),
+      );
+      final large = tester.getSize(find.byType(Avatar)).width;
+
+      await tester.pumpWidget(
+        _wrap(const Avatar(size: SoftSize.small, child: Text('A'))),
+      );
+      expect(tester.getSize(find.byType(Avatar)).width, lessThan(large));
+    });
+
+    testWidgets('a diameter is taken as given', (tester) async {
+      await tester.pumpWidget(
+        _wrap(const Avatar(size: ControlSize.fixed(56), child: Text('A'))),
+      );
+      expect(tester.getSize(find.byType(Avatar)).width, 56);
+    });
+
+    testWidgets('initials scale with a named diameter', (tester) async {
+      await tester.pumpWidget(
+        _wrap(const Avatar(size: ControlSize.fixed(80), child: Text('A'))),
+      );
+      final style = DefaultTextStyle.of(tester.element(find.text('A'))).style;
+      expect(style.fontSize, 40, reason: 'half of 80');
     });
   });
 }

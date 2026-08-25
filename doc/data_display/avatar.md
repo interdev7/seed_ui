@@ -11,8 +11,11 @@ Avatar(
 ```
 
 ### Avatar Properties
-- `size`: Uses standard `SoftSize` (`small`, `middle`, `large`).
-- `customSize`: Sets a specific logical pixel size, overriding `size`.
+- `size`: A `ControlSize` — either a preset (`SoftSize.small`, `middle`,
+  `large`) or a diameter of your own (`ControlSize.fixed(64)`). One slot for
+  both: a diameter is the whole story for a circle, so there is nothing a
+  preset carries that a number leaves unsaid. Follows `AvatarDefaults.size`,
+  then `ConfigProvider.componentSize`, else `middle`.
 - `shape`: `AvatarShape.circle` or `AvatarShape.square`.
 - `image`: An `ImageProvider` to display an image avatar.
 - `icon`: A `Widget` (typically an `Icon`) to display an icon avatar.

@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Avatar.customSize` is gone**; its `size` slot now takes a diameter
+  directly, as `Spin`, `Progress` and `Steps` already did:
+
+  ```dart
+  Avatar(size: SoftSize.large)          // the theme's scale
+  Avatar(size: ControlSize.fixed(64))   // a diameter of your own
+  ```
+
+  It was the last "two props for one idea" left in the kit, after
+  `Tag.customColor`. An audit found no others.
+
 - **`size` and `disabled` in the per-component defaults.** They could only be
   said for a whole screen, through `ConfigProvider.componentSize` and
   `componentDisabled` — so "small buttons on an otherwise normal screen" could

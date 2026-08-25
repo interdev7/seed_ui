@@ -32,7 +32,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outright — its value area was `Expanded`, which needs a width from above — so
   every one had to be wrapped in a `SizedBox` measured by hand. The format
   already says what the field can ever hold, so it now says how wide it needs
-  to be; given a width it still fills it, as a form field should.
+  to be — or the placeholder does, whichever is wider, since the field shows
+  both at different times and must not resize between them. A shorter
+  placeholder is the lever for a narrower field.
+
+  Told a width it fills it, as a form field should; merely offered an upper
+  bound — by a `Wrap`, a plain `Column`, a `Row` — it takes what it needs, and
+  gives way when there is less. Both look the same to `hasBoundedWidth`, and
+  treating them alike stretched every picker across its parent.
 
   Chosen values land at once rather than easing up from the hover grey, which
   showed as a flash under the finger. The figures follow the locale, and a time

@@ -687,7 +687,11 @@ void main() {
   });
 
   group('the field sizes itself', () {
-    Future<double> widthIn(WidgetTester tester, String format) async {
+    Future<double> widthIn(
+      WidgetTester tester,
+      String format, {
+      String? placeholder,
+    }) async {
       await tester.pumpWidget(
         ConfigProvider(
           child: MaterialApp(
@@ -696,7 +700,9 @@ void main() {
               body: Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [TimePicker(format: format)],
+                  children: [
+                    TimePicker(format: format, placeholder: placeholder),
+                  ],
                 ),
               ),
             ),
@@ -715,26 +721,166 @@ void main() {
       final width = await widthIn(tester, 'HH:mm');
       expect(tester.takeException(), isNull);
       expect(width, greaterThan(0));
-      expect(width, lessThan(400), reason: 'sized to the format, not the page');
+      expect(width, lessThan(400), reason: 'sized to itself, not the page');
     });
 
     testWidgets('a longer format asks for more room', (tester) async {
-      final short = await widthIn(tester, 'HH');
-      final medium = await widthIn(tester, 'HH:mm');
-      final long = await widthIn(tester, 'HH:mm:ss');
+      // With nothing to say while empty, the figures decide.
+      final short = await widthIn(tester, 'HH', placeholder: '');
+      final medium = await widthIn(tester, 'HH:mm', placeholder: '');
+      final long = await widthIn(tester, 'HH:mm:ss', placeholder: '');
 
       expect(short, lessThan(medium));
       expect(medium, lessThan(long));
     });
 
+    testWidgets('the placeholder is not cut off', (tester) async {
+      // The field shows the placeholder until a time is chosen, so it has to
+      // fit — sizing to the figures alone clipped it with an ellipsis.
+      final plain = await widthIn(tester, 'HH:mm', placeholder: 'now');
+      final wordy = await widthIn(
+        tester,
+        'HH:mm',
+        placeholder: 'Choose an opening time',
+      );
+
+      expect(wordy, greaterThan(plain));
+    });
+
+    testWidgets('the width does not change when a time is picked', (
+      tester,
+    ) async {
+      // A field that resized between empty and full would shuffle the row
+      // around it.
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: const Scaffold(
+              body: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [TimePicker(format: 'HH')],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      final empty = tester.getSize(find.byType(TimePicker)).width;
+
+      await tester.tap(find.byType(TimePicker));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('03'));
+      await tester.pumpAndSettle();
+
+      expect(tester.getSize(find.byType(TimePicker)).width, empty);
+    });
+
     testWidgets('given a width it still fills it', (tester) async {
       // A form field lines up with its neighbours; sizing to content there
       // would leave a ragged column.
-      await tester.pumpWidget(
-        _host(const TimePicker(format: 'HH:mm')),
-      );
+      await tester.pumpWidget(_host(const TimePicker(format: 'HH:mm')));
       await tester.pump();
       expect(tester.getSize(find.byType(TimePicker)).width, 320);
+    });
+  });
+
+  group('told a width, or merely offered one', () {
+    Future<double> widthUnder(WidgetTester tester, Widget parent) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(body: parent),
+          ),
+        ),
+      );
+      await tester.pump();
+      return tester.getSize(find.byType(TimePicker)).width;
+    }
+
+    const picker = TimePicker(format: 'HH:mm', placeholder: '');
+
+    testWidgets('a tight width is filled', (tester) async {
+      expect(
+        await widthUnder(
+          tester,
+          const Center(child: SizedBox(width: 220, child: picker)),
+        ),
+        220,
+      );
+      expect(
+        await widthUnder(
+          tester,
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [picker],
+          ),
+        ),
+        800,
+        reason: 'a stretched column tells it exactly how wide to be',
+      );
+    });
+
+    testWidgets('a loose one is not', (tester) async {
+      // Wrap, a plain Column and a Row all offer an upper bound rather than
+      // dictating a width. Treating that as "fill it" stretched every picker
+      // across its parent.
+      final inWrap = await widthUnder(tester, const Wrap(children: [picker]));
+      final inColumn =
+          await widthUnder(tester, const Column(children: [picker]));
+      final inRow = await widthUnder(
+        tester,
+        const Row(mainAxisSize: MainAxisSize.min, children: [picker]),
+      );
+
+      expect(inWrap, lessThan(400));
+      expect(inColumn, inWrap);
+      expect(inRow, inWrap);
+    });
+
+    testWidgets('filling means the affixes go to the far edge', (tester) async {
+      // Width alone cannot tell the two apart inside a tight box — the field
+      // is that wide either way. What moves is the clock: filled, it is
+      // pushed to the trailing edge; self-sized, it sits just after the
+      // digits.
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: const Scaffold(
+              body: Center(child: SizedBox(width: 320, child: picker)),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final field = tester.getRect(find.byType(TimePicker));
+      final icon = tester.getRect(find.byType(CustomPaint).last);
+
+      expect(
+        field.right - icon.right,
+        lessThan(20),
+        reason: 'the clock sits against the trailing edge',
+      );
+    });
+
+    testWidgets('but it never outgrows the room on offer', (tester) async {
+      // A narrow *loose* parent: the Wrap offers 60 and dictates nothing, so
+      // the field has to hold itself back or the row inside it overflows.
+      expect(
+        await widthUnder(
+          tester,
+          const Center(
+            child: SizedBox(width: 60, child: Wrap(children: [picker])),
+          ),
+        ),
+        lessThanOrEqualTo(60),
+      );
+      expect(tester.takeException(), isNull);
     });
   });
 }

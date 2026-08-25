@@ -573,12 +573,19 @@ class _TimePickerState extends State<TimePicker> {
   double _fontSize(Token t) =>
       _size == SoftSize.large ? t.fontSizeLG : t.fontSize;
 
-  /// How wide the value area has to be for this format, whatever the time.
+  /// How wide the value area has to be, whatever the field is showing.
   ///
-  /// The format says exactly what the field can ever hold, so the picker can
-  /// size itself: `'HH:mm'` needs room for `00:00` and no more. Measured with
-  /// the widest digit the face draws, since a proportional font does not give
-  /// every figure the same width.
+  /// The wider of two things, because the field shows both at different times
+  /// and must not resize between them: the longest the format can render, and
+  /// the placeholder that stands in until a time is chosen. Sizing to the
+  /// figures alone cut the placeholder off with an ellipsis; sizing to the
+  /// placeholder alone would make every picker as wide as the locale's own
+  /// wording, since one is always supplied.
+  ///
+  /// A shorter placeholder is the lever for a narrower field.
+  ///
+  /// Measured with the widest digit the face draws, since a proportional font
+  /// does not give every figure the same width.
   double _valueWidth(TextStyle style, SeedLocalizations words) {
     double widthOf(String text) {
       final painter = TextPainter(
@@ -613,7 +620,11 @@ class _TimePickerState extends State<TimePicker> {
         .split('')
         .map((ch) => words.digits.contains(ch) ? widest : ch)
         .join();
-    return widthOf(padded);
+
+    final placeholder = widget.placeholder ?? words.selectTime;
+    final figures = widthOf(padded);
+    final hint = widthOf(placeholder);
+    return figures > hint ? figures : hint;
   }
 
   void _syncAnchor() {
@@ -739,19 +750,34 @@ class _TimePickerState extends State<TimePicker> {
                 ],
               );
 
+              // Told exactly how wide to be — a SizedBox, a stretched
+              // Column — the field fills that, as a form field should.
+              // Merely offered an upper bound, as a Wrap or a Row offers,
+              // it takes what it needs and no more: `hasBoundedWidth` is
+              // true for both, and treating them alike stretched every
+              // picker across its parent.
+              final told = available.maxWidth == available.minWidth;
+              final room = available.maxWidth;
+
               return Row(
-                // Given a width the field fills it, as a form field should —
-                // Expanded sees to that. Left unbounded the row shrinks to its
-                // children, and the value area takes what the format needs.
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (widget.prefix != null) ...[
                     widget.prefix!,
                     SizedBox(width: t.sizeXS),
                   ],
-                  if (available.hasBoundedWidth)
+                  if (told)
                     Expanded(child: valueArea)
+                  else if (room.isFinite)
+                    // Offered a bound: take what the format needs, but give
+                    // way when the affixes and the chrome leave less than
+                    // that. Clamping to the room alone is not enough — the
+                    // padding, the gap and the icon come out of it too.
+                    Flexible(
+                      child: SizedBox(width: valueWidth, child: valueArea),
+                    )
                   else
+                    // No bound at all, so nothing to give way to.
                     SizedBox(width: valueWidth, child: valueArea),
                   SizedBox(width: t.sizeXS),
                   if (showClear)

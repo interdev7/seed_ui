@@ -46,15 +46,41 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Group(
-          'It sizes itself to the format',
-          // No SizedBox: with no width from above the field takes what the
-          // format needs. Given one — a form column — it fills it instead.
-          Row(
+          'It sizes itself',
+          // No SizedBox anywhere here. With no width from above the field
+          // takes the wider of two things: the longest the format can show,
+          // and the placeholder that stands in until a time is chosen.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final f in ['HH', 'HH:mm', 'HH:mm:ss']) ...[
-                TimePicker(format: f),
-                const SizedBox(width: 12),
-              ],
+              // Wrap, not Row: each picker takes its own width, so a row of
+              // them can only overflow once the page is narrow enough.
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  for (final f in ['HH', 'HH:mm', 'HH:mm:ss'])
+                    TimePicker(format: f, placeholder: f),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  TimePicker(format: 'HH:mm'),
+                  TimePicker(
+                    format: 'HH:mm',
+                    placeholder: 'Choose an opening time',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Above: nothing to say while empty, so the figures decide. '
+                'Below: the placeholder is wider, so it does — a shorter one '
+                'is the lever for a narrower field.',
+              ),
             ],
           ),
         ),
@@ -233,7 +259,6 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
                   status: InputStatus.warning,
                 ),
               ),
-              SizedBox(width: 12),
               SizedBox(
                 width: 200,
                 child: TimePicker(

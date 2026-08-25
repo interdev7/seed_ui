@@ -55,11 +55,34 @@ The grammar is `TimeFields`:
 
 ## Width
 
-The field sizes itself to the format. `TimePicker(format: 'HH:mm')` in a `Row`
-takes exactly the room `00:00` needs — no `SizedBox` to work out by hand.
+The field sizes itself — no `SizedBox` to work out by hand. In a `Row`,
+`TimePicker(format: 'HH:mm')` takes the room it needs.
 
-Given a width it fills it instead, so a picker in a form column lines up with
-the fields around it. A `SizedBox` still wins, as always.
+It takes the **wider of two things**, because it shows both at different times
+and must not resize between them:
+
+| | |
+| --- | --- |
+| the longest the format can render | `00:00` for `'HH:mm'` |
+| the placeholder | until a time is chosen |
+
+Sizing to the figures alone cut the placeholder off with an ellipsis. Sizing to
+the placeholder alone would make every picker as wide as the locale's own
+wording, since one is always supplied.
+
+**A shorter placeholder is the lever for a narrower field** — `placeholder: ''`
+leaves the figures to decide.
+
+**Told** a width it fills it, so a picker in a form column lines up with the
+fields around it. Merely **offered** an upper bound it takes what it needs and
+gives way if there is less:
+
+| Parent | Result |
+| --- | --- |
+| `SizedBox(width: 220)` | 220 — told |
+| `Column(crossAxisAlignment: stretch)` | fills — told |
+| `Wrap`, a plain `Column`, a `Row` | its own width — offered |
+| a narrow one of those | shrinks rather than overflowing |
 
 The measurement uses the widest figure the face draws, since a proportional
 font does not give every digit the same width, and it follows the locale's own

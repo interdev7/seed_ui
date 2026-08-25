@@ -29,4 +29,27 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Now'), findsOneWidget);
   });
+
+  testWidgets('the page lays out on a narrow screen too', (tester) async {
+    // The pickers size themselves, so a row of them overflows once the page
+    // is narrow enough — which is what Wrap is for. A phone-width pass is the
+    // only way that shows up before it reaches a screen.
+    tester.view.physicalSize = const Size(400, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ConfigProvider(
+        child: MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          home: const Scaffold(
+            body: SingleChildScrollView(child: TimePickerDemo()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+  });
 }

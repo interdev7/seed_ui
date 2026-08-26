@@ -18,6 +18,7 @@ import '../components/data_display/tooltip.dart';
 import '../components/data_display/tour.dart';
 import '../components/data_display/tree.dart';
 import '../components/data_entry/checkbox.dart';
+import '../components/data_entry/date_picker.dart';
 import '../components/data_entry/input.dart';
 import '../components/data_entry/input_number.dart';
 import '../components/data_entry/radio.dart';
@@ -52,6 +53,7 @@ class ComponentsConfig {
     this.checkbox,
     this.collapse,
     this.countdown,
+    this.datePicker,
     this.drawer,
     this.dropdown,
     this.empty,
@@ -108,6 +110,9 @@ class ComponentsConfig {
 
   /// Overrides applied to every [Countdown] under this provider.
   final CountdownToken? countdown;
+
+  /// Overrides for [DatePicker].
+  final DatePickerToken? datePicker;
 
   /// Overrides applied to every [Drawer] under this provider.
   final DrawerToken? drawer;
@@ -260,6 +265,9 @@ class ComponentsConfig {
     if (T == CheckboxToken && checkbox != null) return checkbox as T;
     if (T == CollapseToken && collapse != null) return collapse as T;
     if (T == CountdownToken && countdown != null) return countdown as T;
+    if (T == DatePickerToken && datePicker != null) {
+      return datePicker as T;
+    }
     if (T == DrawerToken && drawer != null) return drawer as T;
     if (T == DropdownToken && dropdown != null) return dropdown as T;
     if (T == EmptyToken && empty != null) return empty as T;

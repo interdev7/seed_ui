@@ -336,4 +336,54 @@ void main() {
       );
     }
   });
+
+  test('every language names its own calendar words', () {
+    const languages = {
+      'ru': SeedLocalizations.ru,
+      'tk': SeedLocalizations.tk,
+      'de': SeedLocalizations.de,
+      'fr': SeedLocalizations.fr,
+      'es': SeedLocalizations.es,
+      'zh': SeedLocalizations.zh,
+      'ja': SeedLocalizations.ja,
+      'tr': SeedLocalizations.tr,
+      'pt': SeedLocalizations.pt,
+      'ar': SeedLocalizations.ar,
+      'he': SeedLocalizations.he,
+    };
+    for (final entry in languages.entries) {
+      final l = entry.value;
+      expect(l.shortMonths, hasLength(12), reason: '${entry.key} months');
+      expect(l.shortWeekdays, hasLength(7), reason: '${entry.key} weekdays');
+      expect(
+        l.shortMonths.every((m) => m.isNotEmpty),
+        isTrue,
+        reason: '${entry.key} has an empty month',
+      );
+      expect(
+        l.shortWeekdays.every((d) => d.isNotEmpty),
+        isTrue,
+        reason: '${entry.key} has an empty weekday',
+      );
+      expect(
+        l.firstDayOfWeek,
+        inInclusiveRange(DateTime.monday, DateTime.sunday),
+        reason: '${entry.key} first day',
+      );
+      // A language that forgot them would silently show English names beside
+      // its own words, which reads as a bug rather than a default.
+      expect(
+        l.shortMonths,
+        isNot(SeedLocalizations.englishMonths),
+        reason: '${entry.key} still carries the English months',
+      );
+    }
+  });
+
+  test('a week does not always start on Monday', () {
+    // The kit would misread a month at a glance for everyone it is wrong for.
+    expect(SeedLocalizations.en.firstDayOfWeek, DateTime.monday);
+    expect(SeedLocalizations.ja.firstDayOfWeek, DateTime.sunday);
+    expect(SeedLocalizations.ar.firstDayOfWeek, DateTime.saturday);
+  });
 }

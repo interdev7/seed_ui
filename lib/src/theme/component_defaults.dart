@@ -17,6 +17,7 @@ import '../components/data_display/tooltip.dart';
 import '../components/data_display/tour.dart';
 import '../components/data_display/tree.dart';
 import '../components/data_entry/checkbox.dart';
+import '../components/data_entry/date_picker.dart';
 import '../components/data_entry/input.dart';
 import '../components/data_entry/input_number.dart';
 import '../components/data_entry/radio.dart';
@@ -80,6 +81,7 @@ class ComponentDefaults {
     this.steps,
     this.tabs,
     this.tree,
+    this.datePicker,
     this.dropdown,
     this.empty,
     this.input,
@@ -155,6 +157,9 @@ class ComponentDefaults {
   /// Applied to every [Upload] under this provider.
   final UploadDefaults? upload;
 
+  /// Applied to every [DatePicker] under this provider.
+  final DatePickerDefaults? datePicker;
+
   /// Applied to every [Dropdown] under this provider.
   final DropdownDefaults? dropdown;
 
@@ -209,6 +214,7 @@ class ComponentDefaults {
         steps: other.steps ?? steps,
         tabs: other.tabs ?? tabs,
         tree: other.tree ?? tree,
+        datePicker: other.datePicker ?? datePicker,
         dropdown: other.dropdown ?? dropdown,
         empty: other.empty ?? empty,
         input: other.input ?? input,
@@ -228,6 +234,9 @@ class ComponentDefaults {
     if (T == InputDefaults && input != null) return input as T;
     if (T == SelectDefaults && select != null) return select as T;
     if (T == TagDefaults && tag != null) return tag as T;
+    if (T == DatePickerDefaults && datePicker != null) {
+      return datePicker as T;
+    }
     if (T == DropdownDefaults && dropdown != null) return dropdown as T;
     if (T == PopconfirmDefaults && popconfirm != null) {
       return popconfirm as T;

@@ -157,6 +157,13 @@ export 'src/components/data_entry/checkbox.dart'
         CheckboxGroup,
         CheckboxOption,
         CheckboxToken;
+export 'src/components/data_entry/date_picker.dart'
+    show
+        DatePanelMode,
+        DatePicker,
+        DatePickerDefaults,
+        DatePickerToken,
+        DatePickerVariant;
 export 'src/components/data_entry/input.dart'
     show
         InputDefaults,
@@ -315,6 +322,18 @@ export 'src/theme/design_token.dart'
         SoftSize,
         Token;
 export 'src/theme/palette.dart' show generate;
+export 'src/utils/date_format.dart'
+    show
+        DateFields,
+        addMonths,
+        dateOnly,
+        daysInMonth,
+        formatDate,
+        isSameDay,
+        isSameMonth,
+        monthGrid,
+        parseDate,
+        weekdayOrder;
 export 'src/utils/hex_color.dart' show parseHexColor;
 export 'src/utils/overlay_host.dart' show UiKit;
 export 'src/utils/popover.dart'

@@ -13,6 +13,7 @@ import 'components/data_display/badge_demo.dart';
 import 'components/general/button_demo.dart';
 import 'components/data_display/card_demo.dart';
 import 'components/data_entry/slider_demo.dart';
+import 'components/data_entry/date_picker_demo.dart';
 import 'components/data_entry/time_picker_demo.dart';
 import 'components/data_display/collapse_demo.dart';
 import 'components/data_display/countdown_demo.dart';
@@ -379,6 +380,7 @@ final List<Demo> demos = [
   Demo('avatar', 'Avatar', (_) => const AvatarDemo()),
   Demo('badge', 'Badge', (_) => const BadgeDemo()),
   Demo('slider', 'Slider', (_) => const SliderDemo()),
+  Demo('date-picker', 'DatePicker', (_) => const DatePickerDemo()),
   Demo('time-picker', 'TimePicker', (_) => const TimePickerDemo()),
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),

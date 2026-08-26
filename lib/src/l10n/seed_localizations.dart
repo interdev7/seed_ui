@@ -69,6 +69,11 @@ class SeedLocalizations {
     this.noMoreItems = 'No more items',
     this.perPage = '/ page',
     this.selectTime = 'Select time',
+    this.selectDate = 'Select date',
+    this.today = 'Today',
+    this.shortMonths = englishMonths,
+    this.shortWeekdays = englishWeekdays,
+    this.firstDayOfWeek = DateTime.monday,
     this.now = 'Now',
     this.am = 'AM',
     this.pm = 'PM',
@@ -87,6 +92,59 @@ class SeedLocalizations {
 
   /// Placeholder of an empty `TimePicker`.
   final String selectTime;
+
+  /// The English month abbreviations, used when a language says nothing.
+  static const List<String> englishMonths = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  /// The English weekday abbreviations, from Monday.
+  static const List<String> englishWeekdays = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
+
+  /// Placeholder of an empty `DatePicker`.
+  final String selectDate;
+
+  /// Jumps a `DatePicker` to the current day.
+  final String today;
+
+  /// The twelve months, shortened, from January.
+  ///
+  /// Short forms only: a calendar header has one cell's worth of room, and
+  /// every date library ships the same abbreviations rather than the full
+  /// names.
+  final List<String> shortMonths;
+
+  /// The seven weekdays, shortened, from Monday — the order
+  /// [DateTime.weekday] counts in.
+  final List<String> shortWeekdays;
+
+  /// Which day a week starts on, as [DateTime.monday] through
+  /// [DateTime.sunday].
+  ///
+  /// Most of the world starts on Monday; the United States and much of the
+  /// Americas start on Sunday, and several Arabic-speaking countries on
+  /// Saturday. A calendar that always led with Monday would misread a month at
+  /// a glance for the people it is wrong for.
+  final int firstDayOfWeek;
 
   /// Jumps a `TimePicker` to the current time.
   final String now;
@@ -199,6 +257,11 @@ class SeedLocalizations {
     String? noMoreItems,
     String? perPage,
     String? selectTime,
+    String? selectDate,
+    String? today,
+    List<String>? shortMonths,
+    List<String>? shortWeekdays,
+    int? firstDayOfWeek,
     String? now,
     String? am,
     String? pm,
@@ -219,6 +282,11 @@ class SeedLocalizations {
         noMoreItems: noMoreItems ?? this.noMoreItems,
         perPage: perPage ?? this.perPage,
         selectTime: selectTime ?? this.selectTime,
+        selectDate: selectDate ?? this.selectDate,
+        today: today ?? this.today,
+        shortMonths: shortMonths ?? this.shortMonths,
+        shortWeekdays: shortWeekdays ?? this.shortWeekdays,
+        firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
         now: now ?? this.now,
         am: am ?? this.am,
         pm: pm ?? this.pm,
@@ -242,6 +310,9 @@ class SeedLocalizations {
       other.noMoreItems == noMoreItems &&
       other.perPage == perPage &&
       other.selectTime == selectTime &&
+      other.selectDate == selectDate &&
+      other.today == today &&
+      other.firstDayOfWeek == firstDayOfWeek &&
       other.now == now &&
       other.am == am &&
       other.pm == pm &&
@@ -279,6 +350,32 @@ class SeedLocalizations {
   /// Russian.
   static const SeedLocalizations ru = SeedLocalizations(
     localeName: 'ru',
+    selectDate: 'Выберите дату',
+    today: 'Сегодня',
+    firstDayOfWeek: DateTime.monday,
+    shortMonths: [
+      'янв',
+      'фев',
+      'мар',
+      'апр',
+      'май',
+      'июн',
+      'июл',
+      'авг',
+      'сен',
+      'окт',
+      'ноя',
+      'дек',
+    ],
+    shortWeekdays: [
+      'пн',
+      'вт',
+      'ср',
+      'чт',
+      'пт',
+      'сб',
+      'вс',
+    ],
     selectTime: 'Выберите время',
     now: 'Сейчас',
     am: 'AM',
@@ -299,6 +396,32 @@ class SeedLocalizations {
   /// Turkmen.
   static const SeedLocalizations tk = SeedLocalizations(
     localeName: 'tk',
+    selectDate: 'Senäni saýlaň',
+    today: 'Şu gün',
+    firstDayOfWeek: DateTime.monday,
+    shortMonths: [
+      'ýan',
+      'few',
+      'mart',
+      'apr',
+      'maý',
+      'iýun',
+      'iýul',
+      'awg',
+      'sen',
+      'okt',
+      'noý',
+      'dek',
+    ],
+    shortWeekdays: [
+      'duş',
+      'siş',
+      'çar',
+      'pen',
+      'ann',
+      'şen',
+      'ýek',
+    ],
     selectTime: 'Wagty saýlaň',
     now: 'Häzir',
     am: 'AM',
@@ -320,6 +443,32 @@ class SeedLocalizations {
   /// German.
   static const SeedLocalizations de = SeedLocalizations(
     localeName: 'de',
+    selectDate: 'Datum wählen',
+    today: 'Heute',
+    firstDayOfWeek: DateTime.monday,
+    shortMonths: [
+      'Jan',
+      'Feb',
+      'Mär',
+      'Apr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Dez',
+    ],
+    shortWeekdays: [
+      'Mo',
+      'Di',
+      'Mi',
+      'Do',
+      'Fr',
+      'Sa',
+      'So',
+    ],
     selectTime: 'Zeit auswählen',
     now: 'Jetzt',
     am: 'AM',
@@ -340,6 +489,32 @@ class SeedLocalizations {
   /// French.
   static const SeedLocalizations fr = SeedLocalizations(
     localeName: 'fr',
+    selectDate: 'Sélectionner une date',
+    today: 'Aujourd\'hui',
+    firstDayOfWeek: DateTime.monday,
+    shortMonths: [
+      'janv',
+      'févr',
+      'mars',
+      'avr',
+      'mai',
+      'juin',
+      'juil',
+      'août',
+      'sept',
+      'oct',
+      'nov',
+      'déc',
+    ],
+    shortWeekdays: [
+      'lun',
+      'mar',
+      'mer',
+      'jeu',
+      'ven',
+      'sam',
+      'dim',
+    ],
     selectTime: 'Sélectionner l\'heure',
     now: 'Maintenant',
     am: 'AM',
@@ -360,6 +535,32 @@ class SeedLocalizations {
   /// Spanish.
   static const SeedLocalizations es = SeedLocalizations(
     localeName: 'es',
+    selectDate: 'Seleccionar fecha',
+    today: 'Hoy',
+    firstDayOfWeek: DateTime.monday,
+    shortMonths: [
+      'ene',
+      'feb',
+      'mar',
+      'abr',
+      'may',
+      'jun',
+      'jul',
+      'ago',
+      'sep',
+      'oct',
+      'nov',
+      'dic',
+    ],
+    shortWeekdays: [
+      'lun',
+      'mar',
+      'mié',
+      'jue',
+      'vie',
+      'sáb',
+      'dom',
+    ],
     selectTime: 'Seleccionar hora',
     now: 'Ahora',
     am: 'AM',
@@ -381,6 +582,32 @@ class SeedLocalizations {
   /// Chinese, simplified.
   static const SeedLocalizations zh = SeedLocalizations(
     localeName: 'zh',
+    selectDate: '请选择日期',
+    today: '今天',
+    firstDayOfWeek: DateTime.monday,
+    shortMonths: [
+      '1月',
+      '2月',
+      '3月',
+      '4月',
+      '5月',
+      '6月',
+      '7月',
+      '8月',
+      '9月',
+      '10月',
+      '11月',
+      '12月',
+    ],
+    shortWeekdays: [
+      '一',
+      '二',
+      '三',
+      '四',
+      '五',
+      '六',
+      '日',
+    ],
     selectTime: '请选择时间',
     now: '此刻',
     am: '上午',
@@ -402,6 +629,32 @@ class SeedLocalizations {
   /// Japanese.
   static const SeedLocalizations ja = SeedLocalizations(
     localeName: 'ja',
+    selectDate: '日付を選択',
+    today: '今日',
+    firstDayOfWeek: DateTime.sunday,
+    shortMonths: [
+      '1月',
+      '2月',
+      '3月',
+      '4月',
+      '5月',
+      '6月',
+      '7月',
+      '8月',
+      '9月',
+      '10月',
+      '11月',
+      '12月',
+    ],
+    shortWeekdays: [
+      '月',
+      '火',
+      '水',
+      '木',
+      '金',
+      '土',
+      '日',
+    ],
     selectTime: '時間を選択',
     now: '現在',
     am: '午前',
@@ -422,6 +675,32 @@ class SeedLocalizations {
   /// Turkish.
   static const SeedLocalizations tr = SeedLocalizations(
     localeName: 'tr',
+    selectDate: 'Tarih seçin',
+    today: 'Bugün',
+    firstDayOfWeek: DateTime.monday,
+    shortMonths: [
+      'Oca',
+      'Şub',
+      'Mar',
+      'Nis',
+      'May',
+      'Haz',
+      'Tem',
+      'Ağu',
+      'Eyl',
+      'Eki',
+      'Kas',
+      'Ara',
+    ],
+    shortWeekdays: [
+      'Pzt',
+      'Sal',
+      'Çar',
+      'Per',
+      'Cum',
+      'Cmt',
+      'Paz',
+    ],
     selectTime: 'Saat seçin',
     now: 'Şimdi',
     am: 'ÖÖ',
@@ -443,6 +722,32 @@ class SeedLocalizations {
   /// Portuguese.
   static const SeedLocalizations pt = SeedLocalizations(
     localeName: 'pt',
+    selectDate: 'Selecionar data',
+    today: 'Hoje',
+    firstDayOfWeek: DateTime.sunday,
+    shortMonths: [
+      'jan',
+      'fev',
+      'mar',
+      'abr',
+      'mai',
+      'jun',
+      'jul',
+      'ago',
+      'set',
+      'out',
+      'nov',
+      'dez',
+    ],
+    shortWeekdays: [
+      'seg',
+      'ter',
+      'qua',
+      'qui',
+      'sex',
+      'sáb',
+      'dom',
+    ],
     selectTime: 'Selecionar hora',
     now: 'Agora',
     am: 'AM',
@@ -463,6 +768,32 @@ class SeedLocalizations {
   /// Arabic. Read right to left.
   static const SeedLocalizations ar = SeedLocalizations(
     localeName: 'ar',
+    selectDate: 'اختر التاريخ',
+    today: 'اليوم',
+    firstDayOfWeek: DateTime.saturday,
+    shortMonths: [
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر',
+    ],
+    shortWeekdays: [
+      'اثن',
+      'ثلا',
+      'أرب',
+      'خمي',
+      'جمع',
+      'سبت',
+      'أحد',
+    ],
     selectTime: 'اختر الوقت',
     now: 'الآن',
     am: 'ص',
@@ -485,6 +816,32 @@ class SeedLocalizations {
   /// Hebrew. Read right to left.
   static const SeedLocalizations he = SeedLocalizations(
     localeName: 'he',
+    selectDate: 'בחר תאריך',
+    today: 'היום',
+    firstDayOfWeek: DateTime.sunday,
+    shortMonths: [
+      'ינו',
+      'פבר',
+      'מרץ',
+      'אפר',
+      'מאי',
+      'יונ',
+      'יול',
+      'אוג',
+      'ספט',
+      'אוק',
+      'נוב',
+      'דצמ',
+    ],
+    shortWeekdays: [
+      'ב',
+      'ג',
+      'ד',
+      'ה',
+      'ו',
+      'ש',
+      'א',
+    ],
     selectTime: 'בחר שעה',
     now: 'עכשיו',
     am: 'AM',

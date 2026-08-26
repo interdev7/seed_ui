@@ -5,6 +5,54 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.10.0
+
+### Added
+
+- **`DatePicker`** — the kit's second picker, on the foundation `TimePicker`
+  laid. The value is a `DateTime` at midnight: Dart's own date type, so nothing
+  is converted on the way in or out, and `dateOnly` trims one that carries a
+  time.
+
+  **The panel has three depths.** The header walks up — days to months, months
+  to years — and picking walks back down, so a date years away is three taps
+  rather than twenty-eight presses of a chevron. The grid is always six weeks;
+  a month that fitted in five would shorten the panel and shift everything
+  under it.
+
+  ```dart
+  DatePicker(
+    value: _startsOn,
+    minDate: DateTime(2026, 1, 1),
+    disabledDate: (day) => day.weekday == DateTime.sunday,
+    onChanged: (date) => setState(() => _startsOn = date),
+  )
+  ```
+
+  Typed as well as picked, and **a day the month does not have is refused**
+  rather than rolled over — `DateTime` itself turns the 31st of February into
+  the 3rd of March, which would land a typo somewhere else entirely. Leap years
+  come out right, century rules included, because the arithmetic asks
+  `DateTime` rather than working them out again.
+
+  It carries the same field as `TimePicker`: self-sizing width, `status`,
+  `prefix`, `suffixIcon`, `onClear`, `footerBuilder`, controlled and
+  uncontrolled modes, and the locale's own figures.
+
+- **`DateFields`, `formatDate`, `parseDate`, `monthGrid`, `addMonths`,
+  `daysInMonth`, `dateOnly`, `isSameDay`, `isSameMonth`, `weekdayOrder`** —
+  the date core, exported on its own so every awkward case is reachable
+  without a picker on screen.
+
+- **Calendar words in every language.** `shortMonths`, `shortWeekdays`,
+  `selectDate`, `today`, and **`firstDayOfWeek`** on `SeedLocalizations`. Most
+  languages start the week on Monday; Japanese, Portuguese and Hebrew start on
+  Sunday and Arabic on Saturday, and a calendar that always led with Monday
+  would misread a month at a glance for everyone it is wrong for.
+
+  The Turkmen and Hebrew abbreviations are the conventional ones as far as I
+  can tell and deserve a native reader's eye.
+
 ## 0.9.0
 
 ### Added

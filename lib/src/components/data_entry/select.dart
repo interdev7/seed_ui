@@ -764,6 +764,35 @@ class _SelectState<T> extends State<Select<T>> {
     });
   }
 
+  /// How wide the value area has to be when nothing dictates a width.
+  ///
+  /// The widest of every option's own label and the placeholder, because the
+  /// field shows each of them at different times and must not resize between
+  /// them. Unlike a picker, a select has no format promising what it can hold
+  /// — its options are the promise.
+  ///
+  /// Labels that are not plain text cannot be measured, so they are skipped:
+  /// a select of pictures falls back to the placeholder and whatever width it
+  /// is given.
+  double _naturalWidth(TextStyle style) {
+    double widthOf(String text) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      return painter.width;
+    }
+
+    var widest = widthOf(widget.placeholder ?? '');
+    for (final option in widget.options) {
+      final label = option.label;
+      if (label is! Text || label.data == null) continue;
+      final w = widthOf(label.data!);
+      if (w > widest) widest = w;
+    }
+    return widest;
+  }
+
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
@@ -925,21 +954,40 @@ class _SelectState<T> extends State<Select<T>> {
               ]
             : null,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(child: valueArea),
-          SizedBox(width: token.sizeXS),
-          SizedBox(
-            width: fontSize,
-            height: _height(token),
-            child: Center(child: suffix),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, available) {
+          // A select fills the width it is given — unlike a picker it has no
+          // format promising what it can hold, and in tags mode the chips
+          // decide their own size. With no width at all it cannot fill
+          // anything, and Expanded would throw, so it falls back to the
+          // widest label it knows about.
+          final room = available.maxWidth;
+          return Row(
+            mainAxisSize: room.isFinite ? MainAxisSize.max : MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (room.isFinite)
+                Expanded(child: valueArea)
+              else
+                SizedBox(width: _naturalWidth(textStyle), child: valueArea),
+              SizedBox(width: token.sizeXS),
+              SizedBox(
+                width: fontSize,
+                height: _height(token),
+                child: Center(child: suffix),
+              ),
+            ],
+          );
+        },
       ),
     );
 
-    return MouseRegion(
+    // A two-dimensional size names a width as well; a preset and a bare
+    // dimension say nothing about it, so the field fills its parent as
+    // before.
+    final named = _size.explicitWidth;
+
+    final control = MouseRegion(
       cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -954,6 +1002,8 @@ class _SelectState<T> extends State<Select<T>> {
         child: box,
       ),
     );
+
+    return named == null ? control : SizedBox(width: named, child: control);
   }
 
   Widget _buildTags(

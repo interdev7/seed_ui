@@ -109,7 +109,19 @@ single select marks it by highlight alone.
 
 ## Sizes, variants and status
 
-`size` is `small` (24px), `middle` (32px, default) or `large` (40px). `variant`
+`size` takes either a preset — `small` (24px), `middle` (32px, default) or
+`large` (40px) — or a measurement of your own:
+
+```dart
+Select<String>(size: ControlSize.fixed(36), options: fruitOptions)
+Select<String>(size: ControlSize.raw(180, 36), options: fruitOptions)
+```
+
+A preset carries a type size with it; a bare measurement names only itself, so
+the standard type stands. The two-dimensional form names the width too, so it
+needs no `SizedBox` around it.
+
+`variant`
 is `outlined` (default), `filled` or `borderless`. `status` recolours the
 border to `SelectStatus.error` or `.warning`.
 

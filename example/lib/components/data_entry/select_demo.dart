@@ -192,6 +192,55 @@ class _SelectDemoState extends State<SelectDemo> {
           ),
         ),
         const Group(
+          'A measurement instead of a preset',
+          // The same slot takes either: a preset walks the theme's scale,
+          // a measurement is taken as given.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: 200,
+                    child: Select<String>(
+                      size: ControlSize.fixed(28),
+                      placeholder: 'fixed(28)',
+                      options: _fruits,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 200,
+                    child: Select<String>(
+                      size: ControlSize.fixed(44),
+                      placeholder: 'fixed(44)',
+                      options: _fruits,
+                    ),
+                  ),
+                  // No SizedBox: this one names its own width too.
+                  Select<String>(
+                    size: ControlSize.raw(180, 36),
+                    placeholder: 'raw(180, 36)',
+                    options: _fruits,
+                  ),
+                  Select<String>(
+                    size: ControlSize.raw(80, 30),
+                    placeholder: 'raw(80, 30)',
+                    options: _fruits,
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Text(
+                'A preset carries a type size of its own; a bare measurement '
+                'names only itself, so the standard type stands. The '
+                'two-dimensional one needs no SizedBox around it.',
+              ),
+            ],
+          ),
+        ),
+        const Group(
           'Variants & status',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

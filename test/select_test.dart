@@ -350,4 +350,109 @@ void main() {
     await tester.pumpAndSettle();
     expect(value, ['custom']);
   });
+
+  group('size takes a preset or a measurement', () {
+    Widget host(Widget child) => ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(body: Center(child: child)),
+          ),
+        );
+
+    const options = [SelectOption(value: 1, label: Text('one'))];
+
+    testWidgets('a preset still walks the theme scale', (tester) async {
+      Future<double> heightOf(ControlSize size) async {
+        await tester.pumpWidget(
+          host(
+            SizedBox(
+              width: 300,
+              child: Select<int>(size: size, options: options),
+            ),
+          ),
+        );
+        // The height rides an AnimatedContainer, so settle before measuring.
+        await tester.pumpAndSettle();
+        return tester.getSize(find.byType(Select<int>)).height;
+      }
+
+      expect(await heightOf(SoftSize.small),
+          lessThan(await heightOf(SoftSize.large)));
+    });
+
+    testWidgets('a two-dimensional size names both', (tester) async {
+      // A loose parent, so the field is free to take the width it was given.
+      await tester.pumpWidget(
+        host(
+          const Wrap(
+            children: [
+              Select<int>(size: ControlSize.raw(180, 36), options: options),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final size = tester.getSize(find.byType(Select<int>));
+      expect(size.width, 180);
+      // The border sits outside the named height.
+      expect(size.height, closeTo(36, 2));
+    });
+  });
+
+  group('width', () {
+    const options = [
+      SelectOption(value: 1, label: Text('Apple')),
+      SelectOption(value: 2, label: Text('A considerably longer fruit name')),
+    ];
+
+    Future<double> widthUnder(WidgetTester tester, Widget parent) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(body: Center(child: parent)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return tester.getSize(find.byType(Select<int>)).width;
+    }
+
+    testWidgets('it fills the width it is given', (tester) async {
+      // A select has no format promising what it can hold, and in tags mode
+      // the chips decide their own size, so it fills rather than measuring.
+      expect(
+        await widthUnder(
+          tester,
+          const SizedBox(width: 300, child: Select<int>(options: options)),
+        ),
+        300,
+      );
+      expect(
+        await widthUnder(
+          tester,
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [Select<int>(options: options)],
+          ),
+        ),
+        800,
+      );
+    });
+
+    testWidgets('with no width at all it does not throw', (tester) async {
+      // It used to: the value area was Expanded, which needs a width from
+      // above. With nothing to fill it falls back to its widest label.
+      final width = await widthUnder(
+        tester,
+        const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [Select<int>(options: options)],
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(width, greaterThan(0));
+      expect(width, lessThan(800), reason: 'its labels, not the page');
+    });
+  });
 }

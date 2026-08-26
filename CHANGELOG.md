@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A `Select` with no width no longer throws.** Its value area was
+  `Expanded`, which needs a width from above, so a select in a `Row` crashed
+  the way the pickers used to. With nothing to fill it now falls back to its
+  widest label.
+
+  It does not size itself the way the pickers do, and deliberately: a picker's
+  format promises what the field can ever hold, while a select's content is
+  whatever was chosen — and in tags mode the chips decide their own size.
+  Given a width, it fills it.
+
 - **A controlled `open` no longer throws.** Handing `TimePicker` or
   `DatePicker` an `open` that changed made them mount the overlay entry from
   `didUpdateWidget` — which runs inside a build, where marking the Overlay as
@@ -25,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   DatePicker(size: ControlSize.fixed(36))     // 36 tall
   DatePicker(size: ControlSize.raw(200, 36))  // 200 by 36
   ```
+
+  `explicitWidth` goes with it, so a two-dimensional size names the width as
+  well — a `Select` or a picker given `raw(180, 36)` needs no `SizedBox`
+  around it.
 
   `resolveHeight` was added beside `resolve1D` for it: a two-dimensional size
   has to give its height, not its larger side, or a 200-by-36 field would come

@@ -15,6 +15,7 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
   Duration? _basic = const Duration(hours: 9, minutes: 30);
   Duration? _seconds;
   int _cleared = 0;
+  bool _driven = false;
   Duration? _twelve;
   Duration? _stepped;
   Duration? _blocked;
@@ -207,6 +208,180 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
                 const SizedBox(width: 12),
               ],
             ],
+          ),
+        ),
+        Group(
+          'A measurement instead of a preset',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  TimePicker(
+                    format: 'HH:mm',
+                    size: ControlSize.fixed(28),
+                    placeholder: '',
+                  ),
+                  TimePicker(
+                    format: 'HH:mm',
+                    size: ControlSize.fixed(44),
+                    placeholder: '',
+                  ),
+                  TimePicker(format: 'HH:mm', size: ControlSize.raw(200, 36)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'fixed(28) and fixed(44) name a height; raw(200, 36) names '
+                'both. A bare measurement says nothing about type, so the '
+                'standard size stands.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
+          ),
+        ),
+        const Group(
+          'Coarser steps',
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              SizedBox(
+                width: 200,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  hourStep: 2,
+                  placeholder: 'every 2 hours',
+                ),
+              ),
+              SizedBox(
+                width: 220,
+                child: TimePicker(
+                  minuteStep: 30,
+                  secondStep: 15,
+                  placeholder: 'coarse throughout',
+                ),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Hidden rather than greyed',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 200,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  hideDisabledOptions: true,
+                  disabledTime: DisabledTime(
+                    hours: () => [
+                      for (var h = 0; h < 24; h++)
+                        if (h < 9 || h > 17) h,
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The same nine-to-five, with the unavailable hours off the '
+                'list instead of dimmed.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A trimmed panel',
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              const SizedBox(
+                width: 200,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  showNow: false,
+                  placeholder: 'no Now',
+                ),
+              ),
+              SizedBox(
+                width: 200,
+                child: TimePicker(
+                  format: 'HH',
+                  needConfirm: true,
+                  placeholder: 'waits for OK',
+                  onChanged: (time) => debugPrint("Confirmed time: $time"),
+                ),
+              ),
+              const SizedBox(
+                width: 200,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  allowClear: false,
+                  defaultValue: Duration(hours: 9),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Opened from outside',
+          Row(
+            children: [
+              SizedBox(
+                width: 200,
+                child: TimePicker(
+                  format: 'HH:mm',
+                  open: _driven,
+                  onOpenChange: (v) => setState(() => _driven = v),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Button(
+                onPressed: () => setState(() => _driven = !_driven),
+                child: Text(_driven ? 'Close it' : 'Open it'),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Where the panel opens',
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final placement in [
+                PopoverPlacement.bottomLeft,
+                PopoverPlacement.bottomRight,
+                PopoverPlacement.topLeft,
+              ])
+                SizedBox(
+                  width: 200,
+                  child: TimePicker(
+                    format: 'HH:mm',
+                    placement: placement,
+                    placeholder: placement.name,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const Group(
+          'Its own tokens',
+          SizedBox(
+            width: 220,
+            child: TimePicker(
+              format: 'HH:mm',
+              token: TimePickerToken(
+                borderRadius: 16,
+                cellHeight: 34,
+                columnWidth: 72,
+                visibleRows: 5,
+              ),
+            ),
           ),
         ),
         const Group(

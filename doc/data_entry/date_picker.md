@@ -89,6 +89,25 @@ format can render and the placeholder. **Told** a width it fills it; merely
 **offered** an upper bound it takes what it needs and gives way when there is
 less.
 
+## Size
+
+`size` takes either a preset or a measurement:
+
+```dart
+DatePicker(size: SoftSize.large)              // the theme's scale
+DatePicker(size: ControlSize.fixed(36))       // 36 tall
+DatePicker(size: ControlSize.raw(200, 36))    // 200 by 36
+```
+
+A preset carries a type size of its own; a bare measurement names only itself,
+so the standard type size stands. A two-dimensional size gives its **height**
+as the height — not its larger side, which would make a 200-by-36 field two
+hundred pixels tall.
+
+Fields whose preset carries more than the box — `Button`, `Input`, where the
+padding and the radius move with it too — keep `SoftSize`: a bare number would
+supply one of the four and leave the rest guessing.
+
 ## API
 
 | Prop | Type | Default | Notes |
@@ -102,7 +121,7 @@ less.
 | `showToday` | `bool?` | `null` | Follows the defaults, else true |
 | `allowClear` | `bool?` | `null` | Follows the defaults, else true |
 | `disabled` | `bool?` | `null` | Follows `componentDisabled` |
-| `size` | `SoftSize?` | `null` | Follows `componentSize` |
+| `size` | `ControlSize?` | `null` | A preset, or a measurement of your own. Follows `componentSize` |
 | `variant` | `DatePickerVariant?` | `null` | `outlined`, `filled`, `borderless` |
 | `placeholder` | `String?` | `null` | Falls back to the locale |
 | `placement` | `PopoverPlacement` | `bottomLeft` | Where the panel opens |

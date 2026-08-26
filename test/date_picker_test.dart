@@ -451,4 +451,136 @@ void main() {
     await _openPanel(tester);
     expect(find.text('Today'), findsNothing);
   });
+
+  group('size takes a preset or a measurement', () {
+    Future<Size> sizeOf(WidgetTester tester, ControlSize? size) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(
+              body: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [DatePicker(size: size, placeholder: '')],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      // Settled: the height rides an AnimatedContainer, so a measurement at
+      // once still reads the preset before it.
+      await tester.pumpAndSettle();
+      return tester.getSize(find.byType(DatePicker));
+    }
+
+    testWidgets('a preset still walks the theme scale', (tester) async {
+      final small = await sizeOf(tester, SoftSize.small);
+      final large = await sizeOf(tester, SoftSize.large);
+      expect(small.height, lessThan(large.height));
+    });
+
+    testWidgets('a bare dimension is the height, taken as given', (
+      tester,
+    ) async {
+      expect((await sizeOf(tester, const ControlSize.fixed(36))).height, 36);
+    });
+
+    testWidgets('a two-dimensional size names both', (tester) async {
+      // The larger side would make the field two hundred pixels tall, which
+      // is what a plain 1D resolve would have given.
+      final size = await sizeOf(tester, const ControlSize.raw(200, 36));
+      expect(size.height, 36);
+      expect(size.width, 200);
+    });
+
+    testWidgets('a measurement leaves the type size alone', (tester) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: const Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 240,
+                  child: DatePicker(
+                    size: ControlSize.fixed(36),
+                    placeholder: 'x',
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      // A dimension says nothing about type, so the standard size stands.
+      expect(tester.widget<Text>(find.text('x')).style?.fontSize, 14);
+    });
+  });
+
+  group('a panel driven from outside', () {
+    Widget driven({required bool open, required VoidCallback toggle}) =>
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 200,
+                      child: DatePicker(open: open),
+                    ),
+                    GestureDetector(
+                      onTap: toggle,
+                      child: const Text('flip'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+    testWidgets('opens without building the overlay mid-build', (
+      tester,
+    ) async {
+      // didUpdateWidget runs inside a build, and mounting the overlay entry
+      // marks the Overlay as needing to build — doing it there throws.
+      var open = false;
+      late StateSetter setOuter;
+      await tester.pumpWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            setOuter = setState;
+            return driven(
+              open: open,
+              toggle: () => setState(() => open = !open),
+            );
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('flip'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Today'), findsOneWidget, reason: 'the panel opened');
+
+      setOuter(() => open = false);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Today'), findsNothing);
+    });
+
+    testWidgets('a picker born open opens', (tester) async {
+      await tester.pumpWidget(driven(open: true, toggle: () {}));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Today'), findsOneWidget);
+    });
+  });
 }

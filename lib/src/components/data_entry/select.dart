@@ -6,6 +6,7 @@ import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/popover.dart';
+import '../../utils/size_resolver.dart';
 import '../navigation/dropdown.dart' show DropdownPanel;
 
 /// How a [Select] behaves: pick one value, several, or freely create new ones.
@@ -211,7 +212,7 @@ class SelectDefaults {
   ///
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Whether a [Select] is disabled, unless it says otherwise.
   ///
@@ -321,7 +322,7 @@ class Select<T> extends StatefulWidget {
   final ValueChanged<String>? onSearch;
 
   /// Which height preset to use.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// A validation status that recolours the border.
   final SelectStatus? status;
@@ -397,7 +398,7 @@ class _SelectState<T> extends State<Select<T>> {
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
-  SoftSize get _size =>
+  ControlSize get _size =>
       widget.size ??
       _defaults?.size ??
       ConfigProvider.componentSizeOf(context) ??
@@ -726,12 +727,14 @@ class _SelectState<T> extends State<Select<T>> {
 
   // --- sizing ---
 
-  double _height(Token t) => switch (_size) {
-        SoftSize.small => t.controlHeightSM,
-        SoftSize.middle => t.controlHeight,
-        SoftSize.large => t.controlHeightLG,
-      };
+  double _height(Token t) => _size.resolveHeight(
+        small: t.controlHeightSM,
+        middle: t.controlHeight,
+        large: t.controlHeightLG,
+      );
 
+  /// A preset carries a type size of its own; a dimension names only
+  /// itself, so the standard one stands.
   double _fontSize(Token t) =>
       _size == SoftSize.large ? t.fontSizeLG : t.fontSize;
 

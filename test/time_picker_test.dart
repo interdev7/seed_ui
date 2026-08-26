@@ -883,4 +883,68 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('a panel driven from outside', () {
+    Widget driven({required bool open, required VoidCallback toggle}) =>
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 200,
+                      child: TimePicker(format: 'HH:mm', open: open),
+                    ),
+                    GestureDetector(
+                      onTap: toggle,
+                      child: const Text('flip'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+    testWidgets('opens without building the overlay mid-build', (
+      tester,
+    ) async {
+      // didUpdateWidget runs inside a build, and mounting the overlay entry
+      // marks the Overlay as needing to build — doing it there throws.
+      var open = false;
+      late StateSetter setOuter;
+      await tester.pumpWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            setOuter = setState;
+            return driven(
+              open: open,
+              toggle: () => setState(() => open = !open),
+            );
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('flip'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Now'), findsOneWidget, reason: 'the panel opened');
+
+      setOuter(() => open = false);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Now'), findsNothing);
+    });
+
+    testWidgets('a picker born open opens', (tester) async {
+      await tester.pumpWidget(driven(open: true, toggle: () {}));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Now'), findsOneWidget);
+    });
+  });
 }

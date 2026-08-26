@@ -430,6 +430,19 @@ ConfigProvider(
 )
 ```
 
+### A preset, or a measurement
+
+`size` is a `ControlSize` on some components and a `SoftSize` on others, and
+the line between them is what the preset actually feeds:
+
+| | Components | Why |
+| --- | --- | --- |
+| `ControlSize` | `Avatar`, `Spin`, `Steps`, `Progress`, `Select`, `TimePicker`, `DatePicker` | The size feeds the box alone — a diameter, or a height and a type size that can stay put |
+| `SoftSize` | `Button`, `Input` | The preset feeds four or five things at once: height, type size, padding, radius. A bare number would supply one and leave the rest guessing |
+
+Where `ControlSize` is taken, all three forms work: `SoftSize.large`,
+`ControlSize.fixed(36)` and `ControlSize.raw(200, 36)`.
+
 ### Font weight
 
 Two seeds carry weight, and every component reads one of them:

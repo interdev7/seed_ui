@@ -17,6 +17,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
   DateTime? _bounded;
   DateTime? _weekdays;
   int _cleared = 0;
+  bool _driven = false;
 
   String _say(DateTime? d) =>
       d == null ? 'nothing chosen' : formatDate(d, 'EEE, d MMM yyyy');
@@ -144,6 +145,150 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
               for (final size in SoftSize.values)
                 SizedBox(width: 200, child: DatePicker(size: size)),
             ],
+          ),
+        ),
+        Group(
+          'A measurement instead of a preset',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  DatePicker(size: ControlSize.fixed(28), placeholder: ''),
+                  DatePicker(size: ControlSize.fixed(44), placeholder: ''),
+                  DatePicker(size: ControlSize.raw(240, 36)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'fixed(28) and fixed(44) name a height; raw(240, 36) names '
+                'both. A preset carries a type size of its own — a bare '
+                'measurement names only itself, so the standard type stands.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
+          ),
+        ),
+        const Group(
+          'A trimmed panel',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: 200,
+                    child: DatePicker(
+                      showToday: false,
+                      placeholder: 'no Today',
+                    ),
+                  ),
+                  SizedBox(
+                    width: 200,
+                    child: DatePicker(
+                      allowClear: false,
+                      defaultValue: null,
+                      placeholder: 'no clear',
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Text('The footer and the clear button are both optional.'),
+            ],
+          ),
+        ),
+        Group(
+          'A prefix, a suffix and a footer of your own',
+          SizedBox(
+            width: 260,
+            child: DatePicker(
+              prefix: Text('on', style: TextStyle(color: t.colorTextSecondary)),
+              suffixIcon: Icon(
+                Icons.event_outlined,
+                size: 16,
+                color: t.colorTextQuaternary,
+              ),
+              footerBuilder: (context) => Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  'Bookings open 30 days ahead',
+                  style: TextStyle(fontSize: 12, color: t.colorTextSecondary),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Group(
+          'Opened from outside',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SizedBox(
+                    width: 200,
+                    child: DatePicker(
+                      open: _driven,
+                      onOpenChange: (v) => setState(() => _driven = v),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Button(
+                    onPressed: () => setState(() => _driven = !_driven),
+                    child: Text(_driven ? 'Close it' : 'Open it'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'With open supplied the picker stops deciding for itself and '
+                'reports what it would have done through onOpenChange.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Where the panel opens',
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final placement in [
+                PopoverPlacement.bottomLeft,
+                PopoverPlacement.bottomRight,
+                PopoverPlacement.topLeft,
+              ])
+                SizedBox(
+                  width: 200,
+                  child: DatePicker(
+                    placement: placement,
+                    placeholder: placement.name,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const Group(
+          'Panel only, no typing',
+          SizedBox(width: 220, child: DatePicker(inputReadOnly: true)),
+        ),
+        const Group(
+          'Its own tokens',
+          // Per instance, without touching the theme.
+          SizedBox(
+            width: 240,
+            child: DatePicker(
+              token: DatePickerToken(
+                borderRadius: 16,
+                cellWidth: 44,
+                cellHeight: 30,
+              ),
+            ),
           ),
         ),
         Group(

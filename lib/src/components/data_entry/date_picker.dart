@@ -5,6 +5,7 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/date_format.dart';
 import '../../utils/popover.dart';
+import '../../utils/size_resolver.dart';
 import '../data_entry/input.dart' show InputStatus;
 import '../data_entry/select.dart' show ClearIconPainter;
 
@@ -60,7 +61,7 @@ class DatePickerDefaults {
   final bool? showToday;
 
   /// Which control height a [DatePicker] takes, unless it names one.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Whether a [DatePicker] is disabled, unless it says otherwise.
   final bool? disabled;
@@ -198,7 +199,7 @@ class DatePicker extends StatefulWidget {
   final bool? disabled;
 
   /// Which control height to use. Follows `ConfigProvider.componentSize`.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// How the field is filled and bordered.
   final DatePickerVariant? variant;
@@ -270,7 +271,7 @@ class _DatePickerState extends State<DatePicker> {
       ConfigProvider.componentDisabledOf(context) ??
       false;
 
-  SoftSize get _size =>
+  ControlSize get _size =>
       widget.size ??
       _defaults?.size ??
       ConfigProvider.componentSizeOf(context) ??
@@ -290,12 +291,26 @@ class _DatePickerState extends State<DatePicker> {
     super.initState();
     _internal = widget.defaultValue;
     _cursor = dateOnly(_value ?? DateTime.now());
+    // Born open: the same deferral, since the first build is a build too.
+    if (widget.open ?? false) _obey(true);
     _popover.onClosed = () {
       if (!mounted || !_open) return;
       setState(() => _open = false);
       _syncText();
       widget.onOpenChange?.call(false);
     };
+  }
+
+  /// Opens or closes the panel after the frame.
+  ///
+  /// Mounting the overlay entry marks the Overlay as needing to build, and
+  /// both callers reach here during a build — `didUpdateWidget` runs inside
+  /// one, and so does the first frame. Doing it there throws.
+  void _obey(bool open) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      open ? _openPanel() : _closePanel();
+    });
   }
 
   @override
@@ -311,7 +326,7 @@ class _DatePickerState extends State<DatePicker> {
       _syncText();
     }
     if (widget.open != null && widget.open != old.open) {
-      widget.open! ? _openPanel() : _closePanel();
+      _obey(widget.open!);
     }
   }
 
@@ -497,12 +512,14 @@ class _DatePickerState extends State<DatePicker> {
   // Building
   // --------------------------------------------------------------------------
 
-  double _height(Token t) => switch (_size) {
-        SoftSize.small => t.controlHeightSM,
-        SoftSize.middle => t.controlHeight,
-        SoftSize.large => t.controlHeightLG,
-      };
+  double _height(Token t) => _size.resolveHeight(
+        small: t.controlHeightSM,
+        middle: t.controlHeight,
+        large: t.controlHeightLG,
+      );
 
+  /// A preset carries a type size of its own; a dimension names only
+  /// itself, so the standard one stands.
   double _fontSize(Token t) =>
       _size == SoftSize.large ? t.fontSizeLG : t.fontSize;
 
@@ -639,7 +656,11 @@ class _DatePickerState extends State<DatePicker> {
 
     final valueWidth = _valueWidth(textStyle, words);
 
-    return MouseRegion(
+    // A two-dimensional size names a width as well; anything else leaves the
+    // field to size itself from the format.
+    final named = _size.explicitWidth;
+
+    final control = MouseRegion(
       cursor:
           _enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
       onEnter: (_) => setState(() => _hovered = true),
@@ -718,6 +739,8 @@ class _DatePickerState extends State<DatePicker> {
         ),
       ),
     );
+
+    return named == null ? control : SizedBox(width: named, child: control);
   }
 }
 

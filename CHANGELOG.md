@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A controlled `open` no longer throws.** Handing `TimePicker` or
+  `DatePicker` an `open` that changed made them mount the overlay entry from
+  `didUpdateWidget` — which runs inside a build, where marking the Overlay as
+  needing to build is illegal. Both now wait for the frame to finish. A picker
+  born with `open: true` opens as well, which it never did.
+
+- **`Select`, `TimePicker` and `DatePicker` take a `ControlSize`.** Their
+  `size` accepted only a preset, so an exact height meant wrapping the field.
+  The line is drawn by what the preset actually feeds: these three feed the box
+  alone — a height and a type size that can stay put — while `Button` and
+  `Input` feed four or five things at once and keep `SoftSize`.
+
+  ```dart
+  DatePicker(size: ControlSize.fixed(36))     // 36 tall
+  DatePicker(size: ControlSize.raw(200, 36))  // 200 by 36
+  ```
+
+  `resolveHeight` was added beside `resolve1D` for it: a two-dimensional size
+  has to give its height, not its larger side, or a 200-by-36 field would come
+  out two hundred pixels tall.
+
+  Source-compatible — `SoftSize` is a `ControlSize`, so every existing call
+  still reads the same.
+
 - **`DatePicker`** — the kit's second picker, on the foundation `TimePicker`
   laid. The value is a `DateTime` at midnight: Dart's own date type, so nothing
   is converted on the way in or out, and `dateOnly` trims one that carries a

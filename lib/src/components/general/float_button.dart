@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/services.dart'
+    show HardwareKeyboard, KeyDownEvent, KeyEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 
 import '../../icons/icons.dart';
@@ -210,27 +212,49 @@ class FloatButtonFan extends FloatButtonLayout {
   /// Chooses which scatter [jitter] produces.
   final int seed;
 
-  double _radius(Size item, double gap) => radius ?? item.longestSide + gap * 2;
+  double _sweep() => sweep ?? math.pi / 2;
 
-  double _sweep(int count) => sweep ?? math.pi / 2;
+  /// The angle between two neighbouring spokes.
+  double _step(int count) => count < 2 ? 0 : _sweep() / (count - 1);
+
+  double _radius(int count, Size item, double gap) {
+    if (radius != null) return radius!;
+    final clear = item.longestSide + gap;
+    final step = _step(count);
+    // Far enough out that the chord between neighbours is a whole item plus a
+    // gap; then further still, in proportion to the scatter asked for, so the
+    // scatter has somewhere to go.
+    final needed = step == 0 ? clear : clear / (2 * math.sin(step / 2));
+    return math.max(item.longestSide + gap * 2, needed) + jitter * clear;
+  }
+
+  /// How far an item may stray without meeting its neighbour.
+  ///
+  /// Half the daylight between two of them: if both stray towards each other
+  /// by this much, they arrive just touching.
+  double _room(int count, Size item, double gap) {
+    if (jitter == 0 || count < 2) return 0;
+    final chord = 2 * _radius(count, item, gap) * math.sin(_step(count) / 2);
+    return math.max(0, chord - item.longestSide) / 2;
+  }
 
   double _angle(int index, int count, Offset away) {
     final base = start ?? math.atan2(away.dy, away.dx);
     if (count < 2) return base;
-    final s = _sweep(count);
-    return base + s * (index / (count - 1) - 0.5);
+    return base + _sweep() * (index / (count - 1) - 0.5);
   }
 
   @override
   Offset offsetFor(int index, int count, Size item, Offset away, double gap) {
     var angle = _angle(index, count, away);
-    var r = _radius(item, gap);
-    if (jitter > 0) {
-      // Bounded by half the gap on each axis, so however wild the scatter, two
-      // items still cannot meet.
-      final room = gap / 2 * jitter;
-      angle += _noise(seed, index, 1) * (room / math.max(r, 1));
-      r += _noise(seed, index, 2) * room;
+    var r = _radius(count, item, gap);
+    final room = _room(count, item, gap);
+    if (room > 0) {
+      // Split between the two directions an item can move — along the arc and
+      // out along its spoke — so neither alone spends the whole allowance.
+      final along = room / math.sqrt2;
+      angle += _noise(seed, index, 1) * (along / math.max(r, 1));
+      r += _noise(seed, index, 2) * along;
     }
     return Offset(math.cos(angle) * r, math.sin(angle) * r);
   }
@@ -335,14 +359,12 @@ class FloatButtonToken {
     this.size,
     this.gap,
     this.labelGap,
-    this.labelPadding,
-    this.labelBackgroundColor,
     this.labelTextColor,
     this.labelFontSize,
-    this.labelBorderRadius,
     this.borderRadius,
     this.shadow,
     this.motionDuration,
+    this.curve,
   });
 
   /// Diameter of a round button, height of a square one.
@@ -354,20 +376,11 @@ class FloatButtonToken {
   /// Space between a button and its label.
   final double? labelGap;
 
-  /// Padding inside a label's chip.
-  final EdgeInsetsGeometry? labelPadding;
-
-  /// Fill behind a label.
-  final Color? labelBackgroundColor;
-
   /// Colour of a label's text.
   final Color? labelTextColor;
 
   /// Size of a label's text.
   final double? labelFontSize;
-
-  /// Corner radius of a label's chip.
-  final double? labelBorderRadius;
 
   /// Corner radius of a square button. A round one is always half its size.
   final double? borderRadius;
@@ -378,19 +391,19 @@ class FloatButtonToken {
   /// How long the group takes to open.
   final Duration? motionDuration;
 
+  /// The shape of the opening — how the items accelerate along their way.
+  final Curve? curve;
+
   _ResolvedFloatButtonToken _resolve(Token t) => _ResolvedFloatButtonToken(
         size: size ?? t.controlHeightLG + t.sizeXS,
         gap: gap ?? t.sizeSM,
-        labelGap: labelGap ?? t.sizeXS,
-        labelPadding: labelPadding ??
-            EdgeInsets.symmetric(horizontal: t.sizeXS, vertical: t.sizeXXS),
-        labelBackgroundColor: labelBackgroundColor ?? t.colorBgElevated,
+        labelGap: labelGap ?? t.sizeXXS,
         labelTextColor: labelTextColor ?? t.colorText,
         labelFontSize: labelFontSize ?? t.fontSizeSM,
-        labelBorderRadius: labelBorderRadius ?? t.borderRadius,
         borderRadius: borderRadius ?? t.borderRadiusLG,
         shadow: shadow ?? t.boxShadowSecondary,
         motionDuration: motionDuration ?? t.motionDurationMid,
+        curve: curve ?? t.motionEaseOut,
       );
 }
 
@@ -400,27 +413,23 @@ class _ResolvedFloatButtonToken {
     required this.size,
     required this.gap,
     required this.labelGap,
-    required this.labelPadding,
-    required this.labelBackgroundColor,
     required this.labelTextColor,
     required this.labelFontSize,
-    required this.labelBorderRadius,
     required this.borderRadius,
     required this.shadow,
     required this.motionDuration,
+    required this.curve,
   });
 
   final double size;
   final double gap;
   final double labelGap;
-  final EdgeInsetsGeometry labelPadding;
-  final Color labelBackgroundColor;
   final Color labelTextColor;
   final double labelFontSize;
-  final double labelBorderRadius;
   final double borderRadius;
   final List<BoxShadow> shadow;
   final Duration motionDuration;
+  final Curve curve;
 }
 
 /// Defaults for every [FloatButton] and [FloatButtonGroup] under a
@@ -439,6 +448,8 @@ class FloatButtonDefaults {
     this.trigger,
     this.labelPlacement,
     this.disabled,
+    this.dismissible,
+    this.closeOnSelect,
   });
 
   /// Round or square.
@@ -459,6 +470,12 @@ class FloatButtonDefaults {
   /// Whether float buttons are greyed out and deaf to taps.
   final bool? disabled;
 
+  /// Whether a tap on open ground closes a group.
+  final bool? dismissible;
+
+  /// Whether tapping an item closes its group.
+  final bool? closeOnSelect;
+
   /// Returns a copy with the given fields replaced.
   FloatButtonDefaults copyWith({
     ButtonShape? shape,
@@ -467,6 +484,8 @@ class FloatButtonDefaults {
     FloatButtonTrigger? trigger,
     FloatButtonLabelPlacement? labelPlacement,
     bool? disabled,
+    bool? dismissible,
+    bool? closeOnSelect,
   }) =>
       FloatButtonDefaults(
         shape: shape ?? this.shape,
@@ -475,31 +494,9 @@ class FloatButtonDefaults {
         trigger: trigger ?? this.trigger,
         labelPlacement: labelPlacement ?? this.labelPlacement,
         disabled: disabled ?? this.disabled,
+        dismissible: dismissible ?? this.dismissible,
+        closeOnSelect: closeOnSelect ?? this.closeOnSelect,
       );
-}
-
-/// What a [FloatButtonGroup] tells the items inside it.
-///
-/// An inherited widget rather than a look at the child's type, so that a
-/// button wrapped in a `Badge` or a `Tooltip` is still an item of the group.
-class _FloatItemScope extends InheritedWidget {
-  const _FloatItemScope({
-    required this.labelPlacement,
-    required this.token,
-    required this.close,
-    required super.child,
-  });
-
-  final FloatButtonLabelPlacement labelPlacement;
-  final FloatButtonToken? token;
-  final VoidCallback close;
-
-  static _FloatItemScope? maybeOf(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<_FloatItemScope>();
-
-  @override
-  bool updateShouldNotify(_FloatItemScope old) =>
-      labelPlacement != old.labelPlacement || token != old.token;
 }
 
 /// A button that floats above the page — the round action button that sits in
@@ -575,10 +572,8 @@ class FloatButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final scope = _FloatItemScope.maybeOf(context);
     final defaults = ConfigProvider.defaultsOf<FloatButtonDefaults>(context);
     final r = (token ??
-            scope?.token ??
             ConfigProvider.componentOf<FloatButtonToken>(context) ??
             const FloatButtonToken())
         ._resolve(t);
@@ -598,17 +593,6 @@ class FloatButton extends StatelessWidget {
       borderRadiusLG: radius,
     );
 
-    final close = scope?.close;
-    final handler = onPressed == null
-        ? null
-        : () {
-            onPressed!();
-            // A group folds itself away once one of its actions has been
-            // taken; leaving it open would hide the result of the very thing
-            // just tapped.
-            close?.call();
-          };
-
     Widget button = SizedBox(
       width: child == null ? r.size : null,
       height: r.size,
@@ -618,7 +602,7 @@ class FloatButton extends StatelessWidget {
         color: color ?? defaults?.color ?? ButtonColor.defaultColor,
         disabled: disabled ?? defaults?.disabled,
         icon: icon,
-        onPressed: handler,
+        onPressed: onPressed,
         token: pinned,
         child: child,
       ),
@@ -637,7 +621,6 @@ class FloatButton extends StatelessWidget {
     if (label != null) {
       button = _Labelled(
         placement: labelPlacement ??
-            scope?.labelPlacement ??
             defaults?.labelPlacement ??
             FloatButtonLabelPlacement.left,
         size: r.size,
@@ -676,28 +659,23 @@ class _Labelled extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chip = Container(
-      padding: token.labelPadding,
-      decoration: BoxDecoration(
-        color: token.labelBackgroundColor,
-        borderRadius: BorderRadius.circular(token.labelBorderRadius),
-        boxShadow: token.shadow,
+    // The kit dresses the text and stops there. A caption that needs a plate
+    // behind it to stay legible is a caption wrapped in one by its caller —
+    // which is the whole point of [FloatButton.label] being a widget.
+    final chip = DefaultTextStyle(
+      style: TextStyle(
+        color: token.labelTextColor,
+        fontSize: token.labelFontSize,
+        fontFamily: themeToken.fontFamily,
+        fontFamilyFallback: themeToken.fontFamilyFallback,
+        fontWeight: themeToken.fontWeight,
+        decoration: TextDecoration.none,
+        height: 1,
+        leadingDistribution: TextLeadingDistribution.even,
       ),
-      child: DefaultTextStyle(
-        style: TextStyle(
-          color: token.labelTextColor,
-          fontSize: token.labelFontSize,
-          fontFamily: themeToken.fontFamily,
-          fontFamilyFallback: themeToken.fontFamilyFallback,
-          fontWeight: themeToken.fontWeight,
-          decoration: TextDecoration.none,
-          height: 1,
-          leadingDistribution: TextLeadingDistribution.even,
-        ),
-        maxLines: 1,
-        softWrap: false,
-        child: label,
-      ),
+      maxLines: 1,
+      softWrap: false,
+      child: label,
     );
 
     // The chip is aligned to the edge it should leave from and then pushed
@@ -745,6 +723,119 @@ class _Labelled extends StatelessWidget {
   }
 }
 
+/// One action inside a [FloatButtonGroup].
+///
+/// Data, not a widget. The group has to size and place its items to lay them
+/// out at all, and a plain object is also the safer home for something held
+/// outside a build — a widget kept in a field can close over a context that
+/// has since gone stale.
+///
+/// [T] is whatever you use to tell one action from another. An enum makes the
+/// `switch` in [FloatButtonGroup.onItemTap] exhaustive, so a forgotten case is
+/// a compile error rather than a silent nothing.
+@immutable
+class FloatButtonItem<T> {
+  /// Creates a [FloatButtonItem].
+  const FloatButtonItem({
+    this.key,
+    this.value,
+    this.label,
+    this.icon,
+    this.child,
+    this.color,
+    this.disabled,
+    this.onTap,
+  });
+
+  /// A key fastened to this item in the widget tree.
+  ///
+  /// This is the tree's kind of identity, not the group's: a `GlobalKey` here
+  /// lets a `Tour` step aim at the item. Note that items exist only while the
+  /// group is open, so a tour has to open the group before it can point at
+  /// one — [FloatButtonController] is how.
+  final Key? key;
+
+  /// What this item reports through [FloatButtonGroup.onItemTap].
+  final T? value;
+
+  /// The caption hung beside the button.
+  ///
+  /// A string rather than a widget: an item is data. Wrap the whole item
+  /// through [FloatButtonGroup.itemBuilder] when it needs to be more.
+  final String? label;
+
+  /// The mark on the button.
+  final Widget? icon;
+
+  /// Content of your own, in place of [icon].
+  final Widget? child;
+
+  /// Which palette this item draws from, where it differs from the group's —
+  /// a destructive action asking to be red among neutral ones.
+  final ButtonColor? color;
+
+  /// Greys this item out and blocks taps.
+  final bool? disabled;
+
+  /// Called when this item is tapped. [FloatButtonGroup.onItemTap] fires too.
+  final VoidCallback? onTap;
+}
+
+/// Wraps one built item, e.g. to put it in a `Tooltip` or a `Badge`.
+///
+/// The [child] is the finished float button; return it inside whatever you
+/// like. A wrapper that changes the item's size is worth knowing about: the
+/// layout spaces items by the size in the token, so something much larger will
+/// crowd its neighbours.
+typedef FloatButtonItemBuilder<T> = Widget Function(
+  BuildContext context,
+  FloatButtonItem<T> item,
+  Widget child,
+);
+
+/// Opens and closes a [FloatButtonGroup] from outside the build.
+///
+/// Reach for this when the group has to answer to something that is not a
+/// widget — a tour step that needs the items on screen before it can point at
+/// one, or a business event that should put the menu away.
+///
+/// ```dart
+/// final fab = FloatButtonController();
+/// ...
+/// FloatButtonGroup(controller: fab, items: items)
+/// ...
+/// fab.open();
+/// ```
+///
+/// A group takes either this or [FloatButtonGroup.open], never both: two
+/// owners of one truth is a bug that surfaces late.
+class FloatButtonController extends ChangeNotifier {
+  /// Creates a [FloatButtonController].
+  FloatButtonController({bool open = false}) : _open = open;
+
+  bool _open;
+
+  /// Whether the group is open.
+  bool get isOpen => _open;
+
+  /// Spreads the items.
+  void open() {
+    if (_open) return;
+    _open = true;
+    notifyListeners();
+  }
+
+  /// Folds them away.
+  void close() {
+    if (!_open) return;
+    _open = false;
+    notifyListeners();
+  }
+
+  /// Opens a closed group, closes an open one.
+  void toggle() => _open ? close() : open();
+}
+
 /// A [FloatButton] that opens into several.
 ///
 /// The trigger renders where you put it. The items are painted into the
@@ -753,41 +844,47 @@ class _Labelled extends StatelessWidget {
 /// side without being clipped.
 ///
 /// ```dart
-/// FloatButtonGroup(
+/// FloatButtonGroup<UserAction>(
 ///   layout: const FloatButtonLayout.fan(),
-///   children: [
-///     FloatButton(icon: const SearchIcon(), label: const Text('Search')),
-///     FloatButton(icon: const UserIcon(), label: const Text('Profile')),
+///   items: const [
+///     FloatButtonItem(value: UserAction.upload, label: 'Upload'),
+///     FloatButtonItem(value: UserAction.remove, label: 'Delete'),
 ///   ],
+///   onItemTap: (value) => handle(value),
 /// )
 /// ```
 ///
 /// The direction the items travel is read off the trigger's place on screen:
 /// a group parked at the bottom right opens up and to the left. Nothing needs
 /// to be told twice.
-class FloatButtonGroup extends StatefulWidget {
+class FloatButtonGroup<T> extends StatefulWidget {
   /// Creates a [FloatButtonGroup].
   const FloatButtonGroup({
     super.key,
-    required this.children,
+    required this.items,
     this.layout,
     this.icon,
     this.color,
     this.shape,
     this.trigger,
+    this.controller,
     this.open,
     this.onOpenChange,
+    this.onItemTap,
+    this.itemBuilder,
+    this.dismissible,
+    this.closeOnSelect,
     this.labelPlacement,
     this.semanticLabel,
     this.token,
-  });
+  }) : assert(
+          controller == null || open == null,
+          'Give a FloatButtonGroup a controller or an open flag, not both: '
+          'two owners of one truth disagree sooner or later.',
+        );
 
-  /// The items, in the order they spread.
-  ///
-  /// A [Widget] rather than a [FloatButton] on purpose: a button wrapped in a
-  /// `Badge` or a `Tooltip` is still an item, and the group tells its items
-  /// what they need through the tree rather than by inspecting their type.
-  final List<Widget> children;
+  /// The actions, in the order they spread.
+  final List<FloatButtonItem<T>> items;
 
   /// How the items spread. Defaults to a column.
   final FloatButtonLayout? layout;
@@ -795,20 +892,38 @@ class FloatButtonGroup extends StatefulWidget {
   /// The mark on the trigger. Defaults to a plus that turns into a cross.
   final Widget? icon;
 
-  /// Which palette the trigger draws from.
+  /// Which palette the trigger and its items draw from. An item may differ.
   final ButtonColor? color;
 
-  /// Round (the default) or square.
+  /// Round (the default) or square, for the whole group.
   final ButtonShape? shape;
 
   /// What opens the group. Defaults to a tap.
   final FloatButtonTrigger? trigger;
 
-  /// Drives the group from outside. Null leaves it to manage itself.
+  /// Drives the group from outside the build. Excludes [open].
+  final FloatButtonController? controller;
+
+  /// Drives the group from the widget tree. Excludes [controller].
   final bool? open;
 
   /// Called whenever the group wants to open or close.
   final ValueChanged<bool>? onOpenChange;
+
+  /// Called with the tapped item's [FloatButtonItem.value].
+  final ValueChanged<T?>? onItemTap;
+
+  /// Wraps each built item — a `Tooltip`, a `Badge`, anything.
+  final FloatButtonItemBuilder<T>? itemBuilder;
+
+  /// Whether a tap on open ground closes the group. Defaults to yes.
+  ///
+  /// Escape closes it either way. A menu with no way out from the keyboard is
+  /// a trap, and no setting should be able to make one.
+  final bool? dismissible;
+
+  /// Whether tapping an item closes the group. Defaults to yes.
+  final bool? closeOnSelect;
 
   /// Which side the items' labels hang on. Null lets the layout decide.
   final FloatButtonLabelPlacement? labelPlacement;
@@ -820,27 +935,43 @@ class FloatButtonGroup extends StatefulWidget {
   final FloatButtonToken? token;
 
   @override
-  State<FloatButtonGroup> createState() => _FloatButtonGroupState();
+  State<FloatButtonGroup<T>> createState() => _FloatButtonGroupState<T>();
 }
 
-class _FloatButtonGroupState extends State<FloatButtonGroup>
+class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     with SingleTickerProviderStateMixin {
   final GlobalKey _triggerKey = GlobalKey();
   AnimationController? _controller;
   OverlayEntry? _entry;
   bool _openSelf = false;
-
-  /// Where the trigger's centre sits in the overlay, and which way is away
-  /// from the nearest corner. Read once per opening: a float button is
-  /// parked, and asking every frame would cost more than it is worth.
-  Offset _origin = Offset.zero;
-  Offset _away = const Offset(-1, -1);
-
   Timer? _hoverClose;
   ScrollPosition? _scrolled;
   VoidCallback? _scrollListener;
+  bool _remeasuring = false;
 
-  bool get _isOpen => widget.open ?? _openSelf;
+  /// Where the trigger's centre sits in the overlay, and which way is away
+  /// from the nearest corner.
+  Offset _origin = Offset.zero;
+  Offset _away = const Offset(-1, -1);
+
+  bool get _isOpen => widget.controller?.isOpen ?? widget.open ?? _openSelf;
+
+  /// Whether the group settles its own state, or reports and waits.
+  bool get _governed => widget.controller != null || widget.open != null;
+
+  FloatButtonDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<FloatButtonDefaults>(context);
+
+  FloatButtonLayout get _layout =>
+      widget.layout ?? _defaults?.layout ?? const FloatButtonLayout.vertical();
+
+  FloatButtonTrigger get _trigger =>
+      widget.trigger ?? _defaults?.trigger ?? FloatButtonTrigger.click;
+
+  bool get _dismissible => widget.dismissible ?? _defaults?.dismissible ?? true;
+
+  bool get _closeOnSelect =>
+      widget.closeOnSelect ?? _defaults?.closeOnSelect ?? true;
 
   void _cancelClose() {
     _hoverClose?.cancel();
@@ -854,19 +985,11 @@ class _FloatButtonGroupState extends State<FloatButtonGroup>
     });
   }
 
-  FloatButtonDefaults? get _defaults =>
-      ConfigProvider.defaultsOf<FloatButtonDefaults>(context);
-
-  FloatButtonLayout get _layout =>
-      widget.layout ?? _defaults?.layout ?? const FloatButtonLayout.vertical();
-
-  FloatButtonTrigger get _trigger =>
-      widget.trigger ?? _defaults?.trigger ?? FloatButtonTrigger.click;
-
   @override
   void initState() {
     super.initState();
-    if (widget.open ?? false) {
+    widget.controller?.addListener(_obeyController);
+    if (_isOpen) {
       // Born open. There is no previous state for didUpdateWidget to compare
       // against, so without this the overlay would wait for a tap that the
       // caller has already said is unnecessary.
@@ -877,8 +1000,12 @@ class _FloatButtonGroupState extends State<FloatButtonGroup>
   }
 
   @override
-  void didUpdateWidget(FloatButtonGroup old) {
+  void didUpdateWidget(FloatButtonGroup<T> old) {
     super.didUpdateWidget(old);
+    if (widget.controller != old.controller) {
+      old.controller?.removeListener(_obeyController);
+      widget.controller?.addListener(_obeyController);
+    }
     if (widget.open != null && widget.open != old.open) {
       // didUpdateWidget runs inside a build, and an overlay entry may not be
       // mounted while the framework has the tree locked.
@@ -886,14 +1013,28 @@ class _FloatButtonGroupState extends State<FloatButtonGroup>
         if (mounted) _apply(widget.open!);
       });
     } else if (_entry != null) {
-      _entry!.markNeedsBuild();
+      // Deferred for the same reason the line above is: didUpdateWidget runs
+      // inside a build, and an overlay entry may not be marked dirty while
+      // the framework has the tree locked. A page that rebuilds under an open
+      // group — reporting which item was tapped, say — comes through here.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _entry?.markNeedsBuild();
+      });
     }
+  }
+
+  void _obeyController() {
+    if (!mounted) return;
+    setState(() {});
+    _apply(widget.controller!.isOpen);
   }
 
   @override
   void dispose() {
     _cancelClose();
     _unwatchScroll();
+    HardwareKeyboard.instance.removeHandler(_onKey);
+    widget.controller?.removeListener(_obeyController);
     _entry?.remove();
     _entry = null;
     _controller?.dispose();
@@ -903,12 +1044,15 @@ class _FloatButtonGroupState extends State<FloatButtonGroup>
   void _ask(bool next) {
     if (next == _isOpen) return;
     widget.onOpenChange?.call(next);
-    // An uncontrolled group answers to itself; a controlled one waits to be
-    // told, so that its parent stays the single account of whether it is open.
-    if (widget.open == null) {
-      setState(() => _openSelf = next);
-      _apply(next);
+    if (widget.controller != null) {
+      next ? widget.controller!.open() : widget.controller!.close();
+      return;
     }
+    // A group with an owner reports and waits, so that the owner stays the
+    // single account of whether it is open.
+    if (_governed) return;
+    setState(() => _openSelf = next);
+    _apply(next);
   }
 
   void _apply(bool next) {
@@ -916,20 +1060,18 @@ class _FloatButtonGroupState extends State<FloatButtonGroup>
       _measure();
       _controller ??= AnimationController(
         vsync: this,
-        duration: (widget.token ??
-                ConfigProvider.componentOf<FloatButtonToken>(context) ??
-                const FloatButtonToken())
-            ._resolve(context.softToken)
-            .motionDuration,
+        duration: _resolved().motionDuration,
       );
       if (_entry == null) {
         _entry = OverlayEntry(builder: _buildLayer);
         Overlay.of(context).insert(_entry!);
       }
       _watchScroll();
+      HardwareKeyboard.instance.addHandler(_onKey);
       _controller!.forward();
     } else {
       _unwatchScroll();
+      HardwareKeyboard.instance.removeHandler(_onKey);
       _controller?.reverse().whenComplete(() {
         if (!mounted) return;
         // A second opening may have overtaken this closing.
@@ -941,18 +1083,50 @@ class _FloatButtonGroupState extends State<FloatButtonGroup>
     }
   }
 
-  /// Folds the group away when the page beneath it scrolls.
+  _ResolvedFloatButtonToken _resolved() => (widget.token ??
+          ConfigProvider.componentOf<FloatButtonToken>(context) ??
+          const FloatButtonToken())
+      ._resolve(context.softToken);
+
+  /// Closes the group on Escape, whatever [FloatButtonGroup.dismissible] says.
   ///
-  /// The geometry is read once per opening — a float button is parked, and
-  /// asking every frame would cost more than it is worth. Scrolling is the one
-  /// thing that invalidates it, and the kit answers it the same way a popover
-  /// does: by letting go.
+  /// Read straight off the keyboard rather than through a focus node: the
+  /// layer lives in an overlay and never takes focus from the route that owns
+  /// it, so a `Focus` here would hear nothing. A menu with no way out from the
+  /// keyboard is a trap, and no setting may make one.
+  bool _onKey(KeyEvent event) {
+    if (!_isOpen ||
+        event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.escape) {
+      return false;
+    }
+    _ask(false);
+    return true;
+  }
+
+  /// Follows the page when it scrolls under an open group.
+  ///
+  /// The geometry is read once per opening, so something has to answer a
+  /// scroll. Closing would be the cheap answer, and it is the wrong one: a
+  /// group told `dismissible: false` may not close itself. So it re-aims.
   void _watchScroll() {
     _unwatchScroll();
     final position = Scrollable.maybeOf(context)?.position;
     if (position == null) return;
     _scrolled = position;
-    _scrollListener = () => _ask(false);
+    _scrollListener = () {
+      if (_entry == null || _remeasuring) return;
+      // A scroll notification arrives before the frame it belongs to has been
+      // laid out, so measuring here would read the position the trigger is
+      // leaving rather than the one it is going to. Wait for the frame.
+      _remeasuring = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _remeasuring = false;
+        if (!mounted || _entry == null) return;
+        _measure();
+        _entry!.markNeedsBuild();
+      });
+    };
     position.addListener(_scrollListener!);
   }
 
@@ -979,38 +1153,67 @@ class _FloatButtonGroupState extends State<FloatButtonGroup>
     );
   }
 
-  Widget _buildLayer(BuildContext overlayContext) {
-    final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<FloatButtonToken>(context) ??
-            const FloatButtonToken())
-        ._resolve(t);
-    final layout = _layout;
-    final count = widget.children.length;
-    final item = Size.square(r.size);
+  void _tapped(FloatButtonItem<T> item) {
+    item.onTap?.call();
+    widget.onItemTap?.call(item.value);
+    // A group folds itself away once one of its actions has been taken;
+    // leaving it open would hide the result of the very thing just tapped.
+    if (_closeOnSelect) _ask(false);
+  }
 
+  Widget _buildItem(
+    FloatButtonItem<T> item,
+    FloatButtonLabelPlacement placement,
+  ) {
+    Widget built = FloatButton(
+      icon: item.icon,
+      label: item.label == null ? null : Text(item.label!),
+      labelPlacement: placement,
+      color: item.color ?? widget.color,
+      shape: widget.shape,
+      disabled: item.disabled,
+      semanticLabel: item.label,
+      token: widget.token,
+      onPressed: () => _tapped(item),
+      child: item.child,
+    );
+    if (widget.itemBuilder != null) {
+      built = widget.itemBuilder!(context, item, built);
+    }
+    // Outermost, so a Tour aiming at this key sees the whole item.
+    return item.key == null ? built : KeyedSubtree(key: item.key, child: built);
+  }
+
+  Widget _buildLayer(BuildContext overlayContext) {
+    final r = _resolved();
+    final layout = _layout;
+    final count = widget.items.length;
+    final item = Size.square(r.size);
     final asked = widget.labelPlacement ??
         _defaults?.labelPlacement ??
         FloatButtonLabelPlacement.auto;
 
-    final items = <Widget>[
+    final children = <Widget>[
       for (var i = 0; i < count; i++)
-        _FloatItemScope(
-          labelPlacement: asked == FloatButtonLabelPlacement.auto
-              ? layout.labelPlacementFor(i, count, item, _away, r.gap)
-              : asked,
-          token: widget.token,
-          close: () => _ask(false),
-          child: _trigger == FloatButtonTrigger.hover
-              ? MouseRegion(
-                  // The pointer has to cross open ground to reach an item, so
-                  // leaving the trigger only *schedules* a close; arriving
-                  // anywhere in the group calls it off.
-                  onEnter: (_) => _cancelClose(),
-                  onExit: (_) => _scheduleClose(),
-                  child: widget.children[i],
-                )
-              : widget.children[i],
+        Builder(
+          builder: (_) {
+            final built = _buildItem(
+              widget.items[i],
+              asked == FloatButtonLabelPlacement.auto
+                  ? layout.labelPlacementFor(i, count, item, _away, r.gap)
+                  : asked,
+            );
+            return _trigger == FloatButtonTrigger.hover
+                ? MouseRegion(
+                    // The pointer has to cross open ground to reach an item,
+                    // so leaving the trigger only *schedules* a close;
+                    // arriving anywhere in the group calls it off.
+                    onEnter: (_) => _cancelClose(),
+                    onExit: (_) => _scheduleClose(),
+                    child: built,
+                  )
+                : built;
+          },
         ),
     ];
 
@@ -1023,18 +1226,21 @@ class _FloatButtonGroupState extends State<FloatButtonGroup>
         away: _away,
         item: item,
         gap: r.gap,
-        curve: t.motionEaseOut,
+        curve: r.curve,
       ),
-      children: items,
+      children: children,
     );
 
     return Stack(
       children: [
         if (_trigger == FloatButtonTrigger.click)
           Positioned.fill(
+            // The ground stays covered even when it cannot be tapped
+            // through: an open menu should not have the page acting behind
+            // it. Only whether the tap *closes* is up to dismissible.
             child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () => _ask(false),
+              behavior: HitTestBehavior.opaque,
+              onTap: _dismissible ? () => _ask(false) : () {},
             ),
           ),
         Positioned.fill(child: flow),

@@ -47,12 +47,13 @@ and lets a label hang off the side without being clipped.
 ## Groups
 
 ```dart
-FloatButtonGroup(
+FloatButtonGroup<UserAction>(
   layout: const FloatButtonLayout.fan(),
-  children: [
-    FloatButton(icon: const Icon(Icons.edit), label: const Text('Edit')),
-    FloatButton(icon: const Icon(Icons.share), label: const Text('Share')),
+  items: const [
+    FloatButtonItem(value: UserAction.edit, label: 'Edit', icon: Icon(Icons.edit)),
+    FloatButtonItem(value: UserAction.share, label: 'Share', icon: Icon(Icons.share)),
   ],
+  onItemTap: (value) => handle(value),
 )
 ```
 
@@ -60,22 +61,44 @@ The direction the items travel is read off the trigger's place on screen: a
 group parked at the bottom right opens up and to the left, one at the top left
 opens down and to the right. Nothing needs to be told twice.
 
-`children` is a `List<Widget>`, not a `List<FloatButton>`, on purpose. A group
-tells its items what they need through the tree rather than by inspecting their
-type, so wrapping one changes nothing:
+### Items are data
+
+`FloatButtonItem` is a plain object, not a widget. The group has to size and
+place its items to lay them out at all, and an object is the safer home for
+something held outside a build — a widget kept in a field can close over a
+context that has since gone stale.
+
+| Field | |
+| --- | --- |
+| `value` | What the item reports through `onItemTap`. An enum makes the `switch` exhaustive |
+| `key` | A key fastened to the item in the tree — a `GlobalKey` here lets a `Tour` aim at it |
+| `label` | The caption, as a string. The kit styles it |
+| `icon`, `child` | The mark, or content of your own in its place |
+| `color` | Where this item differs from its group — a destructive action asking to be red |
+| `disabled` | Greys it out |
+| `onTap` | Fires alongside `onItemTap` |
+
+`key` and `value` are two kinds of identity and deliberately separate: `key` is
+the tree's (which element is this?), `value` is yours (which action is this?).
+Note that items exist only while the group is open, so a tour step aiming at
+one has to open the group first — which is what the controller is for.
+
+### Wrapping an item
+
+There is no `badge` prop and no `tooltip` prop. One hook covers every wrapper
+there will ever be:
 
 ```dart
-children: [
-  Badge(count: 5, child: FloatButton(icon: const Icon(Icons.mail), onPressed: open)),
-  Tooltip(message: 'Admins only', child: FloatButton(icon: const Icon(Icons.key))),
-]
+itemBuilder: (context, item, child) => Tooltip(
+  message: Text(item.label ?? ''),
+  child: child,
+),
 ```
 
-There is no `badge` prop, and no `tooltip` prop, because `Badge` and `Tooltip`
-are already widgets that wrap.
-
-An item folds the group away once its `onPressed` has run — a menu left open
-would hide the result of the very thing just tapped.
+`child` is the finished float button; return it inside whatever you like. A
+wrapper that changes the item's size is worth knowing about: the layout spaces
+items by the size in the token, so something much larger will crowd its
+neighbours.
 
 ## Layouts
 
@@ -101,6 +124,17 @@ no new number does not earn a class of its own.
 o'clock. Left null it aims away from the nearest corner, which is right nearly
 always — a fan that opened off the edge of the screen would be no use.
 
+### How far out
+
+`radius` left null is worked out from the number of items. The chord between
+two neighbouring spokes is `2r·sin(step/2)`, so the more items share a sweep,
+the further out they must sit to keep from touching; the kit picks the distance
+that leaves a gap between them. A fixed default cannot do this — an earlier one
+put four items eleven pixels *inside* each other.
+
+Naming a radius yourself is taken as given, crowding and all. Sometimes an
+overlap is the look you want.
+
 ### Scatter
 
 `jitter` runs from 0 (a drawn arc) to 1, and `seed` chooses which scatter you
@@ -113,9 +147,17 @@ FloatButtonLayout.fan(jitter: 0.4, seed: 7)
 Two things it deliberately is not. It is **not random**: the same seed gives
 the same arrangement on every open, in every process and in every test run. A
 menu whose buttons landed somewhere new each time would defeat the muscle
-memory that makes a menu worth having, and would take its tests with it. And it
-is **bounded** by half the gap, so however high it goes, two items still cannot
-collide.
+memory that makes a menu worth having, and would take its tests with it.
+
+And it **cannot make items collide** — but the bound comes from the arc, not
+from anywhere else. Raising `jitter` widens the derived radius, so the scatter
+buys its own room, and the stray is then held to half the daylight that
+actually exists between neighbours. A cap taken from the gap instead, as an
+earlier version had, held items to a few pixels nobody could see: bounded is
+not supposed to mean invisible.
+
+Give a `radius` of your own and the scatter works within whatever room that
+leaves.
 
 ## Labels
 
@@ -127,6 +169,23 @@ FloatButton(
   icon: const Icon(Icons.description),
   label: const Text('Document'),
   onPressed: newDoc,
+)
+```
+
+The kit dresses the text — colour, size, the theme's face — and stops there.
+There is no plate behind it, because a caption that needs one is a caption you
+wrap yourself, which is what `label` being a widget is for:
+
+```dart
+label: DecoratedBox(
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(6),
+  ),
+  child: const Padding(
+    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    child: Text('Document'),
+  ),
 )
 ```
 
@@ -148,12 +207,34 @@ about to:
 | Prop | Meaning |
 | --- | --- |
 | `trigger` | `FloatButtonTrigger.click` (the default) or `.hover` |
-| `open` | Drives the group from outside; null lets it manage itself |
+| `open` | Drives the group from the widget tree; null lets it manage itself |
+| `controller` | Drives it from outside the build. Excludes `open` |
 | `onOpenChange` | Called whenever the group wants to open or close |
+| `dismissible` | Whether a tap on open ground closes it. Default yes |
+| `closeOnSelect` | Whether tapping an item closes it. Default yes |
 
-A controlled group reports and waits: it does not open until `open` says so, so
-the parent stays the single account of whether it is open. A group born with
-`open: true` opens on its first frame.
+A controlled group reports and waits: it does not open until `open` or the
+controller says so, so the caller stays the single account of whether it is
+open. A group born open opens on its first frame. Passing both `open` and a
+`controller` is an assertion error — two owners of one truth disagree sooner
+or later.
+
+`dismissible` and `closeOnSelect` are different questions: one is about a tap
+outside, the other about a tap on an item. A toolbar that stays up while you
+work is `closeOnSelect: false`.
+
+**Escape always closes the group**, whatever `dismissible` says. A menu with no
+way out from the keyboard is a trap, and no setting may make one. The key is
+read straight off the keyboard rather than through a focus node, because a
+layer in an overlay never takes focus from the route that owns it.
+
+```dart
+final fab = FloatButtonController();
+...
+FloatButtonGroup<UserAction>(controller: fab, items: items)
+...
+fab.open();   // and close(), and toggle()
+```
 
 ## Tokens
 
@@ -161,11 +242,12 @@ the parent stays the single account of whether it is open. A group born with
 | --- | --- |
 | `size` | `controlHeightLG + sizeXS` — diameter of a round button, height of a square one |
 | `gap` | `sizeSM` — between two items |
-| `labelGap` | `sizeXS` — between a button and its label |
-| `labelPadding`, `labelBackgroundColor`, `labelTextColor`, `labelFontSize`, `labelBorderRadius` | the label's chip |
+| `labelGap` | `sizeXXS` — between a button and its label |
+| `labelTextColor`, `labelFontSize` | the label's text |
 | `borderRadius` | `borderRadiusLG`, for a square button |
 | `shadow` | `boxShadowSecondary` |
 | `motionDuration` | `motionDurationMid` |
+| `curve` | `motionEaseOut` — the shape of the opening |
 
 ```dart
 ConfigProvider(
@@ -192,3 +274,11 @@ anything out again.
 *before* measuring its children, so it can never shrink to fit them. That costs
 nothing here because the flow fills the overlay, which is also why labels can
 overhang freely.
+
+## Scrolling
+
+The trigger's position is read once per opening rather than every frame, and a
+scroll under an open group is what makes that stale. The group re-aims itself
+instead of closing: closing would be the cheap answer, and it contradicts
+`dismissible: false`. The re-measure waits for the frame the scroll belongs to,
+since a scroll notification arrives before that frame has been laid out.

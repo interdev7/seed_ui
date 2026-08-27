@@ -13,12 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   page, alone or opening into several.
 
   ```dart
-  FloatButtonGroup(
+  FloatButtonGroup<UserAction>(
     layout: const FloatButtonLayout.fan(jitter: 0.4, seed: 7),
-    children: [
-      FloatButton(icon: const Icon(Icons.edit), label: const Text('Edit')),
-      FloatButton(icon: const Icon(Icons.share), label: const Text('Share')),
+    items: const [
+      FloatButtonItem(value: UserAction.edit, label: 'Edit'),
+      FloatButtonItem(value: UserAction.share, label: 'Share'),
     ],
+    onItemTap: (value) => handle(value),
   )
   ```
 
@@ -39,13 +40,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   along its own spoke on a fan, so labels fan out with the buttons instead of
   piling up on one side.
 
-  `fan(jitter:)` scatters the arc without being random: the same `seed` gives
-  the same arrangement on every open and in every test run, and the stray is
-  capped at half the gap so two items cannot collide.
+  A fan's radius is worked out from how many items share the sweep — the chord
+  between neighbouring spokes is `2r·sin(step/2)` — so they stand clear of one
+  another however many there are. `fan(jitter:)` scatters that arc without
+  being random: the same `seed` gives the same arrangement on every open and in
+  every test run, raising it widens the radius so the scatter has room, and the
+  stray is held to half the daylight between neighbours.
 
-  `children` is a `List<Widget>`, so a button wrapped in a `Badge` or a
-  `Tooltip` is still an item of the group — there is no `badge` prop, because
-  `Badge` is already a widget that wraps.
+  Items are data, so the group can size and place them. `value` is yours (which
+  action is this?) and `key` is the tree's (which element?) — a `GlobalKey`
+  there lets a `Tour` aim at an item. `onItemTap` fires with the value beside
+  the item's own `onTap`, as `Dropdown` already does.
+
+  One `itemBuilder` hook covers every wrapper, so there is no `badge` prop and
+  no `tooltip` prop:
+
+  ```dart
+  itemBuilder: (context, item, child) =>
+      Tooltip(message: Text(item.label ?? ''), child: child),
+  ```
+
+  `dismissible` and `closeOnSelect` answer two different questions — a tap
+  outside, and a tap on an item. **Escape closes the group whatever they say**:
+  a menu with no way out from the keyboard is a trap, and no setting may make
+  one. `FloatButtonController` drives a group from outside the build, for a
+  tour step that needs the items on screen before it can point at one; passing
+  both a controller and `open` is an assertion error.
+
+  A scroll under an open group re-aims it rather than closing it — closing
+  would contradict `dismissible: false`.
+
+  A label wears the kit's text style and nothing else — no plate behind it,
+  because a caption that needs one is a caption you wrap yourself. The opening
+  is shaped by `FloatButtonToken.curve`.
 
   Positions are settled by a `Flow` delegate during paint, so a frame of the
   opening animation moves every item without laying anything out again.

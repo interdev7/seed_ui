@@ -89,11 +89,14 @@ ExplicitBox
 ExplicitHeight
 ExplicitWidth
 FloatButton
+FloatButtonController
 FloatButtonCustom
 FloatButtonDefaults
 FloatButtonFan
 FloatButtonGrid
 FloatButtonGroup
+FloatButtonItem
+FloatButtonItemBuilder
 FloatButtonLabelPlacement
 FloatButtonLayout
 FloatButtonLine

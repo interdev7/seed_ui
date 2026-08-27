@@ -37,6 +37,7 @@ import '../components/feedback/progress.dart';
 import '../components/feedback/result.dart';
 import '../components/feedback/spin.dart';
 import '../components/general/button.dart';
+import '../components/general/float_button.dart';
 import '../components/navigation/dropdown.dart';
 import '../components/navigation/pagination.dart';
 
@@ -57,6 +58,7 @@ class ComponentsConfig {
     this.drawer,
     this.dropdown,
     this.empty,
+    this.floatButton,
     this.input,
     this.inputNumber,
     this.listy,
@@ -113,6 +115,9 @@ class ComponentsConfig {
 
   /// Overrides for [DatePicker].
   final DatePickerToken? datePicker;
+
+  /// Overrides applied to every [FloatButton] under this provider.
+  final FloatButtonToken? floatButton;
 
   /// Overrides applied to every [Drawer] under this provider.
   final DrawerToken? drawer;
@@ -226,6 +231,7 @@ class ComponentsConfig {
         drawer: other.drawer ?? drawer,
         dropdown: other.dropdown ?? dropdown,
         empty: other.empty ?? empty,
+        floatButton: other.floatButton ?? floatButton,
         input: other.input ?? input,
         inputNumber: other.inputNumber ?? inputNumber,
         listy: other.listy ?? listy,
@@ -271,6 +277,9 @@ class ComponentsConfig {
     if (T == DrawerToken && drawer != null) return drawer as T;
     if (T == DropdownToken && dropdown != null) return dropdown as T;
     if (T == EmptyToken && empty != null) return empty as T;
+    if (T == FloatButtonToken && floatButton != null) {
+      return floatButton as T;
+    }
     if (T == InputToken && input != null) return input as T;
     if (T == InputNumberToken && inputNumber != null) return inputNumber as T;
     if (T == ListyToken && listy != null) return listy as T;

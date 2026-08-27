@@ -29,6 +29,7 @@ import '../components/feedback/alert.dart';
 import '../components/feedback/popconfirm.dart';
 import '../components/feedback/progress.dart';
 import '../components/general/button.dart';
+import '../components/general/float_button.dart';
 import '../components/navigation/dropdown.dart';
 import '../components/navigation/pagination.dart';
 
@@ -84,6 +85,7 @@ class ComponentDefaults {
     this.datePicker,
     this.dropdown,
     this.empty,
+    this.floatButton,
     this.input,
     this.popconfirm,
     this.popover,
@@ -166,6 +168,9 @@ class ComponentDefaults {
   /// Applied to every [Empty] under this provider.
   final EmptyDefaults? empty;
 
+  /// Props applied to every [FloatButton] and [FloatButtonGroup].
+  final FloatButtonDefaults? floatButton;
+
   /// Applied to every [Input] under this provider.
   final InputDefaults? input;
 
@@ -217,6 +222,7 @@ class ComponentDefaults {
         datePicker: other.datePicker ?? datePicker,
         dropdown: other.dropdown ?? dropdown,
         empty: other.empty ?? empty,
+        floatButton: other.floatButton ?? floatButton,
         input: other.input ?? input,
         select: other.select ?? select,
         popconfirm: other.popconfirm ?? popconfirm,
@@ -231,6 +237,9 @@ class ComponentDefaults {
   T? of<T>() {
     if (T == ButtonDefaults && button != null) return button as T;
     if (T == EmptyDefaults && empty != null) return empty as T;
+    if (T == FloatButtonDefaults && floatButton != null) {
+      return floatButton as T;
+    }
     if (T == InputDefaults && input != null) return input as T;
     if (T == SelectDefaults && select != null) return select as T;
     if (T == TagDefaults && tag != null) return tag as T;

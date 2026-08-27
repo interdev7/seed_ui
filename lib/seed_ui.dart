@@ -277,6 +277,20 @@ export 'src/components/general/button.dart'
         ButtonShape,
         ButtonToken,
         ButtonVariant;
+export 'src/components/general/float_button.dart'
+    show
+        FloatButton,
+        FloatButtonCustom,
+        FloatButtonDefaults,
+        FloatButtonFan,
+        FloatButtonGrid,
+        FloatButtonGroup,
+        FloatButtonLabelPlacement,
+        FloatButtonLayout,
+        FloatButtonLine,
+        FloatButtonPlacer,
+        FloatButtonToken,
+        FloatButtonTrigger;
 export 'src/components/navigation/dropdown.dart'
     show
         DropdownDefaults,

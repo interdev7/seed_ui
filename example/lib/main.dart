@@ -11,6 +11,7 @@ import 'components/feedback/alert_demo.dart';
 import 'components/data_display/avatar_demo.dart';
 import 'components/data_display/badge_demo.dart';
 import 'components/general/button_demo.dart';
+import 'components/general/float_button_demo.dart';
 import 'components/data_display/card_demo.dart';
 import 'components/data_entry/slider_demo.dart';
 import 'components/data_entry/date_picker_demo.dart';
@@ -399,6 +400,7 @@ final List<Demo> demos = [
   Demo('time-picker', 'TimePicker', (_) => const TimePickerDemo()),
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),
+  Demo('float-button', 'FloatButton', (_) => const FloatButtonDemo()),
   Demo('message', 'message', (_) => const MessageDemo()),
   Demo('notification', 'notification', (_) => const NotificationDemo()),
   Demo('modal', 'Modal', (_) => const ModalDemo()),

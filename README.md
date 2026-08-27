@@ -84,6 +84,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Badge](doc/data_display/badge.md)                | Corner count, dot or status — and `Ribbon` across a container's corner         |
 | [Countdown](doc/data_display/countdown.md)        | Time to a moment or since one, counting either way                             |
 | [Button](doc/general/button.md)                   | Pressable button with variant, color, size, shape, loading and danger states   |
+| [FloatButton](doc/general/float_button.md)        | A button that floats above the page, alone or opening into a fan, column or grid |
 | [Slider](doc/data_entry/slider.md)                | A groove with one handle or two, with marks, steps and a range          |
 | [TimePicker](doc/data_entry/time_picker.md)       | A time of day, typed or picked, with the format deciding the columns    |
 | [DatePicker](doc/data_entry/date_picker.md)       | A calendar date, typed or picked, with day, month and year panels       |

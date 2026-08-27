@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`FloatButton` and `FloatButtonGroup`** — the button that floats above the
+  page, alone or opening into several.
+
+  ```dart
+  FloatButtonGroup(
+    layout: const FloatButtonLayout.fan(jitter: 0.4, seed: 7),
+    children: [
+      FloatButton(icon: const Icon(Icons.edit), label: const Text('Edit')),
+      FloatButton(icon: const Icon(Icons.share), label: const Text('Share')),
+    ],
+  )
+  ```
+
+  It is a `Button` underneath with its control height pinned, so `ButtonColor`
+  and `ButtonShape` are the same types they are everywhere else rather than
+  look-alikes, and hover, press and disabled behave as they already do.
+
+  `FloatButtonLayout` is sealed, not an enum: `vertical`, `horizontal`, `fan`,
+  `grid` and `custom` do not all carry the same data, and an enum would have to
+  hang a fan's radius on the group, where it would be silently meaningless for
+  three variants out of five. A ring is not a sixth layout — it is
+  `fan(sweep: 2 * pi)`.
+
+  The direction of travel is read off the trigger's place on screen: a group
+  parked at the bottom right opens up and to the left. `label` is a widget hung
+  outside the button's own box, and `FloatButtonLabelPlacement.auto` works out
+  the side from the layout — sideways along a column, above a row, and outward
+  along its own spoke on a fan, so labels fan out with the buttons instead of
+  piling up on one side.
+
+  `fan(jitter:)` scatters the arc without being random: the same `seed` gives
+  the same arrangement on every open and in every test run, and the stray is
+  capped at half the gap so two items cannot collide.
+
+  `children` is a `List<Widget>`, so a button wrapped in a `Badge` or a
+  `Tooltip` is still an item of the group — there is no `badge` prop, because
+  `Badge` is already a widget that wraps.
+
+  Positions are settled by a `Flow` delegate during paint, so a frame of the
+  opening animation moves every item without laying anything out again.
+
 - **`ControlSize.width(180)`** — the other half of `box()`. It names a width
   and leaves the height to the preset scale, where `height()` names a height
   and leaves the width to the component. Every control that took a

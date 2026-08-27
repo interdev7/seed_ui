@@ -234,7 +234,7 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
               ),
               const SizedBox(height: 8),
               Text(
-                'fixed(28) and fixed(44) name a height; raw(200, 36) names '
+                'height(28) and height(44) name a height; box(200, 36) names '
                 'both. A bare measurement says nothing about type, so the '
                 'standard size stands.',
                 style: TextStyle(color: t.colorTextSecondary),

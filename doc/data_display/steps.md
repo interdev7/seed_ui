@@ -306,6 +306,7 @@ the width floor.
 | `SoftSize.middle` | 32 | The default |
 | `SoftSize.large` | 40 | The kit's third step |
 | `ControlSize.height(48)` | 48 | Follows the marker: ≤26 small, ≥38 large |
+| `ControlSize.width(48)` | 48 | The marker is a circle, so a width names that same diameter |
 
 ```dart
 Steps(size: SoftSize.large, items: items);

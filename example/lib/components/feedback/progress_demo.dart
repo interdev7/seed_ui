@@ -276,6 +276,10 @@ class _ProgressDemoState extends State<ProgressDemo> {
                 steps: const ProgressSteps(3),
                 size: const ControlSize.box(20, 30),
               ),
+              const SizedBox(height: 12),
+              // A width gives the bar a length of its own — without one it
+              // fills the row — while the thickness stays standard.
+              Progress(percent: _percent, size: const ControlSize.width(180)),
             ],
           ),
         ),

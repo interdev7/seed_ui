@@ -87,6 +87,7 @@ EmptySlot
 EmptyToken
 ExplicitBox
 ExplicitHeight
+ExplicitWidth
 GapPlacement
 HolderPainter
 Input

@@ -437,11 +437,22 @@ the line between them is what the preset actually feeds:
 
 | | Components | Why |
 | --- | --- | --- |
-| `ControlSize` | `Avatar`, `Spin`, `Steps`, `Progress`, `Select`, `TimePicker`, `DatePicker` | The size feeds the box alone — a diameter, or a height and a type size that can stay put |
-| `SoftSize` | `Button`, `Input` | The preset feeds four or five things at once: height, type size, padding, radius. A bare number would supply one and leave the rest guessing |
+| `ControlSize` | `Avatar`, `Spin`, `Steps`, `Progress`, `Input`, `InputNumber`, `Select`, `TimePicker`, `DatePicker` | The size feeds the box alone — a diameter, or a height and a type size that can stay put |
+| `SoftSize` | `Button` | The preset feeds four or five things at once: height, type size, padding, radius. A bare number would supply one and leave the rest guessing |
 
-Where `ControlSize` is taken, all three forms work: `SoftSize.large`,
-`ControlSize.height(36)` and `ControlSize.box(200, 36)`.
+Where `ControlSize` is taken, all four forms work:
+
+```dart
+size: SoftSize.large              // a preset, walking the theme's scale
+size: ControlSize.height(36)      // a height; the component keeps its width
+size: ControlSize.width(180)      // a width; the height keeps the preset
+size: ControlSize.box(180, 36)    // both
+```
+
+A circle has one measurement, so `height` and `width` mean the same thing to
+an `Avatar`, a `Spin` or a `Steps` marker: `ControlSize.width(56)` is the
+56-wide circle that `ControlSize.height(56)` is. The two names part company
+only where a control has two dimensions to name.
 
 ### Font weight
 

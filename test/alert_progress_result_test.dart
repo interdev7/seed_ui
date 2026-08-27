@@ -287,6 +287,32 @@ void main() {
     test('rejects an out-of-range percent', () {
       expect(() => Progress(percent: 1.5), throwsAssertionError);
     });
+
+    testWidgets('a width is the bar\'s length, the thickness standard',
+        (tester) async {
+      Future<Size> barAt(ControlSize? size) async {
+        await tester.pumpWidget(
+          _host(
+              SizedBox(width: 400, child: Progress(percent: 0.5, size: size))),
+        );
+        await tester.pumpAndSettle();
+        // Progress itself still fills the room it is offered; the bar drawn
+        // inside it is what takes a named length.
+        return tester.getSize(
+          find.descendant(
+            of: find.byType(Progress),
+            matching: find.byType(ClipRRect),
+          ),
+        );
+      }
+
+      final standard = await barAt(null);
+      final named = await barAt(const ControlSize.width(160));
+      expect(named.width, 160);
+      // The one number went to the length, so the bar keeps its usual
+      // thickness rather than turning 160 tall.
+      expect(named.height, standard.height);
+    });
   });
 
   group('Result', () {

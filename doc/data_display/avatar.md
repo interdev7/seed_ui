@@ -12,7 +12,8 @@ Avatar(
 
 ### Avatar Properties
 - `size`: A `ControlSize` — either a preset (`SoftSize.small`, `middle`,
-  `large`) or a diameter of your own (`ControlSize.height(64)`). One slot for
+  `large`) or a diameter of your own (`ControlSize.height(64)`, or `ControlSize.width(64)`
+  for the same circle). One slot for
   both: a diameter is the whole story for a circle, so there is nothing a
   preset carries that a number leaves unsaid. Follows `AvatarDefaults.size`,
   then `ConfigProvider.componentSize`, else `middle`.

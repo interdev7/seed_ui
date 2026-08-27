@@ -163,7 +163,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
               ),
               const SizedBox(height: 8),
               Text(
-                'fixed(28) and fixed(44) name a height; raw(240, 36) names '
+                'height(28) and height(44) name a height; box(240, 36) names '
                 'both. A preset carries a type size of its own — a bare '
                 'measurement names only itself, so the standard type stands.',
                 style: TextStyle(color: t.colorTextSecondary),

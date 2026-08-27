@@ -18,6 +18,12 @@ sealed class ControlSize {
   /// a spinner as well as for a field.
   const factory ControlSize.height(double height) = ExplicitHeight;
 
+  /// A width of your own, with the height left to the preset scale.
+  ///
+  /// A circle's width is its diameter, so this reads true for an [Avatar] or
+  /// a spinner as well as for a field.
+  const factory ControlSize.width(double width) = ExplicitWidth;
+
   /// A width and a height of your own.
   const factory ControlSize.box(double width, double height) = ExplicitBox;
 }
@@ -36,7 +42,16 @@ enum SoftSize implements ControlSize {
   large;
 }
 
-/// Explicit 2D width and height size.
+/// A [ControlSize] naming a width and leaving the height to the presets.
+class ExplicitWidth extends ControlSize {
+  /// Creates a width of your own.
+  const ExplicitWidth(this.width);
+
+  /// Width in logical pixels. A circle's width is its diameter.
+  final double width;
+}
+
+/// A [ControlSize] naming a width and height.
 class ExplicitBox extends ControlSize {
   /// Creates an explicit 2D size with [width] and [height].
   const ExplicitBox(this.width, this.height);
@@ -48,7 +63,7 @@ class ExplicitBox extends ControlSize {
   final double height;
 }
 
-/// Explicit 1D dimension size (square/diameter or line height).
+/// A [ControlSize] naming a height, leaving the width to the component.
 class ExplicitHeight extends ControlSize {
   /// Creates a height of your own.
   const ExplicitHeight(this.height);

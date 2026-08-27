@@ -36,6 +36,8 @@ At 100% a check (success) or cross (error) replaces the text label.
 
 - Preset: `SoftSize.small`, `SoftSize.middle`, `SoftSize.large`
 - Fixed 1D dimension: `ControlSize.height(20)` or `ExplicitHeight(20)` or `20`
+- A length of its own: `ControlSize.width(200)` or `ExplicitWidth(200)` — the
+  thickness stays the standard one
 - Explicit 2D size: `ControlSize.box(200, 10)` or `ExplicitBox(200, 10)`
 
 ```dart
@@ -69,7 +71,7 @@ current marker.
 | `status`          | `StatusType?`                | `null`               | Overrides status color (`normal`, `active`, `success`, `error`)                              |
 | `showInfo`        | `bool`                       | `true`               | Show percentage / completion badge                                                           |
 | `strokeWidth`     | `double?`                    | `8` line, `6` circle | Track thickness                                                                              |
-| `size`            | `ControlSize?`               | `SoftSize.middle`    | Preset (`SoftSize`), `ControlSize.height(20)`, or `ControlSize.box(200, 10)`                  |
+| `size`            | `ControlSize?`               | `SoftSize.middle`    | Preset (`SoftSize`), `ControlSize.height(20)`, `ControlSize.width(200)`, or `ControlSize.box(200, 10)`                  |
 | `color`           | `Color?`                     | `null`               | Overrides fill color                                                                         |
 | `trailColor`      | `Color?`                     | `null`               | Overrides unfilled track color                                                               |
 | `gradient`        | `Gradient?`                  | `null`               | Linear or sweep gradient fill                                                                |

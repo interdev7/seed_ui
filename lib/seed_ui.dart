@@ -318,6 +318,7 @@ export 'src/theme/design_token.dart'
         ControlSize,
         ExplicitBox,
         ExplicitHeight,
+        ExplicitWidth,
         SeedToken,
         SoftSize,
         Token;

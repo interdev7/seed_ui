@@ -134,6 +134,29 @@ void main() {
       expect((await boxAt(tester, const ControlSize.height(20))).height, 20);
     });
 
+    testWidgets('a width names the width, the height staying standard',
+        (tester) async {
+      await tester.pumpWidget(
+        const ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: Wrap(
+                  children: [Input(size: ControlSize.width(180))],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final size = tester.getSize(find.byType(Input));
+      expect(size.width, 180);
+      // One number was spent on the width, so the height keeps the middle
+      // preset rather than becoming 180 tall.
+      expect(size.height, (await boxAt(tester, SoftSize.middle)).height);
+    });
+
     testWidgets('a two-dimensional size names the width too', (tester) async {
       // Both ways out of the build have to honour it: a plain field returns
       // before the search-button Row, and an earlier attempt missed that exit

@@ -73,9 +73,10 @@ height — the box holds the height up, the padding only adds air inside it —
 so a measurement past either end of the preset scale is safe.
 
 `ControlSize.box(200, 36)` names the width too, so it needs no `SizedBox`
-around it. `fixed()` names only a height — a field given one goes on filling
+around it. `height()` names only a height — a field given one goes on filling
 the width it is offered, since a text input has nothing to measure itself
-against.
+against. `ControlSize.width(200)` is the other half of that pair: it names the
+width and leaves the height to the preset scale.
 
 ## Affixes
 

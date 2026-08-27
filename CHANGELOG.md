@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.11.0
 
+### Added
+
+- **`ControlSize.width(180)`** — the other half of `box()`. It names a width
+  and leaves the height to the preset scale, where `height()` names a height
+  and leaves the width to the component. Every control that took a
+  `ControlSize` takes it: `Input`, `InputNumber`, `Select`, `TimePicker`,
+  `DatePicker`, `Progress`, `Steps`, `Avatar` and `Spin`.
+
+  ```dart
+  Input(size: ControlSize.width(180))      // 180 wide, standard height
+  Progress(percent: 0.5, size: const ControlSize.width(160))
+  ```
+
+  A circle has one measurement, so `width` and `height` mean the same thing to
+  an `Avatar`, a `Spin` or a `Steps` marker: `ControlSize.width(56)` is the
+  same 56-wide circle as `ControlSize.height(56)`. The names part company only
+  where a control has two dimensions to name.
+
 ### Changed
 
 - **`ControlSize.fixed` and `.raw` are now `.height` and `.box`.** The old

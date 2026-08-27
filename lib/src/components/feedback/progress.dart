@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/size_resolver.dart';
 import 'message.dart' show StatusType;
 
 /// Shape of a [Progress].
@@ -734,6 +735,13 @@ class _ProgressState extends State<Progress> {
       // what it is given, as it does for a preset.
       ExplicitHeight(:final height) =>
         _ProgressResolvedSize(width: height, height: height),
+      // A width names the bar's length — and a ring's diameter — while its
+      // thickness stays the standard one, there being no second number.
+      ExplicitWidth(:final width) => _ProgressResolvedSize(
+          width: width,
+          height: r.lineHeight,
+          hasFixedStepWidth: widget.steps != null && width > 0,
+        ),
       ExplicitBox(:final width, :final height) => _ProgressResolvedSize(
           width: width,
           height: height,
@@ -946,11 +954,12 @@ class _ProgressState extends State<Progress> {
       );
     }
 
-    final explicit = widget.size;
-    final hasCustomWidth =
-        explicit is ExplicitBox && !resSize.hasFixedStepWidth;
+    // A size that names a width gives the bar a length of its own; a preset
+    // or a bare height names none, so the bar fills what it is given.
+    final named = widget.size?.explicitWidth;
+    final hasCustomWidth = named != null && !resSize.hasFixedStepWidth;
     final barWidget = hasCustomWidth
-        ? SizedBox(width: explicit.width, child: bar)
+        ? SizedBox(width: named, child: bar)
         : (resSize.hasFixedStepWidth ? bar : Expanded(child: bar));
 
     if (!_showInfo || isInner) {

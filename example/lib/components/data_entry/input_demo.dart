@@ -77,28 +77,28 @@ class InputDemo extends StatelessWidget {
         const SizedBox(height: 12),
         // A measurement instead of a preset.
         //
-        // fixed() names a height and says nothing about width, so these still
-        // fill the line — a text field has no content to measure. raw() names
+        // height() names a height and says nothing about width, so these still
+        // fill the line — a text field has no content to measure. box() names
         // both, and needs no SizedBox around it.
         const Row(
           children: [
             Expanded(
               child: Input(
-                placeholder: 'fixed(20)',
+                placeholder: 'height(20)',
                 size: ControlSize.height(20),
               ),
             ),
             SizedBox(width: 8),
             Expanded(
               child: Input(
-                placeholder: 'fixed(36)',
+                placeholder: 'height(36)',
                 size: ControlSize.height(36),
               ),
             ),
             SizedBox(width: 8),
             Expanded(
               child: Input(
-                placeholder: 'fixed(56)',
+                placeholder: 'height(56)',
                 size: ControlSize.height(56),
               ),
             ),
@@ -109,9 +109,12 @@ class InputDemo extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            Input(placeholder: 'raw(140, 24)', size: ControlSize.box(140, 24)),
-            Input(placeholder: 'raw(200, 36)', size: ControlSize.box(200, 36)),
-            Input(placeholder: 'raw(260, 48)', size: ControlSize.box(260, 48)),
+            Input(placeholder: 'box(140, 24)', size: ControlSize.box(140, 24)),
+            Input(placeholder: 'box(200, 36)', size: ControlSize.box(200, 36)),
+            Input(placeholder: 'box(260, 48)', size: ControlSize.box(260, 48)),
+            // width() is the other half of box(): it names the width and
+            // leaves the height to the preset scale.
+            Input(placeholder: 'width(160)', size: ControlSize.width(160)),
           ],
         ),
         const SizedBox(height: 12),

@@ -137,6 +137,7 @@ instead of greying them out.
 ```dart
 TimePicker(size: SoftSize.large)              // the theme's scale
 TimePicker(size: ControlSize.height(36))       // 36 tall
+TimePicker(size: ControlSize.width(200))      // 200 wide, standard height
 TimePicker(size: ControlSize.box(200, 36))    // 200 by 36
 ```
 

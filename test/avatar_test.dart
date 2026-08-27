@@ -130,6 +130,14 @@ void _sizeSlot() {
       expect(tester.getSize(find.byType(Avatar)).width, 56);
     });
 
+    testWidgets('a width is that same diameter', (tester) async {
+      // A circle has one measurement, so either bare number names it.
+      await tester.pumpWidget(
+        _wrap(const Avatar(size: ControlSize.width(56), child: Text('A'))),
+      );
+      expect(tester.getSize(find.byType(Avatar)), const Size(56, 56));
+    });
+
     testWidgets('initials scale with a named diameter', (tester) async {
       await tester.pumpWidget(
         _wrap(const Avatar(size: ControlSize.height(80), child: Text('A'))),

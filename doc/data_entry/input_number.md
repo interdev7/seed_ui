@@ -63,6 +63,7 @@ InputNumber(
 
 ```dart
 InputNumber(size: ControlSize.height(44))       // 44 tall
+InputNumber(size: ControlSize.width(160))      // 160 wide, standard height
 InputNumber(size: ControlSize.box(160, 36))    // 160 by 36
 ```
 

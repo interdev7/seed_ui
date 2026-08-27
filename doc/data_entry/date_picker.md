@@ -96,6 +96,7 @@ less.
 ```dart
 DatePicker(size: SoftSize.large)              // the theme's scale
 DatePicker(size: ControlSize.height(36))       // 36 tall
+DatePicker(size: ControlSize.width(200))      // 200 wide, standard height
 DatePicker(size: ControlSize.box(200, 36))    // 200 by 36
 ```
 

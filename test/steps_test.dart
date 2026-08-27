@@ -1430,6 +1430,11 @@ void main() {
       await markerOf(tester, const ControlSize.height(20));
       expect(titleHeight(), lessThan(big));
     });
+
+    testWidgets('a width names that same marker', (tester) async {
+      // The marker is a circle: its width is its diameter, as its height is.
+      expect((await markerOf(tester, const ControlSize.width(48))).width, 48);
+    });
   });
 
   group('Rail length', () {

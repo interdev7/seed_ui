@@ -114,6 +114,7 @@ single select marks it by highlight alone.
 
 ```dart
 Select<String>(size: ControlSize.height(36), options: fruitOptions)
+Select<String>(size: ControlSize.width(180), options: fruitOptions)
 Select<String>(size: ControlSize.box(180, 36), options: fruitOptions)
 ```
 

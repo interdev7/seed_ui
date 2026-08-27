@@ -92,6 +92,7 @@ enum _Scale {
         SoftSize.middle => _Scale.middle,
         SoftSize.large => _Scale.large,
         ExplicitHeight(:final height) => forMarker(height),
+        ExplicitWidth(:final width) => forMarker(width),
         ExplicitBox(:final height) => forMarker(height),
       };
 }
@@ -336,6 +337,7 @@ class StepsToken {
       SoftSize.middle => iconSize ?? 32,
       SoftSize.large => iconSizeLG ?? 40,
       ExplicitHeight(:final height) => height,
+      ExplicitWidth(:final width) => width,
       ExplicitBox(:final height) => height,
     };
     return _ResolvedStepsToken(

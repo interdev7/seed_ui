@@ -89,8 +89,8 @@ class _InputNumberDemoState extends State<InputNumberDemo> {
         ),
         const Group(
           'A measurement instead of a preset',
-          // fixed() names a height; the field goes on filling the width, as a
-          // text field with nothing to measure should. raw() names both and
+          // height() names a height; the field goes on filling the width, as a
+          // text field with nothing to measure should. box() names both and
           // needs no SizedBox — in spinner mode it beats spinnerWidth too.
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

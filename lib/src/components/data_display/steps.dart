@@ -91,8 +91,8 @@ enum _Scale {
         SoftSize.small => _Scale.small,
         SoftSize.middle => _Scale.middle,
         SoftSize.large => _Scale.large,
-        ExplicitSquareSize(:final dimension) => forMarker(dimension),
-        ExplicitSize(:final height) => forMarker(height),
+        ExplicitHeight(:final height) => forMarker(height),
+        ExplicitBox(:final height) => forMarker(height),
       };
 }
 
@@ -335,8 +335,8 @@ class StepsToken {
       SoftSize.small => iconSizeSM ?? 24,
       SoftSize.middle => iconSize ?? 32,
       SoftSize.large => iconSizeLG ?? 40,
-      ExplicitSquareSize(:final dimension) => dimension,
-      ExplicitSize(:final height) => height,
+      ExplicitHeight(:final height) => height,
+      ExplicitBox(:final height) => height,
     };
     return _ResolvedStepsToken(
       iconSize: marker,
@@ -716,7 +716,7 @@ class Steps extends StatefulWidget {
   ///
   /// A [SoftSize] picks a preset — `small` is the small run,
   /// `middle` its default, `large` the kit's third step. A number sets the
-  /// marker's diameter outright (`ControlSize.fixed(48)`), and the type scale
+  /// marker's diameter outright (`ControlSize.height(48)`), and the type scale
   /// follows the marker it sits beside.
   final ControlSize? size;
 
@@ -1278,7 +1278,7 @@ class _Marker extends StatelessWidget {
           ? ProgressType.circle
           : template.type,
       // The template's own choices win; these only fill the gaps.
-      size: template.size ?? ControlSize.fixed(ringBox),
+      size: template.size ?? ControlSize.height(ringBox),
       strokeWidth: template.strokeWidth ?? 3,
       child: marker,
     );

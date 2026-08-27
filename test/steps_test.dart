@@ -1420,14 +1420,14 @@ void main() {
 
     testWidgets('a number is the marker diameter, and the type follows it',
         (tester) async {
-      expect((await markerOf(tester, const ControlSize.fixed(48))).width, 48);
+      expect((await markerOf(tester, const ControlSize.height(48))).width, 48);
 
       // The type keeps up with the circle beside it: a 48px marker takes the
       // large scale, a 20px one the small.
       double titleHeight() => tester.getRect(find.text('Two')).height;
-      await markerOf(tester, const ControlSize.fixed(48));
+      await markerOf(tester, const ControlSize.height(48));
       final big = titleHeight();
-      await markerOf(tester, const ControlSize.fixed(20));
+      await markerOf(tester, const ControlSize.height(20));
       expect(titleHeight(), lessThan(big));
     });
   });

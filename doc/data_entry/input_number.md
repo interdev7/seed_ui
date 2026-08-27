@@ -62,8 +62,8 @@ InputNumber(
 `size` takes a preset — `small`, `middle`, `large` — or a measurement:
 
 ```dart
-InputNumber(size: ControlSize.fixed(44))       // 44 tall
-InputNumber(size: ControlSize.raw(160, 36))    // 160 by 36
+InputNumber(size: ControlSize.height(44))       // 44 tall
+InputNumber(size: ControlSize.box(160, 36))    // 160 by 36
 ```
 
 The steppers follow the height, so they stay inside the border. In

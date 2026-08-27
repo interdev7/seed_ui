@@ -421,7 +421,7 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
           type: ProgressType.circle,
           showInfo: false,
           color: dotColor,
-          size: ControlSize.fixed(size),
+          size: ControlSize.height(size),
           strokeWidth: math.max(2.0, size * 0.1),
         ),
       );

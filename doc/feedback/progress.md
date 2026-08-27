@@ -35,13 +35,13 @@ At 100% a check (success) or cross (error) replaces the text label.
 `size` accepts `ControlSize` presets or explicit dimensions:
 
 - Preset: `SoftSize.small`, `SoftSize.middle`, `SoftSize.large`
-- Fixed 1D dimension: `ControlSize.fixed(20)` or `ExplicitSquareSize(20)` or `20`
-- Explicit 2D size: `ControlSize.raw(200, 10)` or `ExplicitSize(200, 10)`
+- Fixed 1D dimension: `ControlSize.height(20)` or `ExplicitHeight(20)` or `20`
+- Explicit 2D size: `ControlSize.box(200, 10)` or `ExplicitBox(200, 10)`
 
 ```dart
 Progress(percent: 0.8, size: SoftSize.small)
-Progress(percent: 0.8, size: ControlSize.fixed(20))
-Progress(percent: 0.8, size: ExplicitSize(200, 10))
+Progress(percent: 0.8, size: ControlSize.height(20))
+Progress(percent: 0.8, size: ExplicitBox(200, 10))
 ```
 
 ## A child in place of the label
@@ -69,7 +69,7 @@ current marker.
 | `status`          | `StatusType?`                | `null`               | Overrides status color (`normal`, `active`, `success`, `error`)                              |
 | `showInfo`        | `bool`                       | `true`               | Show percentage / completion badge                                                           |
 | `strokeWidth`     | `double?`                    | `8` line, `6` circle | Track thickness                                                                              |
-| `size`            | `ControlSize?`               | `SoftSize.middle`    | Preset (`SoftSize`), `ControlSize.fixed(20)`, or `ControlSize.raw(200, 10)`                  |
+| `size`            | `ControlSize?`               | `SoftSize.middle`    | Preset (`SoftSize`), `ControlSize.height(20)`, or `ControlSize.box(200, 10)`                  |
 | `color`           | `Color?`                     | `null`               | Overrides fill color                                                                         |
 | `trailColor`      | `Color?`                     | `null`               | Overrides unfilled track color                                                               |
 | `gradient`        | `Gradient?`                  | `null`               | Linear or sweep gradient fill                                                                |

@@ -221,15 +221,15 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
                 children: [
                   TimePicker(
                     format: 'HH:mm',
-                    size: ControlSize.fixed(28),
+                    size: ControlSize.height(28),
                     placeholder: '',
                   ),
                   TimePicker(
                     format: 'HH:mm',
-                    size: ControlSize.fixed(44),
+                    size: ControlSize.height(44),
                     placeholder: '',
                   ),
-                  TimePicker(format: 'HH:mm', size: ControlSize.raw(200, 36)),
+                  TimePicker(format: 'HH:mm', size: ControlSize.box(200, 36)),
                 ],
               ),
               const SizedBox(height: 8),

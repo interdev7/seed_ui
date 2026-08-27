@@ -305,11 +305,11 @@ the width floor.
 | `SoftSize.small` | 24 | The compact run |
 | `SoftSize.middle` | 32 | The default |
 | `SoftSize.large` | 40 | The kit's third step |
-| `ControlSize.fixed(48)` | 48 | Follows the marker: ≤26 small, ≥38 large |
+| `ControlSize.height(48)` | 48 | Follows the marker: ≤26 small, ≥38 large |
 
 ```dart
 Steps(size: SoftSize.large, items: items);
-Steps(size: const ControlSize.fixed(48), items: items);
+Steps(size: const ControlSize.height(48), items: items);
 ```
 
 Dot markers keep their own sizes (`dotSize`, `dotCurrentSize`) whatever `size`

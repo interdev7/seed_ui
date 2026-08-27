@@ -5,6 +5,32 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.11.0
+
+### Changed
+
+- **`ControlSize.fixed` and `.raw` are now `.height` and `.box`.** The old
+  names said a measurement was given without saying *which* — and the one-
+  dimension case meant different things in different places: a height on a
+  field, a diameter on an avatar. A circle's height is its diameter, so one
+  honest name covers both.
+
+  ```dart
+  ControlSize.fixed(36)       →  ControlSize.height(36)
+  ControlSize.raw(200, 36)    →  ControlSize.box(200, 36)
+  ```
+
+  The classes behind them moved with the names, so the pair cannot drift
+  apart: `ExplicitSquareSize` is `ExplicitHeight` (its `dimension` is now
+  `height`), and `ExplicitSize` is `ExplicitBox`.
+
+  **`SoftSize` is untouched** — `size: SoftSize.large` reads exactly as before.
+  It answers a different question: a preset follows the theme's scale, a
+  measurement does not.
+
+  No deprecated aliases. Two names for one idea is the confusion this removes,
+  and 1.0 would freeze whichever survived.
+
 ## 0.10.0
 
 ### Added

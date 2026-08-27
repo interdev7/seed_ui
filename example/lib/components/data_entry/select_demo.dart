@@ -205,7 +205,7 @@ class _SelectDemoState extends State<SelectDemo> {
                   SizedBox(
                     width: 200,
                     child: Select<String>(
-                      size: ControlSize.fixed(28),
+                      size: ControlSize.height(28),
                       placeholder: 'fixed(28)',
                       options: _fruits,
                     ),
@@ -213,19 +213,19 @@ class _SelectDemoState extends State<SelectDemo> {
                   SizedBox(
                     width: 200,
                     child: Select<String>(
-                      size: ControlSize.fixed(44),
+                      size: ControlSize.height(44),
                       placeholder: 'fixed(44)',
                       options: _fruits,
                     ),
                   ),
                   // No SizedBox: this one names its own width too.
                   Select<String>(
-                    size: ControlSize.raw(180, 36),
+                    size: ControlSize.box(180, 36),
                     placeholder: 'raw(180, 36)',
                     options: _fruits,
                   ),
                   Select<String>(
-                    size: ControlSize.raw(80, 30),
+                    size: ControlSize.box(80, 30),
                     placeholder: 'raw(80, 30)',
                     options: _fruits,
                   ),

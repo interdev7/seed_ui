@@ -156,9 +156,9 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  DatePicker(size: ControlSize.fixed(28), placeholder: ''),
-                  DatePicker(size: ControlSize.fixed(44), placeholder: ''),
-                  DatePicker(size: ControlSize.raw(240, 36)),
+                  DatePicker(size: ControlSize.height(28), placeholder: ''),
+                  DatePicker(size: ControlSize.height(44), placeholder: ''),
+                  DatePicker(size: ControlSize.box(240, 36)),
                 ],
               ),
               const SizedBox(height: 8),

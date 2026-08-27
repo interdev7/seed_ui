@@ -99,7 +99,7 @@ class _InputNumberDemoState extends State<InputNumberDemo> {
                 width: 220,
                 child: InputNumber(
                   defaultValue: 1,
-                  size: ControlSize.fixed(44),
+                  size: ControlSize.height(44),
                 ),
               ),
               SizedBox(height: 8),
@@ -107,11 +107,11 @@ class _InputNumberDemoState extends State<InputNumberDemo> {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  InputNumber(defaultValue: 1, size: ControlSize.raw(160, 36)),
+                  InputNumber(defaultValue: 1, size: ControlSize.box(160, 36)),
                   InputNumber(
                     defaultValue: 1,
                     mode: InputNumberMode.spinner,
-                    size: ControlSize.raw(180, 44),
+                    size: ControlSize.box(180, 44),
                   ),
                 ],
               ),

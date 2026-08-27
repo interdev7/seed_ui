@@ -128,10 +128,10 @@ void main() {
     });
 
     testWidgets('a measurement is taken as given', (tester) async {
-      expect((await boxAt(tester, const ControlSize.fixed(36))).height, 36);
+      expect((await boxAt(tester, const ControlSize.height(36))).height, 36);
       // Past both ends of the preset scale, too.
-      expect((await boxAt(tester, const ControlSize.fixed(56))).height, 56);
-      expect((await boxAt(tester, const ControlSize.fixed(20))).height, 20);
+      expect((await boxAt(tester, const ControlSize.height(56))).height, 56);
+      expect((await boxAt(tester, const ControlSize.height(20))).height, 20);
     });
 
     testWidgets('a two-dimensional size names the width too', (tester) async {
@@ -144,7 +144,7 @@ void main() {
             home: Scaffold(
               body: Center(
                 child: Wrap(
-                  children: [Input(size: ControlSize.raw(180, 36))],
+                  children: [Input(size: ControlSize.box(180, 36))],
                 ),
               ),
             ),
@@ -167,7 +167,7 @@ void main() {
                 child: Wrap(
                   children: [
                     Input(
-                      size: const ControlSize.raw(220, 36),
+                      size: const ControlSize.box(220, 36),
                       search: SearchConfig(enterButton: true, onSearch: (_) {}),
                     ),
                   ],
@@ -190,7 +190,7 @@ void main() {
             home: Scaffold(
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [Input(size: ControlSize.fixed(20))],
+                children: [Input(size: ControlSize.height(20))],
               ),
             ),
           ),
@@ -205,7 +205,7 @@ void main() {
       // The padding is not what holds the height up — the box is — so an
       // unusual height neither pushes the text off centre nor overflows.
       for (final h in [20.0, 36.0, 56.0]) {
-        final box = await boxAt(tester, ControlSize.fixed(h));
+        final box = await boxAt(tester, ControlSize.height(h));
         final text = tester.getRect(find.text('Ag'));
         expect(
           text.top - box.top,

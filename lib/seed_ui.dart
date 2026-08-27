@@ -316,8 +316,8 @@ export 'src/theme/design_token.dart'
     show
         ColorGroup,
         ControlSize,
-        ExplicitSize,
-        ExplicitSquareSize,
+        ExplicitBox,
+        ExplicitHeight,
         SeedToken,
         SoftSize,
         Token;

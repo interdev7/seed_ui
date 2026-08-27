@@ -192,7 +192,7 @@ class Avatar extends StatelessWidget {
   /// How big the avatar is: a preset, or a diameter of your own.
   ///
   /// `SoftSize.large` follows the theme's avatar scale;
-  /// `ControlSize.fixed(64)` names a diameter outright. One slot for both —
+  /// `ControlSize.height(64)` names a diameter outright. One slot for both —
   /// a diameter is the whole story for a circle, so there is nothing a
   /// preset carries that a number leaves unsaid.
   final ControlSize? size;

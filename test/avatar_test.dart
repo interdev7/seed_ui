@@ -125,14 +125,14 @@ void _sizeSlot() {
 
     testWidgets('a diameter is taken as given', (tester) async {
       await tester.pumpWidget(
-        _wrap(const Avatar(size: ControlSize.fixed(56), child: Text('A'))),
+        _wrap(const Avatar(size: ControlSize.height(56), child: Text('A'))),
       );
       expect(tester.getSize(find.byType(Avatar)).width, 56);
     });
 
     testWidgets('initials scale with a named diameter', (tester) async {
       await tester.pumpWidget(
-        _wrap(const Avatar(size: ControlSize.fixed(80), child: Text('A'))),
+        _wrap(const Avatar(size: ControlSize.height(80), child: Text('A'))),
       );
       final style = DefaultTextStyle.of(tester.element(find.text('A'))).style;
       expect(style.fontSize, 40, reason: 'half of 80');

@@ -434,8 +434,8 @@ class Progress extends StatefulWidget {
   ///
   /// Examples:
   /// - `SoftSize.small` — a preset
-  /// - `ControlSize.fixed(20)` — a diameter, or a line height
-  /// - `ControlSize.raw(200, 10)` — an explicit width and height
+  /// - `ControlSize.height(20)` — a diameter, or a line height
+  /// - `ControlSize.box(200, 10)` — an explicit width and height
   final ControlSize? size;
 
   /// Overrides the fill colour outright.
@@ -730,9 +730,11 @@ class _ProgressState extends State<Progress> {
       SoftSize.middle =>
         _ProgressResolvedSize(width: r.circleSize, height: r.lineHeight),
       SoftSize.large => const _ProgressResolvedSize(width: 160, height: 12),
-      ExplicitSquareSize(:final dimension) =>
-        _ProgressResolvedSize(width: dimension, height: dimension),
-      ExplicitSize(:final width, :final height) => _ProgressResolvedSize(
+      // One number names the height; a bar with no length of its own fills
+      // what it is given, as it does for a preset.
+      ExplicitHeight(:final height) =>
+        _ProgressResolvedSize(width: height, height: height),
+      ExplicitBox(:final width, :final height) => _ProgressResolvedSize(
           width: width,
           height: height,
           hasFixedStepWidth: widget.steps != null && width > 0,
@@ -946,7 +948,7 @@ class _ProgressState extends State<Progress> {
 
     final explicit = widget.size;
     final hasCustomWidth =
-        explicit is ExplicitSize && !resSize.hasFixedStepWidth;
+        explicit is ExplicitBox && !resSize.hasFixedStepWidth;
     final barWidget = hasCustomWidth
         ? SizedBox(width: explicit.width, child: bar)
         : (resSize.hasFixedStepWidth ? bar : Expanded(child: bar));
@@ -1236,8 +1238,8 @@ class _ProgressState extends State<Progress> {
     final resSize = _resolveSize(token, r);
     final defaultStroke = effectiveSize == SoftSize.small ? 4.0 : 6.0;
     final stroke = widget.strokeWidth ??
-        (effectiveSize is ExplicitSquareSize
-            ? effectiveSize.dimension * 0.1
+        (effectiveSize is ExplicitHeight
+            ? effectiveSize.height * 0.1
             : defaultStroke);
     final fill = _fill(token, currentPercent);
     final sz = resSize.width;

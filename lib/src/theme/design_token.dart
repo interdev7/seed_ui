@@ -7,16 +7,19 @@ import 'palette.dart';
 /// Sealed hierarchy representing component sizes in seed_ui.
 ///
 /// Accepts preset sizes ([SoftSize.small], [SoftSize.middle], [SoftSize.large]),
-/// fixed 1D dimension ([ExplicitSquareSize] or [ControlSize.fixed]),
-/// or explicit 2D width and height ([ExplicitSize] or [ControlSize.raw]).
+/// a height of your own ([ExplicitHeight] or [ControlSize.height]),
+/// or a width and height of your own ([ExplicitBox] or [ControlSize.box]).
 sealed class ControlSize {
   const ControlSize();
 
-  /// Creates a 1D fixed dimension size (e.g. diameter 20 or line height 20).
-  const factory ControlSize.fixed(double dimension) = ExplicitSquareSize;
+  /// A height of your own, in logical pixels.
+  ///
+  /// A circle's height is its diameter, so this reads true for an [Avatar] or
+  /// a spinner as well as for a field.
+  const factory ControlSize.height(double height) = ExplicitHeight;
 
-  /// Creates an explicit 2D width and height size (e.g. width 200, height 10).
-  const factory ControlSize.raw(double width, double height) = ExplicitSize;
+  /// A width and a height of your own.
+  const factory ControlSize.box(double width, double height) = ExplicitBox;
 }
 
 /// The shared height preset for the kit's controls — small, middle (the
@@ -34,9 +37,9 @@ enum SoftSize implements ControlSize {
 }
 
 /// Explicit 2D width and height size.
-class ExplicitSize extends ControlSize {
+class ExplicitBox extends ControlSize {
   /// Creates an explicit 2D size with [width] and [height].
-  const ExplicitSize(this.width, this.height);
+  const ExplicitBox(this.width, this.height);
 
   /// Width in logical pixels.
   final double width;
@@ -46,12 +49,12 @@ class ExplicitSize extends ControlSize {
 }
 
 /// Explicit 1D dimension size (square/diameter or line height).
-class ExplicitSquareSize extends ControlSize {
-  /// Creates a 1D dimension size.
-  const ExplicitSquareSize(this.dimension);
+class ExplicitHeight extends ControlSize {
+  /// Creates a height of your own.
+  const ExplicitHeight(this.height);
 
-  /// Dimension in logical pixels.
-  final double dimension;
+  /// Height in logical pixels. A circle's height is its diameter.
+  final double height;
 }
 
 /// The minimal set of inputs an entire theme is derived from.

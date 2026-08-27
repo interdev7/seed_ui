@@ -441,7 +441,7 @@ the line between them is what the preset actually feeds:
 | `SoftSize` | `Button`, `Input` | The preset feeds four or five things at once: height, type size, padding, radius. A bare number would supply one and leave the rest guessing |
 
 Where `ControlSize` is taken, all three forms work: `SoftSize.large`,
-`ControlSize.fixed(36)` and `ControlSize.raw(200, 36)`.
+`ControlSize.height(36)` and `ControlSize.box(200, 36)`.
 
 ### Font weight
 

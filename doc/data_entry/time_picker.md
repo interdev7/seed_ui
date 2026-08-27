@@ -136,8 +136,8 @@ instead of greying them out.
 
 ```dart
 TimePicker(size: SoftSize.large)              // the theme's scale
-TimePicker(size: ControlSize.fixed(36))       // 36 tall
-TimePicker(size: ControlSize.raw(200, 36))    // 200 by 36
+TimePicker(size: ControlSize.height(36))       // 36 tall
+TimePicker(size: ControlSize.box(200, 36))    // 200 by 36
 ```
 
 A preset carries a type size of its own; a bare measurement names only itself,

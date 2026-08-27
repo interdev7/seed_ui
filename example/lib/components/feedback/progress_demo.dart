@@ -158,10 +158,10 @@ class _ProgressDemoState extends State<ProgressDemo> {
               Progress(
                 type: ProgressType.dashboard,
                 percent: _percent,
-                size: const ControlSize.fixed(96),
+                size: const ControlSize.height(96),
                 strokeWidth: 6,
                 child: const Avatar(
-                  size: ControlSize.fixed(56),
+                  size: ControlSize.height(56),
                   child: Text('AS'),
                 ),
               ),
@@ -255,7 +255,7 @@ class _ProgressDemoState extends State<ProgressDemo> {
                   Color(0xFF52C41A),
                   Color(0xFF52C41A),
                 ],
-                size: const ControlSize.raw(4, 16),
+                size: const ControlSize.box(4, 16),
               ),
               const SizedBox(height: 12),
               const SizedBox(
@@ -274,7 +274,7 @@ class _ProgressDemoState extends State<ProgressDemo> {
               Progress(
                 percent: _percent,
                 steps: const ProgressSteps(3),
-                size: const ControlSize.raw(20, 30),
+                size: const ControlSize.box(20, 30),
               ),
             ],
           ),
@@ -311,7 +311,7 @@ class _ProgressDemoState extends State<ProgressDemo> {
               Progress(
                 percent: _percent,
                 steps: const ProgressSteps(3),
-                size: const ControlSize.raw(20, 30),
+                size: const ControlSize.box(20, 30),
               ),
             ],
           ),
@@ -517,14 +517,14 @@ class _ProgressDemoState extends State<ProgressDemo> {
                 percent: _percent,
                 steps: const ProgressSteps(6),
                 strokeWidth: 14,
-                size: const ControlSize.fixed(140),
+                size: const ControlSize.height(140),
               ),
               Progress(
                 type: ProgressType.circle,
                 percent: _percent,
                 steps: const ProgressSteps(5),
                 strokeWidth: 16,
-                size: const ControlSize.fixed(140),
+                size: const ControlSize.height(140),
                 strokeColor: const [
                   Color(0xFF1677FF),
                   Color(0xFF52C41A),
@@ -538,7 +538,7 @@ class _ProgressDemoState extends State<ProgressDemo> {
                 percent: _percent,
                 steps: const ProgressSteps(10),
                 strokeWidth: 18,
-                size: const ControlSize.fixed(140),
+                size: const ControlSize.height(140),
                 gradient: const LinearGradient(
                   colors: [Color(0xFF1677FF), Color(0xFF52C41A)],
                 ),
@@ -548,7 +548,7 @@ class _ProgressDemoState extends State<ProgressDemo> {
                 percent: _percent,
                 steps: const ProgressSteps(10),
                 strokeWidth: 18,
-                size: const ControlSize.fixed(140),
+                size: const ControlSize.height(140),
                 rangeColors: const {
                   ProgressRange(0.0, to: 0.3): Color(0xFFFF4D4F),
                   ProgressRange(0.3, to: 0.7): Color(0xFFFFA940),
@@ -560,7 +560,7 @@ class _ProgressDemoState extends State<ProgressDemo> {
                 percent: _percent,
                 steps: const ProgressSteps(5, gap: 7),
                 strokeWidth: 20,
-                size: const ControlSize.fixed(140),
+                size: const ControlSize.height(140),
               ),
             ],
           ),

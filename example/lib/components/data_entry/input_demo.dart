@@ -85,21 +85,21 @@ class InputDemo extends StatelessWidget {
             Expanded(
               child: Input(
                 placeholder: 'fixed(20)',
-                size: ControlSize.fixed(20),
+                size: ControlSize.height(20),
               ),
             ),
             SizedBox(width: 8),
             Expanded(
               child: Input(
                 placeholder: 'fixed(36)',
-                size: ControlSize.fixed(36),
+                size: ControlSize.height(36),
               ),
             ),
             SizedBox(width: 8),
             Expanded(
               child: Input(
                 placeholder: 'fixed(56)',
-                size: ControlSize.fixed(56),
+                size: ControlSize.height(56),
               ),
             ),
           ],
@@ -109,9 +109,9 @@ class InputDemo extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            Input(placeholder: 'raw(140, 24)', size: ControlSize.raw(140, 24)),
-            Input(placeholder: 'raw(200, 36)', size: ControlSize.raw(200, 36)),
-            Input(placeholder: 'raw(260, 48)', size: ControlSize.raw(260, 48)),
+            Input(placeholder: 'raw(140, 24)', size: ControlSize.box(140, 24)),
+            Input(placeholder: 'raw(200, 36)', size: ControlSize.box(200, 36)),
+            Input(placeholder: 'raw(260, 48)', size: ControlSize.box(260, 48)),
           ],
         ),
         const SizedBox(height: 12),

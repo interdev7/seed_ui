@@ -85,8 +85,8 @@ EmptyDefaults
 EmptyImage
 EmptySlot
 EmptyToken
-ExplicitSize
-ExplicitSquareSize
+ExplicitBox
+ExplicitHeight
 GapPlacement
 HolderPainter
 Input

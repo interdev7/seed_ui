@@ -484,13 +484,13 @@ void main() {
     testWidgets('a bare dimension is the height, taken as given', (
       tester,
     ) async {
-      expect((await sizeOf(tester, const ControlSize.fixed(36))).height, 36);
+      expect((await sizeOf(tester, const ControlSize.height(36))).height, 36);
     });
 
     testWidgets('a two-dimensional size names both', (tester) async {
       // The larger side would make the field two hundred pixels tall, which
       // is what a plain 1D resolve would have given.
-      final size = await sizeOf(tester, const ControlSize.raw(200, 36));
+      final size = await sizeOf(tester, const ControlSize.box(200, 36));
       expect(size.height, 36);
       expect(size.width, 200);
     });
@@ -505,7 +505,7 @@ void main() {
                 child: SizedBox(
                   width: 240,
                   child: DatePicker(
-                    size: ControlSize.fixed(36),
+                    size: ControlSize.height(36),
                     placeholder: 'x',
                   ),
                 ),

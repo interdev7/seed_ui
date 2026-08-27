@@ -64,7 +64,7 @@ from the control height tokens. Large also bumps the font size.
 
 ```dart
 Input(size: SoftSize.large, placeholder: 'Large')
-Input(size: ControlSize.fixed(36), placeholder: '36 tall')
+Input(size: ControlSize.height(36), placeholder: '36 tall')
 ```
 
 A preset carries a type size with it; a bare measurement names only itself, so
@@ -72,7 +72,7 @@ the standard type, padding and radius stand. The text stays centred at any
 height — the box holds the height up, the padding only adds air inside it —
 so a measurement past either end of the preset scale is safe.
 
-`ControlSize.raw(200, 36)` names the width too, so it needs no `SizedBox`
+`ControlSize.box(200, 36)` names the width too, so it needs no `SizedBox`
 around it. `fixed()` names only a height — a field given one goes on filling
 the width it is offered, since a text input has nothing to measure itself
 against.

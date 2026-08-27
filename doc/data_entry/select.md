@@ -113,8 +113,8 @@ single select marks it by highlight alone.
 `large` (40px) — or a measurement of your own:
 
 ```dart
-Select<String>(size: ControlSize.fixed(36), options: fruitOptions)
-Select<String>(size: ControlSize.raw(180, 36), options: fruitOptions)
+Select<String>(size: ControlSize.height(36), options: fruitOptions)
+Select<String>(size: ControlSize.box(180, 36), options: fruitOptions)
 ```
 
 A preset carries a type size with it; a bare measurement names only itself, so

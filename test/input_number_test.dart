@@ -327,12 +327,12 @@ void main() {
     });
 
     testWidgets('a bare measurement is the height', (tester) async {
-      expect((await at(tester, const ControlSize.fixed(44))).height, 44);
+      expect((await at(tester, const ControlSize.height(44))).height, 44);
     });
 
     testWidgets('a two-dimensional size names both', (tester) async {
       // It reaches the inner Input, which is what actually draws the field.
-      final size = await at(tester, const ControlSize.raw(160, 36));
+      final size = await at(tester, const ControlSize.box(160, 36));
       expect(size.width, 160);
       expect(size.height, 36);
     });
@@ -382,7 +382,7 @@ void main() {
       }
 
       final middle = await tallestButton(SoftSize.middle);
-      final tall = await tallestButton(const ControlSize.fixed(56));
+      final tall = await tallestButton(const ControlSize.height(56));
       expect(tall, greaterThan(middle), reason: 'the buttons grew with it');
     });
 
@@ -395,7 +395,7 @@ void main() {
       );
       final told = await at(
         tester,
-        const ControlSize.raw(160, 36),
+        const ControlSize.box(160, 36),
         mode: InputNumberMode.spinner,
       );
       expect(byToken.width, isNot(160));

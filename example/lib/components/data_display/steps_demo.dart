@@ -608,7 +608,7 @@ class _StepsDemoState extends State<StepsDemo> {
                   SegmentedOption(value: SoftSize.middle, label: 'middle'),
                   SegmentedOption(value: SoftSize.large, label: 'large'),
                   SegmentedOption(
-                    value: ControlSize.fixed(52),
+                    value: ControlSize.height(52),
                     label: 'fixed(52)',
                   ),
                 ],

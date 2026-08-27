@@ -386,7 +386,7 @@ void main() {
         host(
           const Wrap(
             children: [
-              Select<int>(size: ControlSize.raw(180, 36), options: options),
+              Select<int>(size: ControlSize.box(180, 36), options: options),
             ],
           ),
         ),

@@ -95,8 +95,8 @@ less.
 
 ```dart
 DatePicker(size: SoftSize.large)              // the theme's scale
-DatePicker(size: ControlSize.fixed(36))       // 36 tall
-DatePicker(size: ControlSize.raw(200, 36))    // 200 by 36
+DatePicker(size: ControlSize.height(36))       // 36 tall
+DatePicker(size: ControlSize.box(200, 36))    // 200 by 36
 ```
 
 A preset carries a type size of its own; a bare measurement names only itself,

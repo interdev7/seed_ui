@@ -19,10 +19,10 @@ extension ControlSizeResolver on ControlSize {
         SoftSize.large => large,
       };
     }
-    if (size is ExplicitSquareSize) {
-      return size.dimension;
+    if (size is ExplicitHeight) {
+      return size.height;
     }
-    if (size is ExplicitSize) {
+    if (size is ExplicitBox) {
       return math.max(size.width, size.height);
     }
     return middle;
@@ -39,7 +39,7 @@ extension ControlSizeResolver on ControlSize {
     required double large,
   }) {
     final size = this;
-    if (size is ExplicitSize) return size.height;
+    if (size is ExplicitBox) return size.height;
     return resolve1D(small: small, middle: middle, large: large);
   }
 
@@ -49,6 +49,6 @@ extension ControlSizeResolver on ControlSize {
   /// sizes its own is left to do so.
   double? get explicitWidth {
     final size = this;
-    return size is ExplicitSize ? size.width : null;
+    return size is ExplicitBox ? size.width : null;
   }
 }

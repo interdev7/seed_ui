@@ -117,7 +117,11 @@ const Map<String, String> demoLanguages = {
 };
 
 class DemoApp extends StatefulWidget {
-  const DemoApp({super.key});
+  const DemoApp({super.key, this.initialLocation = '/'});
+
+  /// Where the app opens. Only a test names one — it stands in for a deep
+  /// link, which is the case a pushed route could not give a way back from.
+  final String initialLocation;
 
   @override
   State<DemoApp> createState() => _DemoAppState();
@@ -142,24 +146,35 @@ class _DemoAppState extends State<DemoApp> {
 
   late final GoRouter _router = GoRouter(
     navigatorKey: UiKit.navigatorKey,
-    initialLocation: '/',
+    initialLocation: widget.initialLocation,
     routes: [
       ShellRoute(
         builder: (context, state, child) {
           return MainLayout(child: child);
         },
         routes: [
-          GoRoute(path: '/', builder: (context, state) => const HomePage()),
+          // The demo pages are children of the home route, not its siblings.
+          // `go` builds the whole branch, so a demo always has home beneath
+          // it and Back returns there instead of leaving the app — including
+          // when the demo is opened cold from a link, which `push` could not
+          // give. The URLs are unchanged: a relative path resolves to
+          // /demo/:id either way.
           GoRoute(
-            path: '/demo/:id',
-            builder: (context, state) {
-              final id = state.pathParameters['id'];
-              final demo = demos.firstWhere(
-                (d) => d.id == id,
-                orElse: () => demos.first,
-              );
-              return DemoPage(demo: demo);
-            },
+            path: '/',
+            builder: (context, state) => const HomePage(),
+            routes: [
+              GoRoute(
+                path: 'demo/:id',
+                builder: (context, state) {
+                  final id = state.pathParameters['id'];
+                  final demo = demos.firstWhere(
+                    (d) => d.id == id,
+                    orElse: () => demos.first,
+                  );
+                  return DemoPage(demo: demo);
+                },
+              ),
+            ],
           ),
         ],
       ),

@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   needing to build is illegal. Both now wait for the frame to finish. A picker
   born with `open: true` opens as well, which it never did.
 
-- **`Select`, `TimePicker` and `DatePicker` take a `ControlSize`.** Their
+- **`Input`, `InputNumber`, `Select`, `TimePicker` and `DatePicker` take a
+  `ControlSize`.** Their
   `size` accepted only a preset, so an exact height meant wrapping the field.
   The line is drawn by what the preset actually feeds: these three feed the box
   alone — a height and a type size that can stay put — while `Button` and
@@ -43,6 +44,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `resolveHeight` was added beside `resolve1D` for it: a two-dimensional size
   has to give its height, not its larger side, or a 200-by-36 field would come
   out two hundred pixels tall.
+
+  `Input` was the interesting one. The rule as first written said its preset
+  feeds five things at once — height, type size, two paddings and a radius —
+  so a bare number would supply one and leave the rest guessing. Measured
+  rather than restated, that is wrong: the text sits exactly centred at 20, 36
+  and 56 pixels and nothing overflows, because the box holds the height up and
+  the padding only adds air inside it.
+
+  The two-dimensional form names the width as well, on all four. `Input` has
+  two ways out of its build — a plain field returns before the row that
+  carries a search button — and an earlier attempt patched only the second, so
+  `raw()` looked like it did nothing at all. Both honour it now.
+
+  `fixed()` names a height and nothing else, so a field given one still fills
+  the width it is offered: a text input has no content to measure itself
+  against, unlike a picker whose format says what it can hold.
+
+  `InputNumber` is an `Input` with steppers, so it took the measurement the
+  moment the field did — except for the stepper buttons, which are sized
+  separately and would have stuck out of the border. In spinner mode a named
+  width beats the `spinnerWidth` token.
+
+  `Button` is the same question and still takes a `SoftSize`. Its size feeds
+  four places, one of them `ButtonShape.circle` where the height is a
+  diameter, so it needs its own pass rather than a mechanical one.
 
   Source-compatible — `SoftSize` is a `ControlSize`, so every existing call
   still reads the same.

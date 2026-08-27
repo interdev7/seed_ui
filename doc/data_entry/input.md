@@ -57,12 +57,25 @@ soft focus ring when focused — recoloured to the status when one is set.
 
 ## Sizes
 
-`small` (24px), `middle` (32px, default) and `large` (40px), from the control
-height tokens. Large also bumps the font size.
+`size` takes either a preset or a measurement of your own.
+
+The presets are `small` (24px), `middle` (32px, default) and `large` (40px),
+from the control height tokens. Large also bumps the font size.
 
 ```dart
 Input(size: SoftSize.large, placeholder: 'Large')
+Input(size: ControlSize.fixed(36), placeholder: '36 tall')
 ```
+
+A preset carries a type size with it; a bare measurement names only itself, so
+the standard type, padding and radius stand. The text stays centred at any
+height — the box holds the height up, the padding only adds air inside it —
+so a measurement past either end of the preset scale is safe.
+
+`ControlSize.raw(200, 36)` names the width too, so it needs no `SizedBox`
+around it. `fixed()` names only a height — a field given one goes on filling
+the width it is offered, since a text input has nothing to measure itself
+against.
 
 ## Affixes
 

@@ -294,4 +294,113 @@ void main() {
       240,
     );
   });
+
+  group('size takes a preset or a measurement', () {
+    Future<Size> at(
+      WidgetTester tester,
+      ControlSize size, {
+      InputNumberMode mode = InputNumberMode.handles,
+    }) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: Wrap(
+                  children: [
+                    InputNumber(size: size, mode: mode, defaultValue: 5),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      // The height rides an AnimatedContainer, so settle before measuring.
+      await tester.pumpAndSettle();
+      return tester.getSize(find.byType(InputNumber));
+    }
+
+    testWidgets('a preset still walks the theme scale', (tester) async {
+      expect((await at(tester, SoftSize.small)).height, 24);
+      expect((await at(tester, SoftSize.large)).height, 40);
+    });
+
+    testWidgets('a bare measurement is the height', (tester) async {
+      expect((await at(tester, const ControlSize.fixed(44))).height, 44);
+    });
+
+    testWidgets('a two-dimensional size names both', (tester) async {
+      // It reaches the inner Input, which is what actually draws the field.
+      final size = await at(tester, const ControlSize.raw(160, 36));
+      expect(size.width, 160);
+      expect(size.height, 36);
+    });
+
+    testWidgets('the stepper buttons follow the height too', (tester) async {
+      // The field's own height comes from the Input inside; the buttons are
+      // sized separately, so a measurement has to reach both or they stick
+      // out of the border.
+      Future<double> tallestButton(ControlSize size) async {
+        await tester.pumpWidget(
+          ConfigProvider(
+            child: MaterialApp(
+              home: Scaffold(
+                body: Center(
+                  child: Wrap(
+                    children: [
+                      InputNumber(
+                        size: size,
+                        mode: InputNumberMode.spinner,
+                        defaultValue: 5,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        // The button itself, not the field: each step button paints its sign
+        // on a CustomPaint, and the box around that is what _controlHeight
+        // sizes. The field has an AnimatedContainer of its own, which is what
+        // an earlier attempt at this measured by mistake.
+        final sign = find
+            .descendant(
+              of: find.byType(InputNumber),
+              matching: find.byType(CustomPaint),
+            )
+            .first;
+        return tester
+            .getSize(
+              find
+                  .ancestor(of: sign, matching: find.byType(AnimatedContainer))
+                  .first,
+            )
+            .height;
+      }
+
+      final middle = await tallestButton(SoftSize.middle);
+      final tall = await tallestButton(const ControlSize.fixed(56));
+      expect(tall, greaterThan(middle), reason: 'the buttons grew with it');
+    });
+
+    testWidgets('in spinner mode it beats spinnerWidth', (tester) async {
+      // A spinner sizes itself from the token unless told outright.
+      final byToken = await at(
+        tester,
+        SoftSize.large,
+        mode: InputNumberMode.spinner,
+      );
+      final told = await at(
+        tester,
+        const ControlSize.raw(160, 36),
+        mode: InputNumberMode.spinner,
+      );
+      expect(byToken.width, isNot(160));
+      expect(told.width, 160);
+      expect(told.height, 36);
+    });
+  });
 }

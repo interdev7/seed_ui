@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/size_resolver.dart';
 import 'input.dart';
 
 /// Per-component design tokens for [InputNumber].
@@ -122,7 +123,7 @@ class InputNumberDefaults {
   ///
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Whether a [InputNumber] is disabled, unless it says otherwise.
   ///
@@ -213,7 +214,7 @@ class InputNumber extends StatefulWidget {
   final bool? keyboard;
 
   /// Which height preset to use.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// A validation status that recolours the border.
   final InputStatus? status;
@@ -268,7 +269,7 @@ class _InputNumberState extends State<InputNumber> {
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
-  SoftSize get _size =>
+  ControlSize get _size =>
       widget.size ??
       _defaults?.size ??
       ConfigProvider.componentSizeOf(context) ??
@@ -473,20 +474,24 @@ class _InputNumberState extends State<InputNumber> {
     // buttons and the number between them. Align hands its child loose
     // constraints, so a parent that stretches its children — a `Column` with
     // `crossAxisAlignment: stretch`, a wide page — cannot blow it across the
-    // screen. `spinnerWidth` on the token is how you widen it.
+    // screen. `spinnerWidth` on the token is how you widen it, and a
+    // two-dimensional size names it outright.
     return Align(
       alignment: AlignmentDirectional.centerStart,
       widthFactor: 1,
       heightFactor: 1,
-      child: SizedBox(width: r.spinnerWidth, child: field),
+      child: SizedBox(
+        width: _size.explicitWidth ?? r.spinnerWidth,
+        child: field,
+      ),
     );
   }
 
-  double _controlHeight(Token t) => switch (_size) {
-        SoftSize.small => t.controlHeightSM,
-        SoftSize.middle => t.controlHeight,
-        SoftSize.large => t.controlHeightLG,
-      };
+  double _controlHeight(Token t) => _size.resolveHeight(
+        small: t.controlHeightSM,
+        middle: t.controlHeight,
+        large: t.controlHeightLG,
+      );
 }
 
 /// The vertical up/down spinner shown at the right of an [InputNumber]: two

@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/size_resolver.dart';
 
 /// A validation status that recolours a [Input]'s border.
 enum InputStatus {
@@ -296,7 +297,7 @@ class InputDefaults {
   ///
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Whether a [Input] is disabled, unless it says otherwise.
   ///
@@ -405,7 +406,7 @@ class Input extends StatefulWidget {
   final bool prefixFlush;
 
   /// Which height preset to use.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// A validation status that recolours the border. Null is the normal state.
   final InputStatus? status;
@@ -471,7 +472,7 @@ class _SoftInputState extends State<Input> {
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
-  SoftSize get _size =>
+  ControlSize get _size =>
       widget.size ??
       _defaults?.size ??
       ConfigProvider.componentSizeOf(context) ??
@@ -538,17 +539,19 @@ class _SoftInputState extends State<Input> {
 
   bool get _obscure => widget.password != null && _obscured;
 
-  double _height(Token token) => switch (_size) {
-        SoftSize.small => token.controlHeightSM,
-        SoftSize.middle => token.controlHeight,
-        SoftSize.large => token.controlHeightLG,
-      };
+  double _height(Token token) => _size.resolveHeight(
+        small: token.controlHeightSM,
+        middle: token.controlHeight,
+        large: token.controlHeightLG,
+      );
 
-  double _fontSize(_ResolvedInputToken r) => switch (_size) {
-        SoftSize.small => r.fontSizeSM,
-        SoftSize.middle => r.fontSize,
-        SoftSize.large => r.fontSizeLG,
-      };
+  double _fontSize(_ResolvedInputToken r) => _size is! SoftSize
+      ? r.fontSize
+      : switch (_size as SoftSize) {
+          SoftSize.small => r.fontSizeSM,
+          SoftSize.middle => r.fontSize,
+          SoftSize.large => r.fontSizeLG,
+        };
 
   /// Whether the soft [count] limit is currently exceeded.
   bool get _countExceeded {
@@ -762,42 +765,57 @@ class _SoftInputState extends State<Input> {
 
     final box = _box(token, r, content, flatRight: attached);
 
-    if (!attached) return box;
+    // A two-dimensional size names a width as well. Both ways out of this
+    // build have to honour it — the plain field returns early, which is what
+    // an earlier attempt at this missed.
+    final named = _size.explicitWidth;
+    Widget sized(Widget child) =>
+        named == null ? child : SizedBox(width: named, child: child);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(child: box),
-        _SearchButton(
-          token: token,
-          height: _height(token),
-          fontSize: fontSize,
-          loading: search.loading,
-          label: search.enterButtonLabel,
-          icon: search.searchIcon,
-          onTap: _enabled ? _triggerSearch : null,
-        ),
-      ],
+    if (!attached) return sized(box);
+
+    return sized(
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(child: box),
+          _SearchButton(
+            token: token,
+            height: _height(token),
+            fontSize: fontSize,
+            loading: search.loading,
+            label: search.enterButtonLabel,
+            icon: search.searchIcon,
+            onTap: _enabled ? _triggerSearch : null,
+          ),
+        ],
+      ),
     );
   }
 
-  double _paddingInline(_ResolvedInputToken r) => switch (_size) {
-        SoftSize.small => r.paddingInlineSM,
-        SoftSize.middle => r.paddingInline,
-        SoftSize.large => r.paddingInlineLG,
-      };
+  double _paddingInline(_ResolvedInputToken r) => _size is! SoftSize
+      ? r.paddingInline
+      : switch (_size as SoftSize) {
+          SoftSize.small => r.paddingInlineSM,
+          SoftSize.middle => r.paddingInline,
+          SoftSize.large => r.paddingInlineLG,
+        };
 
-  double _paddingBlock(_ResolvedInputToken r) => switch (_size) {
-        SoftSize.small => r.paddingBlockSM,
-        SoftSize.middle => r.paddingBlock,
-        SoftSize.large => r.paddingBlockLG,
-      };
+  double _paddingBlock(_ResolvedInputToken r) => _size is! SoftSize
+      ? r.paddingBlock
+      : switch (_size as SoftSize) {
+          SoftSize.small => r.paddingBlockSM,
+          SoftSize.middle => r.paddingBlock,
+          SoftSize.large => r.paddingBlockLG,
+        };
 
-  double _radiusVal(_ResolvedInputToken r) => switch (_size) {
-        SoftSize.small => r.borderRadiusSM,
-        SoftSize.middle => r.borderRadius,
-        SoftSize.large => r.borderRadiusLG,
-      };
+  double _radiusVal(_ResolvedInputToken r) => _size is! SoftSize
+      ? r.borderRadius
+      : switch (_size as SoftSize) {
+          SoftSize.small => r.borderRadiusSM,
+          SoftSize.middle => r.borderRadius,
+          SoftSize.large => r.borderRadiusLG,
+        };
 
   /// The corner an affix sitting *inside* the border has to follow: the box's
   /// own radius less the border it sits within.

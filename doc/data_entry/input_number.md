@@ -55,9 +55,19 @@ InputNumber(
 
 ## Other
 
-`prefix`, `suffix` (when `controls` is off), `size` (`small`/`middle`/`large`),
-`status` (`error`/`warning`), `disabled` and `readOnly` behave as on
+`prefix`, `suffix` (when `controls` is off), `size`, `status`
+(`error`/`warning`), `disabled` and `readOnly` behave as on
 [Input](../data_entry/input.md).
+
+`size` takes a preset — `small`, `middle`, `large` — or a measurement:
+
+```dart
+InputNumber(size: ControlSize.fixed(44))       // 44 tall
+InputNumber(size: ControlSize.raw(160, 36))    // 160 by 36
+```
+
+The steppers follow the height, so they stay inside the border. In
+`InputNumberMode.spinner` a named width beats the `spinnerWidth` token.
 
 ## Other properties
 

@@ -99,4 +99,121 @@ void main() {
     await tester.enterText(find.byType(Input), 'abcdef');
     expect(controller.text, 'abc');
   });
+
+  group('size takes a preset or a measurement', () {
+    Future<Rect> boxAt(WidgetTester tester, ControlSize size) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 260,
+                  child: Input(size: size, placeholder: 'Ag'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      // The height rides an AnimatedContainer, so settle before measuring.
+      await tester.pumpAndSettle();
+      return tester.getRect(find.byType(Input));
+    }
+
+    testWidgets('a preset still walks the theme scale', (tester) async {
+      expect((await boxAt(tester, SoftSize.small)).height, 24);
+      expect((await boxAt(tester, SoftSize.middle)).height, 32);
+      expect((await boxAt(tester, SoftSize.large)).height, 40);
+    });
+
+    testWidgets('a measurement is taken as given', (tester) async {
+      expect((await boxAt(tester, const ControlSize.fixed(36))).height, 36);
+      // Past both ends of the preset scale, too.
+      expect((await boxAt(tester, const ControlSize.fixed(56))).height, 56);
+      expect((await boxAt(tester, const ControlSize.fixed(20))).height, 20);
+    });
+
+    testWidgets('a two-dimensional size names the width too', (tester) async {
+      // Both ways out of the build have to honour it: a plain field returns
+      // before the search-button Row, and an earlier attempt missed that exit
+      // entirely, so raw() looked like it did nothing.
+      await tester.pumpWidget(
+        const ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: Wrap(
+                  children: [Input(size: ControlSize.raw(180, 36))],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final size = tester.getSize(find.byType(Input));
+      expect(size.width, 180);
+      expect(size.height, 36);
+    });
+
+    testWidgets('the search field honours it as well', (tester) async {
+      // The other exit — the one with the button attached.
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: Wrap(
+                  children: [
+                    Input(
+                      size: const ControlSize.raw(220, 36),
+                      search: SearchConfig(enterButton: true, onSearch: (_) {}),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(Input)).width, 220);
+    });
+
+    testWidgets('a bare height says nothing about width', (tester) async {
+      // fixed() names one dimension; the field goes on filling what it is
+      // offered, as a text field with nothing to measure should.
+      await tester.pumpWidget(
+        const ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [Input(size: ControlSize.fixed(20))],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final size = tester.getSize(find.byType(Input));
+      expect(size.height, 20);
+      expect(size.width, 800);
+    });
+    testWidgets('the text stays centred at any height', (tester) async {
+      // The padding is not what holds the height up — the box is — so an
+      // unusual height neither pushes the text off centre nor overflows.
+      for (final h in [20.0, 36.0, 56.0]) {
+        final box = await boxAt(tester, ControlSize.fixed(h));
+        final text = tester.getRect(find.text('Ag'));
+        expect(
+          text.top - box.top,
+          closeTo(box.bottom - text.bottom, 0.5),
+          reason: 'off centre at $h',
+        );
+        expect(tester.takeException(), isNull, reason: 'overflowed at $h');
+      }
+    });
+  });
 }

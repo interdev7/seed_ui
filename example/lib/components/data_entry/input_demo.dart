@@ -75,6 +75,46 @@ class InputDemo extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        // A measurement instead of a preset.
+        //
+        // fixed() names a height and says nothing about width, so these still
+        // fill the line — a text field has no content to measure. raw() names
+        // both, and needs no SizedBox around it.
+        const Row(
+          children: [
+            Expanded(
+              child: Input(
+                placeholder: 'fixed(20)',
+                size: ControlSize.fixed(20),
+              ),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: Input(
+                placeholder: 'fixed(36)',
+                size: ControlSize.fixed(36),
+              ),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: Input(
+                placeholder: 'fixed(56)',
+                size: ControlSize.fixed(56),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            Input(placeholder: 'raw(140, 24)', size: ControlSize.raw(140, 24)),
+            Input(placeholder: 'raw(200, 36)', size: ControlSize.raw(200, 36)),
+            Input(placeholder: 'raw(260, 48)', size: ControlSize.raw(260, 48)),
+          ],
+        ),
+        const SizedBox(height: 12),
         const Input(placeholder: 'Text area', maxLines: 4),
       ],
     );

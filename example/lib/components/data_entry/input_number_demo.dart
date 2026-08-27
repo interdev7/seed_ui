@@ -87,6 +87,37 @@ class _InputNumberDemoState extends State<InputNumberDemo> {
             ],
           ),
         ),
+        const Group(
+          'A measurement instead of a preset',
+          // fixed() names a height; the field goes on filling the width, as a
+          // text field with nothing to measure should. raw() names both and
+          // needs no SizedBox — in spinner mode it beats spinnerWidth too.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 220,
+                child: InputNumber(
+                  defaultValue: 1,
+                  size: ControlSize.fixed(44),
+                ),
+              ),
+              SizedBox(height: 8),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  InputNumber(defaultValue: 1, size: ControlSize.raw(160, 36)),
+                  InputNumber(
+                    defaultValue: 1,
+                    mode: InputNumberMode.spinner,
+                    size: ControlSize.raw(180, 44),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
         const Group('Disabled', InputNumber(defaultValue: 5, disabled: true)),
       ],
     );

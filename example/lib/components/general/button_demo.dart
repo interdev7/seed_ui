@@ -52,6 +52,68 @@ class ButtonDemo extends StatelessWidget {
           ),
         ),
         Group(
+          'Sizes · a measurement of your own',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Button(
+                    variant: ButtonVariant.solid,
+                    color: ButtonColor.primary,
+                    size: const ControlSize.height(54),
+                    onPressed: () {},
+                    child: const Text('height(54)'),
+                  ),
+                  Button(
+                    variant: ButtonVariant.solid,
+                    color: ButtonColor.primary,
+                    size: const ControlSize.height(20),
+                    onPressed: () {},
+                    child: const Text('height(20)'),
+                  ),
+                  // A circle has one measurement: the height is the diameter.
+                  Button(
+                    variant: ButtonVariant.solid,
+                    color: ButtonColor.primary,
+                    size: const ControlSize.height(54),
+                    shape: ButtonShape.circle,
+                    icon: const Icon(Icons.search),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Button(
+                    size: const ControlSize.box(200, 36),
+                    onPressed: () {},
+                    child: const Text('box(200, 36)'),
+                  ),
+                  Button(
+                    size: const ControlSize.width(160),
+                    onPressed: () {},
+                    child: const Text('width(160)'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'A measurement names a height; the type, the corners and the '
+                'padding come from the preset it is nearest to, so a button '
+                'sized by hand still looks like one of the family.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Loading / disabled / icon',
           Wrap(
             spacing: 8,
@@ -79,6 +141,7 @@ class ButtonDemo extends StatelessWidget {
           variant: ButtonVariant.solid,
           color: ButtonColor.primary,
           block: true,
+          size: SoftSize.large,
           onPressed: () {},
           child: const Text('Block'),
         ),

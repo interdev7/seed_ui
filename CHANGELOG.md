@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.14.0
+
+### Changed
+
+- **`Button.size` takes a `ControlSize`, not just a `SoftSize`.** It was the
+  last control still on presets alone, so a round button could not be given a
+  diameter — `ControlSize.height(54)` would not compile.
+
+  ```dart
+  Button(size: const ControlSize.height(54), shape: ButtonShape.circle, ...)
+  ```
+
+  A measurement names a height and nothing else, so the type size, the corners
+  and the padding come from the preset that height is nearest to, measured
+  against the theme's own scale rather than numbers written down in the
+  component. `Steps` sizes its type the same way. A circle given two
+  dimensions takes the larger side, as an `Avatar` does. `SoftSize.large` and
+  the rest read exactly as before; `ButtonDefaults.size` widens to match.
+
 ## 0.13.0
 
 ### Added

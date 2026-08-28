@@ -81,7 +81,7 @@ Button(variant: ButtonVariant.outlined, onPressed: () {}, child: const Text('Def
 | `onPressed` | `VoidCallback?` | `null` | Tap handler; null disables the button |
 | `variant` | `ButtonVariant?` | `null` | Follows `ButtonDefaults.variant`, else `outlined`. How the button is filled |
 | `color` | `ButtonColor?` | `null` | A preset, or a colour of your own. Follows `ButtonDefaults.color`, else `defaultColor` |
-| `size` | `SoftSize?` | `null` | `small` (24), `middle` (32), `large` (40). Follows `ButtonDefaults.size`, then `componentSize`, else `middle` |
+| `size` | `ControlSize?` | `null` | A preset — `small` (24), `middle` (32), `large` (40) — or a measurement of your own. Follows `ButtonDefaults.size`, then `componentSize`, else `middle` |
 | `shape` | `ButtonShape?` | `null` | Follows `ButtonDefaults.shape`, else `defaultShape`. `defaultShape`, `circle`, `round` |
 | `icon` | `Widget?` | `null` | Leading icon, tinted and sized to the label |
 | `loading` | `bool` | `false` | Swaps the icon for a spinner and blocks taps |
@@ -93,6 +93,32 @@ Button(variant: ButtonVariant.outlined, onPressed: () {}, child: const Text('Def
 
 ```dart
 Button(size: SoftSize.large, variant: ButtonVariant.solid, color: ButtonColor.primary, onPressed: () {}, child: const Text('Large'))
+```
+
+### A measurement of your own
+
+```dart
+Button(size: const ControlSize.height(54), ...)            // 54 tall
+Button(size: const ControlSize.box(200, 36), ...)          // and 200 wide
+Button(size: const ControlSize.width(160), ...)            // height left to the preset
+
+// A circle has one measurement, so the height is its diameter.
+Button(
+  size: const ControlSize.height(54),
+  shape: ButtonShape.circle,
+  icon: const Icon(Icons.search),
+  onPressed: () {},
+)
+```
+
+A measurement names a height and nothing else, but the type size, the corners
+and the padding all have to come from somewhere. They come from the **preset
+the height is nearest to**, measured against the theme's own control heights
+rather than fixed numbers — so a theme that moves its scale carries this with
+it, and a button sized by hand still looks like one of the family.
+
+Given two dimensions, a circle takes the larger side, as an `Avatar` does:
+honouring both would make it an oval.
 ```
 
 ## Icons

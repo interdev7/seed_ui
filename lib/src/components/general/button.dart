@@ -5,6 +5,7 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
 import '../../utils/hex_color.dart';
+import '../../utils/size_resolver.dart';
 
 /// How a [Button] is filled and bordered.
 enum ButtonVariant {
@@ -271,7 +272,7 @@ class ButtonDefaults {
   ///
   /// Nearer than `ConfigProvider.componentSize`, so this wins where
   /// both are set — 'small buttons on an otherwise normal screen'.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Whether Button is disabled, unless it says otherwise.
   ///
@@ -328,8 +329,13 @@ class Button extends StatefulWidget {
   /// Which palette the button draws from.
   final ButtonColor? color;
 
-  /// Which control height to use.
-  final SoftSize? size;
+  /// Which control height to use: a preset, or a measurement of your own.
+  ///
+  /// A circle has one measurement, so `ControlSize.height(54)` is its
+  /// diameter. Everything else a preset would have settled — the type size,
+  /// the corners, the padding — comes from the preset nearest the height
+  /// asked for, so a button sized by hand still looks like one of the family.
+  final ControlSize? size;
 
   /// The outline shape. Use [ButtonShape.circle] for icon-only buttons.
   final ButtonShape? shape;
@@ -385,7 +391,7 @@ class _SoftButtonState extends State<Button> {
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
-  SoftSize get _size =>
+  ControlSize get _size =>
       widget.size ??
       _defaults?.size ??
       ConfigProvider.componentSizeOf(context) ??
@@ -394,13 +400,42 @@ class _SoftButtonState extends State<Button> {
   bool _hovered = false;
   bool _pressed = false;
 
-  double _height(_ResolvedButtonToken r) => switch (_size) {
-        SoftSize.small => r.controlHeightSM,
-        SoftSize.middle => r.controlHeight,
-        SoftSize.large => r.controlHeightLG,
-      };
+  /// The button's height — and, for a circle, its diameter.
+  ///
+  /// A circle takes the larger side of a two-dimensional size, as an [Avatar]
+  /// does: it has one measurement, and honouring both would make it an oval.
+  double _height(_ResolvedButtonToken r) => _shape == ButtonShape.circle
+      ? _size.resolve1D(
+          small: r.controlHeightSM,
+          middle: r.controlHeight,
+          large: r.controlHeightLG,
+        )
+      : _size.resolveHeight(
+          small: r.controlHeightSM,
+          middle: r.controlHeight,
+          large: r.controlHeightLG,
+        );
 
-  double _fontSize(_ResolvedButtonToken r) => switch (_size) {
+  /// The preset a size belongs to.
+  ///
+  /// A measurement names a height and nothing else, but the type, the corners
+  /// and the padding all have to come from somewhere. They come from the
+  /// preset the height is nearest to, measured against the theme's own scale
+  /// rather than fixed numbers, so a theme that moves its control heights
+  /// carries this with it. `Steps` sizes its type the same way.
+  SoftSize _preset(_ResolvedButtonToken r) {
+    final size = _size;
+    if (size is SoftSize) return size;
+    final height = _height(r);
+    final byDistance = <(SoftSize, double)>[
+      (SoftSize.small, (height - r.controlHeightSM).abs()),
+      (SoftSize.middle, (height - r.controlHeight).abs()),
+      (SoftSize.large, (height - r.controlHeightLG).abs()),
+    ]..sort((a, b) => a.$2.compareTo(b.$2));
+    return byDistance.first.$1;
+  }
+
+  double _fontSize(_ResolvedButtonToken r) => switch (_preset(r)) {
         SoftSize.small => r.fontSizeSM,
         SoftSize.middle => r.fontSize,
         SoftSize.large => r.fontSizeLG,
@@ -411,7 +446,7 @@ class _SoftButtonState extends State<Button> {
         ButtonShape.round =>
           BorderRadius.circular(_height(r) / 2),
         ButtonShape.defaultShape => BorderRadius.circular(
-            switch (_size) {
+            switch (_preset(r)) {
               SoftSize.small => r.borderRadiusSM,
               SoftSize.middle => r.borderRadius,
               SoftSize.large => r.borderRadiusLG,
@@ -576,7 +611,7 @@ class _SoftButtonState extends State<Button> {
 
     final horizontalPadding = widget._iconOnly
         ? 0.0
-        : switch (_size) {
+        : switch (_preset(r)) {
             SoftSize.small => r.paddingInlineSM,
             SoftSize.middle => r.paddingInline,
             SoftSize.large => r.paddingInlineLG,
@@ -586,7 +621,12 @@ class _SoftButtonState extends State<Button> {
       duration: token.motionDurationMid,
       curve: token.motionEaseInOut,
       height: height,
-      width: widget._iconOnly ? height : null,
+      // A circle is as wide as it is tall; otherwise a two-dimensional size
+      // names the width, an icon-only button is square, and anything else is
+      // as wide as what is in it.
+      width: _shape == ButtonShape.circle
+          ? height
+          : (_size.explicitWidth ?? (widget._iconOnly ? height : null)),
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       decoration: BoxDecoration(
         color: widget.gradient == null ? style.background : null,

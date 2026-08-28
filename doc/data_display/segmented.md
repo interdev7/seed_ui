@@ -74,7 +74,9 @@ whether segments differ in width.
 | `size`       | `small` (24px), `middle` (32px, default), `large` (40px) |
 | `direction`  | `horizontal` (default) or `vertical`                     |
 | `block`      | Stretch the segments to fill the available space equally |
-| `scrollButtons` | Arrows for stepping through a run too wide to fit (default on) |
+| `scrollButtons` | Arrows for stepping through a run too big to fit (default on) |
+| `arrowBuilder` | Draw those arrows yourself |
+| `controller` | Drive the scrolling from outside the build |
 | `disabled`   | Grey the whole control out and block selection           |
 | `trackColor` | Override the background colour                           |
 | `thumbColor` | Override the sliding thumb's colour                      |
@@ -145,8 +147,79 @@ underneath one.
 In a right-to-left layout everything mirrors: onwards is leftwards, and the
 carets and the buttons follow.
 
-`block: true` never scrolls — the options share whatever width there is — and a
-vertical run grows instead, so neither offers arrows.
+`block: true` never scrolls: the options share whatever width there is.
+
+### A column scrolls too
+
+A column scrolls inside whatever height it is given, with the arrows at the top
+and bottom and the carets turned to match. Give it no height — the usual case,
+in a page that scrolls itself — and it grows instead, so there is nothing
+hidden and no arrow to say so.
+
+```dart
+SizedBox(
+  height: 90,
+  child: Segmented(direction: Axis.vertical, value: v, options: o, onChanged: f),
+)
+```
+
+### Arrows of your own
+
+`arrowBuilder` replaces the kit's pair. One builder for both, told apart by a
+`SegmentedArrow`, rather than a pair of props: the two arrows are one thing
+pointing opposite ways, and two builders would have that written twice and free
+to drift apart. Where they really differ, a `switch` inside is one line. It is
+the shape [`emptyBuilder`](../theming.md) already has.
+
+```dart
+Segmented(
+  arrowBuilder: (context, arrow, step) => GestureDetector(
+    onTap: step,
+    child: Icon(
+      arrow == SegmentedArrow.next ? Icons.chevron_right : Icons.chevron_left,
+    ),
+  ),
+  ...
+)
+```
+
+Call `step` when yours is pressed; the kit places what you return, at the end
+it steps towards. It measures it too, so a step still stops short of an arrow
+of your own size rather than sliding a segment underneath it.
+
+### Driving it from outside
+
+`SegmentedController` moves the run when something other than the arrows should
+— a keyboard shortcut, a button elsewhere on the page.
+
+```dart
+final segments = SegmentedController();
+...
+Segmented(controller: segments, value: v, options: o, onChanged: f)
+...
+segments.next();          // one more segment on
+segments.previous();
+segments.toStart();
+segments.toEnd();
+segments.scrollTo(3);     // bring one into view, moving as little as it takes
+```
+
+It is a `ChangeNotifier` and reports `canStepBack` and `canStepOn`, so a button
+of your own knows when to grey itself out:
+
+```dart
+ListenableBuilder(
+  listenable: segments,
+  builder: (context, _) => Button(
+    onPressed: segments.canStepOn ? segments.next : null,
+    child: const Text('More'),
+  ),
+)
+```
+
+Scrolling only. Which segment is **selected** stays with `value` and
+`onChanged`: a controller that could also select would make two owners of one
+truth, and they disagree sooner or later.
 
 ## Design tokens
 

@@ -69,6 +69,9 @@ export 'src/components/data_display/segmented.dart'
     show
         SegmentedDefaults,
         Segmented,
+        SegmentedArrow,
+        SegmentedArrowBuilder,
+        SegmentedController,
         SegmentedDirection,
         SegmentedOption,
         SegmentedToken;

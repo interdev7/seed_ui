@@ -579,11 +579,14 @@ const _long = ['Compact', 'Cozy', 'Comfortable', 'Extra', 'Extra Large'];
 
 Widget _run({
   double width = 220,
+  double? height,
   bool block = false,
   bool? scrollButtons,
   Axis? direction,
   TextDirection dir = TextDirection.ltr,
   ValueChanged<int>? onChanged,
+  SegmentedController? controller,
+  SegmentedArrowBuilder? arrowBuilder,
 }) =>
     ConfigProvider(
       child: MaterialApp(
@@ -593,12 +596,15 @@ Widget _run({
             body: Center(
               child: SizedBox(
                 width: width,
+                height: height,
                 child: Segmented<int>(
                   value: 0,
                   size: SoftSize.small,
                   block: block,
                   direction: direction,
                   scrollButtons: scrollButtons,
+                  controller: controller,
+                  arrowBuilder: arrowBuilder,
                   onChanged: onChanged ?? (_) {},
                   options: [
                     for (var i = 0; i < _long.length; i++)
@@ -726,15 +732,186 @@ void _scrollButtonTests() {
       expect(_arrows('Next'), 0);
     });
 
-    testWidgets('a block run and a column never scroll, and so never ask',
-        (tester) async {
+    testWidgets('a block run never scrolls, and so never asks', (tester) async {
       await tester.pumpWidget(_run(block: true));
       await tester.pumpAndSettle();
       expect(_arrows('Next'), 0);
+    });
 
-      await tester.pumpWidget(_run(direction: Axis.vertical));
+    testWidgets('a column left to grow grows, without complaint',
+        (tester) async {
+      // Inside a page that scrolls, which is where a column usually lives:
+      // the height is unbounded, so there is no viewport to scroll inside and
+      // wrapping it in one would be an error, not a feature. A Center would
+      // not do here — it bounds the height, and the test would pass without
+      // touching the thing it means to.
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: Segmented<int>(
+                  value: 0,
+                  size: SoftSize.small,
+                  direction: Axis.vertical,
+                  onChanged: (_) {},
+                  options: [
+                    for (var i = 0; i < _long.length; i++)
+                      SegmentedOption(value: i, label: _long[i]),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(_arrows('Next'), 0);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a column given a height scrolls, and asks at top and bottom',
+        (tester) async {
+      await tester.pumpWidget(_run(direction: Axis.vertical, height: 90));
+      await tester.pumpAndSettle();
+      expect(_arrows('Previous'), 0, reason: 'nothing above yet');
+      expect(_arrows('Next'), 1);
+
+      final view = tester.getRect(find.byType(SingleChildScrollView));
+      final next = tester.getRect(find.bySemanticsLabel('Next'));
+      expect(next.top, greaterThan(view.center.dy), reason: 'at the bottom');
+      expect(next.width, closeTo(view.width, 1), reason: 'across the column');
+
+      await tester.tap(find.bySemanticsLabel('Next'));
+      await tester.pumpAndSettle();
+      expect(_arrows('Previous'), 1, reason: 'something is above now');
+    });
+
+    testWidgets('a controller steps, jumps and reveals', (tester) async {
+      final c = SegmentedController();
+      addTearDown(c.dispose);
+      await tester.pumpWidget(_run(controller: c));
+      await tester.pumpAndSettle();
+
+      expect(c.canStepBack, isFalse);
+      expect(c.canStepOn, isTrue);
+
+      c.next();
+      await tester.pumpAndSettle();
+      expect(c.canStepBack, isTrue, reason: 'something is behind now');
+      final afterOne = _readable(tester);
+
+      c.previous();
+      await tester.pumpAndSettle();
+      expect(_readable(tester), isNot(afterOne));
+
+      c.toEnd();
+      await tester.pumpAndSettle();
+      expect(c.canStepOn, isFalse);
+      expect(_readable(tester), contains(_long.last));
+
+      c.toStart();
+      await tester.pumpAndSettle();
+      expect(c.canStepBack, isFalse);
+      expect(_readable(tester), contains(_long.first));
+
+      c.scrollTo(_long.length - 1);
+      await tester.pumpAndSettle();
+      expect(_readable(tester), contains(_long.last));
+
+      // Already in view, so it stays put.
+      final settled = _readable(tester);
+      c.scrollTo(_long.length - 1);
+      await tester.pumpAndSettle();
+      expect(_readable(tester), settled);
+    });
+
+    testWidgets('a controller tells its listeners when an end runs out',
+        (tester) async {
+      final c = SegmentedController();
+      addTearDown(c.dispose);
+      var told = 0;
+      c.addListener(() => told++);
+
+      await tester.pumpWidget(_run(controller: c));
+      await tester.pumpAndSettle();
+      expect(told, greaterThan(0), reason: 'the first layout is news');
+
+      final before = told;
+      c.toEnd();
+      await tester.pumpAndSettle();
+      expect(told, greaterThan(before), reason: 'the far end ran out');
+    });
+
+    test('a controller drives nothing before it is attached', () {
+      // Called on a controller no control is using, these do nothing rather
+      // than throw — a page may reach for one during a build that has not
+      // happened yet.
+      final c = SegmentedController();
+      addTearDown(c.dispose);
+      expect(c.canStepOn, isFalse);
+      expect(c.next, returnsNormally);
+      expect(c.toEnd, returnsNormally);
+      expect(() => c.scrollTo(3), returnsNormally);
+    });
+
+    testWidgets('arrowBuilder replaces the kit\'s arrows, and still steps',
+        (tester) async {
+      await tester.pumpWidget(
+        _run(
+          arrowBuilder: (context, arrow, step) => GestureDetector(
+            onTap: step,
+            child: SizedBox(
+              width: 60,
+              child: Text(arrow == SegmentedArrow.next ? 'ON' : 'BACK'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(_arrows('Next'), 0, reason: "the kit's own are gone");
+      expect(find.text('ON'), findsOneWidget);
+      expect(find.text('BACK'), findsNothing, reason: 'nothing behind yet');
+
+      await tester.tap(find.text('ON'));
+      await tester.pumpAndSettle();
+      expect(find.text('BACK'), findsOneWidget);
+    });
+
+    testWidgets('a step clears an arrow of the caller\'s own size',
+        (tester) async {
+      // The inset is measured, not assumed, so a wide custom arrow does not
+      // land on top of the segment the step just brought on.
+      const wide = 60.0;
+      await tester.pumpWidget(
+        _run(
+          arrowBuilder: (context, arrow, step) => GestureDetector(
+            onTap: step,
+            child: Container(
+              width: wide,
+              color: const Color(0xFF000000),
+              child: Text(arrow == SegmentedArrow.next ? 'ON' : 'BACK'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final view = tester.getRect(find.byType(SingleChildScrollView));
+      await tester.tap(find.text('ON'));
+      await tester.pumpAndSettle();
+
+      final arrow = tester.getRect(find.text('ON'));
+      expect(arrow.width, closeTo(wide, 1), reason: 'the caller owns the size');
+      // Whatever the run brought on must stop before the button, not under it.
+      final visible = [
+        for (final l in _long)
+          if (tester.getRect(find.text(l)).right <= arrow.left + 0.5 &&
+              tester.getRect(find.text(l)).left >= view.left - 0.5)
+            l,
+      ];
+      expect(visible, isNotEmpty);
     });
 
     testWidgets('a mirrored run steps the way it reads', (tester) async {

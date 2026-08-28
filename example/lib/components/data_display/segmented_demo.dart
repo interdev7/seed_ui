@@ -15,6 +15,13 @@ class _SegmentedDemoState extends State<SegmentedDemo> {
   String _view = 'list';
   int _density = 1;
   bool _scrollButtons = true;
+  final _run = SegmentedController();
+
+  @override
+  void dispose() {
+    _run.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,6 +166,7 @@ class _SegmentedDemoState extends State<SegmentedDemo> {
                 child: Segmented<int>(
                   value: _density,
                   size: SoftSize.small,
+                  controller: _run,
                   scrollButtons: _scrollButtons,
                   onChanged: (v) => setState(() => _density = v),
                   options: const [
@@ -169,6 +177,42 @@ class _SegmentedDemoState extends State<SegmentedDemo> {
                     SegmentedOption(value: 4, label: 'Extra Large'),
                     SegmentedOption(value: 5, label: 'Block'),
                     SegmentedOption(value: 6, label: 'Round'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              // The same run, driven from outside. The buttons grey themselves
+              // out because the controller says which ends have run out.
+              ListenableBuilder(
+                listenable: _run,
+                builder: (context, _) => Wrap(
+                  spacing: 8,
+                  children: [
+                    Button(
+                      size: SoftSize.small,
+                      onPressed: _run.canStepBack ? _run.previous : null,
+                      child: const Text('previous()'),
+                    ),
+                    Button(
+                      size: SoftSize.small,
+                      onPressed: _run.canStepOn ? _run.next : null,
+                      child: const Text('next()'),
+                    ),
+                    Button(
+                      size: SoftSize.small,
+                      onPressed: _run.toStart,
+                      child: const Text('toStart()'),
+                    ),
+                    Button(
+                      size: SoftSize.small,
+                      onPressed: _run.toEnd,
+                      child: const Text('toEnd()'),
+                    ),
+                    Button(
+                      size: SoftSize.small,
+                      onPressed: () => _run.scrollTo(3),
+                      child: const Text('scrollTo(3)'),
+                    ),
                   ],
                 ),
               ),
@@ -187,6 +231,73 @@ class _SegmentedDemoState extends State<SegmentedDemo> {
                 'An arrow appears on whichever end has something hidden, and '
                 'each tap brings on one more segment. Both show when there is '
                 'more in either direction; each goes when its end runs out.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Arrows of your own',
+          SizedBox(
+            width: 260,
+            child: Segmented<int>(
+              value: _density,
+              size: SoftSize.small,
+              onChanged: (v) => setState(() => _density = v),
+              // One builder for both, told apart by the enum — the shape
+              // emptyBuilder already has.
+              arrowBuilder: (context, arrow, step) => GestureDetector(
+                onTap: step,
+                child: Container(
+                  width: 28,
+                  color: const Color(0xCC1677FF),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    arrow == SegmentedArrow.next
+                        ? Icons.chevron_right
+                        : Icons.chevron_left,
+                    size: 16,
+                    color: const Color(0xFFFFFFFF),
+                  ),
+                ),
+              ),
+              options: const [
+                SegmentedOption(value: 0, label: 'Compact'),
+                SegmentedOption(value: 1, label: 'Cozy'),
+                SegmentedOption(value: 2, label: 'Comfortable'),
+                SegmentedOption(value: 3, label: 'Extra'),
+                SegmentedOption(value: 4, label: 'Extra Large'),
+              ],
+            ),
+          ),
+        ),
+        Group(
+          'A column that scrolls',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // A column only scrolls inside a height someone gives it; left
+              // to grow it grows, and has nothing to hide.
+              SizedBox(
+                height: 90,
+                child: Segmented<int>(
+                  value: _density,
+                  size: SoftSize.small,
+                  direction: Axis.vertical,
+                  onChanged: (v) => setState(() => _density = v),
+                  options: const [
+                    SegmentedOption(value: 0, label: 'Compact'),
+                    SegmentedOption(value: 1, label: 'Cozy'),
+                    SegmentedOption(value: 2, label: 'Comfortable'),
+                    SegmentedOption(value: 3, label: 'Extra'),
+                    SegmentedOption(value: 4, label: 'Extra Large'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The arrows go to the top and bottom and turn with the axis. '
+                'Give the column no height and it grows instead, with nothing '
+                'to scroll and so nothing to say.',
               ),
             ],
           ),

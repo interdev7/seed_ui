@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`Segmented.scrollButtons`** — a run too wide to fit now says so.
+- **`Segmented.scrollButtons`** — a run too big to fit now says so.
 
   An arrow appears on whichever end has something hidden behind it, and each
   tap brings on one more segment; both show when there is more either way, and
@@ -22,6 +22,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   width so the segment it brings on does not arrive underneath one. `arrowBg`,
   `arrowHoverBg` and `arrowColor` dress them; `scrollButtons: false` turns them
   off.
+
+- **`SegmentedController`** — moves the run from outside the build: `next`,
+  `previous`, `toStart`, `toEnd`, `scrollTo`. A `ChangeNotifier` reporting
+  `canStepBack` and `canStepOn`, so a button of your own knows when to grey
+  itself out. Scrolling only: which segment is selected stays with `value` and
+  `onChanged`, and a controller that could also select would make two owners of
+  one truth.
+
+- **`Segmented.arrowBuilder`** — draw the arrows yourself. One builder for
+  both, told apart by a `SegmentedArrow`, which is the shape `emptyBuilder`
+  already has; a pair of props would have one widget written twice and free to
+  drift. The kit places what you return and measures it, so a step still stops
+  short of an arrow of your own size.
+
+- **A column scrolls too**, with the arrows at its top and bottom and the
+  carets turned to match. Given no height it grows as before, with nothing
+  hidden and nothing to say.
 
 - **`DropdownEntry<T>`** — the menu carries the type of what it reports.
 

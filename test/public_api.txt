@@ -188,6 +188,9 @@ SearchIcon
 SeedLocalizations
 SeedToken
 Segmented
+SegmentedArrow
+SegmentedArrowBuilder
+SegmentedController
 SegmentedDefaults
 SegmentedDirection
 SegmentedOption

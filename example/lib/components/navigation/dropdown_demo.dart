@@ -25,27 +25,27 @@ class _DropdownDemoState extends State<DropdownDemo> {
 
   static const _menu = <DropdownEntry>[
     DropdownItem(
-      key: 'profile',
+      value: 'profile',
       label: Text('Profile'),
       icon: Icon(Icons.person),
     ),
     DropdownItem(
-      key: 'settings',
+      value: 'settings',
       label: Text('Settings'),
       icon: Icon(Icons.settings),
     ),
     DropdownDivider(),
     DropdownItem(
-      key: 'more',
+      value: 'more',
       label: Text('More'),
       children: [
-        DropdownItem(key: 'help', label: Text('Help')),
-        DropdownItem(key: 'about', label: Text('About')),
+        DropdownItem(value: 'help', label: Text('Help')),
+        DropdownItem(value: 'about', label: Text('About')),
       ],
     ),
     DropdownDivider(),
     DropdownItem(
-      key: 'logout',
+      value: 'logout',
       label: Text('Log out'),
       icon: Icon(Icons.logout),
       danger: true,
@@ -123,15 +123,15 @@ class _DropdownDemoState extends State<DropdownDemo> {
               DropdownGroup(
                 label: Text('Account'),
                 children: [
-                  DropdownItem(key: 'billing', label: Text('Billing')),
-                  DropdownItem(key: 'team', label: Text('Team')),
+                  DropdownItem(value: 'billing', label: Text('Billing')),
+                  DropdownItem(value: 'team', label: Text('Team')),
                 ],
               ),
               DropdownGroup(
                 label: Text('Danger zone'),
                 children: [
                   DropdownItem(
-                    key: 'delete',
+                    value: 'delete',
                     label: Text('Delete account'),
                     danger: true,
                   ),
@@ -146,7 +146,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
           Dropdown(
             menu: [
               for (final item in _items)
-                DropdownItem(key: item, label: Text(item)),
+                DropdownItem(value: item, label: Text(item)),
             ],
             onItemTap: (k) => message.info('Tapped: $k'),
             // A custom popup body has no anchor width to match, so give it an

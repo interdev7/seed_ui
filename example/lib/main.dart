@@ -308,30 +308,28 @@ class MainLayout extends StatelessWidget {
                           trigger: const [DropdownTrigger.click],
                           menu: const [
                             DropdownItem(
-                              key: ThemeModeOption.light,
+                              value: ThemeModeOption.light,
                               label: Text('Light ☀️'),
                               icon: Icon(Icons.light_mode),
                             ),
                             DropdownItem(
-                              key: ThemeModeOption.dark,
+                              value: ThemeModeOption.dark,
                               label: Text('Dark 🌙'),
                               icon: Icon(Icons.dark_mode),
                             ),
                             DropdownItem(
-                              key: ThemeModeOption.newYear,
+                              value: ThemeModeOption.newYear,
                               label: Text('New Year 🎄'),
                               icon: Icon(Icons.park),
                             ),
                             DropdownItem(
-                              key: ThemeModeOption.newYearNight,
+                              value: ThemeModeOption.newYearNight,
                               label: Text('New Year night 🌙🎄'),
                               icon: Icon(Icons.nights_stay),
                             ),
                           ],
-                          onItemTap: (key) {
-                            if (key is ThemeModeOption) {
-                              themeController.setTheme(key);
-                            }
+                          onItemTap: (mode) {
+                            if (mode != null) themeController.setTheme(mode);
                           },
                           child: Button(
                             onPressed: () {},
@@ -344,11 +342,11 @@ class MainLayout extends StatelessWidget {
                           trigger: const [DropdownTrigger.click],
                           menu: [
                             for (final e in demoLanguages.entries)
-                              DropdownItem(key: e.key, label: Text(e.value)),
+                              DropdownItem(value: e.key, label: Text(e.value)),
                           ],
-                          onItemTap: (key) {
-                            if (key is String) {
-                              localeController.setLocale(Locale(key));
+                          onItemTap: (code) {
+                            if (code != null) {
+                              localeController.setLocale(Locale(code));
                             }
                           },
                           child: Button(

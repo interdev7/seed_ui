@@ -9,14 +9,80 @@ Widget _host(Widget child) => MaterialApp(
       home: Scaffold(body: Center(child: child)),
     );
 
-const _menu = [
-  DropdownItem(key: 'edit', label: Text('Edit')),
+const List<DropdownEntry<String>> _menu = [
+  DropdownItem(value: 'edit', label: Text('Edit')),
   DropdownDivider(),
-  DropdownItem(key: 'delete', label: Text('Delete'), danger: true),
-  DropdownItem(key: 'off', label: Text('Off'), disabled: true),
+  DropdownItem(value: 'delete', label: Text('Delete'), danger: true),
+  DropdownItem(value: 'off', label: Text('Off'), disabled: true),
 ];
 
+enum _Action { edit, remove }
+
 void main() {
+  testWidgets('a menu types itself from its items', (tester) async {
+    // Nothing below names a type, and what comes back is an _Action rather
+    // than an Object? to be interrogated at the other end.
+    _Action? tapped;
+    await tester.pumpWidget(
+      _host(
+        Dropdown(
+          trigger: const [DropdownTrigger.click],
+          open: true,
+          menu: const [
+            DropdownItem(value: _Action.edit, label: Text('Edit')),
+            DropdownItem(value: _Action.remove, label: Text('Delete')),
+          ],
+          onItemTap: (value) => tapped = value,
+          child: const Text('Open'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    expect(tapped, _Action.remove);
+  });
+
+  testWidgets('a divider asks for the type to be named once', (tester) async {
+    // A divider carries no value, and Dart settles a list's element type
+    // before the menu's, so a mixed literal has nothing to go on and falls to
+    // Object. Naming the type on the Dropdown puts it back — one place, and
+    // the items and the handler are checked against it from there.
+    _Action? tapped;
+    await tester.pumpWidget(
+      _host(
+        Dropdown<_Action>(
+          trigger: const [DropdownTrigger.click],
+          open: true,
+          menu: const [
+            DropdownItem(value: _Action.edit, label: Text('Edit')),
+            DropdownDivider(),
+            DropdownItem(value: _Action.remove, label: Text('Delete')),
+          ],
+          onItemTap: (value) => tapped = value,
+          child: const Text('Open'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    expect(tapped, _Action.remove);
+  });
+
+  test('a submenu carries its parent\'s type', () {
+    const menu = <DropdownEntry<_Action>>[
+      DropdownItem(
+        value: _Action.edit,
+        children: [DropdownItem(value: _Action.remove)],
+      ),
+    ];
+    final parent = menu.first as DropdownItem<_Action>;
+    expect(parent.children!.first, isA<DropdownItem<_Action>>());
+  });
+
   testWidgets('click trigger opens the menu and reports the tapped key',
       (tester) async {
     Object? tapped;
@@ -113,7 +179,7 @@ void main() {
             trigger: const [],
             open: true,
             menu: [
-              for (final i in items) DropdownItem(key: i, label: Text(i)),
+              for (final i in items) DropdownItem(value: i, label: Text(i)),
             ],
             child: const Text('Open'),
           ),
@@ -133,7 +199,9 @@ void main() {
   testWidgets('custom content renders and can close itself', (tester) async {
     await tester.pumpWidget(
       _host(
-        Dropdown(
+        // Never: built from content, so it has no items and no value to
+        // report.
+        Dropdown<Never>(
           trigger: const [DropdownTrigger.click],
           content: (context, close) => DropdownPanel(
             child: Padding(
@@ -185,9 +253,11 @@ void main() {
                 trigger: const [DropdownTrigger.click],
                 menu: const [
                   DropdownItem(
-                    key: 'more',
+                    value: 'more',
                     label: Text('More'),
-                    children: [DropdownItem(key: 'help', label: Text('Help'))],
+                    children: [
+                      DropdownItem(value: 'help', label: Text('Help'))
+                    ],
                   ),
                 ],
                 child: const Text('open'),

@@ -21,16 +21,21 @@ enum DropdownTrigger {
 
 /// Base type for the entries of a [Dropdown] menu: an item, a divider or a
 /// titled group.
+///
+/// [T] is whatever tells one item from another. An enum makes the `switch` in
+/// [Dropdown.onItemTap] exhaustive, so a forgotten case is a compile error
+/// rather than a silent nothing — and it is inferred from the menu, so it
+/// rarely has to be written down.
 @immutable
-sealed class DropdownEntry {
+sealed class DropdownEntry<T> {
   const DropdownEntry();
 }
 
 /// A selectable row in a [Dropdown] menu.
-class DropdownItem extends DropdownEntry {
+class DropdownItem<T> extends DropdownEntry<T> {
   /// Creates a [DropdownItem].
   const DropdownItem({
-    this.key,
+    this.value,
     this.label,
     this.icon,
     this.disabled = false,
@@ -39,8 +44,8 @@ class DropdownItem extends DropdownEntry {
     this.onTap,
   });
 
-  /// Identity reported through [Dropdown.onItemTap].
-  final Object? key;
+  /// What this item reports through [Dropdown.onItemTap].
+  final T? value;
 
   /// The row's content.
   final Widget? label;
@@ -55,22 +60,28 @@ class DropdownItem extends DropdownEntry {
   final bool danger;
 
   /// A nested submenu, opened to the side on hover.
-  final List<DropdownEntry>? children;
+  final List<DropdownEntry<T>>? children;
 
-  /// Tapped handler. [Dropdown.onItemTap] also fires with [key].
+  /// Tapped handler. [Dropdown.onItemTap] also fires with [value].
   final VoidCallback? onTap;
 
   bool get _hasChildren => children != null && children!.isNotEmpty;
 }
 
 /// A horizontal divider between [Dropdown] entries.
-class DropdownDivider extends DropdownEntry {
+class DropdownDivider<T> extends DropdownEntry<T> {
   /// Creates a [DropdownDivider].
+  ///
+  /// Generic despite carrying no value, and that is not ceremony: written into
+  /// a menu beside typed items, it takes [T] from the same context they do. A
+  /// `DropdownEntry<Never>` would look tidier and would defeat the inference —
+  /// Dart resolves the list's element type before the menu's, and a divider
+  /// with nothing to say drags that to `Object`.
   const DropdownDivider();
 }
 
 /// A titled group of [Dropdown] entries.
-class DropdownGroup extends DropdownEntry {
+class DropdownGroup<T> extends DropdownEntry<T> {
   /// Creates a [DropdownGroup].
   const DropdownGroup({required this.label, required this.children});
 
@@ -78,7 +89,7 @@ class DropdownGroup extends DropdownEntry {
   final Widget label;
 
   /// The entries under the heading.
-  final List<DropdownEntry> children;
+  final List<DropdownEntry<T>> children;
 }
 
 /// Per-component design tokens for [Dropdown].
@@ -182,14 +193,15 @@ class DropdownDefaults {
 /// ```dart
 /// Dropdown(
 ///   menu: [
-///     DropdownItem(key: 'edit', label: const Text('Edit')),
-///     DropdownItem(key: 'delete', label: const Text('Delete'), danger: true),
+///     DropdownItem(value: Action.edit, label: const Text('Edit')),
+///     DropdownItem(value: Action.remove, label: const Text('Delete'),
+///         danger: true),
 ///   ],
-///   onItemTap: (key) => handle(key),
+///   onItemTap: (value) => handle(value),
 ///   child: Button(child: const Text('Actions')),
 /// )
 /// ```
-class Dropdown extends StatefulWidget {
+class Dropdown<T> extends StatefulWidget {
   /// Creates a [Dropdown].
   const Dropdown({
     super.key,
@@ -216,7 +228,7 @@ class Dropdown extends StatefulWidget {
   final Widget child;
 
   /// The menu entries. Mutually exclusive with [content].
-  final List<DropdownEntry>? menu;
+  final List<DropdownEntry<T>>? menu;
 
   /// A fully custom popup body, instead of
   /// [menu]. Receives a callback to close the dropdown.
@@ -246,8 +258,8 @@ class Dropdown extends StatefulWidget {
   /// Draws a caret pointing at the trigger.
   final bool? arrow;
 
-  /// Called with an item's `key` when it is tapped.
-  final ValueChanged<Object?>? onItemTap;
+  /// Called with an item's [DropdownItem.value] when it is tapped.
+  final ValueChanged<T?>? onItemTap;
 
   /// Whether tapping an item closes the menu (ignored for submenu parents).
   final bool? closeOnSelect;
@@ -259,10 +271,10 @@ class Dropdown extends StatefulWidget {
   final DropdownToken? token;
 
   @override
-  State<Dropdown> createState() => _DropdownState();
+  State<Dropdown<T>> createState() => _DropdownState<T>();
 }
 
-class _DropdownState extends State<Dropdown> {
+class _DropdownState<T> extends State<Dropdown<T>> {
   /// The defaults set for this component in the subtree, if any.
   DropdownDefaults? get _defaults =>
       ConfigProvider.defaultsOf<DropdownDefaults>(context);
@@ -337,7 +349,7 @@ class _DropdownState extends State<Dropdown> {
   }
 
   @override
-  void didUpdateWidget(Dropdown old) {
+  void didUpdateWidget(Dropdown<T> old) {
     super.didUpdateWidget(old);
     if (widget.open != null && widget.open != _open) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -416,10 +428,10 @@ class _DropdownState extends State<Dropdown> {
     if (widget.content != null) {
       return widget.content!(context, () => _requestOpen(false));
     }
-    final Widget menu = DropdownMenuList(
+    final Widget menu = DropdownMenuList<T>(
       entries: widget.menu!,
       onSelect: (item) {
-        widget.onItemTap?.call(item.key);
+        widget.onItemTap?.call(item.value);
         item.onTap?.call();
         if (_closeOnSelect) _requestOpen(false);
       },
@@ -548,7 +560,7 @@ class DropdownPanel extends StatelessWidget {
 
 /// Renders a list of [DropdownEntry]s as menu rows. Used inside a
 /// [DropdownPanel].
-class DropdownMenuList extends StatelessWidget {
+class DropdownMenuList<T> extends StatelessWidget {
   /// Creates a [DropdownMenuList].
   const DropdownMenuList({
     super.key,
@@ -557,10 +569,10 @@ class DropdownMenuList extends StatelessWidget {
   });
 
   /// The rows to render, in order — items, groups and dividers.
-  final List<DropdownEntry> entries;
+  final List<DropdownEntry<T>> entries;
 
   /// Called with the item the user chose.
-  final ValueChanged<DropdownItem> onSelect;
+  final ValueChanged<DropdownItem<T>> onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -581,7 +593,11 @@ class DropdownMenuList extends StatelessWidget {
     );
   }
 
-  Widget _buildEntry(BuildContext context, Token token, DropdownEntry entry) {
+  Widget _buildEntry(
+    BuildContext context,
+    Token token,
+    DropdownEntry<T> entry,
+  ) {
     switch (entry) {
       case DropdownDivider():
         return Padding(
@@ -615,22 +631,22 @@ class DropdownMenuList extends StatelessWidget {
           ],
         );
       case DropdownItem():
-        return _MenuRow(item: entry, onSelect: onSelect);
+        return _MenuRow<T>(item: entry, onSelect: onSelect);
     }
   }
 }
 
-class _MenuRow extends StatefulWidget {
+class _MenuRow<T> extends StatefulWidget {
   const _MenuRow({required this.item, required this.onSelect});
 
-  final DropdownItem item;
-  final ValueChanged<DropdownItem> onSelect;
+  final DropdownItem<T> item;
+  final ValueChanged<DropdownItem<T>> onSelect;
 
   @override
-  State<_MenuRow> createState() => _MenuRowState();
+  State<_MenuRow<T>> createState() => _MenuRowState<T>();
 }
 
-class _MenuRowState extends State<_MenuRow> {
+class _MenuRowState<T> extends State<_MenuRow<T>> {
   bool _hovered = false;
   final PopoverController _submenu = PopoverController();
   bool _submenuOpen = false;
@@ -679,7 +695,7 @@ class _MenuRowState extends State<_MenuRow> {
           _closeSubmenuSoon();
         },
         child: DropdownPanel(
-          child: DropdownMenuList(
+          child: DropdownMenuList<T>(
             entries: widget.item.children!,
             onSelect: widget.onSelect,
           ),

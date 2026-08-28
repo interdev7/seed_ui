@@ -32,7 +32,7 @@ open a drawer.
 
 ```yaml
 dependencies:
-  seed_ui: ^0.12.0
+  seed_ui: ^0.13.0
 ```
 
 ## Getting started
@@ -50,11 +50,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final kit = ThemeData(dark: isDark);
+
     return ConfigProvider(
       theme: ThemeData(
         token: const SeedToken(colorPrimary: Color(0xFF1677FF)),
       ),
       child: MaterialApp(
+        theme: kit.materialTheme,
         navigatorKey: UiKit.navigatorKey,
         home: const HomePage(),
       ),

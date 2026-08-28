@@ -480,7 +480,9 @@ class AvatarGroup extends StatelessWidget {
         }
 
         items.add(
-          Dropdown(
+          // Never, because this one is built from `content` and has no menu
+          // items — so there is no value it could ever report.
+          Dropdown<Never>(
             arrow: maxPopoverArrow,
             placement: maxPopoverPlacement,
             trigger: maxPopoverTrigger,

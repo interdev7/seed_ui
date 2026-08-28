@@ -5,6 +5,39 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.13.0
+
+### Added
+
+- **`DropdownEntry<T>`** — the menu carries the type of what it reports.
+
+  ```dart
+  Dropdown(
+    menu: [
+      DropdownItem(value: RowAction.edit, label: const Text('Edit')),
+      DropdownItem(value: RowAction.remove, label: const Text('Delete')),
+    ],
+    onItemTap: (action) => switch (action) { ... },
+  )
+  ```
+
+  `DropdownItem.key` was an `Object?`, so every handler began by asking what it
+  had been given. It is now `DropdownItem<T>.value`, inferred from the items
+  and handed back through `onItemTap` — and an enum makes the `switch`
+  exhaustive. A submenu's `children` carry their parent's type.
+
+  A menu of items alone needs no type written anywhere. A `DropdownDivider`
+  among them asks for one to be named once, on the `Dropdown`: a divider
+  carries no value, and Dart settles a list's element type before the menu's.
+
+### Changed
+
+- **`DropdownItem.key` is now `DropdownItem.value`, and `Dropdown` is
+  `Dropdown<T>`.** `key` next to Flutter's own `Key` read as tree identity
+  when it was nothing of the sort, and `Segmented` and `Select` had settled on
+  `value` for this long ago. Rename the argument and drop the `is` check the
+  old `Object?` forced on every handler.
+
 ## 0.12.0
 
 ### Added

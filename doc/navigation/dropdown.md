@@ -8,28 +8,64 @@ It is the shared overlay primitive behind the kit's menus: [Select](../data_entr
 builds its option popup on the same [DropdownPanel](#reusing-the-panel) chrome.
 
 ```dart
+enum RowAction { edit, remove }
+
 Dropdown(
   menu: [
-    DropdownItem(key: 'edit', label: const Text('Edit'), icon: const Icon(Icons.edit)),
-    DropdownItem(key: 'delete', label: const Text('Delete'), danger: true),
+    DropdownItem(value: RowAction.edit, label: const Text('Edit')),
+    DropdownItem(value: RowAction.remove, label: const Text('Delete'),
+        danger: true),
   ],
-  onItemTap: (key) => handle(key),
+  onItemTap: (action) => switch (action) {
+    RowAction.edit => edit(),
+    RowAction.remove => remove(),
+    null => null,
+  },
   child: Button(child: const Text('Actions')),
 )
 ```
+
+Nothing there names a type. `Dropdown<T>` takes it from the items, hands it
+back through `onItemTap`, and an enum makes that `switch` exhaustive — a case
+you forget is a compile error rather than a silent nothing.
 
 ## Entries
 
 The `menu` is a list of `DropdownEntry`:
 
-| Type              | Purpose                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| `DropdownItem`    | A selectable row: `key`, `label`, `icon`, `disabled`, `danger`, `onTap`, nested `children` |
-| `DropdownDivider` | A horizontal rule between rows                                                             |
-| `DropdownGroup`   | A titled `label` over a list of `children`                                                 |
+| Type                 | Purpose                                                                                       |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| `DropdownItem<T>`    | A selectable row: `value`, `label`, `icon`, `disabled`, `danger`, `onTap`, nested `children` |
+| `DropdownDivider<T>` | A horizontal rule between rows                                                                |
+| `DropdownGroup<T>`   | A titled `label` over a list of `children`                                                    |
 
-`onItemTap` fires with the tapped item's `key`; an item's own `onTap` fires too.
-A `danger` item is red; a `disabled` item is greyed and inert.
+`onItemTap` fires with the tapped item's `value`; an item's own `onTap` fires
+too. A `danger` item is red; a `disabled` item is greyed and inert. A submenu's
+`children` carry the same `T` as the menu they hang from.
+
+### When the type has to be named
+
+A menu of items alone infers `T` from the items. Put a `DropdownDivider` among
+them and it has to be named once:
+
+```dart
+Dropdown<RowAction>(
+  menu: const [
+    DropdownItem(value: RowAction.edit, label: Text('Edit')),
+    DropdownDivider(),
+    DropdownItem(value: RowAction.remove, label: Text('Delete')),
+  ],
+  onItemTap: handle,
+  child: trigger,
+)
+```
+
+A divider carries no value, and Dart settles a list's element type before the
+menu's, so a mixed literal has nothing to go on and falls back to `Object`.
+Naming the type on the `Dropdown` puts it back, and the items and the handler
+are both checked against it from there. The same applies to a menu hoisted into
+a variable, which has no context at all: annotate it
+`const List<DropdownEntry<RowAction>> menu = [...]`.
 
 ## Submenus
 
@@ -40,8 +76,8 @@ caret appears and the nested menu opens to the side on hover.
 DropdownItem(
   label: const Text('More'),
   children: [
-    DropdownItem(key: 'help', label: const Text('Help')),
-    DropdownItem(key: 'about', label: const Text('About')),
+    DropdownItem(value: 'help', label: const Text('Help')),
+    DropdownItem(value: 'about', label: const Text('About')),
   ],
 )
 ```

@@ -79,6 +79,31 @@ void main() {
     expect(find.textContaining('Last tapped: share'), findsOneWidget);
   });
 
+  testWidgets('the curve picker changes how the items travel', (tester) async {
+    await _pump(tester);
+
+    Future<double> travelAtHalfway(String curve) async {
+      await tester.tap(find.text(curve));
+      await tester.pumpAndSettle();
+      final stage = find.byType(FloatButtonGroup<FabAction>).first;
+      final trigger = tester.getCenter(stage);
+      await tester.tap(stage);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      final travelled = (_centreOf(tester, 'Edit') - trigger).distance;
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pumpAndSettle();
+      return travelled;
+    }
+
+    // Halfway through, a linear opening has covered less ground than one that
+    // eases out.
+    expect(
+      await travelAtHalfway('easeOut'),
+      greaterThan(await travelAtHalfway('linear')),
+    );
+  });
+
   testWidgets('the controller opens and closes its own group', (tester) async {
     await _pump(tester);
 

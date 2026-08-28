@@ -1,5 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart'
-    hide Badge, ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+    hide
+        Badge,
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer,
+        Slider;
 import 'package:seed_ui/seed_ui.dart';
 
 import '../group.dart';
@@ -53,19 +63,26 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
   double _jitter = 0;
   double? _radius;
   ControlSize _size = SoftSize.middle;
+  Curve _curve = Curves.easeOutBack;
   FloatButtonLabelPlacement _labels = FloatButtonLabelPlacement.auto;
   bool _dismissible = true;
   bool _closeOnSelect = true;
   FabAction? _last;
+  int _seed = 7;
 
   FloatButtonLayout get _chosen => _layout == 'fan'
-      ? FloatButtonLayout.fan(jitter: _jitter, radius: _radius, seed: 7)
+      ? FloatButtonLayout.fan(jitter: _jitter, radius: _radius, seed: _seed)
       : _layouts.firstWhere((e) => e.$1 == _layout).$2;
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onItemTap(FabAction? value) {
+    debugPrint('$value');
+    setState(() => _last = value);
   }
 
   /// A stage with room for a group to open into, parked bottom right the way
@@ -157,15 +174,39 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                   color: ButtonColor.primary,
                   labelPlacement: _labels,
                   size: _size,
+                  token: FloatButtonToken(curve: _curve),
                   dismissible: _dismissible,
                   closeOnSelect: _closeOnSelect,
                   items: _actions,
                   // One hook covers every wrapper, which is why there is no
                   // tooltip prop, and no badge prop either.
-                  itemBuilder: (context, item, child) =>
-                      Tooltip(message: Text(item.label ?? ''), child: child),
-                  onItemTap: (value) => setState(() => _last = value),
+                  itemBuilder: (context, item, child) {
+                    if (kIsWeb) {
+                      return Tooltip(
+                        message: Text(item.label ?? ''),
+                        child: child,
+                      );
+                    }
+                    return child;
+                  },
+                  onItemTap: _onItemTap,
                 ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Text("Seed: $_seed"),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Slider(
+                      value: _seed.toDouble(),
+                      min: 0,
+                      max: 25,
+                      step: 1,
+                      onChanged: (v) => setState(() => _seed = v.toInt()),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Segmented<double>(
@@ -194,6 +235,37 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                   _radius = v;
                   _layout = 'fan';
                 }),
+              ),
+              const SizedBox(height: 8),
+              Segmented<Curve>(
+                size: SoftSize.small,
+                value: _curve,
+                options: const [
+                  SegmentedOption(value: Curves.linear, label: 'linear'),
+                  SegmentedOption(value: Curves.easeOutCubic, label: 'easeOut'),
+                  SegmentedOption(
+                    value: Curves.easeOutBack,
+                    label: 'easeOutBack',
+                  ),
+                  SegmentedOption(
+                    value: Curves.elasticOut,
+                    label: 'elasticOut',
+                  ),
+                  SegmentedOption(value: Curves.bounceOut, label: 'bounceOut'),
+                  SegmentedOption(value: Curves.easeInCubic, label: 'easeIn'),
+                  SegmentedOption(
+                    value: Curves.easeInBack,
+                    label: 'easeInBack',
+                  ),
+                  SegmentedOption(value: Curves.elasticIn, label: 'elasticIn'),
+                  SegmentedOption(value: Curves.bounceIn, label: 'bounceIn'),
+                  SegmentedOption(value: Curves.easeInOut, label: 'easeInOut'),
+                  SegmentedOption(
+                    value: Curves.easeInOutBack,
+                    label: 'easeInOutBack',
+                  ),
+                ],
+                onChanged: (v) => setState(() => _curve = v),
               ),
               const SizedBox(height: 8),
               Segmented<ControlSize>(
@@ -249,8 +321,10 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                 'of your own is taken as given, crowding and all. Raising '
                 'jitter sends the items out to different distances along '
                 'their spokes, which is what reads as scatter, and the same '
-                'seed arranges them the same way every time. The page below '
-                'keeps working while the group is open.'
+                'seed arranges them the same way every time. The curve shapes '
+                'the opening: easeOutBack and elasticOut overshoot and settle, '
+                'bounceOut lands twice. The page below keeps working while the '
+                'group is open.'
                 '${_last == null ? '' : '  Last tapped: ${_last!.name}.'}',
               ),
             ],

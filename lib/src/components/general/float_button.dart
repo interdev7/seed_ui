@@ -421,7 +421,7 @@ class FloatButtonToken {
         labelFontSize: labelFontSize ?? t.fontSizeSM,
         borderRadius: borderRadius ?? t.borderRadiusLG,
         shadow: shadow ?? t.boxShadowSecondary,
-        motionDuration: motionDuration ?? t.motionDurationMid,
+        motionDuration: motionDuration ?? t.motionDurationSlow,
         curve: curve ?? t.motionEaseOut,
       );
 }

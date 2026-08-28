@@ -272,7 +272,7 @@ fab.open();   // and close(), and toggle()
 | `labelTextColor`, `labelFontSize` | the label's text |
 | `borderRadius` | `borderRadiusLG`, for a square button |
 | `shadow` | `boxShadowSecondary` |
-| `motionDuration` | `motionDurationMid` |
+| `motionDuration` | `motionDurationSlow` |
 | `curve` | `motionEaseOut` — the shape of the opening |
 
 ```dart

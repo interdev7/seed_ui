@@ -550,7 +550,7 @@ void main() {
                 controller: scroll,
                 children: [
                   const SizedBox(height: 400),
-                  Center(child: _group(dismissible: false)),
+                  Center(child: _group()),
                   const SizedBox(height: 800),
                 ],
               ),
@@ -778,9 +778,12 @@ void main() {
   });
 
   group('the page underneath', () {
-    testWidgets('still answers while the group is open', (tester) async {
-      // An opaque sheet over the page for as long as a menu is up is not a
-      // trade a float button may make.
+    testWidgets('gets a tap that dismisses, and nothing else with it',
+        (tester) async {
+      // One gesture, one thing: the tap puts the menu away and stops there.
+      // Pressing what was underneath as well would be two actions at once —
+      // and an outside control that toggles would then see the group already
+      // shut and open it straight back up.
       var behind = 0;
       await tester.pumpWidget(
         ConfigProvider(
@@ -807,9 +810,56 @@ void main() {
 
       await tester.tap(find.text('Behind'));
       await tester.pumpAndSettle();
-      expect(behind, 1, reason: 'the tap reached the page');
-      expect(find.byType(UserIcon), findsNothing,
-          reason: 'and closed the menu');
+      expect(find.byType(UserIcon), findsNothing, reason: 'the menu closed');
+      expect(behind, 0, reason: 'and the page was not pressed as well');
+
+      // With the menu away, the page answers again.
+      await tester.tap(find.text('Behind'));
+      await tester.pumpAndSettle();
+      expect(behind, 1);
+    });
+
+    testWidgets('a control outside that toggles does not fight the barrier',
+        (tester) async {
+      final fab = FloatButtonController();
+      addTearDown(fab.dispose);
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Stack(
+                children: [
+                  Positioned(
+                    left: 20,
+                    top: 20,
+                    child: Button(
+                      onPressed: fab.toggle,
+                      child: const Text('Toggle'),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: _group(controller: fab),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Toggle'));
+      await tester.pumpAndSettle();
+      expect(find.byType(UserIcon), findsOneWidget, reason: 'it opened');
+
+      await tester.tap(find.text('Toggle'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byType(UserIcon),
+        findsNothing,
+        reason: 'and it stayed shut rather than flickering back open',
+      );
     });
 
     testWidgets('still scrolls while the group is open', (tester) async {
@@ -836,7 +886,12 @@ void main() {
       await tester.drag(find.byType(ListView), const Offset(0, -80));
       await tester.pumpAndSettle();
       expect(scroll.offset, closeTo(80, 1),
-          reason: 'the drag reached the list');
+          reason: 'the drag reached the list through the barrier');
+      expect(
+        find.byType(UserIcon),
+        findsOneWidget,
+        reason: 'a drag is not a dismissing tap, so the group stayed open',
+      );
     });
   });
 

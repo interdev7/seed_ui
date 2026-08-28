@@ -220,13 +220,19 @@ on it across the other axis.
 
 ## Blocking
 
-It does not. The page underneath an open group keeps working: it scrolls, and
-its buttons still answer. A tap outside closes the group and reaches the page
-both. Putting a sheet over the page for as long as a menu is up is not a trade
-a float button may make.
+Not much. The page under an open group goes on **scrolling** — a drag is never
+taken from it, and the group re-aims itself rather than vanishing. Putting a
+sheet over the page for as long as a menu is up is not a trade a float button
+may make.
 
-The trigger is the one exception: a press there belongs to the trigger alone,
-so it toggles rather than closing twice over.
+A **tap** outside is the one thing the group does take, and it spends it on
+closing: the menu goes away and nothing else happens with that tap. Letting it
+press what was underneath as well would be two actions at once — and an outside
+control that *toggles* would fire on the release, find the group already shut,
+and open it straight back up.
+
+Where the page really must stay live under an open group, `dismissible: false`
+removes the barrier altogether and leaves Escape as the way out.
 
 ## Opening
 

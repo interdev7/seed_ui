@@ -656,4 +656,8 @@ class Token {
 
   /// Quintic decelerating easing for natural slowing entrances.
   Curve get motionEaseOutQuint => const Cubic(0.23, 1, 0.32, 1);
+
+  /// Back easing for natural slowing entrances.
+  /// Defaults to `Curves.easeOutBack`.
+  Curve get easeOutBack => const Cubic(0.175, 0.885, 0.32, 1.275);
 }

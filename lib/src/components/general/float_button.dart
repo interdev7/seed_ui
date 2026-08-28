@@ -422,7 +422,7 @@ class FloatButtonToken {
         borderRadius: borderRadius ?? t.borderRadiusLG,
         shadow: shadow ?? t.boxShadowSecondary,
         motionDuration: motionDuration ?? t.motionDurationSlow,
-        curve: curve ?? t.motionEaseOut,
+        curve: curve ?? t.easeOutBack,
       );
 }
 
@@ -1006,10 +1006,6 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
   Offset _origin = Offset.zero;
   Offset _away = const Offset(-1, -1);
 
-  /// The trigger's own patch of the overlay. The barrier leaves it alone: the
-  /// trigger is part of the group, not the ground around it.
-  Rect _triggerRect = Rect.zero;
-
   bool get _isOpen => widget.controller?.isOpen ?? widget.open ?? _openSelf;
 
   /// Whether the group settles its own state, or reports and waits.
@@ -1226,7 +1222,6 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
         box.localToGlobal(Offset.zero, ancestor: overlayBox) & box.size;
     final screen = overlayBox.size;
     _origin = rect.center;
-    _triggerRect = rect;
 
     final r = _resolved();
     final need = _reach(
@@ -1278,6 +1273,25 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     return item.key == null ? built : KeyedSubtree(key: item.key, child: built);
   }
 
+  /// The ground around the group: one tap on it puts the menu away.
+  ///
+  /// A tap, not a raw pointer-down, and that is the whole point. Taking the
+  /// press meant an outside control that *toggles* fired on the release,
+  /// found the group already shut, and opened it straight back up — a flicker
+  /// instead of a close. Claiming the tap settles it in the gesture arena
+  /// instead: the dismissal happens and nothing else happens with it.
+  ///
+  /// It claims **taps only**. A drag is never claimed, so the page under an
+  /// open group goes on scrolling and the group re-aims rather than vanishing.
+  /// Translucent on top of that, so anything else — hover, a pointer merely
+  /// passing over — reaches the page as well.
+  Widget _barrier() => Positioned.fill(
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => _ask(false),
+        ),
+      );
+
   Widget _buildLayer(BuildContext overlayContext) {
     final r = _resolved();
     final layout = _layout;
@@ -1327,26 +1341,7 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
 
     return Stack(
       children: [
-        if (_trigger == FloatButtonTrigger.click && _dismissible)
-          Positioned.fill(
-            // Translucent, so the page underneath keeps working while the
-            // group is open: it still scrolls, and its buttons still answer.
-            // An opaque sheet would put the page out of reach for as long as
-            // the menu is up, which is not a trade a float button may make.
-            // The items are above this in the stack, so a tap on one reaches
-            // the item and never gets here.
-            child: Listener(
-              behavior: HitTestBehavior.translucent,
-              onPointerDown: (event) {
-                // Everywhere except the trigger. Being translucent, this
-                // hears the press on the trigger as well as the trigger does
-                // — and closing here first would leave the trigger's own
-                // handler to find a shut group and open it straight back up.
-                if (_triggerRect.contains(event.localPosition)) return;
-                _ask(false);
-              },
-            ),
-          ),
+        if (_trigger == FloatButtonTrigger.click && _dismissible) _barrier(),
         Positioned.fill(child: flow),
       ],
     );

@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.15.0
+
+### Added
+
+- **`Token.easeOutBack`** — the overshoot-and-settle curve, beside the motion
+  tokens the kit already carries.
+
+### Changed
+
+- **A tap outside an open `FloatButtonGroup` now only closes it.** It used to
+  dismiss on the press and let the same gesture through to the page, so a
+  control outside that toggled the group fired on the release, found it already
+  shut, and opened it straight back up — a flicker instead of a close. The
+  barrier claims the tap instead. Dragging is still never claimed, so the page
+  goes on scrolling under an open group, and `dismissible: false` still removes
+  the barrier entirely.
+
 ## 0.14.0
 
 ### Changed

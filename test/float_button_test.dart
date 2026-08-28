@@ -326,6 +326,16 @@ void main() {
       expect(find.byType(UserIcon), findsOneWidget);
     });
 
+    testWidgets('a second tap on the trigger closes it, and it stays shut',
+        (tester) async {
+      await tester.pumpWidget(_host(_group()));
+      await _open(tester);
+
+      await tester.tap(find.byType(FloatButtonGroup<String>));
+      await tester.pumpAndSettle();
+      expect(find.byType(UserIcon), findsNothing);
+    });
+
     testWidgets('a tap on open ground closes the group', (tester) async {
       await tester.pumpWidget(_host(_group()));
       await _open(tester);

@@ -225,6 +225,9 @@ its buttons still answer. A tap outside closes the group and reaches the page
 both. Putting a sheet over the page for as long as a menu is up is not a trade
 a float button may make.
 
+The trigger is the one exception: a press there belongs to the trigger alone,
+so it toggles rather than closing twice over.
+
 ## Opening
 
 | Prop | Meaning |

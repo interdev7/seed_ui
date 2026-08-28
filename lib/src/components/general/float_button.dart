@@ -1006,6 +1006,10 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
   Offset _origin = Offset.zero;
   Offset _away = const Offset(-1, -1);
 
+  /// The trigger's own patch of the overlay. The barrier leaves it alone: the
+  /// trigger is part of the group, not the ground around it.
+  Rect _triggerRect = Rect.zero;
+
   bool get _isOpen => widget.controller?.isOpen ?? widget.open ?? _openSelf;
 
   /// Whether the group settles its own state, or reports and waits.
@@ -1222,6 +1226,7 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
         box.localToGlobal(Offset.zero, ancestor: overlayBox) & box.size;
     final screen = overlayBox.size;
     _origin = rect.center;
+    _triggerRect = rect;
 
     final r = _resolved();
     final need = _reach(
@@ -1332,7 +1337,14 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
             // the item and never gets here.
             child: Listener(
               behavior: HitTestBehavior.translucent,
-              onPointerDown: (_) => _ask(false),
+              onPointerDown: (event) {
+                // Everywhere except the trigger. Being translucent, this
+                // hears the press on the trigger as well as the trigger does
+                // — and closing here first would leave the trigger's own
+                // handler to find a shut group and open it straight back up.
+                if (_triggerRect.contains(event.localPosition)) return;
+                _ask(false);
+              },
             ),
           ),
         Positioned.fill(child: flow),

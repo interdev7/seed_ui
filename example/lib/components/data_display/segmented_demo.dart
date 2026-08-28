@@ -187,6 +187,7 @@ class _SegmentedDemoState extends State<SegmentedDemo> {
                 listenable: _run,
                 builder: (context, _) => Wrap(
                   spacing: 8,
+                  runSpacing: 8,
                   children: [
                     Button(
                       size: SoftSize.small,

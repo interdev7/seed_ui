@@ -74,6 +74,7 @@ whether segments differ in width.
 | `size`       | `small` (24px), `middle` (32px, default), `large` (40px) |
 | `direction`  | `horizontal` (default) or `vertical`                     |
 | `block`      | Stretch the segments to fill the available space equally |
+| `scrollButtons` | Arrows for stepping through a run too wide to fit (default on) |
 | `disabled`   | Grey the whole control out and block selection           |
 | `trackColor` | Override the background colour                           |
 | `thumbColor` | Override the sliding thumb's colour                      |
@@ -119,9 +120,39 @@ they ask for, a horizontal run scrolls rather than overflowing, so no segment
 is left past the edge. With room to spare there is nothing to scroll and the
 control is exactly its options wide, as above.
 
-`block: true` never scrolls — the options share whatever width there is.
+A run that scrolls also says so. An arrow appears on whichever end has
+something hidden behind it, and each tap brings on **one more segment** — not a
+page, because the arrow is there on account of a segment you cannot see, and
+the thing to do about that is to show it. Both arrows show when there is more
+in either direction, and each goes when its end runs out. A run that fits shows
+neither.
+
+```dart
+Segmented(
+  scrollButtons: false,   // ...unless you would rather offer your own
+  value: v,
+  options: options,
+  onChanged: onChanged,
+)
+```
+
+The arrows sit **over** the ends rather than beside them: a button that took
+space of its own would narrow the viewport the moment it appeared, hiding
+another segment and so keeping itself needed. They are translucent, and a step
+stops short by a button's width so the segment it brings on does not arrive
+underneath one.
+
+In a right-to-left layout everything mirrors: onwards is leftwards, and the
+carets and the buttons follow.
+
+`block: true` never scrolls — the options share whatever width there is — and a
+vertical run grows instead, so neither offers arrows.
 
 ## Design tokens
+
+| `arrowBg` | Fill behind a scroll button — translucent, so the segment under it stays legible |
+| `arrowHoverBg` | Its fill under the pointer |
+| `arrowColor` | The caret's colour |
 
 `SegmentedToken` overrides this component's own tokens. Every field is an override; an
 unset one falls back to the value derived from the global theme.

@@ -14,6 +14,7 @@ class SegmentedDemo extends StatefulWidget {
 class _SegmentedDemoState extends State<SegmentedDemo> {
   String _view = 'list';
   int _density = 1;
+  bool _scrollButtons = true;
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +87,10 @@ class _SegmentedDemoState extends State<SegmentedDemo> {
                     SegmentedOption(value: 0, label: 'Compact'),
                     SegmentedOption(value: 1, label: 'Cozy'),
                     SegmentedOption(value: 2, label: 'Comfortable'),
+                    SegmentedOption(value: 3, label: 'Extra'),
+                    SegmentedOption(value: 4, label: 'Extra Large'),
+                    SegmentedOption(value: 5, label: 'Block'),
+                    SegmentedOption(value: 6, label: 'Round'),
                   ],
                 ),
               ),
@@ -138,6 +143,50 @@ class _SegmentedDemoState extends State<SegmentedDemo> {
                     SegmentedOption(value: 2, label: 'Comfortable'),
                   ],
                 ),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Too many to fit',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Deliberately boxed narrower than the run needs, which is what
+              // a phone does to it.
+              SizedBox(
+                width: 260,
+                child: Segmented<int>(
+                  value: _density,
+                  size: SoftSize.small,
+                  scrollButtons: _scrollButtons,
+                  onChanged: (v) => setState(() => _density = v),
+                  options: const [
+                    SegmentedOption(value: 0, label: 'Compact'),
+                    SegmentedOption(value: 1, label: 'Cozy'),
+                    SegmentedOption(value: 2, label: 'Comfortable'),
+                    SegmentedOption(value: 3, label: 'Extra'),
+                    SegmentedOption(value: 4, label: 'Extra Large'),
+                    SegmentedOption(value: 5, label: 'Block'),
+                    SegmentedOption(value: 6, label: 'Round'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Segmented<bool>(
+                size: SoftSize.small,
+                value: _scrollButtons,
+                options: const [
+                  SegmentedOption(value: true, label: 'scrollButtons: true'),
+                  SegmentedOption(value: false, label: 'false'),
+                ],
+                onChanged: (v) => setState(() => _scrollButtons = v),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'An arrow appears on whichever end has something hidden, and '
+                'each tap brings on one more segment. Both show when there is '
+                'more in either direction; each goes when its end runs out.',
               ),
             ],
           ),

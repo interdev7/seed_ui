@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Segmented.scrollButtons`** — a run too wide to fit now says so.
+
+  An arrow appears on whichever end has something hidden behind it, and each
+  tap brings on one more segment; both show when there is more either way, and
+  each goes when its end runs out. A run that fits shows neither. Segments that
+  scrolled with nothing to say so looked like all the segments there were.
+
+  The arrows sit over the ends rather than beside them — a button taking space
+  of its own would narrow the viewport the moment it appeared, hiding another
+  segment and so keeping itself needed — and a step stops short by a button's
+  width so the segment it brings on does not arrive underneath one. `arrowBg`,
+  `arrowHoverBg` and `arrowColor` dress them; `scrollButtons: false` turns them
+  off.
+
 - **`DropdownEntry<T>`** — the menu carries the type of what it reports.
 
   ```dart

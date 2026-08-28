@@ -14,6 +14,8 @@ const _options = [
 ];
 
 void main() {
+  _scrollButtonTests();
+
   testWidgets('renders every segment label', (tester) async {
     await tester.pumpWidget(
       _host(
@@ -568,6 +570,190 @@ void main() {
       final short = await heightFor('C');
       final long = await heightFor('An extremely long label indeed');
       expect(long, short, reason: 'the strip does not grow a second line');
+    });
+  });
+}
+
+/// A run of five, too wide for the box the tests put it in.
+const _long = ['Compact', 'Cozy', 'Comfortable', 'Extra', 'Extra Large'];
+
+Widget _run({
+  double width = 220,
+  bool block = false,
+  bool? scrollButtons,
+  Axis? direction,
+  TextDirection dir = TextDirection.ltr,
+  ValueChanged<int>? onChanged,
+}) =>
+    ConfigProvider(
+      child: MaterialApp(
+        home: Directionality(
+          textDirection: dir,
+          child: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: width,
+                child: Segmented<int>(
+                  value: 0,
+                  size: SoftSize.small,
+                  block: block,
+                  direction: direction,
+                  scrollButtons: scrollButtons,
+                  onChanged: onChanged ?? (_) {},
+                  options: [
+                    for (var i = 0; i < _long.length; i++)
+                      SegmentedOption(value: i, label: _long[i]),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+int _arrows(String label) => find.bySemanticsLabel(label).evaluate().length;
+
+/// The labels a reader can actually see: inside the viewport, and not behind
+/// one of the buttons laid over its ends.
+List<String> _readable(WidgetTester tester) {
+  var view = tester.getRect(find.byType(SingleChildScrollView));
+  // Cut by where each button actually is, not by which one it is: a mirrored
+  // run puts "next" on the left.
+  for (final label in const ['Previous', 'Next']) {
+    final arrow = find.bySemanticsLabel(label);
+    if (arrow.evaluate().isEmpty) continue;
+    final r = tester.getRect(arrow);
+    view = r.center.dx < view.center.dx
+        ? Rect.fromLTRB(r.right, view.top, view.right, view.bottom)
+        : Rect.fromLTRB(view.left, view.top, r.left, view.bottom);
+  }
+  return [
+    for (final l in _long)
+      if (tester.getRect(find.text(l)).left >= view.left - 0.5 &&
+          tester.getRect(find.text(l)).right <= view.right + 0.5)
+        l,
+  ];
+}
+
+void _scrollButtonTests() {
+  group('scroll buttons', () {
+    testWidgets('a run that fits offers none', (tester) async {
+      await tester.pumpWidget(_run(width: 900));
+      await tester.pumpAndSettle();
+      expect(_arrows('Previous'), 0);
+      expect(_arrows('Next'), 0);
+    });
+
+    testWidgets('only the end with something hidden offers one',
+        (tester) async {
+      await tester.pumpWidget(_run());
+      await tester.pumpAndSettle();
+      // At rest the run starts at its beginning, so there is nothing behind.
+      expect(_arrows('Previous'), 0);
+      expect(_arrows('Next'), 1);
+    });
+
+    testWidgets('a step brings on exactly the next hidden segment',
+        (tester) async {
+      await tester.pumpWidget(_run());
+      await tester.pumpAndSettle();
+      final before = _readable(tester);
+      final nextHidden = _long[_long.indexOf(before.last) + 1];
+
+      await tester.tap(find.bySemanticsLabel('Next'));
+      await tester.pumpAndSettle();
+
+      final after = _readable(tester);
+      expect(after, contains(nextHidden));
+      expect(
+        after,
+        isNot(contains(_long[_long.indexOf(nextHidden) + 1])),
+        reason: 'one at a time, not a page',
+      );
+    });
+
+    testWidgets('and a step back brings on the one behind', (tester) async {
+      await tester.pumpWidget(_run());
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Next'));
+      await tester.pumpAndSettle();
+      final before = _readable(tester);
+      final behind = _long[_long.indexOf(before.first) - 1];
+
+      await tester.tap(find.bySemanticsLabel('Previous'));
+      await tester.pumpAndSettle();
+      expect(_readable(tester), contains(behind));
+    });
+
+    testWidgets('each arrow goes when its end runs out', (tester) async {
+      await tester.pumpWidget(_run());
+      await tester.pumpAndSettle();
+
+      var steps = 0;
+      while (_arrows('Next') > 0 && steps < 10) {
+        await tester.tap(find.bySemanticsLabel('Next'));
+        await tester.pumpAndSettle();
+        steps++;
+      }
+      expect(steps, lessThan(10), reason: 'the run ends');
+      expect(_arrows('Previous'), 1, reason: 'everything is behind now');
+      expect(_readable(tester), contains(_long.last));
+
+      while (_arrows('Previous') > 0 && steps < 20) {
+        await tester.tap(find.bySemanticsLabel('Previous'));
+        await tester.pumpAndSettle();
+        steps++;
+      }
+      expect(_arrows('Next'), 1);
+      expect(_readable(tester), contains(_long.first));
+    });
+
+    testWidgets('a tap on an arrow does not choose the segment beneath it',
+        (tester) async {
+      var chosen = -1;
+      await tester.pumpWidget(_run(onChanged: (v) => chosen = v));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Next'));
+      await tester.pumpAndSettle();
+      expect(chosen, -1);
+    });
+
+    testWidgets('scrollButtons: false leaves the run bare', (tester) async {
+      await tester.pumpWidget(_run(scrollButtons: false));
+      await tester.pumpAndSettle();
+      expect(_arrows('Next'), 0);
+    });
+
+    testWidgets('a block run and a column never scroll, and so never ask',
+        (tester) async {
+      await tester.pumpWidget(_run(block: true));
+      await tester.pumpAndSettle();
+      expect(_arrows('Next'), 0);
+
+      await tester.pumpWidget(_run(direction: Axis.vertical));
+      await tester.pumpAndSettle();
+      expect(_arrows('Next'), 0);
+    });
+
+    testWidgets('a mirrored run steps the way it reads', (tester) async {
+      await tester.pumpWidget(_run(dir: TextDirection.rtl));
+      await tester.pumpAndSettle();
+
+      final view = tester.getRect(find.byType(SingleChildScrollView));
+      final next = tester.getRect(find.bySemanticsLabel('Next'));
+      expect(
+        next.left < view.center.dx,
+        isTrue,
+        reason: 'right to left, so onwards is leftwards',
+      );
+
+      final before = _readable(tester);
+      await tester.tap(find.bySemanticsLabel('Next'));
+      await tester.pumpAndSettle();
+      expect(_readable(tester), isNot(before));
+      expect(_arrows('Previous'), 1);
     });
   });
 }

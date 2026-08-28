@@ -1,5 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 
+import '../../icons/icons.dart';
+import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 
@@ -66,6 +70,9 @@ class SegmentedToken {
     this.borderRadius,
     this.borderRadiusSM,
     this.borderRadiusLG,
+    this.arrowBg,
+    this.arrowHoverBg,
+    this.arrowColor,
   });
 
   /// Track background color (`trackBg`).
@@ -99,6 +106,16 @@ class SegmentedToken {
   /// Corner radius for large control (`borderRadiusLG`).
   final double? borderRadiusLG;
 
+  /// Fill behind a scroll button. Translucent, so the segment it covers is
+  /// still legible underneath.
+  final Color? arrowBg;
+
+  /// Fill behind a scroll button under the pointer.
+  final Color? arrowHoverBg;
+
+  /// Colour of a scroll button's caret.
+  final Color? arrowColor;
+
   _ResolvedSegmentedToken _resolve(Token t) => _ResolvedSegmentedToken(
         // The layout background, not a translucent fill. A fill lightens the
         // track in a dark theme, which leaves the elevated thumb *darker* than
@@ -114,6 +131,12 @@ class SegmentedToken {
         borderRadius: borderRadius ?? t.borderRadius,
         borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
         borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
+        // The elevated surface rather than the track's own: a button that
+        // matched the groove would vanish into it. Translucent, so the segment
+        // sliding under it stays readable.
+        arrowBg: arrowBg ?? t.colorBgElevated.withValues(alpha: 0.9),
+        arrowHoverBg: arrowHoverBg ?? t.colorBgElevated,
+        arrowColor: arrowColor ?? t.colorText,
       );
 }
 
@@ -130,6 +153,9 @@ class _ResolvedSegmentedToken {
     required this.borderRadius,
     required this.borderRadiusSM,
     required this.borderRadiusLG,
+    required this.arrowBg,
+    required this.arrowHoverBg,
+    required this.arrowColor,
   });
 
   final Color trackBg;
@@ -142,6 +168,9 @@ class _ResolvedSegmentedToken {
   final double borderRadius;
   final double borderRadiusSM;
   final double borderRadiusLG;
+  final Color arrowBg;
+  final Color arrowHoverBg;
+  final Color arrowColor;
 }
 
 /// Defaults for every [Segmented] under a `ConfigProvider`.
@@ -154,10 +183,14 @@ class SegmentedDefaults {
     this.direction,
     this.size,
     this.disabled,
+    this.scrollButtons,
   });
 
   /// Which way the segments run.
   final Axis? direction;
+
+  /// Whether an overflowing run offers arrows to step through it.
+  final bool? scrollButtons;
 
   /// Which control height a [Segmented] takes, unless it names one.
   ///
@@ -201,6 +234,7 @@ class Segmented<T> extends StatefulWidget {
     this.size,
     this.direction,
     this.block = false,
+    this.scrollButtons,
     this.disabled,
     this.trackColor,
     this.thumbColor,
@@ -225,6 +259,13 @@ class Segmented<T> extends StatefulWidget {
 
   /// Stretch the segments to fill the available space equally.
   final bool block;
+
+  /// Whether a run too wide for its space offers arrows to step through it.
+  ///
+  /// They appear only on the side that has something hidden, and go again when
+  /// it does not — a run that fits shows none. Defaults to yes: segments that
+  /// scroll with nothing to say so look like all the segments there are.
+  final bool? scrollButtons;
 
   /// Greys the whole control out and blocks selection.
   final bool? disabled;
@@ -269,8 +310,121 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
 
   final GlobalKey _stackKey = GlobalKey();
   final Map<int, GlobalKey> _segmentKeys = {};
+  final ScrollController _scroll = ScrollController();
   Rect? _thumbRect;
   int? _hoveredIndex;
+
+  /// Whether anything is hidden behind each end of the viewport.
+  bool _canStepBack = false;
+  bool _canStepOn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_syncArrows);
+  }
+
+  @override
+  void dispose() {
+    _scroll
+      ..removeListener(_syncArrows)
+      ..dispose();
+    super.dispose();
+  }
+
+  bool get _scrollButtons =>
+      widget.scrollButtons ?? _defaults?.scrollButtons ?? true;
+
+  /// Turns the arrows on and off as the run scrolls.
+  ///
+  /// Read from the position rather than from a count of segments: a run whose
+  /// content fits has no extent to scroll and so neither arrow, whatever the
+  /// options say.
+  void _syncArrows() {
+    if (!mounted) return;
+    final has = _scroll.hasClients;
+    final back = has && _scroll.offset > _scroll.position.minScrollExtent + 0.5;
+    final on = has && _scroll.offset < _scroll.position.maxScrollExtent - 0.5;
+    if (back != _canStepBack || on != _canStepOn) {
+      setState(() {
+        _canStepBack = back;
+        _canStepOn = on;
+      });
+    }
+  }
+
+  /// How wide one scroll button is.
+  ///
+  /// Shared by the button and by the arithmetic that steps the run, because a
+  /// step has to clear the button: they sit *over* the ends, so a segment
+  /// brought exactly to the edge would arrive underneath one.
+  double _arrowExtent(Token t) => t.fontSize * 2;
+
+  /// How far along the scroll a segment begins.
+  ///
+  /// Not simply its offset inside the strip: a run that reads right to left
+  /// starts at the far end, where an offset of zero shows the content's right
+  /// edge, and a segment's distance is measured from there.
+  double _offsetOf(RenderBox segment, RenderBox strip) {
+    final origin = segment.localToGlobal(Offset.zero, ancestor: strip);
+    if (Directionality.of(context) == TextDirection.ltr) return origin.dx;
+    return strip.size.width - (origin.dx + segment.size.width);
+  }
+
+  /// Brings exactly one more segment into view at one end.
+  ///
+  /// One at a time rather than a page: the arrow is there because a segment is
+  /// half-hidden, and the thing to do about that is to show it.
+  void _step(bool forward) {
+    if (!_scroll.hasClients) return;
+    final strip = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    if (strip == null || !strip.hasSize) return;
+
+    final position = _scroll.position;
+    final inset = _arrowExtent(context.softToken);
+    final start = position.pixels;
+    final end = start + position.viewportDimension;
+
+    double? target;
+    for (var i = 0; i < widget.options.length; i++) {
+      final box =
+          _segmentKeys[i]?.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) continue;
+      final from = _offsetOf(box, strip);
+      final to = from + box.size.width;
+      if (forward) {
+        // The first segment whose far edge is past the viewport's, less the
+        // button it would otherwise land under.
+        if (to > end - inset + 0.5) {
+          target = to - position.viewportDimension + inset;
+          break;
+        }
+      } else if (from < start + inset - 0.5) {
+        // The last one whose near edge is behind the viewport's, again with
+        // room for the button.
+        target = from - inset;
+      }
+    }
+    if (target == null) return;
+
+    var to = target.clamp(position.minScrollExtent, position.maxScrollExtent);
+    // A segment wider than the viewport cannot be framed, and the arithmetic
+    // above would then aim backwards. Fall back to a viewport's worth.
+    if (forward && to <= start + 0.5) {
+      to = math.min(
+          position.maxScrollExtent, start + position.viewportDimension);
+    } else if (!forward && to >= start - 0.5) {
+      to = math.max(
+          position.minScrollExtent, start - position.viewportDimension);
+    }
+
+    final token = context.softToken;
+    _scroll.animateTo(
+      to,
+      duration: token.motionDurationMid,
+      curve: token.motionEaseInOut,
+    );
+  }
 
   bool get _enabled => !_disabled && widget.onChanged != null;
   bool get _vertical => _direction == Axis.vertical;
@@ -323,34 +477,38 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
         color: widget.trackColor ?? r.trackBg,
         borderRadius: BorderRadius.circular(_radius(r)),
       ),
-      child: _maybeScrollable(
-        Stack(
-          key: _stackKey,
-          children: [
-            // The thumb slides behind the labels once measured. It is positioned
-            // in the Stack's own coordinates, so the rect is measured relative to
-            // the Stack — not the padded Container.
-            if (rect != null)
-              AnimatedPositioned(
-                duration: token.motionDurationMid,
-                curve: token.motionEaseInOut,
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: _enabled
-                        ? (widget.thumbColor ?? r.itemSelectedBg)
-                        : (widget.thumbColor ?? r.itemSelectedBg)
-                            .withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(_radius(r)),
-                    boxShadow: _enabled ? token.boxShadowSecondary : null,
+      child: _withArrows(
+        token,
+        r,
+        _maybeScrollable(
+          Stack(
+            key: _stackKey,
+            children: [
+              // The thumb slides behind the labels once measured. It is positioned
+              // in the Stack's own coordinates, so the rect is measured relative to
+              // the Stack — not the padded Container.
+              if (rect != null)
+                AnimatedPositioned(
+                  duration: token.motionDurationMid,
+                  curve: token.motionEaseInOut,
+                  left: rect.left,
+                  top: rect.top,
+                  width: rect.width,
+                  height: rect.height,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: _enabled
+                          ? (widget.thumbColor ?? r.itemSelectedBg)
+                          : (widget.thumbColor ?? r.itemSelectedBg)
+                              .withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(_radius(r)),
+                      boxShadow: _enabled ? token.boxShadowSecondary : null,
+                    ),
                   ),
                 ),
-              ),
-            _strip(segmentWidgets),
-          ],
+              _strip(segmentWidgets),
+            ],
+          ),
         ),
       ),
     );
@@ -373,6 +531,56 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
     );
   }
 
+  /// Lays the arrows over the ends of an overflowing run.
+  ///
+  /// Over, not beside: a button that took space of its own would narrow the
+  /// viewport the moment it appeared, hiding another segment and so keeping
+  /// itself needed. Each sits on the end it steps towards and goes when that
+  /// end has nothing left to show.
+  Widget _withArrows(
+    Token token,
+    _ResolvedSegmentedToken r,
+    Widget child,
+  ) {
+    if (_vertical || block || !_scrollButtons) return child;
+    final words = SeedLocalizations.of(context);
+    return Stack(
+      children: [
+        child,
+        if (_canStepBack)
+          PositionedDirectional(
+            start: 0,
+            top: 0,
+            bottom: 0,
+            child: _ScrollArrow(
+              forward: false,
+              token: token,
+              resolved: r,
+              radius: _radius(r),
+              extent: _arrowExtent(token),
+              label: words.previous,
+              onPressed: () => _step(false),
+            ),
+          ),
+        if (_canStepOn)
+          PositionedDirectional(
+            end: 0,
+            top: 0,
+            bottom: 0,
+            child: _ScrollArrow(
+              forward: true,
+              token: token,
+              resolved: r,
+              radius: _radius(r),
+              extent: _arrowExtent(token),
+              label: words.next,
+              onPressed: () => _step(true),
+            ),
+          ),
+      ],
+    );
+  }
+
   /// Lets a horizontal run scroll rather than overflow.
   ///
   /// A content-sized control cannot always have the width it asks for — a
@@ -383,6 +591,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
   Widget _maybeScrollable(Widget child) {
     if (_vertical || block) return child;
     return SingleChildScrollView(
+      controller: _scroll,
       scrollDirection: Axis.horizontal,
       // The thumb is measured against the strip's own coordinates, so it
       // travels with the content instead of floating over the viewport.
@@ -425,6 +634,11 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
   bool get block => widget.block;
 
   void _measure() {
+    // Whether either end has something hidden is a fact about the laid-out
+    // run, so it is settled here with the thumb rather than guessed at during
+    // build. This also covers a resize and a change of options, both of which
+    // reach this the same way.
+    _syncArrows();
     final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
     final segBox = _segmentKeys[_selectedIndex]
         ?.currentContext
@@ -536,5 +750,77 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
     if (_hoveredIndex != index && mounted) {
       setState(() => _hoveredIndex = index);
     }
+  }
+}
+
+/// One of the two buttons that step an overflowing [Segmented] along.
+class _ScrollArrow extends StatefulWidget {
+  const _ScrollArrow({
+    required this.forward,
+    required this.token,
+    required this.resolved,
+    required this.radius,
+    required this.extent,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final bool forward;
+  final Token token;
+  final _ResolvedSegmentedToken resolved;
+  final double radius;
+  final double extent;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  State<_ScrollArrow> createState() => _ScrollArrowState();
+}
+
+class _ScrollArrowState extends State<_ScrollArrow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.token;
+    final glyph = t.fontSize;
+    // The caret points the way the run will travel, which in a mirrored
+    // layout is the other way round — so it follows the reading direction
+    // rather than the flag.
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final pointsRight = widget.forward != rtl;
+
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: t.motionDurationFast,
+            curve: t.motionEaseOut,
+            width: widget.extent,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _hovered
+                  ? widget.resolved.arrowHoverBg
+                  : widget.resolved.arrowBg,
+              borderRadius: BorderRadius.circular(widget.radius),
+            ),
+            child: Transform.rotate(
+              angle: pointsRight ? 0 : math.pi,
+              child: CustomPaint(
+                size: Size.square(glyph),
+                painter: ChevronPainter(widget.resolved.arrowColor),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

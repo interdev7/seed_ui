@@ -387,10 +387,11 @@ class MainLayout extends StatelessWidget {
 }
 
 class Demo {
-  const Demo(this.id, this.title, this.builder);
+  const Demo(this.id, this.title, this.builder, {this.isNew = false});
   final String id;
   final String title;
   final WidgetBuilder builder;
+  final bool isNew;
 }
 
 final List<Demo> demos = [
@@ -403,7 +404,12 @@ final List<Demo> demos = [
   Demo('time-picker', 'TimePicker', (_) => const TimePickerDemo()),
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),
-  Demo('float-button', 'FloatButton', (_) => const FloatButtonDemo()),
+  Demo(
+    'float-button',
+    'FloatButton',
+    (_) => const FloatButtonDemo(),
+    isNew: true,
+  ),
   Demo('message', 'message', (_) => const MessageDemo()),
   Demo('notification', 'notification', (_) => const NotificationDemo()),
   Demo('modal', 'Modal', (_) => const ModalDemo()),
@@ -453,6 +459,7 @@ class HomePage extends StatelessWidget {
         return _DemoTile(
           title: demo.title,
           onTap: () => context.go('/demo/${demo.id}'),
+          isNew: demo.isNew,
         );
       },
     );
@@ -460,10 +467,15 @@ class HomePage extends StatelessWidget {
 }
 
 class _DemoTile extends StatelessWidget {
-  const _DemoTile({required this.title, required this.onTap});
+  const _DemoTile({
+    required this.title,
+    required this.onTap,
+    this.isNew = false,
+  });
 
   final String title;
   final VoidCallback onTap;
+  final bool isNew;
 
   @override
   Widget build(BuildContext context) {
@@ -483,7 +495,14 @@ class _DemoTile extends StatelessWidget {
                 color: token.colorText,
               ),
             ),
-            Icon(Icons.chevron_right, color: token.colorTextTertiary),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isNew)
+                  const Tag(color: TagColor.primary, child: Text("New")),
+                Icon(Icons.chevron_right, color: token.colorTextTertiary),
+              ],
+            ),
           ],
         ),
       ),

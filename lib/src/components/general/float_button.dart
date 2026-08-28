@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/size_resolver.dart';
 import 'button.dart';
 
 /// Which side of a [FloatButton] its label hangs on.
@@ -217,25 +218,29 @@ class FloatButtonFan extends FloatButtonLayout {
   /// The angle between two neighbouring spokes.
   double _step(int count) => count < 2 ? 0 : _sweep() / (count - 1);
 
+  /// Where the items sit before any scatter.
   double _radius(int count, Size item, double gap) {
     if (radius != null) return radius!;
     final clear = item.longestSide + gap;
     final step = _step(count);
     // Far enough out that the chord between neighbours is a whole item plus a
-    // gap; then further still, in proportion to the scatter asked for, so the
-    // scatter has somewhere to go.
+    // gap: the more items share a sweep, the further out they must go.
     final needed = step == 0 ? clear : clear / (2 * math.sin(step / 2));
-    return math.max(item.longestSide + gap * 2, needed) + jitter * clear;
+    return math.max(item.longestSide + gap * 2, needed);
   }
 
-  /// How far an item may stray without meeting its neighbour.
+  /// The closest an item may come to the trigger.
   ///
-  /// Half the daylight between two of them: if both stray towards each other
-  /// by this much, they arrive just touching.
-  double _room(int count, Size item, double gap) {
-    if (jitter == 0 || count < 2) return 0;
-    final chord = 2 * _radius(count, item, gap) * math.sin(_step(count) / 2);
-    return math.max(0, chord - item.longestSide) / 2;
+  /// The distance from a point at radius r to its neighbour's spoke is
+  /// `r·sin(step)`, so any item at or beyond this radius clears every other
+  /// spoke whatever the items on them are doing. That is what lets the scatter
+  /// run along the spokes freely: it cannot produce a collision, however far
+  /// two items happen to differ.
+  double _floor(int count, Size item) {
+    final step = _step(count);
+    if (step <= 0) return 0;
+    // A twentieth of an item of daylight, so "clear" is visibly clear.
+    return item.longestSide * 1.05 / math.sin(math.min(step, math.pi / 2));
   }
 
   double _angle(int index, int count, Offset away) {
@@ -246,15 +251,18 @@ class FloatButtonFan extends FloatButtonLayout {
 
   @override
   Offset offsetFor(int index, int count, Size item, Offset away, double gap) {
-    var angle = _angle(index, count, away);
+    final angle = _angle(index, count, away);
     var r = _radius(count, item, gap);
-    final room = _room(count, item, gap);
-    if (room > 0) {
-      // Split between the two directions an item can move — along the arc and
-      // out along its spoke — so neither alone spends the whole allowance.
-      final along = room / math.sqrt2;
-      angle += _noise(seed, index, 1) * (along / math.max(r, 1));
-      r += _noise(seed, index, 2) * along;
+    if (jitter > 0) {
+      // Along the spokes rather than across them. Items standing at visibly
+      // different distances is what reads as scatter — nudging them sideways
+      // by a few degrees does not — and a spoke is the one direction an item
+      // can travel without ever nearing its neighbours.
+      final reach = jitter * (item.longestSide + gap) * 1.5;
+      r = math.max(
+        _floor(count, item),
+        r + _noise(seed, index, 2) * reach,
+      );
     }
     return Offset(math.cos(angle) * r, math.sin(angle) * r);
   }
@@ -292,7 +300,9 @@ class FloatButtonGrid extends FloatButtonLayout {
     final row = index ~/ columns;
     return Offset(
       away.dx * (col + 1) * (item.width + g),
-      away.dy * (row + 1) * (item.height + g),
+      // Rows stand a gap further apart than columns do, because a caption
+      // hangs under each item and has to go somewhere.
+      away.dy * (row + 1) * (item.height + g * 2),
     );
   }
 
@@ -304,11 +314,9 @@ class FloatButtonGrid extends FloatButtonLayout {
     Offset away,
     double gap,
   ) =>
-      // The block grows into one quadrant, so every label goes the same way
-      // out of it — sideways, where a neighbour is not about to land.
-      away.dx < 0
-          ? FloatButtonLabelPlacement.left
-          : FloatButtonLabelPlacement.right;
+      // Under the item, in the room [offsetFor] leaves between rows. Sideways
+      // would put a caption straight through the item in the next column.
+      FloatButtonLabelPlacement.bottom;
 }
 
 /// Positions supplied by the caller — [FloatButtonLayout.custom].
@@ -357,6 +365,8 @@ class FloatButtonToken {
   /// Creates a [FloatButtonToken].
   const FloatButtonToken({
     this.size,
+    this.sizeSM,
+    this.sizeLG,
     this.gap,
     this.labelGap,
     this.labelTextColor,
@@ -367,8 +377,15 @@ class FloatButtonToken {
     this.curve,
   });
 
-  /// Diameter of a round button, height of a square one.
+  /// Diameter of a round button, height of a square one — the standard
+  /// preset, and what a button takes when it is given no size at all.
   final double? size;
+
+  /// The compact preset.
+  final double? sizeSM;
+
+  /// The roomy preset.
+  final double? sizeLG;
 
   /// Space between two items in a group.
   final double? gap;
@@ -396,6 +413,8 @@ class FloatButtonToken {
 
   _ResolvedFloatButtonToken _resolve(Token t) => _ResolvedFloatButtonToken(
         size: size ?? t.controlHeightLG + t.sizeXS,
+        sizeSM: sizeSM ?? t.controlHeight + t.sizeXS,
+        sizeLG: sizeLG ?? t.controlHeightLG + t.size,
         gap: gap ?? t.sizeSM,
         labelGap: labelGap ?? t.sizeXXS,
         labelTextColor: labelTextColor ?? t.colorText,
@@ -411,6 +430,8 @@ class FloatButtonToken {
 class _ResolvedFloatButtonToken {
   const _ResolvedFloatButtonToken({
     required this.size,
+    required this.sizeSM,
+    required this.sizeLG,
     required this.gap,
     required this.labelGap,
     required this.labelTextColor,
@@ -422,6 +443,8 @@ class _ResolvedFloatButtonToken {
   });
 
   final double size;
+  final double sizeSM;
+  final double sizeLG;
   final double gap;
   final double labelGap;
   final Color labelTextColor;
@@ -444,6 +467,7 @@ class FloatButtonDefaults {
   const FloatButtonDefaults({
     this.shape,
     this.color,
+    this.size,
     this.layout,
     this.trigger,
     this.labelPlacement,
@@ -457,6 +481,9 @@ class FloatButtonDefaults {
 
   /// Which palette float buttons draw from.
   final ButtonColor? color;
+
+  /// How big they are — a preset, or a measurement of your own.
+  final ControlSize? size;
 
   /// How groups spread their items.
   final FloatButtonLayout? layout;
@@ -480,6 +507,7 @@ class FloatButtonDefaults {
   FloatButtonDefaults copyWith({
     ButtonShape? shape,
     ButtonColor? color,
+    ControlSize? size,
     FloatButtonLayout? layout,
     FloatButtonTrigger? trigger,
     FloatButtonLabelPlacement? labelPlacement,
@@ -490,6 +518,7 @@ class FloatButtonDefaults {
       FloatButtonDefaults(
         shape: shape ?? this.shape,
         color: color ?? this.color,
+        size: size ?? this.size,
         layout: layout ?? this.layout,
         trigger: trigger ?? this.trigger,
         labelPlacement: labelPlacement ?? this.labelPlacement,
@@ -528,6 +557,7 @@ class FloatButton extends StatelessWidget {
     this.onPressed,
     this.color,
     this.shape,
+    this.size,
     this.disabled,
     this.labelPlacement,
     this.semanticLabel,
@@ -555,6 +585,11 @@ class FloatButton extends StatelessWidget {
   /// Round (the default) or square.
   final ButtonShape? shape;
 
+  /// How big the button is: a preset from the token's scale, or a measurement
+  /// of your own. A circle's height is its diameter, so
+  /// `ControlSize.height(64)` reads true here.
+  final ControlSize? size;
+
   /// Greys the button out and blocks taps.
   final bool? disabled;
 
@@ -579,23 +614,27 @@ class FloatButton extends StatelessWidget {
         ._resolve(t);
 
     final buttonShape = shape ?? defaults?.shape ?? ButtonShape.circle;
+    final diameter =
+        (size ?? defaults?.size ?? ConfigProvider.componentSizeOf(context))
+                ?.resolve1D(small: r.sizeSM, middle: r.size, large: r.sizeLG) ??
+            r.size;
     final radius =
-        buttonShape == ButtonShape.circle ? r.size / 2 : r.borderRadius;
+        buttonShape == ButtonShape.circle ? diameter / 2 : r.borderRadius;
 
     // Pinned to one number so the shadow behind the button and the button's
     // own corners cannot disagree.
     final pinned = ButtonToken(
-      controlHeight: r.size,
-      controlHeightSM: r.size,
-      controlHeightLG: r.size,
+      controlHeight: diameter,
+      controlHeightSM: diameter,
+      controlHeightLG: diameter,
       borderRadius: radius,
       borderRadiusSM: radius,
       borderRadiusLG: radius,
     );
 
     Widget button = SizedBox(
-      width: child == null ? r.size : null,
-      height: r.size,
+      width: child == null ? diameter : null,
+      height: diameter,
       child: Button(
         shape: buttonShape,
         variant: ButtonVariant.solid,
@@ -623,7 +662,7 @@ class FloatButton extends StatelessWidget {
         placement: labelPlacement ??
             defaults?.labelPlacement ??
             FloatButtonLabelPlacement.left,
-        size: r.size,
+        size: diameter,
         token: r,
         themeToken: t,
         label: label!,
@@ -711,6 +750,14 @@ class _Labelled extends StatelessWidget {
               offset: by,
               child: OverflowBox(
                 alignment: from,
+                // The minimums matter as much as the maximums here. Left
+                // unset they are inherited from the box this fills — the
+                // button's — and a caption shorter than the button would be
+                // stretched out to it, padding the text away from the button
+                // it names and giving it a footprint that overlaps the item
+                // next door.
+                minWidth: 0,
+                minHeight: 0,
                 maxWidth: double.infinity,
                 maxHeight: double.infinity,
                 child: chip,
@@ -866,6 +913,7 @@ class FloatButtonGroup<T> extends StatefulWidget {
     this.icon,
     this.color,
     this.shape,
+    this.size,
     this.trigger,
     this.controller,
     this.open,
@@ -897,6 +945,10 @@ class FloatButtonGroup<T> extends StatefulWidget {
 
   /// Round (the default) or square, for the whole group.
   final ButtonShape? shape;
+
+  /// How big the trigger and its items are. A group sizes them alike, which
+  /// is what lets it space them.
+  final ControlSize? size;
 
   /// What opens the group. Defaults to a tap.
   final FloatButtonTrigger? trigger;
@@ -1088,6 +1140,14 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
           const FloatButtonToken())
       ._resolve(context.softToken);
 
+  /// The size every item shares — what the layout spaces them by.
+  double _itemSize(_ResolvedFloatButtonToken r) =>
+      (widget.size ??
+              _defaults?.size ??
+              ConfigProvider.componentSizeOf(context))
+          ?.resolve1D(small: r.sizeSM, middle: r.size, large: r.sizeLG) ??
+      r.size;
+
   /// Closes the group on Escape, whatever [FloatButtonGroup.dismissible] says.
   ///
   /// Read straight off the keyboard rather than through a focus node: the
@@ -1138,6 +1198,21 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     }
   }
 
+  /// How far the open items reach from the trigger, on each axis.
+  ///
+  /// Measured with a direction of `(1, 1)`, since every layout mirrors its
+  /// offsets about the trigger and only the sign changes.
+  Offset _reach(FloatButtonLayout layout, int count, Size item, double gap) {
+    var dx = 0.0;
+    var dy = 0.0;
+    for (var i = 0; i < count; i++) {
+      final at = layout.offsetFor(i, count, item, const Offset(1, 1), gap);
+      dx = math.max(dx, at.dx.abs());
+      dy = math.max(dy, at.dy.abs());
+    }
+    return Offset(dx + item.width / 2, dy + item.height / 2);
+  }
+
   void _measure() {
     final box = _triggerKey.currentContext?.findRenderObject() as RenderBox?;
     final overlayBox =
@@ -1147,9 +1222,22 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
         box.localToGlobal(Offset.zero, ancestor: overlayBox) & box.size;
     final screen = overlayBox.size;
     _origin = rect.center;
+
+    final r = _resolved();
+    final need = _reach(
+      _layout,
+      widget.items.length,
+      Size.square(_itemSize(r)),
+      r.gap,
+    );
+
+    // Up and to the left, which is where a button parked in the usual corner
+    // has to go — but only where the items actually fit. Half of the screen is
+    // the wrong question: a group a third of the way down has plenty of room
+    // above it and no reason to open away from the reach it needs.
     _away = Offset(
-      rect.center.dx > screen.width / 2 ? -1 : 1,
-      rect.center.dy > screen.height / 2 ? -1 : 1,
+      rect.left >= need.dx || rect.left >= screen.width - rect.right ? -1 : 1,
+      rect.top >= need.dy || rect.top >= screen.height - rect.bottom ? -1 : 1,
     );
   }
 
@@ -1167,6 +1255,7 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
   ) {
     Widget built = FloatButton(
       icon: item.icon,
+      size: widget.size,
       label: item.label == null ? null : Text(item.label!),
       labelPlacement: placement,
       color: item.color ?? widget.color,
@@ -1188,7 +1277,7 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     final r = _resolved();
     final layout = _layout;
     final count = widget.items.length;
-    final item = Size.square(r.size);
+    final item = Size.square(_itemSize(r));
     final asked = widget.labelPlacement ??
         _defaults?.labelPlacement ??
         FloatButtonLabelPlacement.auto;
@@ -1233,14 +1322,17 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
 
     return Stack(
       children: [
-        if (_trigger == FloatButtonTrigger.click)
+        if (_trigger == FloatButtonTrigger.click && _dismissible)
           Positioned.fill(
-            // The ground stays covered even when it cannot be tapped
-            // through: an open menu should not have the page acting behind
-            // it. Only whether the tap *closes* is up to dismissible.
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _dismissible ? () => _ask(false) : () {},
+            // Translucent, so the page underneath keeps working while the
+            // group is open: it still scrolls, and its buttons still answer.
+            // An opaque sheet would put the page out of reach for as long as
+            // the menu is up, which is not a trade a float button may make.
+            // The items are above this in the stack, so a tap on one reaches
+            // the item and never gets here.
+            child: Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (_) => _ask(false),
             ),
           ),
         Positioned.fill(child: flow),
@@ -1254,6 +1346,7 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
       key: _triggerKey,
       color: widget.color,
       shape: widget.shape,
+      size: widget.size,
       token: widget.token,
       semanticLabel: widget.semanticLabel,
       onPressed: () => _ask(!_isOpen),

@@ -582,6 +582,80 @@ void main() {
       );
     });
 
+    testWidgets('a label is its own size, not the button\'s', (tester) async {
+      // An OverflowBox inherits the minimum constraints as well as the
+      // maximum ones. Left unset they came from the button, and a caption
+      // shorter than the button was stretched out to it — padding the text
+      // away from what it names, and giving it a footprint that ran through
+      // the item next door.
+      await tester.pumpWidget(
+        _host(
+          FloatButton(
+            icon: const UserIcon(),
+            label: const Text('Edit'),
+            onPressed: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final button = tester.getSize(find.byType(Button));
+      final label = tester.getSize(find.text('Edit'));
+      expect(label.height, lessThan(button.height / 2));
+    });
+
+    testWidgets('a grid keeps its captions out of its buttons', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const FloatButtonGroup<String>(
+            layout: FloatButtonLayout.grid(2),
+            items: [
+              FloatButtonItem(value: 'a', icon: UserIcon(), label: 'One'),
+              FloatButtonItem(value: 'b', icon: UserIcon(), label: 'Two'),
+              FloatButtonItem(value: 'c', icon: UserIcon(), label: 'Three'),
+              FloatButtonItem(value: 'd', icon: UserIcon(), label: 'Four'),
+            ],
+          ),
+        ),
+      );
+      await _open(tester);
+
+      // A caption is a sibling of its button inside the item, not a
+      // descendant of it, so pair them through the FloatButton they share.
+      Rect buttonOf(String caption) => tester.getRect(
+            find.descendant(
+              of: find.ancestor(
+                of: find.text(caption),
+                matching: find.byType(FloatButton),
+              ),
+              matching: find.byType(Button),
+            ),
+          );
+
+      const captions = ['One', 'Two', 'Three', 'Four'];
+      for (final caption in captions) {
+        final label = tester.getRect(find.text(caption));
+        for (final other in captions) {
+          if (other == caption) continue;
+          expect(
+            label.overlaps(buttonOf(other)),
+            isFalse,
+            reason: '"$caption" runs through "$other"',
+          );
+        }
+      }
+    });
+
+    testWidgets('a group with room above it opens upwards', (tester) async {
+      // Half the screen is the wrong question: a group a third of the way
+      // down has plenty of room above and no reason to open away from it.
+      await tester.pumpWidget(_host(_group(), at: const Alignment(0, -0.3)));
+      final trigger = tester.getCenter(find.byType(FloatButtonGroup<String>));
+      await _open(tester);
+
+      expect(tester.getCenter(find.byType(UserIcon)).dy, lessThan(trigger.dy));
+    });
+
     testWidgets('a label hangs clear of the button it names', (tester) async {
       await tester.pumpWidget(
         _host(
@@ -618,6 +692,141 @@ void main() {
       final button = tester.getRect(find.byType(UserIcon));
       final label = tester.getRect(find.text('Profile'));
       expect(label.bottom, lessThan(button.top));
+    });
+  });
+
+  group('size', () {
+    testWidgets('a preset walks the token scale', (tester) async {
+      Future<Size> at(ControlSize? size) async {
+        await tester.pumpWidget(
+          _host(
+            FloatButton(
+              size: size,
+              icon: const UserIcon(),
+              onPressed: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        return tester.getSize(find.byType(FloatButton));
+      }
+
+      expect((await at(SoftSize.small)).width, 40);
+      expect((await at(null)).width, 48);
+      expect((await at(SoftSize.large)).width, 56);
+    });
+
+    testWidgets('a measurement is taken as given', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          FloatButton(
+            size: const ControlSize.height(72),
+            icon: const UserIcon(),
+            onPressed: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // A circle's height is its diameter.
+      expect(tester.getSize(find.byType(FloatButton)), const Size(72, 72));
+    });
+
+    testWidgets('a group sizes its items alike, and spaces them by it',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const FloatButtonGroup<String>(
+            size: ControlSize.height(72),
+            items: [
+              FloatButtonItem(value: 'a', icon: UserIcon()),
+              FloatButtonItem(
+                  value: 'b', icon: SearchIcon(color: Color(0xFF000000))),
+            ],
+          ),
+        ),
+      );
+      await _open(tester);
+
+      expect(tester.getSize(find.byType(UserIcon).hitTestable()), isNotNull);
+      final first = tester.getRect(
+        find.ancestor(
+          of: find.byType(UserIcon),
+          matching: find.byType(Button),
+        ),
+      );
+      expect(first.size, const Size(72, 72));
+
+      final second = tester.getRect(
+        find.ancestor(
+          of: find.byType(SearchIcon),
+          matching: find.byType(Button),
+        ),
+      );
+      // A column: one item, then one gap, both taken from the bigger size.
+      expect((second.center - first.center).distance, closeTo(72 + 12, 0.5));
+    });
+  });
+
+  group('the page underneath', () {
+    testWidgets('still answers while the group is open', (tester) async {
+      // An opaque sheet over the page for as long as a menu is up is not a
+      // trade a float button may make.
+      var behind = 0;
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Stack(
+                children: [
+                  Positioned(
+                    left: 20,
+                    top: 20,
+                    child: Button(
+                      onPressed: () => behind++,
+                      child: const Text('Behind'),
+                    ),
+                  ),
+                  Align(alignment: Alignment.bottomRight, child: _group()),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await _open(tester);
+
+      await tester.tap(find.text('Behind'));
+      await tester.pumpAndSettle();
+      expect(behind, 1, reason: 'the tap reached the page');
+      expect(find.byType(UserIcon), findsNothing,
+          reason: 'and closed the menu');
+    });
+
+    testWidgets('still scrolls while the group is open', (tester) async {
+      final scroll = ScrollController();
+      addTearDown(scroll.dispose);
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: MaterialApp(
+            home: Scaffold(
+              body: ListView(
+                controller: scroll,
+                children: [
+                  const SizedBox(height: 400),
+                  Center(child: _group(dismissible: false)),
+                  const SizedBox(height: 800),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await _open(tester);
+
+      await tester.drag(find.byType(ListView), const Offset(0, -80));
+      await tester.pumpAndSettle();
+      expect(scroll.offset, closeTo(80, 1),
+          reason: 'the drag reached the list');
     });
   });
 

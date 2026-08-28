@@ -40,12 +40,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   along its own spoke on a fan, so labels fan out with the buttons instead of
   piling up on one side.
 
-  A fan's radius is worked out from how many items share the sweep — the chord
-  between neighbouring spokes is `2r·sin(step/2)` — so they stand clear of one
-  another however many there are. `fan(jitter:)` scatters that arc without
-  being random: the same `seed` gives the same arrangement on every open and in
-  every test run, raising it widens the radius so the scatter has room, and the
-  stray is held to half the daylight between neighbours.
+  `size` takes a preset or a measurement of your own, on a button alone or on a
+  whole group. A fan's radius is worked out from how many items share the
+  sweep — the chord between neighbouring spokes is `2r·sin(step/2)` — so they
+  stand clear of one another however many there are. `fan(jitter:)` scatters
+  them along their spokes without being random: the same `seed` gives the same
+  arrangement on every open and in every test run, and an item is kept beyond
+  the radius at which it clears the next spoke, so no arrangement can collide.
+
+  The page underneath an open group keeps working — it scrolls, and its buttons
+  still answer.
 
   Items are data, so the group can size and place them. `value` is yours (which
   action is this?) and `key` is the tree's (which element?) — a `GlobalKey`

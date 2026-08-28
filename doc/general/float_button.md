@@ -57,9 +57,10 @@ FloatButtonGroup<UserAction>(
 )
 ```
 
-The direction the items travel is read off the trigger's place on screen: a
-group parked at the bottom right opens up and to the left, one at the top left
-opens down and to the right. Nothing needs to be told twice.
+The direction the items travel is worked out from the room around the trigger.
+A group goes up and to the left — where a button in the usual corner has to go
+— unless the items would not fit there, in which case it takes the roomier
+side. Nothing needs to be told twice.
 
 ### Items are data
 
@@ -135,6 +136,20 @@ put four items eleven pixels *inside* each other.
 Naming a radius yourself is taken as given, crowding and all. Sometimes an
 overlap is the look you want.
 
+### Sizes
+
+`size` takes a preset from the token scale or a measurement of your own, on a
+button alone or on a whole group. A circle's height is its diameter, so a bare
+number reads true:
+
+```dart
+FloatButton(size: SoftSize.large, ...)          // 56
+FloatButton(size: const ControlSize.height(72), ...)
+FloatButtonGroup<T>(size: SoftSize.small, ...)  // trigger and items alike
+```
+
+A group sizes its items alike, which is what lets it space them.
+
 ### Scatter
 
 `jitter` runs from 0 (a drawn arc) to 1, and `seed` chooses which scatter you
@@ -149,15 +164,13 @@ the same arrangement on every open, in every process and in every test run. A
 menu whose buttons landed somewhere new each time would defeat the muscle
 memory that makes a menu worth having, and would take its tests with it.
 
-And it **cannot make items collide** — but the bound comes from the arc, not
-from anywhere else. Raising `jitter` widens the derived radius, so the scatter
-buys its own room, and the stray is then held to half the daylight that
-actually exists between neighbours. A cap taken from the gap instead, as an
-earlier version had, held items to a few pixels nobody could see: bounded is
-not supposed to mean invisible.
-
-Give a `radius` of your own and the scatter works within whatever room that
-leaves.
+The scatter runs **along the spokes**, not across them: items standing at
+visibly different distances is what reads as scatter, where nudging them a few
+degrees sideways does not. It is also the one direction an item can travel
+without ever nearing its neighbours — the distance from a point at radius `r`
+to the next spoke is `r·sin(step)` — so an item is simply kept beyond the
+radius where that clears a whole item, and no arrangement can collide however
+far two of them differ.
 
 ## Labels
 
@@ -199,8 +212,18 @@ about to:
 | `vertical` | Out to the side — above would sit on the item above |
 | `horizontal` | Above or below — beside would sit on the next item |
 | `fan` | Outward along that item's own spoke, so labels fan out with the buttons |
-| `grid` | Out of the side of the block |
+| `grid` | Underneath, in the room a grid leaves between its rows |
 | `custom` | Outward from the trigger, snapped to the nearest side |
+
+A caption takes its own size and sits a few pixels clear of the button, centred
+on it across the other axis.
+
+## Blocking
+
+It does not. The page underneath an open group keeps working: it scrolls, and
+its buttons still answer. A tap outside closes the group and reaches the page
+both. Putting a sheet over the page for as long as a menu is up is not a trade
+a float button may make.
 
 ## Opening
 

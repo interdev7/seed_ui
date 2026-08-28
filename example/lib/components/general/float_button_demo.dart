@@ -52,6 +52,7 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
   String _layout = 'fan';
   double _jitter = 0;
   double? _radius;
+  ControlSize _size = SoftSize.middle;
   FloatButtonLabelPlacement _labels = FloatButtonLabelPlacement.auto;
   bool _dismissible = true;
   bool _closeOnSelect = true;
@@ -155,6 +156,7 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                   layout: _chosen,
                   color: ButtonColor.primary,
                   labelPlacement: _labels,
+                  size: _size,
                   dismissible: _dismissible,
                   closeOnSelect: _closeOnSelect,
                   items: _actions,
@@ -194,6 +196,21 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                 }),
               ),
               const SizedBox(height: 8),
+              Segmented<ControlSize>(
+                size: SoftSize.small,
+                value: _size,
+                options: const [
+                  SegmentedOption(value: SoftSize.small, label: 'small'),
+                  SegmentedOption(value: SoftSize.middle, label: 'middle'),
+                  SegmentedOption(value: SoftSize.large, label: 'large'),
+                  SegmentedOption(
+                    value: ControlSize.height(72),
+                    label: 'height(72)',
+                  ),
+                ],
+                onChanged: (v) => setState(() => _size = v),
+              ),
+              const SizedBox(height: 8),
               Segmented<bool>(
                 size: SoftSize.small,
                 value: _dismissible,
@@ -230,8 +247,10 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                 'window opens downwards — the rule working, not a fault. '
                 'radius: auto stands the items clear of one another; a radius '
                 'of your own is taken as given, crowding and all. Raising '
-                'jitter widens the arc so the scatter has somewhere to go, and '
-                'the same seed arranges them the same way every time.'
+                'jitter sends the items out to different distances along '
+                'their spokes, which is what reads as scatter, and the same '
+                'seed arranges them the same way every time. The page below '
+                'keeps working while the group is open.'
                 '${_last == null ? '' : '  Last tapped: ${_last!.name}.'}',
               ),
             ],

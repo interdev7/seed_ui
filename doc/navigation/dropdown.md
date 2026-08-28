@@ -45,8 +45,21 @@ too. A `danger` item is red; a `disabled` item is greyed and inert. A submenu's
 
 ### When the type has to be named
 
-A menu of items alone infers `T` from the items. Put a `DropdownDivider` among
-them and it has to be named once:
+A menu of items alone infers `T` from the items — nothing to write:
+
+```dart
+Dropdown(
+  menu: [
+    DropdownItem(value: RowAction.edit, label: const Text('Edit')),
+    DropdownItem(value: RowAction.remove, label: const Text('Delete')),
+  ],
+  onItemTap: handle,
+  child: trigger,
+)
+```
+
+Put a `DropdownDivider` among them and the type has to be named once — on the
+`Dropdown`, or on the list if it is hoisted:
 
 ```dart
 Dropdown<RowAction>(
@@ -58,14 +71,24 @@ Dropdown<RowAction>(
   onItemTap: handle,
   child: trigger,
 )
+
+// Hoisted, and so with no call site to infer from:
+static const _menu = <DropdownEntry<RowAction>>[ ... ];
 ```
 
-A divider carries no value, and Dart settles a list's element type before the
-menu's, so a mixed literal has nothing to go on and falls back to `Object`.
-Naming the type on the `Dropdown` puts it back, and the items and the handler
-are both checked against it from there. The same applies to a menu hoisted into
-a variable, which has no context at all: annotate it
-`const List<DropdownEntry<RowAction>> menu = [...]`.
+This is a limit of Dart's inference rather than a choice made here. A list
+literal's element type is settled by the least upper bound of its elements, and
+Dart's least upper bound across two *different* classes — an item and a divider
+— collapses to `Object`. Four ways round it were measured and none works: a
+non-generic divider carrying `Never`, a divider exposed as a typed constant, a
+type fixed by a typed handler, and covariance. The only design that infers is
+one class for items, dividers and groups together, which would make illegal
+states representable and take pattern matching with it — a worse type to save
+one annotation.
+
+Write `<DropdownEntry>` with no argument and it compiles, silently meaning
+`DropdownEntry<dynamic>`: the menu is untyped again and nothing says so. Name
+the type.
 
 ## Submenus
 

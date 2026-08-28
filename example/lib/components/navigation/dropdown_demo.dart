@@ -4,6 +4,10 @@ import 'package:seed_ui/seed_ui.dart';
 
 import '../group.dart';
 
+/// What the menu below reports. An enum, so the handler is checked against
+/// the items and a forgotten case will not compile.
+enum MenuAction { profile, settings, more, help, about, logout }
+
 class DropdownDemo extends StatefulWidget {
   const DropdownDemo({super.key});
 
@@ -23,29 +27,33 @@ class _DropdownDemoState extends State<DropdownDemo> {
     super.dispose();
   }
 
-  static const _menu = <DropdownEntry>[
+  // Hoisted and shared by five dropdowns, so there is no call site for a type
+  // to be inferred from — and a list mixing items with dividers cannot infer
+  // one anyway, since Dart settles a list's element type before the menu's.
+  // Named here, it is checked everywhere the menu is used.
+  static const _menu = <DropdownEntry<MenuAction>>[
     DropdownItem(
-      value: 'profile',
+      value: MenuAction.profile,
       label: Text('Profile'),
       icon: Icon(Icons.person),
     ),
     DropdownItem(
-      value: 'settings',
+      value: MenuAction.settings,
       label: Text('Settings'),
       icon: Icon(Icons.settings),
     ),
     DropdownDivider(),
     DropdownItem(
-      value: 'more',
+      value: MenuAction.more,
       label: Text('More'),
       children: [
-        DropdownItem(value: 'help', label: Text('Help')),
-        DropdownItem(value: 'about', label: Text('About')),
+        DropdownItem(value: MenuAction.help, label: Text('Help')),
+        DropdownItem(value: MenuAction.about, label: Text('About')),
       ],
     ),
     DropdownDivider(),
     DropdownItem(
-      value: 'logout',
+      value: MenuAction.logout,
       label: Text('Log out'),
       icon: Icon(Icons.logout),
       danger: true,
@@ -61,7 +69,19 @@ class _DropdownDemoState extends State<DropdownDemo> {
           'Hover',
           Dropdown(
             menu: _menu,
-            onItemTap: (k) => message.info('Tapped: $k'),
+            // Exhaustive, because the menu carries its type: drop a case and
+            // this stops compiling. It is also what proves the annotation on
+            // _menu is doing work — weaken it to a bare <DropdownEntry> and
+            // the switch loses its subject.
+            onItemTap: (action) => message.info(switch (action) {
+              MenuAction.profile => 'Your profile',
+              MenuAction.settings => 'Settings',
+              MenuAction.more => 'More',
+              MenuAction.help => 'Help',
+              MenuAction.about => 'About',
+              MenuAction.logout => 'Logged out',
+              null => 'Nothing',
+            }),
             child: Button(onPressed: () {}, child: const Text('Hover me')),
           ),
         ),
@@ -74,7 +94,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
             barrierColor: const Color.fromARGB(126, 105, 197, 102), // 50% black
             menu: _menu,
             arrow: true,
-            onItemTap: (k) => message.info('Tapped: $k'),
+            onItemTap: (action) => message.info('Tapped: ${action?.name}'),
             child: Button(
               onPressed: () => setState(() => _barrierOpen = !_barrierOpen),
               child: const Text('Click me (Barrier)'),
@@ -91,7 +111,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
             onOpenChange: (v) => setState(() => _clickOpen = v),
             menu: _menu,
             arrow: true,
-            onItemTap: (k) => message.info('Tapped: $k'),
+            onItemTap: (action) => message.info('Tapped: ${action?.name}'),
             child: Button(
               variant: ButtonVariant.solid,
               color: ButtonColor.primary,
@@ -105,7 +125,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
           Dropdown(
             trigger: const [DropdownTrigger.contextMenu],
             menu: _menu,
-            onItemTap: (k) => message.info('Tapped: $k'),
+            onItemTap: (action) => message.info('Tapped: ${action?.name}'),
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(

@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.12.0
+
+### Added
+
+- **`ThemeData.materialTheme`** — the Material theme that matches a kit theme.
+
+  ```dart
+  final kit = ThemeData(dark: isDark);
+
+  ConfigProvider(
+    theme: kit,
+    child: MaterialApp(theme: kit.materialTheme, home: const Home()),
+  )
+  ```
+
+  The kit's theme is not Material's, and anything Material still draws keeps
+  reading `MaterialApp.theme`. A page transition paints its backdrop with
+  `colorScheme.surface`; left unset that is Material's light default, so under
+  a dark kit theme every navigation flashed white before the page arrived.
+
+  It is reached from the theme itself rather than through a `BuildContext`, so
+  no `Builder` is needed between the provider and the app;
+  `context.softToken.materialTheme` is the same value from inside the tree. A
+  bridge for Material's own chrome, not a port of the kit's design language.
+
 ## 0.11.0
 
 ### Added

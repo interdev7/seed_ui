@@ -268,6 +268,42 @@ Because components depend on the provider via `context.softToken`, the flip
 rebuilds them automatically — no manual invalidation. The example app has a
 working light/dark toggle wired up this way.
 
+### Tell Material too
+
+The kit's theme is not Material's. Anything Material still draws for you — page
+transitions above all — keeps using `MaterialApp.theme`, and left unset that is
+Material's **light** default. A page transition paints its backdrop with
+`colorScheme.surface`, so under a dark kit theme every navigation flashes white
+before the page arrives.
+
+You do not have to write that theme out. Every kit `ThemeData` can hand you the
+matching Material one:
+
+```dart
+final kit = ThemeData(dark: _dark);
+
+ConfigProvider(
+  theme: kit,
+  child: MaterialApp(
+    theme: kit.materialTheme,
+    home: const HomePage(),
+  ),
+)
+```
+
+No `Builder` in between: `materialTheme` is reached from the theme itself, so
+it can be named beside the very provider it belongs to. From inside the tree
+the same value is `context.softToken.materialTheme`.
+
+It carries the brightness, the primary and error colours, the divider, and —
+the one that stops the flash — the surface, which is the colour the kit paints
+a page in. It is a bridge for Material's own chrome, not a port of the kit's
+design language: components draw themselves from the tokens and pay it no
+attention.
+
+A theme that leaves its brightness to inherit does not know it yet, so read
+this from the theme you hand to the top-level provider.
+
 ### Following the platform
 
 ```dart

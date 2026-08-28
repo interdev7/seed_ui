@@ -122,6 +122,8 @@ ListyScrollAlign
 ListyScrollTo
 ListyStyles
 ListyToken
+MaterialThemeFromThemeData
+MaterialThemeFromToken
 MessageApi
 MessageConfig
 MessageHandle

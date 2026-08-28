@@ -184,6 +184,7 @@ class _DemoAppState extends State<DemoApp> {
 
   @override
   Widget build(BuildContext context) {
+    final kit = _getTheme();
     return ThemeController(
       mode: _mode,
       setTheme: (mode) => setState(() => _mode = mode),
@@ -192,12 +193,16 @@ class _DemoAppState extends State<DemoApp> {
         setLocale: (l) => setState(() => _locale = l),
         // Above MaterialApp, as the kit's docs place it: overlays draw into
         // the navigator, above anything put inside `home`.
+        // The kit's theme and Material's, from one source. Without the
+        // second, a page transition paints its backdrop in Material's light
+        // default and every navigation in a dark theme flashes white.
         child: ConfigProvider(
-          theme: _getTheme(),
+          theme: kit,
           child: MaterialApp.router(
             title: 'seed_ui',
             debugShowCheckedModeBanner: false,
             locale: _locale,
+            theme: kit.materialTheme,
             // The kit's delegate is one more in the list, not a scheme of its
             // own. The global ones are Flutter's requirement: MaterialApp
             // refuses a non-English locale without them.

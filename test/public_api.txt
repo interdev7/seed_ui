@@ -92,6 +92,7 @@ FloatButton
 FloatButtonController
 FloatButtonCustom
 FloatButtonDefaults
+FloatButtonDirection
 FloatButtonFan
 FloatButtonGrid
 FloatButtonGroup

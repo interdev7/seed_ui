@@ -286,6 +286,7 @@ export 'src/components/general/float_button.dart'
         FloatButtonController,
         FloatButtonCustom,
         FloatButtonDefaults,
+        FloatButtonDirection,
         FloatButtonFan,
         FloatButtonGrid,
         FloatButtonGroup,

@@ -242,6 +242,7 @@ TabScrollAlign
 Table
 TableAlign
 TableColumn
+TableColumnFixed
 TableDefaults
 TableScroll
 TableToken

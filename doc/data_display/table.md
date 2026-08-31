@@ -102,10 +102,22 @@ Table(scroll: const TableScroll(x: 1200), ...)   // wider than its box
 **`y`** gives the rows a height of their own, and the heading stops travelling
 with them: it sits above and stays.
 
-**`x`** lays the table out at a width of your choosing, however narrow its box,
-and what does not fit scrolls across. The heading goes with the rows — both sit
+**`x`** is the width the table is laid out at, however narrow its box, and what
+does not fit scrolls across. It is a **floor**: a table is never laid out
+narrower than its own columns need, so adding columns past the width you named
+widens the table rather than cutting it off.
+
+It is still a number you have to mean. Name a width your window is wider than
+and there is nothing to scroll — which is not a fault, but does look like one. The heading goes with the rows — both sit
 in the same viewport rather than in one each kept in step by hand, so there is
 only one offset for them to disagree about.
+
+A table that scrolls sideways draws a bar and can be dragged with a mouse, the
+heading travelling with the rows.
+Neither comes free: Flutter leaves the mouse out of `dragDevices`, so a scroll
+view cannot be dragged with one at all, and it draws no scrollbar on the
+horizontal axis. On the web that left a table that scrolled sideways with no
+way to scroll it, since the wheel only goes down.
 
 ### What scrolling costs
 
@@ -119,6 +131,42 @@ pixels out of line. It is the trade `tableLayout: fixed` makes, for the same
 reason.
 
 So name a `width` or a `flex` on the columns that matter once you scroll.
+
+A shared column is never squeezed below `columnMinWidth`, though. Past that the
+table grows wider and scrolls rather than shrinking them further — fifteen
+columns sharing eight hundred pixels came out thirty-seven pixels each, which
+is not a column anybody can read.
+
+### Columns that stay put
+
+`fixed` pins a column to an edge and lets the rest scroll past it.
+
+```dart
+TableColumn(
+  title: const Text('Name'),
+  width: 160,
+  fixed: TableColumnFixed.start,
+  value: (u) => u.name,
+)
+```
+
+Two things come with it, and both are consequences rather than choices.
+
+**A pinned column needs a `width`.** It is laid out apart from the columns that
+scroll, so a share of a width it cannot see means nothing.
+
+**Pinning holds every row to one height.** The table becomes three laid out
+side by side, and separate tables work out their own row heights — measured,
+one wrapping cell put two panes a hundred and forty pixels out of step. The
+height is exact rather than a floor, so a cell with more in it is cut: a floor
+was tried, and a cell that grew past it put the panes eight pixels out again.
+
+Order does not matter. A column marked `end` is drawn at that edge wherever it
+was listed.
+
+A `bordered` table draws a rule where a pinned pane meets the rest. Inside a
+pane the table draws its own rules; between panes there is only the join, so
+without this a pinned column ran into its neighbour unmarked.
 
 ## Around the rows
 
@@ -146,8 +194,16 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `cellPaddingBlock`, `cellPaddingBlockSM`, `cellPaddingBlockLG` | 12, 8, 16 |
 | `cellPaddingInline`, `cellPaddingInlineSM`, `cellPaddingInlineLG` | 16, 8, 20 |
 | `footerBg`, `borderRadius`, `fontSize` | |
+| `columnMinWidth` | `controlHeightLG × 2.5` — the narrowest a shared column is squeezed to |
+
+## How many rows
+
+Every row is built, not just the ones on screen: five hundred rows measure four
+thousand widgets. That is fine for a page of them — which, with pagination, is
+what a table usually holds — and too slow for thousands. Laziness needs a
+two-dimensional viewport and is the next piece of work on this component.
 
 ## Not here yet
 
-Fixed columns, sorting, filtering, row selection, expandable rows and
-pagination are still to come, in that order.
+Lazy rows, sorting, filtering, row selection, expandable rows and pagination
+are still to come, in that order.

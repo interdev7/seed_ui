@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' as m;
 import 'package:flutter/material.dart'
     hide
@@ -492,9 +493,485 @@ void main() {
       expect(find.byType(Empty), findsOneWidget);
     });
 
+    testWidgets('a mouse can drag it sideways', (tester) async {
+      // Flutter leaves the mouse out of dragDevices, so a scroll view cannot
+      // be dragged with one at all — and buildScrollbar returns the child
+      // untouched on the horizontal axis, so there is no bar to drag either.
+      // Between them, a table that scrolled sideways could not be scrolled
+      // sideways on the web, where the wheel only goes down.
+      await tester.pumpWidget(rows(const TableScroll(x: 1200), n: 3));
+      final before = tester.getRect(find.text('N')).left;
+
+      final mouse = await tester.startGesture(
+        tester.getCenter(find.text('row 1')),
+        kind: PointerDeviceKind.mouse,
+      );
+      await mouse.moveBy(const Offset(-150, 0));
+      await tester.pump();
+      await mouse.up();
+      await tester.pumpAndSettle();
+
+      expect(tester.getRect(find.text('N')).left, closeTo(before - 150, 1));
+    });
+
+    testWidgets('and there is a bar to show it can be', (tester) async {
+      await tester.pumpWidget(rows(const TableScroll(x: 1200), n: 3));
+      final bar = tester.widget<RawScrollbar>(find.byType(RawScrollbar));
+      expect(bar.thumbVisibility, isTrue,
+          reason: 'a table wide enough to scroll should say so');
+    });
+
     test('a scroll must have room to happen in', () {
       expect(() => TableScroll(y: 0), throwsAssertionError);
       expect(() => TableScroll(x: -1), throwsAssertionError);
+    });
+  });
+
+  group('pinned columns', () {
+    Widget pinned({double? y, bool endFirst = false}) {
+      final end = TableColumn<int>(
+        title: const Text('End'),
+        width: 80,
+        fixed: TableColumnFixed.end,
+        value: (v) => 'e$v',
+      );
+      final start = TableColumn<int>(
+        title: const Text('Pin'),
+        width: 100,
+        fixed: TableColumnFixed.start,
+        value: (v) => 'p$v',
+      );
+      return _host(
+        Table<int>(
+          scroll: TableScroll(x: 1000, y: y),
+          columns: [
+            if (endFirst) end,
+            start,
+            for (var c = 0; c < 5; c++)
+              TableColumn<int>(title: Text('C$c'), value: (v) => 'c${c}r$v'),
+            if (!endFirst) end,
+          ],
+          data: [for (var i = 0; i < 12; i++) i],
+        ),
+        width: 400,
+      );
+    }
+
+    testWidgets('a pinned column stays while the rest go past', (tester) async {
+      await tester.pumpWidget(pinned(y: 200));
+      final table = tester.getRect(find.byType(Table<int>));
+      final start = tester.getRect(find.text('p0')).left;
+      final end = tester.getRect(find.text('e0')).left;
+      expect(end - table.left, greaterThan(200),
+          reason: 'the end pane is against the far edge of a 400-wide box');
+
+      await tester.drag(find.text('c0r1'), const Offset(-200, 0));
+      await tester.pumpAndSettle();
+
+      expect(tester.getRect(find.text('p0')).left, start);
+      expect(tester.getRect(find.text('e0')).left, end);
+    });
+
+    testWidgets('the heading travels across with its rows', (tester) async {
+      // Two viewports here — one for the heading, one for the rows — so this
+      // is the one place they are kept in step by hand.
+      await tester.pumpWidget(pinned(y: 200));
+      final heading = tester.getRect(find.text('C0')).left;
+      final cell = tester.getRect(find.text('c0r0')).left;
+
+      await tester.drag(find.text('c0r1'), const Offset(-200, 0));
+      await tester.pumpAndSettle();
+
+      // How far they went is the gesture's business — a drag gives up its
+      // first pixels to the touch slop. That they went the *same* distance is
+      // the table's.
+      final movedHeading = heading - tester.getRect(find.text('C0')).left;
+      final movedCell = cell - tester.getRect(find.text('c0r0')).left;
+      expect(movedHeading, movedCell, reason: 'they moved as one');
+      expect(movedHeading, greaterThan(100), reason: 'and they did move');
+    });
+
+    testWidgets('a pinned table scrolls sideways, heading and all',
+        (tester) async {
+      // The case the gallery caught: with a sticky heading the columns went
+      // one way and the heading another — its pane was laid out at the width
+      // of the box rather than the table, so its columns came out at the
+      // floor while the rows' were half as wide again.
+      await tester.pumpWidget(pinned(y: 200));
+      final headingBefore = tester.getRect(find.text('C0')).left;
+      final cellBefore = tester.getRect(find.text('c0r0')).left;
+      expect(
+        tester.getRect(find.text('C1')).left,
+        tester.getRect(find.text('c1r0')).left,
+        reason: 'the columns are the same width in both bands',
+      );
+
+      final mouse = await tester.startGesture(
+        tester.getCenter(find.text('c0r1')),
+        kind: PointerDeviceKind.mouse,
+      );
+      await mouse.moveBy(const Offset(-150, 0));
+      await tester.pump();
+      await mouse.up();
+      await tester.pumpAndSettle();
+
+      final headingMoved = headingBefore - tester.getRect(find.text('C0')).left;
+      final cellMoved = cellBefore - tester.getRect(find.text('c0r0')).left;
+      expect(cellMoved, greaterThan(100), reason: 'the rows went across');
+      expect(headingMoved, cellMoved, reason: 'and the heading went with them');
+    });
+
+    testWidgets('rows stay level across the panes', (tester) async {
+      // The reason pinning fixes the row height: laid out apart, three tables
+      // work out their own, and one wrapping cell put two of them a hundred
+      // and forty pixels out of step.
+      await tester.pumpWidget(pinned(y: 200));
+      final top = tester.getRect(find.text('p0')).top;
+      expect(tester.getRect(find.text('c0r0')).top, top);
+      expect(tester.getRect(find.text('e0')).top, top);
+
+      final second = tester.getRect(find.text('p1')).top;
+      expect(tester.getRect(find.text('c0r1')).top, second);
+      expect(tester.getRect(find.text('e1')).top, second);
+    });
+
+    testWidgets('a pinned column goes to its edge wherever it was listed',
+        (tester) async {
+      await tester.pumpWidget(pinned(y: 200, endFirst: true));
+      final table = tester.getRect(find.byType(Table<int>));
+      expect(
+        tester.getRect(find.text('e0')).left - table.left,
+        greaterThan(200),
+        reason: 'listed first, drawn last, because that is its edge',
+      );
+      expect(tester.getRect(find.text('p0')).left - table.left, lessThan(100));
+    });
+
+    testWidgets('every cell is drawn once', (tester) async {
+      // An earlier attempt drew the whole table again for each pinned edge,
+      // so every cell existed three times over — three times the work, a
+      // screen reader reading it three times, and an ambiguous finder in
+      // every test anyone writes.
+      await tester.pumpWidget(pinned(y: 200));
+      expect(find.text('p0'), findsOneWidget);
+      expect(find.text('c0r0'), findsOneWidget);
+      expect(find.text('e0'), findsOneWidget);
+    });
+
+    testWidgets('pinning holds every row to one height', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(x: 900),
+            columns: [
+              TableColumn<int>(
+                title: const Text('Pin'),
+                width: 80,
+                fixed: TableColumnFixed.start,
+                value: (v) => 'p$v',
+              ),
+              TableColumn<int>(
+                title: const Text('Long'),
+                // Long enough to actually wrap in the room it is given — a
+                // string that fits on one line would leave this test with
+                // nothing to catch.
+                value: (v) => v == 0
+                    ? 'a cell long enough to wrap over several lines indeed '
+                        'and then a good deal more besides'
+                    : 's$v',
+              ),
+            ],
+            data: const [0, 1],
+          ),
+          width: 300,
+        ),
+      );
+      // The cell that wraps is in the scrolling pane; the pinned pane's rows
+      // must still line up with it. A floor was not enough — a cell that grew
+      // past it put the two panes eight pixels out — so the height is exact
+      // and anything longer is cut.
+      // The *second* row, where both cells are one line: the first row's long
+      // cell overflows the height it is held to and is clipped, so its text
+      // sits higher than the cell does and proves nothing. Where row two
+      // begins is the question — and it only lines up if row one was the same
+      // height in both panes.
+      expect(
+        tester.getRect(find.text('p1')).top,
+        tester.getRect(find.text('s1')).top,
+        reason: 'the second row is level across both panes',
+      );
+    });
+
+    testWidgets('many columns are not squeezed into illegibility',
+        (tester) async {
+      // Fifteen sharing a declared width came out thirty-seven pixels each.
+      // Past a floor the table grows and scrolls instead.
+      Future<double> widthOf(int columns) async {
+        await tester.pumpWidget(
+          _host(
+            Table<int>(
+              scroll: const TableScroll(x: 1100),
+              columns: [
+                for (var i = 0; i < columns; i++)
+                  TableColumn<int>(title: Text('H$i'), value: (v) => 'c$i'),
+              ],
+              data: const [0],
+            ),
+            width: 800,
+          ),
+        );
+        await tester.pumpAndSettle();
+        return tester.getRect(find.text('H1')).left -
+            tester.getRect(find.text('H0')).left;
+      }
+
+      expect(await widthOf(5), greaterThan(150), reason: 'room to spare');
+      expect(await widthOf(15), greaterThanOrEqualTo(100),
+          reason: 'and a floor once there is not');
+    });
+
+    testWidgets('a table is never laid out narrower than its own columns',
+        (tester) async {
+      // Fifteen columns at the hundred-pixel floor want fifteen hundred, and
+      // the width declared was eleven hundred. Held to the declared one the
+      // table overflowed its box and the scroll ran only as far as the box —
+      // four hundred pixels of table that could not be reached at all.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(x: 1100, y: 220),
+            columns: [
+              TableColumn<int>(
+                title: const Text('Pin'),
+                width: 160,
+                fixed: TableColumnFixed.start,
+                value: (v) => 'p$v',
+              ),
+              for (var i = 0; i < 15; i++)
+                TableColumn<int>(title: Text('N$i'), value: (v) => 'n$i-$v'),
+            ],
+            data: const [0, 1, 2],
+          ),
+          width: 800,
+        ),
+      );
+      final first = tester.getRect(find.text('N0')).left;
+
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('n0-1'))),
+      );
+      for (var i = 1; i <= 12; i++) {
+        await tester.sendEventToBinding(pointer.scroll(Offset(120.0 * i, 0)));
+        await tester.pumpAndSettle();
+      }
+
+      // Fifteen hundred of columns in a six-hundred-and-forty-wide pane.
+      expect(first - tester.getRect(find.text('N0')).left, closeTo(860, 1));
+      expect(
+        tester.getRect(find.text('N14')).right,
+        lessThanOrEqualTo(tester.getRect(find.byType(Table<int>)).right + 1),
+        reason: 'the last column can be reached',
+      );
+    });
+
+    testWidgets('nor is one without a pinned column', (tester) async {
+      // The same reckoning on the other path, where the whole table is inside
+      // one scroll view rather than a pane of it.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(x: 1100, y: 220),
+            columns: [
+              for (var i = 0; i < 15; i++)
+                TableColumn<int>(title: Text('N$i'), value: (v) => 'n$i-$v'),
+            ],
+            data: const [0, 1, 2],
+          ),
+          width: 800,
+        ),
+      );
+      final first = tester.getRect(find.text('N0')).left;
+
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('n0-1'))),
+      );
+      for (var i = 1; i <= 12; i++) {
+        await tester.sendEventToBinding(pointer.scroll(Offset(120.0 * i, 0)));
+        await tester.pumpAndSettle();
+      }
+      // Fifteen hundred of columns in an eight-hundred-wide box.
+      expect(first - tester.getRect(find.text('N0')).left, closeTo(700, 1));
+    });
+
+    testWidgets('the floor is a token', (tester) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(
+            components: const ComponentsConfig(
+              table: TableToken(columnMinWidth: 200),
+            ),
+          ),
+          child: m.MaterialApp(
+            home: m.Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 800,
+                  child: Table<int>(
+                    scroll: const TableScroll(x: 1100),
+                    columns: [
+                      for (var i = 0; i < 15; i++)
+                        TableColumn<int>(
+                          title: Text('H$i'),
+                          value: (v) => 'c$i',
+                        ),
+                    ],
+                    data: const [0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text('H1')).left -
+            tester.getRect(find.text('H0')).left,
+        greaterThanOrEqualTo(200),
+      );
+    });
+
+    testWidgets('a rule stands between the panes', (tester) async {
+      // Inside a pane the table draws its own; between them there was
+      // nothing, so a pinned column ran into its neighbour unmarked.
+      bool hasSeam() => find
+          .byWidgetPredicate(
+            (w) =>
+                w is DecoratedBox &&
+                w.decoration is BoxDecoration &&
+                (w.decoration as BoxDecoration).border is BorderDirectional,
+          )
+          .evaluate()
+          .isNotEmpty;
+
+      await tester.pumpWidget(pinned(y: 200));
+      expect(hasSeam(), isFalse, reason: 'no rules were asked for');
+
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            bordered: true,
+            scroll: const TableScroll(x: 1000, y: 200),
+            columns: [
+              TableColumn<int>(
+                title: const Text('Pin'),
+                width: 100,
+                fixed: TableColumnFixed.start,
+                value: (v) => 'p$v',
+              ),
+              for (var c = 0; c < 5; c++)
+                TableColumn<int>(title: Text('C$c'), value: (v) => 'c${c}r$v'),
+            ],
+            data: const [0, 1],
+          ),
+          width: 400,
+        ),
+      );
+      expect(hasSeam(), isTrue);
+    });
+
+    test('a pinned column must name a width', () {
+      expect(
+        () => TableColumn<int>(
+          title: const Text('Pin'),
+          fixed: TableColumnFixed.start,
+          value: (v) => v,
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    testWidgets('an empty pinned table still shows its heading',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(x: 900),
+            columns: [
+              TableColumn<int>(
+                title: const Text('Pin'),
+                width: 80,
+                fixed: TableColumnFixed.start,
+                value: (v) => v,
+              ),
+              TableColumn<int>(title: const Text('C'), value: (v) => v),
+            ],
+            data: const [],
+          ),
+          width: 300,
+        ),
+      );
+      expect(find.text('Pin'), findsOneWidget);
+      expect(find.byType(Empty), findsOneWidget);
+    });
+  });
+
+  group('hovering', () {
+    testWidgets('lights the row under the pointer, and only that one',
+        (tester) async {
+      // The fill used to live on the row's decoration, which only the whole
+      // table can redraw — so every twitch of the pointer rebuilt every row,
+      // ninety milliseconds of it at five hundred rows. It lives in the cell
+      // now; this is the behaviour that had to survive the move.
+      await tester.pumpWidget(
+        _host(Table<_User>(columns: [_name()], data: _users)),
+      );
+
+      Color? fillAt(String text) {
+        final box = find
+            .ancestor(of: find.text(text), matching: find.byType(ColoredBox))
+            .evaluate()
+            .map((e) => (e.widget as ColoredBox).color)
+            .where((c) => c.a > 0);
+        return box.isEmpty ? null : box.first;
+      }
+
+      expect(fillAt('Ann'), isNull, reason: 'nothing is hovered yet');
+
+      final pointer = TestPointer(1, PointerDeviceKind.mouse);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('Ann'))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(fillAt('Ann'), isNotNull, reason: 'the row it is over');
+      expect(fillAt('Bartholomew Longname'), isNull, reason: 'and no other');
+    });
+
+    testWidgets('rowHoverable: false lights nothing', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            columns: [_name()],
+            data: _users,
+            rowHoverable: false,
+          ),
+        ),
+      );
+      final pointer = TestPointer(1, PointerDeviceKind.mouse);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('Ann'))),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find
+            .ancestor(of: find.text('Ann'), matching: find.byType(ColoredBox))
+            .evaluate()
+            .where((e) => (e.widget as ColoredBox).color.a > 0),
+        isEmpty,
+      );
     });
   });
 

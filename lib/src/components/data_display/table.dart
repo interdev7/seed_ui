@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/widgets.dart' hide Table, TableRow;
 // Flutter's own Table does the column arithmetic: it measures every cell in a
 // column and gives them all the widest one's width, which is the behaviour a
@@ -49,6 +52,27 @@ class TableScroll {
   final double? y;
 }
 
+/// Which part of a pane is being built.
+enum _Band {
+  /// The heading alone, for when it has to stay put.
+  heading,
+
+  /// The rows alone.
+  rows,
+
+  /// Both together, for when nothing has been separated.
+  both,
+}
+
+/// Which edge a column is pinned to, if any.
+enum TableColumnFixed {
+  /// Against the leading edge, where the rows begin.
+  start,
+
+  /// Against the trailing edge.
+  end,
+}
+
 /// One column of a [Table].
 ///
 /// [T] is the type of a row. A column says how to draw a cell from one, which
@@ -65,6 +89,7 @@ class TableColumn<T> {
     this.flex,
     this.align,
     this.headerAlign,
+    this.fixed,
     this.ellipsis = false,
   })  : assert(
           width == null || flex == null,
@@ -74,6 +99,11 @@ class TableColumn<T> {
         assert(
           value != null || builder != null,
           'A column needs a value to read, a builder to draw with, or both.',
+        ),
+        assert(
+          fixed == null || width != null,
+          'A pinned column needs a width: it is laid out apart from the '
+          'columns that scroll, so a share of what is left means nothing.',
         );
 
   /// What this column reads out of a row.
@@ -116,6 +146,15 @@ class TableColumn<T> {
   /// Which edge the heading is drawn against. Defaults to [align].
   final TableAlign? headerAlign;
 
+  /// Pins the column to one edge, so the rest scroll past it.
+  ///
+  /// A pinned column needs a [width]: it is laid out apart from the columns
+  /// that scroll, and a share of a width it cannot see is no use to it.
+  ///
+  /// Pinning anything makes every row exactly one height — the panes are laid
+  /// out separately, and only a height they all know keeps their rows level.
+  final TableColumnFixed? fixed;
+
   /// Cuts a cell's text with an ellipsis rather than letting it wrap.
   final bool ellipsis;
 }
@@ -143,6 +182,7 @@ class TableToken {
     this.footerBg,
     this.borderRadius,
     this.fontSize,
+    this.columnMinWidth,
   });
 
   /// Fill behind the heading row.
@@ -184,6 +224,15 @@ class TableToken {
   /// Size of the text in a cell.
   final double? fontSize;
 
+  /// The narrowest a column will be squeezed to when it is sharing a width.
+  ///
+  /// Only columns that named neither a width nor a flex, and only in a
+  /// scrolling table — the ones taking a share of what there is. Past this
+  /// the table grows wider and scrolls rather than squeezing them further:
+  /// fifteen columns sharing eight hundred pixels are thirty-seven pixels
+  /// each, which is not a column anybody can read.
+  final double? columnMinWidth;
+
   _ResolvedTableToken _resolve(Token t) => _ResolvedTableToken(
         headerBg: headerBg ?? t.colorFillQuaternary,
         headerColor: headerColor ?? t.colorText,
@@ -201,6 +250,7 @@ class TableToken {
         footerBg: footerBg ?? t.colorFillQuaternary,
         borderRadius: borderRadius ?? t.borderRadiusLG,
         fontSize: fontSize ?? t.fontSize,
+        columnMinWidth: columnMinWidth ?? t.controlHeightLG * 2.5,
       );
 }
 
@@ -220,6 +270,7 @@ class _ResolvedTableToken {
     required this.footerBg,
     required this.borderRadius,
     required this.fontSize,
+    required this.columnMinWidth,
   });
 
   final Color headerBg;
@@ -235,6 +286,7 @@ class _ResolvedTableToken {
   final Color footerBg;
   final double borderRadius;
   final double fontSize;
+  final double columnMinWidth;
 }
 
 /// Defaults for every [Table] under a `ConfigProvider`.
@@ -360,7 +412,60 @@ class Table<T> extends StatefulWidget {
 }
 
 class _TableState<T> extends State<Table<T>> {
-  int? _hovered;
+  /// Which row the pointer is over.
+  ///
+  /// A notifier and not a field behind setState: the fill used to live on the
+  /// row's decoration, which only the whole table can redraw, so every twitch
+  /// of the pointer rebuilt every row. Measured at five hundred rows that was
+  /// ninety milliseconds a move. It lives in the cell now, and only the two
+  /// rows that changed listen.
+  final ValueNotifier<int?> _hovered = ValueNotifier<int?>(null);
+
+  /// The rows' offset across, and the heading's, kept together.
+  ///
+  /// Two of them because a heading that stays put vertically while travelling
+  /// horizontally is a second viewport, and one controller cannot drive two.
+  /// They agree because they are laid out over the same width — when they were
+  /// not, each clamped to its own extent and a two-hundred-pixel drag moved
+  /// one of them a hundred and eighty.
+  final ScrollController _rowsX = ScrollController();
+  final ScrollController _headingX = ScrollController();
+  bool _syncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _rowsX.addListener(() => _keepTogether(_rowsX, _headingX));
+    _headingX.addListener(() => _keepTogether(_headingX, _rowsX));
+  }
+
+  /// Moves [to] to wherever [from] is.
+  ///
+  /// [_syncing] guards a loop rather than a pixel, which is why no test moves
+  /// without it: while the two agree, the half-pixel check below already stops
+  /// the echo. Should they ever fail to — one clamping where the other does
+  /// not — they would answer each other for ever, and that is a hang, not an
+  /// error anybody could read.
+  void _keepTogether(ScrollController from, ScrollController to) {
+    if (_syncing || !from.hasClients || !to.hasClients) return;
+    if ((to.offset - from.offset).abs() < 0.5) return;
+    _syncing = true;
+    to.jumpTo(
+      from.offset.clamp(
+        to.position.minScrollExtent,
+        to.position.maxScrollExtent,
+      ),
+    );
+    _syncing = false;
+  }
+
+  @override
+  void dispose() {
+    _rowsX.dispose();
+    _headingX.dispose();
+    _hovered.dispose();
+    super.dispose();
+  }
 
   TableDefaults? get _defaults =>
       ConfigProvider.defaultsOf<TableDefaults>(context);
@@ -382,6 +487,14 @@ class _TableState<T> extends State<Table<T>> {
 
   /// The width to lay the table out at, wider than its box if need be.
   double? get _across => widget.scroll?.x;
+
+  /// The narrowest these columns can be laid out in.
+  ///
+  /// Every column has a width of its own or the floor, so this is exact rather
+  /// than a guess — and knowing it is what keeps a table from being laid out
+  /// narrower than its own columns.
+  double _leastWidth(List<TableColumn<T>> columns, _ResolvedTableToken r) =>
+      columns.fold(0, (sum, c) => sum + (c.width ?? r.columnMinWidth));
 
   /// The preset a size belongs to, so a height of your own still picks the
   /// padding of the preset it is nearest — as a `Button` does.
@@ -425,7 +538,7 @@ class _TableState<T> extends State<Table<T>> {
     // padding that would have decided it steps aside; anything else would
     // add to the number rather than honour it.
     return EdgeInsets.symmetric(
-      vertical: _askedRowHeight(t) == null ? block : 0,
+      vertical: _uniformHeight(t) == null ? block : 0,
       horizontal: inline,
     );
   }
@@ -435,16 +548,25 @@ class _TableState<T> extends State<Table<T>> {
   /// A column that names neither a width nor a flex takes the width of its
   /// widest cell — Flutter's own intrinsic measurement, which is what makes
   /// the common case need saying nothing at all.
-  Map<int, TableColumnWidth> get _widths => {
-        for (var i = 0; i < widget.columns.length; i++)
-          i: switch (widget.columns[i]) {
+  Map<int, TableColumnWidth> _widthsFor(
+    List<TableColumn<T>> columns,
+    _ResolvedTableToken r,
+  ) =>
+      {
+        for (var i = 0; i < columns.length; i++)
+          i: switch (columns[i]) {
             TableColumn(:final width?) => FixedColumnWidth(width),
             TableColumn(:final flex?) => FlexColumnWidth(flex.toDouble()),
             // Once the heading has stopped travelling with the rows they are
             // two tables, and an intrinsic width would measure a different
             // thing in each — the title in one, the cells in the other. An
             // equal share is what they can both work out alike.
-            _ when _detached || _across != null => const FlexColumnWidth(),
+            // A share, but never squeezed past what a column can be read at:
+            // the table grows and scrolls instead.
+            _ when _detached || _across != null => MaxColumnWidth(
+                FixedColumnWidth(r.columnMinWidth),
+                const FlexColumnWidth(),
+              ),
             // flex: 1, and not a bare intrinsic width. Left to itself
             // Flutter shares any slack equally between *every* column, which
             // quietly inflates a column that asked for an exact width — 100
@@ -454,6 +576,32 @@ class _TableState<T> extends State<Table<T>> {
             _ => const IntrinsicColumnWidth(flex: 1),
           },
       };
+
+  /// The columns pinned to one edge, in the order they were given.
+  List<TableColumn<T>> _pinnedTo(TableColumnFixed side) =>
+      widget.columns.where((c) => c.fixed == side).toList();
+
+  /// The columns that scroll.
+  List<TableColumn<T>> get _loose =>
+      widget.columns.where((c) => c.fixed == null).toList();
+
+  bool get _hasPinned => widget.columns.any((c) => c.fixed != null);
+
+  double _pinnedWidth(TableColumnFixed side) =>
+      _pinnedTo(side).fold(0, (sum, c) => sum + c.width!);
+
+  /// The height every row is held to exactly, or null where it is not.
+  ///
+  /// Pinning turns one table into three laid out apart from each other, and
+  /// separate tables work out their own row heights: measured side by side,
+  /// one wrapping cell put two of them a hundred and forty pixels out of
+  /// step. A height they all know is what keeps their rows level — and it has
+  /// to be exact, not a floor. Tried as a floor first, and a cell that wrapped
+  /// past it put the panes eight pixels out again.
+  double? _exactHeight(Token t) => _hasPinned ? _rowHeight(t) : null;
+
+  /// The height a row will not go under, or null where content decides.
+  double? _uniformHeight(Token t) => _exactHeight(t) ?? _askedRowHeight(t);
 
   Alignment _alignment(TableAlign align) => switch (align) {
         TableAlign.start => AlignmentDirectional.centerStart.resolve(
@@ -480,15 +628,14 @@ class _TableState<T> extends State<Table<T>> {
         ._resolve(t);
 
     final rule = BorderSide(color: r.borderColor, width: t.lineWidth);
-    final rows = <flutter.TableRow>[
-      if (_showHeader)
+    flutter.TableRow headingRow(List<TableColumn<T>> columns) =>
         flutter.TableRow(
           decoration: BoxDecoration(
             color: r.headerBg,
             border: Border(bottom: rule),
           ),
           children: [
-            for (final column in widget.columns)
+            for (final column in columns)
               _cell(
                 DefaultTextStyle.merge(
                   style: TextStyle(
@@ -503,23 +650,29 @@ class _TableState<T> extends State<Table<T>> {
                 t,
               ),
           ],
-        ),
-      for (var i = 0; i < widget.data.length; i++)
-        flutter.TableRow(
-          decoration: BoxDecoration(
-            color: _hoverable && _hovered == i ? r.rowHoverBg : null,
-            // Every row but the last carries the rule below it, so the table
-            // does not end on a line hanging under nothing.
-            border: i == widget.data.length - 1 ? null : Border(bottom: rule),
-          ),
-          children: [
-            for (final column in widget.columns) _rowCell(i, column, r, t),
-          ],
-        ),
-    ];
+        );
 
-    flutter.Table grid(List<flutter.TableRow> of) => flutter.Table(
-          columnWidths: _widths,
+    List<flutter.TableRow> dataRowsOf(List<TableColumn<T>> columns) => [
+          for (var i = 0; i < widget.data.length; i++)
+            flutter.TableRow(
+              decoration: BoxDecoration(
+                // Every row but the last carries the rule below it, so the
+                // table does not end on a line hanging under nothing.
+                border:
+                    i == widget.data.length - 1 ? null : Border(bottom: rule),
+              ),
+              children: [
+                for (final column in columns) _rowCell(i, column, r, t),
+              ],
+            ),
+        ];
+
+    flutter.Table grid(
+      List<TableColumn<T>> columns,
+      List<flutter.TableRow> of,
+    ) =>
+        flutter.Table(
+          columnWidths: _widthsFor(columns, r),
           // Every cell in a row is as tall as the tallest, which is what
           // keeps a row a row when one cell wraps and its neighbours do not.
           defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -532,29 +685,133 @@ class _TableState<T> extends State<Table<T>> {
           children: of,
         );
 
-    final heading = _showHeader && rows.isNotEmpty ? rows.first : null;
-    final dataRows = _showHeader ? rows.skip(1).toList() : rows;
+    /// One band of the table — a heading, a run of rows, or both together.
+    Widget band(List<TableColumn<T>> columns, {required _Band which}) {
+      final of = <flutter.TableRow>[
+        if (_showHeader && which != _Band.rows) headingRow(columns),
+        if (which != _Band.heading) ...dataRowsOf(columns),
+      ];
+      return grid(columns, of);
+    }
 
-    Widget table = _detached
-        ? Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (heading != null) grid([heading]),
-              // The rows scroll; the heading, being outside this, does not.
-              SizedBox(
-                height: widget.scroll!.y,
-                child: SingleChildScrollView(child: grid(dataRows)),
-              ),
-            ],
-          )
-        : grid(rows);
+    final startPinned = _pinnedTo(TableColumnFixed.start);
+    final endPinned = _pinnedTo(TableColumnFixed.end);
+    final loose = _loose;
+
+    // Only what is left after the pinned columns. No allowance for the
+    // sharing columns' floors: MaxColumnWidth already grows the table past
+    // this when it has to, and measured, adding one changed nothing.
+    final middleWidth = _across == null
+        ? null
+        : _across! -
+            _pinnedWidth(TableColumnFixed.start) -
+            _pinnedWidth(TableColumnFixed.end);
+
+    /// The columns that scroll, laid out at the width left for them.
+    Widget scrolling(_Band which) {
+      final middle = band(loose, which: which);
+      if (middleWidth == null) return middle;
+      // The width asked for, or what the columns need, whichever is more. A
+      // table laid out narrower than its own columns overflows its box, and
+      // the scroll then only runs as far as the box: fifteen columns wanting
+      // fifteen hundred pixels inside a declared eleven hundred left four
+      // hundred that could not be reached at all.
+      final sized = SizedBox(
+        width: math.max(middleWidth, _leastWidth(loose, r)),
+        child: middle,
+      );
+      // Each band scrolls itself; the two are kept together. Only the rows
+      // wear the bar — two bars for one table would be one too many.
+      return which == _Band.heading
+          ? _across1D(sized, t, _headingX, bar: false)
+          : _across1D(sized, t, _rowsX);
+    }
+
+    // The rule between two panes, drawn as the pane's own inner edge rather
+    // than as a strip between them: a strip would have to be stretched to the
+    // pane's height, and asking for that inside a scroll view is asking for
+    // an infinite one. Inside a pane the table draws its own rules; between
+    // them there was nothing, so a pinned column ran into its neighbour with
+    // no line at all.
+    Widget seamed(Widget pane, {required bool atStart}) => DecoratedBox(
+          decoration: BoxDecoration(
+            border: BorderDirectional(
+              end: atStart ? rule : BorderSide.none,
+              start: atStart ? BorderSide.none : rule,
+            ),
+          ),
+          child: pane,
+        );
+
+    /// A row of panes: pinned, scrolling, pinned.
+    Widget panes(_Band which) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (startPinned.isNotEmpty)
+              _bordered
+                  ? seamed(band(startPinned, which: which), atStart: true)
+                  : band(startPinned, which: which),
+            Expanded(child: scrolling(which)),
+            if (endPinned.isNotEmpty)
+              _bordered
+                  ? seamed(band(endPinned, which: which), atStart: false)
+                  : band(endPinned, which: which),
+          ],
+        );
+
+    Widget table;
+    if (!_hasPinned) {
+      final all = <flutter.TableRow>[
+        if (_showHeader) headingRow(widget.columns),
+        ...dataRowsOf(widget.columns),
+      ];
+      table = _detached
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_showHeader) grid(widget.columns, [all.first]),
+                // The rows scroll; the heading, being outside this, does not.
+                SizedBox(
+                  height: widget.scroll!.y,
+                  child: SingleChildScrollView(
+                    child: grid(
+                      widget.columns,
+                      _showHeader ? all.skip(1).toList() : all,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : grid(widget.columns, all);
+    } else if (_detached) {
+      // Two viewports here, one for the heading and one for the rows, kept in
+      // step by hand — the only arrangement where that is unavoidable, since
+      // the heading must stay put vertically while travelling horizontally
+      // with rows that are inside a different scroll.
+      table = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_showHeader) panes(_Band.heading),
+          SizedBox(
+            height: widget.scroll!.y,
+            child: SingleChildScrollView(child: panes(_Band.rows)),
+          ),
+        ],
+      );
+    } else {
+      // One viewport: the heading rides with its own rows inside each pane.
+      table = panes(_Band.both);
+    }
 
     if (widget.data.isEmpty) {
       table = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (heading != null) grid([heading]),
+          // The heading alone: the columns are still worth showing, and the
+          // panes still line up because they always did.
+          if (_showHeader) panes(_Band.heading),
           Padding(
             padding: EdgeInsets.symmetric(vertical: t.sizeXL),
             child: widget.empty ??
@@ -600,13 +857,21 @@ class _TableState<T> extends State<Table<T>> {
       ),
     );
 
-    if (_across != null) {
+    if (_across != null && !_hasPinned) {
       // One scroll view around the heading and the rows together, rather than
       // one each kept in step by hand: laid out side by side inside the same
       // viewport they cannot drift apart, because there is only one offset.
-      body = SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: SizedBox(width: _across, child: body),
+      //
+      // Not where a column is pinned, though: there the scrolling belongs to
+      // the middle pane alone, and wrapping the lot would carry the pinned
+      // ones off with it — which is exactly what it did before this guard.
+      body = _across1D(
+        SizedBox(
+          width: math.max(_across!, _leastWidth(widget.columns, r)),
+          child: body,
+        ),
+        t,
+        _rowsX,
       );
     }
 
@@ -627,6 +892,47 @@ class _TableState<T> extends State<Table<T>> {
   }
 
   Widget _defaultEmpty(BuildContext context, EmptySlot slot) => const Empty();
+
+  /// A scroll view that can actually be scrolled sideways.
+  ///
+  /// Two things stand in the way of that, both of them Flutter's defaults and
+  /// neither of them obvious. `dragDevices` leaves the mouse out, so a scroll
+  /// view cannot be dragged with one at all; and `buildScrollbar` returns the
+  /// child untouched on the horizontal axis, so there is no bar to drag
+  /// either. On the web that left a table that scrolls sideways with no way
+  /// to do it — the wheel only goes down.
+  Widget _across1D(
+    Widget child,
+    Token t,
+    ScrollController controller, {
+    bool bar = true,
+  }) =>
+      ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          dragDevices: {
+            ...ScrollConfiguration.of(context).dragDevices,
+            PointerDeviceKind.mouse,
+          },
+          scrollbars: false,
+        ),
+        // RawScrollbar and not Material's: the kit draws its own chrome from
+        // its own tokens.
+        child: RawScrollbar(
+          controller: controller,
+          // Shown rather than summoned by a hover: a table wide enough to
+          // scroll should say so, the way an overflowing Segmented shows its
+          // arrows.
+          thumbVisibility: bar,
+          thumbColor: t.colorFill,
+          thickness: t.sizeXS,
+          radius: Radius.circular(t.sizeXS),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            controller: controller,
+            child: child,
+          ),
+        ),
+      );
 
   /// One cell of a data row, with the row's hover and tap on it.
   ///
@@ -656,9 +962,20 @@ class _TableState<T> extends State<Table<T>> {
     }
     if (!_hoverable) return cell;
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = index),
-      onExit: (_) => setState(() => _hovered = null),
-      child: cell,
+      onEnter: (_) => _hovered.value = index,
+      onExit: (_) {
+        if (_hovered.value == index) _hovered.value = null;
+      },
+      // Only this row's cells are listening, so a pointer crossing the table
+      // rebuilds two rows rather than all of them.
+      child: ValueListenableBuilder<int?>(
+        valueListenable: _hovered,
+        builder: (context, hovered, child) => ColoredBox(
+          color: hovered == index ? r.rowHoverBg : const Color(0x00000000),
+          child: child,
+        ),
+        child: cell,
+      ),
     );
   }
 
@@ -676,19 +993,37 @@ class _TableState<T> extends State<Table<T>> {
     _ResolvedTableToken r,
     Token t,
   ) {
-    final asked = _askedRowHeight(t);
+    final exact = _exactHeight(t);
+    if (exact != null) {
+      // Held to it, not merely kept above it: a cell that needs more is cut
+      // rather than allowed to shove its row's neighbours out of line.
+      return SizedBox(
+        height: exact,
+        child: ClipRect(child: _padded(child, column, align, r, t)),
+      );
+    }
     return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: asked ?? 0),
-      child: Padding(
-        padding: _cellPadding(r, t),
-        child: Align(
-          alignment: _alignment(align),
-          child: DefaultTextStyle.merge(
-            textAlign: _textAlign(align),
-            overflow: column.ellipsis ? TextOverflow.ellipsis : null,
-            maxLines: column.ellipsis ? 1 : null,
-            child: child,
-          ),
+      constraints: BoxConstraints(minHeight: _uniformHeight(t) ?? 0),
+      child: _padded(child, column, align, r, t),
+    );
+  }
+
+  Widget _padded(
+    Widget child,
+    TableColumn<T> column,
+    TableAlign align,
+    _ResolvedTableToken r,
+    Token t,
+  ) {
+    return Padding(
+      padding: _cellPadding(r, t),
+      child: Align(
+        alignment: _alignment(align),
+        child: DefaultTextStyle.merge(
+          textAlign: _textAlign(align),
+          overflow: column.ellipsis ? TextOverflow.ellipsis : null,
+          maxLines: column.ellipsis ? 1 : null,
+          child: child,
         ),
       ),
     );

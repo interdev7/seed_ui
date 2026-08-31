@@ -41,6 +41,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   left to intrinsic widths a short heading over long cells drifts thirty pixels
   out of line.
 
+  `TableColumn.fixed` pins a column to an edge and lets the rest scroll past.
+  It needs a `width` — it is laid out apart from the columns that scroll — and
+  it holds every row to one exact height, because three panes laid out side by
+  side otherwise work out their own: measured, one wrapping cell put two of
+  them a hundred and forty pixels out of step, and a floor rather than an exact
+  height still left eight.
+
+  `scroll.x` is a floor rather than a cap: a table is never laid out narrower
+  than its own columns, so fifteen columns inside a declared eleven hundred
+  widen the table instead of leaving four hundred pixels of it unreachable.
+
+  A table that scrolls sideways draws a bar, answers a mouse drag, and carries
+  its heading along with the rows. Flutter does neither of the first two by
+  default — the mouse is not among `dragDevices`, and no
+  scrollbar is built for the horizontal axis — which left a table that scrolled
+  sideways with no way to scroll it on the web.
+
+  Columns sharing a width are never squeezed below `columnMinWidth`: past that
+  the table grows and scrolls instead, since fifteen sharing eight hundred
+  pixels came out thirty-seven each. A bordered table draws a rule where a
+  pinned pane meets the rest — inside a pane the table draws its own, and
+  between them there was nothing at all.
+
   The name is Flutter's own too, so a file that wants both hides one:
   `import 'package:seed_ui/seed_ui.dart' hide Table;` and the reverse. `Empty`
   gains an `EmptySlot.table` so a kit-wide placeholder covers tables as well.

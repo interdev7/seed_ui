@@ -229,6 +229,47 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Columns that stay put',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                scroll: const TableScroll(x: 1100, y: 220),
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    width: 160,
+                    fixed: TableColumnFixed.start,
+                    ellipsis: true,
+                    value: (p) => p.name,
+                  ),
+                  for (var i = 0; i < 15; i++)
+                    TableColumn(
+                      title: Text('Note $i'),
+                      value: (p) => '${p.city} $i',
+                    ),
+                  TableColumn(
+                    title: const Text('Age'),
+                    width: 80,
+                    fixed: TableColumnFixed.end,
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                  ),
+                ],
+                data: _many,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Drag across: the name and the age stay while the notes go '
+                'past. A pinned column needs a width, and pinning holds every '
+                'row to one height — three panes laid out apart can only stay '
+                'level on a height they all know.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Nothing to show',
           Table<Person>(bordered: true, columns: _columns, data: const []),
         ),

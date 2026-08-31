@@ -7,12 +7,8 @@ likes, how wide to be.
 Table<User>(
   data: users,
   columns: [
-    TableColumn(title: const Text('Name'), builder: (_, u, __) => Text(u.name)),
-    TableColumn(
-      title: const Text('Age'),
-      align: TableAlign.end,
-      builder: (_, u, __) => Text('${u.age}'),
-    ),
+    TableColumn(title: const Text('Name'), value: (u) => u.name),
+    TableColumn(title: const Text('Age'), align: TableAlign.end, value: (u) => u.age),
   ],
 )
 ```
@@ -33,7 +29,8 @@ went the other way — `List` is `dart:core`'s and there is no hiding that.
 
 | Field | |
 | --- | --- |
-| `builder` | Draws one cell: `(context, record, index)` |
+| `value` | What the column reads out of a row |
+| `builder` | Draws one cell, where text will not do: `(context, record, index)` |
 | `title` | What stands at the head of the column |
 | `width` | A width in logical pixels |
 | `flex` | A share of what is left over |
@@ -41,8 +38,27 @@ went the other way — `List` is `dart:core`'s and there is no hiding that.
 | `headerAlign` | The same for the heading. Defaults to `align` |
 | `ellipsis` | Cuts the text rather than letting it wrap |
 
-There is no key into a map to get wrong: `T` is your own row type and the
-builder is handed one.
+A column needs one of the two. **A `value` is the whole of most columns** —
+the cell is that value as text, and there is nothing else to write:
+
+```dart
+TableColumn(title: const Text('Name'), value: (u) => u.name)
+```
+
+Reach for `builder` where text will not do. Naming a `value` as well is worth
+it even then: the value is what a sort compares and a filter matches, so a
+`Tag` can sort by the word inside it.
+
+```dart
+TableColumn(
+  title: const Text('City'),
+  value: (u) => u.city,
+  builder: (_, u, __) => Tag(child: Text(u.city)),
+)
+```
+
+There is no key into a map to get wrong: `T` is your own row type, and `value`
+is handed one.
 
 ### How wide a column is
 

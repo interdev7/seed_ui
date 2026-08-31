@@ -17,15 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Table<User>(
     data: users,
     columns: [
-      TableColumn(title: const Text('Name'), builder: (_, u, __) => Text(u.name)),
-      TableColumn(
-        title: const Text('Age'),
-        align: TableAlign.end,
-        builder: (_, u, __) => Text('${u.age}'),
-      ),
+      TableColumn(title: const Text('Name'), value: (u) => u.name),
+      TableColumn(title: const Text('Age'), align: TableAlign.end, value: (u) => u.age),
     ],
   )
   ```
+
+  A `value` is the whole of most columns — the cell is that value as text —
+  and `builder` is there for where text will not do. Naming both is worth it:
+  the value is what a sort will compare and a filter will match, so a `Tag`
+  can sort by the word inside it.
 
   A column that says nothing about its width fits its content, which is what a
   table is expected to do; `width` is then exact and `flex` a share of what is

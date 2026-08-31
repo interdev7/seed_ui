@@ -35,7 +35,7 @@ TableColumn<_User> _name({double? width, int? flex, TableAlign? align}) =>
       width: width,
       flex: flex,
       align: align,
-      builder: (_, u, __) => Text(u.name),
+      value: (u) => u.name,
     );
 
 TableColumn<_User> _age({double? width, int? flex, TableAlign? align}) =>
@@ -44,7 +44,7 @@ TableColumn<_User> _age({double? width, int? flex, TableAlign? align}) =>
       width: width,
       flex: flex,
       align: align,
-      builder: (_, u, __) => Text('${u.age}'),
+      value: (u) => u.age,
     );
 
 /// Where a column begins, measured from the table's own left edge.
@@ -197,6 +197,67 @@ void main() {
       );
       expect(text.maxLines ?? style.maxLines, 1);
       expect(text.overflow ?? style.overflow, TextOverflow.ellipsis);
+    });
+  });
+
+  group('a value is enough', () {
+    testWidgets('a column with no builder draws its value as text',
+        (tester) async {
+      // Most columns are a word out of a row, and saying so should be the
+      // whole of it.
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            columns: [
+              TableColumn(title: const Text('Name'), value: (u) => u.name),
+            ],
+            data: _users,
+          ),
+        ),
+      );
+      expect(find.text('Ann'), findsOneWidget);
+      expect(find.text('Bartholomew Longname'), findsOneWidget);
+    });
+
+    testWidgets('a builder overrules the value it is given', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            columns: [
+              TableColumn(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                builder: (_, u, __) => Text(u.name.toUpperCase()),
+              ),
+            ],
+            data: _users,
+          ),
+        ),
+      );
+      expect(find.text('ANN'), findsOneWidget);
+      expect(find.text('Ann'), findsNothing);
+    });
+
+    testWidgets('an absent value draws nothing, not the word null',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            columns: [
+              TableColumn(title: const Text('Name'), value: (u) => null),
+            ],
+            data: _users,
+          ),
+        ),
+      );
+      expect(find.text('null'), findsNothing);
+    });
+
+    test('a column needs one of the two', () {
+      expect(
+        () => TableColumn<_User>(title: const Text('Name')),
+        throwsAssertionError,
+      );
     });
   });
 

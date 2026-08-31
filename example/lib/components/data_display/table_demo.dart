@@ -39,14 +39,15 @@ class _TableDemoState extends State<TableDemo> {
   Person? _tapped;
 
   List<TableColumn<Person>> get _columns => [
-    TableColumn(title: const Text('Name'), builder: (_, p, __) => Text(p.name)),
-    TableColumn(title: const Text('City'), builder: (_, p, __) => Text(p.city)),
+    // A value is the whole of most columns: no builder, no ceremony.
+    TableColumn(title: const Text('Name'), value: (p) => p.name),
+    TableColumn(title: const Text('City'), value: (p) => p.city),
     TableColumn(
       title: const Text('Age'),
       // A number reads better against the far edge, and the heading follows
       // it without being told twice.
       align: TableAlign.end,
-      builder: (_, p, __) => Text('${p.age}'),
+      value: (p) => p.age,
     ),
   ];
 
@@ -123,18 +124,18 @@ class _TableDemoState extends State<TableDemo> {
                 title: const Text('Name'),
                 width: 120,
                 ellipsis: true,
-                builder: (_, p, __) => Text(p.name),
+                value: (p) => p.name,
               ),
               TableColumn(
                 title: const Text('City'),
                 flex: 1,
-                builder: (_, p, __) => Text(p.city),
+                value: (p) => p.city,
               ),
               TableColumn(
                 title: const Text('Age'),
                 flex: 2,
                 align: TableAlign.end,
-                builder: (_, p, __) => Text('${p.age}'),
+                value: (p) => p.age,
               ),
             ],
           ),
@@ -150,6 +151,24 @@ class _TableDemoState extends State<TableDemo> {
               'Average age '
               '${(rows.map((p) => p.age).reduce((a, b) => a + b) / rows.length).round()}',
             ),
+          ),
+        ),
+        Group(
+          'A builder where text will not do',
+          Table<Person>(
+            bordered: true,
+            data: _people,
+            columns: [
+              TableColumn(title: const Text('Name'), value: (p) => p.name),
+              TableColumn(
+                title: const Text('City'),
+                // The value still stands for the cell — a sort will compare
+                // the word, not the widget around it.
+                value: (p) => p.city,
+                builder: (_, p, __) =>
+                    Tag(color: TagPreset.processing, child: Text(p.city)),
+              ),
+            ],
           ),
         ),
         Group(

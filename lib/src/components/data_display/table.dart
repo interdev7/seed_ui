@@ -32,21 +32,42 @@ enum TableAlign {
 class TableColumn<T> {
   /// Creates a [TableColumn].
   const TableColumn({
-    required this.builder,
+    this.value,
+    this.builder,
     this.title,
     this.width,
     this.flex,
     this.align,
     this.headerAlign,
     this.ellipsis = false,
-  }) : assert(
+  })  : assert(
           width == null || flex == null,
           'Give a column a width or a flex, not both: one is a number of '
           'pixels and the other a share of what is left over.',
+        ),
+        assert(
+          value != null || builder != null,
+          'A column needs a value to read, a builder to draw with, or both.',
         );
 
-  /// Draws one cell.
-  final Widget Function(BuildContext context, T record, int index) builder;
+  /// What this column reads out of a row.
+  ///
+  /// Enough on its own: a cell with no [builder] is that value as text, which
+  /// is what most columns are.
+  ///
+  /// ```dart
+  /// TableColumn(title: const Text('Name'), value: (u) => u.name)
+  /// ```
+  ///
+  /// It is also the number a sort compares and a filter matches, so a column
+  /// that names one gets those for nothing when they arrive.
+  final Object? Function(T record)? value;
+
+  /// Draws one cell, where text will not do.
+  ///
+  /// Given a [value] as well, this decides how it looks and the value still
+  /// stands for the cell — a `Tag` that sorts by the word inside it.
+  final Widget Function(BuildContext context, T record, int index)? builder;
 
   /// What stands at the head of the column.
   final Widget? title;
@@ -544,7 +565,7 @@ class _TableState<T> extends State<Table<T>> {
   ) {
     final record = widget.data[index];
     Widget cell = _cell(
-      column.builder(context, record, index),
+      column.builder?.call(context, record, index) ?? _text(column, record),
       column,
       column.align ?? TableAlign.start,
       r,
@@ -563,6 +584,13 @@ class _TableState<T> extends State<Table<T>> {
       onExit: (_) => setState(() => _hovered = null),
       child: cell,
     );
+  }
+
+  /// A column with no builder draws its value, and an absent one draws
+  /// nothing rather than the word "null".
+  Widget _text(TableColumn<T> column, T record) {
+    final value = column.value?.call(record);
+    return value == null ? const SizedBox.shrink() : Text('$value');
   }
 
   Widget _cell(

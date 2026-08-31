@@ -577,32 +577,6 @@ class FloatButtonDefaults {
 
   /// Whether tapping an item closes its group.
   final bool? closeOnSelect;
-
-  /// Returns a copy with the given fields replaced.
-  FloatButtonDefaults copyWith({
-    ButtonShape? shape,
-    ButtonColor? color,
-    ControlSize? size,
-    FloatButtonLayout? layout,
-    FloatButtonDirection? direction,
-    FloatButtonTrigger? trigger,
-    FloatButtonLabelPlacement? labelPlacement,
-    bool? disabled,
-    bool? dismissible,
-    bool? closeOnSelect,
-  }) =>
-      FloatButtonDefaults(
-        shape: shape ?? this.shape,
-        color: color ?? this.color,
-        size: size ?? this.size,
-        layout: layout ?? this.layout,
-        direction: direction ?? this.direction,
-        trigger: trigger ?? this.trigger,
-        labelPlacement: labelPlacement ?? this.labelPlacement,
-        disabled: disabled ?? this.disabled,
-        dismissible: dismissible ?? this.dismissible,
-        closeOnSelect: closeOnSelect ?? this.closeOnSelect,
-      );
 }
 
 /// A button that floats above the page — the round action button that sits in

@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Token.easeOutBack`** — the overshoot-and-settle curve, beside the motion
   tokens the kit already carries.
 
+### Removed
+
+- **`FloatButtonDefaults.copyWith`.** Nothing called it, in the kit or out of
+  it, and no other `Defaults` class in the kit has one — it was there by habit
+  rather than need, and public API costs something to keep.
+
 ### Changed
 
 - **A tap outside an open `FloatButtonGroup` now only closes it.** It used to

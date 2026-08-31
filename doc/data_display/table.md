@@ -92,6 +92,34 @@ rest. A number says how tall the row is, so the vertical padding stands aside
 rather than adding to it — and it is a floor, so a cell that needs more still
 gets it.
 
+## Scrolling
+
+```dart
+Table(scroll: const TableScroll(y: 320), ...)    // a body that scrolls
+Table(scroll: const TableScroll(x: 1200), ...)   // wider than its box
+```
+
+**`y`** gives the rows a height of their own, and the heading stops travelling
+with them: it sits above and stays.
+
+**`x`** lays the table out at a width of your choosing, however narrow its box,
+and what does not fit scrolls across. The heading goes with the rows — both sit
+in the same viewport rather than in one each kept in step by hand, so there is
+only one offset for them to disagree about.
+
+### What scrolling costs
+
+A column that named neither a `width` nor a `flex` stops fitting its content
+and takes an equal share instead.
+
+It has to. Once the heading has stopped moving it is a second table, and an
+intrinsic width would measure a different thing in each — the title in one, the
+cells in the other. Left to that, a short heading over long cells drifts thirty
+pixels out of line. It is the trade `tableLayout: fixed` makes, for the same
+reason.
+
+So name a `width` or a `flex` on the columns that matter once you scroll.
+
 ## Around the rows
 
 | Prop | |
@@ -121,5 +149,5 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 
 ## Not here yet
 
-Sorting, filtering, row selection, expandable rows, pagination, fixed columns
-and a sticky header are still to come. They are being built in that order.
+Fixed columns, sorting, filtering, row selection, expandable rows and
+pagination are still to come, in that order.

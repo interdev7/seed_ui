@@ -92,7 +92,7 @@ export 'src/components/data_display/steps.dart'
         StepsVariant,
         StepTitlePlacement;
 export 'src/components/data_display/table.dart'
-    show Table, TableAlign, TableColumn, TableDefaults, TableToken;
+    show Table, TableAlign, TableColumn, TableDefaults, TableScroll, TableToken;
 export 'src/components/data_display/tabs.dart'
     show
         TabsDefaults,

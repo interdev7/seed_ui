@@ -23,6 +23,32 @@ enum TableAlign {
   end,
 }
 
+/// How much room a [Table] gives itself, and which way it scrolls.
+///
+/// ```dart
+/// Table(scroll: const TableScroll(y: 320), ...)   // a body that scrolls
+/// Table(scroll: const TableScroll(x: 1200), ...)  // wider than its box
+/// ```
+@immutable
+class TableScroll {
+  /// Creates a [TableScroll].
+  const TableScroll({this.x, this.y})
+      : assert(x == null || x > 0, 'a width to scroll across must be positive'),
+        assert(y == null || y > 0, 'a height to scroll down must be positive');
+
+  /// The width to lay the table out at, however narrow its box.
+  ///
+  /// Null keeps it to the room it is given. A number wider than that is what
+  /// puts a scrollbar under it.
+  final double? x;
+
+  /// The height of the scrolling body.
+  ///
+  /// Set this and the heading stops travelling with the rows: it sits above
+  /// them and stays.
+  final double? y;
+}
+
 /// One column of a [Table].
 ///
 /// [T] is the type of a row. A column says how to draw a cell from one, which
@@ -271,6 +297,7 @@ class Table<T> extends StatefulWidget {
     this.bordered,
     this.showHeader,
     this.rowHoverable,
+    this.scroll,
     this.header,
     this.footer,
     this.empty,
@@ -296,6 +323,16 @@ class Table<T> extends StatefulWidget {
 
   /// Whether a row lights up under the pointer.
   final bool? rowHoverable;
+
+  /// How much room the table gives itself, and which way it scrolls.
+  ///
+  /// A scrolling table lays its columns out to a width it knows in advance,
+  /// so a column that named neither a width nor a flex takes an equal share
+  /// rather than fitting its content: the heading and the rows are two tables
+  /// once the heading stops moving, and only a width they both work out the
+  /// same way keeps them in step. It is the trade `tableLayout: fixed` makes
+  /// for the same reason.
+  final TableScroll? scroll;
 
   /// Drawn above the table, inside its outline.
   final Widget Function(BuildContext context, List<T> rows)? header;
@@ -339,6 +376,12 @@ class _TableState<T> extends State<Table<T>> {
   bool get _showHeader => widget.showHeader ?? _defaults?.showHeader ?? true;
 
   bool get _hoverable => widget.rowHoverable ?? _defaults?.rowHoverable ?? true;
+
+  /// Whether the heading has been lifted out of the run of rows.
+  bool get _detached => widget.scroll?.y != null;
+
+  /// The width to lay the table out at, wider than its box if need be.
+  double? get _across => widget.scroll?.x;
 
   /// The preset a size belongs to, so a height of your own still picks the
   /// padding of the preset it is nearest — as a `Button` does.
@@ -397,6 +440,11 @@ class _TableState<T> extends State<Table<T>> {
           i: switch (widget.columns[i]) {
             TableColumn(:final width?) => FixedColumnWidth(width),
             TableColumn(:final flex?) => FlexColumnWidth(flex.toDouble()),
+            // Once the heading has stopped travelling with the rows they are
+            // two tables, and an intrinsic width would measure a different
+            // thing in each — the title in one, the cells in the other. An
+            // equal share is what they can both work out alike.
+            _ when _detached || _across != null => const FlexColumnWidth(),
             // flex: 1, and not a bare intrinsic width. Left to itself
             // Flutter shares any slack equally between *every* column, which
             // quietly inflates a column that asked for an exact width — 100
@@ -470,25 +518,43 @@ class _TableState<T> extends State<Table<T>> {
         ),
     ];
 
-    Widget table = flutter.Table(
-      columnWidths: _widths,
-      // Every cell in a row is as tall as the tallest, which is what keeps a
-      // row a row when one cell wraps and its neighbours do not.
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      border: _bordered
-          ? TableBorder(
-              verticalInside: rule,
-              horizontalInside: BorderSide.none,
-            )
-          : null,
-      children: rows,
-    );
+    flutter.Table grid(List<flutter.TableRow> of) => flutter.Table(
+          columnWidths: _widths,
+          // Every cell in a row is as tall as the tallest, which is what
+          // keeps a row a row when one cell wraps and its neighbours do not.
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          border: _bordered
+              ? TableBorder(
+                  verticalInside: rule,
+                  horizontalInside: BorderSide.none,
+                )
+              : null,
+          children: of,
+        );
+
+    final heading = _showHeader && rows.isNotEmpty ? rows.first : null;
+    final dataRows = _showHeader ? rows.skip(1).toList() : rows;
+
+    Widget table = _detached
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (heading != null) grid([heading]),
+              // The rows scroll; the heading, being outside this, does not.
+              SizedBox(
+                height: widget.scroll!.y,
+                child: SingleChildScrollView(child: grid(dataRows)),
+              ),
+            ],
+          )
+        : grid(rows);
 
     if (widget.data.isEmpty) {
       table = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (_showHeader) table,
+          if (heading != null) grid([heading]),
           Padding(
             padding: EdgeInsets.symmetric(vertical: t.sizeXL),
             child: widget.empty ??
@@ -533,6 +599,16 @@ class _TableState<T> extends State<Table<T>> {
         ],
       ),
     );
+
+    if (_across != null) {
+      // One scroll view around the heading and the rows together, rather than
+      // one each kept in step by hand: laid out side by side inside the same
+      // viewport they cannot drift apart, because there is only one offset.
+      body = SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(width: _across, child: body),
+      );
+    }
 
     if (_bordered) {
       body = DecoratedBox(

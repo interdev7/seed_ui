@@ -34,6 +34,16 @@ class TableDemo extends StatefulWidget {
 }
 
 class _TableDemoState extends State<TableDemo> {
+  /// Enough rows to have something to scroll.
+  static final _many = [
+    for (var i = 0; i < 24; i++)
+      Person(
+        '${_people[i % _people.length].name} ${i + 1}',
+        20 + i,
+        _people[i % _people.length].city,
+      ),
+  ];
+
   ControlSize _size = SoftSize.middle;
   bool _bordered = false;
   Person? _tapped;
@@ -167,6 +177,53 @@ class _TableDemoState extends State<TableDemo> {
                 value: (p) => p.city,
                 builder: (_, p, __) =>
                     Tag(color: TagPreset.processing, child: Text(p.city)),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A body that scrolls, and a heading that does not',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                scroll: const TableScroll(y: 200),
+                columns: _columns,
+                data: _many,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Give the body a height and the heading stops travelling with '
+                'the rows. Columns then share the width rather than fitting '
+                'their content: two tables can only agree on a width they '
+                'both work out the same way.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Wider than its box',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                scroll: const TableScroll(x: 900, y: 200),
+                columns: [
+                  ..._columns,
+                  TableColumn(
+                    title: const Text('Note'),
+                    value: (p) => 'about ${p.name}',
+                  ),
+                ],
+                data: _many,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Drag across: the heading goes with the rows, because both '
+                'sit in the same viewport rather than in one each kept in '
+                'step by hand.',
               ),
             ],
           ),

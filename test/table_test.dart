@@ -364,6 +364,140 @@ void main() {
     });
   });
 
+  group('scrolling', () {
+    List<int> many(int n) => [for (var i = 0; i < n; i++) i];
+
+    Widget rows(TableScroll? scroll, {int n = 30, double box = 400}) => _host(
+          Table<int>(
+            scroll: scroll,
+            columns: [
+              TableColumn<int>(title: const Text('N'), value: (v) => 'row $v'),
+              TableColumn<int>(title: const Text('Sq'), value: (v) => 'sq $v'),
+            ],
+            data: many(n),
+          ),
+          width: box,
+        );
+
+    testWidgets('with no scroll the table is as tall as its rows',
+        (tester) async {
+      await tester.pumpWidget(rows(null, n: 4));
+      final short = tester.getRect(find.byType(Table<int>)).height;
+      await tester.pumpWidget(rows(null, n: 8));
+      expect(
+        tester.getRect(find.byType(Table<int>)).height,
+        greaterThan(short),
+      );
+    });
+
+    testWidgets('a height keeps the table to it', (tester) async {
+      await tester.pumpWidget(rows(const TableScroll(y: 200)));
+      final table = tester.getRect(find.byType(Table<int>));
+      expect(table.height, lessThan(300), reason: 'thirty rows would be 600');
+      expect(table.height, greaterThan(200), reason: 'the heading as well');
+    });
+
+    testWidgets('the heading stays while the rows go by', (tester) async {
+      await tester.pumpWidget(rows(const TableScroll(y: 200)));
+      final heading = tester.getRect(find.text('N')).top;
+      final first = tester.getRect(find.text('row 0')).top;
+
+      await tester.drag(find.text('row 1'), const Offset(0, -80));
+      await tester.pumpAndSettle();
+
+      expect(tester.getRect(find.text('N')).top, heading,
+          reason: 'the heading did not move');
+      expect(tester.getRect(find.text('row 0')).top, closeTo(first - 80, 1),
+          reason: 'the rows did');
+    });
+
+    testWidgets('a width wider than the box scrolls across', (tester) async {
+      await tester.pumpWidget(rows(const TableScroll(x: 900), n: 3));
+      final table = tester.getRect(find.byType(Table<int>));
+      expect(table.width, closeTo(400, 1), reason: 'the box, not the content');
+
+      final heading = tester.getRect(find.text('N')).left;
+      await tester.drag(find.text('row 0'), const Offset(-200, 0));
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.text('N')).left, closeTo(heading - 200, 1));
+    });
+
+    testWidgets('the heading and the rows never drift apart', (tester) async {
+      // They share one viewport rather than a controller each, so there is
+      // only one offset for them to disagree about.
+      // The *second* column, not the first: every first column starts at
+      // zero whatever the widths are, so comparing those proves nothing. And
+      // a short heading over long cells, because that is where two tables
+      // measuring themselves separately come apart — thirty pixels, measured.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(y: 150),
+            columns: [
+              TableColumn<int>(
+                title: const Text('N'),
+                value: (v) => 'a very long cell $v',
+              ),
+              TableColumn<int>(title: const Text('Sq'), value: (v) => 'x'),
+            ],
+            data: many(5),
+          ),
+          width: 400,
+        ),
+      );
+      expect(
+        tester.getRect(find.text('Sq')).left,
+        tester.getRect(find.text('x').first).left,
+        reason: 'the heading sits over its own column',
+      );
+
+      await tester.drag(find.text('a very long cell 1'), const Offset(0, -40));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text('Sq')).left,
+        tester.getRect(find.text('x').first).left,
+        reason: 'still over it once the rows have moved',
+      );
+    });
+
+    testWidgets('a scrolling table shares the width between its columns',
+        (tester) async {
+      // The trade a detached heading forces: an intrinsic width would measure
+      // the title in one table and the cells in the other.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(y: 200),
+            columns: [
+              TableColumn<int>(title: const Text('N'), value: (v) => 'x'),
+              TableColumn<int>(
+                title: const Text('Sq'),
+                value: (v) => 'a much longer cell than the other',
+              ),
+            ],
+            data: many(4),
+          ),
+          width: 400,
+        ),
+      );
+      final table = tester.getRect(find.byType(Table<int>));
+      final second = tester.getRect(find.text('Sq')).left - table.left;
+      expect(second, closeTo(200 + 16, 2), reason: 'half each, then padding');
+    });
+
+    testWidgets('an empty scrolling table still shows its heading',
+        (tester) async {
+      await tester.pumpWidget(rows(const TableScroll(y: 200), n: 0));
+      expect(find.text('N'), findsOneWidget);
+      expect(find.byType(Empty), findsOneWidget);
+    });
+
+    test('a scroll must have room to happen in', () {
+      expect(() => TableScroll(y: 0), throwsAssertionError);
+      expect(() => TableScroll(x: -1), throwsAssertionError);
+    });
+  });
+
   group('size', () {
     Future<double> rowHeight(WidgetTester tester, ControlSize? size) async {
       await tester.pumpWidget(

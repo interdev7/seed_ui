@@ -32,6 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   table is expected to do; `width` is then exact and `flex` a share of what is
   left. There is no key into a map to get wrong — `T` is your own row type.
 
+  `scroll` gives the body a height of its own, and the heading then stays put
+  above it; a width of your own lays the table out at that width however narrow
+  its box, with the heading and the rows in the same viewport so there is one
+  offset between them rather than two kept in step. A scrolling table shares
+  the width between columns that named neither a `width` nor a `flex`: two
+  tables can only agree on a measurement they both work out the same way, and
+  left to intrinsic widths a short heading over long cells drifts thirty pixels
+  out of line.
+
   The name is Flutter's own too, so a file that wants both hides one:
   `import 'package:seed_ui/seed_ui.dart' hide Table;` and the reverse. `Empty`
   gains an `EmptySlot.table` so a kit-wide placeholder covers tables as well.

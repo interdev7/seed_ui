@@ -243,6 +243,7 @@ Table
 TableAlign
 TableColumn
 TableDefaults
+TableScroll
 TableToken
 Tabs
 TabsController

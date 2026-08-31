@@ -260,6 +260,40 @@ void main() {
     });
   });
   group('which way it opens', () {
+    test('every direction points where its name says', () {
+      // The whole compass, so a swapped sign is a failing test rather than a
+      // group that opens into the wrong corner.
+      expect(FloatButtonDirection.auto.vector, isNull);
+      expect(FloatButtonDirection.top.vector, const Offset(0, -1));
+      expect(FloatButtonDirection.topRight.vector, const Offset(1, -1));
+      expect(FloatButtonDirection.right.vector, const Offset(1, 0));
+      expect(FloatButtonDirection.bottomRight.vector, const Offset(1, 1));
+      expect(FloatButtonDirection.bottom.vector, const Offset(0, 1));
+      expect(FloatButtonDirection.bottomLeft.vector, const Offset(-1, 1));
+      expect(FloatButtonDirection.left.vector, const Offset(-1, 0));
+      expect(FloatButtonDirection.topLeft.vector, const Offset(-1, -1));
+
+      // Opposite names must be opposite vectors, and the four that name one
+      // side alone must be flat on the other.
+      for (final (a, b) in const [
+        (FloatButtonDirection.top, FloatButtonDirection.bottom),
+        (FloatButtonDirection.left, FloatButtonDirection.right),
+        (FloatButtonDirection.topLeft, FloatButtonDirection.bottomRight),
+        (FloatButtonDirection.topRight, FloatButtonDirection.bottomLeft),
+      ]) {
+        expect(a.vector, -b.vector!, reason: '${a.name} against ${b.name}');
+      }
+      for (final d in const [
+        FloatButtonDirection.top,
+        FloatButtonDirection.bottom,
+        FloatButtonDirection.left,
+        FloatButtonDirection.right,
+      ]) {
+        final v = d.vector!;
+        expect(v.dx * v.dy, 0, reason: '${d.name} leans on one axis only');
+      }
+    });
+
     test('a fan told neither side opens symmetrically', () {
       // The point of a zero component. Four corners could not say "straight
       // up", so a group at the foot of a screen tipped into one of them.

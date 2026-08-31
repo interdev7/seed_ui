@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer;
-import 'package:seed_ui/seed_ui.dart';
+// This page lays its buttons out with Flutter's own Table, so the kit's is
+// hidden here rather than the other way round.
+import 'package:seed_ui/seed_ui.dart' hide Table;
 
 class PopconfirmDemo extends StatelessWidget {
   const PopconfirmDemo({super.key});

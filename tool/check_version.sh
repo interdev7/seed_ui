@@ -9,7 +9,11 @@
 #     after the change was merged;
 #   * leaving the README's install snippet or the gallery's constraint on the
 #     previous version, which nothing rejects at all: it just tells readers to
-#     depend on something older than what they are reading about.
+#     depend on something older than what they are reading about;
+#   * carrying on in a version that is already on pub.dev, which every local
+#     file agrees about and none of them can see. That one cost real work: a
+#     released section of the CHANGELOG was edited more than once as though it
+#     were still open.
 #
 # Run it from the repository root:
 #
@@ -71,6 +75,25 @@ if [ -f "$constant_file" ]; then
   else
     note "$constant_file says '$found' but pubspec.yaml is $version. Regenerate it with ./tool/sync_version.sh"
   fi
+fi
+
+# Everything above compares this checkout against itself, which cannot notice
+# the one thing that matters most: whether this version has already shipped.
+# Skipped without a fuss when pub.dev cannot be reached, so an offline build is
+# not a failing build.
+published=""
+if command -v curl >/dev/null 2>&1; then
+  published="$(curl -fsS --max-time 10 \
+    https://pub.dev/api/packages/seed_ui 2>/dev/null |
+    tr ',' '\n' | grep -m1 -oE '"version":"[0-9]+\.[0-9]+\.[0-9]+"' |
+    grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)"
+fi
+if [ -z "$published" ]; then
+  echo "· pub.dev is out of reach, so nothing was checked against it"
+elif [ "$published" = "$version" ]; then
+  note "pub.dev already serves $version. Bump before going further, and leave its CHANGELOG section alone — it is published."
+else
+  echo "✓ pub.dev serves $published, so $version is still unreleased"
 fi
 
 if [ "$fail" -ne 0 ]; then

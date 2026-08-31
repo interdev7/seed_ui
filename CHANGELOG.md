@@ -5,6 +5,36 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.16.0
+
+### Added
+
+- **`Table`** — rows and columns, with a heading. The first stage: the grid
+  itself, sizes, borders, a title and footer, an empty state and a loading one.
+  Sorting, filtering, selection, expandable rows and pagination follow.
+
+  ```dart
+  Table<User>(
+    data: users,
+    columns: [
+      TableColumn(title: const Text('Name'), builder: (_, u, __) => Text(u.name)),
+      TableColumn(
+        title: const Text('Age'),
+        align: TableAlign.end,
+        builder: (_, u, __) => Text('${u.age}'),
+      ),
+    ],
+  )
+  ```
+
+  A column that says nothing about its width fits its content, which is what a
+  table is expected to do; `width` is then exact and `flex` a share of what is
+  left. There is no key into a map to get wrong — `T` is your own row type.
+
+  The name is Flutter's own too, so a file that wants both hides one:
+  `import 'package:seed_ui/seed_ui.dart' hide Table;` and the reverse. `Empty`
+  gains an `EmptySlot.table` so a kit-wide placeholder covers tables as well.
+
 ## 0.15.0
 
 ### Added

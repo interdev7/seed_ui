@@ -32,7 +32,7 @@ open a drawer.
 
 ```yaml
 dependencies:
-  seed_ui: ^0.15.0
+  seed_ui: ^0.16.0
 ```
 
 ## Getting started
@@ -104,6 +104,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Input](doc/data_entry/input.md)                  | Single- or multi-line text field                                               |
 | [InputNumber](doc/data_entry/input_number.md)     | Numeric input with steppers, range, precision                                  |
 | [Segmented](doc/data_display/segmented.md)        | Segmented single-select control                                                |
+| [Table](doc/data_display/table.md)                | Rows and columns; a column fits its content unless told a width or a flex   |
 | [Tabs](doc/data_display/tabs.md)                  | Tabbed panels — line, card, editable-card                                      |
 | [Card](doc/data_display/card.md)                  | Content container — header, cover, actions, tabs, meta                         |
 | [Collapse](doc/data_display/collapse.md)          | Collapsible panels — accordion, ghost, custom icons                            |

@@ -11,6 +11,7 @@ import '../components/data_display/popover.dart';
 import '../components/data_display/segmented.dart';
 import '../components/data_display/sortable_list.dart';
 import '../components/data_display/steps.dart';
+import '../components/data_display/table.dart';
 import '../components/data_display/tabs.dart';
 import '../components/data_display/tag.dart';
 import '../components/data_display/timeline.dart';
@@ -79,6 +80,7 @@ class ComponentsConfig {
     this.spin,
     this.steps,
     this.switchToken,
+    this.table,
     this.tabs,
     this.tag,
     this.timePicker,
@@ -192,6 +194,9 @@ class ComponentsConfig {
   /// Overrides applied to every [Tabs] under this provider.
   final TabsToken? tabs;
 
+  /// Overrides applied to every [Table] under this provider.
+  final TableToken? table;
+
   /// Overrides applied to every [Tag] under this provider.
   final TagToken? tag;
 
@@ -252,6 +257,7 @@ class ComponentsConfig {
         spin: other.spin ?? spin,
         steps: other.steps ?? steps,
         switchToken: other.switchToken ?? switchToken,
+        table: other.table ?? table,
         tabs: other.tabs ?? tabs,
         tag: other.tag ?? tag,
         timeline: other.timeline ?? timeline,
@@ -304,6 +310,7 @@ class ComponentsConfig {
     if (T == SpinToken && spin != null) return spin as T;
     if (T == StepsToken && steps != null) return steps as T;
     if (T == SwitchToken && switchToken != null) return switchToken as T;
+    if (T == TableToken && table != null) return table as T;
     if (T == TabsToken && tabs != null) return tabs as T;
     if (T == TagToken && tag != null) return tag as T;
     if (T == TimePickerToken && timePicker != null) {

@@ -239,6 +239,11 @@ TabEditAction
 TabItem
 TabPosition
 TabScrollAlign
+Table
+TableAlign
+TableColumn
+TableDefaults
+TableToken
 Tabs
 TabsController
 TabsDefaults

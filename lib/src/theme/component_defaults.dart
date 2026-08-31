@@ -10,6 +10,7 @@ import '../components/data_display/popover.dart';
 import '../components/data_display/segmented.dart';
 import '../components/data_display/sortable_list.dart';
 import '../components/data_display/steps.dart';
+import '../components/data_display/table.dart';
 import '../components/data_display/tabs.dart';
 import '../components/data_display/tag.dart';
 import '../components/data_display/timeline.dart';
@@ -80,6 +81,7 @@ class ComponentDefaults {
     this.segmented,
     this.slider,
     this.steps,
+    this.table,
     this.tabs,
     this.tree,
     this.datePicker,
@@ -195,6 +197,9 @@ class ComponentDefaults {
   /// Applied to every [Tour] under this provider.
   final TourDefaults? tour;
 
+  /// Props applied to every [Table].
+  final TableDefaults? table;
+
   /// This set with [other] laid over it: every slot [other] names wins, the
   /// rest are kept.
   ComponentDefaults merge(ComponentDefaults other) => ComponentDefaults(
@@ -217,6 +222,7 @@ class ComponentDefaults {
         segmented: other.segmented ?? segmented,
         slider: other.slider ?? slider,
         steps: other.steps ?? steps,
+        table: other.table ?? table,
         tabs: other.tabs ?? tabs,
         tree: other.tree ?? tree,
         datePicker: other.datePicker ?? datePicker,
@@ -235,6 +241,7 @@ class ComponentDefaults {
 
   /// Fast lookup for a specific defaults type [T].
   T? of<T>() {
+    if (T == TableDefaults && table != null) return table as T;
     if (T == ButtonDefaults && button != null) return button as T;
     if (T == EmptyDefaults && empty != null) return empty as T;
     if (T == FloatButtonDefaults && floatButton != null) {

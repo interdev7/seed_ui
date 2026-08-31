@@ -22,6 +22,9 @@ enum EmptySlot {
 
   /// A [Listy] with no rows.
   listy,
+
+  /// A [Table] with no rows.
+  table,
 }
 
 /// Builds the "no data" placeholder for [slot].

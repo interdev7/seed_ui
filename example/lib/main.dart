@@ -44,6 +44,7 @@ import 'components/data_display/steps_demo.dart';
 import 'components/data_entry/select_demo.dart';
 import 'components/data_entry/switch_demo.dart';
 import 'components/data_entry/upload_demo.dart';
+import 'components/data_display/table_demo.dart';
 import 'components/data_display/tabs_demo.dart';
 import 'components/data_display/tag_demo.dart';
 import 'components/data_display/tooltip_demo.dart';
@@ -404,12 +405,7 @@ final List<Demo> demos = [
   Demo('time-picker', 'TimePicker', (_) => const TimePickerDemo()),
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),
-  Demo(
-    'float-button',
-    'FloatButton',
-    (_) => const FloatButtonDemo(),
-    isNew: true,
-  ),
+  Demo('float-button', 'FloatButton', (_) => const FloatButtonDemo()),
   Demo('message', 'message', (_) => const MessageDemo()),
   Demo('notification', 'notification', (_) => const NotificationDemo()),
   Demo('modal', 'Modal', (_) => const ModalDemo()),
@@ -424,6 +420,7 @@ final List<Demo> demos = [
   Demo('input', 'Input', (_) => const InputDemo()),
   Demo('inputnumber', 'InputNumber', (_) => const InputNumberDemo()),
   Demo('segmented', 'Segmented', (_) => const SegmentedDemo()),
+  Demo('table', 'Table', (_) => const TableDemo(), isNew: true),
   Demo('tabs', 'Tabs', (_) => const TabsDemo()),
   Demo('card', 'Card', (_) => const CardDemo()),
   Demo('collapse', 'Collapse', (_) => const CollapseDemo()),

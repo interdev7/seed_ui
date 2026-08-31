@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`FloatButtonGroup.direction`** — eight ways round the compass, or `auto`.
+
+  ```dart
+  FloatButtonGroup<T>(direction: FloatButtonDirection.top, items: items)
+  ```
+
+  The direction used to be four corners, so *straight up* could not be said at
+  all: a group at the foot of a screen, with as much room to its left as its
+  right, tipped its fan into a corner instead of opening symmetrically. `auto`
+  can now lean neither way — a fan straddles the trigger, a grid centres its
+  columns — and a direction of your own overrides it outright. Carried by
+  `FloatButtonDefaults` as well.
+
+- **A run with nowhere left to go folds into a block.** Twelve items in a row
+  want more width than a phone has, and no direction fixes that; the far half
+  used to land off the screen. It now fills the axis it has before starting a
+  second lane, on either axis, since a column of twelve overruns a screen as
+  surely as a row does.
+
 - **`Token.easeOutBack`** — the overshoot-and-settle curve, beside the motion
   tokens the kit already carries.
 

@@ -63,12 +63,27 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
   double _jitter = 0;
   double? _radius;
   ControlSize _size = SoftSize.middle;
+  FloatButtonDirection _direction = FloatButtonDirection.auto;
+  int _count = 4;
   Curve _curve = Curves.easeOutBack;
   FloatButtonLabelPlacement _labels = FloatButtonLabelPlacement.auto;
   bool _dismissible = true;
   bool _closeOnSelect = true;
   FabAction? _last;
   int _seed = 7;
+
+  /// The stage's items, padded out past the four named ones so a run long
+  /// enough to have nowhere left to go can actually be tried.
+  List<FloatButtonItem<FabAction>> get _stageItems => [
+    for (var i = 0; i < _count; i++)
+      i < _actions.length
+          ? _actions[i]
+          : FloatButtonItem(
+              value: FabAction.values[i % FabAction.values.length],
+              label: 'Item ${i + 1}',
+              icon: const Icon(Icons.circle_outlined),
+            ),
+  ];
 
   FloatButtonLayout get _chosen => _layout == 'fan'
       ? FloatButtonLayout.fan(jitter: _jitter, radius: _radius, seed: _seed)
@@ -173,11 +188,12 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                   layout: _chosen,
                   color: ButtonColor.primary,
                   labelPlacement: _labels,
+                  direction: _direction,
                   size: _size,
                   token: FloatButtonToken(curve: _curve),
                   dismissible: _dismissible,
                   closeOnSelect: _closeOnSelect,
-                  items: _actions,
+                  items: _stageItems,
                   // One hook covers every wrapper, which is why there is no
                   // tooltip prop, and no badge prop either.
                   itemBuilder: (context, item, child) {
@@ -268,6 +284,39 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                 onChanged: (v) => setState(() => _curve = v),
               ),
               const SizedBox(height: 8),
+              // Eight ways round the compass plus auto. `top` is the one four
+              // corners could never say, and it is what a centred group wants.
+              Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: [
+                  for (final d in FloatButtonDirection.values)
+                    Button(
+                      size: SoftSize.small,
+                      variant: _direction == d
+                          ? ButtonVariant.solid
+                          : ButtonVariant.outlined,
+                      color: ButtonColor.primary,
+                      onPressed: () => setState(() => _direction = d),
+                      child: Text(d.name),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Segmented<int>(
+                size: SoftSize.small,
+                value: _count,
+                options: const [
+                  SegmentedOption(value: 2, label: '2 items'),
+                  SegmentedOption(value: 4, label: '4 items'),
+                  SegmentedOption(value: 6, label: '6 items'),
+                  SegmentedOption(value: 8, label: '8 items'),
+                  SegmentedOption(value: 10, label: '10 items'),
+                  SegmentedOption(value: 12, label: '12 items'),
+                ],
+                onChanged: (v) => setState(() => _count = v),
+              ),
+              const SizedBox(height: 8),
               Segmented<ControlSize>(
                 size: SoftSize.small,
                 value: _size,
@@ -323,8 +372,11 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                 'their spokes, which is what reads as scatter, and the same '
                 'seed arranges them the same way every time. The curve shapes '
                 'the opening: easeOutBack and elasticOut overshoot and settle, '
-                'bounceOut lands twice. The page below keeps working while the '
-                'group is open.'
+                'bounceOut lands twice. Park the stage centrally and pick a '
+                'row of 12: with nowhere left to run it folds into rows rather '
+                'than sending half the buttons off the screen. The page below '
+                'keeps scrolling while the group is open, and a tap outside '
+                'spends itself on closing.'
                 '${_last == null ? '' : '  Last tapped: ${_last!.name}.'}',
               ),
             ],

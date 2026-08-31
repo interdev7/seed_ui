@@ -58,9 +58,43 @@ FloatButtonGroup<UserAction>(
 ```
 
 The direction the items travel is worked out from the room around the trigger.
-A group goes up and to the left — where a button in the usual corner has to go
-— unless the items would not fit there, in which case it takes the roomier
-side. Nothing needs to be told twice.
+Nothing needs to be told twice — but it can be.
+
+### Which way it opens
+
+`direction` names one of eight ways round the compass, or leaves it to `auto`:
+
+```dart
+FloatButtonGroup<T>(direction: FloatButtonDirection.top, items: items)
+```
+
+Left to itself a group goes **up and to the left** — where a button in the
+usual corner has to go — unless the items would not fit there, in which case it
+takes the roomier side. Where the room is the same either way it leans
+**neither**, and that is the case four corners could not describe:
+
+| Layout | Told neither side |
+| --- | --- |
+| `fan` | Opens **symmetrically** about the axis — straight up from a centred group, rather than tipped into a corner |
+| `grid` | Centres its columns over the trigger |
+| `vertical` | Up, as always: a column has no sideways travel to spend |
+| `horizontal` | The usual way, for the same reason in reverse |
+
+Not every direction means something to every layout, in the same way that not
+every side suits a label. A row reads only the horizontal half of what it is
+given; a column only the vertical.
+
+### When there is nowhere left to go
+
+Twelve items in a row want more width than a phone has, and no direction fixes
+that: whichever way they are sent, the far half lands off the screen where it
+can be neither reached nor seen. So the run stops being a run and **folds into
+a block**, filling the axis it had before starting a second lane. Both axes
+fold — a column of twelve overruns a screen as surely as a row does.
+
+Letting it scroll instead would hide the same buttons behind an affordance
+nobody knows to look for. A fan needs none of this: its radius already widens
+with the number of items.
 
 ### Items are data
 

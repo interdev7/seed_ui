@@ -34,6 +34,63 @@ enum FloatButtonLabelPlacement {
   right,
 }
 
+/// Which way a [FloatButtonGroup] opens.
+///
+/// Eight ways round the compass, plus [auto]. Not a list of corners: a group
+/// parked at the foot of a screen has as much room to its left as to its
+/// right, and nothing to gain by leaning into one of them — [top] sends a fan
+/// straight up, symmetric about the trigger, where a corner would tip it into
+/// a quadrant.
+///
+/// Not every direction means something to every layout. A row has no vertical
+/// travel, so it reads only the horizontal half of what it is given, the way a
+/// label takes only the side that suits its run.
+enum FloatButtonDirection {
+  /// Worked out from the room around the trigger. See
+  /// [FloatButtonGroup.direction].
+  auto,
+
+  /// Straight up.
+  top,
+
+  /// Up and to the right.
+  topRight,
+
+  /// Straight out to the right.
+  right,
+
+  /// Down and to the right.
+  bottomRight,
+
+  /// Straight down.
+  bottom,
+
+  /// Down and to the left.
+  bottomLeft,
+
+  /// Straight out to the left.
+  left,
+
+  /// Up and to the left — where a button in the usual corner has to go.
+  topLeft;
+
+  /// The direction as a vector, or null for [auto], which has none of its own.
+  ///
+  /// A zero component is the point of the whole type: it says *neither side*,
+  /// which four corners could not.
+  Offset? get vector => switch (this) {
+        FloatButtonDirection.auto => null,
+        FloatButtonDirection.top => const Offset(0, -1),
+        FloatButtonDirection.topRight => const Offset(1, -1),
+        FloatButtonDirection.right => const Offset(1, 0),
+        FloatButtonDirection.bottomRight => const Offset(1, 1),
+        FloatButtonDirection.bottom => const Offset(0, 1),
+        FloatButtonDirection.bottomLeft => const Offset(-1, 1),
+        FloatButtonDirection.left => const Offset(-1, 0),
+        FloatButtonDirection.topLeft => const Offset(-1, -1),
+      };
+}
+
 /// What opens a [FloatButtonGroup].
 enum FloatButtonTrigger {
   /// A tap on the trigger toggles the group.
@@ -96,9 +153,14 @@ sealed class FloatButtonLayout {
   /// measured from the trigger's centre.
   ///
   /// [item] is the size every item shares — a group sizes its items alike, so
-  /// this is one size and not a list. [away] is the unit direction pointing
-  /// off the nearest corner of the screen: `(-1, -1)` for a group parked at
-  /// the bottom right.
+  /// this is one size and not a list. [away] is the unit direction the items
+  /// travel: `(-1, -1)` for a group parked at the bottom right, `(0, -1)` for
+  /// one at the foot of the screen with as much room to its left as its right.
+  ///
+  /// A **zero component means neither side**. What a layout makes of that is
+  /// its own business: a fan aims along the axis and opens symmetrically, a
+  /// grid centres its columns, and a run — which has no travel on the other
+  /// axis to spend — falls back to the way it conventionally goes.
   Offset offsetFor(int index, int count, Size item, Offset away, double gap);
 
   /// Which side item [index]'s label hangs on under
@@ -152,9 +214,11 @@ class FloatButtonLine extends FloatButtonLayout {
     final step =
         (axis == Axis.vertical ? item.height : item.width) + (this.gap ?? gap);
     final travel = step * (index + 1);
+    // A run has no travel across itself, so it reads only the half of the
+    // direction it can act on — and takes the usual way when told neither.
     return axis == Axis.vertical
-        ? Offset(0, away.dy * travel)
-        : Offset(away.dx * travel, 0);
+        ? Offset(0, (away.dy == 0 ? -1 : away.dy.sign) * travel)
+        : Offset((away.dx == 0 ? -1 : away.dx.sign) * travel, 0);
   }
 
   @override
@@ -168,12 +232,12 @@ class FloatButtonLine extends FloatButtonLayout {
       // Perpendicular to the run: a label above an item in a column would sit
       // on the item above it.
       axis == Axis.vertical
-          ? (away.dx < 0
-              ? FloatButtonLabelPlacement.left
-              : FloatButtonLabelPlacement.right)
-          : (away.dy < 0
-              ? FloatButtonLabelPlacement.top
-              : FloatButtonLabelPlacement.bottom);
+          ? (away.dx > 0
+              ? FloatButtonLabelPlacement.right
+              : FloatButtonLabelPlacement.left)
+          : (away.dy > 0
+              ? FloatButtonLabelPlacement.bottom
+              : FloatButtonLabelPlacement.top);
 }
 
 /// An arc of items swept around the trigger — [FloatButtonLayout.fan].
@@ -298,11 +362,18 @@ class FloatButtonGrid extends FloatButtonLayout {
     final g = this.gap ?? gap;
     final col = index % columns;
     final row = index ~/ columns;
+    final across = item.width + g;
+    // Rows stand a gap further apart than columns do, because a caption hangs
+    // under each item and has to go somewhere.
+    final down = item.height + g * 2;
+    final wide = math.min(columns, count);
     return Offset(
-      away.dx * (col + 1) * (item.width + g),
-      // Rows stand a gap further apart than columns do, because a caption
-      // hangs under each item and has to go somewhere.
-      away.dy * (row + 1) * (item.height + g * 2),
+      // Told neither side, the block sits centred over the trigger rather
+      // than stacking every column on top of it.
+      away.dx == 0
+          ? (col - (wide - 1) / 2) * across
+          : away.dx.sign * (col + 1) * across,
+      (away.dy == 0 ? -1 : away.dy.sign) * (row + 1) * down,
     );
   }
 
@@ -469,6 +540,7 @@ class FloatButtonDefaults {
     this.color,
     this.size,
     this.layout,
+    this.direction,
     this.trigger,
     this.labelPlacement,
     this.disabled,
@@ -487,6 +559,9 @@ class FloatButtonDefaults {
 
   /// How groups spread their items.
   final FloatButtonLayout? layout;
+
+  /// Which way they travel.
+  final FloatButtonDirection? direction;
 
   /// What opens a group.
   final FloatButtonTrigger? trigger;
@@ -509,6 +584,7 @@ class FloatButtonDefaults {
     ButtonColor? color,
     ControlSize? size,
     FloatButtonLayout? layout,
+    FloatButtonDirection? direction,
     FloatButtonTrigger? trigger,
     FloatButtonLabelPlacement? labelPlacement,
     bool? disabled,
@@ -520,6 +596,7 @@ class FloatButtonDefaults {
         color: color ?? this.color,
         size: size ?? this.size,
         layout: layout ?? this.layout,
+        direction: direction ?? this.direction,
         trigger: trigger ?? this.trigger,
         labelPlacement: labelPlacement ?? this.labelPlacement,
         disabled: disabled ?? this.disabled,
@@ -910,6 +987,7 @@ class FloatButtonGroup<T> extends StatefulWidget {
     super.key,
     required this.items,
     this.layout,
+    this.direction,
     this.icon,
     this.color,
     this.shape,
@@ -936,6 +1014,15 @@ class FloatButtonGroup<T> extends StatefulWidget {
 
   /// How the items spread. Defaults to a column.
   final FloatButtonLayout? layout;
+
+  /// Which way they travel. Defaults to working it out.
+  ///
+  /// Left to itself the group goes up and to the left — where a button in the
+  /// usual corner has to go — unless the items would not fit there, in which
+  /// case it takes the roomier side. Where the room is the same either way it
+  /// leans **neither**, which is what sends a fan on a centred group straight
+  /// up rather than tipping it into a corner.
+  final FloatButtonDirection? direction;
 
   /// The mark on the trigger. Defaults to a plus that turns into a cross.
   final Widget? icon;
@@ -1006,6 +1093,9 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
   Offset _origin = Offset.zero;
   Offset _away = const Offset(-1, -1);
 
+  /// The layout actually used, which is [_layout] unless a run had to wrap.
+  FloatButtonLayout? _wrapped;
+
   bool get _isOpen => widget.controller?.isOpen ?? widget.open ?? _openSelf;
 
   /// Whether the group settles its own state, or reports and waits.
@@ -1016,6 +1106,9 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
 
   FloatButtonLayout get _layout =>
       widget.layout ?? _defaults?.layout ?? const FloatButtonLayout.vertical();
+
+  FloatButtonDirection get _direction =>
+      widget.direction ?? _defaults?.direction ?? FloatButtonDirection.auto;
 
   FloatButtonTrigger get _trigger =>
       widget.trigger ?? _defaults?.trigger ?? FloatButtonTrigger.click;
@@ -1213,6 +1306,61 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     return Offset(dx + item.width / 2, dy + item.height / 2);
   }
 
+  /// Which way to travel along one axis, given the room on either side.
+  ///
+  /// Zero where the two are the same: a group with as much space one way as
+  /// the other has no reason to lean, and saying so is what lets a fan open
+  /// symmetrically instead of tipping into a corner.
+  static double _lean(double before, double after, double need) {
+    if ((before - after).abs() <= 1) return 0;
+    if (before >= need) return -1;
+    if (after >= need) return 1;
+    return before >= after ? -1 : 1;
+  }
+
+  /// Folds a run into a block when it has nowhere left to run.
+  ///
+  /// Twelve items in a row want more width than a phone has, and no direction
+  /// fixes that: whichever way they are sent, the far half ends up off the
+  /// screen where it can be neither reached nor seen. So the run stops being a
+  /// run. The alternative was to let it scroll, which hides the same buttons
+  /// behind an affordance nobody knows to look for.
+  ///
+  /// Both axes, because both have an end: a column of twelve overruns a screen
+  /// as surely as a row does. A fan needs none of this — it widens its own
+  /// radius — and a grid is what this turns into.
+  FloatButtonLayout? _wrapIfCornered(
+    Rect rect,
+    Size screen,
+    Size item,
+    double gap,
+  ) {
+    final layout = _layout;
+    if (layout is! FloatButtonLine) return null;
+    final down = layout.axis == Axis.vertical;
+    final g = layout.gap ?? gap;
+    // The step the *block* will use, not the run's: a grid stands its rows a
+    // gap further apart to leave room for a caption, so measuring with the
+    // run's own spacing would promise a column more items than fit.
+    final step = down ? item.height + g * 2 : item.width + g;
+    if (step <= 0) return null;
+    // The side it will actually travel down — a run told neither takes the
+    // usual one, so the room to measure is the room that way.
+    final room = down
+        ? (_away.dy > 0 ? screen.height - rect.bottom : rect.top)
+        : (_away.dx > 0 ? screen.width - rect.right : rect.left);
+    final fits = (room / step).floor();
+    final count = widget.items.length;
+    if (fits >= count) return null;
+    final lanes = math.max(1, fits);
+    // A row folds into rows of what fits; a column into as many columns as it
+    // takes to get everything inside the height there is.
+    return FloatButtonGrid(
+      down ? (count / lanes).ceil() : lanes,
+      gap: layout.gap,
+    );
+  }
+
   void _measure() {
     final box = _triggerKey.currentContext?.findRenderObject() as RenderBox?;
     final overlayBox =
@@ -1231,14 +1379,23 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
       r.gap,
     );
 
+    final named = _direction.vector;
+    if (named != null) {
+      _away = named;
+      _wrapped =
+          _wrapIfCornered(rect, screen, Size.square(_itemSize(r)), r.gap);
+      return;
+    }
+
     // Up and to the left, which is where a button parked in the usual corner
     // has to go — but only where the items actually fit. Half of the screen is
     // the wrong question: a group a third of the way down has plenty of room
     // above it and no reason to open away from the reach it needs.
     _away = Offset(
-      rect.left >= need.dx || rect.left >= screen.width - rect.right ? -1 : 1,
-      rect.top >= need.dy || rect.top >= screen.height - rect.bottom ? -1 : 1,
+      _lean(rect.left, screen.width - rect.right, need.dx),
+      _lean(rect.top, screen.height - rect.bottom, need.dy),
     );
+    _wrapped = _wrapIfCornered(rect, screen, Size.square(_itemSize(r)), r.gap);
   }
 
   void _tapped(FloatButtonItem<T> item) {
@@ -1294,7 +1451,7 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
 
   Widget _buildLayer(BuildContext overlayContext) {
     final r = _resolved();
-    final layout = _layout;
+    final layout = _wrapped ?? _layout;
     final count = widget.items.length;
     final item = Size.square(_itemSize(r));
     final asked = widget.labelPlacement ??

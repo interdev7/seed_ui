@@ -263,6 +263,9 @@ class _TableDemoState extends State<TableDemo> {
                     title: const Text('City'),
                     sortable: true,
                     value: (p) => p.city,
+                    // A field above the choices, worth it once there are more
+                    // of them than a reader will scan.
+                    filterSearch: true,
                     filters: const [
                       TableFilter('Bristol', 'Bristol'),
                       TableFilter('Galway', 'Galway'),

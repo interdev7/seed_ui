@@ -288,6 +288,13 @@ any of them. Across columns a row has to answer every one, which is what
 narrowing twice means. `filterMultiple: false` makes a column's menu behave as
 a set of radios, so a choice replaces the one before it.
 
+`filterSearch: true` puts a field above the choices for narrowing the menu
+itself, worth it once there are more of them than a reader will scan. What is
+typed is matched against each choice's label, ignoring case and the spaces
+around it; `filterSearchMatch` says what typing means instead — the same shape
+as `sorter` against `sortable`. A choice already ticked stays ticked while it
+is out of sight: narrowing the menu must not quietly drop what was chosen.
+
 Nothing chosen is every row — a filter narrows, and one that has been asked
 for nothing narrows nothing. A column present in the map with an empty list is
 the same thing.
@@ -345,6 +352,7 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `columnMinWidth` | `controlHeightLG × 2.5` — the narrowest a `flex` column is squeezed to |
 | `filterIconSize` | `sizeSM` — how big the funnel is |
 | `filterHoverBg` | `colorFill` — the funnel's own ground under the pointer |
+| `filterSearchWidth` | `140` — how wide the field that narrows a menu is |
 | `filterMenuMaxHeight` | `264` — how tall a filter menu grows before its choices scroll |
 | `headerHoverBg` | `colorFillSecondary` — behind a sortable heading under the pointer, and behind the one being sorted by |
 | `headerMarkActiveColor` | `primary.base` — a mark in force: the caret of the order, a funnel that is narrowing |

@@ -15,6 +15,7 @@ import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
 import '../data_entry/checkbox.dart';
+import '../data_entry/input.dart';
 import '../feedback/spin.dart';
 import '../general/button.dart';
 import '../navigation/dropdown.dart';
@@ -169,6 +170,8 @@ class TableColumn<T> {
     this.filters,
     this.onFilter,
     this.filterMultiple = true,
+    this.filterSearch = false,
+    this.filterSearchMatch,
   })  : assert(
           width == null || flex == null,
           'Give a column a width or a flex, not both: one is a number of '
@@ -192,6 +195,11 @@ class TableColumn<T> {
           filters == null || value != null || onFilter != null,
           'A filtered column needs a value to match, or an onFilter that says '
           'what a choice means itself.',
+        ),
+        assert(
+          (!filterSearch && filterSearchMatch == null) || filters != null,
+          'Searching a filter menu needs a menu to search: give the column '
+          'filters, or leave the search off.',
         ),
         assert(
           fixed == null || width != null,
@@ -262,8 +270,24 @@ class TableColumn<T> {
   /// before it.
   final bool filterMultiple;
 
+  /// Puts a field above the choices for narrowing the menu itself.
+  ///
+  /// Worth it once there are more choices than a reader will scan. What is
+  /// typed is matched against each choice's [TableFilter.label], ignoring
+  /// case and the spaces around it.
+  final bool filterSearch;
+
+  /// How a typed word and a choice are matched, where the label will not do.
+  ///
+  /// Naming one puts the field there, so [filterSearch] need not be set as
+  /// well — the same shape as [sorter] against [sortable].
+  final bool Function(String query, TableFilter choice)? filterSearchMatch;
+
   /// Whether this column filters at all.
   bool get filtersRows => filters != null;
+
+  /// Whether its menu can be searched.
+  bool get filterSearches => filterSearch || filterSearchMatch != null;
 
   /// A width in logical pixels.
   ///
@@ -329,6 +353,7 @@ class TableToken {
     this.filterIconSize,
     this.filterMenuMaxHeight,
     this.filterHoverBg,
+    this.filterSearchWidth,
   });
 
   /// Fill behind the heading row.
@@ -411,6 +436,9 @@ class TableToken {
   /// How tall a filter menu grows before its choices scroll.
   final double? filterMenuMaxHeight;
 
+  /// How wide the field that narrows a filter menu is.
+  final double? filterSearchWidth;
+
   /// Fill behind the funnel itself under the pointer.
   ///
   /// A step stronger than [headerHoverBg], or the mark would not be told
@@ -450,6 +478,7 @@ class TableToken {
         filterIconSize: filterIconSize ?? t.sizeSM,
         filterMenuMaxHeight: filterMenuMaxHeight ?? 264,
         filterHoverBg: filterHoverBg ?? t.colorFill,
+        filterSearchWidth: filterSearchWidth ?? 140,
       );
 }
 
@@ -479,6 +508,7 @@ class _ResolvedTableToken {
     required this.filterIconSize,
     required this.filterMenuMaxHeight,
     required this.filterHoverBg,
+    required this.filterSearchWidth,
   });
 
   final Color headerBg;
@@ -504,6 +534,7 @@ class _ResolvedTableToken {
   final double filterIconSize;
   final double filterMenuMaxHeight;
   final Color filterHoverBg;
+  final double filterSearchWidth;
 }
 
 /// Defaults for every [Table] under a `ConfigProvider`.
@@ -1684,124 +1715,16 @@ class _TableState<T> extends State<Table<T>> {
     VoidCallback close,
     _ResolvedTableToken r,
     Token t,
-  ) {
-    final words = context.seedLocale;
-    final chosen = {...?_filters[index]};
-
-    // `Dropdown.content` is handed straight to the overlay — that is what it
-    // is for, so a caller can draw its own surface. Ours wants the usual one,
-    // and wants to be as wide as its widest choice: the popover offers loose
-    // constraints, and without a panel and an intrinsic width the menu had no
-    // ground of its own and took the whole width of the screen.
-    return DropdownPanel(
-      child: IntrinsicWidth(
-        child: StatefulBuilder(
-          builder: (context, setLocal) {
-            // The same geometry as any other menu in the kit, taken from
-            // `DropdownMenuList` rather than picked: sizeXXS round the list,
-            // and sizeSM either side of a row. A menu that reads as its own
-            // kind of thing is a menu the reader has to learn twice.
-            Widget choice(TableFilter filter) => Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: t.sizeSM,
-                    vertical: t.sizeXXS,
-                  ),
-                  child: Checkbox(
-                    checked: chosen.contains(filter.value),
-                    label: Text(filter.label),
-                    onChanged: (on) => setLocal(() {
-                      // One at a time where the column says so, and the choice
-                      // replaces the one before it rather than joining it.
-                      if (!column.filterMultiple) chosen.clear();
-                      if (on) {
-                        chosen.add(filter.value);
-                      } else {
-                        chosen.remove(filter.value);
-                      }
-                    }),
-                  ),
-                );
-
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // A long list of choices scrolls rather than growing past
-                // the screen.
-                Flexible(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: r.filterMenuMaxHeight,
-                    ),
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: EdgeInsets.all(t.sizeXXS),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final filter in column.filters!)
-                              choice(filter),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // `-filter-dropdown-btns`, to the letter: a rule across the
-                // whole width — the panel clips it to its own corners — then
-                // `paddingXS` either side and `paddingXS - lineWidth` above
-                // and below, so the rule does not add to the height.
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(
-                        color: r.borderColor,
-                        width: t.lineWidth,
-                      ),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: t.sizeXS,
-                      vertical: t.sizeXS - t.lineWidth,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Button(
-                          variant: ButtonVariant.text,
-                          size: SoftSize.small,
-                          onPressed: chosen.isEmpty
-                              ? null
-                              : () {
-                                  _applyFilter(index, const []);
-                                  close();
-                                },
-                          child: Text(words.reset),
-                        ),
-                        SizedBox(width: t.sizeXS),
-                        Button(
-                          variant: ButtonVariant.solid,
-                          color: ButtonColor.primary,
-                          size: SoftSize.small,
-                          onPressed: () {
-                            _applyFilter(index, chosen.toList());
-                            close();
-                          },
-                          child: Text(words.ok),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
+  ) =>
+      _FilterMenu<T>(
+        column: column,
+        chosen: _filters[index] ?? const [],
+        onApply: (chosen) {
+          _applyFilter(index, chosen);
+          close();
+        },
+        r: r,
+      );
 
   /// A heading cell that answers the pointer, where its column sorts.
   ///
@@ -2324,6 +2247,182 @@ class _Carets extends StatelessWidget {
           ),
         ],
       );
+}
+
+/// The menu a funnel opens: the choices, and the two words that end it.
+///
+/// A widget of its own rather than a `StatefulBuilder` closing over locals:
+/// what has been ticked and what has been typed have to outlive a rebuild of
+/// the overlay above, and locals do not — measured, a word typed into the
+/// field was gone by the frame after it.
+class _FilterMenu<T> extends StatefulWidget {
+  const _FilterMenu({
+    required this.column,
+    required this.chosen,
+    required this.onApply,
+    required this.r,
+  });
+
+  final TableColumn<T> column;
+  final List<Object?> chosen;
+  final ValueChanged<List<Object?>> onApply;
+  final _ResolvedTableToken r;
+
+  @override
+  State<_FilterMenu<T>> createState() => _FilterMenuState<T>();
+}
+
+class _FilterMenuState<T> extends State<_FilterMenu<T>> {
+  late final Set<Object?> _chosen = {...widget.chosen};
+  String _query = '';
+
+  /// Whether a choice survives what has been typed.
+  ///
+  /// Case and the spaces around the word are ignored, because nobody typing
+  /// into a menu means either of them.
+  bool _matches(TableFilter choice) {
+    final typed = _query.trim();
+    if (typed.isEmpty) return true;
+    final match = widget.column.filterSearchMatch;
+    if (match != null) return match(typed, choice);
+    return choice.label.toLowerCase().contains(typed.toLowerCase());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.softToken;
+    final r = widget.r;
+    final column = widget.column;
+    final words = context.seedLocale;
+
+    // Chosen but out of sight is still chosen: narrowing the menu must not
+    // quietly drop a choice the reader has already made.
+    final shown = [
+      for (final filter in column.filters!)
+        if (_matches(filter)) filter,
+    ];
+
+    // `Dropdown.content` is handed straight to the overlay — that is what it
+    // is for, so a caller can draw its own surface. Ours wants the usual one,
+    // and wants to be as wide as its widest choice: the popover offers loose
+    // constraints, and without a panel and an intrinsic width the menu had no
+    // ground of its own and took the whole width of the screen.
+    return DropdownPanel(
+      child: IntrinsicWidth(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (column.filterSearches)
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: r.borderColor,
+                      width: t.lineWidth,
+                    ),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(t.sizeXS),
+                  child: SizedBox(
+                    width: r.filterSearchWidth,
+                    child: Input(
+                      size: SoftSize.small,
+                      placeholder: words.search,
+                      onChanged: (typed) => setState(() => _query = typed),
+                    ),
+                  ),
+                ),
+              ),
+            // A long list of choices scrolls rather than growing past the
+            // screen.
+            Flexible(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: r.filterMenuMaxHeight),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    // The same geometry as any other menu in the kit, taken
+                    // from `DropdownMenuList` rather than picked: sizeXXS
+                    // round the list, sizeSM either side of a row. A menu
+                    // that reads as its own kind of thing is one the reader
+                    // has to learn twice.
+                    padding: EdgeInsets.all(t.sizeXXS),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final filter in shown)
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: t.sizeSM,
+                              vertical: t.sizeXXS,
+                            ),
+                            child: Checkbox(
+                              checked: _chosen.contains(filter.value),
+                              label: Text(filter.label),
+                              onChanged: (on) => setState(() {
+                                // One at a time where the column says so, and
+                                // the choice replaces the one before it
+                                // rather than joining it.
+                                if (!column.filterMultiple) _chosen.clear();
+                                if (on) {
+                                  _chosen.add(filter.value);
+                                } else {
+                                  _chosen.remove(filter.value);
+                                }
+                              }),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // A rule across the whole block of buttons — the panel clips it
+            // to its own corners — then sizeXS either side and
+            // sizeXS - lineWidth above and below, so the rule does not add to
+            // the height.
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: r.borderColor, width: t.lineWidth),
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: t.sizeXS,
+                  vertical: t.sizeXS - t.lineWidth,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Button(
+                      variant: ButtonVariant.text,
+                      size: SoftSize.small,
+                      onPressed: _chosen.isEmpty
+                          ? null
+                          : () => widget.onApply(const []),
+                      child: Text(words.reset),
+                    ),
+                    SizedBox(width: t.sizeXS),
+                    Button(
+                      variant: ButtonVariant.solid,
+                      color: ButtonColor.primary,
+                      size: SoftSize.small,
+                      onPressed: () => widget.onApply(_chosen.toList()),
+                      child: Text(words.ok),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// A funnel: the mark at the head of a column that can be narrowed.

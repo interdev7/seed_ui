@@ -2028,6 +2028,96 @@ void main() {
       expect(funnelColour(tester), isNot(idle));
     });
 
+    Widget searchable({
+      bool search = true,
+      bool Function(String, TableFilter)? match,
+    }) =>
+        host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                filterSearch: search,
+                filterSearchMatch: match,
+                filters: const [
+                  TableFilter('Ann', 'Ann'),
+                  TableFilter('Bart', 'Bart'),
+                  TableFilter('Chen', 'Chen'),
+                ],
+              ),
+            ],
+          ),
+        );
+
+    testWidgets('a menu is searched only where the column asks',
+        (tester) async {
+      await tester.pumpWidget(searchable(search: false));
+      await openMenu(tester, 0);
+      expect(find.byType(Input), findsNothing);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(searchable());
+      await openMenu(tester, 0);
+      expect(find.byType(Input), findsOneWidget);
+    });
+
+    testWidgets('typing narrows the menu, ignoring case and spaces',
+        (tester) async {
+      await tester.pumpWidget(searchable());
+      await openMenu(tester, 0);
+      expect(find.byType(Checkbox), findsNWidgets(3));
+
+      await tester.enterText(find.byType(Input), '  aN ');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Checkbox), findsOneWidget);
+      expect(find.widgetWithText(Checkbox, 'Ann'), findsOneWidget);
+    });
+
+    testWidgets('a choice out of sight is still a choice', (tester) async {
+      // Narrowing the menu must not quietly drop what has been ticked.
+      await tester.pumpWidget(searchable());
+      await openMenu(tester, 0);
+      await choose(tester, 'Ann');
+
+      await tester.enterText(find.byType(Input), 'bart');
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(Checkbox, 'Ann'), findsNothing);
+
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(names(tester), ['Ann']);
+    });
+
+    testWidgets('a match of your own says what typing means', (tester) async {
+      // Only where the label begins with what was typed, which a substring
+      // match would not give: 'Bart' holds an 'a' but does not start with one.
+      await tester.pumpWidget(searchable(
+        search: false,
+        match: (typed, choice) => choice.label.startsWith(typed),
+      ));
+      await openMenu(tester, 0);
+      await tester.enterText(find.byType(Input), 'A');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Checkbox), findsOneWidget);
+      expect(find.widgetWithText(Checkbox, 'Ann'), findsOneWidget);
+      expect(find.widgetWithText(Checkbox, 'Bart'), findsNothing);
+    });
+
+    test('searching a menu needs a menu to search', () {
+      expect(
+        () => TableColumn<_User>(
+          title: const Text('Name'),
+          value: (u) => u.name,
+          filterSearch: true,
+        ),
+        throwsAssertionError,
+      );
+    });
+
     test('a column with filters needs something to match on', () {
       expect(
         () => TableColumn<_User>(

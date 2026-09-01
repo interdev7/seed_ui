@@ -147,6 +147,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   side and `sizeXS - lineWidth` above and below so it does not add to the
   height.
 
+  `filterSearch: true` puts a field above the choices for narrowing the menu
+  itself; what is typed is matched against each choice's label, ignoring case
+  and surrounding spaces, and `filterSearchMatch` says what typing means
+  instead. A choice already ticked stays ticked while it is out of sight.
+
   Filtering happens before sorting, and the widths are still
   measured from the rows as given — so a column keeps its width while you
   filter rather than jumping about under the hand.
@@ -189,9 +194,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `import 'package:seed_ui/seed_ui.dart' hide Table;` and the reverse. `Empty`
   gains an `EmptySlot.table` so a kit-wide placeholder covers tables as well.
 
-- **`SeedLocalizations.reset`** — the word that clears a `Table` column's
-  filter menu, next to `ok` which applies it. Translated into the eleven
-  languages the kit already carries.
+- **`SeedLocalizations.reset` and `.search`** — the word that clears a `Table`
+  column's filter menu, next to `ok` which applies it, and the placeholder of
+  the field that narrows one. Both translated into the eleven languages the
+  kit already carries.
 
 ## 0.15.0
 

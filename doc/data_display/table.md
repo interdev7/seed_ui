@@ -117,12 +117,15 @@ and there is nothing to scroll — which is not a fault, but does look like one.
 in the same viewport rather than in one each kept in step by hand, so there is
 only one offset for them to disagree about.
 
-A table that scrolls sideways draws a bar and can be dragged with a mouse, the
-heading travelling with the rows.
-Neither comes free: Flutter leaves the mouse out of `dragDevices`, so a scroll
-view cannot be dragged with one at all, and it draws no scrollbar on the
-horizontal axis. On the web that left a table that scrolled sideways with no
-way to scroll it, since the wheel only goes down.
+A table that scrolls sideways can be dragged with a mouse, the heading
+travelling with the rows. That does not come free: Flutter leaves the mouse out
+of `dragDevices`, so a scroll view cannot be dragged with one at all. On the web
+that left a table that scrolled sideways with no way to scroll it, since the
+wheel only goes down.
+
+No bar is drawn across it, scrolling or still. A bar at the foot of a wide
+table is a line the design did not ask for and it sits over the last row; the
+shade a pinned column casts is what says there is more to see.
 
 ### What scrolling costs
 

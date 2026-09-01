@@ -781,7 +781,7 @@ class _TableState<T> extends State<Table<T>> {
       // Each band scrolls itself; the two are kept together. Only the rows
       // wear the bar — two bars for one table would be one too many.
       return which == _Band.heading
-          ? _across1D(sized, t, _headingX, bar: false)
+          ? _across1D(sized, t, _headingX)
           : _across1D(sized, t, _rowsX);
     }
 
@@ -1072,35 +1072,24 @@ class _TableState<T> extends State<Table<T>> {
   Widget _across1D(
     Widget child,
     Token t,
-    ScrollController controller, {
-    bool bar = true,
-  }) =>
+    ScrollController controller,
+  ) =>
       ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(
           dragDevices: {
             ...ScrollConfiguration.of(context).dragDevices,
             PointerDeviceKind.mouse,
           },
+          // No bar across the foot of a wide table, not even while it is
+          // being scrolled: it is a line the design did not ask for, and it
+          // sits over the last row. What says there is more to see is the
+          // shade a pinned column casts, and the rows moving under the hand.
           scrollbars: false,
         ),
-        // RawScrollbar and not Material's: the kit draws its own chrome from
-        // its own tokens.
-        child: RawScrollbar(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
           controller: controller,
-          // Only while it is being scrolled. A bar standing across the foot
-          // of every wide table is a line the design did not ask for; the
-          // shadow on a pinned column is what says there is more to see.
-          thumbVisibility: false,
-          // The track is never drawn, bar or no bar.
-          trackVisibility: false,
-          thumbColor: t.colorFill,
-          thickness: t.sizeXS,
-          radius: Radius.circular(t.sizeXS),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            controller: controller,
-            child: child,
-          ),
+          child: child,
         ),
       );
 

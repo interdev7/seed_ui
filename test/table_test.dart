@@ -514,15 +514,18 @@ void main() {
       expect(tester.getRect(find.text('N')).left, closeTo(before - 150, 1));
     });
 
-    testWidgets('the bar comes and goes, and never brings a track',
-        (tester) async {
-      // A bar standing across the foot of every wide table is a line the
-      // design did not ask for. The shadow on a pinned column is what says
-      // there is more to see.
+    testWidgets('no bar crosses the table, scrolling or still', (tester) async {
+      // A bar across the foot of a wide table is a line the design did not
+      // ask for, and it sits over the last row. What says there is more to
+      // see is the shade a pinned column casts.
       await tester.pumpWidget(rows(const TableScroll(x: 1200), n: 3));
-      final bar = tester.widget<RawScrollbar>(find.byType(RawScrollbar));
-      expect(bar.thumbVisibility, isFalse);
-      expect(bar.trackVisibility, isFalse);
+      expect(find.byType(RawScrollbar), findsNothing);
+
+      // Not merely hidden at rest: a drag does not bring one out either.
+      await tester.drag(find.text('N'), const Offset(-150, 0));
+      await tester.pump();
+      expect(find.byType(RawScrollbar), findsNothing);
+      await tester.pumpAndSettle();
     });
 
     testWidgets('what the rows cannot use goes back to the page',

@@ -66,8 +66,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   does it, and not a `BoxShadow` behind the pinned pane: a shadow is painted
   behind the box that casts it, and the neighbouring pane is drawn afterwards,
   so the whole cast ended up under a column whose cells are mostly transparent
-  — a grey wash across the column instead of a shade beside it. The scrollbar appears while the table is being
-  scrolled and goes again, and never brings a track.
+  — a grey wash across the column instead of a shade beside it.
+
+  No scrollbar crosses a wide table, scrolling or still: it is a line the
+  design did not ask for and it sits over the last row. The shade a pinned
+  column casts is what says there is more to see.
 
   A table that scrolls sideways answers a mouse drag and carries its heading
   along with the rows. Flutter does neither of the first two by

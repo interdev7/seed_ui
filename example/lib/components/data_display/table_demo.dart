@@ -57,6 +57,7 @@ class _TableDemoState extends State<TableDemo> {
   ControlSize _size = SoftSize.middle;
   bool _bordered = false;
   Person? _tapped;
+  TableSort? _sort;
 
   List<TableColumn<Person>> get _columns => [
     // A value is the whole of most columns: no builder, no ceremony.
@@ -187,6 +188,82 @@ class _TableDemoState extends State<TableDemo> {
                 value: (p) => p.city,
                 builder: (_, p, __) =>
                     Tag(color: TagPreset.processing, child: Text(p.city)),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Sorting',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                onSortChanged: (next) => setState(() => _sort = next),
+                columns: [
+                  // A value is enough: the column knows what to compare.
+                  TableColumn(
+                    title: const Text('Name'),
+                    sortable: true,
+                    value: (p) => p.name,
+                  ),
+                  TableColumn(
+                    title: const Text('City'),
+                    // Sorted by the last letter, which no comparison of the
+                    // words themselves would give.
+                    sorter: (a, b) => a.city
+                        .substring(a.city.length - 1)
+                        .compareTo(b.city.substring(b.city.length - 1)),
+                    value: (p) => p.city,
+                  ),
+                  TableColumn(
+                    title: const Text('Age'),
+                    sortable: true,
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tap a heading: up, then down, then back to the order the '
+                'rows came in. Name and Age compare their values; City is '
+                'told how, and sorts by the last letter. '
+                '${_sort == null ? 'Unsorted.' : 'Sorted by column ${_sort!.column}, ${_sort!.order.name}.'}',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Five hundred rows, sorted',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                scroll: const TableScroll(y: 240),
+                defaultSort: const TableSort(1, TableSortOrder.ascending),
+                data: _crowd,
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    sortable: true,
+                    value: (p) => p.name,
+                  ),
+                  TableColumn(
+                    title: const Text('Age'),
+                    sortable: true,
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Sorting and building only what is on screen are the same '
+                'table: the rows are put in order once, and the ones you can '
+                'see are built from that.',
               ),
             ],
           ),

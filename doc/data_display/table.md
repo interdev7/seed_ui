@@ -198,6 +198,63 @@ transparent, so the cast used to show through the column as a grey wash.
 A `bordered` table rules between every pair of columns, the pinned ones
 included.
 
+## Sorting
+
+`sortable` lets a heading be tapped, and the column's `value` is what it
+compares — which is why most columns need nothing else said.
+
+```dart
+TableColumn(title: const Text('Age'), sortable: true, value: (u) => u.age)
+```
+
+A tap cycles ascending, descending, and back to the order the rows came in,
+as antd's does. The whole heading answers — padding and all, the way antd
+lights up the `th` rather than the word inside it — and lights up under the
+pointer while it is a heading that will do something.
+
+Both carets are always drawn: one alone would say the column *is* sorted that
+way, and a column that merely *can* be sorted has to say so too. They stand at
+the cell's trailing edge rather than beside the word, or a column of headings
+would have each pair at the end of a word of its own length, and a ragged edge
+with it.
+
+`sorter` says how to compare where the value will not do — a date shown as
+`12 Mar` sorts by the date, not by the word. Naming one makes the column
+sortable, so `sortable` need not be set as well.
+
+```dart
+TableColumn(
+  title: const Text('Due'),
+  sorter: (a, b) => a.due.compareTo(b.due),
+  value: (u) => format(u.due),
+)
+```
+
+Two things the table settles on its own:
+
+- **Ties keep the order they came in.** Dart's `sort` is only stable below
+  thirty-two elements, so the row's original place breaks the tie.
+- **A row with nothing in the column goes last**, ascending or descending. The
+  direction is applied to the comparison and not to that rule; turned round
+  with everything else, a blank cell rose to the top of a descending sort.
+
+Left to itself the table keeps its own sort, starting from `defaultSort`.
+Give it `sort` and it shows what it is told and nothing else — pair it with
+`onSortChanged`, or the heading will not answer.
+
+```dart
+Table(
+  sort: _sort,
+  onSortChanged: (next) => setState(() => _sort = next),
+  ...
+)
+```
+
+Sorting and building only what is on screen are the same table: the rows are
+put in order once per data and sort, and the ones in view are built from that.
+The column widths are measured from the rows as given, not as shown — an order
+does not change how wide a word is, so sorting never re-measures.
+
 ## Around the rows
 
 | Prop | |
@@ -225,36 +282,38 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `cellPaddingInline`, `cellPaddingInlineSM`, `cellPaddingInlineLG` | 16, 8, 20 |
 | `footerBg`, `borderRadius`, `fontSize` | |
 | `columnMinWidth` | `controlHeightLG × 2.5` — the narrowest a `flex` column is squeezed to |
+| `headerHoverBg` | `colorFillSecondary` — behind a sortable heading under the pointer |
+| `sortActiveColor` | `primary.base` — the caret standing for the order in force |
+| `sortIdleColor` | `colorTextQuaternary` — the other one, saying only that the column sorts |
+| `sortCaretSize` | `sizeXXS` — how tall each caret is |
 | `pinnedShadowColor` | black at 15% (32% dark) — the shade a pinned column casts over the rows going past it |
 | `pinnedShadowExtent` | `sizeLG` — how far that shade reaches before it has faded out |
 
 ## How many rows
 
-Every row is built, not just the ones on screen: five hundred rows measure four
-thousand widgets. That is fine for a page of rows — which, with pagination, is
-what a table usually holds — and too slow for thousands.
+A table with a `scroll.y` builds only the rows on screen, so the count no
+longer costs anything: three hundred rows and three thousand build the same
+hundred-odd cells. Measured over twenty scroll ticks on three thousand rows of
+fifteen columns, against the same table before the viewport:
 
-It is worth being exact about where the cost is, because the obvious answer is
-wrong. **Scrolling rebuilds nothing**: counted over twenty ticks on three
-hundred rows, the table rebuilds zero times, a cell zero times. What costs is
-painting three thousand widgets that are mostly off screen. So the usual
-advice — memoise the widths, hoist the `EdgeInsets`, make each row a
-`StatefulWidget` — buys nothing here, because none of that runs.
-
-Repaint boundaries do help, since they let a layer be re-offered instead of
-repainted. Measured over twenty ticks on three hundred rows with a pinned
-column:
-
-| | sideways | downwards |
+| | paragraphs in the tree | twenty ticks |
 | --- | --- | --- |
-| before | 334ms | 135ms |
-| with them | 210ms | 103ms |
+| before | 45015 | 5215ms |
+| now | 114 | 184ms |
 
-The cure is still to build only what is on screen, and that needs a
-two-dimensional viewport with the column widths worked out by hand rather than
-by Flutter's `Table`. It is the next piece of work on this component.
+A table with no `scroll.y` still builds every row, which is right: there is
+nothing to virtualise in a table you can see all of.
+
+The other cost is measuring, and it is worth being exact about it. Measuring is
+exact and so proportional to the data — five hundred rows of fifteen columns is
+seven and a half thousand strings, and at fifteen microseconds each that is a
+hundred and seventeen milliseconds. That was paid on every rebuild above the
+table: a tap on a row cost all of it. The answer is now kept and only worked
+out again when the question changes, which brought that tap to sixteen
+milliseconds. The rows are compared element by element rather than by the
+list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-Lazy rows, sorting, filtering, row selection, expandable rows and pagination
-are still to come, in that order.
+Filtering, row selection, expandable rows and pagination are still to come, in
+that order.

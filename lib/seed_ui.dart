@@ -99,6 +99,8 @@ export 'src/components/data_display/table.dart'
         TableColumnFixed,
         TableDefaults,
         TableScroll,
+        TableSort,
+        TableSortOrder,
         TableToken;
 export 'src/components/data_display/tabs.dart'
     show

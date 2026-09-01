@@ -29,6 +29,49 @@ enum TableAlign {
   end,
 }
 
+/// Which way a column is sorted.
+///
+/// Not sorted at all is a [TableSort] of `null` rather than a third case
+/// here: a column with no order is not sorted by, and saying so twice would
+/// let the two disagree.
+enum TableSortOrder {
+  /// Least first.
+  ascending,
+
+  /// Greatest first.
+  descending;
+
+  /// The other one.
+  TableSortOrder get opposite => this == ascending ? descending : ascending;
+}
+
+/// Which column a table is sorted by, and which way.
+@immutable
+class TableSort {
+  /// Creates a [TableSort].
+  const TableSort(this.column, this.order);
+
+  /// The column's place in [Table.columns].
+  ///
+  /// Its place rather than a name of its own: a column's identity is where it
+  /// was listed, and a table with a name for every column would be a name to
+  /// keep in step with nothing asking for it.
+  final int column;
+
+  /// Which way that column is sorted.
+  final TableSortOrder order;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TableSort && other.column == column && other.order == order;
+
+  @override
+  int get hashCode => Object.hash(column, order);
+
+  @override
+  String toString() => 'TableSort($column, ${order.name})';
+}
+
 /// How much room a [Table] gives itself, and which way it scrolls.
 ///
 /// ```dart
@@ -94,6 +137,8 @@ class TableColumn<T> {
     this.headerAlign,
     this.fixed,
     this.ellipsis = false,
+    this.sortable = false,
+    this.sorter,
   })  : assert(
           width == null || flex == null,
           'Give a column a width or a flex, not both: one is a number of '
@@ -102,6 +147,11 @@ class TableColumn<T> {
         assert(
           value != null || builder != null,
           'A column needs a value to read, a builder to draw with, or both.',
+        ),
+        assert(
+          !sortable || value != null || sorter != null,
+          'A sortable column needs a value to compare, or a sorter that says '
+          'how to compare the rows itself.',
         ),
         assert(
           fixed == null || width != null,
@@ -130,6 +180,23 @@ class TableColumn<T> {
 
   /// What stands at the head of the column.
   final Widget? title;
+
+  /// Lets the heading be tapped to sort the table by this column.
+  ///
+  /// The [value] is what is compared, which is why most columns need nothing
+  /// else said. Tapping cycles ascending, descending, and back to the order
+  /// the rows came in.
+  final bool sortable;
+
+  /// How two rows compare, where the [value] will not do.
+  ///
+  /// Naming one makes the column sortable, so [sortable] need not be set as
+  /// well. Use it where the value is not what the reader is sorting by — a
+  /// date shown as `12 Mar` sorts by the date, not by the word.
+  final int Function(T a, T b)? sorter;
+
+  /// Whether this column sorts at all.
+  bool get sorts => sortable || sorter != null;
 
   /// A width in logical pixels.
   ///
@@ -188,6 +255,10 @@ class TableToken {
     this.columnMinWidth,
     this.pinnedShadowColor,
     this.pinnedShadowExtent,
+    this.headerHoverBg,
+    this.sortActiveColor,
+    this.sortIdleColor,
+    this.sortCaretSize,
   });
 
   /// Fill behind the heading row.
@@ -248,6 +319,21 @@ class TableToken {
   /// How far that shade reaches over the rows before it has faded out.
   final double? pinnedShadowExtent;
 
+  /// Fill behind a sortable heading under the pointer.
+  ///
+  /// Only a heading that sorts takes one: a heading that does nothing has no
+  /// business lighting up under the hand.
+  final Color? headerHoverBg;
+
+  /// Colour of the caret standing for the order a column is sorted in.
+  final Color? sortActiveColor;
+
+  /// Colour of the other one, which is only there to say the column sorts.
+  final Color? sortIdleColor;
+
+  /// How tall each of the two carets is.
+  final double? sortCaretSize;
+
   _ResolvedTableToken _resolve(Token t) => _ResolvedTableToken(
         headerBg: headerBg ?? t.colorFillQuaternary,
         headerColor: headerColor ?? t.colorText,
@@ -274,6 +360,10 @@ class TableToken {
         pinnedShadowColor: pinnedShadowColor ??
             alphaOn(const Color(0xFF000000), t.isDark ? 0.32 : 0.15),
         pinnedShadowExtent: pinnedShadowExtent ?? t.sizeLG,
+        headerHoverBg: headerHoverBg ?? t.colorFillSecondary,
+        sortActiveColor: sortActiveColor ?? t.primary.base,
+        sortIdleColor: sortIdleColor ?? t.colorTextQuaternary,
+        sortCaretSize: sortCaretSize ?? t.sizeXXS,
       );
 }
 
@@ -296,6 +386,10 @@ class _ResolvedTableToken {
     required this.columnMinWidth,
     required this.pinnedShadowColor,
     required this.pinnedShadowExtent,
+    required this.headerHoverBg,
+    required this.sortActiveColor,
+    required this.sortIdleColor,
+    required this.sortCaretSize,
   });
 
   final Color headerBg;
@@ -314,6 +408,10 @@ class _ResolvedTableToken {
   final double columnMinWidth;
   final Color pinnedShadowColor;
   final double pinnedShadowExtent;
+  final Color headerHoverBg;
+  final Color sortActiveColor;
+  final Color sortIdleColor;
+  final double sortCaretSize;
 }
 
 /// Defaults for every [Table] under a `ConfigProvider`.
@@ -382,6 +480,9 @@ class Table<T> extends StatefulWidget {
     this.empty,
     this.loading = false,
     this.onRowTap,
+    this.sort,
+    this.defaultSort,
+    this.onSortChanged,
     this.token,
   });
 
@@ -431,6 +532,21 @@ class Table<T> extends StatefulWidget {
   /// Called when a row is tapped.
   final void Function(T record, int index)? onRowTap;
 
+  /// Which column the table is sorted by, and which way (controlled).
+  ///
+  /// Left null the table keeps its own, starting from [defaultSort]. Give it
+  /// a value and the table shows what it is told and nothing else — pair it
+  /// with [onSortChanged] or the heading will not answer.
+  final TableSort? sort;
+
+  /// What it is sorted by to begin with (uncontrolled).
+  final TableSort? defaultSort;
+
+  /// Called when a heading is tapped, with what the sort has become.
+  ///
+  /// Null where the rows have gone back to the order they came in.
+  final ValueChanged<TableSort?>? onSortChanged;
+
   /// Per-instance token overrides.
   final TableToken? token;
 
@@ -447,6 +563,9 @@ class _TableState<T> extends State<Table<T>> {
   /// ninety milliseconds a move. It lives in the cell now, and only the two
   /// rows that changed listen.
   final ValueNotifier<int?> _hovered = ValueNotifier<int?>(null);
+
+  /// Which heading the pointer is over, or null.
+  final ValueNotifier<int?> _hoveredHeading = ValueNotifier<int?>(null);
 
   /// The rows' offset across, and the heading's, kept together.
   ///
@@ -521,6 +640,7 @@ class _TableState<T> extends State<Table<T>> {
     _rowsX.dispose();
     _headingX.dispose();
     _hovered.dispose();
+    _hoveredHeading.dispose();
     _acrossOffset.dispose();
     _measured.dispose();
     super.dispose();
@@ -711,6 +831,9 @@ class _TableState<T> extends State<Table<T>> {
         ._resolve(t);
 
     final rule = BorderSide(color: r.borderColor, width: t.lineWidth);
+    // Every band draws the rows in the order they are shown, and the title
+    // and summary are handed the same order.
+    final rows = _rows;
     flutter.TableRow headingRow(List<TableColumn<T>> columns) =>
         flutter.TableRow(
           decoration: BoxDecoration(
@@ -719,30 +842,28 @@ class _TableState<T> extends State<Table<T>> {
           ),
           children: [
             for (final column in columns)
-              _cell(
-                DefaultTextStyle.merge(
-                  style: TextStyle(
-                    color: r.headerColor,
-                    fontWeight: t.fontWeightStrong,
-                  ),
-                  child: column.title ?? const SizedBox.shrink(),
+              _headingCell(
+                _cell(
+                  _heading(column, widget.columns.indexOf(column), r, t),
+                  column,
+                  column.headerAlign ?? column.align ?? TableAlign.start,
+                  r,
+                  t,
                 ),
                 column,
-                column.headerAlign ?? column.align ?? TableAlign.start,
+                widget.columns.indexOf(column),
                 r,
-                t,
               ),
           ],
         );
 
     List<flutter.TableRow> dataRowsOf(List<TableColumn<T>> columns) => [
-          for (var i = 0; i < widget.data.length; i++)
+          for (var i = 0; i < rows.length; i++)
             flutter.TableRow(
               decoration: BoxDecoration(
                 // Every row but the last carries the rule below it, so the
                 // table does not end on a line hanging under nothing.
-                border:
-                    i == widget.data.length - 1 ? null : Border(bottom: rule),
+                border: i == rows.length - 1 ? null : Border(bottom: rule),
               ),
               children: [
                 for (final column in columns) _rowCell(i, column, r, t),
@@ -1021,7 +1142,7 @@ class _TableState<T> extends State<Table<T>> {
             Container(
               padding: _cellPadding(r, t),
               decoration: BoxDecoration(border: Border(bottom: rule)),
-              child: widget.header!(context, widget.data),
+              child: widget.header!(context, rows),
             ),
           table,
           if (widget.footer != null)
@@ -1031,7 +1152,7 @@ class _TableState<T> extends State<Table<T>> {
                 color: r.footerBg,
                 border: Border(top: rule),
               ),
-              child: widget.footer!(context, widget.data),
+              child: widget.footer!(context, rows),
             ),
         ],
       ),
@@ -1080,6 +1201,105 @@ class _TableState<T> extends State<Table<T>> {
   /// measured. The answer only changes when the question does.
   _TableWidths? _widths;
   Object? _widthsAsked;
+
+  /// The sort the table keeps for itself while nobody is controlling it.
+  TableSort? _ownSort;
+  bool _startedSort = false;
+
+  /// The sort in force: the one given, or the one the table is keeping.
+  TableSort? get _sort {
+    if (widget.sort != null) return widget.sort;
+    if (!_startedSort) {
+      _startedSort = true;
+      _ownSort = widget.defaultSort;
+    }
+    return _ownSort;
+  }
+
+  /// The rows in the order they are shown.
+  ///
+  /// Sorted once per data and sort rather than per build, and stable: rows
+  /// that compare equal stay in the order they were given, so sorting by a
+  /// column with ties does not shuffle the rest.
+  List<T>? _rowsCache;
+  Object? _rowsAsked;
+
+  List<T> get _rows {
+    final sort = _sort;
+    if (sort == null ||
+        sort.column < 0 ||
+        sort.column >= widget.columns.length) {
+      return widget.data;
+    }
+    final column = widget.columns[sort.column];
+    if (!column.sorts) return widget.data;
+
+    final asked = Object.hash(identityHashCode(widget.data), sort);
+    if (_rowsAsked == asked && _rowsCache != null) return _rowsCache!;
+
+    final ascending = sort.order == TableSortOrder.ascending;
+    final sorter = column.sorter;
+
+    // Kept beside the row rather than read inside the comparison: a sort asks
+    // for the same value again and again, and the index is what breaks a tie
+    // — Dart's sort is not stable, and twenty rows of one value came out
+    // shuffled without it.
+    final keyed = [
+      for (var i = 0; i < widget.data.length; i++)
+        (
+          i,
+          widget.data[i],
+          sorter == null ? column.value!(widget.data[i]) : null
+        ),
+    ]..sort((a, b) {
+        final by = sorter != null
+            ? (ascending ? sorter(a.$2, b.$2) : sorter(b.$2, a.$2))
+            : _compare(a.$3, b.$3, ascending: ascending);
+        return by != 0 ? by : a.$1.compareTo(b.$1);
+      });
+
+    _rowsAsked = asked;
+    return _rowsCache = [for (final row in keyed) row.$2];
+  }
+
+  /// Comparing two of the values a column reads.
+  ///
+  /// A row with nothing in the column goes last whichever way round, so the
+  /// direction is applied to the comparison and not to that rule — turned
+  /// round with everything else, a blank cell rose to the top of a descending
+  /// sort, which is not what a blank cell means.
+  ///
+  /// A value that cannot be compared leaves the rows where they are rather
+  /// than throwing: a column of mixed types is a mistake, but not one worth a
+  /// crash in the middle of a table.
+  static int _compare(Object? a, Object? b, {required bool ascending}) {
+    if (a == null && b == null) return 0;
+    if (a == null) return 1;
+    if (b == null) return -1;
+    if (a is! Comparable || b is! Comparable) return 0;
+    final int by;
+    try {
+      by = Comparable.compare(a, b);
+    } on TypeError {
+      return 0;
+    }
+    return ascending ? by : -by;
+  }
+
+  /// What a tap on a sortable heading makes of the sort.
+  ///
+  /// Ascending, then descending, then back to the order the rows came in —
+  /// which is antd's cycle, and the one a reader expects from a third tap.
+  void _cycleSort(int column) {
+    final was = _sort;
+    final next = was == null || was.column != column
+        ? TableSort(column, TableSortOrder.ascending)
+        : was.order == TableSortOrder.ascending
+            ? TableSort(column, TableSortOrder.descending)
+            : null;
+    if (widget.sort == null) setState(() => _ownSort = next);
+    widget.onSortChanged?.call(next);
+  }
 
   /// The rows the cached widths were measured from, kept to be compared
   /// against the next lot.
@@ -1165,7 +1385,79 @@ class _TableState<T> extends State<Table<T>> {
           },
       ];
 
-  /// One cell of the lazy body: a heading when it is the top row, a data cell
+  /// The heading's content: its title, and where the column sorts, the pair
+  /// of carets at the far edge of the cell.
+  Widget _heading(
+    TableColumn<T> column,
+    int index,
+    _ResolvedTableToken r,
+    Token t,
+  ) {
+    final title = DefaultTextStyle.merge(
+      style: TextStyle(color: r.headerColor, fontWeight: t.fontWeightStrong),
+      child: column.title ?? const SizedBox.shrink(),
+    );
+    if (!column.sorts) return title;
+
+    final sort = _sort;
+    // The carets stand at the cell's trailing edge rather than beside the
+    // word, as antd's do: a column of headings whose carets each sat at the
+    // end of a word of its own length is a ragged edge.
+    return Row(
+      children: [
+        Expanded(
+          child: Align(
+            alignment: _alignment(
+              column.headerAlign ?? column.align ?? TableAlign.start,
+            ),
+            child: title,
+          ),
+        ),
+        SizedBox(width: t.sizeXXS),
+        _Carets(
+          order: sort?.column == index ? sort!.order : null,
+          active: r.sortActiveColor,
+          idle: r.sortIdleColor,
+          size: r.sortCaretSize,
+        ),
+      ],
+    );
+  }
+
+  /// A heading cell that answers the pointer, where its column sorts.
+  ///
+  /// The whole cell, padding and all — antd lights up the `th` and not the
+  /// word inside it, and a heading you have to hit exactly is a heading you
+  /// miss.
+  Widget _headingCell(
+    Widget cell,
+    TableColumn<T> column,
+    int index,
+    _ResolvedTableToken r,
+  ) {
+    if (!column.sorts) return cell;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => _hoveredHeading.value = index,
+      onExit: (_) {
+        if (_hoveredHeading.value == index) _hoveredHeading.value = null;
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _cycleSort(index),
+        child: ValueListenableBuilder<int?>(
+          valueListenable: _hoveredHeading,
+          builder: (context, hovered, child) => ColoredBox(
+            color: hovered == index ? r.headerHoverBg : const Color(0x00000000),
+            child: child,
+          ),
+          child: cell,
+        ),
+      ),
+    );
+  }
+
+  /// One cell of the lazy body:  /// One cell of the lazy body: a heading when it is the top row, a data cell
   /// otherwise.
   Widget _lazyCell(
     ChildVicinity at,
@@ -1177,7 +1469,7 @@ class _TableState<T> extends State<Table<T>> {
     final column = columns[at.xIndex];
     final heading = _showHeader && at.yIndex == 0;
     final index = at.yIndex - (_showHeader ? 1 : 0);
-    final last = index == widget.data.length - 1;
+    final last = index == _rows.length - 1;
 
     final border = Border(
       bottom: heading || !last ? rule : BorderSide.none,
@@ -1188,23 +1480,22 @@ class _TableState<T> extends State<Table<T>> {
     if (heading) {
       return DecoratedBox(
         decoration: BoxDecoration(color: r.headerBg, border: border),
-        child: _padded(
-          DefaultTextStyle.merge(
-            style: TextStyle(
-              color: r.headerColor,
-              fontWeight: t.fontWeightStrong,
-            ),
-            child: column.title ?? const SizedBox.shrink(),
+        child: _headingCell(
+          _padded(
+            _heading(column, at.xIndex, r, t),
+            column,
+            column.headerAlign ?? column.align ?? TableAlign.start,
+            r,
+            t,
           ),
           column,
-          column.headerAlign ?? column.align ?? TableAlign.start,
+          at.xIndex,
           r,
-          t,
         ),
       );
     }
 
-    final record = widget.data[index];
+    final record = _rows[index];
     Widget cell = DecoratedBox(
       decoration: BoxDecoration(border: border),
       child: _padded(
@@ -1303,7 +1594,7 @@ class _TableState<T> extends State<Table<T>> {
               // state no cell has.
               addAutomaticKeepAlives: false,
               maxXIndex: columns.length - 1,
-              maxYIndex: widget.data.length - 1 + (_showHeader ? 1 : 0),
+              maxYIndex: _rows.length - 1 + (_showHeader ? 1 : 0),
               builder: (context, vicinity) =>
                   _lazyCell(vicinity, columns, r, t, rule),
             ),
@@ -1384,7 +1675,7 @@ class _TableState<T> extends State<Table<T>> {
     _ResolvedTableToken r,
     Token t,
   ) {
-    final record = widget.data[index];
+    final record = _rows[index];
     Widget cell = _cell(
       column.builder?.call(context, record, index) ?? _text(column, record),
       column,
@@ -1608,6 +1899,74 @@ class _TableWidths {
     painter.dispose();
     return width;
   }
+}
+
+/// The pair of carets at the head of a sortable column.
+///
+/// Both are always drawn, as antd draws them: one caret alone would say the
+/// column is sorted that way, and a column that merely can be sorted has to
+/// say so too. The one standing for the order in force is the one coloured.
+class _Carets extends StatelessWidget {
+  const _Carets({
+    required this.order,
+    required this.active,
+    required this.idle,
+    required this.size,
+  });
+
+  final TableSortOrder? order;
+  final Color active;
+  final Color idle;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CustomPaint(
+            size: Size(size * 1.6, size),
+            painter: _CaretPainter(
+              order == TableSortOrder.ascending ? active : idle,
+              up: true,
+            ),
+          ),
+          SizedBox(height: size * 0.3),
+          CustomPaint(
+            size: Size(size * 1.6, size),
+            painter: _CaretPainter(
+              order == TableSortOrder.descending ? active : idle,
+              up: false,
+            ),
+          ),
+        ],
+      );
+}
+
+class _CaretPainter extends CustomPainter {
+  const _CaretPainter(this.color, {required this.up});
+
+  final Color color;
+  final bool up;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+    if (up) {
+      path
+        ..moveTo(size.width / 2, 0)
+        ..lineTo(size.width, size.height)
+        ..lineTo(0, size.height);
+    } else {
+      path
+        ..moveTo(0, 0)
+        ..lineTo(size.width, 0)
+        ..lineTo(size.width / 2, size.height);
+    }
+    canvas.drawPath(path..close(), Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_CaretPainter old) => old.color != color || old.up != up;
 }
 
 /// The rows of a scrolling table, built as they come into view.

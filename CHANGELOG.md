@@ -80,6 +80,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tall as a still one's. A table with no `scroll.y` keeps the grid it had,
   where a cell that wraps still grows its row.
 
+  **Sorting.** `sortable: true` on a column lets its heading be tapped, and the
+  column's `value` is what is compared — most columns need nothing else said.
+  A tap cycles ascending, descending, and back to the order the rows came in,
+  as antd's does. The whole heading answers it — padding and all, the way antd
+  lights up the `th` and not the word inside it — and lights up under the
+  pointer while it is a heading that will do something. Both carets are always
+  drawn: one alone would say the column *is* sorted that way, where a column
+  that merely *can* be sorted has to say so too. They stand at the cell's
+  trailing edge, or a column of headings would carry each pair at the end of a
+  word of its own length. `sorter` says how to compare where the value will not do, and
+  naming one makes the column sortable by itself.
+
+  ```dart
+  Table<User>(
+    data: users,
+    defaultSort: const TableSort(1, TableSortOrder.ascending),
+    columns: [
+      TableColumn(title: const Text('Name'), sortable: true, value: (u) => u.name),
+      TableColumn(title: const Text('Age'), sortable: true, value: (u) => u.age),
+    ],
+  )
+  ```
+
+  Ties keep the order they came in — Dart's `sort` is only stable below
+  thirty-two elements, so the row's original place breaks the tie — and a row
+  with nothing in the column goes last whichever way round: the direction is
+  applied to the comparison and not to that rule, and turned round with
+  everything else a blank cell rose to the top of a descending sort. Left
+  alone the table keeps its own sort from `defaultSort`; given `sort` it shows
+  what it is told and `onSortChanged` says what a tap would have made of it.
+
+  Sorting and building only what is on screen are the same table: the rows are
+  put in order once per data and sort, and the widths are measured from the
+  rows as given rather than as shown — an order does not change how wide a
+  word is, so sorting never re-measures.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

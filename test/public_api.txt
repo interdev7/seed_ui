@@ -245,6 +245,8 @@ TableColumn
 TableColumnFixed
 TableDefaults
 TableScroll
+TableSort
+TableSortOrder
 TableToken
 Tabs
 TabsController

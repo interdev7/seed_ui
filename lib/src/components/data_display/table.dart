@@ -1071,6 +1071,65 @@ class _TableState<T> extends State<Table<T>> {
     return Spin(spinning: widget.loading, child: body);
   }
 
+  /// What the last width reckoning was asked, and what it answered.
+  ///
+  /// Measuring is exact and therefore proportional to the data: five hundred
+  /// rows of fifteen columns is seven and a half thousand strings, and at
+  /// fifteen microseconds each that is a hundred and seventeen milliseconds
+  /// every time anything above the table calls `setState` — a tap on a row,
+  /// measured. The answer only changes when the question does.
+  _TableWidths? _widths;
+  Object? _widthsAsked;
+
+  /// The rows the cached widths were measured from, kept to be compared
+  /// against the next lot.
+  List<T>? _measuredRows;
+
+  /// Whether the rows are the rows that were measured.
+  ///
+  /// Element by element, not by the list's identity: `data: [...]` written
+  /// inline is a new list on every build and would never match, which is most
+  /// of the callers. A comparison costs a few microseconds where measuring
+  /// the same rows costs a hundred and seventeen milliseconds, so it is worth
+  /// making even when it fails.
+  bool _sameRows() {
+    final was = _measuredRows;
+    if (was == null || was.length != widget.data.length) return false;
+    for (var i = 0; i < was.length; i++) {
+      if (was[i] != widget.data[i]) return false;
+    }
+    return true;
+  }
+
+  /// The rest of the question: everything but the rows.
+  ///
+  /// The columns cannot be compared by identity either — a `columns:` list is
+  /// usually built fresh on every build, closures and all — so what is
+  /// compared is the shape of them, which is what the widths are worked out
+  /// from.
+  Object _ask(
+    List<TableColumn<T>> columns,
+    double available,
+    TextStyle style,
+    double inlinePadding,
+    TextScaler scaler,
+  ) =>
+      Object.hash(
+        available,
+        style,
+        inlinePadding,
+        scaler,
+        Object.hashAll([
+          for (final column in columns) ...[
+            column.width,
+            column.flex,
+            column.fixed,
+            column.ellipsis,
+            switch (column.title) { Text(:final data) => data, _ => null },
+          ],
+        ]),
+      );
+
   /// The columns in the order the lazy body wants them: pinned to the start,
   /// then the ones that travel, then pinned to the end.
   ///
@@ -1189,28 +1248,35 @@ class _TableState<T> extends State<Table<T>> {
     final columns = _ordered;
     final style = _bodyStyle(r, t);
     final inline = _cellPadding(r, t).horizontal;
+    final scaler = MediaQuery.textScalerOf(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final widths = _TableWidths.resolve<T>(
-          columns: columns,
-          data: widget.data,
-          available: math.max(
-            constraints.hasBoundedWidth ? constraints.maxWidth : 0,
-            _across ?? 0,
-          ),
-          bodyStyle: style,
-          inlinePadding: inline,
-          minWidth: r.columnMinWidth,
-          textScaler: MediaQuery.textScalerOf(context),
-          textDirection: Directionality.of(context),
-          headerNatural: _headingWidths(
-            columns,
-            style.copyWith(fontWeight: t.fontWeightStrong),
-            inline,
-          ),
-          builderNatural: List<double?>.filled(columns.length, null),
+        final available = math.max(
+          constraints.hasBoundedWidth ? constraints.maxWidth : 0.0,
+          _across ?? 0.0,
         );
+        final asked = _ask(columns, available, style, inline, scaler);
+        final widths = _widthsAsked == asked && _widths != null && _sameRows()
+            ? _widths!
+            : _widths = _TableWidths.resolve<T>(
+                columns: columns,
+                data: widget.data,
+                available: available,
+                bodyStyle: style,
+                inlinePadding: inline,
+                minWidth: r.columnMinWidth,
+                textScaler: scaler,
+                textDirection: Directionality.of(context),
+                headerNatural: _headingWidths(
+                  columns,
+                  style.copyWith(fontWeight: t.fontWeightStrong),
+                  inline,
+                ),
+                builderNatural: List<double?>.filled(columns.length, null),
+              );
+        _widthsAsked = asked;
+        _measuredRows = widget.data;
 
         return ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(
@@ -1231,6 +1297,11 @@ class _TableState<T> extends State<Table<T>> {
             verticalDetails: const ScrollableDetails.vertical(),
             horizontalDetails: const ScrollableDetails.horizontal(),
             delegate: TwoDimensionalChildBuilderDelegate(
+              // Nothing in a cell wants keeping alive, and the default wraps
+              // every one of them in an AutomaticKeepAlive and a selection
+              // listener — two elements and two notifications a cell, for a
+              // state no cell has.
+              addAutomaticKeepAlives: false,
               maxXIndex: columns.length - 1,
               maxYIndex: widget.data.length - 1 + (_showHeader ? 1 : 0),
               builder: (context, vicinity) =>
@@ -1682,7 +1753,9 @@ class _RenderRows extends RenderTwoDimensionalViewport {
         _pinnedStart = pinnedStart,
         _pinnedEnd = pinnedEnd,
         _shadeColor = shadeColor,
-        _shadeExtent = shadeExtent;
+        _shadeExtent = shadeExtent {
+    _measureColumns();
+  }
 
   List<double> _widths;
 
@@ -1697,6 +1770,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   set widths(List<double> value) {
     if (_sameWidths(value)) return;
     _widths = value;
+    _measureColumns();
     markNeedsLayout();
   }
 
@@ -1761,22 +1835,25 @@ class _RenderRows extends RenderTwoDimensionalViewport {
         CacheExtentStyle.viewport => scrollCacheExtent.value * mainAxisExtent,
       };
 
-  /// Where a column starts, measured from the first column.
-  double _startOf(int column) {
-    var x = 0.0;
-    for (var i = 0; i < column; i++) {
-      x += _widths[i];
+  /// Where each column starts, worked out once when the widths change.
+  ///
+  /// Walking the widths per cell made the layout quadratic in the columns,
+  /// and a table wide enough to want virtualising is exactly the one with
+  /// enough columns for that to tell.
+  List<double> _starts = const [];
+
+  void _measureColumns() {
+    final starts = List<double>.filled(_widths.length + 1, 0);
+    for (var i = 0; i < _widths.length; i++) {
+      starts[i + 1] = starts[i] + _widths[i];
     }
-    return x;
+    _starts = starts;
   }
 
-  double _extent(int from, int to) {
-    var w = 0.0;
-    for (var i = from; i < to; i++) {
-      w += _widths[i];
-    }
-    return w;
-  }
+  /// Where a column starts, measured from the first column.
+  double _startOf(int column) => _starts[column];
+
+  double _extent(int from, int to) => _starts[to] - _starts[from];
 
   void _place(int column, int row, double dx, double dy) {
     final child = buildOrObtainChildFor(

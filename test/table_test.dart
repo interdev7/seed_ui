@@ -511,6 +511,49 @@ void main() {
       );
     });
 
+    testWidgets('the widths are measured again only when they would change',
+        (tester) async {
+      // Measuring is exact and so proportional to the data: five hundred rows
+      // of two columns is a thousand strings, and every rebuild above the
+      // table paid for all of them. Measured on fifteen columns, a tap on a
+      // row cost a hundred and seventeen milliseconds.
+      var built = 0;
+      Widget host(List<int> data) => _host(
+            StatefulBuilder(
+              builder: (context, setState) => Table<int>(
+                scroll: const TableScroll(y: 200),
+                onRowTap: (_, __) => setState(() {}),
+                columns: [
+                  TableColumn<int>(
+                    title: const Text('N'),
+                    value: (v) {
+                      built++;
+                      return 'row $v';
+                    },
+                  ),
+                ],
+                data: data,
+              ),
+            ),
+            width: 400,
+          );
+
+      // A fresh list every build, which is how a `data:` written inline
+      // behaves — so the rows are compared, not the list.
+      await tester.pumpWidget(host([for (var i = 0; i < 200; i++) i]));
+      await tester.pumpAndSettle();
+      built = 0;
+
+      await tester.tap(find.text('row 1'));
+      await tester.pumpAndSettle();
+      expect(built, lessThan(50), reason: 'the rows on screen, and no more');
+
+      // Different rows, though, and the question has changed.
+      await tester.pumpWidget(host([for (var i = 0; i < 200; i++) i + 1000]));
+      await tester.pumpAndSettle();
+      expect(built, greaterThan(200), reason: 'every row was measured again');
+    });
+
     testWidgets('only the rows on screen are built', (tester) async {
       // Five hundred rows of two columns is a thousand cells, and building
       // them all to show a dozen was the whole of what scrolling cost.

@@ -137,7 +137,10 @@ twenty scroll ticks from five thousand two hundred milliseconds to a hundred
 and eighty-four. The count no longer moves with the data — three hundred rows
 and three thousand build the same hundred-odd cells.
 
-Columns still fit their content. A lazy body cannot ask them to negotiate — the
+Columns still fit their content, and are measured again only when the answer
+would change — the rows are compared element by element first, which costs
+microseconds where measuring them costs milliseconds. A lazy body cannot ask
+them to negotiate — the
 rows that would do the negotiating have not been built — so the widths are
 settled first, from the text itself: a `TextPainter` measures a string for the
 price of laying that string out, and never touches the widget tree. A column

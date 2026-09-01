@@ -60,8 +60,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fourteen, and twenty scroll ticks five thousand two hundred milliseconds
   became a hundred and eighty-four. The count no longer moves with the data.
 
-  Columns still fit their content. The widths are settled before a cell is
-  built, from the text itself — a `TextPainter` measures a string for the price
+  Columns still fit their content, and are measured again only when the answer
+  would change: measuring is exact and so proportional to the data, and every
+  rebuild above the table used to pay for all of it — measured, a tap on a row
+  of a five-hundred-row table cost a hundred and seventeen milliseconds, and
+  now costs sixteen. The rows are compared element by element rather than by
+  the list's identity, since `data:` written inline is a new list every build.
+
+  The widths are settled before a cell is built, from the text itself — a `TextPainter` measures a string for the price
   of laying that string out — so a column with a `value` is exact over every
   row. A column drawing with a `builder` and naming no `value`, or headed by
   something that is not a `Text`, cannot be measured that way and should name a

@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart' as flutter show Table, TableRow;
 
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
 import '../feedback/spin.dart';
 import 'empty.dart';
@@ -183,6 +184,8 @@ class TableToken {
     this.borderRadius,
     this.fontSize,
     this.columnMinWidth,
+    this.pinnedShadowColor,
+    this.pinnedShadowExtent,
   });
 
   /// Fill behind the heading row.
@@ -233,6 +236,16 @@ class TableToken {
   /// each, which is not a column anybody can read.
   final double? columnMinWidth;
 
+  /// Colour of the shade a pinned column casts over the rows going past it,
+  /// at its darkest against the column's edge.
+  ///
+  /// Cast only while there is something behind it to cast over, so a run
+  /// scrolled back to its start shows none.
+  final Color? pinnedShadowColor;
+
+  /// How far that shade reaches over the rows before it has faded out.
+  final double? pinnedShadowExtent;
+
   _ResolvedTableToken _resolve(Token t) => _ResolvedTableToken(
         headerBg: headerBg ?? t.colorFillQuaternary,
         headerColor: headerColor ?? t.colorText,
@@ -251,6 +264,14 @@ class TableToken {
         borderRadius: borderRadius ?? t.borderRadiusLG,
         fontSize: fontSize ?? t.fontSize,
         columnMinWidth: columnMinWidth ?? t.controlHeightLG * 2.5,
+        // Not a `BoxShadow`: a shadow is painted behind the box that casts
+        // it, and the pinned pane's neighbour is drawn after it, so the whole
+        // cast landed under the pane instead of over the rows — a grey smear
+        // showing through columns that are mostly transparent. antd lays a
+        // strip over the scrolling rows instead, and so does this.
+        pinnedShadowColor: pinnedShadowColor ??
+            alphaOn(const Color(0xFF000000), t.isDark ? 0.32 : 0.15),
+        pinnedShadowExtent: pinnedShadowExtent ?? t.sizeLG,
       );
 }
 
@@ -271,6 +292,8 @@ class _ResolvedTableToken {
     required this.borderRadius,
     required this.fontSize,
     required this.columnMinWidth,
+    required this.pinnedShadowColor,
+    required this.pinnedShadowExtent,
   });
 
   final Color headerBg;
@@ -287,6 +310,8 @@ class _ResolvedTableToken {
   final double borderRadius;
   final double fontSize;
   final double columnMinWidth;
+  final Color pinnedShadowColor;
+  final double pinnedShadowExtent;
 }
 
 /// Defaults for every [Table] under a `ConfigProvider`.
@@ -432,9 +457,39 @@ class _TableState<T> extends State<Table<T>> {
   final ScrollController _headingX = ScrollController();
   bool _syncing = false;
 
+  /// How far across the rows have gone, for whatever wants to know without
+  /// rebuilding the table to find out.
+  final ValueNotifier<double> _acrossOffset = ValueNotifier<double>(0);
+
+  /// Bumped once the scroll knows how much there is of it.
+  ///
+  /// How far there is left to go is only answerable after a layout, and a
+  /// shadow at the far end depends on it — without this the trailing column
+  /// went unshaded until something else happened to move.
+  final ValueNotifier<int> _measured = ValueNotifier<int>(0);
+  bool _knowsItsLength = false;
+
+  /// Whatever a shadow needs to know: where the rows are, and how far they go.
+  Listenable get _acrossGeometry =>
+      Listenable.merge([_acrossOffset, _measured]);
+
+  void _noteLength() {
+    if (_knowsItsLength) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _knowsItsLength) return;
+      if (_rowsX.hasClients && _rowsX.position.hasContentDimensions) {
+        _knowsItsLength = true;
+        _measured.value++;
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    _rowsX.addListener(() {
+      if (_rowsX.hasClients) _acrossOffset.value = _rowsX.offset;
+    });
     _rowsX.addListener(() => _keepTogether(_rowsX, _headingX));
     _headingX.addListener(() => _keepTogether(_headingX, _rowsX));
   }
@@ -464,6 +519,8 @@ class _TableState<T> extends State<Table<T>> {
     _rowsX.dispose();
     _headingX.dispose();
     _hovered.dispose();
+    _acrossOffset.dispose();
+    _measured.dispose();
     super.dispose();
   }
 
@@ -686,6 +743,7 @@ class _TableState<T> extends State<Table<T>> {
         );
 
     /// One band of the table — a heading, a run of rows, or both together.
+    /// One band of the table — a heading, a run of rows, or both together.
     Widget band(List<TableColumn<T>> columns, {required _Band which}) {
       final of = <flutter.TableRow>[
         if (_showHeader && which != _Band.rows) headingRow(columns),
@@ -727,6 +785,72 @@ class _TableState<T> extends State<Table<T>> {
           : _across1D(sized, t, _rowsX);
     }
 
+    // A pinned pane casts over what has gone behind it, and only then: at
+    // rest against its own end there is nothing there to shade. Listening to
+    // the offset rather than rebuilding on it — the pane is passed through as
+    // a child, so it is the shadow that is redrawn and not the columns.
+    _noteLength();
+    Widget shaded(
+      Widget middle, {
+      required bool fromStart,
+      required bool fromEnd,
+    }) =>
+        AnimatedBuilder(
+          animation: _acrossGeometry,
+          builder: (context, child) {
+            final offset = _acrossOffset.value;
+            // hasContentDimensions as well as hasClients: a position exists
+            // before it has been told how much there is to scroll, and asking
+            // it then throws.
+            final max =
+                _rowsX.hasClients && _rowsX.position.hasContentDimensions
+                    ? _rowsX.position.maxScrollExtent
+                    : 0.0;
+
+            Widget strip({required bool atStart}) => PositionedDirectional(
+                  start: atStart ? 0 : null,
+                  end: atStart ? null : 0,
+                  top: 0,
+                  bottom: 0,
+                  width: r.pinnedShadowExtent,
+                  // Inside the Positioned, not around it: a parent data
+                  // widget has to sit directly under its Stack.
+                  child: IgnorePointer(
+                      child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: atStart
+                            ? AlignmentDirectional.centerStart
+                            : AlignmentDirectional.centerEnd,
+                        end: atStart
+                            ? AlignmentDirectional.centerEnd
+                            : AlignmentDirectional.centerStart,
+                        colors: [
+                          r.pinnedShadowColor,
+                          r.pinnedShadowColor.withAlpha(0),
+                        ],
+                      ),
+                    ),
+                  )),
+                );
+
+            return Stack(
+              children: [
+                child!,
+                // A shade only where a column is standing over rows that have
+                // gone behind it: at rest against its own end there is
+                // nothing there to cast over.
+                if (fromStart && offset > 0.5) strip(atStart: true),
+                if (fromEnd && offset < max - 0.5) strip(atStart: false),
+              ],
+            );
+          },
+          // Listening to the offset rather than rebuilding on it — the pane
+          // is passed through as a child, so it is the shade that is redrawn
+          // and not the columns.
+          child: middle,
+        );
+
     // The rule between two panes, drawn as the pane's own inner edge rather
     // than as a strip between them: a strip would have to be stretched to the
     // pane's height, and asking for that inside a scroll view is asking for
@@ -751,7 +875,13 @@ class _TableState<T> extends State<Table<T>> {
               _bordered
                   ? seamed(band(startPinned, which: which), atStart: true)
                   : band(startPinned, which: which),
-            Expanded(child: scrolling(which)),
+            Expanded(
+              child: shaded(
+                scrolling(which),
+                fromStart: startPinned.isNotEmpty,
+                fromEnd: endPinned.isNotEmpty,
+              ),
+            ),
             if (endPinned.isNotEmpty)
               _bordered
                   ? seamed(band(endPinned, which: which), atStart: false)
@@ -774,10 +904,18 @@ class _TableState<T> extends State<Table<T>> {
                 // The rows scroll; the heading, being outside this, does not.
                 SizedBox(
                   height: widget.scroll!.y,
-                  child: SingleChildScrollView(
-                    child: grid(
-                      widget.columns,
-                      _showHeader ? all.skip(1).toList() : all,
+                  child: _handOn(
+                    SingleChildScrollView(
+                      // Its own layer, so a scroll re-offers the rows rather
+                      // than painting them again: measured over twenty ticks,
+                      // five hundred and seventeen milliseconds became three
+                      // hundred and ninety-eight.
+                      child: RepaintBoundary(
+                        child: grid(
+                          widget.columns,
+                          _showHeader ? all.skip(1).toList() : all,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -796,7 +934,11 @@ class _TableState<T> extends State<Table<T>> {
           if (_showHeader) panes(_Band.heading),
           SizedBox(
             height: widget.scroll!.y,
-            child: SingleChildScrollView(child: panes(_Band.rows)),
+            child: _handOn(
+              SingleChildScrollView(
+                child: RepaintBoundary(child: panes(_Band.rows)),
+              ),
+            ),
           ),
         ],
       );
@@ -893,6 +1035,32 @@ class _TableState<T> extends State<Table<T>> {
 
   Widget _defaultEmpty(BuildContext context, EmptySlot slot) => const Empty();
 
+  /// Hands what the rows cannot use back to the page they sit on.
+  ///
+  /// A scroll view inside another does not chain: reaching its own end, it
+  /// simply stops, and the page under it stays where it is. Measured, a table
+  /// with a height of its own froze the page for as long as the pointer was
+  /// over it — thirteen drags and the page had not moved a pixel. What the
+  /// rows cannot use is passed on.
+  Widget _handOn(Widget rows) => NotificationListener<OverscrollNotification>(
+        onNotification: (notification) {
+          if (notification.depth != 0) return false;
+          if (notification.metrics.axis != Axis.vertical) return false;
+          final page = Scrollable.maybeOf(context);
+          if (page == null) return false;
+          final position = page.position;
+          if (position.axis != Axis.vertical) return false;
+          position.moveTo(
+            (position.pixels + notification.overscroll).clamp(
+              position.minScrollExtent,
+              position.maxScrollExtent,
+            ),
+          );
+          return true;
+        },
+        child: rows,
+      );
+
   /// A scroll view that can actually be scrolled sideways.
   ///
   /// Two things stand in the way of that, both of them Flutter's defaults and
@@ -919,10 +1087,12 @@ class _TableState<T> extends State<Table<T>> {
         // its own tokens.
         child: RawScrollbar(
           controller: controller,
-          // Shown rather than summoned by a hover: a table wide enough to
-          // scroll should say so, the way an overflowing Segmented shows its
-          // arrows.
-          thumbVisibility: bar,
+          // Only while it is being scrolled. A bar standing across the foot
+          // of every wide table is a line the design did not ask for; the
+          // shadow on a pinned column is what says there is more to see.
+          thumbVisibility: false,
+          // The track is never drawn, bar or no bar.
+          trackVisibility: false,
           thumbColor: t.colorFill,
           thickness: t.sizeXS,
           radius: Radius.circular(t.sizeXS),

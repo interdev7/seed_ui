@@ -514,11 +514,65 @@ void main() {
       expect(tester.getRect(find.text('N')).left, closeTo(before - 150, 1));
     });
 
-    testWidgets('and there is a bar to show it can be', (tester) async {
+    testWidgets('the bar comes and goes, and never brings a track',
+        (tester) async {
+      // A bar standing across the foot of every wide table is a line the
+      // design did not ask for. The shadow on a pinned column is what says
+      // there is more to see.
       await tester.pumpWidget(rows(const TableScroll(x: 1200), n: 3));
       final bar = tester.widget<RawScrollbar>(find.byType(RawScrollbar));
-      expect(bar.thumbVisibility, isTrue,
-          reason: 'a table wide enough to scroll should say so');
+      expect(bar.thumbVisibility, isFalse);
+      expect(bar.trackVisibility, isFalse);
+    });
+
+    testWidgets('what the rows cannot use goes back to the page',
+        (tester) async {
+      // A scroll view inside another does not chain: reaching its own end it
+      // simply stops. Measured before this, a table with a height of its own
+      // froze the page for as long as the pointer was over it — thirteen
+      // drags and the page had not moved a pixel.
+      final page = ScrollController();
+      addTearDown(page.dispose);
+      await tester.pumpWidget(
+        ConfigProvider(
+          child: m.MaterialApp(
+            home: m.Scaffold(
+              body: SingleChildScrollView(
+                controller: page,
+                child: Column(
+                  children: [
+                    Table<int>(
+                      scroll: const TableScroll(y: 200),
+                      columns: [
+                        for (var c = 0; c < 3; c++)
+                          TableColumn<int>(
+                            title: Text('C$c'),
+                            value: (v) => 'c$c-$v',
+                          ),
+                      ],
+                      data: [for (var i = 0; i < 40; i++) i],
+                    ),
+                    const SizedBox(height: 1500),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The first drag is the table's own business.
+      await tester.drag(find.text('c0-1'), const Offset(0, -150));
+      await tester.pumpAndSettle();
+      expect(page.offset, 0);
+
+      // Once its rows have run out, the page takes what is left.
+      for (var i = 0; i < 12; i++) {
+        await tester.drag(find.byType(Table<int>), const Offset(0, -200));
+        await tester.pumpAndSettle();
+      }
+      expect(page.offset, greaterThan(100));
     });
 
     test('a scroll must have room to happen in', () {
@@ -619,6 +673,61 @@ void main() {
       final cellMoved = cellBefore - tester.getRect(find.text('c0r0')).left;
       expect(cellMoved, greaterThan(100), reason: 'the rows went across');
       expect(headingMoved, cellMoved, reason: 'and the heading went with them');
+    });
+
+    testWidgets('a pinned column casts over what has gone behind it',
+        (tester) async {
+      // The shade is a strip laid over the scrolling rows — antd's way — not
+      // a shadow behind the pinned pane: a shadow is painted behind the box
+      // that casts it, and the neighbouring pane is drawn after, so the whole
+      // cast ended up under columns that are mostly transparent.
+      bool shadeAt({required bool atStart}) => find
+          .byWidgetPredicate((w) =>
+              w is PositionedDirectional &&
+              (atStart
+                  ? w.start == 0 && w.end == null
+                  : w.end == 0 && w.start == null))
+          .evaluate()
+          .isNotEmpty;
+
+      // A bare pump first, so this table gets a State of its own. Pumping one
+      // Table<int> over another hands the second the first's element — and its
+      // scroll position with it.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(pinned(y: 200));
+      // How far there is left to go is only known after a layout, so the
+      // trailing shadow arrives on the frame after the first.
+      await tester.pumpAndSettle();
+
+      // At rest the run is against its start: nothing has gone behind the
+      // leading column, and everything is still ahead of the trailing one.
+      expect(shadeAt(atStart: true), isFalse);
+      expect(shadeAt(atStart: false), isTrue);
+
+      // Run it to the far end and the two swap over. Scroll events rather
+      // than drags: a drag begins where the finder is now, so after the first
+      // one the grip has moved and the rest land nowhere.
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('c0r1'))),
+      );
+      for (var i = 1; i <= 10; i++) {
+        await tester.sendEventToBinding(pointer.scroll(Offset(120.0 * i, 0)));
+        await tester.pumpAndSettle();
+      }
+      expect(shadeAt(atStart: true), isTrue,
+          reason: 'something is behind it now');
+      expect(shadeAt(atStart: false), isFalse, reason: 'and nothing is ahead');
+
+      // And it falls over the rows going past, clear of the pinned column
+      // itself — which is where a shadow painted behind the pane landed, as
+      // a grey wash over columns that are mostly transparent.
+      // Two strips: the heading band casts one as well as the rows.
+      final strip = tester.getRect(find
+          .byWidgetPredicate((w) => w is PositionedDirectional && w.start == 0)
+          .last);
+      expect(strip.left, greaterThan(tester.getRect(find.text('p0')).right));
+      expect(strip.width, closeTo(24, 0.5), reason: 'sizeLG, and no wider');
     });
 
     testWidgets('rows stay level across the panes', (tester) async {

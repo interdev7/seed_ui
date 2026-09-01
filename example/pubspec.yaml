@@ -14,6 +14,7 @@ dependencies:
     sdk: flutter
   go_router: ^17.4.0
   seed_ui: ^0.16.0
+  two_dimensional_scrollables: ^0.5.4
 
 # The gallery declares a hosted dependency so it reads like a real consumer,
 # but always builds against the working tree — otherwise it would validate

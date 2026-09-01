@@ -52,8 +52,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   than its own columns, so fifteen columns inside a declared eleven hundred
   widen the table instead of leaving four hundred pixels of it unreachable.
 
-  A table that scrolls sideways draws a bar, answers a mouse drag, and carries
-  its heading along with the rows. Flutter does neither of the first two by
+  A table inside a scrolling page hands back what its rows cannot use: scroll
+  views do not chain, so a table with a height of its own used to freeze the
+  page for as long as the pointer was over it — thirteen drags without the page
+  moving a pixel.
+
+  Repaint boundaries round each pane and inside the sideways scroll: measured
+  over twenty ticks on three hundred rows, sideways went from 334ms to 210 and
+  downwards from 135 to 103.
+
+  A pinned column casts a shade over the rows that have gone behind it, and
+  only while there are any. It is a strip laid over those rows, the way antd
+  does it, and not a `BoxShadow` behind the pinned pane: a shadow is painted
+  behind the box that casts it, and the neighbouring pane is drawn afterwards,
+  so the whole cast ended up under a column whose cells are mostly transparent
+  — a grey wash across the column instead of a shade beside it. The scrollbar appears while the table is being
+  scrolled and goes again, and never brings a track.
+
+  A table that scrolls sideways answers a mouse drag and carries its heading
+  along with the rows. Flutter does neither of the first two by
   default — the mouse is not among `dragDevices`, and no
   scrollbar is built for the horizontal axis — which left a table that scrolled
   sideways with no way to scroll it on the web.

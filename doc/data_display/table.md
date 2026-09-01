@@ -102,6 +102,11 @@ Table(scroll: const TableScroll(x: 1200), ...)   // wider than its box
 **`y`** gives the rows a height of their own, and the heading stops travelling
 with them: it sits above and stays.
 
+A table inside a scrolling page hands back what its rows cannot use. Scroll
+views do not chain on their own — one inside another simply stops at its end —
+so a table with a height of its own would otherwise freeze the page for as long
+as the pointer was over it.
+
 **`x`** is the width the table is laid out at, however narrow its box, and what
 does not fit scrolls across. It is a **floor**: a table is never laid out
 narrower than its own columns need, so adding columns past the width you named
@@ -164,6 +169,12 @@ was tried, and a cell that grew past it put the panes eight pixels out again.
 Order does not matter. A column marked `end` is drawn at that edge wherever it
 was listed.
 
+A pinned column casts a shadow over the rows that have gone behind it, and
+only then: at rest against its own end there is nothing there to shade. The
+bar, meanwhile, appears while the table is being scrolled and goes again — a
+line standing across the foot of every wide table is not what says there is
+more to see.
+
 A `bordered` table draws a rule where a pinned pane meets the rest. Inside a
 pane the table draws its own rules; between panes there is only the join, so
 without this a pinned column ran into its neighbour unmarked.
@@ -195,13 +206,34 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `cellPaddingInline`, `cellPaddingInlineSM`, `cellPaddingInlineLG` | 16, 8, 20 |
 | `footerBg`, `borderRadius`, `fontSize` | |
 | `columnMinWidth` | `controlHeightLG × 2.5` — the narrowest a shared column is squeezed to |
+| `pinnedShadowColor` | black at 15% (32% dark) — the shade a pinned column casts over the rows going past it |
+| `pinnedShadowExtent` | `sizeLG` — how far that shade reaches before it has faded out |
 
 ## How many rows
 
 Every row is built, not just the ones on screen: five hundred rows measure four
-thousand widgets. That is fine for a page of them — which, with pagination, is
-what a table usually holds — and too slow for thousands. Laziness needs a
-two-dimensional viewport and is the next piece of work on this component.
+thousand widgets. That is fine for a page of rows — which, with pagination, is
+what a table usually holds — and too slow for thousands.
+
+It is worth being exact about where the cost is, because the obvious answer is
+wrong. **Scrolling rebuilds nothing**: counted over twenty ticks on three
+hundred rows, the table rebuilds zero times, a cell zero times. What costs is
+painting three thousand widgets that are mostly off screen. So the usual
+advice — memoise the widths, hoist the `EdgeInsets`, make each row a
+`StatefulWidget` — buys nothing here, because none of that runs.
+
+Repaint boundaries do help, since they let a layer be re-offered instead of
+repainted. Measured over twenty ticks on three hundred rows with a pinned
+column:
+
+| | sideways | downwards |
+| --- | --- | --- |
+| before | 334ms | 135ms |
+| with them | 210ms | 103ms |
+
+The cure is still to build only what is on screen, and that needs a
+two-dimensional viewport with the column widths worked out by hand rather than
+by Flutter's `Table`. It is the next piece of work on this component.
 
 ## Not here yet
 

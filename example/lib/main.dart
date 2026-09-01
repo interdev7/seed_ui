@@ -45,6 +45,7 @@ import 'components/data_entry/select_demo.dart';
 import 'components/data_entry/switch_demo.dart';
 import 'components/data_entry/upload_demo.dart';
 import 'components/data_display/table_demo.dart';
+import 'components/data_display/table_two_d_demo.dart';
 import 'components/data_display/tabs_demo.dart';
 import 'components/data_display/tag_demo.dart';
 import 'components/data_display/tooltip_demo.dart';
@@ -421,6 +422,7 @@ final List<Demo> demos = [
   Demo('inputnumber', 'InputNumber', (_) => const InputNumberDemo()),
   Demo('segmented', 'Segmented', (_) => const SegmentedDemo()),
   Demo('table', 'Table', (_) => const TableDemo(), isNew: true),
+  Demo('table2d', 'Table (2D pkg)', (_) => const TableTwoDDemo(), isNew: true),
   Demo('tabs', 'Tabs', (_) => const TabsDemo()),
   Demo('card', 'Card', (_) => const CardDemo()),
   Demo('collapse', 'Collapse', (_) => const CollapseDemo()),

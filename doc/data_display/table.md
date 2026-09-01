@@ -129,21 +129,36 @@ shade a pinned column casts is what says there is more to see.
 
 ### What scrolling costs
 
-A column that named neither a `width` nor a `flex` stops fitting its content
-and takes an equal share instead.
+A table given a `scroll.y` builds only the rows on screen. Five hundred rows of
+fifteen columns is seven and a half thousand cells, and building them all to
+show forty was the whole of the cost: measured over three thousand rows, the
+tree went from forty-five thousand paragraphs to a hundred and fourteen, and
+twenty scroll ticks from five thousand two hundred milliseconds to a hundred
+and eighty-four. The count no longer moves with the data — three hundred rows
+and three thousand build the same hundred-odd cells.
 
-It has to. Once the heading has stopped moving it is a second table, and an
-intrinsic width would measure a different thing in each — the title in one, the
-cells in the other. Left to that, a short heading over long cells drifts thirty
-pixels out of line. It is the trade `tableLayout: fixed` makes, for the same
-reason.
+Columns still fit their content. A lazy body cannot ask them to negotiate — the
+rows that would do the negotiating have not been built — so the widths are
+settled first, from the text itself: a `TextPainter` measures a string for the
+price of laying that string out, and never touches the widget tree. A column
+with a `value` is measured over every row, however many there are.
 
-So name a `width` or a `flex` on the columns that matter once you scroll.
+Two things it cannot measure that way, and both have the same answer — give the
+column a `width`:
 
-A shared column is never squeezed below `columnMinWidth`, though. Past that the
-table grows wider and scrolls rather than shrinking them further — fifteen
-columns sharing eight hundred pixels came out thirty-seven pixels each, which
-is not a column anybody can read.
+- a column that draws with a `builder` and names no `value`, because nothing
+  can guess how wide a `Tag` is;
+- a heading that is not a `Text`, for the same reason.
+
+**Every row is one height** — the cell's padding plus a line of its text, so a
+scrolling table's rows stand exactly as tall as a still one's. A row is found
+by multiplying, not by laying out the ones above it, so a cell that wraps is
+cut rather than allowed to grow its row. A table with no `scroll.y` keeps the grid it always had, where a cell that
+wraps still grows its row — there is nothing to virtualise in a table you can
+see all of.
+
+`scroll.y` is the height of the rows, as antd means it. The heading stands
+above them and is not counted in it.
 
 ### Columns that stay put
 
@@ -160,27 +175,25 @@ TableColumn(
 
 Two things come with it, and both are consequences rather than choices.
 
-**A pinned column needs a `width`.** It is laid out apart from the columns that
-scroll, so a share of a width it cannot see means nothing.
+**A pinned column needs a `width`.** It is measured before the body is laid
+out, and a share of a width nothing has worked out yet means nothing.
 
-**Pinning holds every row to one height.** The table becomes three laid out
-side by side, and separate tables work out their own row heights — measured,
-one wrapping cell put two panes a hundred and forty pixels out of step. The
-height is exact rather than a floor, so a cell with more in it is cut: a floor
-was tried, and a cell that grew past it put the panes eight pixels out again.
+**Pinning holds every row to one height**, as scrolling does, and for the same
+reason: a pinned column is the first or the last column of a body that finds a
+row by multiplying. The height is exact rather than a floor, so a cell with
+more in it is cut.
 
 Order does not matter. A column marked `end` is drawn at that edge wherever it
 was listed.
 
-A pinned column casts a shadow over the rows that have gone behind it, and
-only then: at rest against its own end there is nothing there to shade. The
-bar, meanwhile, appears while the table is being scrolled and goes again — a
-line standing across the foot of every wide table is not what says there is
-more to see.
+A pinned column casts a shade over the rows that have gone behind it, and only
+then: at rest against its own end there is nothing there to shade. It is
+painted over those rows rather than behind the column — a shadow is painted
+behind the box that casts it, and a pinned column's cells are mostly
+transparent, so the cast used to show through the column as a grey wash.
 
-A `bordered` table draws a rule where a pinned pane meets the rest. Inside a
-pane the table draws its own rules; between panes there is only the join, so
-without this a pinned column ran into its neighbour unmarked.
+A `bordered` table rules between every pair of columns, the pinned ones
+included.
 
 ## Around the rows
 
@@ -208,7 +221,7 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `cellPaddingBlock`, `cellPaddingBlockSM`, `cellPaddingBlockLG` | 12, 8, 16 |
 | `cellPaddingInline`, `cellPaddingInlineSM`, `cellPaddingInlineLG` | 16, 8, 20 |
 | `footerBg`, `borderRadius`, `fontSize` | |
-| `columnMinWidth` | `controlHeightLG × 2.5` — the narrowest a shared column is squeezed to |
+| `columnMinWidth` | `controlHeightLG × 2.5` — the narrowest a `flex` column is squeezed to |
 | `pinnedShadowColor` | black at 15% (32% dark) — the shade a pinned column casts over the rows going past it |
 | `pinnedShadowExtent` | `sizeLG` — how far that shade reaches before it has faded out |
 

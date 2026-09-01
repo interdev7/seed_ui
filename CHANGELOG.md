@@ -52,10 +52,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   than its own columns, so fifteen columns inside a declared eleven hundred
   widen the table instead of leaving four hundred pixels of it unreachable.
 
+  A table with a `scroll.y` builds only the rows on screen. Both axes belong to
+  one `RenderTwoDimensionalViewport` rather than to a scroll view each, which
+  is also what makes a pinned column and a heading that stays put ordinary
+  questions about where a cell is laid out. Measured over three thousand rows
+  of fifteen columns: forty-five thousand paragraphs became a hundred and
+  fourteen, and twenty scroll ticks five thousand two hundred milliseconds
+  became a hundred and eighty-four. The count no longer moves with the data.
+
+  Columns still fit their content. The widths are settled before a cell is
+  built, from the text itself — a `TextPainter` measures a string for the price
+  of laying that string out — so a column with a `value` is exact over every
+  row. A column drawing with a `builder` and naming no `value`, or headed by
+  something that is not a `Text`, cannot be measured that way and should name a
+  `width`.
+
+  The rows are held to one height, as pinning already held them: a row is found
+  by multiplying rather than by laying out the ones above it. It is the height
+  the row would have taken anyway — the cell's padding plus a line of its text,
+  measured rather than reckoned — so a scrolling table's rows stand exactly as
+  tall as a still one's. A table with no `scroll.y` keeps the grid it had,
+  where a cell that wraps still grows its row.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page
-  moving a pixel.
+  moving a pixel. One recognizer per axis rather than a pan for both, too: a
+  pan asks the gesture arena for more movement before it will claim a drag, and
+  the page's own vertical drag won every time — a hundred and thirty pixels of
+  a hundred and fifty went to the page.
 
   Repaint boundaries round each pane and inside the sideways scroll: measured
   over twenty ticks on three hundred rows, sideways went from 334ms to 210 and
@@ -78,11 +103,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   scrollbar is built for the horizontal axis — which left a table that scrolled
   sideways with no way to scroll it on the web.
 
-  Columns sharing a width are never squeezed below `columnMinWidth`: past that
-  the table grows and scrolls instead, since fifteen sharing eight hundred
-  pixels came out thirty-seven each. A bordered table draws a rule where a
-  pinned pane meets the rest — inside a pane the table draws its own, and
-  between them there was nothing at all.
+  A `flex` column is never squeezed below `columnMinWidth`: past that the table
+  grows and scrolls instead, since fifteen columns sharing eight hundred pixels
+  came out thirty-seven each. A bordered table rules between every pair of
+  columns, the pinned ones included.
 
   The name is Flutter's own too, so a file that wants both hides one:
   `import 'package:seed_ui/seed_ui.dart' hide Table;` and the reverse. `Empty`

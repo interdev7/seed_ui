@@ -461,10 +461,13 @@ void main() {
       );
     });
 
-    testWidgets('a scrolling table shares the width between its columns',
+    testWidgets('a scrolling table still fits its columns to their content',
         (tester) async {
-      // The trade a detached heading forces: an intrinsic width would measure
-      // the title in one table and the cells in the other.
+      // It used to share the width equally instead: the heading was a table
+      // of its own, and an intrinsic width would have measured the title in
+      // one and the cells in the other. One viewport holds both now, and the
+      // widths are worked out from the text itself before a cell is built —
+      // so a scrolling table sizes its columns like any other.
       await tester.pumpWidget(
         _host(
           Table<int>(
@@ -483,7 +486,51 @@ void main() {
       );
       final table = tester.getRect(find.byType(Table<int>));
       final second = tester.getRect(find.text('Sq')).left - table.left;
-      expect(second, closeTo(200 + 16, 2), reason: 'half each, then padding');
+      // 'x' and its padding, nowhere near the half the old table gave it.
+      expect(second, lessThan(120), reason: 'the narrow column stayed narrow');
+      expect(second, greaterThan(16), reason: 'and it is still a column');
+    });
+
+    testWidgets('a scrolling row is as tall as a still one', (tester) async {
+      // Laid out at the preset's control height with the cell's padding still
+      // on it, the text had nowhere to go and came out cut in half.
+      await tester.pumpWidget(rows(null, n: 4));
+      final still = tester.getRect(find.text('row 1')).top -
+          tester.getRect(find.text('row 0')).top;
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(rows(const TableScroll(y: 200), n: 4));
+      final scrolling = tester.getRect(find.text('row 1')).top -
+          tester.getRect(find.text('row 0')).top;
+
+      expect(scrolling, closeTo(still, 0.5));
+      expect(
+        tester.getRect(find.text('row 0')).height,
+        lessThan(scrolling),
+        reason: 'the text fits inside its row rather than being cut by it',
+      );
+    });
+
+    testWidgets('only the rows on screen are built', (tester) async {
+      // Five hundred rows of two columns is a thousand cells, and building
+      // them all to show a dozen was the whole of what scrolling cost.
+      await tester.pumpWidget(rows(const TableScroll(y: 200), n: 500));
+      expect(find.byType(RichText).evaluate().length, lessThan(60));
+      expect(find.text('row 0'), findsOneWidget);
+      expect(find.text('row 499'), findsNothing);
+
+      // All five hundred are there to be reached, though, and the count does
+      // not grow on the way.
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('row 1'))),
+      );
+      for (var i = 1; i <= 3; i++) {
+        await tester.sendEventToBinding(pointer.scroll(Offset(0, 20000.0 * i)));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('row 499'), findsOneWidget);
+      expect(find.byType(RichText).evaluate().length, lessThan(60));
     });
 
     testWidgets('an empty scrolling table still shows its heading',
@@ -667,7 +714,11 @@ void main() {
         tester.getCenter(find.text('c0r1')),
         kind: PointerDeviceKind.mouse,
       );
-      await mouse.moveBy(const Offset(-150, 0));
+      // Two moves, not one: a drag recognizer spends the first on winning the
+      // arena and reports nothing for it, which is what a real mouse sending
+      // a stream of moves never notices.
+      await mouse.moveBy(const Offset(-30, 0));
+      await mouse.moveBy(const Offset(-120, 0));
       await tester.pump();
       await mouse.up();
       await tester.pumpAndSettle();
@@ -680,18 +731,18 @@ void main() {
 
     testWidgets('a pinned column casts over what has gone behind it',
         (tester) async {
-      // The shade is a strip laid over the scrolling rows — antd's way — not
-      // a shadow behind the pinned pane: a shadow is painted behind the box
-      // that casts it, and the neighbouring pane is drawn after, so the whole
-      // cast ended up under columns that are mostly transparent.
-      bool shadeAt({required bool atStart}) => find
-          .byWidgetPredicate((w) =>
-              w is PositionedDirectional &&
-              (atStart
-                  ? w.start == 0 && w.end == null
-                  : w.end == 0 && w.start == null))
-          .evaluate()
-          .isNotEmpty;
+      // The shade is painted, not built: one viewport owns both axes now, so
+      // there is no pane to hang a strip on — the rows are laid out where
+      // they are and a gradient goes over them.
+      Finder viewport() => find.byWidgetPredicate(
+            (w) => w.runtimeType.toString() == '_RowsViewport',
+          );
+      // `something` rather than a bare `rect`: the cells paint rectangles of
+      // their own, and the shade is only one of them.
+      PaintPattern casts(Rect where) => paints
+        ..something(
+          (symbol, arguments) => symbol == #drawRect && arguments[0] == where,
+        );
 
       // A bare pump first, so this table gets a State of its own. Pumping one
       // Table<int> over another hands the second the first's element — and its
@@ -704,8 +755,11 @@ void main() {
 
       // At rest the run is against its start: nothing has gone behind the
       // leading column, and everything is still ahead of the trailing one.
-      expect(shadeAt(atStart: true), isFalse);
-      expect(shadeAt(atStart: false), isTrue);
+      expect(
+        tester.renderObject(viewport()),
+        casts(const Rect.fromLTWH(296, 0, 24, 232)),
+        reason: 'the trailing column casts, and it alone',
+      );
 
       // Run it to the far end and the two swap over. Scroll events rather
       // than drags: a drag begins where the finder is now, so after the first
@@ -718,19 +772,16 @@ void main() {
         await tester.sendEventToBinding(pointer.scroll(Offset(120.0 * i, 0)));
         await tester.pumpAndSettle();
       }
-      expect(shadeAt(atStart: true), isTrue,
-          reason: 'something is behind it now');
-      expect(shadeAt(atStart: false), isFalse, reason: 'and nothing is ahead');
-
-      // And it falls over the rows going past, clear of the pinned column
-      // itself — which is where a shadow painted behind the pane landed, as
-      // a grey wash over columns that are mostly transparent.
-      // Two strips: the heading band casts one as well as the rows.
-      final strip = tester.getRect(find
-          .byWidgetPredicate((w) => w is PositionedDirectional && w.start == 0)
-          .last);
-      expect(strip.left, greaterThan(tester.getRect(find.text('p0')).right));
-      expect(strip.width, closeTo(24, 0.5), reason: 'sizeLG, and no wider');
+      expect(
+        tester.renderObject(viewport()),
+        casts(const Rect.fromLTWH(100, 0, 24, 232)),
+        reason: 'now the leading one does, against its own edge',
+      );
+      expect(
+        tester.renderObject(viewport()),
+        isNot(casts(const Rect.fromLTWH(296, 0, 24, 232))),
+        reason: 'and the trailing one has nothing left ahead to cast over',
+      );
     });
 
     testWidgets('rows stay level across the panes', (tester) async {
@@ -867,7 +918,8 @@ void main() {
           width: 800,
         ),
       );
-      final first = tester.getRect(find.text('N0')).left;
+      expect(find.text('N0'), findsOneWidget);
+      expect(find.text('N14'), findsNothing, reason: 'not yet in view');
 
       final pointer = TestPointer(1, PointerDeviceKind.trackpad);
       await tester.sendEventToBinding(
@@ -878,13 +930,15 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      // Fifteen hundred of columns in a six-hundred-and-forty-wide pane.
-      expect(first - tester.getRect(find.text('N0')).left, closeTo(860, 1));
       expect(
         tester.getRect(find.text('N14')).right,
         lessThanOrEqualTo(tester.getRect(find.byType(Table<int>)).right + 1),
         reason: 'the last column can be reached',
       );
+      // The pinned one is still where it was, and the first of the ones that
+      // travel has gone — off the edge and, being off it, unbuilt.
+      expect(find.text('Pin'), findsOneWidget);
+      expect(find.text('N0'), findsNothing);
     });
 
     testWidgets('nor is one without a pinned column', (tester) async {
@@ -955,22 +1009,29 @@ void main() {
       );
     });
 
-    testWidgets('a rule stands between the panes', (tester) async {
-      // Inside a pane the table draws its own; between them there was
-      // nothing, so a pinned column ran into its neighbour unmarked.
-      bool hasSeam() => find
+    testWidgets('a rule stands between the columns when asked', (tester) async {
+      // There are no panes any more — one viewport holds every column — so
+      // the rule belongs to the cell that carries it, and the one beside a
+      // pinned column is the same rule as any other.
+      bool ruled() => find
           .byWidgetPredicate(
             (w) =>
                 w is DecoratedBox &&
                 w.decoration is BoxDecoration &&
-                (w.decoration as BoxDecoration).border is BorderDirectional,
+                (w.decoration as BoxDecoration).border is Border &&
+                // Not the table's own outline, which is a border on every
+                // side and the only one that is rounded.
+                (w.decoration as BoxDecoration).borderRadius == null &&
+                ((w.decoration as BoxDecoration).border! as Border).right !=
+                    BorderSide.none,
           )
           .evaluate()
           .isNotEmpty;
 
       await tester.pumpWidget(pinned(y: 200));
-      expect(hasSeam(), isFalse, reason: 'no rules were asked for');
+      expect(ruled(), isFalse, reason: 'no rules were asked for');
 
+      await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(
         _host(
           Table<int>(
@@ -991,7 +1052,7 @@ void main() {
           width: 400,
         ),
       );
-      expect(hasSeam(), isTrue);
+      expect(ruled(), isTrue);
     });
 
     test('a pinned column must name a width', () {

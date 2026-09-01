@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/rendering.dart'
+    show CacheExtentStyle, ClipRectLayer, LayerHandle, ViewportOffset;
 import 'package:flutter/widgets.dart' hide Table, TableRow;
 // Flutter's own Table does the column arithmetic: it measures every cell in a
 // column and gives them all the widest one's width, which is the behaviour a
@@ -657,6 +659,30 @@ class _TableState<T> extends State<Table<T>> {
   /// past it put the panes eight pixels out again.
   double? _exactHeight(Token t) => _hasPinned ? _rowHeight(t) : null;
 
+  /// The height every row of a lazy body is laid out at.
+  ///
+  /// A body that finds a row by multiplying needs one height for all of them,
+  /// and it has to be the height the row would have taken anyway: laid out at
+  /// the preset's control height with the cell's padding still on, the text
+  /// had nowhere to go and came out cut in half.
+  double _lazyRowHeight(_ResolvedTableToken r, Token t) =>
+      _uniformHeight(t) ??
+      _cellPadding(r, t).vertical +
+          _TableWidths.lineHeight(
+            _bodyStyle(r, t),
+            MediaQuery.textScalerOf(context),
+            Directionality.of(context),
+          );
+
+  /// The style a cell's text is drawn in, and so the style it is measured in.
+  TextStyle _bodyStyle(_ResolvedTableToken r, Token t) =>
+      DefaultTextStyle.of(context).style.copyWith(
+            fontSize: r.fontSize,
+            fontFamily: t.fontFamily,
+            fontFamilyFallback: t.fontFamilyFallback,
+            fontWeight: t.fontWeight,
+          );
+
   /// The height a row will not go under, or null where content decides.
   double? _uniformHeight(Token t) => _exactHeight(t) ?? _askedRowHeight(t);
 
@@ -890,7 +916,19 @@ class _TableState<T> extends State<Table<T>> {
         );
 
     Widget table;
-    if (!_hasPinned) {
+    if (_detached && widget.data.isNotEmpty) {
+      // A height of its own is what makes the rows worth building lazily, and
+      // it is also what a lazy body needs: a row is found by multiplying, so
+      // every row has to be one height. A table with no height of its own
+      // keeps the grid below, where a cell that wraps still grows its row.
+      table = SizedBox(
+        // `scroll.y` is the height of the rows, as antd means it, and the
+        // heading stands above them. One viewport now holds both, so the
+        // heading's row is added back on rather than eating into the body.
+        height: widget.scroll!.y! + (_showHeader ? _lazyRowHeight(r, t) : 0),
+        child: _handOn(_lazyBody(r, t, rule)),
+      );
+    } else if (!_hasPinned) {
       final all = <flutter.TableRow>[
         if (_showHeader) headingRow(widget.columns),
         ...dataRowsOf(widget.columns),
@@ -1031,6 +1069,177 @@ class _TableState<T> extends State<Table<T>> {
     }
 
     return Spin(spinning: widget.loading, child: body);
+  }
+
+  /// The columns in the order the lazy body wants them: pinned to the start,
+  /// then the ones that travel, then pinned to the end.
+  ///
+  /// A pinned column is the first or the last x index and nothing else — that
+  /// is the whole of what pinning is, once one viewport owns both axes.
+  List<TableColumn<T>> get _ordered => [
+        ..._pinnedTo(TableColumnFixed.start),
+        ..._loose,
+        ..._pinnedTo(TableColumnFixed.end),
+      ];
+
+  /// What a heading asks for, where it can be asked without building it.
+  ///
+  /// A `Text` is measured like any other string. Anything else is a widget
+  /// whose width nothing here can guess, and a column headed by one has to
+  /// name a [TableColumn.width] if its heading is the widest thing in it.
+  List<double?> _headingWidths(
+    List<TableColumn<T>> columns,
+    TextStyle style,
+    double inlinePadding,
+  ) =>
+      [
+        for (final column in columns)
+          switch (column.title) {
+            Text(:final data?) => _TableWidths.measure(
+                  data,
+                  style,
+                  MediaQuery.textScalerOf(context),
+                  Directionality.of(context),
+                ) +
+                inlinePadding,
+            _ => null,
+          },
+      ];
+
+  /// One cell of the lazy body: a heading when it is the top row, a data cell
+  /// otherwise.
+  Widget _lazyCell(
+    ChildVicinity at,
+    List<TableColumn<T>> columns,
+    _ResolvedTableToken r,
+    Token t,
+    BorderSide rule,
+  ) {
+    final column = columns[at.xIndex];
+    final heading = _showHeader && at.yIndex == 0;
+    final index = at.yIndex - (_showHeader ? 1 : 0);
+    final last = index == widget.data.length - 1;
+
+    final border = Border(
+      bottom: heading || !last ? rule : BorderSide.none,
+      right:
+          _bordered && at.xIndex != columns.length - 1 ? rule : BorderSide.none,
+    );
+
+    if (heading) {
+      return DecoratedBox(
+        decoration: BoxDecoration(color: r.headerBg, border: border),
+        child: _padded(
+          DefaultTextStyle.merge(
+            style: TextStyle(
+              color: r.headerColor,
+              fontWeight: t.fontWeightStrong,
+            ),
+            child: column.title ?? const SizedBox.shrink(),
+          ),
+          column,
+          column.headerAlign ?? column.align ?? TableAlign.start,
+          r,
+          t,
+        ),
+      );
+    }
+
+    final record = widget.data[index];
+    Widget cell = DecoratedBox(
+      decoration: BoxDecoration(border: border),
+      child: _padded(
+        column.builder?.call(context, record, index) ?? _text(column, record),
+        column,
+        column.align ?? TableAlign.start,
+        r,
+        t,
+      ),
+    );
+    if (widget.onRowTap != null) {
+      cell = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => widget.onRowTap!(record, index),
+        child: cell,
+      );
+    }
+    if (!_hoverable) return cell;
+    return MouseRegion(
+      onEnter: (_) => _hovered.value = index,
+      onExit: (_) {
+        if (_hovered.value == index) _hovered.value = null;
+      },
+      child: ValueListenableBuilder<int?>(
+        valueListenable: _hovered,
+        builder: (context, hovered, child) => ColoredBox(
+          color: hovered == index ? r.rowHoverBg : const Color(0x00000000),
+          child: child,
+        ),
+        child: cell,
+      ),
+    );
+  }
+
+  /// The body of a table that scrolls, built as it comes into view.
+  ///
+  /// Only the rows on screen are built. Five hundred rows of fifteen columns
+  /// is seven and a half thousand cells, and building them to show forty was
+  /// the whole of the cost.
+  Widget _lazyBody(_ResolvedTableToken r, Token t, BorderSide rule) {
+    final columns = _ordered;
+    final style = _bodyStyle(r, t);
+    final inline = _cellPadding(r, t).horizontal;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final widths = _TableWidths.resolve<T>(
+          columns: columns,
+          data: widget.data,
+          available: math.max(
+            constraints.hasBoundedWidth ? constraints.maxWidth : 0,
+            _across ?? 0,
+          ),
+          bodyStyle: style,
+          inlinePadding: inline,
+          minWidth: r.columnMinWidth,
+          textScaler: MediaQuery.textScalerOf(context),
+          textDirection: Directionality.of(context),
+          headerNatural: _headingWidths(
+            columns,
+            style.copyWith(fontWeight: t.fontWeightStrong),
+            inline,
+          ),
+          builderNatural: List<double?>.filled(columns.length, null),
+        );
+
+        return ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(
+            dragDevices: {
+              ...ScrollConfiguration.of(context).dragDevices,
+              PointerDeviceKind.mouse,
+            },
+            scrollbars: false,
+          ),
+          child: _Rows(
+            widths: widths.columns,
+            rowHeight: _lazyRowHeight(r, t),
+            headerRows: _showHeader ? 1 : 0,
+            pinnedStart: _pinnedTo(TableColumnFixed.start).length,
+            pinnedEnd: _pinnedTo(TableColumnFixed.end).length,
+            shadeColor: r.pinnedShadowColor,
+            shadeExtent: r.pinnedShadowExtent,
+            verticalDetails: const ScrollableDetails.vertical(),
+            horizontalDetails: const ScrollableDetails.horizontal(),
+            delegate: TwoDimensionalChildBuilderDelegate(
+              maxXIndex: columns.length - 1,
+              maxYIndex: widget.data.length - 1 + (_showHeader ? 1 : 0),
+              builder: (context, vicinity) =>
+                  _lazyCell(vicinity, columns, r, t, rule),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _defaultEmpty(BuildContext context, EmptySlot slot) => const Empty();
@@ -1187,4 +1396,655 @@ class _TableState<T> extends State<Table<T>> {
       ),
     );
   }
+}
+
+/// What each column is wide, worked out without laying a single cell out.
+///
+/// A lazy table cannot ask its columns to negotiate: the rows that would do
+/// the negotiating have not been built, and building them all is the cost
+/// being removed. So the widths are settled first, from the text itself —
+/// a [TextPainter] measures a string for the price of laying out that string,
+/// and never touches the widget tree.
+///
+/// A column that names a [TableColumn.width] is that wide and is not
+/// measured. A column with a [TableColumn.value] is measured over every row,
+/// so its width is exact however many rows there are. A column that draws
+/// with a [TableColumn.builder] and names no value cannot be measured this
+/// way — nothing here can guess how wide a `Tag` is — and takes
+/// [builderNatural] for that column, which the viewport fills in from the
+/// cells it has actually built.
+@immutable
+class _TableWidths {
+  const _TableWidths._(this.columns, this.total);
+
+  /// One width per column, in the order they were given.
+  final List<double> columns;
+
+  /// What they add up to.
+  final double total;
+
+  static _TableWidths resolve<T>({
+    required List<TableColumn<T>> columns,
+    required List<T> data,
+    required double available,
+    required TextStyle bodyStyle,
+    required double inlinePadding,
+    required double minWidth,
+    required TextScaler textScaler,
+    required TextDirection textDirection,
+    required List<double?> headerNatural,
+    required List<double?> builderNatural,
+  }) {
+    final natural = List<double>.filled(columns.length, 0);
+    final auto = <int>[];
+    final flexed = <int>[];
+
+    for (var i = 0; i < columns.length; i++) {
+      final column = columns[i];
+      if (column.width != null) {
+        natural[i] = column.width!;
+        continue;
+      }
+      if (column.flex != null) {
+        flexed.add(i);
+        // A flexed column still has a floor, or a share of nothing leaves it
+        // at nothing.
+        natural[i] = minWidth;
+        continue;
+      }
+      auto.add(i);
+      var widest = headerNatural[i] ?? 0;
+      if (column.value != null) {
+        for (final record in data) {
+          final value = column.value!(record);
+          if (value == null) continue;
+          widest = math.max(
+            widest,
+            measure('$value', bodyStyle, textScaler, textDirection),
+          );
+        }
+        widest += inlinePadding;
+      } else {
+        // Nothing to read, so the cells that were built have the say. Until
+        // one has been, the column asks for its floor rather than nothing.
+        widest =
+            math.max(widest + inlinePadding, builderNatural[i] ?? minWidth);
+      }
+      natural[i] = widest;
+    }
+
+    // What is left over goes to the flexed columns first — that is what a
+    // share is — and then, if there is still room, to the columns that sized
+    // themselves, which is how a table fills its box rather than huddling at
+    // one edge.
+    final fixedTotal = natural.fold<double>(0, (sum, w) => sum + w);
+    var slack = available.isFinite ? available - fixedTotal : 0.0;
+    if (slack > 0 && flexed.isNotEmpty) {
+      final parts = flexed.fold<int>(0, (sum, i) => sum + columns[i].flex!);
+      for (final i in flexed) {
+        natural[i] += slack * columns[i].flex! / parts;
+      }
+      slack = 0;
+    }
+    if (slack > 0 && auto.isNotEmpty) {
+      final share = slack / auto.length;
+      for (final i in auto) {
+        natural[i] += share;
+      }
+    }
+
+    return _TableWidths._(
+      natural,
+      natural.fold<double>(0, (sum, w) => sum + w),
+    );
+  }
+
+  /// The height a line of this text takes, measured rather than reckoned:
+  /// the arithmetic came out two pixels over what the engine actually lays
+  /// out, and two pixels is a row that does not line up with a still one.
+  static double lineHeight(
+    TextStyle style,
+    TextScaler scaler,
+    TextDirection direction,
+  ) {
+    final painter = TextPainter(
+      // Ascender and descender both, so the line is the line whatever is in
+      // the cell.
+      text: TextSpan(text: 'Ag', style: style),
+      textDirection: direction,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final height = painter.height;
+    painter.dispose();
+    return height;
+  }
+
+  /// The width one string wants, which is the width of the string.
+  static double measure(
+    String text,
+    TextStyle style,
+    TextScaler scaler,
+    TextDirection direction,
+  ) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: direction,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
+  }
+}
+
+/// The rows of a scrolling table, built as they come into view.
+///
+/// Both axes belong to one viewport rather than to a scroll view each: a
+/// pinned column and a heading that stays put are questions about where a
+/// cell sits, and a viewport that owns both answers them by laying the cell
+/// out there. The heading is row zero, held at the top; the pinned columns
+/// are the first and last x indices, held at the edges.
+class _Rows extends TwoDimensionalScrollView {
+  const _Rows({
+    required this.widths,
+    required this.rowHeight,
+    required this.headerRows,
+    required this.pinnedStart,
+    required this.pinnedEnd,
+    required this.shadeColor,
+    required this.shadeExtent,
+    required super.delegate,
+    required super.verticalDetails,
+    required super.horizontalDetails,
+  }) // One recognizer per axis, rather than the pan that would follow a
+  // finger diagonally. A pan asks the arena for more movement before it
+  // will claim a drag, so inside a scrolling page the page's own vertical
+  // drag won every time: measured, a hundred and thirty pixels of a
+  // hundred and fifty went to the page and the rows did not move at all.
+  // A trackpad is unaffected — a scroll is a pointer signal, not a drag.
+  : super(diagonalDragBehavior: DiagonalDragBehavior.none);
+
+  final List<double> widths;
+  final double rowHeight;
+  final int headerRows;
+  final int pinnedStart;
+  final int pinnedEnd;
+  final Color shadeColor;
+  final double shadeExtent;
+
+  @override
+  Widget buildViewport(
+    BuildContext context,
+    ViewportOffset verticalOffset,
+    ViewportOffset horizontalOffset,
+  ) =>
+      _RowsViewport(
+        widths: widths,
+        rowHeight: rowHeight,
+        headerRows: headerRows,
+        pinnedStart: pinnedStart,
+        pinnedEnd: pinnedEnd,
+        shadeColor: shadeColor,
+        shadeExtent: shadeExtent,
+        horizontalOffset: horizontalOffset,
+        horizontalAxisDirection: horizontalDetails.direction,
+        verticalOffset: verticalOffset,
+        verticalAxisDirection: verticalDetails.direction,
+        delegate: delegate as TwoDimensionalChildBuilderDelegate,
+        mainAxis: mainAxis,
+      );
+}
+
+class _RowsViewport extends TwoDimensionalViewport {
+  const _RowsViewport({
+    required this.widths,
+    required this.rowHeight,
+    required this.headerRows,
+    required this.pinnedStart,
+    required this.pinnedEnd,
+    required this.shadeColor,
+    required this.shadeExtent,
+    required super.verticalOffset,
+    required super.verticalAxisDirection,
+    required super.horizontalOffset,
+    required super.horizontalAxisDirection,
+    required TwoDimensionalChildBuilderDelegate super.delegate,
+    required super.mainAxis,
+  });
+
+  final List<double> widths;
+  final double rowHeight;
+  final int headerRows;
+  final int pinnedStart;
+  final int pinnedEnd;
+  final Color shadeColor;
+  final double shadeExtent;
+
+  @override
+  RenderTwoDimensionalViewport createRenderObject(BuildContext context) =>
+      _RenderRows(
+        widths: widths,
+        rowHeight: rowHeight,
+        headerRows: headerRows,
+        pinnedStart: pinnedStart,
+        pinnedEnd: pinnedEnd,
+        shadeColor: shadeColor,
+        shadeExtent: shadeExtent,
+        horizontalOffset: horizontalOffset,
+        horizontalAxisDirection: horizontalAxisDirection,
+        verticalOffset: verticalOffset,
+        verticalAxisDirection: verticalAxisDirection,
+        delegate: delegate as TwoDimensionalChildBuilderDelegate,
+        mainAxis: mainAxis,
+        childManager: context as TwoDimensionalChildManager,
+      );
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderRows renderObject) {
+    renderObject
+      ..widths = widths
+      ..rowHeight = rowHeight
+      ..headerRows = headerRows
+      ..pinnedStart = pinnedStart
+      ..pinnedEnd = pinnedEnd
+      ..shadeColor = shadeColor
+      ..shadeExtent = shadeExtent
+      ..horizontalOffset = horizontalOffset
+      ..horizontalAxisDirection = horizontalAxisDirection
+      ..verticalOffset = verticalOffset
+      ..verticalAxisDirection = verticalAxisDirection
+      ..delegate = delegate
+      ..mainAxis = mainAxis;
+  }
+}
+
+class _RenderRows extends RenderTwoDimensionalViewport {
+  _RenderRows({
+    required List<double> widths,
+    required double rowHeight,
+    required int headerRows,
+    required int pinnedStart,
+    required int pinnedEnd,
+    required Color shadeColor,
+    required double shadeExtent,
+    required super.horizontalOffset,
+    required super.horizontalAxisDirection,
+    required super.verticalOffset,
+    required super.verticalAxisDirection,
+    required TwoDimensionalChildBuilderDelegate super.delegate,
+    required super.mainAxis,
+    required super.childManager,
+  })  : _widths = widths,
+        _rowHeight = rowHeight,
+        _headerRows = headerRows,
+        _pinnedStart = pinnedStart,
+        _pinnedEnd = pinnedEnd,
+        _shadeColor = shadeColor,
+        _shadeExtent = shadeExtent;
+
+  List<double> _widths;
+
+  bool _sameWidths(List<double> other) {
+    if (other.length != _widths.length) return false;
+    for (var i = 0; i < other.length; i++) {
+      if (other[i] != _widths[i]) return false;
+    }
+    return true;
+  }
+
+  set widths(List<double> value) {
+    if (_sameWidths(value)) return;
+    _widths = value;
+    markNeedsLayout();
+  }
+
+  double _rowHeight;
+  set rowHeight(double value) {
+    if (_rowHeight == value) return;
+    _rowHeight = value;
+    markNeedsLayout();
+  }
+
+  int _headerRows;
+  set headerRows(int value) {
+    if (_headerRows == value) return;
+    _headerRows = value;
+    markNeedsLayout();
+  }
+
+  int _pinnedStart;
+  set pinnedStart(int value) {
+    if (_pinnedStart == value) return;
+    _pinnedStart = value;
+    markNeedsLayout();
+  }
+
+  int _pinnedEnd;
+  set pinnedEnd(int value) {
+    if (_pinnedEnd == value) return;
+    _pinnedEnd = value;
+    markNeedsLayout();
+  }
+
+  Color _shadeColor;
+  set shadeColor(Color value) {
+    if (_shadeColor == value) return;
+    _shadeColor = value;
+    markNeedsPaint();
+  }
+
+  double _shadeExtent;
+  set shadeExtent(double value) {
+    if (_shadeExtent == value) return;
+    _shadeExtent = value;
+    markNeedsPaint();
+  }
+
+  // What the last layout settled on, so the paint that follows knows which
+  // cells belong to which band without working any of it out again.
+  int _firstRow = 0;
+  int _lastRow = -1;
+  int _firstColumn = 0;
+  int _lastColumn = -1;
+  double _lead = 0;
+  double _trail = 0;
+  double _headerHeight = 0;
+
+  int get _columnCount => _widths.length;
+
+  /// The base class's cache extent, read without the deprecated getter: rows
+  /// built one frame before they are wanted are rows nobody waits for.
+  double _cache(double mainAxisExtent) => switch (scrollCacheExtent.style) {
+        CacheExtentStyle.pixel => scrollCacheExtent.value,
+        CacheExtentStyle.viewport => scrollCacheExtent.value * mainAxisExtent,
+      };
+
+  /// Where a column starts, measured from the first column.
+  double _startOf(int column) {
+    var x = 0.0;
+    for (var i = 0; i < column; i++) {
+      x += _widths[i];
+    }
+    return x;
+  }
+
+  double _extent(int from, int to) {
+    var w = 0.0;
+    for (var i = from; i < to; i++) {
+      w += _widths[i];
+    }
+    return w;
+  }
+
+  void _place(int column, int row, double dx, double dy) {
+    final child = buildOrObtainChildFor(
+      ChildVicinity(xIndex: column, yIndex: row),
+    );
+    if (child == null) return;
+    child.layout(
+      BoxConstraints.tightFor(width: _widths[column], height: _rowHeight),
+    );
+    parentDataOf(child).layoutOffset = Offset(dx, dy);
+  }
+
+  @override
+  void layoutChildSequence() {
+    final size = viewportDimension;
+    final rows =
+        (delegate as TwoDimensionalChildBuilderDelegate).maxYIndex! + 1;
+    final bodyRows = rows - _headerRows;
+
+    _lead = _extent(0, _pinnedStart);
+    _trail = _extent(_columnCount - _pinnedEnd, _columnCount);
+    _headerHeight = _headerRows * _rowHeight;
+
+    final looseWidth = _extent(_pinnedStart, _columnCount - _pinnedEnd);
+    final freeWidth = math.max(0.0, size.width - _lead - _trail);
+    _maxAcross = math.max(0, looseWidth - freeWidth);
+    horizontalOffset.applyContentDimensions(0, _maxAcross);
+
+    final bodyHeight = math.max(0.0, size.height - _headerHeight);
+    verticalOffset.applyContentDimensions(
+      0,
+      math.max(0, bodyRows * _rowHeight - bodyHeight),
+    );
+
+    final across = horizontalOffset.pixels;
+    final down = verticalOffset.pixels;
+
+    // The cache extent is the base class's, and it is worth having: a row
+    // built one frame before it is needed is a row that does not have to be
+    // built while the finger is moving.
+    _firstRow = bodyRows == 0
+        ? 0
+        : ((down - _cache(bodyHeight)) / _rowHeight)
+            .floor()
+            .clamp(0, bodyRows - 1);
+    _lastRow = bodyRows == 0
+        ? -1
+        : ((down + bodyHeight + _cache(bodyHeight)) / _rowHeight)
+                .ceil()
+                .clamp(0, bodyRows) -
+            1;
+
+    final looseFrom = _pinnedStart;
+    final looseTo = _columnCount - _pinnedEnd - 1;
+    _firstColumn = looseFrom;
+    _lastColumn = looseTo - 1 < looseFrom ? looseFrom - 1 : looseTo;
+    final origin = _startOf(looseFrom);
+    for (var i = looseFrom; i <= looseTo; i++) {
+      final start = _startOf(i) - origin;
+      if (start + _widths[i] <= across - _cache(freeWidth)) {
+        _firstColumn = i + 1;
+        continue;
+      }
+      if (start >= across + freeWidth + _cache(freeWidth)) {
+        _lastColumn = i - 1;
+        break;
+      }
+      _lastColumn = i;
+    }
+    if (_firstColumn > looseTo) _lastColumn = _firstColumn - 1;
+
+    void band(int row, double dy) {
+      for (var i = _firstColumn; i <= _lastColumn; i++) {
+        _place(i, row, _lead + _startOf(i) - origin - across, dy);
+      }
+      for (var i = 0; i < _pinnedStart; i++) {
+        _place(i, row, _startOf(i), dy);
+      }
+      for (var i = _columnCount - _pinnedEnd; i < _columnCount; i++) {
+        _place(
+          i,
+          row,
+          size.width -
+              _trail +
+              _startOf(i) -
+              _startOf(_columnCount - _pinnedEnd),
+          dy,
+        );
+      }
+    }
+
+    for (var y = _firstRow; y <= _lastRow; y++) {
+      band(y + _headerRows, _headerHeight + y * _rowHeight - down);
+    }
+    if (_headerRows > 0) band(0, 0);
+  }
+
+  // One clip layer per band, kept between frames: pushing six new layers on
+  // every scrolled pixel is a cost paid for nothing.
+  final List<LayerHandle<ClipRectLayer>> _clips = [
+    for (var i = 0; i < 6; i++) LayerHandle<ClipRectLayer>(),
+  ];
+
+  @override
+  void dispose() {
+    for (final clip in _clips) {
+      clip.layer = null;
+    }
+    super.dispose();
+  }
+
+  /// Paints one rectangle of cells, clipped to the band it belongs to.
+  ///
+  /// The band is what makes a column pinned. Children are painted in the
+  /// order of their [ChildVicinity], which puts the heading — row zero —
+  /// first, under everything; and a column held at an edge would be painted
+  /// under the columns running past it. Bands settle both, and the clip is
+  /// what keeps a travelling cell out of a pinned one's ground.
+  void _paintBand(
+    PaintingContext context,
+    Offset offset,
+    LayerHandle<ClipRectLayer> clip,
+    Rect bounds, {
+    required int fromColumn,
+    required int toColumn,
+    required int fromRow,
+    required int toRow,
+  }) {
+    if (fromColumn > toColumn || fromRow > toRow || bounds.isEmpty) {
+      clip.layer = null;
+      return;
+    }
+    clip.layer = context.pushClipRect(
+      needsCompositing,
+      offset,
+      bounds,
+      (innerContext, innerOffset) {
+        for (var y = fromRow; y <= toRow; y++) {
+          for (var x = fromColumn; x <= toColumn; x++) {
+            final child = getChildFor(ChildVicinity(xIndex: x, yIndex: y));
+            if (child == null) continue;
+            final data = parentDataOf(child);
+            if (!data.isVisible) continue;
+            innerContext.paintChild(child, innerOffset + data.paintOffset!);
+          }
+        }
+      },
+      oldLayer: clip.layer,
+    );
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (firstChild == null) return;
+    final size = viewportDimension;
+    final middle = math.max(0.0, size.width - _lead - _trail);
+    final body = math.max(0.0, size.height - _headerHeight);
+    final firstRow = _firstRow + _headerRows;
+    final lastRow = _lastRow + _headerRows;
+    final lastColumn = _columnCount - 1;
+
+    // The rows that travel, then the columns that do not, then the heading
+    // over both — each one over what it is meant to stand in front of.
+    _paintBand(
+      context,
+      offset,
+      _clips[0],
+      Rect.fromLTWH(_lead, _headerHeight, middle, body),
+      fromColumn: _firstColumn,
+      toColumn: _lastColumn,
+      fromRow: firstRow,
+      toRow: lastRow,
+    );
+    _paintBand(
+      context,
+      offset,
+      _clips[1],
+      Rect.fromLTWH(0, _headerHeight, _lead, body),
+      fromColumn: 0,
+      toColumn: _pinnedStart - 1,
+      fromRow: firstRow,
+      toRow: lastRow,
+    );
+    _paintBand(
+      context,
+      offset,
+      _clips[2],
+      Rect.fromLTWH(size.width - _trail, _headerHeight, _trail, body),
+      fromColumn: _columnCount - _pinnedEnd,
+      toColumn: lastColumn,
+      fromRow: firstRow,
+      toRow: lastRow,
+    );
+    _paintBand(
+      context,
+      offset,
+      _clips[3],
+      Rect.fromLTWH(_lead, 0, middle, _headerHeight),
+      fromColumn: _firstColumn,
+      toColumn: _lastColumn,
+      fromRow: 0,
+      toRow: _headerRows - 1,
+    );
+    _paintBand(
+      context,
+      offset,
+      _clips[4],
+      Rect.fromLTWH(0, 0, _lead, _headerHeight),
+      fromColumn: 0,
+      toColumn: _pinnedStart - 1,
+      fromRow: 0,
+      toRow: _headerRows - 1,
+    );
+    _paintBand(
+      context,
+      offset,
+      _clips[5],
+      Rect.fromLTWH(size.width - _trail, 0, _trail, _headerHeight),
+      fromColumn: _columnCount - _pinnedEnd,
+      toColumn: lastColumn,
+      fromRow: 0,
+      toRow: _headerRows - 1,
+    );
+
+    _paintShade(context, offset, size);
+  }
+
+  /// The shade a pinned column casts over the rows that have gone behind it,
+  /// and only while there are any.
+  void _paintShade(PaintingContext context, Offset offset, Size size) {
+    final across = horizontalOffset.pixels;
+
+    void cast(Rect local, {required bool atStart}) {
+      if (local.isEmpty) return;
+      // The shader is laid out in the canvas's coordinates, not the
+      // viewport's, so it is the shifted rectangle that describes it.
+      final rect = local.shift(offset);
+      context.canvas.drawRect(
+        rect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: atStart ? Alignment.centerLeft : Alignment.centerRight,
+            end: atStart ? Alignment.centerRight : Alignment.centerLeft,
+            colors: [_shadeColor, _shadeColor.withAlpha(0)],
+          ).createShader(rect),
+      );
+    }
+
+    if (_pinnedStart > 0 && across > 0.5) {
+      cast(
+        Rect.fromLTWH(_lead, 0, _shadeExtent, size.height),
+        atStart: true,
+      );
+    }
+    if (_pinnedEnd > 0 && across < _maxAcross - 0.5) {
+      cast(
+        Rect.fromLTWH(
+          size.width - _trail - _shadeExtent,
+          0,
+          _shadeExtent,
+          size.height,
+        ),
+        atStart: false,
+      );
+    }
+  }
+
+  /// How far the loose columns can be run, kept from the last layout so the
+  /// paint knows whether there is anything left ahead to cast over.
+  double _maxAcross = 0;
 }

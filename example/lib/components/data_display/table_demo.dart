@@ -44,6 +44,16 @@ class _TableDemoState extends State<TableDemo> {
       ),
   ];
 
+  /// Enough rows that building them all would tell.
+  static final _crowd = [
+    for (var i = 0; i < 500; i++)
+      Person(
+        '${_people[i % _people.length].name} ${i + 1}',
+        20 + i % 50,
+        _people[i % _people.length].city,
+      ),
+  ];
+
   ControlSize _size = SoftSize.middle;
   bool _bordered = false;
   Person? _tapped;
@@ -195,9 +205,30 @@ class _TableDemoState extends State<TableDemo> {
               const SizedBox(height: 8),
               const Text(
                 'Give the body a height and the heading stops travelling with '
-                'the rows. Columns then share the width rather than fitting '
-                'their content: two tables can only agree on a width they '
-                'both work out the same way.',
+                'the rows — and only the rows on screen are built. The '
+                'columns still fit their content: the widths are worked out '
+                'from the text before a cell exists.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Five hundred rows',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                scroll: const TableScroll(y: 240),
+                columns: _columns,
+                data: _crowd,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Five hundred rows cost what forty do: the ones off screen '
+                'are never built. Scroll to the end and back — the widths do '
+                'not shift, because they were settled from every row before '
+                'the first one was drawn.',
               ),
             ],
           ),

@@ -244,6 +244,7 @@ TableAlign
 TableColumn
 TableColumnFixed
 TableDefaults
+TableFilter
 TableScroll
 TableSort
 TableSortOrder

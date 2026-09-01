@@ -118,6 +118,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rows as given rather than as shown — an order does not change how wide a
   word is, so sorting never re-measures.
 
+  **Filtering.** `filters` puts a funnel at the head of a column, opening a
+  menu of choices; the column's `value` is what a choice is matched against,
+  so most columns need nothing else said. `onFilter` says what a choice means
+  where matching the value will not do.
+
+  ```dart
+  TableColumn(
+    title: const Text('City'),
+    value: (u) => u.city,
+    filters: const [TableFilter('Bristol', 'Bristol'), TableFilter('Galway', 'Galway')],
+  )
+  ```
+
+  Within one column the choices are alternatives; across columns a row has to
+  answer every one, which is what narrowing twice means. `filterMultiple:
+  false` makes a menu behave as a set of radios. Nothing chosen is every row.
+  Left alone the table keeps its own choices from `defaultFilters`; given
+  `filters` it shows what it is told and `onFiltersChanged` reports what a
+  menu would have made of them.
+
+  The funnel answers the hand apart from the heading it stands in — a rounded
+  ground of its own, a step stronger than the heading's, and the mark darkens
+  with it. The menu is as wide as its widest choice, floored at antd's hundred
+  and twenty, and scrolls past two hundred and sixty-four rather than growing
+  off the screen.
+
+  Filtering happens before sorting, as in antd, and the widths are still
+  measured from the rows as given — so a column keeps its width while you
+  filter rather than jumping about under the hand.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page
@@ -155,6 +185,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The name is Flutter's own too, so a file that wants both hides one:
   `import 'package:seed_ui/seed_ui.dart' hide Table;` and the reverse. `Empty`
   gains an `EmptySlot.table` so a kit-wide placeholder covers tables as well.
+
+- **`SeedLocalizations.reset`** — the word that clears a `Table` column's
+  filter menu, next to `ok` which applies it. Translated into the eleven
+  languages the kit already carries.
 
 ## 0.15.0
 

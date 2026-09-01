@@ -66,6 +66,7 @@ class SeedLocalizations {
     this.next = 'Next',
     this.finish = 'Finish',
     this.noData = 'No data',
+    this.reset = 'Reset',
     this.noMoreItems = 'No more items',
     this.perPage = '/ page',
     this.selectTime = 'Select time',
@@ -89,6 +90,9 @@ class SeedLocalizations {
 
   /// Which language this is, for identifying it. Not used for matching.
   final String localeName;
+
+  /// Clears a `Table` column's filter menu, next to [ok] which applies it.
+  final String reset;
 
   /// Placeholder of an empty `TimePicker`.
   final String selectTime;
@@ -389,6 +393,7 @@ class SeedLocalizations {
     next: 'Далее',
     finish: 'Завершить',
     noData: 'Нет данных',
+    reset: 'Сбросить',
     noMoreItems: 'Больше ничего нет',
     perPage: '/ стр.',
   );
@@ -436,6 +441,7 @@ class SeedLocalizations {
     next: 'Indiki',
     finish: 'Tamamla',
     noData: 'Maglumat ýok',
+    reset: 'Arassala',
     noMoreItems: 'Başga zat ýok',
     perPage: '/ sahypa',
   );
@@ -482,6 +488,7 @@ class SeedLocalizations {
     next: 'Weiter',
     finish: 'Fertig',
     noData: 'Keine Daten',
+    reset: 'Zurücksetzen',
     noMoreItems: 'Keine weiteren Einträge',
     perPage: '/ Seite',
   );
@@ -528,6 +535,7 @@ class SeedLocalizations {
     next: 'Étape suivante',
     finish: 'Fin de la visite guidée',
     noData: 'Aucune donnée',
+    reset: 'Réinitialiser',
     noMoreItems: 'Aucun élément supplémentaire',
     perPage: '/ page',
   );
@@ -575,6 +583,7 @@ class SeedLocalizations {
     next: 'Siguiente',
     finish: 'Finalizar',
     noData: 'Sin datos',
+    reset: 'Restablecer',
     noMoreItems: 'No hay más elementos',
     perPage: '/ página',
   );
@@ -622,6 +631,7 @@ class SeedLocalizations {
     next: '下一步',
     finish: '结束导览',
     noData: '暂无数据',
+    reset: '重置',
     noMoreItems: '没有更多了',
     perPage: '条/页',
   );
@@ -668,6 +678,7 @@ class SeedLocalizations {
     next: '次',
     finish: '仕上げる',
     noData: 'データなし',
+    reset: 'リセット',
     noMoreItems: 'これ以上ありません',
     perPage: '件/ページ',
   );
@@ -715,6 +726,7 @@ class SeedLocalizations {
     next: 'Sonraki',
     finish: 'Bitir',
     noData: 'Veri yok',
+    reset: 'Sıfırla',
     noMoreItems: 'Başka öğe yok',
     perPage: '/ sayfa',
   );
@@ -761,6 +773,7 @@ class SeedLocalizations {
     next: 'Próximo',
     finish: 'Finalizar',
     noData: 'Sem conteúdo',
+    reset: 'Redefinir',
     noMoreItems: 'Não há mais itens',
     perPage: '/ página',
   );
@@ -808,6 +821,7 @@ class SeedLocalizations {
     next: 'التالي',
     finish: 'إنهاء',
     noData: 'لا توجد بيانات',
+    reset: 'إعادة تعيين',
     noMoreItems: 'لا مزيد من العناصر',
     perPage: '/ صفحة',
     digits: arabicIndicDigits,
@@ -856,6 +870,7 @@ class SeedLocalizations {
     next: 'הבא',
     finish: 'סיום',
     noData: 'אין נתונים',
+    reset: 'איפוס',
     noMoreItems: 'אין פריטים נוספים',
     perPage: '/ עמוד',
   );

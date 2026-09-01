@@ -1679,4 +1679,341 @@ void main() {
       );
     });
   });
+
+  group('filtering', () {
+    const people = [
+      _User('Chen', 27),
+      _User('Ann', 45),
+      _User('Bart', 31),
+      _User('Dee', 27),
+    ];
+
+    List<String> names(WidgetTester tester) => tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data)
+        .whereType<String>()
+        .where((s) => people.any((p) => p.name == s))
+        .toList();
+
+    // A filter menu opens in the overlay, so the app has to have one.
+    Widget host(Widget child) => ConfigProvider(
+          child: m.MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: m.Scaffold(
+              body: Center(child: SizedBox(width: 600, child: child)),
+            ),
+          ),
+        );
+
+    Widget table({
+      Map<int, List<Object?>>? filters,
+      Map<int, List<Object?>>? defaultFilters,
+      ValueChanged<Map<int, List<Object?>>>? onFiltersChanged,
+      bool multiple = true,
+      bool Function(Object?, _User)? onFilter,
+      TableSort? defaultSort,
+    }) =>
+        host(
+          Table<_User>(
+            data: people,
+            filters: filters,
+            defaultFilters: defaultFilters,
+            onFiltersChanged: onFiltersChanged,
+            defaultSort: defaultSort,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                filterMultiple: multiple,
+                onFilter: onFilter,
+                filters: const [
+                  TableFilter('Ann', 'Ann'),
+                  TableFilter('Bart', 'Bart'),
+                ],
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                sortable: true,
+                value: (u) => u.age,
+                filters: const [TableFilter('young', 27)],
+              ),
+            ],
+          ),
+        );
+
+    // The label is in the table as well as in the menu; the menu is above.
+    Future<void> choose(WidgetTester tester, String label) async {
+      await tester.tap(find.text(label).last);
+      await tester.pump();
+    }
+
+    Future<void> openMenu(WidgetTester tester, int at) async {
+      await tester.tap(
+        find
+            .byWidgetPredicate((w) =>
+                w is CustomPaint &&
+                w.painter.runtimeType.toString() == '_FunnelPainter')
+            .at(at),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+        'a column with filters wears a funnel, and one without does not',
+        (tester) async {
+      await tester.pumpWidget(table());
+      expect(
+        find.byWidgetPredicate((w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == '_FunnelPainter'),
+        findsNWidgets(2),
+      );
+    });
+
+    testWidgets('choosing narrows the rows', (tester) async {
+      await tester.pumpWidget(table());
+      expect(names(tester), ['Chen', 'Ann', 'Bart', 'Dee']);
+
+      await openMenu(tester, 0);
+      await choose(tester, 'Ann');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(names(tester), ['Ann']);
+    });
+
+    testWidgets('within a column the choices are alternatives', (tester) async {
+      await tester.pumpWidget(table());
+      await openMenu(tester, 0);
+      await choose(tester, 'Ann');
+      await choose(tester, 'Bart');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(names(tester), ['Ann', 'Bart'],
+          reason: 'either, not both at once');
+    });
+
+    testWidgets('across columns a row has to answer every one', (tester) async {
+      await tester.pumpWidget(table());
+      await openMenu(tester, 0);
+      await choose(tester, 'Ann');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      await openMenu(tester, 1);
+      await choose(tester, 'young');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(names(tester), isEmpty, reason: 'Ann is 45, so nothing is left');
+    });
+
+    testWidgets('one at a time where the column says so', (tester) async {
+      await tester.pumpWidget(table(multiple: false));
+      await openMenu(tester, 0);
+      await choose(tester, 'Ann');
+      await choose(tester, 'Bart');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(names(tester), ['Bart'], reason: 'the second replaced the first');
+    });
+
+    testWidgets('reset gives every row back', (tester) async {
+      await tester.pumpWidget(
+        table(defaultFilters: const {
+          0: ['Ann']
+        }),
+      );
+      expect(names(tester), ['Ann']);
+
+      await openMenu(tester, 0);
+      await tester.tap(find.text('Reset'));
+      await tester.pumpAndSettle();
+
+      expect(names(tester), ['Chen', 'Ann', 'Bart', 'Dee']);
+    });
+
+    testWidgets('an onFilter of your own says what a choice means',
+        (tester) async {
+      // Everyone but the one chosen, which no comparison of values would give.
+      await tester.pumpWidget(
+        table(onFilter: (choice, user) => user.name != choice),
+      );
+      await openMenu(tester, 0);
+      await choose(tester, 'Ann');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(names(tester), ['Chen', 'Bart', 'Dee']);
+    });
+
+    testWidgets('filters given are the filters shown, and choosing only tells',
+        (tester) async {
+      Map<int, List<Object?>>? told;
+      await tester.pumpWidget(table(
+        filters: const {
+          0: ['Bart']
+        },
+        onFiltersChanged: (next) => told = next,
+      ));
+      expect(names(tester), ['Bart']);
+
+      await openMenu(tester, 0);
+      await choose(tester, 'Ann');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(told, {
+        0: ['Bart', 'Ann'],
+      });
+      expect(names(tester), ['Bart'], reason: 'and changed nothing itself');
+    });
+
+    testWidgets('narrowing and sorting are the same table', (tester) async {
+      await tester.pumpWidget(table(
+        defaultFilters: const {
+          1: [27]
+        },
+        defaultSort: const TableSort(0, TableSortOrder.ascending),
+      ));
+      expect(names(tester), ['Chen', 'Dee'],
+          reason: 'the twenty-sevens, by name');
+    });
+
+    testWidgets('the funnel of a column being narrowed is marked',
+        (tester) async {
+      Color funnelAt(WidgetTester tester, int at) => (tester
+              .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_FunnelPainter'))
+              .elementAt(at)
+              .painter! as dynamic)
+          .color as Color;
+
+      await tester.pumpWidget(table(defaultFilters: const {
+        0: ['Ann']
+      }));
+      expect(funnelAt(tester, 0), isNot(funnelAt(tester, 1)));
+    });
+
+    testWidgets('a column present with nothing chosen narrows nothing',
+        (tester) async {
+      // A caller may well hand over a map with an empty entry in it — that
+      // column is simply not narrowing, and the ones after it still are.
+      await tester.pumpWidget(table(defaultFilters: const {
+        0: [],
+        1: [27],
+      }));
+      expect(names(tester), ['Chen', 'Dee']);
+    });
+
+    testWidgets('the menu is a panel of its own, not the whole screen',
+        (tester) async {
+      // Dropdown.content is handed straight to the overlay — that is what it
+      // is for — so without a panel the menu had no ground of its own and
+      // took every pixel the overlay offered it.
+      await tester.pumpWidget(table());
+      await openMenu(tester, 0);
+
+      expect(find.byType(DropdownPanel), findsOneWidget);
+      final menu = tester.getRect(find.byType(DropdownPanel));
+      final screen = tester.getRect(find.byType(m.MaterialApp));
+      expect(menu.width, lessThan(screen.width / 2));
+      expect(menu.width, greaterThanOrEqualTo(120), reason: 'antd\'s floor');
+    });
+
+    testWidgets('a long list of choices scrolls instead of growing',
+        (tester) async {
+      await tester.pumpWidget(
+        host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                filters: [
+                  for (var i = 0; i < 40; i++) TableFilter('n$i', 'n$i'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+      await openMenu(tester, 0);
+      expect(tester.getRect(find.byType(DropdownPanel)).height, lessThan(400),
+          reason: 'two hundred and sixty-four and the footer');
+      expect(find.byType(SingleChildScrollView), findsWidgets);
+    });
+
+    testWidgets('the funnel takes a ground of its own under the hand',
+        (tester) async {
+      Color? funnelFill(WidgetTester tester) {
+        final painted = find
+            .ancestor(
+              of: find.byWidgetPredicate((w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_FunnelPainter'),
+              matching: find.byType(DecoratedBox),
+            )
+            .evaluate()
+            .map((e) => (e.widget as DecoratedBox).decoration)
+            .whereType<BoxDecoration>()
+            .map((d) => d.color)
+            .where((c) => c != null && c.a != 0);
+        return painted.isEmpty ? null : painted.first;
+      }
+
+      Color funnelColour(WidgetTester tester) => ((tester
+              .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_FunnelPainter'))
+              .first
+              .painter!) as dynamic)
+          .color as Color;
+
+      await tester.pumpWidget(table());
+      expect(funnelFill(tester), isNull);
+      final idle = funnelColour(tester);
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(tester.getCenter(find
+          .byWidgetPredicate((w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_FunnelPainter')
+          .first));
+      await tester.pumpAndSettle();
+
+      expect(funnelFill(tester), isNotNull);
+      // And the mark itself darkens, as antd's does: the ground alone would
+      // leave a mark you can barely see sitting on it.
+      expect(funnelColour(tester), isNot(idle));
+    });
+
+    test('a column with filters needs something to match on', () {
+      expect(
+        () => TableColumn<_User>(
+          title: const Text('Name'),
+          builder: (_, __, ___) => const Text('x'),
+          filters: const [TableFilter('Ann', 'Ann')],
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    test('a column with an empty filter list is a mistake', () {
+      expect(
+        () => TableColumn<_User>(
+          title: const Text('Name'),
+          value: (u) => u.name,
+          filters: const [],
+        ),
+        throwsAssertionError,
+      );
+    });
+  });
 }

@@ -258,6 +258,59 @@ put in order once per data and sort, and the ones in view are built from that.
 The column widths are measured from the rows as given, not as shown — an order
 does not change how wide a word is, so sorting never re-measures.
 
+## Filtering
+
+`filters` puts a funnel at the head of a column, opening a menu of choices.
+The column's `value` is what a choice is matched against, so most columns need
+nothing else said.
+
+```dart
+TableColumn(
+  title: const Text('City'),
+  value: (u) => u.city,
+  filters: const [
+    TableFilter('Bristol', 'Bristol'),
+    TableFilter('Galway', 'Galway'),
+  ],
+)
+```
+
+`onFilter` says what a choice means where matching the value will not do — a
+range, a first letter, a field the column does not show.
+
+```dart
+onFilter: (choice, user) => user.name.startsWith(choice! as String)
+```
+
+Within one column the choices are alternatives: a row belongs if it answers
+any of them. Across columns a row has to answer every one, which is what
+narrowing twice means. `filterMultiple: false` makes a column's menu behave as
+a set of radios, so a choice replaces the one before it.
+
+Nothing chosen is every row — a filter narrows, and one that has been asked
+for nothing narrows nothing. A column present in the map with an empty list is
+the same thing.
+
+Left to itself the table keeps its own choices, starting from
+`defaultFilters`. Give it `filters` and it shows what it is told, with
+`onFiltersChanged` saying what a menu would have made of them. Both are keyed
+by the column's place in `columns`, as `TableSort` is.
+
+The funnel answers the hand apart from the heading it stands in: it takes a
+rounded ground of its own, a step stronger than the heading's, and the mark
+darkens with it — antd gives the trigger its own background rather than
+letting it share the `th`'s, and a mark you can barely see sitting on a fill
+is worse than no fill.
+
+The menu is as wide as its widest choice, floored at a hundred and twenty
+pixels as antd's is, and its choices scroll past two hundred and sixty-four
+rather than growing off the screen.
+
+Filtering happens before sorting, as it does in antd: the rows are narrowed,
+then put in order. The column widths are measured from the rows as given
+rather than as shown, so neither narrowing nor sorting re-measures — a column
+keeps its width while you filter, instead of jumping about under the hand.
+
 ## Around the rows
 
 | Prop | |
@@ -285,9 +338,12 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `cellPaddingInline`, `cellPaddingInlineSM`, `cellPaddingInlineLG` | 16, 8, 20 |
 | `footerBg`, `borderRadius`, `fontSize` | |
 | `columnMinWidth` | `controlHeightLG × 2.5` — the narrowest a `flex` column is squeezed to |
+| `filterIconSize` | `sizeSM` — how big the funnel is |
+| `filterHoverBg` | `colorFill` — the funnel's own ground under the pointer |
+| `filterMenuMaxHeight` | `264` — how tall a filter menu grows before its choices scroll |
 | `headerHoverBg` | `colorFillSecondary` — behind a sortable heading under the pointer, and behind the one being sorted by |
-| `sortActiveColor` | `primary.base` — the caret standing for the order in force |
-| `sortIdleColor` | `colorTextQuaternary` — the other one, saying only that the column sorts |
+| `headerMarkActiveColor` | `primary.base` — a mark in force: the caret of the order, a funnel that is narrowing |
+| `headerMarkColor` | `colorTextQuaternary` — a mark merely offered |
 | `sortCaretSize` | `sizeXXS` — how tall each caret is |
 | `pinnedShadowColor` | black at 15% (32% dark) — the shade a pinned column casts over the rows going past it |
 | `pinnedShadowExtent` | `sizeLG` — how far that shade reaches before it has faded out |
@@ -318,5 +374,5 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-Filtering, row selection, expandable rows and pagination are still to come, in
-that order.
+Row selection, expandable rows and pagination are still to come, in that
+order.

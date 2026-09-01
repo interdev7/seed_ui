@@ -14,7 +14,10 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
+import '../data_entry/checkbox.dart';
 import '../feedback/spin.dart';
+import '../general/button.dart';
+import '../navigation/dropdown.dart';
 import 'empty.dart';
 
 /// Which edge a column's content is drawn against.
@@ -70,6 +73,30 @@ class TableSort {
 
   @override
   String toString() => 'TableSort($column, ${order.name})';
+}
+
+/// One choice in a column's filter menu.
+@immutable
+class TableFilter {
+  /// Creates a [TableFilter].
+  const TableFilter(this.label, this.value);
+
+  /// What the reader sees against the checkbox.
+  final String label;
+
+  /// What the column is asked about, and what [Table.onFiltersChanged]
+  /// reports.
+  ///
+  /// Compared with the column's value where nothing else was said, so a
+  /// filter over a city is `TableFilter('Galway', 'Galway')`.
+  final Object? value;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TableFilter && other.label == label && other.value == value;
+
+  @override
+  int get hashCode => Object.hash(label, value);
 }
 
 /// How much room a [Table] gives itself, and which way it scrolls.
@@ -139,6 +166,9 @@ class TableColumn<T> {
     this.ellipsis = false,
     this.sortable = false,
     this.sorter,
+    this.filters,
+    this.onFilter,
+    this.filterMultiple = true,
   })  : assert(
           width == null || flex == null,
           'Give a column a width or a flex, not both: one is a number of '
@@ -152,6 +182,16 @@ class TableColumn<T> {
           !sortable || value != null || sorter != null,
           'A sortable column needs a value to compare, or a sorter that says '
           'how to compare the rows itself.',
+        ),
+        assert(
+          filters == null || filters.length != 0,
+          'A column with an empty list of filters offers a menu with nothing '
+          'in it. Leave filters off instead.',
+        ),
+        assert(
+          filters == null || value != null || onFilter != null,
+          'A filtered column needs a value to match, or an onFilter that says '
+          'what a choice means itself.',
         ),
         assert(
           fixed == null || width != null,
@@ -197,6 +237,33 @@ class TableColumn<T> {
 
   /// Whether this column sorts at all.
   bool get sorts => sortable || sorter != null;
+
+  /// What the column can be filtered down to, one entry per choice.
+  ///
+  /// Naming any puts a funnel at the head of the column, opening a menu of
+  /// them. Nothing chosen is every row: a filter narrows, and a filter that
+  /// has been asked for nothing narrows nothing.
+  final List<TableFilter>? filters;
+
+  /// Whether a row belongs under one of the choices.
+  ///
+  /// Left out, a row belongs where its [value] equals the choice's, which is
+  /// what most columns mean. Give one where it is not — a range, a substring,
+  /// a field the column does not show.
+  ///
+  /// ```dart
+  /// onFilter: (choice, user) => user.name.startsWith(choice! as String)
+  /// ```
+  final bool Function(Object? value, T record)? onFilter;
+
+  /// Whether more than one choice can be in force at once.
+  ///
+  /// Off, the menu behaves as a set of radios and a choice replaces the one
+  /// before it.
+  final bool filterMultiple;
+
+  /// Whether this column filters at all.
+  bool get filtersRows => filters != null;
 
   /// A width in logical pixels.
   ///
@@ -256,9 +323,12 @@ class TableToken {
     this.pinnedShadowColor,
     this.pinnedShadowExtent,
     this.headerHoverBg,
-    this.sortActiveColor,
-    this.sortIdleColor,
+    this.headerMarkActiveColor,
+    this.headerMarkColor,
     this.sortCaretSize,
+    this.filterIconSize,
+    this.filterMenuMaxHeight,
+    this.filterHoverBg,
   });
 
   /// Fill behind the heading row.
@@ -325,14 +395,27 @@ class TableToken {
   /// business lighting up under the hand.
   final Color? headerHoverBg;
 
-  /// Colour of the caret standing for the order a column is sorted in.
-  final Color? sortActiveColor;
+  /// Colour of a mark in a heading that is in force — the caret standing for
+  /// the order a column is sorted in, or a funnel that is narrowing the rows.
+  final Color? headerMarkActiveColor;
 
-  /// Colour of the other one, which is only there to say the column sorts.
-  final Color? sortIdleColor;
+  /// Colour of one that is merely offered.
+  final Color? headerMarkColor;
 
   /// How tall each of the two carets is.
   final double? sortCaretSize;
+
+  /// How big the funnel at the head of a filtered column is.
+  final double? filterIconSize;
+
+  /// How tall a filter menu grows before its choices scroll.
+  final double? filterMenuMaxHeight;
+
+  /// Fill behind the funnel itself under the pointer.
+  ///
+  /// A step stronger than [headerHoverBg], or the mark would not be told
+  /// apart from the heading it stands in.
+  final Color? filterHoverBg;
 
   _ResolvedTableToken _resolve(Token t) => _ResolvedTableToken(
         headerBg: headerBg ?? t.colorFillQuaternary,
@@ -361,9 +444,12 @@ class TableToken {
             alphaOn(const Color(0xFF000000), t.isDark ? 0.32 : 0.15),
         pinnedShadowExtent: pinnedShadowExtent ?? t.sizeLG,
         headerHoverBg: headerHoverBg ?? t.colorFillSecondary,
-        sortActiveColor: sortActiveColor ?? t.primary.base,
-        sortIdleColor: sortIdleColor ?? t.colorTextQuaternary,
+        headerMarkActiveColor: headerMarkActiveColor ?? t.primary.base,
+        headerMarkColor: headerMarkColor ?? t.colorTextQuaternary,
         sortCaretSize: sortCaretSize ?? t.sizeXXS,
+        filterIconSize: filterIconSize ?? t.sizeSM,
+        filterMenuMaxHeight: filterMenuMaxHeight ?? 264,
+        filterHoverBg: filterHoverBg ?? t.colorFill,
       );
 }
 
@@ -387,9 +473,12 @@ class _ResolvedTableToken {
     required this.pinnedShadowColor,
     required this.pinnedShadowExtent,
     required this.headerHoverBg,
-    required this.sortActiveColor,
-    required this.sortIdleColor,
+    required this.headerMarkActiveColor,
+    required this.headerMarkColor,
     required this.sortCaretSize,
+    required this.filterIconSize,
+    required this.filterMenuMaxHeight,
+    required this.filterHoverBg,
   });
 
   final Color headerBg;
@@ -409,9 +498,12 @@ class _ResolvedTableToken {
   final Color pinnedShadowColor;
   final double pinnedShadowExtent;
   final Color headerHoverBg;
-  final Color sortActiveColor;
-  final Color sortIdleColor;
+  final Color headerMarkActiveColor;
+  final Color headerMarkColor;
   final double sortCaretSize;
+  final double filterIconSize;
+  final double filterMenuMaxHeight;
+  final Color filterHoverBg;
 }
 
 /// Defaults for every [Table] under a `ConfigProvider`.
@@ -483,6 +575,9 @@ class Table<T> extends StatefulWidget {
     this.sort,
     this.defaultSort,
     this.onSortChanged,
+    this.filters,
+    this.defaultFilters,
+    this.onFiltersChanged,
     this.token,
   });
 
@@ -547,6 +642,19 @@ class Table<T> extends StatefulWidget {
   /// Null where the rows have gone back to the order they came in.
   final ValueChanged<TableSort?>? onSortChanged;
 
+  /// Which choices are in force, per column (controlled).
+  ///
+  /// Keyed by the column's place in [columns], as [TableSort] is. A column
+  /// absent from the map, or present with nothing chosen, is not narrowing
+  /// anything.
+  final Map<int, List<Object?>>? filters;
+
+  /// What is chosen to begin with (uncontrolled).
+  final Map<int, List<Object?>>? defaultFilters;
+
+  /// Called when a filter menu is applied or reset, with what is in force.
+  final ValueChanged<Map<int, List<Object?>>>? onFiltersChanged;
+
   /// Per-instance token overrides.
   final TableToken? token;
 
@@ -566,6 +674,10 @@ class _TableState<T> extends State<Table<T>> {
 
   /// Which heading the pointer is over, or null.
   final ValueNotifier<int?> _hoveredHeading = ValueNotifier<int?>(null);
+
+  /// Which funnel the pointer is over, or null. Its own, because the funnel
+  /// answers the hand apart from the heading it stands in.
+  final ValueNotifier<int?> _hoveredFunnel = ValueNotifier<int?>(null);
 
   /// The rows' offset across, and the heading's, kept together.
   ///
@@ -641,6 +753,7 @@ class _TableState<T> extends State<Table<T>> {
     _headingX.dispose();
     _hovered.dispose();
     _hoveredHeading.dispose();
+    _hoveredFunnel.dispose();
     _acrossOffset.dispose();
     _measured.dispose();
     super.dispose();
@@ -1216,6 +1329,32 @@ class _TableState<T> extends State<Table<T>> {
     return _ownSort;
   }
 
+  /// The choices the table keeps for itself while nobody is controlling them.
+  Map<int, List<Object?>>? _ownFilters;
+  bool _startedFilters = false;
+
+  /// The choices in force.
+  Map<int, List<Object?>> get _filters {
+    if (widget.filters != null) return widget.filters!;
+    if (!_startedFilters) {
+      _startedFilters = true;
+      _ownFilters = widget.defaultFilters;
+    }
+    return _ownFilters ?? const {};
+  }
+
+  /// What a filter menu makes of the choices when it is applied.
+  void _applyFilter(int column, List<Object?> chosen) {
+    final next = {
+      for (final entry in _filters.entries)
+        if (entry.key != column && entry.value.isNotEmpty)
+          entry.key: entry.value,
+      if (chosen.isNotEmpty) column: chosen,
+    };
+    if (widget.filters == null) setState(() => _ownFilters = next);
+    widget.onFiltersChanged?.call(next);
+  }
+
   /// The rows in the order they are shown.
   ///
   /// Sorted once per data and sort rather than per build, and stable: rows
@@ -1226,16 +1365,54 @@ class _TableState<T> extends State<Table<T>> {
 
   List<T> get _rows {
     final sort = _sort;
+    final filters = _filters;
+    final asked = Object.hash(
+      identityHashCode(widget.data),
+      sort,
+      Object.hashAll([
+        for (final entry in filters.entries) ...[
+          entry.key,
+          Object.hashAll(entry.value),
+        ],
+      ]),
+    );
+    if (_rowsAsked == asked && _rowsCache != null) return _rowsCache!;
+
+    _rowsAsked = asked;
+    return _rowsCache = _sorted(_filtered(widget.data, filters), sort);
+  }
+
+  /// The rows that belong under every filter in force.
+  ///
+  /// Every one of them: a row shown is a row that answered each column being
+  /// narrowed, which is what narrowing twice means. Within one column the
+  /// choices are alternatives, so a row belongs if it answers any of them.
+  List<T> _filtered(List<T> rows, Map<int, List<Object?>> filters) {
+    var kept = rows;
+    for (final entry in filters.entries) {
+      if (entry.value.isEmpty) continue;
+      if (entry.key < 0 || entry.key >= widget.columns.length) continue;
+      final column = widget.columns[entry.key];
+      if (!column.filtersRows) continue;
+      final belongs = column.onFilter ??
+          (Object? choice, T record) => column.value?.call(record) == choice;
+      kept = [
+        for (final record in kept)
+          if (entry.value.any((choice) => belongs(choice, record))) record,
+      ];
+    }
+    return kept;
+  }
+
+  /// The rows in the order the sort asks for, or as they are where none does.
+  List<T> _sorted(List<T> rows, TableSort? sort) {
     if (sort == null ||
         sort.column < 0 ||
         sort.column >= widget.columns.length) {
-      return widget.data;
+      return rows;
     }
     final column = widget.columns[sort.column];
-    if (!column.sorts) return widget.data;
-
-    final asked = Object.hash(identityHashCode(widget.data), sort);
-    if (_rowsAsked == asked && _rowsCache != null) return _rowsCache!;
+    if (!column.sorts) return rows;
 
     final ascending = sort.order == TableSortOrder.ascending;
     final sorter = column.sorter;
@@ -1245,12 +1422,8 @@ class _TableState<T> extends State<Table<T>> {
     // — Dart's sort is not stable, and twenty rows of one value came out
     // shuffled without it.
     final keyed = [
-      for (var i = 0; i < widget.data.length; i++)
-        (
-          i,
-          widget.data[i],
-          sorter == null ? column.value!(widget.data[i]) : null
-        ),
+      for (var i = 0; i < rows.length; i++)
+        (i, rows[i], sorter == null ? column.value!(rows[i]) : null),
     ]..sort((a, b) {
         final by = sorter != null
             ? (ascending ? sorter(a.$2, b.$2) : sorter(b.$2, a.$2))
@@ -1258,8 +1431,7 @@ class _TableState<T> extends State<Table<T>> {
         return by != 0 ? by : a.$1.compareTo(b.$1);
       });
 
-    _rowsAsked = asked;
-    return _rowsCache = [for (final row in keyed) row.$2];
+    return [for (final row in keyed) row.$2];
   }
 
   /// Comparing two of the values a column reads.
@@ -1397,7 +1569,22 @@ class _TableState<T> extends State<Table<T>> {
       style: TextStyle(color: r.headerColor, fontWeight: t.fontWeightStrong),
       child: column.title ?? const SizedBox.shrink(),
     );
-    if (!column.sorts) return title;
+    if (!column.sorts && !column.filtersRows) return title;
+    if (!column.sorts) {
+      return Row(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: _alignment(
+                column.headerAlign ?? column.align ?? TableAlign.start,
+              ),
+              child: title,
+            ),
+          ),
+          _funnel(column, index, r, t),
+        ],
+      );
+    }
 
     final sort = _sort;
     // The carets stand at the cell's trailing edge rather than beside the
@@ -1416,11 +1603,195 @@ class _TableState<T> extends State<Table<T>> {
         SizedBox(width: t.sizeXXS),
         _Carets(
           order: sort?.column == index ? sort!.order : null,
-          active: r.sortActiveColor,
-          idle: r.sortIdleColor,
+          active: r.headerMarkActiveColor,
+          idle: r.headerMarkColor,
           size: r.sortCaretSize,
         ),
+        if (column.filtersRows) _funnel(column, index, r, t),
       ],
+    );
+  }
+
+  /// The funnel at the head of a column that can be narrowed, and the menu it
+  /// opens.
+  Widget _funnel(
+    TableColumn<T> column,
+    int index,
+    _ResolvedTableToken r,
+    Token t,
+  ) {
+    final narrowing = (_filters[index] ?? const []).isNotEmpty;
+    return Dropdown<Object?>(
+      // A click, not a hover: a menu with checkboxes and two words to end it
+      // is not something to open by passing over it.
+      trigger: const [DropdownTrigger.click],
+      content: (context, close) => _filterMenu(column, index, close, r, t),
+      // Its own detector under the heading's: the innermost recognizer takes
+      // the tap, so opening the menu does not also sort the column.
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {},
+        child: ValueListenableBuilder<int?>(
+          valueListenable: _hoveredFunnel,
+          builder: (context, hovered, child) {
+            final over = hovered == index;
+            return MouseRegion(
+              cursor: SystemMouseCursors.click,
+              onEnter: (_) => _hoveredFunnel.value = index,
+              onExit: (_) {
+                if (_hoveredFunnel.value == index) {
+                  _hoveredFunnel.value = null;
+                }
+              },
+              // The funnel takes a ground of its own under the hand, rounded
+              // and a step stronger than the heading it sits in — antd gives
+              // the trigger its own background rather than letting it share
+              // the heading's, so the mark and the heading answer separately.
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: over ? r.filterHoverBg : const Color(0x00000000),
+                  borderRadius: BorderRadius.circular(t.borderRadiusSM),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: t.sizeXXS,
+                    vertical: t.sizeXXS / 2,
+                  ),
+                  child: CustomPaint(
+                    size: Size.square(r.filterIconSize),
+                    painter: _FunnelPainter(
+                      narrowing
+                          ? r.headerMarkActiveColor
+                          : over
+                              ? r.headerColor
+                              : r.headerMarkColor,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// The menu itself: the choices, and the two words that end it.
+  Widget _filterMenu(
+    TableColumn<T> column,
+    int index,
+    VoidCallback close,
+    _ResolvedTableToken r,
+    Token t,
+  ) {
+    final words = context.seedLocale;
+    final chosen = {...?_filters[index]};
+
+    // `Dropdown.content` is handed straight to the overlay — that is what it
+    // is for, so a caller can draw its own surface. Ours wants the usual one,
+    // and wants to be as wide as its widest choice: the popover offers loose
+    // constraints, and without a panel and an intrinsic width the menu had no
+    // ground of its own and took the whole width of the screen.
+    return DropdownPanel(
+      child: IntrinsicWidth(
+        child: StatefulBuilder(
+          builder: (context, setLocal) {
+            Widget choice(TableFilter filter) => Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: t.size,
+                    vertical: t.sizeXXS,
+                  ),
+                  child: Checkbox(
+                    checked: chosen.contains(filter.value),
+                    label: Text(filter.label),
+                    onChanged: (on) => setLocal(() {
+                      // One at a time where the column says so, and the choice
+                      // replaces the one before it rather than joining it.
+                      if (!column.filterMultiple) chosen.clear();
+                      if (on) {
+                        chosen.add(filter.value);
+                      } else {
+                        chosen.remove(filter.value);
+                      }
+                    }),
+                  ),
+                );
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // A long list of choices scrolls rather than growing past the
+                // screen, as antd's does at two hundred and sixty-four pixels.
+                Flexible(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: r.filterMenuMaxHeight,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final filter in column.filters!) choice(filter),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    t.sizeXXS,
+                    t.sizeXS,
+                    t.sizeXXS,
+                    0,
+                  ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: r.borderColor,
+                          width: t.lineWidth,
+                        ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.only(top: t.sizeXS),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Button(
+                            variant: ButtonVariant.text,
+                            size: SoftSize.small,
+                            onPressed: chosen.isEmpty
+                                ? null
+                                : () {
+                                    _applyFilter(index, const []);
+                                    close();
+                                  },
+                            child: Text(words.reset),
+                          ),
+                          SizedBox(width: t.sizeXS),
+                          Button(
+                            variant: ButtonVariant.solid,
+                            color: ButtonColor.primary,
+                            size: SoftSize.small,
+                            onPressed: () {
+                              _applyFilter(index, chosen.toList());
+                              close();
+                            },
+                            child: Text(words.ok),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -1947,6 +2318,31 @@ class _Carets extends StatelessWidget {
           ),
         ],
       );
+}
+
+/// A funnel: the mark antd puts at the head of a column that can be narrowed.
+class _FunnelPainter extends CustomPainter {
+  const _FunnelPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final path = Path()
+      ..moveTo(w * 0.06, h * 0.16)
+      ..lineTo(w * 0.94, h * 0.16)
+      ..lineTo(w * 0.58, h * 0.54)
+      ..lineTo(w * 0.58, h * 0.94)
+      ..lineTo(w * 0.42, h * 0.82)
+      ..lineTo(w * 0.42, h * 0.54)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_FunnelPainter old) => old.color != color;
 }
 
 class _CaretPainter extends CustomPainter {

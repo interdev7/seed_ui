@@ -58,6 +58,7 @@ class _TableDemoState extends State<TableDemo> {
   bool _bordered = false;
   Person? _tapped;
   TableSort? _sort;
+  Map<int, List<Object?>> _filters = const {};
 
   List<TableColumn<Person>> get _columns => [
     // A value is the whole of most columns: no builder, no ceremony.
@@ -231,6 +232,52 @@ class _TableDemoState extends State<TableDemo> {
                 'rows came in. Name and Age compare their values; City is '
                 'told how, and sorts by the last letter. '
                 '${_sort == null ? 'Unsorted.' : 'Sorted by column ${_sort!.column}, ${_sort!.order.name}.'}',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Filtering',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _many.take(8).toList(),
+                onFiltersChanged: (next) => setState(() => _filters = next),
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    value: (p) => p.name,
+                    // The choice is matched against the value where nothing
+                    // else is said; here it is a first letter, so it is.
+                    onFilter: (choice, p) =>
+                        p.name.startsWith(choice! as String),
+                    filters: const [
+                      TableFilter('A…', 'Ann'),
+                      TableFilter('B…', 'Bar'),
+                      TableFilter('C…', 'Che'),
+                    ],
+                  ),
+                  TableColumn(
+                    title: const Text('City'),
+                    sortable: true,
+                    value: (p) => p.city,
+                    filters: const [
+                      TableFilter('Bristol', 'Bristol'),
+                      TableFilter('Galway', 'Galway'),
+                      TableFilter('Chengdu', 'Chengdu'),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'A funnel opens a menu of choices. Within one column they are '
+                'alternatives; across columns a row has to answer every one. '
+                'City matches its value; Name is told what a choice means and '
+                'matches a first letter. '
+                '${_filters.isEmpty ? 'Nothing chosen.' : 'In force: $_filters.'}',
               ),
             ],
           ),

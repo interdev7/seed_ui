@@ -85,7 +85,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   A tap cycles ascending, descending, and back to the order the rows came in,
   as antd's does. The whole heading answers it — padding and all, the way antd
   lights up the `th` and not the word inside it — and lights up under the
-  pointer while it is a heading that will do something. Both carets are always
+  pointer while it is a heading that will do something. The column being
+  sorted by keeps that fill with no hand on it, arriving with a `defaultSort`
+  before anything has been touched. Both carets are always
   drawn: one alone would say the column *is* sorted that way, where a column
   that merely *can* be sorted has to say so too. They stand at the cell's
   trailing edge, or a column of headings would carry each pair at the end of a

@@ -1436,6 +1436,11 @@ class _TableState<T> extends State<Table<T>> {
     _ResolvedTableToken r,
   ) {
     if (!column.sorts) return cell;
+    // A column the table is sorted by keeps the fill, hand or no hand: it is
+    // the one doing something, and antd marks it the same way. Which also
+    // means the fill arrives with a `defaultSort`, before anybody has
+    // touched it.
+    final sorted = _sort?.column == index;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => _hoveredHeading.value = index,
@@ -1448,7 +1453,9 @@ class _TableState<T> extends State<Table<T>> {
         child: ValueListenableBuilder<int?>(
           valueListenable: _hoveredHeading,
           builder: (context, hovered, child) => ColoredBox(
-            color: hovered == index ? r.headerHoverBg : const Color(0x00000000),
+            color: sorted || hovered == index
+                ? r.headerHoverBg
+                : const Color(0x00000000),
             child: child,
           ),
           child: cell,

@@ -1578,6 +1578,38 @@ void main() {
       expect(fillOver(find.text('Chen')), isNull, reason: 'that one only');
     });
 
+    testWidgets('the column being sorted by keeps the fill', (tester) async {
+      Color? fillOver(Finder heading) {
+        final boxes = find
+            .ancestor(of: heading, matching: find.byType(ColoredBox))
+            .evaluate()
+            .map((e) => (e.widget as ColoredBox).color)
+            .where((c) => c.a != 0);
+        return boxes.isEmpty ? null : boxes.first;
+      }
+
+      // Sorted before anybody touched it, so the fill arrives with the sort
+      // and not with the hand.
+      await tester.pumpWidget(
+        table(defaultSort: const TableSort(1, TableSortOrder.ascending)),
+      );
+      expect(fillOver(find.text('Age')), isNotNull);
+      expect(fillOver(find.text('Name')), isNull, reason: 'that one only');
+
+      // And it moves with the sort.
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      expect(fillOver(find.text('Name')), isNotNull);
+      expect(fillOver(find.text('Age')), isNull);
+
+      // A third tap gives the rows back, and the fill goes with them.
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      expect(fillOver(find.text('Name')), isNull);
+    });
+
     testWidgets('a heading that does not sort stays quiet', (tester) async {
       await tester.pumpWidget(
         _host(

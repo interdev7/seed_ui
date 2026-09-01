@@ -210,7 +210,10 @@ TableColumn(title: const Text('Age'), sortable: true, value: (u) => u.age)
 A tap cycles ascending, descending, and back to the order the rows came in,
 as antd's does. The whole heading answers — padding and all, the way antd
 lights up the `th` rather than the word inside it — and lights up under the
-pointer while it is a heading that will do something.
+pointer while it is a heading that will do something. The column the table is
+sorted by keeps that fill, hand or no hand: it is the one doing something, so
+it is marked, and the mark arrives with a `defaultSort` before anybody has
+touched anything.
 
 Both carets are always drawn: one alone would say the column *is* sorted that
 way, and a column that merely *can* be sorted has to say so too. They stand at
@@ -282,7 +285,7 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `cellPaddingInline`, `cellPaddingInlineSM`, `cellPaddingInlineLG` | 16, 8, 20 |
 | `footerBg`, `borderRadius`, `fontSize` | |
 | `columnMinWidth` | `controlHeightLG × 2.5` — the narrowest a `flex` column is squeezed to |
-| `headerHoverBg` | `colorFillSecondary` — behind a sortable heading under the pointer |
+| `headerHoverBg` | `colorFillSecondary` — behind a sortable heading under the pointer, and behind the one being sorted by |
 | `sortActiveColor` | `primary.base` — the caret standing for the order in force |
 | `sortIdleColor` | `colorTextQuaternary` — the other one, saying only that the column sorts |
 | `sortCaretSize` | `sizeXXS` — how tall each caret is |

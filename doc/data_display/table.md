@@ -160,7 +160,7 @@ cut rather than allowed to grow its row. A table with no `scroll.y` keeps the gr
 wraps still grows its row — there is nothing to virtualise in a table you can
 see all of.
 
-`scroll.y` is the height of the rows, as antd means it. The heading stands
+`scroll.y` is the height of the rows, not of the table. The heading stands
 above them and is not counted in it.
 
 ### Columns that stay put
@@ -208,9 +208,10 @@ TableColumn(title: const Text('Age'), sortable: true, value: (u) => u.age)
 ```
 
 A tap cycles ascending, descending, and back to the order the rows came in,
-as antd's does. The whole heading answers — padding and all, the way antd
-lights up the `th` rather than the word inside it — and lights up under the
-pointer while it is a heading that will do something. The column the table is
+which is what a reader expects of a third tap: somewhere to put the rows back
+without reaching for anything else. The whole heading answers — padding and
+all, not just the word — and lights up under the pointer while it is a heading
+that will do something. The column the table is
 sorted by keeps that fill, hand or no hand: it is the one doing something, so
 it is marked, and the mark arrives with a `defaultSort` before anybody has
 touched anything.
@@ -298,15 +299,19 @@ by the column's place in `columns`, as `TableSort` is.
 
 The funnel answers the hand apart from the heading it stands in: it takes a
 rounded ground of its own, a step stronger than the heading's, and the mark
-darkens with it — antd gives the trigger its own background rather than
-letting it share the `th`'s, and a mark you can barely see sitting on a fill
-is worse than no fill.
+darkens with it. Sharing the heading's ground would leave the two answering as
+one, when tapping the mark and tapping the heading do different things — and a
+mark you can barely see sitting on a fill is worse than no fill.
 
 The menu is as wide as its widest choice, floored at a hundred and twenty
-pixels as antd's is, and its choices scroll past two hundred and sixty-four
-rather than growing off the screen.
+pixels, and its choices scroll past two hundred and sixty-four rather than
+growing off the screen. They carry the same padding as any other menu in the
+kit — a menu that reads as its own kind of thing is one the reader has to
+learn twice. Under them a rule runs the whole width of the block of buttons,
+clipped to the panel's corners, with `sizeXS` either side and
+`sizeXS - lineWidth` above and below so the rule does not add to the height.
 
-Filtering happens before sorting, as it does in antd: the rows are narrowed,
+Filtering happens before sorting: the rows are narrowed,
 then put in order. The column widths are measured from the rows as given
 rather than as shown, so neither narrowing nor sorting re-measures — a column
 keeps its width while you filter, instead of jumping about under the hand.

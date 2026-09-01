@@ -438,8 +438,8 @@ class TableToken {
         // Not a `BoxShadow`: a shadow is painted behind the box that casts
         // it, and the pinned pane's neighbour is drawn after it, so the whole
         // cast landed under the pane instead of over the rows — a grey smear
-        // showing through columns that are mostly transparent. antd lays a
-        // strip over the scrolling rows instead, and so does this.
+        // showing through columns that are mostly transparent. A strip laid
+        // over the scrolling rows has nothing to show through.
         pinnedShadowColor: pinnedShadowColor ??
             alphaOn(const Color(0xFF000000), t.isDark ? 0.32 : 0.15),
         pinnedShadowExtent: pinnedShadowExtent ?? t.sizeLG,
@@ -1156,7 +1156,7 @@ class _TableState<T> extends State<Table<T>> {
       // every row has to be one height. A table with no height of its own
       // keeps the grid below, where a cell that wraps still grows its row.
       table = SizedBox(
-        // `scroll.y` is the height of the rows, as antd means it, and the
+        // `scroll.y` is the height of the rows, not of the table, and the
         // heading stands above them. One viewport now holds both, so the
         // heading's row is added back on rather than eating into the body.
         height: widget.scroll!.y! + (_showHeader ? _lazyRowHeight(r, t) : 0),
@@ -1460,8 +1460,9 @@ class _TableState<T> extends State<Table<T>> {
 
   /// What a tap on a sortable heading makes of the sort.
   ///
-  /// Ascending, then descending, then back to the order the rows came in —
-  /// which is antd's cycle, and the one a reader expects from a third tap.
+  /// Ascending, then descending, then back to the order the rows came in,
+  /// which is what a reader expects of a third tap: somewhere to put the
+  /// rows back without reaching for anything else.
   void _cycleSort(int column) {
     final was = _sort;
     final next = was == null || was.column != column
@@ -1588,8 +1589,8 @@ class _TableState<T> extends State<Table<T>> {
 
     final sort = _sort;
     // The carets stand at the cell's trailing edge rather than beside the
-    // word, as antd's do: a column of headings whose carets each sat at the
-    // end of a word of its own length is a ragged edge.
+    // word: a column of headings whose carets each sat at the end of a word
+    // of its own length is a ragged edge.
     return Row(
       children: [
         Expanded(
@@ -1644,9 +1645,9 @@ class _TableState<T> extends State<Table<T>> {
                 }
               },
               // The funnel takes a ground of its own under the hand, rounded
-              // and a step stronger than the heading it sits in — antd gives
-              // the trigger its own background rather than letting it share
-              // the heading's, so the mark and the heading answer separately.
+              // and a step stronger than the heading it sits in. Sharing the
+              // heading's would leave the two answering as one, when tapping
+              // the mark and tapping the heading do different things.
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: over ? r.filterHoverBg : const Color(0x00000000),
@@ -1696,9 +1697,13 @@ class _TableState<T> extends State<Table<T>> {
       child: IntrinsicWidth(
         child: StatefulBuilder(
           builder: (context, setLocal) {
+            // The same geometry as any other menu in the kit, taken from
+            // `DropdownMenuList` rather than picked: sizeXXS round the list,
+            // and sizeSM either side of a row. A menu that reads as its own
+            // kind of thing is a menu the reader has to learn twice.
             Widget choice(TableFilter filter) => Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: t.size,
+                    horizontal: t.sizeSM,
                     vertical: t.sizeXXS,
                   ),
                   child: Checkbox(
@@ -1721,69 +1726,72 @@ class _TableState<T> extends State<Table<T>> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // A long list of choices scrolls rather than growing past the
-                // screen, as antd's does at two hundred and sixty-four pixels.
+                // A long list of choices scrolls rather than growing past
+                // the screen.
                 Flexible(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       maxHeight: r.filterMenuMaxHeight,
                     ),
                     child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (final filter in column.filters!) choice(filter),
-                        ],
+                      child: Padding(
+                        padding: EdgeInsets.all(t.sizeXXS),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (final filter in column.filters!)
+                              choice(filter),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    t.sizeXXS,
-                    t.sizeXS,
-                    t.sizeXXS,
-                    0,
-                  ),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(
-                          color: r.borderColor,
-                          width: t.lineWidth,
-                        ),
+                // `-filter-dropdown-btns`, to the letter: a rule across the
+                // whole width — the panel clips it to its own corners — then
+                // `paddingXS` either side and `paddingXS - lineWidth` above
+                // and below, so the rule does not add to the height.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: r.borderColor,
+                        width: t.lineWidth,
                       ),
                     ),
-                    child: Padding(
-                      padding: EdgeInsets.only(top: t.sizeXS),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Button(
-                            variant: ButtonVariant.text,
-                            size: SoftSize.small,
-                            onPressed: chosen.isEmpty
-                                ? null
-                                : () {
-                                    _applyFilter(index, const []);
-                                    close();
-                                  },
-                            child: Text(words.reset),
-                          ),
-                          SizedBox(width: t.sizeXS),
-                          Button(
-                            variant: ButtonVariant.solid,
-                            color: ButtonColor.primary,
-                            size: SoftSize.small,
-                            onPressed: () {
-                              _applyFilter(index, chosen.toList());
-                              close();
-                            },
-                            child: Text(words.ok),
-                          ),
-                        ],
-                      ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: t.sizeXS,
+                      vertical: t.sizeXS - t.lineWidth,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Button(
+                          variant: ButtonVariant.text,
+                          size: SoftSize.small,
+                          onPressed: chosen.isEmpty
+                              ? null
+                              : () {
+                                  _applyFilter(index, const []);
+                                  close();
+                                },
+                          child: Text(words.reset),
+                        ),
+                        SizedBox(width: t.sizeXS),
+                        Button(
+                          variant: ButtonVariant.solid,
+                          color: ButtonColor.primary,
+                          size: SoftSize.small,
+                          onPressed: () {
+                            _applyFilter(index, chosen.toList());
+                            close();
+                          },
+                          child: Text(words.ok),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1797,9 +1805,8 @@ class _TableState<T> extends State<Table<T>> {
 
   /// A heading cell that answers the pointer, where its column sorts.
   ///
-  /// The whole cell, padding and all — antd lights up the `th` and not the
-  /// word inside it, and a heading you have to hit exactly is a heading you
-  /// miss.
+  /// The whole cell, padding and all: a heading you have to hit exactly is a
+  /// heading you miss.
   Widget _headingCell(
     Widget cell,
     TableColumn<T> column,
@@ -1808,9 +1815,8 @@ class _TableState<T> extends State<Table<T>> {
   ) {
     if (!column.sorts) return cell;
     // A column the table is sorted by keeps the fill, hand or no hand: it is
-    // the one doing something, and antd marks it the same way. Which also
-    // means the fill arrives with a `defaultSort`, before anybody has
-    // touched it.
+    // the one doing something, so it is the one marked. Which also means the
+    // fill arrives with a `defaultSort`, before anybody has touched it.
     final sorted = _sort?.column == index;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -2281,9 +2287,9 @@ class _TableWidths {
 
 /// The pair of carets at the head of a sortable column.
 ///
-/// Both are always drawn, as antd draws them: one caret alone would say the
-/// column is sorted that way, and a column that merely can be sorted has to
-/// say so too. The one standing for the order in force is the one coloured.
+/// Both are always drawn: one caret alone would say the column is sorted
+/// that way, and a column that merely can be sorted has to say so too. The
+/// one standing for the order in force is the one coloured.
 class _Carets extends StatelessWidget {
   const _Carets({
     required this.order,
@@ -2320,7 +2326,7 @@ class _Carets extends StatelessWidget {
       );
 }
 
-/// A funnel: the mark antd puts at the head of a column that can be narrowed.
+/// A funnel: the mark at the head of a column that can be narrowed.
 class _FunnelPainter extends CustomPainter {
   const _FunnelPainter(this.color);
 

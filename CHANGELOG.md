@@ -83,9 +83,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **Sorting.** `sortable: true` on a column lets its heading be tapped, and the
   column's `value` is what is compared — most columns need nothing else said.
   A tap cycles ascending, descending, and back to the order the rows came in,
-  as antd's does. The whole heading answers it — padding and all, the way antd
-  lights up the `th` and not the word inside it — and lights up under the
-  pointer while it is a heading that will do something. The column being
+  which is what a reader expects of a third tap. The whole heading answers it —
+  padding and all, not just the word — and lights up under the pointer while
+  it is a heading that will do something. The column being
   sorted by keeps that fill with no hand on it, arriving with a `defaultSort`
   before anything has been touched. Both carets are always
   drawn: one alone would say the column *is* sorted that way, where a column
@@ -140,11 +140,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   The funnel answers the hand apart from the heading it stands in — a rounded
   ground of its own, a step stronger than the heading's, and the mark darkens
-  with it. The menu is as wide as its widest choice, floored at antd's hundred
-  and twenty, and scrolls past two hundred and sixty-four rather than growing
-  off the screen.
+  with it. The menu is as wide as its widest choice with a floor of a hundred
+  and twenty, scrolls past two hundred and sixty-four, and its choices carry
+  the kit's own menu padding rather than a number picked for them. Under them
+  a rule runs the whole width of the block of buttons, with `sizeXS` either
+  side and `sizeXS - lineWidth` above and below so it does not add to the
+  height.
 
-  Filtering happens before sorting, as in antd, and the widths are still
+  Filtering happens before sorting, and the widths are still
   measured from the rows as given — so a column keeps its width while you
   filter rather than jumping about under the hand.
 
@@ -161,8 +164,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   downwards from 135 to 103.
 
   A pinned column casts a shade over the rows that have gone behind it, and
-  only while there are any. It is a strip laid over those rows, the way antd
-  does it, and not a `BoxShadow` behind the pinned pane: a shadow is painted
+  only while there are any. It is a strip laid over those rows and not a
+  `BoxShadow` behind the pinned pane: a shadow is painted
   behind the box that casts it, and the neighbouring pane is drawn afterwards,
   so the whole cast ended up under a column whose cells are mostly transparent
   — a grey wash across the column instead of a shade beside it.

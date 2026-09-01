@@ -1546,7 +1546,7 @@ void main() {
       );
       final word = tester.getRect(find.text('Name'));
       expect(cell.width, greaterThan(word.width + 8),
-          reason: 'the padding is part of it, as antd lights up the th');
+          reason: 'the padding is part of it, not just the word');
 
       // And a tap in the padding, clear of the word, still sorts.
       await tester.tapAt(Offset(cell.right - 4, cell.center.dy));
@@ -1921,7 +1921,41 @@ void main() {
       final menu = tester.getRect(find.byType(DropdownPanel));
       final screen = tester.getRect(find.byType(m.MaterialApp));
       expect(menu.width, lessThan(screen.width / 2));
-      expect(menu.width, greaterThanOrEqualTo(120), reason: 'antd\'s floor');
+      expect(menu.width, greaterThanOrEqualTo(120),
+          reason: 'a menu narrower than this is one you cannot read');
+    });
+
+    testWidgets('the rule under the choices runs the width of the panel',
+        (tester) async {
+      await tester.pumpWidget(table());
+      await openMenu(tester, 0);
+
+      final panel = tester.getRect(find.byType(DropdownPanel));
+      final rule = tester.getRect(
+        find.descendant(
+          of: find.byType(DropdownPanel),
+          matching: find.byWidgetPredicate((w) =>
+              w is DecoratedBox &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).border is Border &&
+              // The rule, not a checkbox: a top side and nothing else.
+              ((w.decoration as BoxDecoration).border! as Border).top !=
+                  BorderSide.none &&
+              ((w.decoration as BoxDecoration).border! as Border).left ==
+                  BorderSide.none),
+        ),
+      );
+      // The rule belongs to the block of buttons and runs across the whole
+      // of it; the panel clips it to its own corners.
+      expect(rule.left, closeTo(panel.left, 0.5));
+      expect(rule.right, closeTo(panel.right, 0.5));
+      expect(rule.bottom, closeTo(panel.bottom, 0.5));
+
+      // sizeXS either side, and sizeXS - lineWidth above and below, so the
+      // rule does not add to the height.
+      final ok = tester.getRect(find.text('OK'));
+      expect(panel.right - ok.right, greaterThan(8),
+          reason: 'paddingXS plus the button\'s own');
     });
 
     testWidgets('a long list of choices scrolls instead of growing',
@@ -1989,8 +2023,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(funnelFill(tester), isNotNull);
-      // And the mark itself darkens, as antd's does: the ground alone would
-      // leave a mark you can barely see sitting on it.
+      // And the mark itself darkens: the ground alone would leave a mark you
+      // can barely see sitting on it.
       expect(funnelColour(tester), isNot(idle));
     });
 

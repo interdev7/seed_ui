@@ -78,6 +78,36 @@ TableColumn(title: const Text('Age'), flex: 2, builder: ...)      // of three
 A column may name one or the other, never both — one is a number of pixels and
 the other a share of what is left.
 
+## Columns under one head
+
+A column with `children` heads them: it has a title spanning what is under it
+and no cells of its own. Groups nest as deep as you like, and only the
+leaves — the columns with no children — hold cells.
+
+```dart
+TableColumn(
+  title: const Text('Name'),
+  children: [
+    TableColumn(title: const Text('First'), value: (u) => u.first),
+    TableColumn(title: const Text('Last'), value: (u) => u.last),
+  ],
+)
+```
+
+A column that heads nothing stands the whole depth of the heading beside a
+group, so nothing has to be spanned downwards by hand.
+
+A sort and a filter belong to a leaf and are keyed by its place among the
+leaves — a group has nothing to order or narrow, and tapping one does nothing.
+
+**How it is drawn.** A `Table` maps a row's children onto its columns one for
+one, so a title spanning several of them cannot be a cell of the grid. The
+heading is laid out by hand instead, as a tree — a group is its title above a
+row of what it heads — against the same measured widths the body is given,
+which is what keeps the two lined up. The same caveat applies as elsewhere: a
+column headed by something other than `Text` should name a `width` if its
+heading is the widest thing in it.
+
 ## Size
 
 `size` takes a preset or a height of your own.
@@ -510,4 +540,4 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-Column groups, a summary row and spanned cells are still to come.
+A summary row and spanned cells are still to come.

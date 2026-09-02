@@ -24,6 +24,13 @@ class _User {
 
 const _users = [_User('Ann', 31), _User('Bartholomew Longname', 7)];
 
+List<String> shownNames(WidgetTester tester) => tester
+    .widgetList<Text>(find.byType(Text))
+    .map((t) => t.data)
+    .whereType<String>()
+    .where((s) => s == 'Chen' || s == 'Ann' || s == 'Bart')
+    .toList();
+
 Widget _host(Widget child, {double width = 600}) => ConfigProvider(
       child: m.MaterialApp(
         home: m.Scaffold(
@@ -3029,6 +3036,170 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(find.byType(Pagination), findsNWidgets(2));
+    });
+  });
+
+  group('grouped columns', () {
+    const people = [_User('Chen', 27), _User('Ann', 45)];
+
+    Widget table({bool bordered = false}) => _host(
+          Table<_User>(
+            bordered: bordered,
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Who'),
+                children: [
+                  TableColumn<_User>(
+                    title: const Text('Name'),
+                    sortable: true,
+                    value: (u) => u.name,
+                  ),
+                  TableColumn<_User>(
+                    title: const Text('Age'),
+                    value: (u) => u.age,
+                  ),
+                ],
+              ),
+              TableColumn<_User>(
+                title: const Text('Note'),
+                value: (u) => 'about ${u.name}',
+              ),
+            ],
+          ),
+          width: 700,
+        );
+
+    testWidgets('a group heads the columns under it', (tester) async {
+      await tester.pumpWidget(table());
+      final group = tester.getRect(find.text('Who'));
+      final name = tester.getRect(find.text('Name'));
+      final age = tester.getRect(find.text('Age'));
+
+      // Above both, and spanning the pair of them.
+      expect(group.center.dy, lessThan(name.center.dy));
+      expect(group.center.dy, lessThan(age.center.dy));
+      expect(group.center.dx, greaterThan(name.left));
+      expect(group.center.dx, lessThan(age.right));
+    });
+
+    testWidgets('a column heading nothing stands the whole depth',
+        (tester) async {
+      await tester.pumpWidget(table());
+      final who = tester.getRect(find.text('Who')).center.dy;
+      final name = tester.getRect(find.text('Name')).center.dy;
+      final note = tester.getRect(find.text('Note')).center.dy;
+
+      // Note has no group over it, so its cell is as tall as the group's
+      // title and the row beneath it together — and its own title sits
+      // between the two, rather than on either row.
+      expect(note, greaterThan(who));
+      expect(note, lessThan(name));
+    });
+
+    testWidgets('the cells line up under the heading they belong to',
+        (tester) async {
+      await tester.pumpWidget(table());
+      expect(
+        tester.getRect(find.text('Chen')).left,
+        closeTo(tester.getRect(find.text('Name')).left, 0.5),
+      );
+      expect(
+        tester.getRect(find.text('about Chen')).left,
+        closeTo(tester.getRect(find.text('Note')).left, 0.5),
+      );
+    });
+
+    testWidgets('a leaf still sorts, and by its own place', (tester) async {
+      await tester.pumpWidget(table());
+      expect(shownNames(tester), ['Chen', 'Ann']);
+
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      expect(shownNames(tester), ['Ann', 'Chen'],
+          reason: 'the first leaf, not the first column given');
+    });
+
+    testWidgets('a group is not a column to sort or narrow', (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(find.text('Who'));
+      await tester.pumpAndSettle();
+      expect(shownNames(tester), ['Chen', 'Ann'], reason: 'nothing moved');
+    });
+
+    testWidgets('a group nests, and a leaf beside one stands its depth',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Who'),
+                children: [
+                  // A leaf and a group side by side under the same head: the
+                  // leaf has to stand as deep as the group beside it.
+                  TableColumn<_User>(
+                    title: const Text('Name'),
+                    value: (u) => u.name,
+                  ),
+                  TableColumn<_User>(
+                    title: const Text('Years'),
+                    children: [
+                      TableColumn<_User>(
+                        title: const Text('Age'),
+                        value: (u) => u.age,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+
+      final who = tester.getRect(find.text('Who')).center.dy;
+      final years = tester.getRect(find.text('Years')).center.dy;
+      final age = tester.getRect(find.text('Age')).center.dy;
+      final name = tester.getRect(find.text('Name')).center.dy;
+
+      expect(who, lessThan(years));
+      expect(years, lessThan(age));
+      // Name has nothing under it, so it stands through both rows below Who
+      // and its title sits between them.
+      expect(name, greaterThan(years));
+      expect(name, lessThan(age));
+
+      // And the cells still line up with the leaf they belong to.
+      expect(
+        tester.getRect(find.text('Chen')).left,
+        closeTo(tester.getRect(find.text('Name')).left, 0.5),
+      );
+    });
+
+    test('a group holds no cells of its own', () {
+      expect(
+        () => TableColumn<_User>(
+          title: const Text('Who'),
+          value: (u) => u.name,
+          children: [
+            TableColumn<_User>(
+              title: const Text('Name'),
+              value: (u) => u.name,
+            ),
+          ],
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    test('a group with nothing under it heads nothing', () {
+      expect(
+        () => TableColumn<_User>(title: const Text('Who'), children: const []),
+        throwsAssertionError,
+      );
     });
   });
 }

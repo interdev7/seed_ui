@@ -224,6 +224,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   position rather than a knob of its own, a `showTotal` drawn beside the pager
   sits with it instead of hugging the leading edge.
 
+  **Columns under one head.** A column with `children` heads them: a title
+  spanning what is under it, no cells of its own, nesting as deep as you like.
+
+  ```dart
+  TableColumn(
+    title: const Text('Name'),
+    children: [
+      TableColumn(title: const Text('First'), value: (u) => u.first),
+      TableColumn(title: const Text('Last'), value: (u) => u.last),
+    ],
+  )
+  ```
+
+  A column that heads nothing stands the whole depth beside a group, so nothing
+  is spanned downwards by hand. A sort and a filter belong to a leaf and are
+  keyed by its place among the leaves. A `Table` maps a row's children onto its
+  columns one for one, so the heading is laid out by hand as a tree, against
+  the same measured widths the body is given.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

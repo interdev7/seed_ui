@@ -428,6 +428,48 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Columns under one head',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                columns: [
+                  // A column with children heads them and holds no cells of
+                  // its own; only the leaves have values.
+                  TableColumn(
+                    title: const Text('Who'),
+                    children: [
+                      TableColumn(
+                        title: const Text('Name'),
+                        sortable: true,
+                        value: (p) => p.name,
+                      ),
+                      TableColumn(
+                        title: const Text('City'),
+                        value: (p) => p.city,
+                      ),
+                    ],
+                  ),
+                  TableColumn(
+                    title: const Text('Age'),
+                    sortable: true,
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Age heads nothing, so it stands the whole depth beside the '
+                'group. Groups nest as deep as you like, and a sort or a '
+                'filter belongs to a leaf — a group has nothing to order.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Rows that open',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

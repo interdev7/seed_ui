@@ -436,14 +436,26 @@ class TableColumn<T> {
     this.filterMultiple = true,
     this.filterSearch = false,
     this.filterSearchMatch,
+    this.children,
   })  : assert(
+          children == null || children.length != 0,
+          'A group with no columns under it heads nothing. Leave children off '
+          'instead.',
+        ),
+        assert(
+          children == null || (value == null && builder == null),
+          'A group heads other columns; it has no cells of its own, so it '
+          'reads no value and draws no cell.',
+        ),
+        assert(
           width == null || flex == null,
           'Give a column a width or a flex, not both: one is a number of '
           'pixels and the other a share of what is left over.',
         ),
         assert(
-          value != null || builder != null,
-          'A column needs a value to read, a builder to draw with, or both.',
+          value != null || builder != null || children != null,
+          'A column needs a value to read, a builder to draw with, or columns '
+          'to head.',
         ),
         assert(
           !sortable || value != null || sorter != null,
@@ -506,6 +518,38 @@ class TableColumn<T> {
   /// well. Use it where the value is not what the reader is sorting by — a
   /// date shown as `12 Mar` sorts by the date, not by the word.
   final int Function(T a, T b)? sorter;
+
+  /// The columns this one heads, where it heads any.
+  ///
+  /// A column with children is a group: it has a title spanning what is under
+  /// it and no cells of its own. Groups nest as deep as you like, and only
+  /// the leaves — the columns with no children — hold cells.
+  ///
+  /// ```dart
+  /// TableColumn(
+  ///   title: const Text('Name'),
+  ///   children: [
+  ///     TableColumn(title: const Text('First'), value: (u) => u.first),
+  ///     TableColumn(title: const Text('Last'), value: (u) => u.last),
+  ///   ],
+  /// )
+  /// ```
+  final List<TableColumn<T>>? children;
+
+  /// Whether this column heads others rather than holding cells.
+  bool get isGroup => children != null;
+
+  /// This column, or every leaf under it.
+  Iterable<TableColumn<T>> get leaves =>
+      children == null ? [this] : children!.expand((c) => c.leaves);
+
+  /// How many leaves stand under this one, which is how many columns its
+  /// heading spans.
+  int get span => leaves.length;
+
+  /// How many rows of heading stand under this one.
+  int get depth =>
+      children == null ? 1 : 1 + children!.map((c) => c.depth).reduce(math.max);
 
   /// Whether this column sorts at all.
   bool get sorts => sortable || sorter != null;
@@ -1236,8 +1280,27 @@ class _TableState<T> extends State<Table<T>> {
   List<TableColumn<T>> get _columns => [
         if (widget.selection != null) _selectionColumn,
         if (widget.expandable?.showColumn ?? false) _expandColumn,
+        ..._leaves,
+      ];
+
+  /// The columns as given, with the box and chevron columns in front: the
+  /// heading is drawn from this, since a group only exists here.
+  List<TableColumn<T>> get _columnTree => [
+        if (widget.selection != null) _selectionColumn,
+        if (widget.expandable?.showColumn ?? false) _expandColumn,
         ...widget.columns,
       ];
+
+  /// The columns that hold cells: the ones given, with any group replaced by
+  /// what stands under it.
+  ///
+  /// A sort and a filter are keyed by a column's place among these, since a
+  /// group has nothing to sort or narrow.
+  List<TableColumn<T>> get _leaves =>
+      widget.columns.expand((c) => c.leaves).toList();
+
+  /// Whether any column heads others, so the heading needs more than one row.
+  bool get _hasGroups => widget.columns.any((c) => c.isGroup);
 
   List<TableColumn<T>> _pinnedTo(TableColumnFixed side) =>
       _columns.where((c) => c.fixed == side).toList();
@@ -1332,14 +1395,14 @@ class _TableState<T> extends State<Table<T>> {
             for (final column in columns)
               _headingCell(
                 _cell(
-                  _heading(column, widget.columns.indexOf(column), r, t),
+                  _heading(column, _leaves.indexOf(column), r, t),
                   column,
                   column.headerAlign ?? column.align ?? TableAlign.start,
                   r,
                   t,
                 ),
                 column,
-                widget.columns.indexOf(column),
+                _leaves.indexOf(column),
                 r,
               ),
           ],
@@ -1560,7 +1623,10 @@ class _TableState<T> extends State<Table<T>> {
           final data = dataRowsOf(columns);
           final children = <Widget>[
             if (_showHeader)
-              grid(columns, [headingRow(columns)], widths: widths),
+              if (_hasGroups)
+                _groupedHeading(_columnTree, measured.columns, r, t, rule)
+              else
+                grid(columns, [headingRow(columns)], widths: widths),
           ];
           var run = <flutter.TableRow>[];
           void flush() {
@@ -1608,10 +1674,14 @@ class _TableState<T> extends State<Table<T>> {
     }
 
     Widget table;
-    if (widget.expandable != null) {
+    if (widget.expandable != null || _hasGroups) {
       // Rows that open are drawn as grids with panels between them, and a
-      // height of its own simply scrolls the lot: a panel is whatever height
-      // its content is, and a lazy body can only find a row by multiplying.
+      // heading of more than one row is drawn by hand — a `Table` cannot span
+      // a cell across its columns, so a group's title cannot be a cell of the
+      // grid. Both want one measured set of widths rather than each part
+      // working out its own. A height of its own simply scrolls the lot: a
+      // panel is whatever height its content is, and a lazy body can only
+      // find a row by multiplying.
       table = _detached
           ? SizedBox(
               height: widget.scroll!.y,
@@ -2080,8 +2150,9 @@ class _TableState<T> extends State<Table<T>> {
     var kept = rows;
     for (final entry in filters.entries) {
       if (entry.value.isEmpty) continue;
-      if (entry.key < 0 || entry.key >= widget.columns.length) continue;
-      final column = widget.columns[entry.key];
+      final leaves = _leaves;
+      if (entry.key < 0 || entry.key >= leaves.length) continue;
+      final column = leaves[entry.key];
       if (!column.filtersRows) continue;
       final belongs = column.onFilter ??
           (Object? choice, T record) => column.value?.call(record) == choice;
@@ -2095,12 +2166,11 @@ class _TableState<T> extends State<Table<T>> {
 
   /// The rows in the order the sort asks for, or as they are where none does.
   List<T> _sorted(List<T> rows, TableSort? sort) {
-    if (sort == null ||
-        sort.column < 0 ||
-        sort.column >= widget.columns.length) {
+    final leaves = _leaves;
+    if (sort == null || sort.column < 0 || sort.column >= leaves.length) {
       return rows;
     }
-    final column = widget.columns[sort.column];
+    final column = leaves[sort.column];
     if (!column.sorts) return rows;
 
     final ascending = sort.order == TableSortOrder.ascending;
@@ -2361,6 +2431,119 @@ class _TableState<T> extends State<Table<T>> {
             _ => null,
           },
       ];
+
+  /// A heading of more than one row, where columns are grouped.
+  ///
+  /// Flutter's `Table` maps a row's children onto its columns one for one, so
+  /// a title spanning several of them cannot be a cell of the grid. The
+  /// heading is laid out by hand instead, against the same measured widths the
+  /// body is given — which is what keeps the two lined up.
+  ///
+  /// Built as a tree rather than as a run of rows: a group is its title above
+  /// a row of what it heads, and a column that heads nothing is one cell
+  /// stretched to whatever height its neighbours came to. That is what lets a
+  /// plain column stand the full depth of the heading beside a group, without
+  /// spanning anything downwards by hand.
+  Widget _groupedHeading(
+    List<TableColumn<T>> columns,
+    List<double> widths,
+    _ResolvedTableToken r,
+    Token t,
+    BorderSide rule,
+  ) {
+    var at = 0;
+
+    double widthOf(TableColumn<T> column) {
+      var total = 0.0;
+      for (var i = 0; i < column.span; i++) {
+        total += widths[at + i];
+      }
+      return total;
+    }
+
+    Widget node(TableColumn<T> column) {
+      final width = widthOf(column);
+      final last = at + column.span >= widths.length;
+
+      if (!column.isGroup) {
+        final index = _leaves.indexOf(column);
+        at += 1;
+        return SizedBox(
+          width: width,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: rule,
+                right: !last && _bordered ? rule : BorderSide.none,
+              ),
+            ),
+            child: _headingCell(
+              _cell(
+                _heading(column, index, r, t),
+                column,
+                column.headerAlign ?? column.align ?? TableAlign.start,
+                r,
+                t,
+              ),
+              column,
+              index,
+              r,
+            ),
+          ),
+        );
+      }
+
+      // A group's own title first, ruled off from what it heads, then that
+      // row of columns under it.
+      final children = column.children!;
+      return SizedBox(
+        width: width,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: rule,
+                  right: !last && _bordered ? rule : BorderSide.none,
+                ),
+              ),
+              child: _cell(
+                DefaultTextStyle.merge(
+                  style: TextStyle(
+                    color: r.headerColor,
+                    fontWeight: t.fontWeightStrong,
+                  ),
+                  child: column.title ?? const SizedBox.shrink(),
+                ),
+                column,
+                column.headerAlign ?? TableAlign.center,
+                r,
+                t,
+              ),
+            ),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [for (final child in children) node(child)],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(color: r.headerBg),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [for (final column in columns) node(column)],
+        ),
+      ),
+    );
+  }
 
   /// The heading's content: its title, and where the column sorts, the pair
   /// of carets at the far edge of the cell.

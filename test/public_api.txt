@@ -244,6 +244,7 @@ TableAlign
 TableColumn
 TableColumnFixed
 TableDefaults
+TableExpandable
 TableFilter
 TableScroll
 TableSelection

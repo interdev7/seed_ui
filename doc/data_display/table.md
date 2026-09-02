@@ -362,6 +362,47 @@ Left to itself the table keeps its own picks, starting from
 `onChanged` saying what a tick would have made of them. `columnWidth` and
 `fixed` size and pin the column, as any other column is sized and pinned.
 
+## Rows that open
+
+`expandable` puts a column of chevrons in front of the others, and the row
+that is opened has a panel of your own drawing under it, across the whole
+table.
+
+```dart
+Table<User>(
+  expandable: TableExpandable(builder: (context, user, i) => Text(user.bio)),
+  columns: columns,
+  data: users,
+)
+```
+
+The panel reveals and hides with the same animation a `Collapse` panel uses,
+so a table opens the way everything else in the kit opens. The mark is a plus
+inside a rounded square whose upright goes as the row opens, leaving a minus —
+so it says what a tap will do rather than which way the row is pointing.
+
+A row is itself, not a key, as with picking. `expandable` says which rows can
+be opened at all — one that cannot shows no mark, since a mark that does
+nothing is worse than none. `byRowTap: true` opens a row from anywhere on
+it, and `showColumn: false` drops the chevrons where that is doing the work.
+
+Left to itself the table keeps its own, starting from `defaultExpanded`; give
+it `expanded` and it shows what it is told, with `onChanged` reporting.
+
+**How the panel is drawn, and what it costs.** Flutter's `Table` cannot span a
+row across its columns, so a panel cannot be a row of the grid — it sits
+between two grids instead. Which is only safe if those grids agree on their
+widths, so the columns are measured once and every grid is handed the same
+numbers rather than each working out its own from the rows it happens to hold.
+That measurement is the same one a scrolling table uses, so the same caveat
+applies: a column headed by something other than `Text` should name a `width`
+if its heading is the widest thing in it.
+
+It also means **a table whose rows open is not lazy**, even with `scroll.y`: a
+panel is whatever height its content is, and a lazy body finds a row by
+multiplying. The rows still scroll inside the height you gave; they are all
+built.
+
 ## Around the rows
 
 | Prop | |
@@ -392,6 +433,8 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `filterIconSize` | `sizeSM` — how big the funnel is |
 | `filterHoverBg` | `colorFill` — the funnel's own ground under the pointer |
 | `filterSearchWidth` | `140` — how wide the field that narrows a menu is |
+| `expandIconSize` | `sizeMD` — how big the mark that opens a row is |
+| `expandedBg` | `colorFillQuaternary` — behind the panel under an opened row |
 | `selectionColumnWidth` | `controlHeightSM` — room for the box itself; the column is this plus a cell's padding |
 | `filterMenuMaxHeight` | `264` — how tall a filter menu grows before its choices scroll |
 | `headerHoverBg` | `colorFillSecondary` — behind a sortable heading under the pointer, and behind the one being sorted by |
@@ -427,4 +470,4 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-Expandable rows and pagination are still to come, in that order.
+Pagination is still to come.

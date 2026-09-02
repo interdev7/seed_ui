@@ -177,6 +177,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   picked row is tinted whether or not the pointer is on it, and a step stronger
   while it is.
 
+  **Rows that open.** `expandable` puts a column of chevrons in front of the
+  others, and the row that is opened has a panel of your own drawing under it,
+  across the whole table.
+
+  ```dart
+  Table<User>(
+    expandable: TableExpandable(builder: (context, user, i) => Text(user.bio)),
+    columns: columns,
+    data: users,
+  )
+  ```
+
+  The panel reveals and hides with the same animation a `Collapse` panel uses,
+  and the mark is a plus in a rounded square whose upright goes as the row
+  opens, leaving a minus. `expandable` bars rows, which then show no mark;
+  `byRowTap` opens a row from anywhere on it and `showColumn: false` drops the
+  column.
+
+  A `Table` cannot span a row across its columns, so the panel sits between
+  two grids rather than inside one — and those grids are handed one measured
+  set of widths rather than each working out its own, or the columns would
+  shift the moment the widest row fell on one side of a panel. It also means a
+  table whose rows open is not lazy even with `scroll.y`: a panel is whatever
+  height its content is, and a lazy body finds a row by multiplying.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page
@@ -214,6 +239,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The name is Flutter's own too, so a file that wants both hides one:
   `import 'package:seed_ui/seed_ui.dart' hide Table;` and the reverse. `Empty`
   gains an `EmptySlot.table` so a kit-wide placeholder covers tables as well.
+
+- **`Expandable.animateOnMount`** — starts shut and opens even when
+  `expanded` is already set on the first build, for callers that add the
+  widget at the moment the thing opens. `Collapse` and `Tree` mount every
+  panel up front and keep the old behaviour, which stays the default.
+
+### Fixed
+
+- **`Expandable` no longer moves its content sideways as it reveals.** The
+  reveal passes loose constraints, so a child that hugs what is in it — a line
+  of text, a row of buttons — was laid out narrow and centred for the length of
+  the animation and then snapped to full width and the leading edge on the last
+  frame. Measured in a `Table` panel: text at 328.8 and 142.5 wide throughout
+  the reveal, then 116 and 568. The width is now read once per layout and
+  handed to the reveal, so the content stands where it will stand from the
+  first frame. `Collapse` and `Tree` reveal the same way and get the same fix.
 
 - **`SeedLocalizations.reset` and `.search`** — the word that clears a `Table`
   column's filter menu, next to `ok` which applies it, and the placeholder of

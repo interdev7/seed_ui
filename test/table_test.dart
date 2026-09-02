@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' as m;
 import 'package:flutter/material.dart'
@@ -2435,6 +2437,295 @@ void main() {
         ),
       );
       expect(boxes(), findsNothing);
+    });
+  });
+
+  group('opening rows', () {
+    const people = [
+      _User('Chen', 27),
+      _User('Ann', 45),
+      _User('Bart', 31),
+    ];
+
+    Widget table({
+      List<_User>? expanded,
+      List<_User>? defaultExpanded,
+      ValueChanged<List<_User>>? onChanged,
+      bool Function(_User)? expandable,
+      bool byRowTap = false,
+      bool showColumn = true,
+      TableScroll? scroll,
+    }) =>
+        _host(
+          Table<_User>(
+            data: people,
+            scroll: scroll,
+            expandable: TableExpandable<_User>(
+              builder: (_, u, __) => Text('about ${u.name}'),
+              expanded: expanded,
+              defaultExpanded: defaultExpanded,
+              onChanged: onChanged,
+              expandable: expandable,
+              byRowTap: byRowTap,
+              showColumn: showColumn,
+            ),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        );
+
+    Finder chevrons() => find.byWidgetPredicate((w) =>
+        w is CustomPaint &&
+        w.painter.runtimeType.toString() == '_ExpandIconPainter');
+
+    testWidgets('a chevron opens a row and shuts it again', (tester) async {
+      await tester.pumpWidget(table());
+      expect(find.text('about Ann'), findsNothing);
+
+      await tester.tap(chevrons().at(1));
+      await tester.pumpAndSettle();
+      expect(find.text('about Ann'), findsOneWidget);
+
+      await tester.tap(chevrons().at(1));
+      await tester.pumpAndSettle();
+      expect(find.text('about Ann'), findsNothing);
+    });
+
+    testWidgets('the panel reveals and hides the way the kit reveals things',
+        (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(chevrons().first);
+
+      // Part way through, the panel is on screen but not yet its full height:
+      // it is the same reveal a Collapse panel uses.
+      // Measured on the table rather than on the text: the reveal clips the
+      // panel, so the text inside it keeps its own height throughout.
+      await tester.pump();
+      final shut = tester.getRect(find.byType(Table<_User>)).height;
+      await tester.pump(const Duration(milliseconds: 60));
+      final opening = tester.getRect(find.byType(Table<_User>)).height;
+      await tester.pumpAndSettle();
+      final open = tester.getRect(find.byType(Table<_User>)).height;
+      expect(opening, greaterThan(shut));
+      expect(opening, lessThan(open));
+
+      // And it animates shut rather than vanishing — a panel simply dropped
+      // from the tree cannot animate at all.
+      await tester.tap(chevrons().first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(find.text('about Chen'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.text('about Chen'), findsNothing);
+    });
+
+    testWidgets('the panel content does not move sideways as it reveals',
+        (tester) async {
+      // The reveal passes loose constraints, so a child that hugs its content
+      // came out narrow and centred for the length of the animation and then
+      // snapped to full width and the leading edge on the last frame:
+      // measured, a panel's text sat at 328.8 and 142.5 wide throughout, then
+      // jumped to 116 and 568.
+      await tester.pumpWidget(table());
+      await tester.tap(chevrons().first);
+      await tester.pump();
+
+      Rect? during;
+      for (final ms in const [40, 80, 140]) {
+        await tester.pump(Duration(milliseconds: ms));
+        final found = find.text('about Chen');
+        if (found.evaluate().isEmpty) continue;
+        final now = tester.getRect(found);
+        during ??= now;
+        expect(now.left, closeTo(during.left, 0.5));
+        expect(now.width, closeTo(during.width, 0.5));
+      }
+      expect(during, isNotNull, reason: 'the panel was on screen part way');
+
+      await tester.pumpAndSettle();
+      final settled = tester.getRect(find.text('about Chen'));
+      expect(settled.left, closeTo(during!.left, 0.5));
+      expect(settled.width, closeTo(during.width, 0.5));
+    });
+
+    testWidgets('the mark is a plus that becomes a minus', (tester) async {
+      // Read off the pixels, not off the animation's value: what matters is
+      // what is drawn, and a painter can hold the right number and still draw
+      // the wrong thing.
+      Future<int> uprightPixels(WidgetTester tester) async {
+        final painter =
+            tester.widgetList<CustomPaint>(chevrons()).first.painter!;
+        final recorder = ui.PictureRecorder();
+        painter.paint(ui.Canvas(recorder), const Size(20, 20));
+        // Rasterising needs the real async world: inside the test's fake one
+        // toImage never completes.
+        final bytes = await tester.runAsync(() async {
+          final image = await recorder.endRecording().toImage(20, 20);
+          final data = await image.toByteData();
+          image.dispose();
+          return data;
+        });
+        // Down the middle, skipping the row the crossbar occupies and the
+        // frame at either end.
+        var lit = 0;
+        for (var y = 3; y < 17; y++) {
+          if ((y - 10).abs() < 2) continue;
+          final alpha = bytes!.getUint8((y * 20 + 10) * 4 + 3);
+          if (alpha > 40) lit++;
+        }
+        return lit;
+      }
+
+      await tester.pumpWidget(table());
+      expect(await uprightPixels(tester), greaterThan(0),
+          reason: 'a plus while the row is shut');
+
+      await tester.tap(chevrons().first);
+      await tester.pumpAndSettle();
+      expect(await uprightPixels(tester), 0, reason: 'a minus once it is open');
+    });
+
+    testWidgets('the panel spans the whole table, not one column',
+        (tester) async {
+      // Flutter's Table cannot span a row across its columns, so the panel is
+      // drawn between two grids rather than inside one.
+      await tester.pumpWidget(table(defaultExpanded: const [_User('Ann', 45)]));
+      final panel = tester.getRect(find.text('about Ann'));
+      final table_ = tester.getRect(find.byType(Table<_User>));
+      expect(panel.left, lessThan(tester.getRect(find.text('Age')).left));
+      expect(table_.width, closeTo(600, 1));
+    });
+
+    testWidgets('every grid is told the same widths', (tester) async {
+      // Two grids that each measured their own rows would disagree the moment
+      // the widest row fell in one of them and not the other. The long name
+      // is in the first segment; the rows after the panel are in the second.
+      const wide = [
+        _User('Bartholomew Considine of Galway', 45),
+        _User('Al', 27),
+        _User('Bo', 31),
+      ];
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: wide,
+            expandable: TableExpandable<_User>(
+              builder: (_, u, __) => Text('about ${u.name}'),
+              defaultExpanded: const [
+                _User('Bartholomew Considine of Galway', 45)
+              ],
+            ),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // The age of the row above the panel and of the ones below it stand in
+      // the same column, because both grids were handed the same numbers.
+      final above = tester.getRect(find.text('45')).left;
+      final below = tester.getRect(find.text('27')).left;
+      expect(below, closeTo(above, 0.5));
+      expect(tester.getRect(find.text('Age')).left, closeTo(above, 0.5));
+    });
+
+    testWidgets('more than one row can stand open', (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(chevrons().first);
+      await tester.pumpAndSettle();
+      await tester.tap(chevrons().at(2));
+      await tester.pumpAndSettle();
+
+      expect(find.text('about Chen'), findsOneWidget);
+      expect(find.text('about Bart'), findsOneWidget);
+      expect(find.text('about Ann'), findsNothing);
+    });
+
+    testWidgets('a row that cannot open shows no chevron', (tester) async {
+      await tester.pumpWidget(table(expandable: (u) => u.name != 'Ann'));
+      expect(chevrons(), findsNWidgets(2));
+    });
+
+    testWidgets('a tap on the row opens it where the table asks',
+        (tester) async {
+      await tester.pumpWidget(table(byRowTap: true));
+      await tester.tap(find.text('Bart'));
+      await tester.pumpAndSettle();
+      expect(find.text('about Bart'), findsOneWidget);
+    });
+
+    testWidgets('no column of chevrons where none was asked for',
+        (tester) async {
+      await tester.pumpWidget(table(showColumn: false, byRowTap: true));
+      expect(chevrons(), findsNothing);
+
+      await tester.tap(find.text('Bart'));
+      await tester.pumpAndSettle();
+      expect(find.text('about Bart'), findsOneWidget);
+    });
+
+    testWidgets('what is open is reported, and can be told', (tester) async {
+      List<_User>? told;
+      await tester.pumpWidget(table(
+        expanded: const [_User('Chen', 27)],
+        onChanged: (rows) => told = rows,
+      ));
+      expect(find.text('about Chen'), findsOneWidget);
+
+      await tester.tap(chevrons().at(1));
+      await tester.pumpAndSettle();
+      expect(told, [const _User('Chen', 27), const _User('Ann', 45)]);
+      expect(find.text('about Ann'), findsNothing,
+          reason: 'it said what it would have become, and changed nothing');
+    });
+
+    testWidgets('a table controlled and then let go keeps no stale opening',
+        (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(chevrons().first);
+      await tester.pumpAndSettle();
+      expect(find.text('about Chen'), findsOneWidget);
+
+      await tester.pumpWidget(table(expanded: const [_User('Bart', 31)]));
+      await tester.tap(chevrons().at(1));
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(table());
+      await tester.pumpAndSettle();
+      expect(find.text('about Chen'), findsOneWidget,
+          reason: 'its own, not what that tap would have made');
+      expect(find.text('about Ann'), findsNothing);
+    });
+
+    testWidgets('a table with a height of its own scrolls the panels too',
+        (tester) async {
+      await tester.pumpWidget(table(
+        scroll: const TableScroll(y: 150),
+        defaultExpanded: const [_User('Chen', 27)],
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('about Chen'), findsOneWidget);
+      expect(
+        tester.getRect(find.byType(Table<_User>)).height,
+        lessThan(300),
+        reason: 'the height it was given, panel and all',
+      );
     });
   });
 }

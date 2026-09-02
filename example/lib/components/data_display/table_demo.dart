@@ -239,6 +239,33 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Rows that open',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                columns: _columns,
+                expandable: TableExpandable<Person>(
+                  // The youngest has nothing more to say, so no chevron.
+                  expandable: (p) => p.age > 27,
+                  builder: (_, p, __) => Text(
+                    '${p.name} is ${p.age} and lives in ${p.city}. '
+                    'The panel spans the whole table, not one column.',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The panel sits between two grids, since a table cannot span a '
+                'row across its columns. Both grids are handed the same '
+                'widths, so nothing shifts as a row opens.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Picking rows',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

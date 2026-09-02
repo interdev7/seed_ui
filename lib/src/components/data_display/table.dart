@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
@@ -13,6 +14,7 @@ import 'package:flutter/widgets.dart' as flutter show Table, TableRow;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
+import '../../utils/expandable.dart';
 import '../../utils/size_resolver.dart';
 import '../data_entry/checkbox.dart';
 import '../data_entry/input.dart';
@@ -148,6 +150,69 @@ class TableSelection<T> {
   final double? columnWidth;
 
   /// Pins that column, as any other column is pinned.
+  final TableColumnFixed? fixed;
+}
+
+/// Opening a row to show more under it.
+///
+/// A column of chevrons goes in front of the others, and the row that is
+/// opened has a panel of your own drawing under it, across the whole table.
+///
+/// ```dart
+/// Table<User>(
+///   expandable: TableExpandable(builder: (context, user, i) => Text(user.bio)),
+///   columns: columns,
+///   data: users,
+/// )
+/// ```
+///
+/// A row is itself, not a key — as with [TableSelection].
+@immutable
+class TableExpandable<T> {
+  /// Creates a [TableExpandable].
+  const TableExpandable({
+    required this.builder,
+    this.expanded,
+    this.defaultExpanded,
+    this.onChanged,
+    this.expandable,
+    this.byRowTap = false,
+    this.showColumn = true,
+    this.columnWidth,
+    this.fixed,
+  });
+
+  /// What is drawn under an opened row.
+  final Widget Function(BuildContext context, T record, int index) builder;
+
+  /// The rows standing open (controlled).
+  final List<T>? expanded;
+
+  /// The rows standing open to begin with (uncontrolled).
+  final List<T>? defaultExpanded;
+
+  /// Called with the rows standing open, whenever that changes.
+  final ValueChanged<List<T>>? onChanged;
+
+  /// Which rows can be opened at all. Every row, where nothing is said.
+  ///
+  /// A row that cannot shows no chevron — an arrow that does nothing is worse
+  /// than none — and tapping it opens nothing.
+  final bool Function(T record)? expandable;
+
+  /// Whether a tap anywhere on the row opens it, as well as the chevron.
+  final bool byRowTap;
+
+  /// Whether the chevrons get a column of their own.
+  ///
+  /// Off where [byRowTap] is doing the work, or where the row draws its own
+  /// way of opening.
+  final bool showColumn;
+
+  /// How wide that column is.
+  final double? columnWidth;
+
+  /// Pins it, as any other column is pinned.
   final TableColumnFixed? fixed;
 }
 
@@ -432,6 +497,8 @@ class TableToken {
     this.filterHoverBg,
     this.filterSearchWidth,
     this.selectionColumnWidth,
+    this.expandIconSize,
+    this.expandedBg,
   });
 
   /// Fill behind the heading row.
@@ -524,6 +591,12 @@ class TableToken {
   /// How wide the field that narrows a filter menu is.
   final double? filterSearchWidth;
 
+  /// How big the chevron that opens a row is.
+  final double? expandIconSize;
+
+  /// Fill behind the panel under an opened row.
+  final Color? expandedBg;
+
   /// How much room the box itself takes in the column of boxes.
   ///
   /// The column is this plus the padding a cell carries either side, so a
@@ -573,6 +646,8 @@ class TableToken {
         filterHoverBg: filterHoverBg ?? t.colorFill,
         filterSearchWidth: filterSearchWidth ?? 140,
         selectionColumnWidth: selectionColumnWidth ?? t.controlHeightSM,
+        expandIconSize: expandIconSize ?? t.sizeMD,
+        expandedBg: expandedBg ?? t.colorFillQuaternary,
       );
 }
 
@@ -606,6 +681,8 @@ class _ResolvedTableToken {
     required this.filterHoverBg,
     required this.filterSearchWidth,
     required this.selectionColumnWidth,
+    required this.expandIconSize,
+    required this.expandedBg,
   });
 
   final Color headerBg;
@@ -635,6 +712,8 @@ class _ResolvedTableToken {
   final Color filterHoverBg;
   final double filterSearchWidth;
   final double selectionColumnWidth;
+  final double expandIconSize;
+  final Color expandedBg;
 }
 
 /// Defaults for every [Table] under a `ConfigProvider`.
@@ -710,6 +789,7 @@ class Table<T> extends StatefulWidget {
     this.defaultFilters,
     this.onFiltersChanged,
     this.selection,
+    this.expandable,
     this.token,
   });
 
@@ -792,6 +872,11 @@ class Table<T> extends StatefulWidget {
   /// Null — the usual — is a table nobody is picking from, and no column of
   /// boxes in front of the others.
   final TableSelection<T>? selection;
+
+  /// Opening a row to show more under it.
+  ///
+  /// Null — the usual — is a table whose rows do not open.
+  final TableExpandable<T>? expandable;
 
   /// Per-instance token overrides.
   final TableToken? token;
@@ -892,6 +977,9 @@ class _TableState<T> extends State<Table<T>> {
     _hovered.dispose();
     _hoveredHeading.dispose();
     _hoveredFunnel.dispose();
+    for (final closer in _closers) {
+      closer.cancel();
+    }
     _acrossOffset.dispose();
     _measured.dispose();
     super.dispose();
@@ -1017,6 +1105,7 @@ class _TableState<T> extends State<Table<T>> {
   /// sorts nor filters and nothing had to be told to skip it.
   List<TableColumn<T>> get _columns => [
         if (widget.selection != null) _selectionColumn,
+        if (widget.expandable?.showColumn ?? false) _expandColumn,
         ...widget.columns,
       ];
 
@@ -1142,10 +1231,11 @@ class _TableState<T> extends State<Table<T>> {
 
     flutter.Table grid(
       List<TableColumn<T>> columns,
-      List<flutter.TableRow> of,
-    ) =>
+      List<flutter.TableRow> of, {
+      Map<int, TableColumnWidth>? widths,
+    }) =>
         flutter.Table(
-          columnWidths: _widthsFor(columns, r),
+          columnWidths: widths ?? _widthsFor(columns, r),
           // Every cell in a row is as tall as the tallest, which is what
           // keeps a row a row when one cell wraps and its neighbours do not.
           defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -1305,8 +1395,104 @@ class _TableState<T> extends State<Table<T>> {
           ],
         );
 
+    /// A table whose rows open, drawn as a run of grids with the panels
+    /// between them.
+    ///
+    /// Flutter's `Table` has no way of spanning a row across every column, so
+    /// a panel cannot be a row of the grid — it has to sit between two grids.
+    /// Which is only safe if the grids agree on their widths, so the columns
+    /// are measured once and every grid is told the same numbers, rather than
+    /// each working out its own from the rows it happens to hold.
+    Widget opening(List<TableColumn<T>> columns) {
+      final style = _bodyStyle(r, t);
+      final inline = _cellPadding(r, t).horizontal;
+      final scaler = MediaQuery.textScalerOf(context);
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final available = math.max(
+            constraints.hasBoundedWidth ? constraints.maxWidth : 0.0,
+            _across ?? 0.0,
+          );
+          final measured = _resolveWidths(
+            columns,
+            available,
+            r,
+            t,
+            style,
+            inline,
+            scaler,
+          );
+          final widths = <int, TableColumnWidth>{
+            for (var i = 0; i < columns.length; i++)
+              i: FixedColumnWidth(measured.columns[i]),
+          };
+
+          final data = dataRowsOf(columns);
+          final children = <Widget>[
+            if (_showHeader)
+              grid(columns, [headingRow(columns)], widths: widths),
+          ];
+          var run = <flutter.TableRow>[];
+          void flush() {
+            if (run.isEmpty) return;
+            children.add(grid(columns, run, widths: widths));
+            run = [];
+          }
+
+          for (var i = 0; i < rows.length; i++) {
+            run.add(data[i]);
+            if (!_hasPanel(rows[i])) continue;
+            flush();
+            children.add(
+              // The same reveal a `Collapse` panel uses, so a table opens the
+              // way everything else in the kit opens.
+              Expandable(
+                expanded: _isExpanded(rows[i]),
+                destroyWhenCollapsed: true,
+                // The panel is added at the moment its row opens, so it has
+                // to start shut and grow — otherwise it arrives at full
+                // height with no reveal at all.
+                animateOnMount: true,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: r.expandedBg,
+                    border: Border(bottom: rule),
+                  ),
+                  child: Padding(
+                    padding: _cellPadding(r, t),
+                    child: widget.expandable!.builder(context, rows[i], i),
+                  ),
+                ),
+              ),
+            );
+          }
+          flush();
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          );
+        },
+      );
+    }
+
     Widget table;
-    if (_detached && widget.data.isNotEmpty) {
+    if (widget.expandable != null) {
+      // Rows that open are drawn as grids with panels between them, and a
+      // height of its own simply scrolls the lot: a panel is whatever height
+      // its content is, and a lazy body can only find a row by multiplying.
+      table = _detached
+          ? SizedBox(
+              height: widget.scroll!.y,
+              child: _handOn(
+                SingleChildScrollView(
+                  child: RepaintBoundary(child: opening(_columns)),
+                ),
+              ),
+            )
+          : opening(_columns);
+    } else if (_detached && widget.data.isNotEmpty) {
       // A height of its own is what makes the rows worth building lazily, and
       // it is also what a lazy body needs: a row is found by multiplying, so
       // every row has to be one height. A table with no height of its own
@@ -1510,6 +1696,60 @@ class _TableState<T> extends State<Table<T>> {
     if (widget.filters == null) setState(() => _ownFilters = next);
     widget.onFiltersChanged?.call(next);
   }
+
+  /// The rows the table keeps open while nobody is controlling them.
+  List<T>? _ownExpanded;
+  bool _startedExpanded = false;
+
+  /// The rows standing open.
+  List<T> get _expanded {
+    final expandable = widget.expandable;
+    if (expandable == null) return const [];
+    if (expandable.expanded != null) return expandable.expanded!;
+    if (!_startedExpanded) {
+      _startedExpanded = true;
+      _ownExpanded = expandable.defaultExpanded;
+    }
+    return _ownExpanded ?? const [];
+  }
+
+  bool _isExpanded(T record) => _expanded.contains(record);
+
+  bool _canExpand(T record) =>
+      widget.expandable?.expandable?.call(record) ?? true;
+
+  /// Rows whose panel is on its way shut.
+  ///
+  /// A panel that is simply dropped from the tree cannot animate closed, so a
+  /// row stays here — and its panel stays built at a shrinking height — until
+  /// the motion is over.
+  final Set<T> _closing = {};
+  final List<Timer> _closers = [];
+
+  void _toggleExpanded(T record) {
+    final expandable = widget.expandable!;
+    if (!_canExpand(record)) return;
+    final next = [..._expanded];
+    final shutting = next.remove(record);
+    if (!shutting) next.add(record);
+    if (expandable.expanded == null) {
+      setState(() => _ownExpanded = next);
+    }
+    expandable.onChanged?.call(next);
+    if (shutting) _holdWhileClosing(record);
+  }
+
+  void _holdWhileClosing(T record) {
+    setState(() => _closing.add(record));
+    final over = context.softToken.motionDurationMid;
+    _closers.add(Timer(over, () {
+      if (!mounted) return;
+      setState(() => _closing.remove(record));
+    }));
+  }
+
+  /// The rows a panel is drawn for: the ones open, and the ones closing.
+  bool _hasPanel(T record) => _isExpanded(record) || _closing.contains(record);
 
   /// The rows the table keeps picked while nobody is controlling them.
   List<T>? _ownSelected;
@@ -1836,6 +2076,48 @@ class _TableState<T> extends State<Table<T>> {
     );
   }
 
+  /// The column of chevrons, built as any other column is.
+  TableColumn<T> get _expandColumn {
+    final expandable = widget.expandable!;
+    return TableColumn<T>(
+      align: TableAlign.center,
+      headerAlign: TableAlign.center,
+      width: expandable.columnWidth ??
+          _cellPadding(_token, context.softToken).horizontal +
+              _token.expandIconSize,
+      fixed: expandable.fixed,
+      title: const SizedBox.shrink(),
+      builder: (context, record, index) {
+        // A row that cannot be opened shows nothing: an arrow that does not
+        // move is worse than no arrow.
+        if (!_canExpand(record)) return const SizedBox.shrink();
+        final open = _isExpanded(record);
+        final t = context.softToken;
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _toggleExpanded(record),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0, end: open ? 1 : 0),
+              duration: t.motionDurationMid,
+              curve: t.motionEaseInOut,
+              builder: (context, shut, _) => CustomPaint(
+                size: Size.square(_token.expandIconSize),
+                painter: _ExpandIconPainter(
+                  bar: _token.headerColor,
+                  border: _token.borderColor,
+                  radius: t.borderRadiusSM,
+                  open: shut,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   /// A pinned column is the first or the last x index and nothing else — that
   /// is the whole of what pinning is, once one viewport owns both axes.
   List<TableColumn<T>> get _ordered => [
@@ -2092,10 +2374,14 @@ class _TableState<T> extends State<Table<T>> {
         t,
       ),
     );
-    if (widget.onRowTap != null) {
+    final opens = widget.expandable?.byRowTap ?? false;
+    if (widget.onRowTap != null || opens) {
       cell = GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => widget.onRowTap!(record, index),
+        onTap: () {
+          widget.onRowTap?.call(record, index);
+          if (opens) _toggleExpanded(record);
+        },
         child: cell,
       );
     }
@@ -2121,6 +2407,40 @@ class _TableState<T> extends State<Table<T>> {
   /// Only the rows on screen are built. Five hundred rows of fifteen columns
   /// is seven and a half thousand cells, and building them to show forty was
   /// the whole of the cost.
+  /// The widths every column is drawn at, worked out once and kept.
+  _TableWidths _resolveWidths(
+    List<TableColumn<T>> columns,
+    double available,
+    _ResolvedTableToken r,
+    Token t,
+    TextStyle style,
+    double inline,
+    TextScaler scaler,
+  ) {
+    final asked = _ask(columns, available, style, inline, scaler);
+    final widths = _widthsAsked == asked && _widths != null && _sameRows()
+        ? _widths!
+        : _widths = _TableWidths.resolve<T>(
+            columns: columns,
+            data: widget.data,
+            available: available,
+            bodyStyle: style,
+            inlinePadding: inline,
+            minWidth: r.columnMinWidth,
+            textScaler: scaler,
+            textDirection: Directionality.of(context),
+            headerNatural: _headingWidths(
+              columns,
+              style.copyWith(fontWeight: t.fontWeightStrong),
+              inline,
+            ),
+            builderNatural: List<double?>.filled(columns.length, null),
+          );
+    _widthsAsked = asked;
+    _measuredRows = widget.data;
+    return widths;
+  }
+
   Widget _lazyBody(_ResolvedTableToken r, Token t, BorderSide rule) {
     final columns = _ordered;
     final style = _bodyStyle(r, t);
@@ -2133,27 +2453,15 @@ class _TableState<T> extends State<Table<T>> {
           constraints.hasBoundedWidth ? constraints.maxWidth : 0.0,
           _across ?? 0.0,
         );
-        final asked = _ask(columns, available, style, inline, scaler);
-        final widths = _widthsAsked == asked && _widths != null && _sameRows()
-            ? _widths!
-            : _widths = _TableWidths.resolve<T>(
-                columns: columns,
-                data: widget.data,
-                available: available,
-                bodyStyle: style,
-                inlinePadding: inline,
-                minWidth: r.columnMinWidth,
-                textScaler: scaler,
-                textDirection: Directionality.of(context),
-                headerNatural: _headingWidths(
-                  columns,
-                  style.copyWith(fontWeight: t.fontWeightStrong),
-                  inline,
-                ),
-                builderNatural: List<double?>.filled(columns.length, null),
-              );
-        _widthsAsked = asked;
-        _measuredRows = widget.data;
+        final widths = _resolveWidths(
+          columns,
+          available,
+          r,
+          t,
+          style,
+          inline,
+          scaler,
+        );
 
         return ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(
@@ -2269,10 +2577,14 @@ class _TableState<T> extends State<Table<T>> {
       r,
       t,
     );
-    if (widget.onRowTap != null) {
+    final opens = widget.expandable?.byRowTap ?? false;
+    if (widget.onRowTap != null || opens) {
       cell = GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => widget.onRowTap!(record, index),
+        onTap: () {
+          widget.onRowTap?.call(record, index);
+          if (opens) _toggleExpanded(record);
+        },
         child: cell,
       );
     }
@@ -2705,6 +3017,57 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
 }
 
 /// A funnel: the mark at the head of a column that can be narrowed.
+/// A plus inside a rounded square, which becomes a minus as the row opens.
+///
+/// [open] runs from nought to one, and the upright of the plus goes with it —
+/// so the mark says what a tap will do rather than which way the row points.
+class _ExpandIconPainter extends CustomPainter {
+  const _ExpandIconPainter({
+    required this.bar,
+    required this.border,
+    required this.radius,
+    required this.open,
+  });
+
+  final Color bar;
+  final Color border;
+  final double radius;
+  final double open;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final square = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(radius),
+    );
+    canvas.drawRRect(
+      square,
+      Paint()
+        ..color = border
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke,
+    );
+
+    final paint = Paint()
+      ..color = bar
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round;
+    final c = size.center(Offset.zero);
+    final arm = size.width * 0.26;
+    // The crossbar stays; the upright shrinks away, so the mark reads as a
+    // minus once the row is open.
+    canvas.drawLine(Offset(c.dx - arm, c.dy), Offset(c.dx + arm, c.dy), paint);
+    final up = arm * (1 - open);
+    if (up > 0.1) {
+      canvas.drawLine(Offset(c.dx, c.dy - up), Offset(c.dx, c.dy + up), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ExpandIconPainter old) =>
+      old.open != open || old.bar != bar || old.border != border;
+}
+
 class _FunnelPainter extends CustomPainter {
   const _FunnelPainter(this.color);
 

@@ -98,6 +98,7 @@ export 'src/components/data_display/table.dart'
         TableColumn,
         TableColumnFixed,
         TableDefaults,
+        TableExpandable,
         TableFilter,
         TableScroll,
         TableSelection,

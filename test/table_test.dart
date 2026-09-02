@@ -2140,4 +2140,301 @@ void main() {
       );
     });
   });
+
+  group('selection', () {
+    const people = [
+      _User('Chen', 27),
+      _User('Ann', 45),
+      _User('Bart', 31),
+    ];
+
+    List<String> names(WidgetTester tester) => tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data)
+        .whereType<String>()
+        .where((s) => people.any((p) => p.name == s))
+        .toList();
+
+    Widget table({
+      TableSelectionMode mode = TableSelectionMode.checkbox,
+      List<_User>? selected,
+      List<_User>? defaultSelected,
+      ValueChanged<List<_User>>? onChanged,
+      bool Function(_User)? selectable,
+      bool showSelectAll = true,
+      Map<int, List<Object?>>? defaultFilters,
+    }) =>
+        _host(
+          Table<_User>(
+            data: people,
+            defaultFilters: defaultFilters,
+            selection: TableSelection<_User>(
+              mode: mode,
+              selected: selected,
+              defaultSelected: defaultSelected,
+              onChanged: onChanged,
+              selectable: selectable,
+              showSelectAll: showSelectAll,
+            ),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                filters: const [TableFilter('Ann', 'Ann')],
+              ),
+            ],
+          ),
+        );
+
+    // The heading's box first, then one per row.
+    Finder boxes() => find.byType(Checkbox);
+
+    testWidgets('a column of boxes goes in front of the others',
+        (tester) async {
+      await tester.pumpWidget(table());
+      expect(boxes(), findsNWidgets(4), reason: 'three rows and the heading');
+      expect(
+        tester.getRect(boxes().first).left,
+        lessThan(tester.getRect(find.text('Name')).left),
+      );
+    });
+
+    testWidgets('ticking a row reports it', (tester) async {
+      List<_User>? told;
+      await tester.pumpWidget(table(onChanged: (rows) => told = rows));
+
+      await tester.tap(boxes().at(2));
+      await tester.pumpAndSettle();
+      expect(told, [people[1]], reason: 'Ann, the second row');
+
+      await tester.tap(boxes().at(1));
+      await tester.pumpAndSettle();
+      expect(told, [people[1], people[0]]);
+
+      await tester.tap(boxes().at(2));
+      await tester.pumpAndSettle();
+      expect(told, [people[0]], reason: 'and letting one go removes it');
+    });
+
+    testWidgets('the heading takes every row, and gives them back',
+        (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(boxes().first);
+      await tester.pumpAndSettle();
+      expect(
+        tester.widgetList<Checkbox>(boxes()).every((b) => b.checked),
+        isTrue,
+      );
+
+      await tester.tap(boxes().first);
+      await tester.pumpAndSettle();
+      expect(
+        tester.widgetList<Checkbox>(boxes()).any((b) => b.checked),
+        isFalse,
+      );
+    });
+
+    testWidgets('the heading is part way when some rows are picked',
+        (tester) async {
+      await tester.pumpWidget(table(defaultSelected: const [_User('Ann', 45)]));
+      final head = tester.widget<Checkbox>(boxes().first);
+      expect(head.checked, isFalse);
+      expect(head.indeterminate, isTrue);
+    });
+
+    testWidgets('a row that may not be picked is passed over', (tester) async {
+      await tester.pumpWidget(
+        table(selectable: (u) => u.name != 'Bart'),
+      );
+      expect(tester.widget<Checkbox>(boxes().at(3)).disabled, isTrue);
+
+      // The heading reads as full once every row that *can* be picked is,
+      // however many are barred.
+      await tester.tap(boxes().first);
+      await tester.pumpAndSettle();
+      expect(tester.widget<Checkbox>(boxes().first).checked, isTrue);
+      expect(tester.widget<Checkbox>(boxes().at(3)).checked, isFalse);
+    });
+
+    testWidgets('the heading answers for the rows on show, not all of them',
+        (tester) async {
+      List<_User>? told;
+      await tester.pumpWidget(table(
+        defaultFilters: const {
+          0: ['Ann'],
+        },
+        onChanged: (rows) => told = rows,
+      ));
+      expect(names(tester), ['Ann']);
+
+      await tester.tap(boxes().first);
+      await tester.pumpAndSettle();
+      expect(told, [people[1]], reason: 'a filter narrows what "all" means');
+    });
+
+    testWidgets('a filter hides a picked row without un-picking it',
+        (tester) async {
+      List<_User>? told;
+      await tester.pumpWidget(table(
+        defaultSelected: const [_User('Chen', 27)],
+        defaultFilters: const {
+          0: ['Ann'],
+        },
+        onChanged: (rows) => told = rows,
+      ));
+      // Chen is picked but filtered away; taking "all" must not drop him.
+      await tester.tap(boxes().first);
+      await tester.pumpAndSettle();
+      expect(told, [people[0], people[1]]);
+    });
+
+    testWidgets('radio picks one row and no more', (tester) async {
+      List<_User>? told;
+      await tester.pumpWidget(table(
+        mode: TableSelectionMode.radio,
+        onChanged: (rows) => told = rows,
+      ));
+      expect(boxes(), findsNothing, reason: 'dots, not boxes');
+      expect(find.byType(Radio<bool>), findsNWidgets(3));
+
+      await tester.tap(find.byType(Radio<bool>).at(0));
+      await tester.pumpAndSettle();
+      expect(told, [people[0]]);
+
+      await tester.tap(find.byType(Radio<bool>).at(2));
+      await tester.pumpAndSettle();
+      expect(told, [people[2]], reason: 'the second replaced the first');
+    });
+
+    testWidgets('no box at the head where one would mean nothing',
+        (tester) async {
+      await tester.pumpWidget(table(showSelectAll: false));
+      expect(boxes(), findsNWidgets(3), reason: 'the rows alone');
+    });
+
+    testWidgets('a selection given is the selection shown, and ticking tells',
+        (tester) async {
+      List<_User>? told;
+      await tester.pumpWidget(table(
+        selected: const [_User('Chen', 27)],
+        onChanged: (rows) => told = rows,
+      ));
+      expect(tester.widget<Checkbox>(boxes().at(1)).checked, isTrue);
+
+      await tester.tap(boxes().at(2));
+      await tester.pumpAndSettle();
+      expect(told, [people[0], people[1]]);
+      expect(tester.widget<Checkbox>(boxes().at(2)).checked, isFalse,
+          reason: 'and changed nothing itself');
+    });
+
+    testWidgets('the heading cannot be ticked when no row can', (tester) async {
+      await tester.pumpWidget(table(selectable: (u) => false));
+      expect(tester.widget<Checkbox>(boxes().first).disabled, isTrue);
+    });
+
+    testWidgets('a table controlled and then let go keeps no stale selection',
+        (tester) async {
+      // Uncontrolled first, so the table has a selection of its own to come
+      // back to; then given one, where ticking may only tell; then let go.
+      await tester.pumpWidget(table());
+      await tester.tap(boxes().at(1));
+      await tester.pumpAndSettle();
+      expect(tester.widget<Checkbox>(boxes().at(1)).checked, isTrue);
+
+      await tester.pumpWidget(table(selected: const [_User('Bart', 31)]));
+      await tester.tap(boxes().at(2));
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(table());
+      await tester.pumpAndSettle();
+      expect(tester.widget<Checkbox>(boxes().at(1)).checked, isTrue,
+          reason: 'its own pick, not what that tick would have made');
+      expect(tester.widget<Checkbox>(boxes().at(2)).checked, isFalse);
+    });
+
+    testWidgets('a picked row is tinted, hand or no hand', (tester) async {
+      Color fillOfRow(WidgetTester tester, String name) => tester
+          .widgetList<ColoredBox>(
+            find.ancestor(
+              of: find.text(name),
+              matching: find.byType(ColoredBox),
+            ),
+          )
+          .first
+          .color;
+
+      await tester.pumpWidget(table());
+      final plain = fillOfRow(tester, 'Ann');
+
+      await tester.tap(boxes().at(2));
+      await tester.pumpAndSettle();
+      final picked = fillOfRow(tester, 'Ann');
+
+      // Without this a picked row looked exactly like every other one, and
+      // the tick in front of it was the only thing saying so.
+      expect(picked, isNot(plain));
+      expect(picked.a, greaterThan(0));
+      expect(fillOfRow(tester, 'Chen'), plain, reason: 'that row only');
+
+      // And the pointer still shows where it is on top of that.
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(tester.getCenter(find.text('Ann')));
+      await tester.pumpAndSettle();
+      expect(fillOfRow(tester, 'Ann'), isNot(picked));
+    });
+
+    testWidgets('a picked row is tinted in a scrolling table too',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            scroll: const TableScroll(y: 200),
+            selection: const TableSelection<_User>(
+              defaultSelected: [_User('Ann', 45)],
+            ),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Color fill(String name) => tester
+          .widgetList<ColoredBox>(
+            find.ancestor(
+              of: find.text(name),
+              matching: find.byType(ColoredBox),
+            ),
+          )
+          .first
+          .color;
+
+      expect(fill('Ann'), isNot(fill('Chen')));
+    });
+
+    testWidgets('no selection, no column', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(boxes(), findsNothing);
+    });
+  });
 }

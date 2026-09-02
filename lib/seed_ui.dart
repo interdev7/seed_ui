@@ -100,6 +100,8 @@ export 'src/components/data_display/table.dart'
         TableDefaults,
         TableFilter,
         TableScroll,
+        TableSelection,
+        TableSelectionMode,
         TableSort,
         TableSortOrder,
         TableToken;

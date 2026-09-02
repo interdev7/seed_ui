@@ -156,6 +156,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   measured from the rows as given — so a column keeps its width while you
   filter rather than jumping about under the hand.
 
+  **Picking rows.** `selection` puts a column of boxes in front of the others,
+  and a box at the head that takes every row on show.
+
+  ```dart
+  Table<User>(
+    selection: TableSelection(onChanged: (rows) => setState(() => picked = rows)),
+    columns: columns,
+    data: users,
+  )
+  ```
+
+  A row is itself rather than a key: what comes back are the records, and two
+  rows that compare equal are one row as far as picking goes.
+  `TableSelectionMode.radio` picks one at a time and drops the head's box,
+  since taking every row is not something a column of dots can mean;
+  `selectable` bars rows, and the head passes them over rather than counting
+  them. The head answers for the rows on show — a filter narrows what "all"
+  means — and a row already picked stays picked while a filter hides it. A
+  picked row is tinted whether or not the pointer is on it, and a step stronger
+  while it is.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

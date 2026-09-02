@@ -59,6 +59,8 @@ class _TableDemoState extends State<TableDemo> {
   Person? _tapped;
   TableSort? _sort;
   Map<int, List<Object?>> _filters = const {};
+  List<Person> _picked = const [];
+  bool _radio = false;
 
   List<TableColumn<Person>> get _columns => [
     // A value is the whole of most columns: no builder, no ceremony.
@@ -232,6 +234,49 @@ class _TableDemoState extends State<TableDemo> {
                 'rows came in. Name and Age compare their values; City is '
                 'told how, and sorts by the last letter. '
                 '${_sort == null ? 'Unsorted.' : 'Sorted by column ${_sort!.column}, ${_sort!.order.name}.'}',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Picking rows',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                selection: TableSelection<Person>(
+                  mode: _radio
+                      ? TableSelectionMode.radio
+                      : TableSelectionMode.checkbox,
+                  selected: _picked,
+                  onChanged: (rows) => setState(() => _picked = rows),
+                  // The youngest cannot be picked, to show a row that is
+                  // barred rather than merely unpicked.
+                  selectable: (p) => p.age > 27,
+                ),
+                columns: _columns,
+              ),
+              const SizedBox(height: 8),
+              Segmented<bool>(
+                size: SoftSize.small,
+                value: _radio,
+                options: const [
+                  SegmentedOption(value: false, label: 'checkbox'),
+                  SegmentedOption(value: true, label: 'radio'),
+                ],
+                onChanged: (v) => setState(() {
+                  _radio = v;
+                  _picked = const [];
+                }),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _picked.isEmpty
+                    ? 'Nothing picked. The box at the head takes every row on '
+                          'show, passing over any that cannot be picked.'
+                    : 'Picked: ${_picked.map((p) => p.name).join(', ')}.',
               ),
             ],
           ),

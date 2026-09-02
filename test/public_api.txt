@@ -246,6 +246,8 @@ TableColumnFixed
 TableDefaults
 TableFilter
 TableScroll
+TableSelection
+TableSelectionMode
 TableSort
 TableSortOrder
 TableToken

@@ -16,6 +16,7 @@ import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
 import '../data_entry/checkbox.dart';
 import '../data_entry/input.dart';
+import '../data_entry/radio.dart';
 import '../feedback/spin.dart';
 import '../general/button.dart';
 import '../navigation/dropdown.dart';
@@ -74,6 +75,80 @@ class TableSort {
 
   @override
   String toString() => 'TableSort($column, ${order.name})';
+}
+
+/// Whether rows are picked one at a time or many.
+enum TableSelectionMode {
+  /// A box against every row, and one at the head that takes the lot.
+  checkbox,
+
+  /// A dot against every row, and only ever one row picked.
+  radio,
+}
+
+/// Picking rows out of a table.
+///
+/// A column of boxes goes in front of the others, and the heading carries one
+/// that takes every row on show — every row the filters left, that is, not
+/// every row that was handed over.
+///
+/// ```dart
+/// Table<User>(
+///   selection: TableSelection(onChanged: (rows) => setState(() => picked = rows)),
+///   columns: columns,
+///   data: users,
+/// )
+/// ```
+///
+/// A row is itself, not a key: what comes back are the records, and two rows
+/// that compare equal are one row as far as picking goes. Give records a
+/// `==` of their own where that matters.
+@immutable
+class TableSelection<T> {
+  /// Creates a [TableSelection].
+  const TableSelection({
+    this.mode = TableSelectionMode.checkbox,
+    this.selected,
+    this.defaultSelected,
+    this.onChanged,
+    this.selectable,
+    this.showSelectAll = true,
+    this.columnWidth,
+    this.fixed,
+  });
+
+  /// One row at a time, or many.
+  final TableSelectionMode mode;
+
+  /// The rows picked (controlled).
+  ///
+  /// Left null the table keeps its own, starting from [defaultSelected].
+  final List<T>? selected;
+
+  /// The rows picked to begin with (uncontrolled).
+  final List<T>? defaultSelected;
+
+  /// Called with the rows picked, whenever that changes.
+  final ValueChanged<List<T>>? onChanged;
+
+  /// Which rows may be picked at all. Every row, where nothing is said.
+  ///
+  /// A row that may not be picked shows a box that cannot be ticked, and the
+  /// heading's box passes it over — so a table whose pickable rows are all
+  /// picked reads as full, however many rows are barred.
+  final bool Function(T record)? selectable;
+
+  /// Whether the heading carries a box that takes every row on show.
+  ///
+  /// Never in [TableSelectionMode.radio]: taking every row is not something a
+  /// column of dots can mean.
+  final bool showSelectAll;
+
+  /// How wide the column of boxes is.
+  final double? columnWidth;
+
+  /// Pins that column, as any other column is pinned.
+  final TableColumnFixed? fixed;
 }
 
 /// One choice in a column's filter menu.
@@ -333,6 +408,8 @@ class TableToken {
     this.headerBg,
     this.headerColor,
     this.rowHoverBg,
+    this.rowSelectedBg,
+    this.rowSelectedHoverBg,
     this.borderColor,
     this.cellPaddingBlock,
     this.cellPaddingBlockSM,
@@ -354,6 +431,7 @@ class TableToken {
     this.filterMenuMaxHeight,
     this.filterHoverBg,
     this.filterSearchWidth,
+    this.selectionColumnWidth,
   });
 
   /// Fill behind the heading row.
@@ -364,6 +442,13 @@ class TableToken {
 
   /// Fill behind the row under the pointer.
   final Color? rowHoverBg;
+
+  /// Fill behind a row that has been picked.
+  final Color? rowSelectedBg;
+
+  /// Fill behind a picked row under the pointer, a step stronger so the
+  /// pointer still shows where it is.
+  final Color? rowSelectedHoverBg;
 
   /// Colour of the rules between rows, and of the outline when bordered.
   final Color? borderColor;
@@ -439,6 +524,12 @@ class TableToken {
   /// How wide the field that narrows a filter menu is.
   final double? filterSearchWidth;
 
+  /// How much room the box itself takes in the column of boxes.
+  ///
+  /// The column is this plus the padding a cell carries either side, so a
+  /// compact table's is narrower without anything being said twice.
+  final double? selectionColumnWidth;
+
   /// Fill behind the funnel itself under the pointer.
   ///
   /// A step stronger than [headerHoverBg], or the mark would not be told
@@ -449,6 +540,8 @@ class TableToken {
         headerBg: headerBg ?? t.colorFillQuaternary,
         headerColor: headerColor ?? t.colorText,
         rowHoverBg: rowHoverBg ?? t.colorFillQuaternary,
+        rowSelectedBg: rowSelectedBg ?? t.primary.bg,
+        rowSelectedHoverBg: rowSelectedHoverBg ?? t.primary.bgHover,
         borderColor: borderColor ?? t.colorSplit,
         // A step at every preset, on both axes. An earlier pair had the
         // standard and the roomy one land on the same number, so `large`
@@ -479,6 +572,7 @@ class TableToken {
         filterMenuMaxHeight: filterMenuMaxHeight ?? 264,
         filterHoverBg: filterHoverBg ?? t.colorFill,
         filterSearchWidth: filterSearchWidth ?? 140,
+        selectionColumnWidth: selectionColumnWidth ?? t.controlHeightSM,
       );
 }
 
@@ -488,6 +582,8 @@ class _ResolvedTableToken {
     required this.headerBg,
     required this.headerColor,
     required this.rowHoverBg,
+    required this.rowSelectedBg,
+    required this.rowSelectedHoverBg,
     required this.borderColor,
     required this.cellPaddingBlock,
     required this.cellPaddingBlockSM,
@@ -509,11 +605,14 @@ class _ResolvedTableToken {
     required this.filterMenuMaxHeight,
     required this.filterHoverBg,
     required this.filterSearchWidth,
+    required this.selectionColumnWidth,
   });
 
   final Color headerBg;
   final Color headerColor;
   final Color rowHoverBg;
+  final Color rowSelectedBg;
+  final Color rowSelectedHoverBg;
   final Color borderColor;
   final double cellPaddingBlock;
   final double cellPaddingBlockSM;
@@ -535,6 +634,7 @@ class _ResolvedTableToken {
   final double filterMenuMaxHeight;
   final Color filterHoverBg;
   final double filterSearchWidth;
+  final double selectionColumnWidth;
 }
 
 /// Defaults for every [Table] under a `ConfigProvider`.
@@ -609,6 +709,7 @@ class Table<T> extends StatefulWidget {
     this.filters,
     this.defaultFilters,
     this.onFiltersChanged,
+    this.selection,
     this.token,
   });
 
@@ -685,6 +786,12 @@ class Table<T> extends StatefulWidget {
 
   /// Called when a filter menu is applied or reset, with what is in force.
   final ValueChanged<Map<int, List<Object?>>>? onFiltersChanged;
+
+  /// Picking rows out of the table, and what to do about it.
+  ///
+  /// Null — the usual — is a table nobody is picking from, and no column of
+  /// boxes in front of the others.
+  final TableSelection<T>? selection;
 
   /// Per-instance token overrides.
   final TableToken? token;
@@ -901,14 +1008,32 @@ class _TableState<T> extends State<Table<T>> {
       };
 
   /// The columns pinned to one edge, in the order they were given.
+  /// The columns as drawn: the column of boxes, where rows are being picked,
+  /// and then the ones that were given.
+  ///
+  /// Only the drawing goes through this. A sort and a filter are keyed by a
+  /// column's place in [Table.columns], and the box column is not one of
+  /// those — `indexOf` gives it -1, which is no column at all, so it neither
+  /// sorts nor filters and nothing had to be told to skip it.
+  List<TableColumn<T>> get _columns => [
+        if (widget.selection != null) _selectionColumn,
+        ...widget.columns,
+      ];
+
   List<TableColumn<T>> _pinnedTo(TableColumnFixed side) =>
-      widget.columns.where((c) => c.fixed == side).toList();
+      _columns.where((c) => c.fixed == side).toList();
 
   /// The columns that scroll.
   List<TableColumn<T>> get _loose =>
-      widget.columns.where((c) => c.fixed == null).toList();
+      _columns.where((c) => c.fixed == null).toList();
 
-  bool get _hasPinned => widget.columns.any((c) => c.fixed != null);
+  /// Asked of what was given, plus the box column's own pinning — not of
+  /// [_columns]. Building that column needs the cell padding, which needs to
+  /// know whether anything is pinned: going through [_columns] here was a
+  /// stack overflow the first time a table was drawn with a selection.
+  bool get _hasPinned =>
+      widget.columns.any((c) => c.fixed != null) ||
+      widget.selection?.fixed != null;
 
   double _pinnedWidth(TableColumnFixed side) =>
       _pinnedTo(side).fold(0, (sum, c) => sum + c.width!);
@@ -1195,15 +1320,15 @@ class _TableState<T> extends State<Table<T>> {
       );
     } else if (!_hasPinned) {
       final all = <flutter.TableRow>[
-        if (_showHeader) headingRow(widget.columns),
-        ...dataRowsOf(widget.columns),
+        if (_showHeader) headingRow(_columns),
+        ...dataRowsOf(_columns),
       ];
       table = _detached
           ? Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_showHeader) grid(widget.columns, [all.first]),
+                if (_showHeader) grid(_columns, [all.first]),
                 // The rows scroll; the heading, being outside this, does not.
                 SizedBox(
                   height: widget.scroll!.y,
@@ -1215,7 +1340,7 @@ class _TableState<T> extends State<Table<T>> {
                       // hundred and ninety-eight.
                       child: RepaintBoundary(
                         child: grid(
-                          widget.columns,
+                          _columns,
                           _showHeader ? all.skip(1).toList() : all,
                         ),
                       ),
@@ -1224,7 +1349,7 @@ class _TableState<T> extends State<Table<T>> {
                 ),
               ],
             )
-          : grid(widget.columns, all);
+          : grid(_columns, all);
     } else if (_detached) {
       // Two viewports here, one for the heading and one for the rows, kept in
       // step by hand — the only arrangement where that is unavoidable, since
@@ -1312,7 +1437,7 @@ class _TableState<T> extends State<Table<T>> {
       // ones off with it — which is exactly what it did before this guard.
       body = _across1D(
         SizedBox(
-          width: math.max(_across!, _leastWidth(widget.columns, r)),
+          width: math.max(_across!, _leastWidth(_columns, r)),
           child: body,
         ),
         t,
@@ -1384,6 +1509,87 @@ class _TableState<T> extends State<Table<T>> {
     };
     if (widget.filters == null) setState(() => _ownFilters = next);
     widget.onFiltersChanged?.call(next);
+  }
+
+  /// The rows the table keeps picked while nobody is controlling them.
+  List<T>? _ownSelected;
+  bool _startedSelection = false;
+
+  /// The rows picked.
+  List<T> get _selected {
+    final selection = widget.selection;
+    if (selection == null) return const [];
+    if (selection.selected != null) return selection.selected!;
+    if (!_startedSelection) {
+      _startedSelection = true;
+      _ownSelected = selection.defaultSelected;
+    }
+    return _ownSelected ?? const [];
+  }
+
+  bool _isSelected(T record) => _selected.contains(record);
+
+  bool _canSelect(T record) =>
+      widget.selection?.selectable?.call(record) ?? true;
+
+  void _select(List<T> next) {
+    if (widget.selection!.selected == null) {
+      setState(() => _ownSelected = next);
+    }
+    widget.selection!.onChanged?.call(next);
+  }
+
+  /// Picking one row, or letting it go.
+  void _toggleRow(T record, {required bool on}) {
+    final selection = widget.selection!;
+    if (selection.mode == TableSelectionMode.radio) {
+      _select(on ? [record] : const []);
+      return;
+    }
+    final next = [..._selected];
+    if (on) {
+      if (!next.contains(record)) next.add(record);
+    } else {
+      next.remove(record);
+    }
+    _select(next);
+  }
+
+  /// The rows the heading's box answers for: the ones on show that may be
+  /// picked at all. Not every row handed over — a filter narrowing the table
+  /// narrows what "all" means, which is what it means everywhere else.
+  List<T> get _selectableOnShow => [
+        for (final record in _rows)
+          if (_canSelect(record)) record
+      ];
+
+  /// Whether every such row is picked, none of them, or some.
+  ({bool all, bool some}) get _selectionState {
+    final available = _selectableOnShow;
+    if (available.isEmpty) return (all: false, some: false);
+    var picked = 0;
+    for (final record in available) {
+      if (_isSelected(record)) picked++;
+    }
+    return (all: picked == available.length, some: picked > 0);
+  }
+
+  void _toggleAll({required bool on}) {
+    final available = _selectableOnShow;
+    if (on) {
+      // What was already picked but is not on show stays picked: a filter
+      // hides rows, it does not un-pick them.
+      final next = [..._selected];
+      for (final record in available) {
+        if (!next.contains(record)) next.add(record);
+      }
+      _select(next);
+    } else {
+      _select([
+        for (final record in _selected)
+          if (!available.contains(record)) record,
+      ]);
+    }
   }
 
   /// The rows in the order they are shown.
@@ -1557,6 +1763,79 @@ class _TableState<T> extends State<Table<T>> {
   /// The columns in the order the lazy body wants them: pinned to the start,
   /// then the ones that travel, then pinned to the end.
   ///
+  /// What is painted behind a row.
+  ///
+  /// A row that has been picked is tinted whether or not the pointer is on
+  /// it — otherwise a picked row looks exactly like every other one, and the
+  /// tick in front of it is the only thing saying so.
+  Color _rowFill(
+    int index, {
+    required bool hovered,
+    required _ResolvedTableToken r,
+  }) {
+    final rows = _rows;
+    final picked = widget.selection != null &&
+        index >= 0 &&
+        index < rows.length &&
+        _isSelected(rows[index]);
+    if (picked) return hovered ? r.rowSelectedHoverBg : r.rowSelectedBg;
+    return hovered ? r.rowHoverBg : const Color(0x00000000);
+  }
+
+  /// The token, resolved wherever it is wanted rather than only in `build`.
+  _ResolvedTableToken get _token => (widget.token ??
+          ConfigProvider.componentOf<TableToken>(context) ??
+          const TableToken())
+      ._resolve(context.softToken);
+
+  /// The column of boxes, built as any other column is.
+  TableColumn<T> get _selectionColumn {
+    final selection = widget.selection!;
+    return TableColumn<T>(
+      align: TableAlign.center,
+      headerAlign: TableAlign.center,
+      // Wide enough for a box *and* the padding the cell will put either
+      // side of it: measured against the preset's padding rather than named
+      // as a number, since a compact table pads less and a roomy one more.
+      width: selection.columnWidth ??
+          _cellPadding(_token, context.softToken).horizontal +
+              _token.selectionColumnWidth,
+      fixed: selection.fixed,
+      title:
+          selection.mode == TableSelectionMode.radio || !selection.showSelectAll
+              // Nothing at the head: taking every row is not something a column
+              // of dots can mean, and a heading box that does nothing is worse
+              // than none.
+              ? const SizedBox.shrink()
+              : Builder(
+                  builder: (context) {
+                    final state = _selectionState;
+                    return Checkbox(
+                      checked: state.all,
+                      indeterminate: state.some && !state.all,
+                      disabled: _selectableOnShow.isEmpty,
+                      onChanged: (on) => _toggleAll(on: on),
+                    );
+                  },
+                ),
+      builder: (context, record, index) {
+        final can = _canSelect(record);
+        return selection.mode == TableSelectionMode.radio
+            ? Radio<bool>(
+                value: true,
+                groupValue: _isSelected(record),
+                disabled: !can,
+                onChanged: (_) => _toggleRow(record, on: true),
+              )
+            : Checkbox(
+                checked: _isSelected(record),
+                disabled: !can,
+                onChanged: (on) => _toggleRow(record, on: on),
+              );
+      },
+    );
+  }
+
   /// A pinned column is the first or the last x index and nothing else — that
   /// is the whole of what pinning is, once one viewport owns both axes.
   List<TableColumn<T>> get _ordered => [
@@ -1829,7 +2108,7 @@ class _TableState<T> extends State<Table<T>> {
       child: ValueListenableBuilder<int?>(
         valueListenable: _hovered,
         builder: (context, hovered, child) => ColoredBox(
-          color: hovered == index ? r.rowHoverBg : const Color(0x00000000),
+          color: _rowFill(index, hovered: hovered == index, r: r),
           child: child,
         ),
         child: cell,
@@ -2008,7 +2287,7 @@ class _TableState<T> extends State<Table<T>> {
       child: ValueListenableBuilder<int?>(
         valueListenable: _hovered,
         builder: (context, hovered, child) => ColoredBox(
-          color: hovered == index ? r.rowHoverBg : const Color(0x00000000),
+          color: _rowFill(index, hovered: hovered == index, r: r),
           child: child,
         ),
         child: cell,

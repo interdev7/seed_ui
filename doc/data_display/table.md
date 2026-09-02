@@ -323,6 +323,45 @@ then put in order. The column widths are measured from the rows as given
 rather than as shown, so neither narrowing nor sorting re-measures — a column
 keeps its width while you filter, instead of jumping about under the hand.
 
+## Picking rows
+
+`selection` puts a column of boxes in front of the others, and a box at the
+head that takes every row on show.
+
+```dart
+Table<User>(
+  selection: TableSelection(onChanged: (rows) => setState(() => picked = rows)),
+  columns: columns,
+  data: users,
+)
+```
+
+A row is itself, not a key: what comes back are the records, and two rows that
+compare equal are one row as far as picking goes. Give records a `==` of their
+own where that matters.
+
+`mode: TableSelectionMode.radio` picks one row at a time, and drops the box at
+the head — taking every row is not something a column of dots can mean.
+`showSelectAll: false` drops it for the same reason of your own choosing.
+
+`selectable` says which rows may be picked at all. A row that may not shows a
+box that cannot be ticked, and the head passes it over, so a table whose
+pickable rows are all picked reads as full however many are barred.
+
+A picked row is tinted whether or not the pointer is on it, and a step
+stronger while it is — without that a picked row looked exactly like every
+other one, and the tick in front of it was the only thing saying so.
+
+**The head answers for the rows on show.** A filter narrowing the table
+narrows what "all" means — which is what it means everywhere else — and a row
+already picked stays picked while a filter hides it: hiding a row is not
+un-picking it.
+
+Left to itself the table keeps its own picks, starting from
+`defaultSelected`. Give it `selected` and it shows what it is told, with
+`onChanged` saying what a tick would have made of them. `columnWidth` and
+`fixed` size and pin the column, as any other column is sized and pinned.
+
 ## Around the rows
 
 | Prop | |
@@ -353,6 +392,7 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `filterIconSize` | `sizeSM` — how big the funnel is |
 | `filterHoverBg` | `colorFill` — the funnel's own ground under the pointer |
 | `filterSearchWidth` | `140` — how wide the field that narrows a menu is |
+| `selectionColumnWidth` | `controlHeightSM` — room for the box itself; the column is this plus a cell's padding |
 | `filterMenuMaxHeight` | `264` — how tall a filter menu grows before its choices scroll |
 | `headerHoverBg` | `colorFillSecondary` — behind a sortable heading under the pointer, and behind the one being sorted by |
 | `headerMarkActiveColor` | `primary.base` — a mark in force: the caret of the order, a funnel that is narrowing |
@@ -387,5 +427,4 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-Row selection, expandable rows and pagination are still to come, in that
-order.
+Expandable rows and pagination are still to come, in that order.

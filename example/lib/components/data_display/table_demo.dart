@@ -61,6 +61,7 @@ class _TableDemoState extends State<TableDemo> {
   Map<int, List<Object?>> _filters = const {};
   List<Person> _picked = const [];
   bool _radio = false;
+  int _page = 1;
 
   List<TableColumn<Person>> get _columns => [
     // A value is the whole of most columns: no builder, no ceremony.
@@ -234,6 +235,179 @@ class _TableDemoState extends State<TableDemo> {
                 'rows came in. Name and Age compare their values; City is '
                 'told how, and sorts by the last letter. '
                 '${_sort == null ? 'Unsorted.' : 'Sorted by column ${_sort!.column}, ${_sort!.order.name}.'}',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A page at a time',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _crowd.take(42).toList(),
+                columns: _columns,
+                pagination: const TablePagination(
+                  defaultPageSize: 5,
+                  showSizeChanger: true,
+                  pageSizeOptions: [5, 10, 20],
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The pager is the kit\'s own Pagination, so everything it can '
+                'be told is told the same way. Paging happens after narrowing '
+                'and sorting, so a page is a page of what the filters left.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A pager you steer yourself',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _crowd.take(42).toList(),
+                columns: _columns,
+                pagination: TablePagination(
+                  // Told which page to show, so the table shows that and
+                  // nothing else; the buttons below do the deciding.
+                  page: _page,
+                  pageSize: 6,
+                  onChanged: (page, _) => setState(() => _page = page),
+                  showTotal: (total, from, to) =>
+                      Text('$from–$to of $total people'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Button(
+                    size: SoftSize.small,
+                    onPressed: _page > 1
+                        ? () => setState(() => _page -= 1)
+                        : null,
+                    child: const Text('Back'),
+                  ),
+                  const SizedBox(width: 8),
+                  Button(
+                    size: SoftSize.small,
+                    onPressed: _page < 7
+                        ? () => setState(() => _page += 1)
+                        : null,
+                    child: const Text('On'),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Page $_page of 7'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The page lives outside the table. showTotal draws a word or '
+                'two about how many rows there are in all — the rows the '
+                'filters left, not the ones on this page.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A pager above, and a plain one',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _many.take(11).toList(),
+                columns: _columns,
+                pagination: const TablePagination(
+                  position: TablePaginationPosition.top,
+                  defaultPageSize: 4,
+                  align: MainAxisAlignment.center,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Table<Person>(
+                bordered: true,
+                data: _many.take(11).toList(),
+                columns: _columns,
+                pagination: const TablePagination(
+                  defaultPageSize: 4,
+                  simple: PaginationSimple(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'position puts the pager above the table, under it, or both. '
+                'A plain pager is the page it is on and the two arrows, for '
+                'somewhere narrow.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Paging what the filters left',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _crowd.take(60).toList(),
+                pagination: const TablePagination(defaultPageSize: 5),
+                selection: const TableSelection<Person>(),
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    sortable: true,
+                    value: (p) => p.name,
+                  ),
+                  TableColumn(
+                    title: const Text('City'),
+                    value: (p) => p.city,
+                    filters: const [
+                      TableFilter('Bristol', 'Bristol'),
+                      TableFilter('Galway', 'Galway'),
+                      TableFilter('Chengdu', 'Chengdu'),
+                    ],
+                  ),
+                  TableColumn(
+                    title: const Text('Age'),
+                    sortable: true,
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Narrow by city and the pager counts what is left, not sixty. '
+                'Narrow past the page you are on and you land on the last page '
+                'there is, never on an empty one. The box at the head takes '
+                'the page in front of you, not the whole table.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A pager that knows when to go',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                columns: _columns,
+                pagination: const TablePagination(
+                  defaultPageSize: 10,
+                  hideOnSinglePage: true,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Three rows and ten to a page: there is only one page, so '
+                'hideOnSinglePage leaves the table without a pager at all.',
               ),
             ],
           ),

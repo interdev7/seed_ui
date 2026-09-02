@@ -246,6 +246,8 @@ TableColumnFixed
 TableDefaults
 TableExpandable
 TableFilter
+TablePagination
+TablePaginationPosition
 TableScroll
 TableSelection
 TableSelectionMode

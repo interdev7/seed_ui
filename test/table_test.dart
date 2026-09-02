@@ -2728,4 +2728,241 @@ void main() {
       );
     });
   });
+
+  group('paging', () {
+    final many = [for (var i = 0; i < 25; i++) _User('n$i', i)];
+
+    // The pager's own numbers: the Age column shows numbers too.
+    Finder pageButton(String n) => find.descendant(
+          of: find.byType(Pagination),
+          matching: find.text(n),
+        );
+
+    List<String> shown(WidgetTester tester) => tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data)
+        .whereType<String>()
+        .where((s) => many.any((u) => u.name == s))
+        .toList();
+
+    Widget table({
+      TablePagination pagination = const TablePagination(defaultPageSize: 10),
+      Map<int, List<Object?>>? defaultFilters,
+      Map<int, List<Object?>>? filters,
+      TableSort? defaultSort,
+      TableSelection<_User>? selection,
+    }) =>
+        _host(
+          Table<_User>(
+            data: many,
+            pagination: pagination,
+            defaultFilters: defaultFilters,
+            filters: filters,
+            defaultSort: defaultSort,
+            selection: selection,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                filters: const [TableFilter('early', 'n1')],
+                onFilter: (choice, u) => u.age < 5,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                sortable: true,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+          width: 700,
+        );
+
+    testWidgets('only a page of rows is shown', (tester) async {
+      await tester.pumpWidget(table());
+      expect(shown(tester).length, 10);
+      expect(shown(tester).first, 'n0');
+      expect(shown(tester).last, 'n9');
+    });
+
+    testWidgets('the pager moves between pages', (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(pageButton('3'));
+      await tester.pumpAndSettle();
+      expect(shown(tester), ['n20', 'n21', 'n22', 'n23', 'n24']);
+    });
+
+    testWidgets('what it says is what it does', (tester) async {
+      int? toldPage;
+      int? toldSize;
+      await tester.pumpWidget(table(
+        pagination: TablePagination(
+          defaultPageSize: 10,
+          onChanged: (page, size) {
+            toldPage = page;
+            toldSize = size;
+          },
+        ),
+      ));
+      await tester.tap(pageButton('2'));
+      await tester.pumpAndSettle();
+      expect(toldPage, 2);
+      expect(toldSize, 10);
+    });
+
+    testWidgets('a page given is the page shown, and tapping only tells',
+        (tester) async {
+      int? told;
+      await tester.pumpWidget(table(
+        pagination: TablePagination(
+          page: 2,
+          pageSize: 10,
+          onChanged: (page, _) => told = page,
+        ),
+      ));
+      expect(shown(tester).first, 'n10');
+
+      await tester.tap(pageButton('3'));
+      await tester.pumpAndSettle();
+      expect(told, 3);
+      expect(shown(tester).first, 'n10', reason: 'and changed nothing itself');
+    });
+
+    testWidgets('a table controlled and then let go keeps no stale page',
+        (tester) async {
+      // Uncontrolled first, so the table has a page of its own to come back
+      // to; then given one, where tapping may only tell; then let go.
+      await tester.pumpWidget(table());
+      await tester.tap(pageButton('2'));
+      await tester.pumpAndSettle();
+      expect(shown(tester).first, 'n10');
+
+      int? told;
+      await tester.pumpWidget(
+        table(
+          pagination: TablePagination(
+            page: 1,
+            pageSize: 10,
+            onChanged: (page, _) => told = page,
+          ),
+        ),
+      );
+      await tester.tap(pageButton('3'));
+      await tester.pumpAndSettle();
+      expect(told, 3, reason: 'the tap reached the table');
+      expect(shown(tester).first, 'n0', reason: 'it showed what it was told');
+
+      await tester.pumpWidget(table());
+      await tester.pumpAndSettle();
+      expect(shown(tester).first, 'n10',
+          reason: 'its own page, not what that tap would have made');
+    });
+
+    testWidgets('the page and the page size are controlled apart',
+        (tester) async {
+      // Page given, size not: tapping a page may only tell, while the size
+      // changer still works on its own.
+      int? told;
+      await tester.pumpWidget(table(
+        pagination: TablePagination(
+          page: 1,
+          defaultPageSize: 10,
+          onChanged: (page, _) => told = page,
+        ),
+      ));
+      await tester.tap(pageButton('3'));
+      await tester.pumpAndSettle();
+      expect(told, 3);
+      expect(shown(tester).first, 'n0', reason: 'the page it was told');
+
+      // And letting go of the page hands back the first one, not that tap.
+      await tester.pumpWidget(table(
+        pagination: const TablePagination(defaultPageSize: 10),
+      ));
+      await tester.pumpAndSettle();
+      expect(shown(tester).first, 'n0',
+          reason: 'a page it was told to show is not a page it chose');
+    });
+
+    testWidgets('paging happens after narrowing and sorting', (tester) async {
+      await tester.pumpWidget(table(
+        defaultFilters: const {
+          0: ['early'],
+        },
+        defaultSort: const TableSort(1, TableSortOrder.descending),
+      ));
+      // Five rows survive the filter, so one page of them, newest first.
+      expect(shown(tester), ['n4', 'n3', 'n2', 'n1', 'n0']);
+    });
+
+    testWidgets('narrowing past the page you are on lands on the last one',
+        (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(pageButton('3'));
+      await tester.pumpAndSettle();
+      expect(shown(tester).first, 'n20');
+
+      // Now only five rows are left: page three does not exist. Controlled
+      // filters, since a default is read once and this table already lives.
+      await tester.pumpWidget(table(filters: const {
+        0: ['early'],
+      }));
+      await tester.pumpAndSettle();
+      expect(shown(tester), ['n0', 'n1', 'n2', 'n3', 'n4'],
+          reason: 'the last page there is, and never an empty one');
+    });
+
+    testWidgets('the heading box takes the page, not the whole table',
+        (tester) async {
+      List<_User>? told;
+      await tester.pumpWidget(table(
+        selection: TableSelection<_User>(onChanged: (rows) => told = rows),
+      ));
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pumpAndSettle();
+      expect(told!.length, 10, reason: 'the ten on show, not all twenty-five');
+    });
+
+    testWidgets('no pagination, no pager', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          SingleChildScrollView(
+            child: Table<_User>(
+              data: many,
+              columns: [
+                TableColumn<_User>(
+                  title: const Text('Name'),
+                  value: (u) => u.name,
+                ),
+              ],
+            ),
+          ),
+          width: 700,
+        ),
+      );
+      expect(find.byType(Pagination), findsNothing);
+      expect(shown(tester).length, 25);
+    });
+
+    testWidgets('a pager above, under, or both', (tester) async {
+      await tester.pumpWidget(table());
+      expect(find.byType(Pagination), findsOneWidget);
+      final table_ = tester.getRect(find.byType(Table<_User>));
+      expect(tester.getRect(find.byType(Pagination)).center.dy,
+          greaterThan(table_.center.dy));
+
+      // Five to a page, or two pagers and twenty-five rows do not fit the
+      // surface the test is given.
+      await tester.pumpWidget(table(
+        pagination: const TablePagination(
+          // Controlled, since a default is read once and this table already
+          // lives: two pagers and ten rows do not fit the test's surface.
+          page: 1,
+          pageSize: 5,
+          position: TablePaginationPosition.both,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byType(Pagination), findsNWidgets(2));
+    });
+  });
 }

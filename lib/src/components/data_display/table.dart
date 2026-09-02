@@ -22,6 +22,7 @@ import '../data_entry/radio.dart';
 import '../feedback/spin.dart';
 import '../general/button.dart';
 import '../navigation/dropdown.dart';
+import '../navigation/pagination.dart';
 import 'empty.dart';
 
 /// Which edge a column's content is drawn against.
@@ -151,6 +152,97 @@ class TableSelection<T> {
 
   /// Pins that column, as any other column is pinned.
   final TableColumnFixed? fixed;
+}
+
+/// Where a table's pager stands.
+enum TablePaginationPosition {
+  /// Above the table.
+  top,
+
+  /// Under it, which is the usual place.
+  bottom,
+
+  /// Both, for a table long enough that the reader is at either end of it.
+  both,
+}
+
+/// Showing a table's rows a page at a time.
+///
+/// The pager is the kit's own [Pagination], so everything it can be told —
+/// its size, a quick jumper, a page-size changer — is told the same way, and
+/// a theme's `PaginationDefaults` reaches it as it reaches any other.
+///
+/// ```dart
+/// Table<User>(
+///   pagination: const TablePagination(defaultPageSize: 20),
+///   columns: columns,
+///   data: users,
+/// )
+/// ```
+///
+/// Paging happens after narrowing and sorting, so a page is a page of what
+/// the filters left, in the order the sort asked for.
+@immutable
+class TablePagination {
+  /// Creates a [TablePagination].
+  const TablePagination({
+    this.page,
+    this.defaultPage = 1,
+    this.pageSize,
+    this.defaultPageSize = 10,
+    this.onChanged,
+    this.position = TablePaginationPosition.bottom,
+    this.align,
+    this.size,
+    this.simple,
+    this.showSizeChanger,
+    this.pageSizeOptions = const [10, 20, 50, 100],
+    this.showQuickJumper,
+    this.showTotal,
+    this.hideOnSinglePage,
+  });
+
+  /// Which page is being shown, counting from one (controlled).
+  final int? page;
+
+  /// Which page is shown to begin with (uncontrolled).
+  final int defaultPage;
+
+  /// How many rows a page holds (controlled).
+  final int? pageSize;
+
+  /// How many it holds to begin with (uncontrolled).
+  final int defaultPageSize;
+
+  /// Called with the page and the page size whenever either changes.
+  final void Function(int page, int pageSize)? onChanged;
+
+  /// Above the table, under it, or both.
+  final TablePaginationPosition position;
+
+  /// Which edge the pager is drawn against.
+  final MainAxisAlignment? align;
+
+  /// The pager's own size preset.
+  final SoftSize? size;
+
+  /// A pager stripped to the page it is on and the two arrows.
+  final PaginationSimple? simple;
+
+  /// Whether the reader can change how many rows a page holds.
+  final bool? showSizeChanger;
+
+  /// The sizes offered when they can.
+  final List<int> pageSizeOptions;
+
+  /// Whether the reader can type a page number.
+  final bool? showQuickJumper;
+
+  /// Draws a word or two about how many rows there are in all.
+  final Widget Function(int total, int from, int to)? showTotal;
+
+  /// Whether the pager goes away when everything fits on one page.
+  final bool? hideOnSinglePage;
 }
 
 /// Opening a row to show more under it.
@@ -790,6 +882,7 @@ class Table<T> extends StatefulWidget {
     this.onFiltersChanged,
     this.selection,
     this.expandable,
+    this.pagination,
     this.token,
   });
 
@@ -877,6 +970,11 @@ class Table<T> extends StatefulWidget {
   ///
   /// Null — the usual — is a table whose rows do not open.
   final TableExpandable<T>? expandable;
+
+  /// Showing the rows a page at a time.
+  ///
+  /// Null — the usual — is every row at once.
+  final TablePagination? pagination;
 
   /// Per-instance token overrides.
   final TableToken? token;
@@ -1631,6 +1729,23 @@ class _TableState<T> extends State<Table<T>> {
       );
     }
 
+    if (widget.pagination != null) {
+      final where = widget.pagination!.position;
+      final above = where != TablePaginationPosition.bottom;
+      final below = where != TablePaginationPosition.top;
+      body = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (above) _pager(t),
+          // Outside the outline: a pager is about the table
+          // rather than part of it.
+          Flexible(child: body),
+          if (below) _pager(t),
+        ],
+      );
+    }
+
     if (_bordered) {
       body = DecoratedBox(
         decoration: BoxDecoration(
@@ -1695,6 +1810,54 @@ class _TableState<T> extends State<Table<T>> {
     };
     if (widget.filters == null) setState(() => _ownFilters = next);
     widget.onFiltersChanged?.call(next);
+  }
+
+  /// The page and page size the table keeps while nobody controls them.
+  int? _ownPage;
+  int? _ownPageSize;
+  bool _startedPaging = false;
+
+  void _startPaging() {
+    if (_startedPaging) return;
+    _startedPaging = true;
+    _ownPage = widget.pagination!.defaultPage;
+    _ownPageSize = widget.pagination!.defaultPageSize;
+  }
+
+  int get _pageSize {
+    final paging = widget.pagination!;
+    if (paging.pageSize != null) return paging.pageSize!;
+    _startPaging();
+    return _ownPageSize!;
+  }
+
+  /// Which page is shown, held inside what there is to show.
+  ///
+  /// Clamped rather than reset: narrowing a table until the page you were on
+  /// no longer exists should land you on the last one, not throw you back to
+  /// the first, and never on a page with nothing on it.
+  int get _page {
+    final paging = widget.pagination!;
+    int asked;
+    if (paging.page != null) {
+      asked = paging.page!;
+    } else {
+      _startPaging();
+      asked = _ownPage!;
+    }
+    final pages = math.max(1, (_narrowed.length / _pageSize).ceil());
+    return asked.clamp(1, pages);
+  }
+
+  void _goToPage(int page, int size) {
+    final paging = widget.pagination!;
+    if (paging.page == null || paging.pageSize == null) {
+      setState(() {
+        if (paging.page == null) _ownPage = page;
+        if (paging.pageSize == null) _ownPageSize = size;
+      });
+    }
+    paging.onChanged?.call(page, size);
   }
 
   /// The rows the table keeps open while nobody is controlling them.
@@ -1840,7 +2003,7 @@ class _TableState<T> extends State<Table<T>> {
   List<T>? _rowsCache;
   Object? _rowsAsked;
 
-  List<T> get _rows {
+  List<T> get _narrowed {
     final sort = _sort;
     final filters = _filters;
     final asked = Object.hash(
@@ -1857,6 +2020,21 @@ class _TableState<T> extends State<Table<T>> {
 
     _rowsAsked = asked;
     return _rowsCache = _sorted(_filtered(widget.data, filters), sort);
+  }
+
+  /// The rows on show: a page of [_narrowed], or every one of them where the
+  /// table is not paged.
+  ///
+  /// Everything that draws works from this, so a row's index is its place on
+  /// the page — and picking, opening and tapping all mean the row the reader
+  /// is looking at.
+  List<T> get _rows {
+    if (widget.pagination == null) return _narrowed;
+    final rows = _narrowed;
+    final size = _pageSize;
+    final from = (_page - 1) * size;
+    if (from >= rows.length) return const [];
+    return rows.sublist(from, math.min(from + size, rows.length));
   }
 
   /// The rows that belong under every filter in force.
@@ -2499,6 +2677,32 @@ class _TableState<T> extends State<Table<T>> {
   }
 
   Widget _defaultEmpty(BuildContext context, EmptySlot slot) => const Empty();
+
+  /// The pager, where the table is paged.
+  ///
+  /// The kit's own [Pagination], so a theme's `PaginationDefaults` reaches it
+  /// as it reaches any other and nothing here restyles it.
+  Widget _pager(Token t) {
+    final paging = widget.pagination!;
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: t.size),
+      child: Pagination(
+        total: _narrowed.length,
+        current: _page,
+        pageSize: _pageSize,
+        onChange: _goToPage,
+        onShowSizeChange: _goToPage,
+        align: paging.align,
+        size: paging.size,
+        simple: paging.simple,
+        showSizeChanger: paging.showSizeChanger,
+        pageSizeOptions: paging.pageSizeOptions,
+        showQuickJumper: paging.showQuickJumper,
+        showTotal: paging.showTotal,
+        hideOnSinglePage: paging.hideOnSinglePage,
+      ),
+    );
+  }
 
   /// Hands what the rows cannot use back to the page they sit on.
   ///

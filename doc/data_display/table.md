@@ -403,6 +403,34 @@ panel is whatever height its content is, and a lazy body finds a row by
 multiplying. The rows still scroll inside the height you gave; they are all
 built.
 
+## A page at a time
+
+`pagination` shows the rows a page at a time. The pager is the kit's own
+`Pagination`, so everything it can be told is told the same way and a theme's
+`PaginationDefaults` reaches it as it reaches any other.
+
+```dart
+Table<User>(
+  pagination: const TablePagination(defaultPageSize: 20),
+  columns: columns,
+  data: users,
+)
+```
+
+Paging happens after narrowing and sorting, so a page is a page of what the
+filters left, in the order the sort asked for. Everything that draws works
+from the page, so a row's index is its place on it, and picking, opening and
+tapping all mean the row the reader is looking at — including the heading's
+box, which takes the page rather than the whole table.
+
+Narrowing a table until the page you were on no longer exists lands you on the
+last page there is, not back on the first, and never on a page with nothing on
+it.
+
+The page and the page size are controlled apart: give `page` and a tap only
+reports through `onChanged` while the size changer still works on its own.
+`position` puts the pager above the table, under it, or both.
+
 ## Around the rows
 
 | Prop | |
@@ -470,4 +498,4 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-Pagination is still to come.
+Column groups, a summary row and spanned cells are still to come.

@@ -202,6 +202,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   table whose rows open is not lazy even with `scroll.y`: a panel is whatever
   height its content is, and a lazy body finds a row by multiplying.
 
+  **A page at a time.** `pagination` shows the rows a page at a time, with the
+  kit's own `Pagination` as the pager — so everything it can be told is told
+  the same way, and a theme's `PaginationDefaults` reaches it as it reaches any
+  other.
+
+  ```dart
+  Table<User>(pagination: const TablePagination(defaultPageSize: 20), ...)
+  ```
+
+  Paging happens after narrowing and sorting. Everything that draws works from
+  the page, so a row's index is its place on it and the heading's box takes the
+  page rather than the whole table. Narrowing until the page you were on no
+  longer exists lands you on the last one there is, never on an empty one. The
+  page and the page size are controlled apart, and `position` puts the pager
+  above the table, under it, or both.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

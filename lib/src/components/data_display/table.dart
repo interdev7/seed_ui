@@ -154,16 +154,49 @@ class TableSelection<T> {
   final TableColumnFixed? fixed;
 }
 
-/// Where a table's pager stands.
+/// Where a table's pager stands, and which edge it is drawn against.
+///
+/// A table takes a list of these, so a long one can carry a pager at both
+/// ends: `position: [TablePaginationPosition.topEnd,
+/// TablePaginationPosition.bottomEnd]`.
 enum TablePaginationPosition {
-  /// Above the table.
-  top,
+  /// Above the table, against the leading edge.
+  topStart,
 
-  /// Under it, which is the usual place.
-  bottom,
+  /// Above it, centred.
+  topCenter,
 
-  /// Both, for a table long enough that the reader is at either end of it.
-  both,
+  /// Above it, against the trailing edge.
+  topEnd,
+
+  /// Under the table, against the leading edge.
+  bottomStart,
+
+  /// Under it, centred.
+  bottomCenter,
+
+  /// Under it, against the trailing edge — the usual place.
+  bottomEnd,
+
+  /// Nowhere: the rows are still paged, but nothing is drawn to page them.
+  ///
+  /// For a table paged from somewhere else on the screen.
+  none;
+
+  /// Whether this one stands above the table.
+  bool get isTop => this == topStart || this == topCenter || this == topEnd;
+
+  /// Whether it stands under it.
+  bool get isBottom =>
+      this == bottomStart || this == bottomCenter || this == bottomEnd;
+
+  /// Which edge it is drawn against.
+  MainAxisAlignment get alignment => switch (this) {
+        topStart || bottomStart => MainAxisAlignment.start,
+        topCenter || bottomCenter => MainAxisAlignment.center,
+        topEnd || bottomEnd => MainAxisAlignment.end,
+        none => MainAxisAlignment.end,
+      };
 }
 
 /// Showing a table's rows a page at a time.
@@ -191,8 +224,7 @@ class TablePagination {
     this.pageSize,
     this.defaultPageSize = 10,
     this.onChanged,
-    this.position = TablePaginationPosition.bottom,
-    this.align,
+    this.position = const [TablePaginationPosition.bottomEnd],
     this.size,
     this.simple,
     this.showSizeChanger,
@@ -217,11 +249,11 @@ class TablePagination {
   /// Called with the page and the page size whenever either changes.
   final void Function(int page, int pageSize)? onChanged;
 
-  /// Above the table, under it, or both.
-  final TablePaginationPosition position;
-
-  /// Which edge the pager is drawn against.
-  final MainAxisAlignment? align;
+  /// Where the pager stands, and which edge it is drawn against.
+  ///
+  /// A list, so a long table can carry one at both ends. Defaults to a single
+  /// pager under the table against the trailing edge.
+  final List<TablePaginationPosition> position;
 
   /// The pager's own size preset.
   final SoftSize? size;
@@ -1731,19 +1763,21 @@ class _TableState<T> extends State<Table<T>> {
 
     if (widget.pagination != null) {
       final where = widget.pagination!.position;
-      final above = where != TablePaginationPosition.bottom;
-      final below = where != TablePaginationPosition.top;
-      body = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (above) _pager(t),
-          // Outside the outline: a pager is about the table
-          // rather than part of it.
-          Flexible(child: body),
-          if (below) _pager(t),
-        ],
-      );
+      final above = where.where((p) => p.isTop);
+      final below = where.where((p) => p.isBottom);
+      if (above.isNotEmpty || below.isNotEmpty) {
+        body = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final at in above) _pager(t, at),
+            // Outside the outline: a pager is about the table rather than
+            // part of it.
+            Flexible(child: body),
+            for (final at in below) _pager(t, at),
+          ],
+        );
+      }
     }
 
     if (_bordered) {
@@ -2682,7 +2716,7 @@ class _TableState<T> extends State<Table<T>> {
   ///
   /// The kit's own [Pagination], so a theme's `PaginationDefaults` reaches it
   /// as it reaches any other and nothing here restyles it.
-  Widget _pager(Token t) {
+  Widget _pager(Token t, TablePaginationPosition at) {
     final paging = widget.pagination!;
     return Padding(
       padding: EdgeInsets.symmetric(vertical: t.size),
@@ -2692,7 +2726,7 @@ class _TableState<T> extends State<Table<T>> {
         pageSize: _pageSize,
         onChange: _goToPage,
         onShowSizeChange: _goToPage,
-        align: paging.align,
+        align: at.alignment,
         size: paging.size,
         simple: paging.simple,
         showSizeChanger: paging.showSizeChanger,

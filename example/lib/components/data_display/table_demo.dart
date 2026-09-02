@@ -314,7 +314,7 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
-          'A pager above, and a plain one',
+          'Where the pager stands',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -323,9 +323,8 @@ class _TableDemoState extends State<TableDemo> {
                 data: _many.take(11).toList(),
                 columns: _columns,
                 pagination: const TablePagination(
-                  position: TablePaginationPosition.top,
+                  position: [TablePaginationPosition.topCenter],
                   defaultPageSize: 4,
-                  align: MainAxisAlignment.center,
                 ),
               ),
               const SizedBox(height: 16),
@@ -339,10 +338,26 @@ class _TableDemoState extends State<TableDemo> {
                 ),
               ),
               const SizedBox(height: 8),
+              const SizedBox(height: 16),
+              Table<Person>(
+                bordered: true,
+                data: _many.take(11).toList(),
+                columns: _columns,
+                pagination: const TablePagination(
+                  defaultPageSize: 4,
+                  position: [
+                    TablePaginationPosition.topEnd,
+                    TablePaginationPosition.bottomEnd,
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
               const Text(
-                'position puts the pager above the table, under it, or both. '
-                'A plain pager is the page it is on and the two arrows, for '
-                'somewhere narrow.',
+                'position takes a list, so a long table can carry a pager at '
+                'both ends. Each names where it stands and which edge it is '
+                'drawn against — the default being under the table, against '
+                'the trailing edge. A plain pager is the page it is on and '
+                'the two arrows, for somewhere narrow.',
               ),
             ],
           ),

@@ -215,8 +215,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the page, so a row's index is its place on it and the heading's box takes the
   page rather than the whole table. Narrowing until the page you were on no
   longer exists lands you on the last one there is, never on an empty one. The
-  page and the page size are controlled apart, and `position` puts the pager
-  above the table, under it, or both.
+  page and the page size are controlled apart.
+
+  `position` says where the pager stands and which edge it is drawn against —
+  `topStart` through `bottomEnd`, or `none` for a table paged from elsewhere on
+  the screen — and takes a list, so a long table can carry one at both ends.
+  The default is a single `bottomEnd`, and since the edge is part of the
+  position rather than a knob of its own, a `showTotal` drawn beside the pager
+  sits with it instead of hugging the leading edge.
 
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the

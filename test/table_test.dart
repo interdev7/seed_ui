@@ -2922,6 +2922,70 @@ void main() {
       expect(told!.length, 10, reason: 'the ten on show, not all twenty-five');
     });
 
+    testWidgets('a pager stands where it is told, against the edge it is told',
+        (tester) async {
+      Future<Rect> pagerAt(List<TablePaginationPosition> where) async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(table(
+          pagination: TablePagination(defaultPageSize: 5, position: where),
+        ));
+        await tester.pumpAndSettle();
+        return tester.getRect(find.byType(Pagination));
+      }
+
+      final bottomEnd =
+          await pagerAt(const [TablePaginationPosition.bottomEnd]);
+      final topStart = await pagerAt(const [TablePaginationPosition.topStart]);
+      expect(topStart.center.dy, lessThan(bottomEnd.center.dy));
+
+      // The alignment is part of the position, so the pager's own content
+      // sits against the edge named — the default being the trailing one,
+      // where a total drawn beside it would otherwise hug the leading edge.
+      final endNumbers = await pagerAt(
+        const [TablePaginationPosition.bottomEnd],
+      );
+      final endOne = tester.getRect(find.descendant(
+        of: find.byType(Pagination),
+        matching: find.text('1'),
+      ));
+      final startNumbers = await pagerAt(
+        const [TablePaginationPosition.bottomStart],
+      );
+      final startOne = tester.getRect(find.descendant(
+        of: find.byType(Pagination),
+        matching: find.text('1'),
+      ));
+      expect(endOne.left, greaterThan(startOne.left));
+      expect(endNumbers.width, closeTo(startNumbers.width, 0.5));
+    });
+
+    testWidgets('by default the pager is under the table, against the end',
+        (tester) async {
+      await tester.pumpWidget(table());
+      final pager = tester.getRect(find.byType(Pagination));
+      final rows = tester.getRect(find.text('n0'));
+      expect(pager.center.dy, greaterThan(rows.center.dy));
+
+      // Against the trailing edge, which is also what keeps a `showTotal`
+      // drawn beside it off the leading one.
+      final one = tester.getRect(find.descendant(
+        of: find.byType(Pagination),
+        matching: find.text('1'),
+      ));
+      expect(one.center.dx, greaterThan(pager.center.dx));
+    });
+
+    testWidgets('none pages the rows and draws nothing', (tester) async {
+      await tester.pumpWidget(table(
+        pagination: const TablePagination(
+          defaultPageSize: 10,
+          position: [TablePaginationPosition.none],
+        ),
+      ));
+      expect(find.byType(Pagination), findsNothing);
+      expect(shown(tester).length, 10, reason: 'still a page of rows');
+    });
+
     testWidgets('no pagination, no pager', (tester) async {
       await tester.pumpWidget(
         _host(
@@ -2950,15 +3014,17 @@ void main() {
       expect(tester.getRect(find.byType(Pagination)).center.dy,
           greaterThan(table_.center.dy));
 
-      // Five to a page, or two pagers and twenty-five rows do not fit the
-      // surface the test is given.
+      // Five to a page, or two pagers and ten rows do not fit the surface the
+      // test is given — and controlled, since a default is read once and this
+      // table already lives.
       await tester.pumpWidget(table(
         pagination: const TablePagination(
-          // Controlled, since a default is read once and this table already
-          // lives: two pagers and ten rows do not fit the test's surface.
           page: 1,
           pageSize: 5,
-          position: TablePaginationPosition.both,
+          position: [
+            TablePaginationPosition.topEnd,
+            TablePaginationPosition.bottomEnd,
+          ],
         ),
       ));
       await tester.pumpAndSettle();

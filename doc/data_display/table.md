@@ -429,7 +429,19 @@ it.
 
 The page and the page size are controlled apart: give `page` and a tap only
 reports through `onChanged` while the size changer still works on its own.
-`position` puts the pager above the table, under it, or both.
+
+`position` says where the pager stands and which edge it is drawn against —
+`topStart`, `topCenter`, `topEnd`, `bottomStart`, `bottomCenter`, `bottomEnd`,
+or `none` for a table paged from somewhere else on the screen. It takes a
+list, so a long table can carry one at both ends:
+
+```dart
+position: const [TablePaginationPosition.topEnd, TablePaginationPosition.bottomEnd]
+```
+
+The default is a single `bottomEnd`. The edge is part of the position rather
+than a knob of its own, so a `showTotal` drawn beside the pager sits with it
+instead of hugging the leading edge.
 
 ## Around the rows
 

@@ -189,6 +189,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   )
   ```
 
+  A panel is never shorter than a row and free to be taller: a row whose height
+  was named carries no vertical padding, so a panel padded the same way
+  collapsed to the height of its text — twenty pixels under a row of
+  sixty-four.
+
   The panel reveals and hides with the same animation a `Collapse` panel uses,
   and the mark is a plus in a rounded square whose upright goes as the row
   opens, leaving a minus. `expandable` bars rows, which then show no mark;

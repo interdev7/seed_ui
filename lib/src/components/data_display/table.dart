@@ -1654,9 +1654,19 @@ class _TableState<T> extends State<Table<T>> {
                     color: r.expandedBg,
                     border: Border(bottom: rule),
                   ),
-                  child: Padding(
-                    padding: _cellPadding(r, t),
-                    child: widget.expandable!.builder(context, rows[i], i),
+                  // Never shorter than a row, and free to be taller. A row
+                  // whose height was named carries no vertical padding — the
+                  // height itself stands in for it — so a panel padded the
+                  // same way collapsed to the height of its text: measured, a
+                  // twenty-pixel panel under a sixty-four-pixel row.
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: _uniformHeight(t) ?? 0,
+                    ),
+                    child: Padding(
+                      padding: _cellPadding(r, t),
+                      child: widget.expandable!.builder(context, rows[i], i),
+                    ),
                   ),
                 ),
               ),

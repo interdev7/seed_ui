@@ -2563,6 +2563,40 @@ void main() {
       expect(settled.width, closeTo(during.width, 0.5));
     });
 
+    testWidgets('a panel is never shorter than a row', (tester) async {
+      // A row whose height was named carries no vertical padding — the height
+      // itself stands in for it — so a panel padded the same way collapsed to
+      // the height of its text: measured, twenty pixels under a row of
+      // sixty-four.
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            size: const ControlSize.height(64),
+            expandable: TableExpandable<_User>(
+              defaultExpanded: const [_User('Chen', 27)],
+              builder: (_, u, __) => Text('about ${u.name}'),
+            ),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Rect boxOf(String text) => tester.getRect(
+            find
+                .ancestor(of: find.text(text), matching: find.byType(Padding))
+                .first,
+          );
+      expect(boxOf('about Chen').height, greaterThanOrEqualTo(64));
+      expect(boxOf('about Chen').height, closeTo(boxOf('Ann').height, 0.5));
+    });
+
     testWidgets('the mark is a plus that becomes a minus', (tester) async {
       // Read off the pixels, not off the animation's value: what matters is
       // what is drawn, and a painter can hold the right number and still draw

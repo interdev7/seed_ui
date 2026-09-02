@@ -406,6 +406,10 @@ Table<User>(
 )
 ```
 
+A panel is never shorter than a row and free to be taller. A row whose height
+was named carries no vertical padding — the height itself stands in for it —
+so a panel padded the same way used to collapse to the height of its text.
+
 The panel reveals and hides with the same animation a `Collapse` panel uses,
 so a table opens the way everything else in the kit opens. The mark is a plus
 inside a rounded square whose upright goes as the row opens, leaving a minus —

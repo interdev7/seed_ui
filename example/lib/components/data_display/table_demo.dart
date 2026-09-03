@@ -428,6 +428,41 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'A row that adds up',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _many.take(6).toList(),
+                pagination: const TablePagination(defaultPageSize: 4),
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    value: (p) => p.name,
+                    summary: (_, rows) => Text('${rows.length} on this page'),
+                  ),
+                  TableColumn(title: const Text('City'), value: (p) => p.city),
+                  TableColumn(
+                    title: const Text('Age'),
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                    summary: (_, rows) =>
+                        Text('${rows.fold<int>(0, (n, p) => n + p.age)}'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Each column says what it adds up, so there is no list of '
+                'cells to keep in step with the columns. City says nothing '
+                'and leaves its place empty. Turn the page: the row sums what '
+                'is on show, not everything handed over.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Columns under one head',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

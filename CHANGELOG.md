@@ -248,6 +248,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   columns one for one, so the heading is laid out by hand as a tree, against
   the same measured widths the body is given.
 
+  **A row that adds up.** A column's `summary` says what it adds up, drawn in a
+  row under the rest — on the column rather than in a list of cells, so there
+  is nothing to keep in step with the columns.
+
+  ```dart
+  TableColumn(
+    title: const Text('Age'),
+    value: (u) => u.age,
+    summary: (context, rows) => Text('total'),
+  )
+  ```
+
+  A column that says nothing leaves its place empty, and a table where none
+  says anything draws no such row. The rows handed over are the rows on show —
+  a page of them where the table is paged, and what the filters left.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

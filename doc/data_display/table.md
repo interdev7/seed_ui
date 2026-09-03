@@ -477,6 +477,27 @@ The default is a single `bottomEnd`. The edge is part of the position rather
 than a knob of its own, so a `showTotal` drawn beside the pager sits with it
 instead of hugging the leading edge.
 
+## A row that adds up
+
+A column's `summary` says what it adds up, drawn in a row under the rest.
+
+```dart
+TableColumn(
+  title: const Text('Age'),
+  value: (u) => u.age,
+  summary: (context, rows) => Text('${rows.fold(0, (n, u) => n + u.age)}'),
+)
+```
+
+It goes on the column rather than in a list of cells, so there is nothing to
+keep in step with the columns: a column that says nothing leaves its place
+empty, and a table where no column says anything draws no such row at all.
+
+The rows handed to it are the rows on show — a page of them where the table is
+paged, and what the filters left — the same rows `header` and `footer` are
+given. A group heads other columns and has no cell of its own to sum up, so
+the summary goes on one of the columns under it.
+
 ## Around the rows
 
 | Prop | |
@@ -508,6 +529,7 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `filterHoverBg` | `colorFill` — the funnel's own ground under the pointer |
 | `filterSearchWidth` | `140` — how wide the field that narrows a menu is |
 | `expandIconSize` | `sizeMD` — how big the mark that opens a row is |
+| `summaryBg` | `colorFillQuaternary` — behind the row that adds the columns up |
 | `expandedBg` | `colorFillQuaternary` — behind the panel under an opened row |
 | `selectionColumnWidth` | `controlHeightSM` — room for the box itself; the column is this plus a cell's padding |
 | `filterMenuMaxHeight` | `264` — how tall a filter menu grows before its choices scroll |
@@ -544,4 +566,4 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-A summary row and spanned cells are still to come.
+Spanned cells are still to come.

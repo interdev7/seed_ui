@@ -437,7 +437,13 @@ class TableColumn<T> {
     this.filterSearch = false,
     this.filterSearchMatch,
     this.children,
+    this.summary,
   })  : assert(
+          children == null || summary == null,
+          'A group heads other columns and has no cell of its own to sum up. '
+          'Put the summary on one of the columns under it.',
+        ),
+        assert(
           children == null || children.length != 0,
           'A group with no columns under it heads nothing. Leave children off '
           'instead.',
@@ -535,6 +541,22 @@ class TableColumn<T> {
   /// )
   /// ```
   final List<TableColumn<T>>? children;
+
+  /// What this column adds up, drawn in a row under the rest.
+  ///
+  /// Given the rows on show — a page of them, where the table is paged, and
+  /// what the filters left. A column that says nothing leaves its place in
+  /// that row empty, and a table where no column says anything draws no such
+  /// row at all.
+  ///
+  /// ```dart
+  /// TableColumn(
+  ///   title: const Text('Age'),
+  ///   value: (u) => u.age,
+  ///   summary: (context, rows) => Text('total'),
+  /// )
+  /// ```
+  final Widget Function(BuildContext context, List<T> rows)? summary;
 
   /// Whether this column heads others rather than holding cells.
   bool get isGroup => children != null;
@@ -667,6 +689,7 @@ class TableToken {
     this.selectionColumnWidth,
     this.expandIconSize,
     this.expandedBg,
+    this.summaryBg,
   });
 
   /// Fill behind the heading row.
@@ -765,6 +788,9 @@ class TableToken {
   /// Fill behind the panel under an opened row.
   final Color? expandedBg;
 
+  /// Fill behind the row that adds the columns up.
+  final Color? summaryBg;
+
   /// How much room the box itself takes in the column of boxes.
   ///
   /// The column is this plus the padding a cell carries either side, so a
@@ -816,6 +842,7 @@ class TableToken {
         selectionColumnWidth: selectionColumnWidth ?? t.controlHeightSM,
         expandIconSize: expandIconSize ?? t.sizeMD,
         expandedBg: expandedBg ?? t.colorFillQuaternary,
+        summaryBg: summaryBg ?? t.colorFillQuaternary,
       );
 }
 
@@ -851,6 +878,7 @@ class _ResolvedTableToken {
     required this.selectionColumnWidth,
     required this.expandIconSize,
     required this.expandedBg,
+    required this.summaryBg,
   });
 
   final Color headerBg;
@@ -882,6 +910,7 @@ class _ResolvedTableToken {
   final double selectionColumnWidth;
   final double expandIconSize;
   final Color expandedBg;
+  final Color summaryBg;
 }
 
 /// Defaults for every [Table] under a `ConfigProvider`.
@@ -1302,6 +1331,9 @@ class _TableState<T> extends State<Table<T>> {
   /// Whether any column heads others, so the heading needs more than one row.
   bool get _hasGroups => widget.columns.any((c) => c.isGroup);
 
+  /// Whether any column adds something up, so there is a row to draw for it.
+  bool get _hasSummary => _leaves.any((c) => c.summary != null);
+
   List<TableColumn<T>> _pinnedTo(TableColumnFixed side) =>
       _columns.where((c) => c.fixed == side).toList();
 
@@ -1673,6 +1705,11 @@ class _TableState<T> extends State<Table<T>> {
             );
           }
           flush();
+          if (_hasSummary) {
+            children.add(
+              _summaryRow(columns, measured.columns, rows, r, t, rule),
+            );
+          }
 
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -1684,7 +1721,7 @@ class _TableState<T> extends State<Table<T>> {
     }
 
     Widget table;
-    if (widget.expandable != null || _hasGroups) {
+    if (widget.expandable != null || _hasGroups || _hasSummary) {
       // Rows that open are drawn as grids with panels between them, and a
       // heading of more than one row is drawn by hand — a `Table` cannot span
       // a cell across its columns, so a group's title cannot be a cell of the
@@ -2441,6 +2478,54 @@ class _TableState<T> extends State<Table<T>> {
             _ => null,
           },
       ];
+
+  /// The row that adds the columns up, drawn under the rest.
+  ///
+  /// Laid out by hand against the same measured widths the body is given,
+  /// like the heading of a grouped table — and for the same reason, since a
+  /// summary that spans columns cannot be a row of the grid either.
+  Widget _summaryRow(
+    List<TableColumn<T>> columns,
+    List<double> widths,
+    List<T> rows,
+    _ResolvedTableToken r,
+    Token t,
+    BorderSide rule,
+  ) =>
+      DecoratedBox(
+        decoration: BoxDecoration(
+          color: r.summaryBg,
+          border: Border(top: rule),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < columns.length; i++)
+                SizedBox(
+                  width: widths[i],
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: BorderDirectional(
+                        end: i == columns.length - 1 || !_bordered
+                            ? BorderSide.none
+                            : rule,
+                      ),
+                    ),
+                    child: _cell(
+                      columns[i].summary?.call(context, rows) ??
+                          const SizedBox.shrink(),
+                      columns[i],
+                      columns[i].align ?? TableAlign.start,
+                      r,
+                      t,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
 
   /// A heading of more than one row, where columns are grouped.
   ///

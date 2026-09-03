@@ -3236,4 +3236,124 @@ void main() {
       );
     });
   });
+
+  group('a row that adds up', () {
+    const people = [
+      _User('Chen', 27),
+      _User('Ann', 45),
+      _User('Bart', 31),
+    ];
+
+    Widget table({
+      bool onAge = true,
+      Map<int, List<Object?>>? defaultFilters,
+      TablePagination? pagination,
+    }) =>
+        _host(
+          Table<_User>(
+            data: people,
+            defaultFilters: defaultFilters,
+            pagination: pagination,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                filters: const [TableFilter('young', 'young')],
+                onFilter: (choice, u) => u.age < 40,
+                summary: (_, rows) => Text('${rows.length} people'),
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                align: TableAlign.end,
+                value: (u) => u.age,
+                summary: onAge
+                    ? (_, rows) => Text('${rows.fold(0, (n, u) => n + u.age)}')
+                    : null,
+              ),
+            ],
+          ),
+          width: 700,
+        );
+
+    testWidgets('a column says what it adds up, and it is drawn under the rest',
+        (tester) async {
+      await tester.pumpWidget(table());
+      expect(find.text('3 people'), findsOneWidget);
+      expect(find.text('103'), findsOneWidget);
+
+      final summary = tester.getRect(find.text('103'));
+      expect(summary.center.dy,
+          greaterThan(tester.getRect(find.text('Bart')).center.dy));
+    });
+
+    testWidgets('it lines up with the columns it sums', (tester) async {
+      await tester.pumpWidget(table());
+      // The Age summary is right-aligned like its column.
+      expect(
+        tester.getRect(find.text('103')).right,
+        closeTo(tester.getRect(find.text('45')).right, 0.5),
+      );
+      expect(
+        tester.getRect(find.text('3 people')).left,
+        closeTo(tester.getRect(find.text('Chen')).left, 0.5),
+      );
+    });
+
+    testWidgets('a column that says nothing leaves its place empty',
+        (tester) async {
+      await tester.pumpWidget(table(onAge: false));
+      expect(find.text('3 people'), findsOneWidget);
+      expect(find.text('103'), findsNothing);
+    });
+
+    testWidgets('no column says anything, no row', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(find.textContaining('people'), findsNothing);
+    });
+
+    testWidgets('it adds up the rows on show, not every row', (tester) async {
+      await tester.pumpWidget(table(defaultFilters: const {
+        0: ['young'],
+      }));
+      // Chen is 27 and Bart is 31; Ann at 45 was filtered away.
+      expect(find.text('2 people'), findsOneWidget);
+      expect(find.text('58'), findsOneWidget);
+    });
+
+    testWidgets('and on a paged table, the page', (tester) async {
+      await tester.pumpWidget(table(
+        pagination: const TablePagination(defaultPageSize: 2),
+      ));
+      expect(find.text('2 people'), findsOneWidget);
+      expect(find.text('72'), findsOneWidget, reason: 'Chen and Ann');
+    });
+
+    test('a group has no cell of its own to sum up', () {
+      expect(
+        () => TableColumn<_User>(
+          title: const Text('Who'),
+          summary: (_, __) => const Text('x'),
+          children: [
+            TableColumn<_User>(
+              title: const Text('Name'),
+              value: (u) => u.name,
+            ),
+          ],
+        ),
+        throwsAssertionError,
+      );
+    });
+  });
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/rendering.dart'
     show CacheExtentStyle, ClipRectLayer, LayerHandle, ViewportOffset;
@@ -13,7 +14,6 @@ import 'package:flutter/widgets.dart' as flutter show Table, TableRow;
 
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
-import '../../theme/palette.dart';
 import '../../utils/expandable.dart';
 import '../../utils/size_resolver.dart';
 import '../data_entry/checkbox.dart';
@@ -772,6 +772,7 @@ class TableToken {
     this.expandIconSize,
     this.expandedBg,
     this.summaryBg,
+    this.pinnedBg,
   });
 
   /// Fill behind the heading row.
@@ -870,6 +871,13 @@ class TableToken {
   /// Fill behind the panel under an opened row.
   final Color? expandedBg;
 
+  /// Fill behind a column held at an edge.
+  ///
+  /// It has to be opaque: a held column stands over the ones sliding under
+  /// it, and a row is only as opaque as its own fill, which is nothing until
+  /// the pointer is on it.
+  final Color? pinnedBg;
+
   /// Fill behind the row that adds the columns up.
   ///
   /// The body's own ground by default, not a tint: the rule above it is what
@@ -913,9 +921,13 @@ class TableToken {
         // cast landed under the pane instead of over the rows — a grey smear
         // showing through columns that are mostly transparent. A strip laid
         // over the scrolling rows has nothing to show through.
-        pinnedShadowColor: pinnedShadowColor ??
-            alphaOn(const Color(0xFF000000), t.isDark ? 0.32 : 0.15),
-        pinnedShadowExtent: pinnedShadowExtent ?? t.sizeLG,
+        // The same shade the reference casts: `colorSplit` at the column's
+        // edge, falling away over about ten pixels. Ours was black at fifteen
+        // per cent over twenty-four — measured, an alpha of 34 fading to
+        // nothing a full twenty-four pixels out, where the reference is a
+        // narrow edge you notice rather than a band you read.
+        pinnedShadowColor: pinnedShadowColor ?? t.colorSplit,
+        pinnedShadowExtent: pinnedShadowExtent ?? t.sizeSM,
         headerHoverBg: headerHoverBg ?? t.colorFillSecondary,
         headerMarkActiveColor: headerMarkActiveColor ?? t.primary.base,
         headerMarkColor: headerMarkColor ?? t.colorTextQuaternary,
@@ -928,6 +940,7 @@ class TableToken {
         expandIconSize: expandIconSize ?? t.sizeMD,
         expandedBg: expandedBg ?? t.colorFillQuaternary,
         summaryBg: summaryBg ?? t.colorBgContainer,
+        pinnedBg: pinnedBg ?? t.colorBgContainer,
       );
 }
 
@@ -964,6 +977,7 @@ class _ResolvedTableToken {
     required this.expandIconSize,
     required this.expandedBg,
     required this.summaryBg,
+    required this.pinnedBg,
   });
 
   final Color headerBg;
@@ -996,6 +1010,7 @@ class _ResolvedTableToken {
   final double expandIconSize;
   final Color expandedBg;
   final Color summaryBg;
+  final Color pinnedBg;
 }
 
 /// Defaults for every [Table] under a `ConfigProvider`.
@@ -2570,11 +2585,13 @@ class _TableState<T> extends State<Table<T>> {
 
   /// A pinned column is the first or the last x index and nothing else — that
   /// is the whole of what pinning is, once one viewport owns both axes.
-  List<TableColumn<T>> get _ordered => [
-        ..._pinnedTo(TableColumnFixed.start),
-        ..._loose,
-        ..._pinnedTo(TableColumnFixed.end),
-      ];
+  /// The columns in the order they were given, box and chevron first.
+  ///
+  /// Held columns are no longer taken out and stacked at the edges: a column
+  /// keeps its place among the others and stops when the scroll would carry
+  /// it past its rest, so a loose column can stand between two held ones and
+  /// slide under them.
+  List<TableColumn<T>> get _ordered => _columns;
 
   /// What a heading asks for, where it can be asked without building it.
   ///
@@ -3129,7 +3146,16 @@ class _TableState<T> extends State<Table<T>> {
 
     if (heading) {
       return DecoratedBox(
-        decoration: BoxDecoration(color: r.headerBg, border: border),
+        decoration: BoxDecoration(
+          // The heading's own fill is a two per cent wash, so a held column's
+          // heading was see-through and the others could be watched
+          // travelling behind it. Composited over the held ground rather than
+          // stacked in a second box: one opaque colour, laid on once.
+          color: column.fixed == null
+              ? r.headerBg
+              : Color.alphaBlend(r.headerBg, r.pinnedBg),
+          border: border,
+        ),
         child: _headingCell(
           _padded(
             _heading(column, at.xIndex, r, t),
@@ -3147,7 +3173,13 @@ class _TableState<T> extends State<Table<T>> {
 
     final record = _rows[index];
     Widget cell = DecoratedBox(
-      decoration: BoxDecoration(border: border),
+      decoration: BoxDecoration(
+        // A held column stands over the ones sliding under it, so it needs a
+        // ground of its own — the rows themselves are only as opaque as their
+        // fill, which is nothing at all until the pointer is on them.
+        color: column.fixed == null ? null : r.pinnedBg,
+        border: border,
+      ),
       child: _padded(
         column.builder?.call(context, record, index) ?? _text(column, record),
         column,
@@ -3257,8 +3289,7 @@ class _TableState<T> extends State<Table<T>> {
             widths: widths.columns,
             rowHeight: _lazyRowHeight(r, t),
             headerRows: _showHeader ? 1 : 0,
-            pinnedStart: _pinnedTo(TableColumnFixed.start).length,
-            pinnedEnd: _pinnedTo(TableColumnFixed.end).length,
+            pinning: [for (final c in columns) c.fixed],
             shadeColor: r.pinnedShadowColor,
             shadeExtent: r.pinnedShadowExtent,
             verticalDetails: const ScrollableDetails.vertical(),
@@ -3939,8 +3970,7 @@ class _Rows extends TwoDimensionalScrollView {
     required this.widths,
     required this.rowHeight,
     required this.headerRows,
-    required this.pinnedStart,
-    required this.pinnedEnd,
+    required this.pinning,
     required this.shadeColor,
     required this.shadeExtent,
     required super.delegate,
@@ -3957,8 +3987,9 @@ class _Rows extends TwoDimensionalScrollView {
   final List<double> widths;
   final double rowHeight;
   final int headerRows;
-  final int pinnedStart;
-  final int pinnedEnd;
+
+  /// Which columns are held at an edge, in the order they are drawn.
+  final List<TableColumnFixed?> pinning;
   final Color shadeColor;
   final double shadeExtent;
 
@@ -3972,8 +4003,7 @@ class _Rows extends TwoDimensionalScrollView {
         widths: widths,
         rowHeight: rowHeight,
         headerRows: headerRows,
-        pinnedStart: pinnedStart,
-        pinnedEnd: pinnedEnd,
+        pinning: pinning,
         shadeColor: shadeColor,
         shadeExtent: shadeExtent,
         horizontalOffset: horizontalOffset,
@@ -3990,8 +4020,7 @@ class _RowsViewport extends TwoDimensionalViewport {
     required this.widths,
     required this.rowHeight,
     required this.headerRows,
-    required this.pinnedStart,
-    required this.pinnedEnd,
+    required this.pinning,
     required this.shadeColor,
     required this.shadeExtent,
     required super.verticalOffset,
@@ -4005,8 +4034,9 @@ class _RowsViewport extends TwoDimensionalViewport {
   final List<double> widths;
   final double rowHeight;
   final int headerRows;
-  final int pinnedStart;
-  final int pinnedEnd;
+
+  /// Which columns are held at an edge, in the order they are drawn.
+  final List<TableColumnFixed?> pinning;
   final Color shadeColor;
   final double shadeExtent;
 
@@ -4016,8 +4046,7 @@ class _RowsViewport extends TwoDimensionalViewport {
         widths: widths,
         rowHeight: rowHeight,
         headerRows: headerRows,
-        pinnedStart: pinnedStart,
-        pinnedEnd: pinnedEnd,
+        pinning: pinning,
         shadeColor: shadeColor,
         shadeExtent: shadeExtent,
         horizontalOffset: horizontalOffset,
@@ -4035,8 +4064,7 @@ class _RowsViewport extends TwoDimensionalViewport {
       ..widths = widths
       ..rowHeight = rowHeight
       ..headerRows = headerRows
-      ..pinnedStart = pinnedStart
-      ..pinnedEnd = pinnedEnd
+      ..pinning = pinning
       ..shadeColor = shadeColor
       ..shadeExtent = shadeExtent
       ..horizontalOffset = horizontalOffset
@@ -4053,8 +4081,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     required List<double> widths,
     required double rowHeight,
     required int headerRows,
-    required int pinnedStart,
-    required int pinnedEnd,
+    required List<TableColumnFixed?> pinning,
     required Color shadeColor,
     required double shadeExtent,
     required super.horizontalOffset,
@@ -4067,8 +4094,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   })  : _widths = widths,
         _rowHeight = rowHeight,
         _headerRows = headerRows,
-        _pinnedStart = pinnedStart,
-        _pinnedEnd = pinnedEnd,
+        _pinning = pinning,
         _shadeColor = shadeColor,
         _shadeExtent = shadeExtent {
     _measureColumns();
@@ -4105,18 +4131,35 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     markNeedsLayout();
   }
 
-  int _pinnedStart;
-  set pinnedStart(int value) {
-    if (_pinnedStart == value) return;
-    _pinnedStart = value;
+  List<TableColumnFixed?> _pinning;
+  set pinning(List<TableColumnFixed?> value) {
+    if (listEquals(_pinning, value)) return;
+    _pinning = value;
     markNeedsLayout();
   }
 
-  int _pinnedEnd;
-  set pinnedEnd(int value) {
-    if (_pinnedEnd == value) return;
-    _pinnedEnd = value;
-    markNeedsLayout();
+  /// Where a column held at the leading edge comes to rest: behind the ones
+  /// held before it, in the order they were given.
+  ///
+  /// A column keeps its place among the others and only stops when the scroll
+  /// would carry it past this — which is what lets a loose column stand
+  /// between two pinned ones and slide under them.
+  double _restStart(int column) {
+    var at = 0.0;
+    for (var i = 0; i < column; i++) {
+      if (_pinning[i] == TableColumnFixed.start) at += _widths[i];
+    }
+    return at;
+  }
+
+  /// The same at the trailing edge: how far in from the far side a column
+  /// held there comes to rest, counting the ones held after it.
+  double _restEndBefore(int column) {
+    var at = 0.0;
+    for (var i = 0; i < column; i++) {
+      if (_pinning[i] == TableColumnFixed.end) at += _widths[i];
+    }
+    return at;
   }
 
   Color _shadeColor;
@@ -4190,13 +4233,18 @@ class _RenderRows extends RenderTwoDimensionalViewport {
         (delegate as TwoDimensionalChildBuilderDelegate).maxYIndex! + 1;
     final bodyRows = rows - _headerRows;
 
-    _lead = _extent(0, _pinnedStart);
-    _trail = _extent(_columnCount - _pinnedEnd, _columnCount);
+    // Every column held at an edge, wherever it stands among the others.
+    _lead = 0;
+    _trail = 0;
+    for (var i = 0; i < _columnCount; i++) {
+      if (_pinning[i] == TableColumnFixed.start) _lead += _widths[i];
+      if (_pinning[i] == TableColumnFixed.end) _trail += _widths[i];
+    }
     _headerHeight = _headerRows * _rowHeight;
 
-    final looseWidth = _extent(_pinnedStart, _columnCount - _pinnedEnd);
+    final total = _extent(0, _columnCount);
     final freeWidth = math.max(0.0, size.width - _lead - _trail);
-    _maxAcross = math.max(0, looseWidth - freeWidth);
+    _maxAcross = math.max(0.0, total - _lead - _trail - freeWidth);
     horizontalOffset.applyContentDimensions(0, _maxAcross);
 
     final bodyHeight = math.max(0.0, size.height - _headerHeight);
@@ -4223,42 +4271,46 @@ class _RenderRows extends RenderTwoDimensionalViewport {
                 .clamp(0, bodyRows) -
             1;
 
-    final looseFrom = _pinnedStart;
-    final looseTo = _columnCount - _pinnedEnd - 1;
-    _firstColumn = looseFrom;
-    _lastColumn = looseTo - 1 < looseFrom ? looseFrom - 1 : looseTo;
-    final origin = _startOf(looseFrom);
-    for (var i = looseFrom; i <= looseTo; i++) {
-      final start = _startOf(i) - origin;
-      if (start + _widths[i] <= across - _cache(freeWidth)) {
-        _firstColumn = i + 1;
+    /// Where a column is drawn: its own place, carried by the scroll, unless
+    /// it is held at an edge and the scroll would take it past its rest.
+    double placeOf(int i) {
+      final natural = _startOf(i) - across;
+      return switch (_pinning[i]) {
+        TableColumnFixed.start => math.max(natural, _restStart(i)),
+        TableColumnFixed.end =>
+          math.min(natural, size.width - _trail + _restEndBefore(i)),
+        null => natural,
+      };
+    }
+
+    // A pinned column is always in view; a loose one only while its place is.
+    _firstColumn = _columnCount;
+    _lastColumn = -1;
+    for (var i = 0; i < _columnCount; i++) {
+      final at = placeOf(i);
+      if (_pinning[i] == null &&
+          (at + _widths[i] <= -_cache(freeWidth) ||
+              at >= size.width + _cache(freeWidth))) {
         continue;
       }
-      if (start >= across + freeWidth + _cache(freeWidth)) {
-        _lastColumn = i - 1;
-        break;
-      }
+      if (i < _firstColumn) _firstColumn = i;
       _lastColumn = i;
     }
-    if (_firstColumn > looseTo) _lastColumn = _firstColumn - 1;
+    if (_lastColumn < _firstColumn) {
+      _firstColumn = 0;
+      _lastColumn = -1;
+    }
 
     void band(int row, double dy) {
       for (var i = _firstColumn; i <= _lastColumn; i++) {
-        _place(i, row, _lead + _startOf(i) - origin - across, dy);
-      }
-      for (var i = 0; i < _pinnedStart; i++) {
-        _place(i, row, _startOf(i), dy);
-      }
-      for (var i = _columnCount - _pinnedEnd; i < _columnCount; i++) {
-        _place(
-          i,
-          row,
-          size.width -
-              _trail +
-              _startOf(i) -
-              _startOf(_columnCount - _pinnedEnd),
-          dy,
-        );
+        if (_pinning[i] == null) {
+          final at = placeOf(i);
+          if (at + _widths[i] <= -_cache(freeWidth) ||
+              at >= size.width + _cache(freeWidth)) {
+            continue;
+          }
+        }
+        _place(i, row, placeOf(i), dy);
       }
     }
 
@@ -4294,12 +4346,11 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     Offset offset,
     LayerHandle<ClipRectLayer> clip,
     Rect bounds, {
-    required int fromColumn,
-    required int toColumn,
+    required TableColumnFixed? held,
     required int fromRow,
     required int toRow,
   }) {
-    if (fromColumn > toColumn || fromRow > toRow || bounds.isEmpty) {
+    if (_lastColumn < _firstColumn || fromRow > toRow || bounds.isEmpty) {
       clip.layer = null;
       return;
     }
@@ -4308,13 +4359,21 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       offset,
       bounds,
       (innerContext, innerOffset) {
-        for (var y = fromRow; y <= toRow; y++) {
-          for (var x = fromColumn; x <= toColumn; x++) {
+        // Column by column, each one's shade laid down before the next
+        // column's cells: a held column that has caught up covers the shade
+        // of the one it came to rest behind, which is what makes the handover
+        // a covering rather than a jump.
+        for (var x = _firstColumn; x <= _lastColumn; x++) {
+          if (_pinning[x] != held) continue;
+          for (var y = fromRow; y <= toRow; y++) {
             final child = getChildFor(ChildVicinity(xIndex: x, yIndex: y));
             if (child == null) continue;
             final data = parentDataOf(child);
             if (!data.isVisible) continue;
             innerContext.paintChild(child, innerOffset + data.paintOffset!);
+          }
+          if (held != null) {
+            _castFor(innerContext, innerOffset, x, bounds, held: held);
           }
         }
       },
@@ -4326,116 +4385,96 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   void paint(PaintingContext context, Offset offset) {
     if (firstChild == null) return;
     final size = viewportDimension;
-    final middle = math.max(0.0, size.width - _lead - _trail);
     final body = math.max(0.0, size.height - _headerHeight);
     final firstRow = _firstRow + _headerRows;
     final lastRow = _lastRow + _headerRows;
-    final lastColumn = _columnCount - 1;
+    final bodyBounds = Rect.fromLTWH(0, _headerHeight, size.width, body);
+    final headBounds = Rect.fromLTWH(0, 0, size.width, _headerHeight);
 
-    // The rows that travel, then the columns that do not, then the heading
-    // over both — each one over what it is meant to stand in front of.
-    _paintBand(
-      context,
-      offset,
-      _clips[0],
-      Rect.fromLTWH(_lead, _headerHeight, middle, body),
-      fromColumn: _firstColumn,
-      toColumn: _lastColumn,
-      fromRow: firstRow,
-      toRow: lastRow,
-    );
-    _paintBand(
-      context,
-      offset,
-      _clips[1],
-      Rect.fromLTWH(0, _headerHeight, _lead, body),
-      fromColumn: 0,
-      toColumn: _pinnedStart - 1,
-      fromRow: firstRow,
-      toRow: lastRow,
-    );
-    _paintBand(
-      context,
-      offset,
-      _clips[2],
-      Rect.fromLTWH(size.width - _trail, _headerHeight, _trail, body),
-      fromColumn: _columnCount - _pinnedEnd,
-      toColumn: lastColumn,
-      fromRow: firstRow,
-      toRow: lastRow,
-    );
-    _paintBand(
-      context,
-      offset,
-      _clips[3],
-      Rect.fromLTWH(_lead, 0, middle, _headerHeight),
-      fromColumn: _firstColumn,
-      toColumn: _lastColumn,
-      fromRow: 0,
-      toRow: _headerRows - 1,
-    );
-    _paintBand(
-      context,
-      offset,
-      _clips[4],
-      Rect.fromLTWH(0, 0, _lead, _headerHeight),
-      fromColumn: 0,
-      toColumn: _pinnedStart - 1,
-      fromRow: 0,
-      toRow: _headerRows - 1,
-    );
-    _paintBand(
-      context,
-      offset,
-      _clips[5],
-      Rect.fromLTWH(size.width - _trail, 0, _trail, _headerHeight),
-      fromColumn: _columnCount - _pinnedEnd,
-      toColumn: lastColumn,
-      fromRow: 0,
-      toRow: _headerRows - 1,
-    );
-
-    _paintShade(context, offset, size);
+    // The columns that travel, then the ones held at either edge over them,
+    // then the heading over the lot. A held column keeps its place among the
+    // others until the scroll would carry it past its rest, so it cannot be
+    // painted by a band of its own the way a pane could — it is picked out by
+    // how it is held, wherever it stands.
+    const order = [null, TableColumnFixed.start, TableColumnFixed.end];
+    for (var i = 0; i < order.length; i++) {
+      _paintBand(
+        context,
+        offset,
+        _clips[i],
+        bodyBounds,
+        held: order[i],
+        fromRow: firstRow,
+        toRow: lastRow,
+      );
+    }
+    for (var i = 0; i < order.length; i++) {
+      _paintBand(
+        context,
+        offset,
+        _clips[i + 3],
+        headBounds,
+        held: order[i],
+        fromRow: 0,
+        toRow: _headerRows - 1,
+      );
+    }
   }
 
-  /// The shade a pinned column casts over the rows that have gone behind it,
-  /// and only while there are any.
-  void _paintShade(PaintingContext context, Offset offset, Size size) {
+  /// The shade one held column casts over what has gone behind it.
+  ///
+  /// Drawn at that column's own trailing edge and moving with it, the way the
+  /// reference hangs it off the cell itself rather than off the band: a shade
+  /// belonging to the band jumped from one column's edge to the next the
+  /// moment the second came to rest.
+  ///
+  /// Its strength comes from how far the column has been held — nought where
+  /// the scroll has only just caught it, full a shade's width later. So it
+  /// arrives with the scroll rather than switching on, and follows the hand
+  /// instead of a clock.
+  void _castFor(
+    PaintingContext context,
+    Offset offset,
+    int column,
+    Rect bounds, {
+    required TableColumnFixed held,
+  }) {
     final across = horizontalOffset.pixels;
+    final natural = _startOf(column) - across;
+    final atStart = held == TableColumnFixed.start;
+    final rest = atStart
+        ? _restStart(column)
+        : viewportDimension.width - _trail + _restEndBefore(column);
+    final heldBy = atStart ? rest - natural : natural - rest;
+    if (heldBy <= 0) return;
 
-    void cast(Rect local, {required bool atStart}) {
-      if (local.isEmpty) return;
-      // The shader is laid out in the canvas's coordinates, not the
-      // viewport's, so it is the shifted rectangle that describes it.
-      final rect = local.shift(offset);
-      context.canvas.drawRect(
-        rect,
-        Paint()
-          ..shader = LinearGradient(
-            begin: atStart ? Alignment.centerLeft : Alignment.centerRight,
-            end: atStart ? Alignment.centerRight : Alignment.centerLeft,
-            colors: [_shadeColor, _shadeColor.withAlpha(0)],
-          ).createShader(rect),
-      );
-    }
+    final strength = (heldBy / _shadeExtent).clamp(0.0, 1.0);
+    final edge = atStart ? rest + _widths[column] : rest;
+    final local = Rect.fromLTWH(
+      atStart ? edge : edge - _shadeExtent,
+      bounds.top,
+      _shadeExtent,
+      bounds.height,
+    );
+    if (local.isEmpty) return;
 
-    if (_pinnedStart > 0 && across > 0.5) {
-      cast(
-        Rect.fromLTWH(_lead, 0, _shadeExtent, size.height),
-        atStart: true,
-      );
-    }
-    if (_pinnedEnd > 0 && across < _maxAcross - 0.5) {
-      cast(
-        Rect.fromLTWH(
-          size.width - _trail - _shadeExtent,
-          0,
-          _shadeExtent,
-          size.height,
-        ),
-        atStart: false,
-      );
-    }
+    final rect = local.shift(offset);
+    final colour = Color.from(
+      alpha: _shadeColor.a * strength,
+      red: _shadeColor.r,
+      green: _shadeColor.g,
+      blue: _shadeColor.b,
+      colorSpace: _shadeColor.colorSpace,
+    );
+    context.canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: atStart ? Alignment.centerLeft : Alignment.centerRight,
+          end: atStart ? Alignment.centerRight : Alignment.centerLeft,
+          colors: [colour, colour.withAlpha(0)],
+        ).createShader(rect),
+    );
   }
 
   /// How far the loose columns can be run, kept from the last layout so the

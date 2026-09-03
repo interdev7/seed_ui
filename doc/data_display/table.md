@@ -206,14 +206,34 @@ TableColumn(
 )
 ```
 
+**The shade belongs to the column, not to the band.** Each held column casts
+its own at its own trailing edge, moving with it — the reference hangs the
+shadow off the fixed cell itself for the same reason. A shade belonging to the
+band jumped from one column's edge to the next the moment the second came to
+rest.
+
+It is a narrow edge rather than a band: `colorSplit` at the column's own edge,
+gone twelve pixels out. Its strength comes from how far the column has been
+held — nothing where the scroll has only just caught it, full a shade's width
+later. So it arrives with
+the scroll rather than switching on, and follows the hand instead of a clock.
+A column coming to rest covers the shade of the one it stops behind, which is
+what makes the handover a covering rather than a jump.
+
+**A held column keeps its place.** It is not taken out and stacked at the edge
+before anything has moved: it stands where you listed it, among the others,
+and stops only when the scroll would carry it past its rest — behind the
+columns held before it. So a loose column can stand between two held ones and
+slide under them as the scroll catches up, and the order you wrote is the
+order you see.
+
 Two things come with it, and both are consequences rather than choices.
 
 **A pinned column needs a `width`.** It is measured before the body is laid
 out, and a share of a width nothing has worked out yet means nothing.
 
 **Pinning holds every row to one height**, as scrolling does, and for the same
-reason: a pinned column is the first or the last column of a body that finds a
-row by multiplying. The height is exact rather than a floor, so a cell with
+reason: a held column lives in a body that finds a row by multiplying. The height is exact rather than a floor, so a cell with
 more in it is cut.
 
 Order does not matter. A column marked `end` is drawn at that edge wherever it
@@ -601,8 +621,9 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `headerMarkActiveColor` | `primary.base` — a mark in force: the caret of the order, a funnel that is narrowing |
 | `headerMarkColor` | `colorTextQuaternary` — a mark merely offered |
 | `sortCaretSize` | `sizeXXS` — how tall each caret is |
-| `pinnedShadowColor` | black at 15% (32% dark) — the shade a pinned column casts over the rows going past it |
-| `pinnedShadowExtent` | `sizeLG` — how far that shade reaches before it has faded out |
+| `pinnedBg` | `colorBgContainer` — behind a column held at an edge, heading included, since it has to be opaque |
+| `pinnedShadowColor` | `colorSplit` — the shade a held column casts over the rows going past it |
+| `pinnedShadowExtent` | `sizeSM` — how far that shade reaches before it has faded out |
 
 ## How many rows
 
@@ -630,6 +651,4 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-Pinned columns that stack as you scroll are still to come: pinning moves a
-column to the edge, so a pinned column with a loose one between it and the
-edge is drawn beside its fellows rather than catching up with them.
+Everything the component set out to do is here.

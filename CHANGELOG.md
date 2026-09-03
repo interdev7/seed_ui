@@ -301,6 +301,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   height, as a lazy body does; spanning columns alone leaves the rows to their
   content.
 
+  **A held column keeps its place.** `fixed` no longer takes a column out and
+  stacks it at the edge before anything has moved: it stands where it was
+  listed, among the others, and stops only when the scroll would carry it past
+  its rest — behind the columns held before it. A loose column can therefore
+  stand between two held ones and slide under them as the scroll catches up,
+  and the order written is the order seen. Each held column casts its own shade at its own
+  trailing edge and moves with it, as the reference hangs the shadow off the
+  fixed cell itself: one belonging to the band jumped from edge to edge the
+  moment the next column came to rest. It is `colorSplit` at the column's own edge and gone
+  twelve pixels out, the narrow edge the reference casts rather than a band.
+  Its strength grows with how far the column has been held — nothing where the scroll has just caught it, full a
+  shade's width later — so it arrives with the hand rather than switching on,
+  and a column coming to rest covers the shade of the one it stops behind. Held cells take `pinnedBg`, since
+  one standing over the columns sliding under it has to be opaque — its
+  heading too, composited over that ground, or the two per cent wash a heading
+  carries let the other headings be watched travelling behind it.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

@@ -791,10 +791,15 @@ void main() {
             (w) => w.runtimeType.toString() == '_RowsViewport',
           );
       // `something` rather than a bare `rect`: the cells paint rectangles of
-      // their own, and the shade is only one of them.
-      PaintPattern casts(Rect where) => paints
+      // their own, and the shade is only one of them. Matched on the edge it
+      // stands at rather than the whole rectangle — the shade is now drawn
+      // per band, so its height is the band's rather than the table's.
+      PaintPattern casts(double edge) => paints
         ..something(
-          (symbol, arguments) => symbol == #drawRect && arguments[0] == where,
+          (symbol, arguments) =>
+              symbol == #drawRect &&
+              (arguments[0] as Rect).left == edge &&
+              (arguments[0] as Rect).width == 12,
         );
 
       // A bare pump first, so this table gets a State of its own. Pumping one
@@ -810,7 +815,7 @@ void main() {
       // leading column, and everything is still ahead of the trailing one.
       expect(
         tester.renderObject(viewport()),
-        casts(const Rect.fromLTWH(296, 0, 24, 232)),
+        casts(308),
         reason: 'the trailing column casts, and it alone',
       );
 
@@ -827,12 +832,12 @@ void main() {
       }
       expect(
         tester.renderObject(viewport()),
-        casts(const Rect.fromLTWH(100, 0, 24, 232)),
+        casts(100),
         reason: 'now the leading one does, against its own edge',
       );
       expect(
         tester.renderObject(viewport()),
-        isNot(casts(const Rect.fromLTWH(296, 0, 24, 232))),
+        isNot(casts(308)),
         reason: 'and the trailing one has nothing left ahead to cast over',
       );
     });
@@ -851,16 +856,207 @@ void main() {
       expect(tester.getRect(find.text('e1')).top, second);
     });
 
-    testWidgets('a pinned column goes to its edge wherever it was listed',
+    testWidgets('a held column keeps its place until the scroll reaches it',
         (tester) async {
-      await tester.pumpWidget(pinned(y: 200, endFirst: true));
-      final table = tester.getRect(find.byType(Table<int>));
-      expect(
-        tester.getRect(find.text('e0')).left - table.left,
-        greaterThan(200),
-        reason: 'listed first, drawn last, because that is its edge',
+      // Held columns are no longer taken out and stacked at the edge: one
+      // keeps its place among the others and stops when the scroll would
+      // carry it past its rest — which is what lets a loose column stand
+      // between two held ones and slide under them.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(x: 1200, y: 200),
+            columns: [
+              TableColumn<int>(
+                title: const Text('One'),
+                width: 100,
+                fixed: TableColumnFixed.start,
+                value: (v) => 'one$v',
+              ),
+              TableColumn<int>(
+                title: const Text('Loose'),
+                width: 100,
+                value: (v) => 'loose$v',
+              ),
+              TableColumn<int>(
+                title: const Text('Two'),
+                width: 100,
+                fixed: TableColumnFixed.start,
+                value: (v) => 'two$v',
+              ),
+              for (var c = 0; c < 6; c++)
+                TableColumn<int>(
+                  title: Text('C$c'),
+                  width: 120,
+                  value: (v) => 'c${c}r$v',
+                ),
+            ],
+            data: [for (var i = 0; i < 8; i++) i],
+          ),
+          width: 400,
+        ),
       );
-      expect(tester.getRect(find.text('p0')).left - table.left, lessThan(100));
+      await tester.pumpAndSettle();
+
+      final table = tester.getRect(find.byType(Table<int>));
+      double leftOf(String text) =>
+          tester.getRect(find.text(text)).left - table.left;
+
+      // At rest the order is the order given, loose column and all.
+      expect(leftOf('one0'), lessThan(leftOf('loose0')));
+      expect(leftOf('loose0'), lessThan(leftOf('two0')));
+
+      // Run it along: the loose one goes under, and the second held column
+      // comes to rest right behind the first.
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('c0r1'))),
+      );
+      for (var i = 0; i < 6; i++) {
+        await tester.sendEventToBinding(pointer.scroll(const Offset(120, 0)));
+        await tester.pumpAndSettle();
+      }
+
+      expect(leftOf('one0'), lessThan(20), reason: 'still at the edge');
+      // Measured between the two texts, since each sits a cell's padding in:
+      // the second stands exactly the first's hundred pixels along.
+      expect(leftOf('two0') - leftOf('one0'), closeTo(100, 2),
+          reason: 'stacked behind the first, which is a hundred wide');
+      expect(find.text('loose0'), findsNothing,
+          reason: 'gone under them, and no longer built');
+    });
+
+    testWidgets('a held column has a ground of its own', (tester) async {
+      // It stands over the columns sliding under it, and a row is only as
+      // opaque as its own fill — which is nothing until the pointer is on it.
+      await tester.pumpWidget(pinned(y: 200));
+      await tester.pumpAndSettle();
+
+      List<Color> fillsOver(String text) => tester
+          .widgetList<DecoratedBox>(
+            find.ancestor(
+              of: find.text(text),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((d) => d.decoration)
+          .whereType<BoxDecoration>()
+          .map((d) => d.color)
+          .whereType<Color>()
+          .where((c) => c.a != 0)
+          .toList();
+
+      expect(fillsOver('p0'), isNotEmpty, reason: 'the held one is opaque');
+      expect(fillsOver('p0').first.a, 1.0);
+      expect(fillsOver('c0r0'), isEmpty, reason: 'a loose one is not');
+
+      // And its heading with it: the heading's own fill is a two per cent
+      // wash, so a held column's heading was see-through and the others could
+      // be watched travelling behind it.
+      expect(fillsOver('Pin').first.a, 1.0);
+      expect(fillsOver('C0').first.a, lessThan(0.5),
+          reason: 'a loose heading keeps the wash it always had');
+    });
+
+    testWidgets('the shade moves to the column that is holding',
+        (tester) async {
+      // Cast from the edge of the columns that are holding, not from where
+      // they will all come to rest: a shade drawn at the far side of the band
+      // appeared beside a column the scroll had not yet reached.
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        _host(
+          RepaintBoundary(
+            key: key,
+            child: Table<int>(
+              scroll: const TableScroll(x: 1200, y: 150),
+              columns: [
+                TableColumn<int>(
+                  title: const Text('One'),
+                  width: 100,
+                  fixed: TableColumnFixed.start,
+                  value: (v) => 'one$v',
+                ),
+                TableColumn<int>(
+                  title: const Text('Loose'),
+                  width: 100,
+                  value: (v) => 'loose$v',
+                ),
+                TableColumn<int>(
+                  title: const Text('Two'),
+                  width: 100,
+                  fixed: TableColumnFixed.start,
+                  value: (v) => 'two$v',
+                ),
+                for (var c = 0; c < 6; c++)
+                  TableColumn<int>(
+                    title: Text('C$c'),
+                    width: 120,
+                    value: (v) => 'c${c}r$v',
+                  ),
+              ],
+              data: [for (var i = 0; i < 6; i++) i],
+            ),
+          ),
+          width: 400,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Alpha, not colour: a held cell is opaque, a loose one paints nothing,
+      // and the shade is a wash over the nothing.
+      Future<List<int>> alphaAt(List<int> xs) async {
+        final box = tester.renderObject<RenderRepaintBoundary>(
+          find.byKey(key),
+        );
+        final bytes = await tester.runAsync(() async {
+          final image = await box.toImage();
+          final data = await image.toByteData();
+          image.dispose();
+          return data;
+        });
+        final w = box.size.width.round();
+        final origin = tester.getRect(find.byKey(key));
+        // Just above the first body glyph: inside the cell's padding, where
+        // no glyph reaches.
+        final y =
+            (tester.getRect(find.text('one0')).top - origin.top - 5).round();
+        return [for (final x in xs) bytes!.getUint8((y * w + x) * 4 + 3)];
+      }
+
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.byKey(key))),
+      );
+
+      // It arrives with the scroll rather than switching on: a few pixels in,
+      // it is only part of the way up.
+      await tester.sendEventToBinding(pointer.scroll(const Offset(8, 0)));
+      await tester.pumpAndSettle();
+      final faint = (await alphaAt([101])).first;
+      expect(faint, greaterThan(0));
+
+      await tester.sendEventToBinding(pointer.scroll(const Offset(32, 0)));
+      await tester.pumpAndSettle();
+      var seen = await alphaAt([101, 108, 202]);
+      expect(seen[0], greaterThan(faint), reason: 'and grows as it is held');
+      expect(seen[0], greaterThan(5), reason: 'a wash past the first column');
+      expect(seen[0], lessThan(60),
+          reason: 'the reference casts a narrow edge, not a band');
+      expect(seen[1], lessThan(seen[0]), reason: 'and it fades');
+      expect(seen[2], 255,
+          reason: 'the second is still at its own place, casting nothing');
+
+      // Once the second has stacked, its own shade grows at its own edge —
+      // it does not switch on at full strength, and the first column's is
+      // covered by the second's cell arriving over it.
+      await tester.sendEventToBinding(pointer.scroll(const Offset(100, 0)));
+      await tester.pumpAndSettle();
+      seen = await alphaAt([101, 201, 208]);
+      expect(seen[0], 255, reason: 'the first two now stand together');
+      expect(seen[1], greaterThan(5));
+      expect(seen[1], lessThan(60));
+      expect(seen[2], lessThan(seen[1]), reason: 'fading from the new edge');
     });
 
     testWidgets('every cell is drawn once', (tester) async {

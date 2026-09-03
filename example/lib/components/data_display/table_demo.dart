@@ -805,6 +805,60 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Held columns that stack',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                scroll: const TableScroll(x: 1600, y: 220),
+                data: _many,
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    width: 160,
+                    fixed: TableColumnFixed.start,
+                    ellipsis: true,
+                    value: (p) => p.name,
+                  ),
+                  // Loose, and standing between two held ones.
+                  TableColumn(
+                    title: const Text('Age'),
+                    width: 90,
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                  ),
+                  TableColumn(
+                    title: const Text('City'),
+                    width: 120,
+                    fixed: TableColumnFixed.start,
+                    value: (p) => p.city,
+                  ),
+                  for (var i = 0; i < 10; i++)
+                    TableColumn(
+                      title: Text('Note $i'),
+                      width: 120,
+                      value: (p) => '${p.city} $i',
+                    ),
+                  TableColumn(
+                    title: const Text('Act'),
+                    width: 90,
+                    fixed: TableColumnFixed.end,
+                    value: (p) => 'do',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Drag across. Name and City are both held at the leading edge '
+                'with a loose Age between them: the order you wrote is the '
+                'order you see, Age slides under, and City comes to rest right '
+                'behind Name rather than being moved there from the start.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Nothing to show',
           Table<Person>(bordered: true, columns: _columns, data: const []),
         ),

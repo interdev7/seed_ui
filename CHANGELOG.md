@@ -347,7 +347,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
   sideways where that is wider than its box. `y` as well for both ways.
 
-  Five things turn the lazy body off, since finding a row by multiplying is the
+  Four things turn the lazy body off, since finding a row by multiplying is the
   whole of how it works: `expandable`, a column with a `span`, a column with
   `children`, `columnsDraggable` and `rowsDraggable` — a
   column sliding aside has to know how far, which is a width, and rows have to
@@ -397,6 +397,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one whose heading was tapped, so a sortable first column with a selection
   simply did nothing; and a second drag of a heading moved the wrong column,
   since the drag spoke in names while the order it changed was in places.
+
+  On a table with a `scroll.y` a grouped heading is laid out from a plan the
+  viewport is handed — where every heading cell stands and how much of the grid
+  it covers — so only the cells that start something are built and the rows
+  stay lazy: three hundred rows built twelve hundred cells before, thirty-seven
+  after.
 
   On a table with a `scroll.y` the summary is held at the foot the way the
   heading is held at the head, so it costs the lazy body nothing — three

@@ -1756,6 +1756,50 @@ class _TableState<T> extends State<Table<T>> {
   List<TableColumn<T>> get _leaves =>
       widget.columns.expand((c) => c.leaves).toList();
 
+  /// Where every heading cell stands, and how much of the grid it covers.
+  ///
+  /// A group's title reaches across the columns under it; a column heading
+  /// nothing reaches down the whole depth beside it. Worked out here, where
+  /// the tree of columns is, and handed to the viewport, which only lays out
+  /// what it is told.
+  List<({int x, int y, int across, int down, TableColumn<T> column})>
+      _headingPlan(int depth) {
+    final plan =
+        <({int x, int y, int across, int down, TableColumn<T> column})>[];
+    var at = 0;
+
+    void walk(List<TableColumn<T>> of, int level) {
+      for (final column in of) {
+        if (column.isGroup) {
+          plan.add((
+            x: at,
+            y: level,
+            across: column.headingSpan,
+            down: 1,
+            column: column,
+          ));
+          walk(column.children!, level + 1);
+        } else {
+          // Nothing under it, so it stands the rest of the way down.
+          plan.add((
+            x: at,
+            y: level,
+            across: 1,
+            down: depth - level,
+            column: column,
+          ));
+          at += 1;
+        }
+      }
+    }
+
+    walk(_columnTree, 0);
+    return plan;
+  }
+
+  /// How deep the heading stands.
+  int get _headingDepth => _columnTree.map((c) => c.depth).reduce(math.max);
+
   /// Whether any column heads others, so the heading needs more than one row.
   bool get _hasGroups => widget.columns.any((c) => c.isGroup);
 
@@ -2254,7 +2298,7 @@ class _TableState<T> extends State<Table<T>> {
 
     Widget table;
     if (widget.expandable != null ||
-        _hasGroups ||
+        (_hasGroups && !_detached) ||
         (_hasSummary && !_detached) ||
         _hasSpans ||
         _isSticky ||
@@ -3825,18 +3869,18 @@ class _TableState<T> extends State<Table<T>> {
 
   /// One cell of the lazy body:  /// One cell of the lazy body:  /// One cell of the lazy body:  /// One cell of the lazy body: a heading when it is the top row, a data cell
   /// otherwise.
-  Widget _lazyCell(
+  Widget? _lazyCell(
     ChildVicinity at,
     List<TableColumn<T>> columns,
     _ResolvedTableToken r,
     Token t,
     BorderSide rule,
   ) {
+    final depth = _showHeader ? _headingDepth : 0;
     final column = columns[at.xIndex];
-    final heading = _showHeader && at.yIndex == 0;
-    final summary =
-        _hasSummary && at.yIndex == _rows.length + (_showHeader ? 1 : 0);
-    final index = at.yIndex - (_showHeader ? 1 : 0);
+    final heading = at.yIndex < depth;
+    final summary = _hasSummary && at.yIndex == _rows.length + depth;
+    final index = at.yIndex - depth;
     final last = index == _rows.length - 1;
 
     final border = Border(
@@ -3846,6 +3890,40 @@ class _TableState<T> extends State<Table<T>> {
     );
 
     if (heading) {
+      // Only the cell that starts something is built; the places it covers
+      // are asked for and given nothing, which is how the grid comes to have
+      // the hole a spanning cell fills.
+      final plan = _headingPlan(depth).where(
+        (cell) => cell.x == at.xIndex && cell.y == at.yIndex,
+      );
+      if (plan.isEmpty) return null;
+      final headed = plan.first.column;
+      if (headed.isGroup) {
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: Color.alphaBlend(r.headerBg, r.pinnedBg),
+            border: Border(
+              bottom: rule,
+              right: _bordered && at.xIndex + plan.first.across < columns.length
+                  ? rule
+                  : BorderSide.none,
+            ),
+          ),
+          child: _cell(
+            DefaultTextStyle.merge(
+              style: TextStyle(
+                color: r.headerColor,
+                fontWeight: t.fontWeightStrong,
+              ),
+              child: headed.title ?? const SizedBox.shrink(),
+            ),
+            headed,
+            headed.headerAlign ?? TableAlign.center,
+            r,
+            t,
+          ),
+        );
+      }
       return DecoratedBox(
         decoration: BoxDecoration(
           // The heading's own fill is a two per cent wash, so a held column's
@@ -4034,7 +4112,18 @@ class _TableState<T> extends State<Table<T>> {
           child: _Rows(
             widths: widths.columns,
             rowHeight: _lazyRowHeight(r, t),
-            headerRows: _showHeader ? 1 : 0,
+            headerRows: _showHeader ? _headingDepth : 0,
+            headerPlan: _showHeader
+                ? [
+                    for (final cell in _headingPlan(_headingDepth))
+                      (
+                        x: cell.x,
+                        y: cell.y,
+                        across: cell.across,
+                        down: cell.down,
+                      ),
+                  ]
+                : const [],
             // The row that adds up is held at the foot as the heading is held
             // at the head: one row, out of the run that scrolls.
             footerRows: _hasSummary ? 1 : 0,
@@ -4052,7 +4141,7 @@ class _TableState<T> extends State<Table<T>> {
               maxXIndex: columns.length - 1,
               maxYIndex: _rows.length -
                   1 +
-                  (_showHeader ? 1 : 0) +
+                  (_showHeader ? _headingDepth : 0) +
                   (_hasSummary ? 1 : 0),
               builder: (context, vicinity) =>
                   _lazyCell(vicinity, columns, r, t, rule),
@@ -4817,6 +4906,7 @@ class _Rows extends TwoDimensionalScrollView {
     required this.widths,
     required this.rowHeight,
     required this.headerRows,
+    required this.headerPlan,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -4836,6 +4926,9 @@ class _Rows extends TwoDimensionalScrollView {
   final double rowHeight;
   final int headerRows;
 
+  /// Where every heading cell stands and how much it covers.
+  final List<({int x, int y, int across, int down})> headerPlan;
+
   /// How many rows are held at the foot — the row that adds up, or none.
   final int footerRows;
 
@@ -4854,6 +4947,7 @@ class _Rows extends TwoDimensionalScrollView {
         widths: widths,
         rowHeight: rowHeight,
         headerRows: headerRows,
+        headerPlan: headerPlan,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -4872,6 +4966,7 @@ class _RowsViewport extends TwoDimensionalViewport {
     required this.widths,
     required this.rowHeight,
     required this.headerRows,
+    required this.headerPlan,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -4892,6 +4987,7 @@ class _RowsViewport extends TwoDimensionalViewport {
   final int footerRows;
 
   /// Which columns are held at an edge, in the order they are drawn.
+  final List<({int x, int y, int across, int down})> headerPlan;
   final List<TableColumnFixed?> pinning;
   final Color shadeColor;
   final double shadeExtent;
@@ -4902,6 +4998,7 @@ class _RowsViewport extends TwoDimensionalViewport {
         widths: widths,
         rowHeight: rowHeight,
         headerRows: headerRows,
+        headerPlan: headerPlan,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -4921,6 +5018,7 @@ class _RowsViewport extends TwoDimensionalViewport {
       ..widths = widths
       ..rowHeight = rowHeight
       ..headerRows = headerRows
+      ..headerPlan = headerPlan
       ..footerRows = footerRows
       ..pinning = pinning
       ..shadeColor = shadeColor
@@ -4939,6 +5037,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     required List<double> widths,
     required double rowHeight,
     required int headerRows,
+    required List<({int x, int y, int across, int down})> headerPlan,
     required int footerRows,
     required List<TableColumnFixed?> pinning,
     required Color shadeColor,
@@ -4953,6 +5052,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   })  : _widths = widths,
         _rowHeight = rowHeight,
         _headerRows = headerRows,
+        _headerPlan = headerPlan,
         _footerRows = footerRows,
         _pinning = pinning,
         _shadeColor = shadeColor,
@@ -5083,15 +5183,47 @@ class _RenderRows extends RenderTwoDimensionalViewport {
 
   double _extent(int from, int to) => _starts[to] - _starts[from];
 
-  void _place(int column, int row, double dx, double dy) {
+  void _place(
+    int column,
+    int row,
+    double dx,
+    double dy, {
+    int across = 1,
+    int down = 1,
+  }) {
     final child = buildOrObtainChildFor(
       ChildVicinity(xIndex: column, yIndex: row),
     );
     if (child == null) return;
+    var width = 0.0;
+    for (var i = 0; i < across && column + i < _columnCount; i++) {
+      width += _widths[column + i];
+    }
     child.layout(
-      BoxConstraints.tightFor(width: _widths[column], height: _rowHeight),
+      BoxConstraints.tightFor(width: width, height: _rowHeight * down),
     );
     parentDataOf(child).layoutOffset = Offset(dx, dy);
+  }
+
+  /// Where each heading cell stands and how much it covers.
+  ///
+  /// A group's title reaches across the columns under it and a column heading
+  /// nothing reaches down the whole depth, neither of which a grid of one
+  /// cell per crossing can say. The plan is worked out where the columns are
+  /// known — in the widget — and the viewport lays out what it is given.
+  List<({int x, int y, int across, int down})> _headerPlan = const [];
+  set headerPlan(List<({int x, int y, int across, int down})> value) {
+    if (_headerPlan.length == value.length &&
+        () {
+          for (var i = 0; i < value.length; i++) {
+            if (_headerPlan[i] != value[i]) return false;
+          }
+          return true;
+        }()) {
+      return;
+    }
+    _headerPlan = value;
+    markNeedsLayout();
   }
 
   @override
@@ -5190,7 +5322,40 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     if (_footerRows > 0) {
       band(rows - 1, size.height - _footerHeight);
     }
-    if (_headerRows > 0) band(0, 0);
+    if (_headerRows > 0) {
+      if (_headerPlan.isEmpty) {
+        band(0, 0);
+      } else {
+        // A heading of several rows, laid out from the plan: only the cells
+        // that start something are placed, and each takes the width of the
+        // columns it reaches across and the height of the rows it reaches
+        // down.
+        for (final cell in _headerPlan) {
+          final at = placeOf(cell.x);
+          if (_pinning[cell.x] == null) {
+            // The same reckoning the other bands use, over the width the cell
+            // actually takes: a title reaching across three columns is on
+            // screen while any of the three is.
+            var width = 0.0;
+            for (var i = 0; i < cell.across && cell.x + i < _columnCount; i++) {
+              width += _widths[cell.x + i];
+            }
+            if (at + width <= -_cache(freeWidth) ||
+                at >= size.width + _cache(freeWidth)) {
+              continue;
+            }
+          }
+          _place(
+            cell.x,
+            cell.y,
+            at,
+            cell.y * _rowHeight,
+            across: cell.across,
+            down: cell.down,
+          );
+        }
+      }
+    }
   }
 
   // One clip layer per band, kept between frames: pushing six new layers on

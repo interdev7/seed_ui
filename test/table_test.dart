@@ -3735,6 +3735,71 @@ void main() {
       );
     });
 
+    testWidgets('a scrolling table keeps its groups and stays lazy',
+        (tester) async {
+      // The heading of a grouped table cannot be a row of the grid — a
+      // title reaches across the columns under it — so the viewport is told
+      // where every heading cell stands and how much it covers, and only the
+      // cells that start something are built.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            bordered: true,
+            scroll: const TableScroll(y: 240),
+            data: [for (var i = 0; i < 300; i++) i],
+            columns: [
+              TableColumn<int>(
+                title: const Text('Who'),
+                children: [
+                  TableColumn<int>(
+                    title: const Text('Name'),
+                    value: (v) => 'n$v',
+                  ),
+                  TableColumn<int>(
+                    title: const Text('City'),
+                    value: (v) => 'c$v',
+                  ),
+                ],
+              ),
+              TableColumn<int>(title: const Text('Age'), value: (v) => 'a$v'),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RichText).evaluate().length, lessThan(80),
+          reason: 'three hundred rows built twelve hundred cells before');
+
+      // The group stands above what it heads, and across it.
+      final who = tester.getRect(find.text('Who'));
+      final name = tester.getRect(find.text('Name'));
+      final city = tester.getRect(find.text('City'));
+      expect(who.center.dy, lessThan(name.center.dy));
+      // The group's own cell reaches across both columns under it — measured
+      // on the cell, since a title is centred in it while a leaf heading is
+      // not, and comparing the words would compare their alignment.
+      final whoCell = tester.getRect(
+        find
+            .ancestor(of: find.text('Who'), matching: find.byType(DecoratedBox))
+            .first,
+      );
+      expect(whoCell.right, greaterThan(city.right),
+          reason: 'a title reaching across one column would stop at Name');
+
+      // Age heads nothing, so it stands the whole depth: its title sits
+      // between the two rows rather than on either.
+      final age = tester.getRect(find.text('Age'));
+      expect(age.center.dy, greaterThan(who.center.dy));
+      expect(age.center.dy, lessThan(name.center.dy));
+
+      // And the cells stand under the columns they belong to.
+      expect(tester.getRect(find.text('n0')).left, closeTo(name.left, 0.5));
+      expect(tester.getRect(find.text('c0')).left, closeTo(city.left, 0.5));
+      expect(tester.getRect(find.text('a0')).left, closeTo(age.left, 0.5));
+    });
+
     test('a group holds no cells of its own', () {
       expect(
         () => TableColumn<_User>(

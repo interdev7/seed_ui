@@ -97,17 +97,16 @@ TableColumn(
 A column that heads nothing stands the whole depth of the heading beside a
 group, so nothing has to be spanned downwards by hand.
 
-A table with a group is not lazy — see
-[What turns it off](#what-turns-it-off).
-
 A sort and a filter belong to a leaf and are keyed by its place among the
 leaves — a group has nothing to order or narrow, and tapping one does nothing.
 
 **How it is drawn.** A `Table` maps a row's children onto its columns one for
-one, so a title spanning several of them cannot be a cell of the grid. The
-heading is laid out by hand instead, as a tree — a group is its title above a
-row of what it heads — against the same measured widths the body is given,
-which is what keeps the two lined up. The same caveat applies as elsewhere: a
+one, so a title spanning several of them cannot be a cell of the grid. Without
+a `scroll.y` the heading is laid out by hand instead, as a tree — a group is
+its title above a row of what it heads — against the same measured widths the
+body is given. With one, the viewport is handed a plan saying where every
+heading cell stands and how much of the grid it covers, and only the cells
+that start something are built: the rows stay lazy. The same caveat applies as elsewhere: a
 column headed by something other than `Text` should name a `width` if its
 heading is the widest thing in it.
 
@@ -196,7 +195,7 @@ nothing to virtualise in a table you can see all of.
 ### What turns it off
 
 Finding a row by multiplying is the whole of how a lazy body works, so
-anything that breaks a uniform grid of rows takes the laziness with it. Five
+anything that breaks a uniform grid of rows takes the laziness with it. Four
 things do, and a table using any of them builds every row it is given even
 with a `scroll.y` — the rows still scroll inside the height you named, they
 are simply all there:
@@ -205,19 +204,19 @@ are simply all there:
 | --- | --- |
 | `expandable` | a panel is whatever height its content is, and it sits between two rows |
 | a column with a `span` | a cell reaching across or down cannot be a cell of a grid |
-| a column with `children` | a heading of several rows cannot be a row of the grid either |
 | `columnsDraggable` | a column sliding aside has to know how far, which is a width |
 | `rowsDraggable` | rows have to be widgets of their own to be picked up |
 
-All five are drawn against one measured set of column widths instead, which is
-what keeps their parts lined up — and the reason they share a fate. A group
-heading could be made lazy too, since it leaves the rows themselves uniform;
-the other four cannot without a body that measures each row as it goes.
+All four are drawn against one measured set of column widths instead, which is
+what keeps their parts lined up — and the reason they share a fate. None of
+the four can be made lazy without a body that measures each row as it goes,
+which is a different body from the one that finds a row by multiplying.
 
-A `summary` used to be among them and no longer is: on a scrolling table the
-row that adds up is held at the foot the way the heading is held at the head,
-which costs nothing. Measured at three hundred rows: twelve hundred cells
-built before, fifty after.
+Two things used to be among them and no longer are. A `summary` is held at the
+foot the way the heading is held at the head; a grouped heading is laid out
+from a plan the viewport is given, saying where every heading cell stands and
+how much of the grid it covers. Measured at three hundred rows: twelve hundred
+cells built with either before, and fifty or so after.
 
 `sticky` is **not** among them, though it looks as though it should be: a
 table with a `scroll.y` already keeps its heading in view inside its own

@@ -1148,6 +1148,8 @@ class Table<T> extends StatefulWidget {
     this.sticky,
     this.columnsDraggable = false,
     this.onColumnsReordered,
+    this.rowsDraggable = false,
+    this.onRowsReordered,
     this.token,
   });
 
@@ -1247,6 +1249,22 @@ class Table<T> extends StatefulWidget {
   /// makes it happen. A sort and a filter go on naming a column by where it
   /// was listed, so moving one about does not point them at its neighbour.
   final bool columnsDraggable;
+
+  /// Lets a row be picked up and dropped into another row's place.
+  ///
+  /// As with [columnsDraggable], the table does the moving and keeps the
+  /// order it is left in; [onRowsReordered] is word of what happened. The
+  /// order it changes is the one the rows came in, so a sort still has the
+  /// last word — sorting a table you can also arrange by hand is asking for
+  /// two answers to one question.
+  ///
+  /// Every row is held to one height, as pinning holds them: a row sliding
+  /// aside has to know how far, and that is a height.
+  final bool rowsDraggable;
+
+  /// Called when a row is dragged into another's place, with where it came
+  /// from and where it went to among the rows as they were given.
+  final void Function(int from, int to)? onRowsReordered;
 
   /// Called when a heading is dragged into another column's place.
   ///
@@ -1541,6 +1559,78 @@ class _TableState<T> extends State<Table<T>> {
   /// key every time, and points at nothing that lasts.
   final GlobalKey _headingAnchor = GlobalKey();
 
+  /// The rows' own order, as places among the ones given, and the drag that
+  /// is changing it.
+  List<int>? _ownRowOrder;
+  int? _dragRowFrom;
+  int? _dragRowOver;
+  final GlobalKey _bodyAnchor = GlobalKey();
+
+  List<int> get _rowOrder => [
+        if (_ownRowOrder?.length == widget.data.length)
+          ..._ownRowOrder!
+        else
+          for (var i = 0; i < widget.data.length; i++) i,
+      ];
+
+  /// The rows as they stand before anything is narrowed or sorted: the order
+  /// they came in, as a drag has left it.
+  List<T> get _given => widget.rowsDraggable || _ownRowOrder != null
+      ? [for (final i in _rowOrder) widget.data[i]]
+      : widget.data;
+
+  /// Moves a row and tells whoever asked.
+  void _moveRow(int from, int to) {
+    final order = _rowOrder;
+    if (from == to ||
+        from < 0 ||
+        from >= order.length ||
+        to < 0 ||
+        to >= order.length) {
+      _endRowDrag();
+      return;
+    }
+    setState(() {
+      final moved = order.removeAt(from);
+      order.insert(to, moved);
+      _ownRowOrder = order;
+      _orderRevision++;
+      _dragRowFrom = null;
+      _dragRowOver = null;
+    });
+    widget.onRowsReordered?.call(from, to);
+  }
+
+  void _endRowDrag() {
+    if (_dragRowFrom == null && _dragRowOver == null) return;
+    setState(() {
+      _dragRowFrom = null;
+      _dragRowOver = null;
+    });
+  }
+
+  /// How far each row has slid out of the way while one is being carried.
+  List<double> _rowShifts(int count, double height) {
+    final shifts = List<double>.filled(count, 0);
+    final from = _dragRowFrom;
+    final to = _dragRowOver;
+    if (from == null || to == null || from == to) return shifts;
+    if (from >= count || to >= count) return shifts;
+
+    if (to > from) {
+      for (var i = from + 1; i <= to; i++) {
+        shifts[i] = -height;
+      }
+      shifts[from] = height * (to - from);
+    } else {
+      for (var i = to; i < from; i++) {
+        shifts[i] = height;
+      }
+      shifts[from] = -height * (from - to);
+    }
+    return shifts;
+  }
+
   /// Bumped whenever the order is committed.
   ///
   /// It goes into the key of every sliding cell, so the drop hands each one a
@@ -1713,7 +1803,8 @@ class _TableState<T> extends State<Table<T>> {
   /// step. A height they all know is what keeps their rows level — and it has
   /// to be exact, not a floor. Tried as a floor first, and a cell that wrapped
   /// past it put the panes eight pixels out again.
-  double? _exactHeight(Token t) => _hasPinned ? _rowHeight(t) : null;
+  double? _exactHeight(Token t) =>
+      _hasPinned || widget.rowsDraggable ? _rowHeight(t) : null;
 
   /// The height every row of a lazy body is laid out at.
   ///
@@ -2070,7 +2161,7 @@ class _TableState<T> extends State<Table<T>> {
                 ),
               );
 
-          if (_hasSpans) {
+          if (_hasSpans || widget.rowsDraggable) {
             // Laid out by hand: a cell reaching across two columns cannot be
             // a cell of the grid, so there is no grid to run. A body with a
             // cell reaching *down* comes back as one placed block, and there
@@ -2078,10 +2169,30 @@ class _TableState<T> extends State<Table<T>> {
             final laid =
                 _spannedRows(columns, measured.columns, rows, r, t, rule);
             if (laid.length == rows.length) {
+              final height = _lazyRowHeight(r, t);
+              final rowShifts = _rowShifts(rows.length, height);
+              final body = <Widget>[];
               for (var i = 0; i < rows.length; i++) {
-                children.add(laid[i]);
-                if (_hasPanel(rows[i])) children.add(panelFor(i));
+                body.add(
+                  _draggableRow(
+                    _slidDown(laid[i], rowShifts[i], 'row$i', t),
+                    rows[i],
+                    i,
+                    r,
+                    t,
+                  ),
+                );
+                if (_hasPanel(rows[i])) body.add(panelFor(i));
               }
+              children.add(_dropOnBody(
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: body,
+                ),
+                height,
+                rows.length,
+              ));
             } else {
               children.addAll(laid);
               for (var i = 0; i < rows.length; i++) {
@@ -2138,7 +2249,8 @@ class _TableState<T> extends State<Table<T>> {
         _hasSummary ||
         _hasSpans ||
         _isSticky ||
-        widget.columnsDraggable) {
+        widget.columnsDraggable ||
+        widget.rowsDraggable) {
       // Rows that open are drawn as grids with panels between them, and a
       // heading of more than one row is drawn by hand — a `Table` cannot span
       // a cell across its columns, so a group's title cannot be a cell of the
@@ -2624,6 +2736,7 @@ class _TableState<T> extends State<Table<T>> {
     final filters = _filters;
     final asked = Object.hash(
       identityHashCode(widget.data),
+      Object.hashAll(_rowOrder),
       Object.hashAll(sorts),
       Object.hashAll([
         for (final entry in filters.entries) ...[
@@ -2635,7 +2748,7 @@ class _TableState<T> extends State<Table<T>> {
     if (_rowsAsked == asked && _rowsCache != null) return _rowsCache!;
 
     _rowsAsked = asked;
-    return _rowsCache = _sorted(_filtered(widget.data, filters), sorts);
+    return _rowsCache = _sorted(_filtered(_given, filters), sorts);
   }
 
   /// The rows on show: a page of [_narrowed], or every one of them where the
@@ -3579,6 +3692,86 @@ class _TableState<T> extends State<Table<T>> {
       _dragOver = null;
     });
     _hoveredHeading.value = null;
+  }
+
+  /// A row carried along by a drag, sliding down or up rather than jumping.
+  Widget _slidDown(Widget row, double by, String slot, Token t) =>
+      TweenAnimationBuilder<double>(
+        key: ValueKey<String>('$_orderRevision:$slot'),
+        tween: Tween<double>(end: by),
+        duration: t.motionDurationMid,
+        curve: t.motionEaseInOut,
+        builder: (context, at, child) =>
+            Transform.translate(offset: Offset(0, at), child: child),
+        child: row,
+      );
+
+  /// A row that can be picked up and dropped into another's place.
+  ///
+  /// Only the picking up lives on the row; where it would land is worked out
+  /// from where the finger is, against a body whose layout does not move.
+  Widget _draggableRow(
+    Widget row,
+    T record,
+    int index,
+    _ResolvedTableToken r,
+    Token t,
+  ) {
+    if (!widget.rowsDraggable) return row;
+    return Draggable<int>(
+      data: index,
+      axis: Axis.vertical,
+      dragAnchorStrategy: pointerDragAnchorStrategy,
+      onDragStarted: () => setState(() {
+        _dragRowFrom = index;
+        _dragRowOver = index;
+      }),
+      onDraggableCanceled: (_, __) => _endRowDrag(),
+      onDragEnd: (_) => _endRowDrag(),
+      feedback: Transform.rotate(
+        angle: 0.006,
+        child: Transform.scale(
+          scale: 1.02,
+          child: IntrinsicWidth(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: r.pinnedBg,
+                borderRadius: BorderRadius.circular(r.borderRadius),
+                boxShadow: t.boxShadowSecondary,
+              ),
+              child: row,
+            ),
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(opacity: 0.35, child: row),
+      child: MouseRegion(cursor: SystemMouseCursors.grab, child: row),
+    );
+  }
+
+  /// The body as one place to drop on, read by the finger's height.
+  Widget _dropOnBody(Widget body, double rowHeight, int count) {
+    if (!widget.rowsDraggable) return body;
+
+    int? rowAt(Offset global) {
+      final box = _bodyAnchor.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize || rowHeight <= 0) return null;
+      final y = box.globalToLocal(global).dy;
+      return (y ~/ rowHeight).clamp(0, count - 1);
+    }
+
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (_) => true,
+      onMove: (details) {
+        final over = rowAt(details.offset);
+        if (over == null || over == _dragRowOver) return;
+        setState(() => _dragRowOver = over);
+      },
+      onAcceptWithDetails: (details) =>
+          _moveRow(details.data, _dragRowOver ?? details.data),
+      onLeave: (_) => _endRowDrag(),
+      builder: (context, _, __) => KeyedSubtree(key: _bodyAnchor, child: body),
+    );
   }
 
   /// The heading as one place to drop on, which reads the finger's position

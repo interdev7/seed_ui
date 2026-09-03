@@ -344,13 +344,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
   sideways where that is wider than its box. `y` as well for both ways.
 
-  Six things turn the lazy body off, since finding a row by multiplying is the
+  Seven things turn the lazy body off, since finding a row by multiplying is the
   whole of how it works: `expandable`, a column with a `span`, a column with
-  `children`, a column with a `summary`, `sticky`, and `columnsDraggable` —
-  a column sliding aside has to know how far, which is a width. Such a table builds every
+  `children`, a column with a `summary`, `sticky`, `columnsDraggable` and
+  `rowsDraggable` — a column sliding aside has to know how far, which is a
+  width, and rows have to be widgets of their own to be picked up. Such a table builds every
   row it is given even with a `scroll.y` — the rows still scroll inside the
   height named, they are simply all there. The documentation lists them in one
   place and says what it costs.
+
+  **Rows you can move.** `rowsDraggable` picks a row up and drops it into
+  another's place, with the same mechanics as the columns: the others slide
+  aside by exactly a row and the table keeps the order it is left in.
+  `onRowsReordered` is word of what happened. The order a drag changes is the
+  one the rows came in — underneath narrowing and sorting — so a sort still has
+  the last word. Every row is held to one height, as pinning holds them, and a
+  row can still be tapped.
 
   **Columns you can move.** `columnsDraggable` lets a heading be picked up and
   dropped on another column's place, and the table does the moving itself —

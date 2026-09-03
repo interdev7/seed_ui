@@ -196,7 +196,7 @@ nothing to virtualise in a table you can see all of.
 ### What turns it off
 
 Finding a row by multiplying is the whole of how a lazy body works, so
-anything that breaks a uniform grid of rows takes the laziness with it. Six
+anything that breaks a uniform grid of rows takes the laziness with it. Seven
 things do, and a table using any of them builds every row it is given even
 with a `scroll.y` — the rows still scroll inside the height you named, they
 are simply all there:
@@ -209,6 +209,7 @@ are simply all there:
 | a column with a `summary` | the row that adds up is laid out beside the heading, against the same measured widths |
 | `sticky` | the heading is drawn over the rows rather than above them |
 | `columnsDraggable` | a column sliding aside has to know how far, which is a width |
+| `rowsDraggable` | rows have to be widgets of their own to be picked up |
 
 All five are drawn against one measured set of column widths instead, which is
 what keeps their parts lined up — and the reason they share a fate. Two of
@@ -661,6 +662,29 @@ would let them be read straight through. `offsetHeader` holds it below a bar
 of your own. A held heading needs its height known before it is laid out, so a
 sticky table holds its heading to one row's height per level, as a lazy body
 holds its rows.
+
+## Rows you can move
+
+`rowsDraggable` lets a row be picked up and dropped into another's place, with
+the same mechanics as the columns: the others slide out of the way, each by
+exactly a row, and the table keeps the order it is left in.
+
+```dart
+Table<User>(
+  columns: columns,
+  data: users,
+  rowsDraggable: true,
+  onRowsReordered: (from, to) => message.success('moved'),
+)
+```
+
+The order a drag changes is **the one the rows came in** — the order underneath
+narrowing and sorting. So a sort still has the last word: a table you can both
+sort and arrange by hand would otherwise be two answers to one question.
+
+Every row is held to one height, as pinning holds them: a row sliding aside
+has to know how far, and that is a height. A row can still be tapped — the
+drag is wrapped round what a row already does rather than put in its place.
 
 ## Columns you can move
 

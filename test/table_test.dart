@@ -4918,4 +4918,160 @@ void main() {
       expect(names, ['Ann', 'Chen'], reason: 'it sorted');
     });
   });
+
+  group('rows you can move', () {
+    final many = [for (var i = 0; i < 5; i++) _User('n$i', i)];
+
+    Widget table({
+      bool draggable = true,
+      void Function(int, int)? onReordered,
+      List<TableSort>? defaultSort,
+    }) =>
+        _host(
+          Table<_User>(
+            data: many,
+            rowsDraggable: draggable,
+            onRowsReordered: onReordered,
+            defaultSort: defaultSort,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                value: (u) => u.name,
+              ),
+            ],
+          ),
+          width: 400,
+        );
+
+    List<String> shown(WidgetTester tester) => tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data)
+        .whereType<String>()
+        .where((s) => s.startsWith('n'))
+        .toList();
+
+    testWidgets('a row carried onto another takes its place', (tester) async {
+      int? from;
+      int? to;
+      await tester.pumpWidget(table(onReordered: (a, b) {
+        from = a;
+        to = b;
+      }));
+      await tester.pumpAndSettle();
+      expect(shown(tester).take(3), ['n0', 'n1', 'n2']);
+
+      final onto = tester.getCenter(find.text('n2'));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('n0')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pumpAndSettle();
+      await grab.up();
+      await tester.pumpAndSettle();
+
+      expect(shown(tester).take(3), ['n1', 'n2', 'n0']);
+      expect(from, 0);
+      expect(to, 2);
+    });
+
+    testWidgets('the rows below slide up as it is carried', (tester) async {
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+      await tester.pumpAndSettle();
+
+      double topOf(String text) => tester.getRect(find.text(text).first).top;
+      final atRest = [topOf('n1'), topOf('n2')];
+
+      final onto = tester.getCenter(find.text('n2'));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('n0')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pumpAndSettle();
+
+      expect(topOf('n1'), lessThan(atRest[0]));
+      expect(topOf('n2'), lessThan(atRest[1]));
+
+      await grab.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a drag given up puts the rows back', (tester) async {
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+      await tester.pumpAndSettle();
+
+      final onto = tester.getCenter(find.text('n2'));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('n0')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pumpAndSettle();
+      await grab.cancel();
+      await tester.pumpAndSettle();
+
+      expect(shown(tester).take(3), ['n0', 'n1', 'n2']);
+    });
+
+    testWidgets('nothing is draggable unless the table says so',
+        (tester) async {
+      await tester.pumpWidget(table(draggable: false));
+      await tester.pumpAndSettle();
+      expect(find.byType(Draggable<int>), findsNothing);
+    });
+
+    testWidgets('a row can still be tapped', (tester) async {
+      // The drag is wrapped round what a row already does, not put in its
+      // place.
+      _User? tapped;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: many,
+            rowsDraggable: true,
+            onRowTap: (record, _) => tapped = record,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+            ],
+          ),
+          width: 400,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('n1'));
+      await tester.pumpAndSettle();
+      expect(tapped?.name, 'n1');
+    });
+
+    testWidgets('a sort still has the last word', (tester) async {
+      // The order a drag changes is the one the rows came in; sorting a table
+      // you can also arrange by hand is asking for two answers to one
+      // question, so the sort wins.
+      await tester.pumpWidget(table(
+        onReordered: (_, __) {},
+        defaultSort: const [TableSort(0, TableSortOrder.descending)],
+      ));
+      await tester.pumpAndSettle();
+      expect(shown(tester).take(2), ['n4', 'n3']);
+
+      final onto = tester.getCenter(find.text('n2'));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('n4')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pumpAndSettle();
+      await grab.up();
+      await tester.pumpAndSettle();
+
+      expect(shown(tester).take(2), ['n4', 'n3'],
+          reason: 'still in the order the sort asks for');
+    });
+  });
 }

@@ -979,6 +979,30 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Rows you can move',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _many.take(6).toList(),
+                columns: _columns,
+                rowsDraggable: true,
+                onRowsReordered: (from, to) =>
+                    message.success('Row $from moved to $to'),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The same mechanics as the columns: pick a row up and the '
+                'others slide out of the way, each by exactly a row. The '
+                'table keeps the order you leave it in. The order a drag '
+                'changes is the one the rows came in, so a sort still has the '
+                'last word.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Nothing to show',
           Table<Person>(bordered: true, columns: _columns, data: const []),
         ),

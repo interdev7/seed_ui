@@ -296,8 +296,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   table is not lazy.
 
   The rules go on the cells rather than on the rows, or a line is drawn through
-  the middle of a cell that reaches down, and a merged cell lights up under the
-  pointer for every row it covers rather than for the first alone. A cell reaching down needs a row's
+  the middle of a cell that reaches down, and what lights up under the pointer is
+  decided by the cell it is on rather than by the row that cell sits in: a row
+  beside a merged cell lights with that cell and not with the rows on its other
+  side, while the merged cell itself lights everything it covers. A cell reaching down needs a row's
   height known before the fact, so a table with one holds every row to one
   height, as a lazy body does; spanning columns alone leaves the rows to their
   content.

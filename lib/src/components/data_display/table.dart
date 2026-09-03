@@ -1301,7 +1301,16 @@ class _TableState<T> extends State<Table<T>> {
   /// of the pointer rebuilt every row. Measured at five hundred rows that was
   /// ninety milliseconds a move. It lives in the cell now, and only the two
   /// rows that changed listen.
-  final ValueNotifier<int?> _hovered = ValueNotifier<int?>(null);
+  /// The stretch of rows the pointer is on: one row for an ordinary cell,
+  /// and every row a merged one covers.
+  ///
+  /// A stretch rather than a row, because what lights up is decided by the
+  /// *cell* under the pointer and not by the row it happens to sit in. Point
+  /// at a merged cell and everything it covers lights; point at a row beside
+  /// it and only that row lights, along with the merged cell standing over
+  /// it — which is on that row too.
+  final ValueNotifier<({int from, int to})?> _hovered =
+      ValueNotifier<({int from, int to})?>(null);
 
   /// Which heading the pointer is over, or null.
   final ValueNotifier<int?> _hoveredHeading = ValueNotifier<int?>(null);
@@ -3933,14 +3942,16 @@ class _TableState<T> extends State<Table<T>> {
       );
     }
     return MouseRegion(
-      onEnter: (_) => _hovered.value = index,
+      onEnter: (_) => _hovered.value = (from: index, to: index + 1),
       onExit: (_) {
-        if (_hovered.value == index) _hovered.value = null;
+        if (_hovered.value?.from == index) _hovered.value = null;
       },
-      child: ValueListenableBuilder<int?>(
+      child: ValueListenableBuilder<({int from, int to})?>(
         valueListenable: _hovered,
         builder: (context, hovered, child) => ColoredBox(
-          color: ground(_rowFill(index, hovered: hovered == index, r: r)),
+          color: ground(
+            _rowFill(index, hovered: hovered?.from == index, r: r),
+          ),
           child: child,
         ),
         child: cell,
@@ -4175,20 +4186,20 @@ class _TableState<T> extends State<Table<T>> {
     }
     if (!_hoverable) return cell;
     return MouseRegion(
-      onEnter: (_) => _hovered.value = index,
+      onEnter: (_) => _hovered.value = (from: index, to: index + covering),
       onExit: (_) {
-        if (_hovered.value == index) _hovered.value = null;
+        if (_hovered.value?.from == index) _hovered.value = null;
       },
       // Only this row's cells are listening, so a pointer crossing the table
       // rebuilds two rows rather than all of them.
-      child: ValueListenableBuilder<int?>(
+      child: ValueListenableBuilder<({int from, int to})?>(
         valueListenable: _hovered,
         builder: (context, hovered, child) => ColoredBox(
           color: _rowFill(
             index,
             hovered: hovered != null &&
-                hovered >= index &&
-                hovered < index + covering,
+                hovered.from < index + covering &&
+                index < hovered.to,
             r: r,
           ),
           child: child,

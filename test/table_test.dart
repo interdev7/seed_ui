@@ -4393,43 +4393,57 @@ void main() {
       expect(find.text('c Ann'), findsNothing);
     });
 
-    testWidgets('a merged cell lights up for every row it covers',
+    testWidgets('what lights up is decided by the cell under the pointer',
         (tester) async {
-      // Lit for its first row alone, the rest of the line went dark under the
-      // pointer while the merged cell stayed pale.
+      // Two rows, a merged cell standing over both of them in one column:
+      //
+      //   a  |  bd
+      //   c  |
+      //
+      // Point at a, and a lights with the cell over it — but not c. Point at
+      // the merged cell and everything it covers lights. What lights is the
+      // *cell* under the pointer, not the row it happens to sit in.
       await tester.pumpWidget(table(
         onName: (_, u, i) =>
             i == 1 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
       ));
       await tester.pumpAndSettle();
 
-      Color? fillOver(String text) {
-        final found = tester
-            .widgetList<ColoredBox>(
-              find.ancestor(
-                of: find.text(text),
-                matching: find.byType(ColoredBox),
-              ),
-            )
-            .map((b) => b.color)
-            .where((c) => c.a != 0);
-        return found.isEmpty ? null : found.first;
-      }
+      bool lit(String text) => tester
+          .widgetList<ColoredBox>(
+            find.ancestor(
+              of: find.text(text),
+              matching: find.byType(ColoredBox),
+            ),
+          )
+          .map((b) => b.color)
+          .any((c) => c.a != 0);
 
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await mouse.addPointer(location: Offset.zero);
       addTearDown(mouse.removePointer);
 
-      // The merged cell starts at Ann's row and covers Bart's. Point at
-      // Bart's row: the cell standing over it must light with it.
+      // 'Ann' is the merged cell, covering the rows of 'city 45' and
+      // 'city 31'; 'city 27' is the row above, which it does not cover.
+      await mouse.moveTo(tester.getCenter(find.text('city 45')));
+      await tester.pumpAndSettle();
+      expect(lit('city 45'), isTrue, reason: 'the row pointed at');
+      expect(lit('Ann'), isTrue, reason: 'and the cell standing over it');
+      expect(lit('city 31'), isFalse, reason: 'but not the row below');
+
       await mouse.moveTo(tester.getCenter(find.text('city 31')));
       await tester.pumpAndSettle();
-      expect(fillOver('city 31'), isNotNull, reason: 'the row under the hand');
-      expect(fillOver('Ann'), isNotNull,
-          reason: 'and the cell standing over it');
+      expect(lit('city 31'), isTrue);
+      expect(lit('Ann'), isTrue);
+      expect(lit('city 45'), isFalse, reason: 'nor the row above');
 
-      // And a row it does not cover stays as it was.
-      expect(fillOver('city 27'), isNull);
+      // The merged cell itself: everything it covers.
+      await mouse.moveTo(tester.getCenter(find.text('Ann')));
+      await tester.pumpAndSettle();
+      expect(lit('Ann'), isTrue);
+      expect(lit('city 45'), isTrue);
+      expect(lit('city 31'), isTrue);
+      expect(lit('city 27'), isFalse, reason: 'and nothing beyond it');
     });
 
     test('a span covers at least its own place', () {

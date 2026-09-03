@@ -639,9 +639,18 @@ open, **a table whose cells span is not lazy** — see
 The rules go on the cells rather than on the rows, or a line would be drawn
 straight through the middle of a cell that reaches down.
 
-A merged cell belongs to every row it covers, so it lights up under the
-pointer for any of them — lit for its first row alone, the rest of the line
-went dark while the merged cell stayed pale.
+What lights up under the pointer is decided by the **cell** it is on, not by
+the row that cell sits in. Take two rows with one column merged across them:
+
+```
+a  |  bd
+c  |
+```
+
+Point at `a` and `a` lights with `bd`, the cell standing over it — `c` does
+not. Point at `c` and `c` lights with `bd`. Point at `bd` and everything it
+covers lights, `a` and `c` both: the cell is one cell, and half of it lit is
+worse than none.
 
 A cell reaching **down** needs to know how tall a row is before it can be laid
 over two of them, so a table with one holds every row to one height — as a

@@ -313,9 +313,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   twelve pixels out, the narrow edge the reference casts rather than a band.
   Its strength grows with how far the column has been held — nothing where the scroll has just caught it, full a
   shade's width later — so it arrives with the hand rather than switching on,
-  and a column coming to rest covers the shade of the one it stops behind. Held cells take `pinnedBg`, since
-  one standing over the columns sliding under it has to be opaque — its
-  heading too, composited over that ground, or the two per cent wash a heading
+  and a column coming to rest covers the shade of the one it stops behind. Held cells stand on `pinnedBg` with the row's own
+  fill composed over it — one standing over the columns sliding under it has to
+  be opaque, and stacking the two instead let the ground cover the fill, so a
+  held column neither lit up under the pointer nor showed that its row was
+  picked. Its heading is composited over that ground too, or the two per cent wash a heading
   carries let the other headings be watched travelling behind it.
 
   **Sorting by more than one column.** `TableColumn.sortPriority` lets several

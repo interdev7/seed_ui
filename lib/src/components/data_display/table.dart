@@ -3322,14 +3322,19 @@ class _TableState<T> extends State<Table<T>> {
     }
 
     final record = _rows[index];
+
+    /// What is painted behind this cell: the row's own fill, and under it the
+    /// ground a held column stands on.
+    ///
+    /// Composed rather than stacked. The ground used to be painted inside the
+    /// cell and the row's fill outside it, so the opaque ground covered the
+    /// fill and a held column neither lit up under the pointer nor showed
+    /// that its row was picked.
+    Color ground(Color fill) =>
+        column.fixed == null ? fill : Color.alphaBlend(fill, r.pinnedBg);
+
     Widget cell = DecoratedBox(
-      decoration: BoxDecoration(
-        // A held column stands over the ones sliding under it, so it needs a
-        // ground of its own — the rows themselves are only as opaque as their
-        // fill, which is nothing at all until the pointer is on them.
-        color: column.fixed == null ? null : r.pinnedBg,
-        border: border,
-      ),
+      decoration: BoxDecoration(border: border),
       child: _padded(
         column.builder?.call(context, record, index) ?? _text(column, record),
         column,
@@ -3349,7 +3354,12 @@ class _TableState<T> extends State<Table<T>> {
         child: cell,
       );
     }
-    if (!_hoverable) return cell;
+    if (!_hoverable) {
+      return ColoredBox(
+        color: ground(_rowFill(index, hovered: false, r: r)),
+        child: cell,
+      );
+    }
     return MouseRegion(
       onEnter: (_) => _hovered.value = index,
       onExit: (_) {
@@ -3358,7 +3368,7 @@ class _TableState<T> extends State<Table<T>> {
       child: ValueListenableBuilder<int?>(
         valueListenable: _hovered,
         builder: (context, hovered, child) => ColoredBox(
-          color: _rowFill(index, hovered: hovered == index, r: r),
+          color: ground(_rowFill(index, hovered: hovered == index, r: r)),
           child: child,
         ),
         child: cell,

@@ -220,6 +220,11 @@ the scroll rather than switching on, and follows the hand instead of a clock.
 A column coming to rest covers the shade of the one it stops behind, which is
 what makes the handover a covering rather than a jump.
 
+A held column's cells stand on `pinnedBg` with the row's own fill composed
+over it, rather than the two being stacked: painted the other way round the
+opaque ground covered the fill, and a held column neither lit up under the
+pointer nor showed that its row was picked.
+
 **A held column keeps its place.** It is not taken out and stacked at the edge
 before anything has moved: it stands where you listed it, among the others,
 and stops only when the scroll would carry it past its rest — behind the

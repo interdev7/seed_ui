@@ -932,19 +932,27 @@ void main() {
       await tester.pumpWidget(pinned(y: 200));
       await tester.pumpAndSettle();
 
-      List<Color> fillsOver(String text) => tester
-          .widgetList<DecoratedBox>(
-            find.ancestor(
-              of: find.text(text),
-              matching: find.byType(DecoratedBox),
-            ),
-          )
-          .map((d) => d.decoration)
-          .whereType<BoxDecoration>()
-          .map((d) => d.color)
-          .whereType<Color>()
-          .where((c) => c.a != 0)
-          .toList();
+      List<Color> fillsOver(String text) => [
+            ...tester
+                .widgetList<DecoratedBox>(
+                  find.ancestor(
+                    of: find.text(text),
+                    matching: find.byType(DecoratedBox),
+                  ),
+                )
+                .map((d) => d.decoration)
+                .whereType<BoxDecoration>()
+                .map((d) => d.color)
+                .whereType<Color>(),
+            ...tester
+                .widgetList<ColoredBox>(
+                  find.ancestor(
+                    of: find.text(text),
+                    matching: find.byType(ColoredBox),
+                  ),
+                )
+                .map((b) => b.color),
+          ].where((c) => c.a != 0).toList();
 
       expect(fillsOver('p0'), isNotEmpty, reason: 'the held one is opaque');
       expect(fillsOver('p0').first.a, 1.0);
@@ -1057,6 +1065,40 @@ void main() {
       expect(seen[1], greaterThan(5));
       expect(seen[1], lessThan(60));
       expect(seen[2], lessThan(seen[1]), reason: 'fading from the new edge');
+    });
+
+    testWidgets('a held column lights up under the pointer like any other',
+        (tester) async {
+      // The ground used to be painted inside the cell and the row's fill
+      // outside it, so the opaque ground covered the fill: a held column
+      // neither lit up under the pointer nor showed that its row was picked.
+      await tester.pumpWidget(pinned(y: 200));
+      await tester.pumpAndSettle();
+
+      Color fillOf(String text) => tester
+          .widgetList<ColoredBox>(
+            find.ancestor(
+              of: find.text(text),
+              matching: find.byType(ColoredBox),
+            ),
+          )
+          .map((b) => b.color)
+          // The innermost is the row's own: a loose cell's is transparent
+          // until the pointer arrives, so it cannot be filtered out by alpha.
+          .first;
+
+      final resting = fillOf('p1');
+      final loose = fillOf('c0r1');
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(tester.getCenter(find.text('p1')));
+      await tester.pumpAndSettle();
+
+      expect(fillOf('p1'), isNot(resting), reason: 'the held cell tints too');
+      expect(fillOf('p1').a, 1.0, reason: 'and keeps its ground under it');
+      expect(fillOf('c0r1'), isNot(loose), reason: 'and so does its row');
     });
 
     testWidgets('every cell is drawn once', (tester) async {

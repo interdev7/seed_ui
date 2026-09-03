@@ -228,6 +228,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer exists lands you on the last one there is, never on an empty one. The
   page and the page size are controlled apart.
 
+  A bordered table paints its outline in front of the rows rather than behind
+  them: a row with a fill of its own — the heading, the row that adds up —
+  is opaque right to the edge, and painted straight over a frame drawn behind
+  it. Measured at the left edge, a body row showed the rule at alpha 15 while
+  the summary beside it came out pure white.
+
   The pager stands outside the outline: drawn inside it, it pushed the frame
   below itself and left the last row with nothing under it, since the row's own
   rule is the one the outline stands in for.

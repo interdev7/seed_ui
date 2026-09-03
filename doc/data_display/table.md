@@ -516,6 +516,10 @@ TableColumn(
 )
 ```
 
+In a bordered table it is ruled like any other row, and the outline closes it
+off: the frame is painted in front of the rows rather than behind them, or a
+row with a fill of its own would paint straight over it.
+
 It goes on the column rather than in a list of cells, so there is nothing to
 keep in step with the columns: a column that says nothing leaves its place
 empty, and a table where no column says anything draws no such row at all.

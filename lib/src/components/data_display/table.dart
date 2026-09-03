@@ -1916,6 +1916,12 @@ class _TableState<T> extends State<Table<T>> {
     // rule is the one the outline stands in for.
     if (_bordered) {
       body = DecoratedBox(
+        // In front of the rows, not behind them. A row with a fill of its own
+        // — the heading, the row that adds up — is opaque right to the edge,
+        // and painted straight over a frame drawn behind it: measured at the
+        // left edge, a body row showed the rule at alpha 15 while the summary
+        // beside it came out pure white.
+        position: DecorationPosition.foreground,
         decoration: BoxDecoration(
           border: Border.all(color: r.borderColor, width: t.lineWidth),
           borderRadius: BorderRadius.circular(r.borderRadius),

@@ -13,6 +13,7 @@ import 'package:flutter/material.dart'
         Switch,
         Tooltip,
         Drawer;
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
@@ -3439,6 +3440,57 @@ void main() {
       expect(fills.first, token.colorBgContainer);
       expect(fills.first, isNot(token.colorFillQuaternary),
           reason: 'not the heading\'s fill');
+    });
+
+    testWidgets('the outline is painted over it, not behind it',
+        (tester) async {
+      // A row with a fill of its own is opaque right to the edge, so a frame
+      // drawn behind it is simply painted over: measured at the left edge, a
+      // body row showed the rule while the summary beside it came out pure
+      // white. Read off the pixels, since nothing about the layout changes.
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        _host(
+          RepaintBoundary(
+            key: key,
+            child: Table<_User>(
+              bordered: true,
+              data: const [_User('Chen', 27)],
+              columns: [
+                TableColumn<_User>(
+                  title: const Text('Name'),
+                  value: (u) => u.name,
+                  summary: (_, rows) => const Text('one'),
+                ),
+              ],
+            ),
+          ),
+          width: 300,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final box = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
+      final bytes = await tester.runAsync(() async {
+        final image = await box.toImage();
+        final data = await image.toByteData();
+        image.dispose();
+        return data;
+      });
+      final w = box.size.width.round();
+      final top = tester.getRect(find.byKey(key)).top;
+
+      int redAt(int x, int y) => bytes!.getUint8((y * w + x) * 4);
+      int alphaAt(int x, int y) => bytes!.getUint8((y * w + x) * 4 + 3);
+
+      final besideSummary =
+          (tester.getRect(find.text('one')).center.dy - top).round();
+      final underSummary = box.size.height.round() - 1;
+
+      // Opaque there, and darker than the fill behind it: the rule is on top.
+      expect(alphaAt(0, besideSummary), 255);
+      expect(redAt(0, besideSummary), lessThan(250));
+      expect(redAt(w ~/ 2, underSummary), lessThan(250));
     });
 
     testWidgets('a bordered table rules it like any other row', (tester) async {

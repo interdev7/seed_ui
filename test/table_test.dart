@@ -4010,6 +4010,96 @@ void main() {
       expect(find.text('72'), findsOneWidget, reason: 'Chen and Ann');
     });
 
+    testWidgets('a scrolling table keeps it and stays lazy', (tester) async {
+      // The row that adds up is held at the foot as the heading is held at
+      // the head, so it costs a lazy body nothing: measured, three hundred
+      // rows built twelve hundred cells before and fifty after.
+      Future<int> cells({required bool summary}) async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(
+          _host(
+            Table<int>(
+              scroll: const TableScroll(y: 240),
+              data: [for (var i = 0; i < 300; i++) i],
+              columns: [
+                for (var c = 0; c < 3; c++)
+                  TableColumn<int>(
+                    title: Text('C$c'),
+                    value: (v) => 'c$c-$v',
+                    summary: summary && c == 0
+                        ? (_, rows) => Text('${rows.length} rows')
+                        : null,
+                  ),
+              ],
+            ),
+            width: 700,
+          ),
+        );
+        await tester.pumpAndSettle();
+        return find.byType(RichText).evaluate().length;
+      }
+
+      final plain = await cells(summary: false);
+      final withSummary = await cells(summary: true);
+      expect(plain, lessThan(70));
+      expect(withSummary, lessThan(70), reason: 'and it did not cost that');
+      expect(find.text('300 rows'), findsOneWidget);
+    });
+
+    testWidgets('it holds at the foot while the rows run under it',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(y: 200),
+            data: [for (var i = 0; i < 60; i++) i],
+            columns: [
+              TableColumn<int>(
+                title: const Text('N'),
+                value: (v) => 'n$v',
+                summary: (_, rows) => const Text('all of them'),
+              ),
+            ],
+          ),
+          width: 400,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final table = tester.getRect(find.byType(Table<int>));
+      final atFirst = tester.getRect(find.text('all of them'));
+      // Against the bottom of the table, not after the last row.
+      expect(atFirst.bottom, closeTo(table.bottom, 20));
+
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('n1'))),
+      );
+      for (var i = 0; i < 5; i++) {
+        await tester.sendEventToBinding(pointer.scroll(const Offset(0, 120)));
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('n0'), findsNothing, reason: 'the rows have moved');
+      expect(
+        tester.getRect(find.text('all of them')).bottom,
+        closeTo(atFirst.bottom, 0.5),
+        reason: 'and it has not',
+      );
+
+      // Run to the very end: the last row stands clear of it rather than
+      // under it, because the body was given the height the footer left.
+      for (var i = 0; i < 20; i++) {
+        await tester.sendEventToBinding(pointer.scroll(const Offset(0, 400)));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('n59'), findsOneWidget);
+      expect(
+        tester.getRect(find.text('n59')).bottom,
+        lessThanOrEqualTo(tester.getRect(find.text('all of them')).top + 1),
+      );
+    });
+
     test('a group has no cell of its own to sum up', () {
       expect(
         () => TableColumn<_User>(
@@ -4301,6 +4391,45 @@ void main() {
       expect(find.text('a Ann'), findsNothing);
       expect(find.text('b Ann'), findsOneWidget);
       expect(find.text('c Ann'), findsNothing);
+    });
+
+    testWidgets('a merged cell lights up for every row it covers',
+        (tester) async {
+      // Lit for its first row alone, the rest of the line went dark under the
+      // pointer while the merged cell stayed pale.
+      await tester.pumpWidget(table(
+        onName: (_, u, i) =>
+            i == 1 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
+      ));
+      await tester.pumpAndSettle();
+
+      Color? fillOver(String text) {
+        final found = tester
+            .widgetList<ColoredBox>(
+              find.ancestor(
+                of: find.text(text),
+                matching: find.byType(ColoredBox),
+              ),
+            )
+            .map((b) => b.color)
+            .where((c) => c.a != 0);
+        return found.isEmpty ? null : found.first;
+      }
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+
+      // The merged cell starts at Ann's row and covers Bart's. Point at
+      // Bart's row: the cell standing over it must light with it.
+      await mouse.moveTo(tester.getCenter(find.text('city 31')));
+      await tester.pumpAndSettle();
+      expect(fillOver('city 31'), isNotNull, reason: 'the row under the hand');
+      expect(fillOver('Ann'), isNotNull,
+          reason: 'and the cell standing over it');
+
+      // And a row it does not cover stays as it was.
+      expect(fillOver('city 27'), isNull);
     });
 
     test('a span covers at least its own place', () {

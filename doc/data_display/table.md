@@ -196,7 +196,7 @@ nothing to virtualise in a table you can see all of.
 ### What turns it off
 
 Finding a row by multiplying is the whole of how a lazy body works, so
-anything that breaks a uniform grid of rows takes the laziness with it. Six
+anything that breaks a uniform grid of rows takes the laziness with it. Five
 things do, and a table using any of them builds every row it is given even
 with a `scroll.y` — the rows still scroll inside the height you named, they
 are simply all there:
@@ -206,15 +206,18 @@ are simply all there:
 | `expandable` | a panel is whatever height its content is, and it sits between two rows |
 | a column with a `span` | a cell reaching across or down cannot be a cell of a grid |
 | a column with `children` | a heading of several rows cannot be a row of the grid either |
-| a column with a `summary` | the row that adds up is laid out beside the heading, against the same measured widths |
 | `columnsDraggable` | a column sliding aside has to know how far, which is a width |
 | `rowsDraggable` | rows have to be widgets of their own to be picked up |
 
-All six are drawn against one measured set of column widths instead, which is
-what keeps their parts lined up — and the reason they share a fate. Two of
-them could be made lazy again, since a group heading and a summary row leave
-the rows themselves uniform; the other four cannot without a body that
-measures each row as it goes.
+All five are drawn against one measured set of column widths instead, which is
+what keeps their parts lined up — and the reason they share a fate. A group
+heading could be made lazy too, since it leaves the rows themselves uniform;
+the other four cannot without a body that measures each row as it goes.
+
+A `summary` used to be among them and no longer is: on a scrolling table the
+row that adds up is held at the foot the way the heading is held at the head,
+which costs nothing. Measured at three hundred rows: twelve hundred cells
+built before, fifty after.
 
 `sticky` is **not** among them, though it looks as though it should be: a
 table with a `scroll.y` already keeps its heading in view inside its own
@@ -593,6 +596,9 @@ TableColumn(
 )
 ```
 
+On a table with a `scroll.y` it is held at the foot while the rows run under
+it, as the heading is held at the head — so it costs the lazy body nothing.
+
 In a bordered table it is ruled like any other row, and the outline closes it
 off: the frame is painted in front of the rows rather than behind them, or a
 row with a fill of its own would paint straight over it.
@@ -600,9 +606,6 @@ row with a fill of its own would paint straight over it.
 It goes on the column rather than in a list of cells, so there is nothing to
 keep in step with the columns: a column that says nothing leaves its place
 empty, and a table where no column says anything draws no such row at all.
-
-A table with a summary is not lazy — see
-[What turns it off](#what-turns-it-off).
 
 The rows handed to it are the rows on show — a page of them where the table is
 paged, and what the filters left — the same rows `header` and `footer` are
@@ -635,6 +638,10 @@ open, **a table whose cells span is not lazy** — see
 
 The rules go on the cells rather than on the rows, or a line would be drawn
 straight through the middle of a cell that reaches down.
+
+A merged cell belongs to every row it covers, so it lights up under the
+pointer for any of them — lit for its first row alone, the rest of the line
+went dark while the merged cell stayed pale.
 
 A cell reaching **down** needs to know how tall a row is before it can be laid
 over two of them, so a table with one holds every row to one height — as a

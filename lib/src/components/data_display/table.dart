@@ -2246,7 +2246,7 @@ class _TableState<T> extends State<Table<T>> {
     Widget table;
     if (widget.expandable != null ||
         _hasGroups ||
-        _hasSummary ||
+        (_hasSummary && !_detached) ||
         _hasSpans ||
         _isSticky ||
         widget.columnsDraggable ||
@@ -3129,7 +3129,7 @@ class _TableState<T> extends State<Table<T>> {
                 : Border(bottom: rule).bottom,
           ),
         ),
-        child: _rowCell(y, column, r, t),
+        child: _rowCell(y, column, r, t, covering: span.down),
       );
 
   /// The body drawn by hand, where a cell may cover its neighbours.
@@ -3825,6 +3825,8 @@ class _TableState<T> extends State<Table<T>> {
   ) {
     final column = columns[at.xIndex];
     final heading = _showHeader && at.yIndex == 0;
+    final summary =
+        _hasSummary && at.yIndex == _rows.length + (_showHeader ? 1 : 0);
     final index = at.yIndex - (_showHeader ? 1 : 0);
     final last = index == _rows.length - 1;
 
@@ -3860,6 +3862,31 @@ class _TableState<T> extends State<Table<T>> {
           column,
           _leaves.indexOf(column),
           at.xIndex,
+          r,
+          t,
+        ),
+      );
+    }
+
+    if (summary) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          // Opaque, and its own rule above it: the rows run under it, and a
+          // row is only as opaque as its fill.
+          color: column.fixed == null
+              ? r.summaryBg
+              : Color.alphaBlend(r.summaryBg, r.pinnedBg),
+          border: Border(
+            top: rule,
+            right: _bordered && at.xIndex != columns.length - 1
+                ? rule
+                : BorderSide.none,
+          ),
+        ),
+        child: _padded(
+          column.summary?.call(context, _rows) ?? const SizedBox.shrink(),
+          column,
+          column.align ?? TableAlign.start,
           r,
           t,
         ),
@@ -3997,6 +4024,9 @@ class _TableState<T> extends State<Table<T>> {
             widths: widths.columns,
             rowHeight: _lazyRowHeight(r, t),
             headerRows: _showHeader ? 1 : 0,
+            // The row that adds up is held at the foot as the heading is held
+            // at the head: one row, out of the run that scrolls.
+            footerRows: _hasSummary ? 1 : 0,
             pinning: [for (final c in columns) c.fixed],
             shadeColor: r.pinnedShadowColor,
             shadeExtent: r.pinnedShadowExtent,
@@ -4009,7 +4039,10 @@ class _TableState<T> extends State<Table<T>> {
               // state no cell has.
               addAutomaticKeepAlives: false,
               maxXIndex: columns.length - 1,
-              maxYIndex: _rows.length - 1 + (_showHeader ? 1 : 0),
+              maxYIndex: _rows.length -
+                  1 +
+                  (_showHeader ? 1 : 0) +
+                  (_hasSummary ? 1 : 0),
               builder: (context, vicinity) =>
                   _lazyCell(vicinity, columns, r, t, rule),
             ),
@@ -4110,12 +4143,17 @@ class _TableState<T> extends State<Table<T>> {
   /// The gesture goes on the cell rather than the row because Flutter's Table
   /// takes only [flutter.TableRow]s, which are not widgets and cannot listen
   /// for anything themselves.
+  /// [covering] is how many rows this cell stands over — more than one where
+  /// it spans downwards. A merged cell belongs to every row it covers, so it
+  /// lights up for any of them: lit for its first row alone, the rest of the
+  /// line went dark under the pointer while the merged cell stayed pale.
   Widget _rowCell(
     int index,
     TableColumn<T> column,
     _ResolvedTableToken r,
-    Token t,
-  ) {
+    Token t, {
+    int covering = 1,
+  }) {
     final record = _rows[index];
     Widget cell = _cell(
       column.builder?.call(context, record, index) ?? _text(column, record),
@@ -4146,7 +4184,13 @@ class _TableState<T> extends State<Table<T>> {
       child: ValueListenableBuilder<int?>(
         valueListenable: _hovered,
         builder: (context, hovered, child) => ColoredBox(
-          color: _rowFill(index, hovered: hovered == index, r: r),
+          color: _rowFill(
+            index,
+            hovered: hovered != null &&
+                hovered >= index &&
+                hovered < index + covering,
+            r: r,
+          ),
           child: child,
         ),
         child: cell,
@@ -4762,6 +4806,7 @@ class _Rows extends TwoDimensionalScrollView {
     required this.widths,
     required this.rowHeight,
     required this.headerRows,
+    required this.footerRows,
     required this.pinning,
     required this.shadeColor,
     required this.shadeExtent,
@@ -4780,6 +4825,9 @@ class _Rows extends TwoDimensionalScrollView {
   final double rowHeight;
   final int headerRows;
 
+  /// How many rows are held at the foot — the row that adds up, or none.
+  final int footerRows;
+
   /// Which columns are held at an edge, in the order they are drawn.
   final List<TableColumnFixed?> pinning;
   final Color shadeColor;
@@ -4795,6 +4843,7 @@ class _Rows extends TwoDimensionalScrollView {
         widths: widths,
         rowHeight: rowHeight,
         headerRows: headerRows,
+        footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
         shadeExtent: shadeExtent,
@@ -4812,6 +4861,7 @@ class _RowsViewport extends TwoDimensionalViewport {
     required this.widths,
     required this.rowHeight,
     required this.headerRows,
+    required this.footerRows,
     required this.pinning,
     required this.shadeColor,
     required this.shadeExtent,
@@ -4827,6 +4877,9 @@ class _RowsViewport extends TwoDimensionalViewport {
   final double rowHeight;
   final int headerRows;
 
+  /// How many rows are held at the foot — the row that adds up, or none.
+  final int footerRows;
+
   /// Which columns are held at an edge, in the order they are drawn.
   final List<TableColumnFixed?> pinning;
   final Color shadeColor;
@@ -4838,6 +4891,7 @@ class _RowsViewport extends TwoDimensionalViewport {
         widths: widths,
         rowHeight: rowHeight,
         headerRows: headerRows,
+        footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
         shadeExtent: shadeExtent,
@@ -4856,6 +4910,7 @@ class _RowsViewport extends TwoDimensionalViewport {
       ..widths = widths
       ..rowHeight = rowHeight
       ..headerRows = headerRows
+      ..footerRows = footerRows
       ..pinning = pinning
       ..shadeColor = shadeColor
       ..shadeExtent = shadeExtent
@@ -4873,6 +4928,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     required List<double> widths,
     required double rowHeight,
     required int headerRows,
+    required int footerRows,
     required List<TableColumnFixed?> pinning,
     required Color shadeColor,
     required double shadeExtent,
@@ -4886,6 +4942,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   })  : _widths = widths,
         _rowHeight = rowHeight,
         _headerRows = headerRows,
+        _footerRows = footerRows,
         _pinning = pinning,
         _shadeColor = shadeColor,
         _shadeExtent = shadeExtent {
@@ -4920,6 +4977,13 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   set headerRows(int value) {
     if (_headerRows == value) return;
     _headerRows = value;
+    markNeedsLayout();
+  }
+
+  int _footerRows;
+  set footerRows(int value) {
+    if (_footerRows == value) return;
+    _footerRows = value;
     markNeedsLayout();
   }
 
@@ -4977,6 +5041,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   double _lead = 0;
   double _trail = 0;
   double _headerHeight = 0;
+  double _footerHeight = 0;
 
   int get _columnCount => _widths.length;
 
@@ -5023,7 +5088,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     final size = viewportDimension;
     final rows =
         (delegate as TwoDimensionalChildBuilderDelegate).maxYIndex! + 1;
-    final bodyRows = rows - _headerRows;
+    final bodyRows = rows - _headerRows - _footerRows;
 
     // Every column held at an edge, wherever it stands among the others.
     _lead = 0;
@@ -5033,13 +5098,15 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       if (_pinning[i] == TableColumnFixed.end) _trail += _widths[i];
     }
     _headerHeight = _headerRows * _rowHeight;
+    _footerHeight = _footerRows * _rowHeight;
 
     final total = _extent(0, _columnCount);
     final freeWidth = math.max(0.0, size.width - _lead - _trail);
     _maxAcross = math.max(0.0, total - _lead - _trail - freeWidth);
     horizontalOffset.applyContentDimensions(0, _maxAcross);
 
-    final bodyHeight = math.max(0.0, size.height - _headerHeight);
+    final bodyHeight =
+        math.max(0.0, size.height - _headerHeight - _footerHeight);
     verticalOffset.applyContentDimensions(
       0,
       math.max(0, bodyRows * _rowHeight - bodyHeight),
@@ -5109,13 +5176,16 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     for (var y = _firstRow; y <= _lastRow; y++) {
       band(y + _headerRows, _headerHeight + y * _rowHeight - down);
     }
+    if (_footerRows > 0) {
+      band(rows - 1, size.height - _footerHeight);
+    }
     if (_headerRows > 0) band(0, 0);
   }
 
   // One clip layer per band, kept between frames: pushing six new layers on
   // every scrolled pixel is a cost paid for nothing.
   final List<LayerHandle<ClipRectLayer>> _clips = [
-    for (var i = 0; i < 6; i++) LayerHandle<ClipRectLayer>(),
+    for (var i = 0; i < 9; i++) LayerHandle<ClipRectLayer>(),
   ];
 
   @override
@@ -5182,6 +5252,13 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     final lastRow = _lastRow + _headerRows;
     final bodyBounds = Rect.fromLTWH(0, _headerHeight, size.width, body);
     final headBounds = Rect.fromLTWH(0, 0, size.width, _headerHeight);
+    final footBounds = Rect.fromLTWH(
+      0,
+      size.height - _footerHeight,
+      size.width,
+      _footerHeight,
+    );
+    final footRow = (delegate as TwoDimensionalChildBuilderDelegate).maxYIndex!;
 
     // The columns that travel, then the ones held at either edge over them,
     // then the heading over the lot. A held column keeps its place among the
@@ -5210,6 +5287,21 @@ class _RenderRows extends RenderTwoDimensionalViewport {
         fromRow: 0,
         toRow: _headerRows - 1,
       );
+    }
+    // The row that adds up, held at the foot and painted over the rows that
+    // run under it, exactly as the heading is painted over the ones above.
+    if (_footerRows > 0) {
+      for (var i = 0; i < order.length; i++) {
+        _paintBand(
+          context,
+          offset,
+          _clips[i + 6],
+          footBounds,
+          held: order[i],
+          fromRow: footRow,
+          toRow: footRow,
+        );
+      }
     }
   }
 

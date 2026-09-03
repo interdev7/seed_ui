@@ -296,7 +296,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   table is not lazy.
 
   The rules go on the cells rather than on the rows, or a line is drawn through
-  the middle of a cell that reaches down. A cell reaching down needs a row's
+  the middle of a cell that reaches down, and a merged cell lights up under the
+  pointer for every row it covers rather than for the first alone. A cell reaching down needs a row's
   height known before the fact, so a table with one holds every row to one
   height, as a lazy body does; spanning columns alone leaves the rows to their
   content.
@@ -344,9 +345,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
   sideways where that is wider than its box. `y` as well for both ways.
 
-  Six things turn the lazy body off, since finding a row by multiplying is the
+  Five things turn the lazy body off, since finding a row by multiplying is the
   whole of how it works: `expandable`, a column with a `span`, a column with
-  `children`, a column with a `summary`, `columnsDraggable` and `rowsDraggable` — a
+  `children`, `columnsDraggable` and `rowsDraggable` — a
   column sliding aside has to know how far, which is a width, and rows have to
   be widgets of their own to be picked up. `sticky` is not among them: a table
   with a `scroll.y` already keeps its heading in view inside its own height, so
@@ -394,6 +395,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one whose heading was tapped, so a sortable first column with a selection
   simply did nothing; and a second drag of a heading moved the wrong column,
   since the drag spoke in names while the order it changed was in places.
+
+  On a table with a `scroll.y` the summary is held at the foot the way the
+  heading is held at the head, so it costs the lazy body nothing — three
+  hundred rows built twelve hundred cells with one before, and fifty after.
 
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the

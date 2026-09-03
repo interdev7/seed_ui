@@ -155,6 +155,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and surrounding spaces, and `filterSearchMatch` says what typing means
   instead. A choice already ticked stays ticked while it is out of sight.
 
+  `filterPanel` puts your own widget where the menu would be — a field to
+  search by, a pair of dates — handed `chosen`, `choose`, `apply`, `clear` and
+  `close`. What it gathers is held while it is open and reaches the table on
+  `apply`, so a half-typed word does not re-narrow the rows. `filterIcon`
+  draws the mark at the head of the column in place of the funnel, told
+  whether the column is narrowing anything.
+
+  ```dart
+  TableColumn(
+    title: const Text('Name'),
+    value: (u) => u.name,
+    onFilter: (choice, u) => u.name.contains(choice! as String),
+    filterPanel: (context, panel) => Input(
+      onChanged: (typed) => panel.choose([if (typed.isNotEmpty) typed]),
+      onSubmitted: (_) => panel.apply(),
+    ),
+  )
+  ```
+
   Filtering happens before sorting, and the widths are still
   measured from the rows as given — so a column keeps its width while you
   filter rather than jumping about under the hand.

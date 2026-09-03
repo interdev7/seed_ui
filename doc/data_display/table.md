@@ -421,6 +421,53 @@ learn twice. Under them a rule runs the whole width of the block of buttons,
 clipped to the panel's corners, with `sizeXS` either side and
 `sizeXS - lineWidth` above and below so the rule does not add to the height.
 
+### A panel of your own
+
+`filterPanel` puts your own widget where the menu of choices would be — a
+field to search by, a pair of dates, a slider. It is handed a
+[`TableFilterPanel`]: `chosen`, what the column is narrowing by now; `choose`,
+to say what it should be narrowing by; `apply`, to narrow the table by it;
+`clear`, to give every row back; and `close`, to shut the panel without
+deciding anything.
+
+```dart
+TableColumn(
+  title: const Text('Name'),
+  value: (u) => u.name,
+  onFilter: (choice, u) => u.name.toLowerCase().contains(
+        (choice! as String).toLowerCase(),
+      ),
+  filterPanel: (context, panel) => Input(
+    defaultValue: panel.chosen.firstOrNull as String?,
+    onChanged: (typed) => panel.choose([if (typed.isNotEmpty) typed]),
+    onSubmitted: (_) => panel.apply(),
+  ),
+)
+```
+
+`choose` is not `apply`: what the panel gathers is held while it is open and
+only reaches the table when `apply` is called, so a half-typed word does not
+re-narrow the rows on every keystroke. What is held survives the panel being
+rebuilt, as the menu's ticks do.
+
+A panel of your own still has to say what a choice means, since it is free to
+hand back anything at all — give the column a `value` to match against, or an
+`onFilter`. The panel is drawn on the kit's own ground with its corners and
+shadow, and is as wide as it asks to be, so give it a width if what is inside
+has no width of its own.
+
+`filterIcon` draws the mark at the head of the column in place of the funnel,
+told whether the column is narrowing anything — the one thing the funnel says
+that a mark of your own would otherwise have to work out.
+
+```dart
+filterIcon: (context, narrowing) => Icon(
+  Icons.search,
+  size: 14,
+  color: narrowing ? token.colorPrimary : null,
+)
+```
+
 Filtering happens before sorting: the rows are narrowed,
 then put in order. The column widths are measured from the rows as given
 rather than as shown, so neither narrowing nor sorting re-measures — a column

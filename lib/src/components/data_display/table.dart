@@ -438,6 +438,39 @@ class TableCellSpan {
   String toString() => 'TableCellSpan(columns: $columns, rows: $rows)';
 }
 
+/// What a filter panel of your own is handed.
+///
+/// Everything it needs to do its work and nothing else: what is chosen, a way
+/// to change that, and the three things it can do about it.
+@immutable
+class TableFilterPanel {
+  /// Creates a [TableFilterPanel].
+  const TableFilterPanel({
+    required this.chosen,
+    required this.choose,
+    required this.apply,
+    required this.clear,
+    required this.close,
+  });
+
+  /// What the panel has settled on so far, which is what was in force when it
+  /// opened until [choose] says otherwise.
+  final List<Object?> chosen;
+
+  /// Changes what is chosen without narrowing anything yet — the panel's own
+  /// working answer, kept for it so it survives a rebuild.
+  final ValueChanged<List<Object?>> choose;
+
+  /// Narrows the table by what is chosen, and shuts the panel.
+  final VoidCallback apply;
+
+  /// Gives every row back, and shuts the panel.
+  final VoidCallback clear;
+
+  /// Shuts the panel and leaves the table as it was.
+  final VoidCallback close;
+}
+
 /// One choice in a column's filter menu.
 @immutable
 class TableFilter {
@@ -548,6 +581,8 @@ class TableColumn<T> {
     this.filterMultiple = true,
     this.filterSearch = false,
     this.filterSearchMatch,
+    this.filterPanel,
+    this.filterIcon,
     this.children,
     this.summary,
     this.span,
@@ -589,6 +624,11 @@ class TableColumn<T> {
           !sortable || value != null || sorter != null,
           'A sortable column needs a value to compare, or a sorter that says '
           'how to compare the rows itself.',
+        ),
+        assert(
+          filterPanel == null || value != null || onFilter != null,
+          'A panel of your own still has to say what a choice means: give the '
+          'column a value to match, or an onFilter.',
         ),
         assert(
           filters == null || filters.length != 0,
@@ -765,8 +805,31 @@ class TableColumn<T> {
   /// well — the same shape as [sorter] against [sortable].
   final bool Function(String query, TableFilter choice)? filterSearchMatch;
 
+  /// Draws the filter panel yourself, in place of the menu of [filters].
+  ///
+  /// Naming one makes the column filterable, [filters] or no: a panel that
+  /// asks for a word to search by has no list of choices to offer. What it is
+  /// handed is a [TableFilterPanel] — what is chosen, a way to change that,
+  /// and apply, clear and close.
+  ///
+  /// ```dart
+  /// filterPanel: (context, panel) => Input(
+  ///   defaultValue: panel.chosen.firstOrNull as String?,
+  ///   onChanged: (typed) => panel.choose([if (typed.isNotEmpty) typed]),
+  ///   onSubmitted: (_) => panel.apply(),
+  /// )
+  /// ```
+  final Widget Function(BuildContext context, TableFilterPanel panel)?
+      filterPanel;
+
+  /// Draws the mark at the head of the column, in place of the funnel.
+  ///
+  /// Told whether the column is narrowing anything, since that is the one
+  /// thing the mark has to say.
+  final Widget Function(BuildContext context, bool narrowing)? filterIcon;
+
   /// Whether this column filters at all.
-  bool get filtersRows => filters != null;
+  bool get filtersRows => filters != null || filterPanel != null;
 
   /// Whether its menu can be searched.
   bool get filterSearches => filterSearch || filterSearchMatch != null;
@@ -3686,7 +3749,17 @@ class _TableState<T> extends State<Table<T>> {
       // A click, not a hover: a menu with checkboxes and two words to end it
       // is not something to open by passing over it.
       trigger: const [DropdownTrigger.click],
-      content: (context, close) => _filterMenu(column, index, close, r, t),
+      content: (context, close) => column.filterPanel != null
+          ? _OwnFilterPanel(
+              build: column.filterPanel!,
+              chosen: _filters[index] ?? const [],
+              onApply: (chosen) {
+                _applyFilter(index, chosen);
+                close();
+              },
+              onClose: close,
+            )
+          : _filterMenu(column, index, close, r, t),
       // Its own detector under the heading's: the innermost recognizer takes
       // the tap, so opening the menu does not also sort the column.
       child: GestureDetector(
@@ -3718,16 +3791,18 @@ class _TableState<T> extends State<Table<T>> {
                     horizontal: t.sizeXXS,
                     vertical: t.sizeXXS / 2,
                   ),
-                  child: CustomPaint(
-                    size: Size.square(r.filterIconSize),
-                    painter: _FunnelPainter(
-                      narrowing
-                          ? r.headerMarkActiveColor
-                          : over
-                              ? r.headerColor
-                              : r.headerMarkColor,
-                    ),
-                  ),
+                  child: column.filterIcon != null
+                      ? column.filterIcon!(context, narrowing)
+                      : CustomPaint(
+                          size: Size.square(r.filterIconSize),
+                          painter: _FunnelPainter(
+                            narrowing
+                                ? r.headerMarkActiveColor
+                                : over
+                                    ? r.headerColor
+                                    : r.headerMarkColor,
+                          ),
+                        ),
                 ),
               ),
             );
@@ -4831,6 +4906,49 @@ class _Carets extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      );
+}
+
+/// A filter panel of the caller's own, with the working answer kept for it.
+///
+/// The panel is theirs to draw; what is chosen has to outlive their rebuilds,
+/// and a widget of its own is where that lives — as with the menu, a
+/// `StatefulBuilder` closing over a local would lose it the moment the
+/// overlay above rebuilt.
+class _OwnFilterPanel extends StatefulWidget {
+  const _OwnFilterPanel({
+    required this.build,
+    required this.chosen,
+    required this.onApply,
+    required this.onClose,
+  });
+
+  final Widget Function(BuildContext context, TableFilterPanel panel) build;
+  final List<Object?> chosen;
+  final ValueChanged<List<Object?>> onApply;
+  final VoidCallback onClose;
+
+  @override
+  State<_OwnFilterPanel> createState() => _OwnFilterPanelState();
+}
+
+class _OwnFilterPanelState extends State<_OwnFilterPanel> {
+  late List<Object?> _chosen = [...widget.chosen];
+
+  @override
+  Widget build(BuildContext context) => DropdownPanel(
+        child: IntrinsicWidth(
+          child: widget.build(
+            context,
+            TableFilterPanel(
+              chosen: _chosen,
+              choose: (next) => setState(() => _chosen = [...next]),
+              apply: () => widget.onApply(_chosen),
+              clear: () => widget.onApply(const []),
+              close: widget.onClose,
+            ),
+          ),
         ),
       );
 }

@@ -725,6 +725,86 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'A filter panel of your own',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _many.take(8).toList(),
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    value: (p) => p.name,
+                    onFilter: (choice, p) => p.name.toLowerCase().contains(
+                      (choice! as String).toLowerCase(),
+                    ),
+                    // A word to search by has no list of choices to offer, so
+                    // the panel is what makes this column filterable at all.
+                    filterPanel: (context, panel) => SizedBox(
+                      width: 200,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Input(
+                              size: SoftSize.small,
+                              defaultValue: panel.chosen.firstOrNull as String?,
+                              placeholder: 'Search a name',
+                              // What is gathered is held while the panel is
+                              // open; only apply reaches the table.
+                              onChanged: (typed) =>
+                                  panel.choose([if (typed.isNotEmpty) typed]),
+                              onSubmitted: (_) => panel.apply(),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Button(
+                                    size: SoftSize.small,
+                                    color: ButtonColor.primary,
+                                    onPressed: panel.apply,
+                                    child: const Text('Search'),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Button(
+                                    size: SoftSize.small,
+                                    onPressed: panel.clear,
+                                    child: const Text('Reset'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    filterIcon: (context, narrowing) => Icon(
+                      Icons.search,
+                      size: 14,
+                      color: narrowing
+                          ? context.softToken.primary.base
+                          : context.softToken.colorTextTertiary,
+                    ),
+                  ),
+                  TableColumn(title: const Text('City'), value: (p) => p.city),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'filterPanel puts your own widget where the menu would be, and '
+                'filterIcon puts your own mark where the funnel would be, told '
+                'whether the column is narrowing anything.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Five hundred rows, sorted',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -2621,6 +2621,136 @@ void main() {
       );
     });
 
+    testWidgets('a panel of your own takes the menu\'s place', (tester) async {
+      // No list of choices at all: a panel that asks for a word to search by
+      // has none to offer, so naming the panel is what makes the column
+      // filterable.
+      await tester.pumpWidget(
+        host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                onFilter: (choice, u) => u.name.startsWith(choice! as String),
+                filterPanel: (context, panel) => SizedBox(
+                  width: 200,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Input(
+                        onChanged: (typed) =>
+                            panel.choose([if (typed.isNotEmpty) typed]),
+                      ),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: panel.apply,
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text('Go'),
+                        ),
+                      ),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: panel.clear,
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text('Undo'),
+                        ),
+                      ),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: panel.close,
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text('Never mind'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(names(tester), ['Chen', 'Ann', 'Bart', 'Dee']);
+      await openMenu(tester, 0);
+      expect(find.text('Go'), findsOneWidget, reason: 'ours, not the menu');
+      expect(find.byType(Checkbox), findsNothing);
+
+      await tester.enterText(find.byType(Input), 'A');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Go'));
+      await tester.pumpAndSettle();
+      expect(names(tester), ['Ann']);
+      expect(find.text('Go'), findsNothing, reason: 'deciding shuts it');
+
+      // Shutting it without deciding leaves the rows as they were.
+      await openMenu(tester, 0);
+      await tester.enterText(find.byType(Input), 'B');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Never mind'));
+      await tester.pumpAndSettle();
+      expect(find.text('Go'), findsNothing);
+      expect(names(tester), ['Ann']);
+
+      // And it can give every row back.
+      await openMenu(tester, 0);
+      await tester.tap(find.text('Undo'));
+      await tester.pumpAndSettle();
+      expect(names(tester), ['Chen', 'Ann', 'Bart', 'Dee']);
+    });
+
+    testWidgets('a mark of your own takes the funnel\'s place', (tester) async {
+      await tester.pumpWidget(
+        host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                filters: const [TableFilter('Ann', 'Ann')],
+                filterIcon: (context, narrowing) =>
+                    Text(narrowing ? 'on' : 'off'),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('off'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == '_FunnelPainter'),
+        findsNothing,
+      );
+
+      await tester.tap(find.text('off'));
+      await tester.pumpAndSettle();
+      await choose(tester, 'Ann');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('on'), findsOneWidget, reason: 'told it is narrowing');
+    });
+
+    test('a panel of your own still says what a choice means', () {
+      expect(
+        () => TableColumn<_User>(
+          title: const Text('Name'),
+          builder: (_, __, ___) => const Text('x'),
+          filterPanel: (_, __) => const SizedBox.shrink(),
+        ),
+        throwsAssertionError,
+      );
+    });
+
     test('a column with filters needs something to match on', () {
       expect(
         () => TableColumn<_User>(

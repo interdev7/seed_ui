@@ -241,6 +241,7 @@ TabPosition
 TabScrollAlign
 Table
 TableAlign
+TableCellSpan
 TableColumn
 TableColumnFixed
 TableDefaults

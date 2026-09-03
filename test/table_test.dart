@@ -3600,4 +3600,302 @@ void main() {
       );
     });
   });
+
+  group('cells that span', () {
+    const people = [
+      _User('Chen', 27),
+      _User('Ann', 45),
+      _User('Bart', 31),
+    ];
+
+    Widget table({
+      TableCellSpan Function(BuildContext, _User, int)? onName,
+      TableCellSpan Function(BuildContext, _User, int)? onCity,
+      bool bordered = false,
+    }) =>
+        _host(
+          Table<_User>(
+            bordered: bordered,
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                span: onName,
+              ),
+              TableColumn<_User>(
+                title: const Text('City'),
+                value: (u) => 'city ${u.age}',
+                span: onCity,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+          width: 700,
+        );
+
+    testWidgets('a cell reaching across covers its neighbour', (tester) async {
+      await tester.pumpWidget(table(
+        onName: (_, u, i) =>
+            i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
+      ));
+
+      // The covered cell is not drawn at all — nothing has to say it is.
+      expect(find.text('city 27'), findsNothing);
+      expect(find.text('city 45'), findsOneWidget);
+
+      // And the spanning cell is as wide as the two places it took.
+      final wide = tester.getRect(
+        find
+            .ancestor(of: find.text('Chen'), matching: find.byType(SizedBox))
+            .first,
+      );
+      final narrow = tester.getRect(
+        find
+            .ancestor(of: find.text('Ann'), matching: find.byType(SizedBox))
+            .first,
+      );
+      expect(wide.width, greaterThan(narrow.width * 1.5));
+    });
+
+    testWidgets('a cell reaching down stands over the rows it covers',
+        (tester) async {
+      await tester.pumpWidget(table(
+        onName: (_, u, i) =>
+            i == 0 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
+      ));
+
+      expect(find.text('Chen'), findsOneWidget);
+      expect(find.text('Ann'), findsNothing, reason: 'covered from above');
+      expect(find.text('Bart'), findsOneWidget);
+      expect(find.text('city 45'), findsOneWidget,
+          reason: 'only the first column was covered');
+
+      // It is as tall as the two rows it covers, rather than sitting in the
+      // first of them and leaving a hole in the second.
+      Rect boxOf(String text) => tester.getRect(
+            find
+                .ancestor(
+                  of: find.text(text),
+                  matching: find.byType(DecoratedBox),
+                )
+                .first,
+          );
+      final spanning = boxOf('Chen');
+      final below = boxOf('Bart');
+      expect(spanning.height, closeTo(below.height * 2, 0.5));
+      expect(spanning.bottom, closeTo(below.top, 0.5));
+    });
+
+    testWidgets('no rule is drawn through a cell that reaches down',
+        (tester) async {
+      // The rules go on the cells, not on the rows: a row that carried its
+      // own drew a line straight through the middle of a merged cell.
+      await tester.pumpWidget(table(
+        onName: (_, u, i) =>
+            i == 0 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
+      ));
+
+      final border = (tester
+              .widgetList<DecoratedBox>(
+                find.ancestor(
+                  of: find.text('Chen'),
+                  matching: find.byType(DecoratedBox),
+                ),
+              )
+              .first
+              .decoration as BoxDecoration)
+          .border! as BorderDirectional;
+      // Its own bottom rule sits under the last row it covers — here the row
+      // before the last, so it carries one.
+      expect(border.bottom, isNot(BorderSide.none));
+
+      // And the row it covers draws nothing of its own in that column.
+      expect(find.text('Ann'), findsNothing);
+    });
+
+    testWidgets('spanning columns alone leaves the rows to their content',
+        (tester) async {
+      // Only a cell reaching down needs a height known before the fact.
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: const [_User('Chen', 27), _User('Ann', 45)],
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                span: (_, u, i) => i == 0
+                    ? const TableCellSpan(columns: 2)
+                    : const TableCellSpan(),
+              ),
+              TableColumn<_User>(
+                title: const Text('Note'),
+                // Two lines in the second row, one in the first.
+                value: (u) => u.age == 45 ? 'a\nb' : 'a',
+              ),
+            ],
+          ),
+          width: 400,
+        ),
+      );
+
+      Rect boxOf(String text) => tester.getRect(
+            find
+                .ancestor(
+                  of: find.text(text),
+                  matching: find.byType(DecoratedBox),
+                )
+                .first,
+          );
+      expect(boxOf('Ann').height, greaterThan(boxOf('Chen').height),
+          reason: 'the taller row is taller');
+    });
+
+    testWidgets('a span asking for more than there is takes what there is',
+        (tester) async {
+      await tester.pumpWidget(table(
+        onName: (_, u, i) => i == 2
+            ? const TableCellSpan(columns: 9, rows: 9)
+            : const TableCellSpan(),
+      ));
+      // The last row and every column: nothing beyond the table is reached
+      // for, and nothing throws.
+      expect(find.text('Bart'), findsOneWidget);
+      expect(find.text('city 31'), findsNothing);
+    });
+
+    testWidgets('the columns still line up with the heading', (tester) async {
+      await tester.pumpWidget(table(
+        onName: (_, u, i) =>
+            i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
+      ));
+      expect(
+        tester.getRect(find.text('Ann')).left,
+        closeTo(tester.getRect(find.text('Name')).left, 0.5),
+      );
+      expect(
+        tester.getRect(find.text('city 45')).left,
+        closeTo(tester.getRect(find.text('City')).left, 0.5),
+      );
+    });
+
+    testWidgets('a bordered table rules the spanned cell once', (tester) async {
+      await tester.pumpWidget(table(
+        bordered: true,
+        onName: (_, u, i) =>
+            i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
+      ));
+
+      // The rule stands after the pair, not through the middle of the cell.
+      final rules = tester
+          .widgetList<DecoratedBox>(
+            find.ancestor(
+              of: find.text('Chen'),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((d) => d.decoration)
+          .whereType<BoxDecoration>()
+          .where((d) => d.border is BorderDirectional)
+          .map((d) => d.border! as BorderDirectional)
+          .where((b) => b.end != BorderSide.none)
+          .length;
+      expect(rules, 1);
+
+      // The last row carries no rule under it: the outline stands in for it.
+      final underLast = (tester
+              .widgetList<DecoratedBox>(
+                find.ancestor(
+                  of: find.text('Bart'),
+                  matching: find.byType(DecoratedBox),
+                ),
+              )
+              .first
+              .decoration as BoxDecoration)
+          .border! as BorderDirectional;
+      expect(underLast.bottom, BorderSide.none);
+
+      // And the last cell in the row carries none: the outline closes it off.
+      final atEnd = tester
+          .widgetList<DecoratedBox>(
+            find.ancestor(
+              of: find.text('27'),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((d) => d.decoration)
+          .whereType<BoxDecoration>()
+          .where((d) => d.border is BorderDirectional)
+          .map((d) => d.border! as BorderDirectional)
+          .where((b) => b.end != BorderSide.none)
+          .length;
+      expect(atEnd, 0);
+    });
+
+    testWidgets('two spans in one row do not tread on each other',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: const [_User('Chen', 27), _User('Ann', 45)],
+            columns: [
+              TableColumn<_User>(
+                title: const Text('A'),
+                value: (u) => 'a ${u.name}',
+                span: (_, u, i) => i == 0
+                    ? const TableCellSpan(rows: 2)
+                    : const TableCellSpan(),
+              ),
+              TableColumn<_User>(
+                title: const Text('B'),
+                value: (u) => 'b ${u.name}',
+                span: (_, u, i) => i == 1
+                    ? const TableCellSpan(columns: 2)
+                    : const TableCellSpan(),
+              ),
+              TableColumn<_User>(
+                title: const Text('C'),
+                value: (u) => 'c ${u.name}',
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+
+      // Row 0: A spans down, B and C ordinary.
+      expect(find.text('a Chen'), findsOneWidget);
+      expect(find.text('b Chen'), findsOneWidget);
+      expect(find.text('c Chen'), findsOneWidget);
+      // Row 1: A is covered from above; B takes B and C.
+      expect(find.text('a Ann'), findsNothing);
+      expect(find.text('b Ann'), findsOneWidget);
+      expect(find.text('c Ann'), findsNothing);
+    });
+
+    test('a span covers at least its own place', () {
+      expect(() => TableCellSpan(columns: 0), throwsAssertionError);
+      expect(() => TableCellSpan(rows: 0), throwsAssertionError);
+    });
+
+    test('a group has no cell of its own to span', () {
+      expect(
+        () => TableColumn<_User>(
+          title: const Text('Who'),
+          span: (_, __, ___) => const TableCellSpan(),
+          children: [
+            TableColumn<_User>(
+              title: const Text('Name'),
+              value: (u) => u.name,
+            ),
+          ],
+        ),
+        throwsAssertionError,
+      );
+    });
+  });
 }

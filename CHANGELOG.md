@@ -280,6 +280,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   says anything draws no such row. The rows handed over are the rows on show —
   a page of them where the table is paged, and what the filters left.
 
+  **Cells that span.** A column's `span` says how many places its cell takes up
+  in a given row.
+
+  ```dart
+  span: (context, user, i) =>
+      i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
+  ```
+
+  A cell that spans covers its neighbours and those are simply not drawn — the
+  table works out which places are taken, so nothing has to return a nought to
+  say it is covered, and a span asking for more than there is takes what there
+  is. The body is then laid out by hand rather than as a grid, against the same
+  measured widths the heading and the summary are given, which means such a
+  table is not lazy.
+
+  The rules go on the cells rather than on the rows, or a line is drawn through
+  the middle of a cell that reaches down. A cell reaching down needs a row's
+  height known before the fact, so a table with one holds every row to one
+  height, as a lazy body does; spanning columns alone leaves the rows to their
+  content.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

@@ -95,6 +95,7 @@ export 'src/components/data_display/table.dart'
     show
         Table,
         TableAlign,
+        TableCellSpan,
         TableColumn,
         TableColumnFixed,
         TableDefaults,

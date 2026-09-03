@@ -463,6 +463,45 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Cells that span',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    value: (p) => p.name,
+                    // The first row's name runs across the city beside it.
+                    span: (_, p, i) => i == 0
+                        ? const TableCellSpan(columns: 2)
+                        : const TableCellSpan(),
+                  ),
+                  TableColumn(title: const Text('City'), value: (p) => p.city),
+                  TableColumn(
+                    title: const Text('Age'),
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                    // And the last two ages are one cell.
+                    span: (_, p, i) => i == 1
+                        ? const TableCellSpan(rows: 2)
+                        : const TableCellSpan(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'A cell that spans covers its neighbours, and those are simply '
+                'not drawn — the table works out which, so nothing has to '
+                'return a nought. A span asking for more than there is takes '
+                'what there is.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Columns under one head',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -369,6 +369,38 @@ class TableExpandable<T> {
   final TableColumnFixed? fixed;
 }
 
+/// How many places a cell takes up.
+///
+/// A cell that spans covers its neighbours, and those neighbours are simply
+/// not drawn — the table works out which ones, rather than asking every cell
+/// to say it is covered.
+@immutable
+class TableCellSpan {
+  /// Creates a [TableCellSpan].
+  const TableCellSpan({this.columns = 1, this.rows = 1})
+      : assert(columns >= 1, 'A cell covers at least its own column.'),
+        assert(rows >= 1, 'A cell covers at least its own row.');
+
+  /// How many columns it covers, counting its own.
+  final int columns;
+
+  /// How many rows it covers, counting its own.
+  final int rows;
+
+  /// Whether this is the ordinary one place.
+  bool get isSingle => columns == 1 && rows == 1;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TableCellSpan && other.columns == columns && other.rows == rows;
+
+  @override
+  int get hashCode => Object.hash(columns, rows);
+
+  @override
+  String toString() => 'TableCellSpan(columns: $columns, rows: $rows)';
+}
+
 /// One choice in a column's filter menu.
 @immutable
 class TableFilter {
@@ -467,7 +499,12 @@ class TableColumn<T> {
     this.filterSearchMatch,
     this.children,
     this.summary,
+    this.span,
   })  : assert(
+          children == null || span == null,
+          'A group heads other columns and has no cell of its own to span.',
+        ),
+        assert(
           children == null || summary == null,
           'A group heads other columns and has no cell of its own to sum up. '
           'Put the summary on one of the columns under it.',
@@ -587,6 +624,22 @@ class TableColumn<T> {
   /// ```
   final Widget Function(BuildContext context, List<T> rows)? summary;
 
+  /// How many places this column's cell takes up in a given row.
+  ///
+  /// A cell that covers its neighbours makes them disappear: the table works
+  /// out which cells are covered and draws nothing for them, so there is no
+  /// need to return a nought from anywhere.
+  ///
+  /// ```dart
+  /// // The first row's name runs across two columns.
+  /// span: (context, user, i) =>
+  ///     i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
+  /// ```
+  ///
+  /// A table whose cells span is drawn row by row rather than as a grid, so
+  /// it is not lazy — as with rows that open.
+  final TableCellSpan Function(BuildContext context, T record, int index)? span;
+
   /// Whether this column heads others rather than holding cells.
   bool get isGroup => children != null;
 
@@ -595,8 +648,8 @@ class TableColumn<T> {
       children == null ? [this] : children!.expand((c) => c.leaves);
 
   /// How many leaves stand under this one, which is how many columns its
-  /// heading spans.
-  int get span => leaves.length;
+  /// heading reaches across.
+  int get headingSpan => leaves.length;
 
   /// How many rows of heading stand under this one.
   int get depth =>
@@ -1366,6 +1419,10 @@ class _TableState<T> extends State<Table<T>> {
   /// Whether any column adds something up, so there is a row to draw for it.
   bool get _hasSummary => _leaves.any((c) => c.summary != null);
 
+  /// Whether any cell covers its neighbours, so the body is drawn row by row
+  /// rather than as a grid.
+  bool get _hasSpans => _leaves.any((c) => c.span != null);
+
   List<TableColumn<T>> _pinnedTo(TableColumnFixed side) =>
       _columns.where((c) => c.fixed == side).toList();
 
@@ -1684,7 +1741,6 @@ class _TableState<T> extends State<Table<T>> {
               i: FixedColumnWidth(measured.columns[i]),
           };
 
-          final data = dataRowsOf(columns);
           final children = <Widget>[
             if (_showHeader)
               if (_hasGroups)
@@ -1692,21 +1748,8 @@ class _TableState<T> extends State<Table<T>> {
               else
                 grid(columns, [headingRow(columns)], widths: widths),
           ];
-          var run = <flutter.TableRow>[];
-          void flush() {
-            if (run.isEmpty) return;
-            children.add(grid(columns, run, widths: widths));
-            run = [];
-          }
 
-          for (var i = 0; i < rows.length; i++) {
-            run.add(data[i]);
-            if (!_hasPanel(rows[i])) continue;
-            flush();
-            children.add(
-              // The same reveal a `Collapse` panel uses, so a table opens the
-              // way everything else in the kit opens.
-              Expandable(
+          Widget panelFor(int i) => Expandable(
                 expanded: _isExpanded(rows[i]),
                 destroyWhenCollapsed: true,
                 // The panel is added at the moment its row opens, so it has
@@ -1721,8 +1764,7 @@ class _TableState<T> extends State<Table<T>> {
                   // Never shorter than a row, and free to be taller. A row
                   // whose height was named carries no vertical padding — the
                   // height itself stands in for it — so a panel padded the
-                  // same way collapsed to the height of its text: measured, a
-                  // twenty-pixel panel under a sixty-four-pixel row.
+                  // same way collapsed to the height of its text.
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       minHeight: _uniformHeight(t) ?? 0,
@@ -1733,10 +1775,45 @@ class _TableState<T> extends State<Table<T>> {
                     ),
                   ),
                 ),
-              ),
-            );
+              );
+
+          if (_hasSpans) {
+            // Laid out by hand: a cell reaching across two columns cannot be
+            // a cell of the grid, so there is no grid to run. A body with a
+            // cell reaching *down* comes back as one placed block, and there
+            // is nowhere between its rows to put a panel.
+            final laid =
+                _spannedRows(columns, measured.columns, rows, r, t, rule);
+            if (laid.length == rows.length) {
+              for (var i = 0; i < rows.length; i++) {
+                children.add(laid[i]);
+                if (_hasPanel(rows[i])) children.add(panelFor(i));
+              }
+            } else {
+              children.addAll(laid);
+              for (var i = 0; i < rows.length; i++) {
+                if (_hasPanel(rows[i])) children.add(panelFor(i));
+              }
+            }
+          } else {
+            final data = dataRowsOf(columns);
+            var run = <flutter.TableRow>[];
+            void flush() {
+              if (run.isEmpty) return;
+              children.add(grid(columns, run, widths: widths));
+              run = [];
+            }
+
+            for (var i = 0; i < rows.length; i++) {
+              run.add(data[i]);
+              if (!_hasPanel(rows[i])) continue;
+              flush();
+              // The same reveal a `Collapse` panel uses, so a table opens the
+              // way everything else in the kit opens.
+              children.add(panelFor(i));
+            }
+            flush();
           }
-          flush();
           if (_hasSummary) {
             children.add(
               _summaryRow(columns, measured.columns, rows, r, t, rule),
@@ -1753,7 +1830,7 @@ class _TableState<T> extends State<Table<T>> {
     }
 
     Widget table;
-    if (widget.expandable != null || _hasGroups || _hasSummary) {
+    if (widget.expandable != null || _hasGroups || _hasSummary || _hasSpans) {
       // Rows that open are drawn as grids with panels between them, and a
       // heading of more than one row is drawn by hand — a `Table` cannot span
       // a cell across its columns, so a group's title cannot be a cell of the
@@ -2523,7 +2600,178 @@ class _TableState<T> extends State<Table<T>> {
           },
       ];
 
-  /// The row that adds the columns up, drawn under the rest.
+  /// One cell of a body laid out by hand, with the rules it carries.
+  ///
+  /// The rules go on the cell rather than on the row: a cell reaching down
+  /// two rows must not have a line drawn through the middle of it, and a row
+  /// that carried its own rule drew exactly that.
+  Widget _spanCell(
+    int y,
+    int x,
+    TableColumn<T> column,
+    ({int across, int down}) span,
+    int columnCount,
+    int rowCount,
+    _ResolvedTableToken r,
+    Token t,
+    BorderSide rule,
+  ) =>
+      DecoratedBox(
+        decoration: BoxDecoration(
+          border: BorderDirectional(
+            end: x + span.across >= columnCount || !_bordered
+                ? BorderSide.none
+                : rule,
+            // Under the last row this cell covers, and not under the last row
+            // of the table — there the outline stands in for it.
+            bottom: y + span.down >= rowCount
+                ? BorderSide.none
+                : Border(bottom: rule).bottom,
+          ),
+        ),
+        child: _rowCell(y, column, r, t),
+      );
+
+  /// The body drawn by hand, where a cell may cover its neighbours.
+  ///
+  /// A `Table` maps a row's children onto its columns one for one, so a cell
+  /// reaching across two of them cannot be a cell of the grid. Rows are laid
+  /// out against the measured widths instead — the same widths the heading
+  /// and the summary are given, which is what keeps them lined up.
+  ///
+  /// Which cells are covered is worked out here rather than asked of the
+  /// caller: a cell that spans marks the places it takes, and a place already
+  /// taken is drawn as nothing at all.
+  ///
+  /// A cell reaching *down* needs to know how tall a row is before it can be
+  /// laid out over two of them, so a table with one holds every row to one
+  /// height — as a lazy body does, and for the same reason. Spanning columns
+  /// alone leaves the rows to their content.
+  List<Widget> _spannedRows(
+    List<TableColumn<T>> columns,
+    List<double> widths,
+    List<T> rows,
+    _ResolvedTableToken r,
+    Token t,
+    BorderSide rule,
+  ) {
+    // Worked out first, because whether any cell reaches down decides how the
+    // whole body is laid out.
+    final taken = <int, Set<int>>{};
+    final placed = <(
+      int y,
+      int x,
+      TableColumn<T> column,
+      ({int across, int down}) span
+    )>[];
+    var reachesDown = false;
+
+    for (var y = 0; y < rows.length; y++) {
+      var x = 0;
+      while (x < columns.length) {
+        if (taken[y]?.contains(x) ?? false) {
+          x++;
+          continue;
+        }
+        final column = columns[x];
+        final asked =
+            column.span?.call(context, rows[y], y) ?? const TableCellSpan();
+        // Never past the last column or the last row: a span asking for more
+        // than there is takes what there is.
+        final across = math.min(asked.columns, columns.length - x);
+        final down = math.min(asked.rows, rows.length - y);
+        if (down > 1) reachesDown = true;
+
+        for (var dy = 0; dy < down; dy++) {
+          for (var dx = 0; dx < across; dx++) {
+            if (dy == 0 && dx == 0) continue;
+            (taken[y + dy] ??= {}).add(x + dx);
+          }
+        }
+        placed.add((y, x, column, (across: across, down: down)));
+        x += across;
+      }
+    }
+
+    double widthAt(int x, int across) {
+      var total = 0.0;
+      for (var i = 0; i < across; i++) {
+        total += widths[x + i];
+      }
+      return total;
+    }
+
+    double startAt(int x) {
+      var total = 0.0;
+      for (var i = 0; i < x; i++) {
+        total += widths[i];
+      }
+      return total;
+    }
+
+    if (!reachesDown) {
+      // Nothing reaches down, so the rows can be rows and keep the heights
+      // their content asks for.
+      return [
+        for (var y = 0; y < rows.length; y++)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final cell in placed.where((c) => c.$1 == y))
+                  SizedBox(
+                    width: widthAt(cell.$2, cell.$4.across),
+                    child: _spanCell(
+                      cell.$1,
+                      cell.$2,
+                      cell.$3,
+                      cell.$4,
+                      columns.length,
+                      rows.length,
+                      r,
+                      t,
+                      rule,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ];
+    }
+
+    // A cell standing over two rows has to be placed, not laid in a row, and
+    // placing it needs a height known before the fact.
+    final height = _lazyRowHeight(r, t);
+    return [
+      SizedBox(
+        height: height * rows.length,
+        child: Stack(
+          children: [
+            for (final cell in placed)
+              Positioned(
+                left: startAt(cell.$2),
+                top: height * cell.$1,
+                width: widthAt(cell.$2, cell.$4.across),
+                height: height * cell.$4.down,
+                child: _spanCell(
+                  cell.$1,
+                  cell.$2,
+                  cell.$3,
+                  cell.$4,
+                  columns.length,
+                  rows.length,
+                  r,
+                  t,
+                  rule,
+                ),
+              ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  /// The row that adds the columns up, drawn under the rest.  /// The row that adds the columns up, drawn under the rest.
   ///
   /// Laid out by hand against the same measured widths the body is given,
   /// like the heading of a grouped table — and for the same reason, since a
@@ -2594,7 +2842,7 @@ class _TableState<T> extends State<Table<T>> {
 
     double widthOf(TableColumn<T> column) {
       var total = 0.0;
-      for (var i = 0; i < column.span; i++) {
+      for (var i = 0; i < column.headingSpan; i++) {
         total += widths[at + i];
       }
       return total;
@@ -2602,7 +2850,7 @@ class _TableState<T> extends State<Table<T>> {
 
     Widget node(TableColumn<T> column) {
       final width = widthOf(column);
-      final last = at + column.span >= widths.length;
+      final last = at + column.headingSpan >= widths.length;
 
       if (!column.isGroup) {
         final index = _leaves.indexOf(column);

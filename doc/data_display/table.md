@@ -529,6 +529,39 @@ paged, and what the filters left — the same rows `header` and `footer` are
 given. A group heads other columns and has no cell of its own to sum up, so
 the summary goes on one of the columns under it.
 
+## Cells that span
+
+A column's `span` says how many places its cell takes up in a given row.
+
+```dart
+TableColumn(
+  title: const Text('Name'),
+  value: (u) => u.name,
+  span: (context, user, i) =>
+      i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
+)
+```
+
+A cell that spans covers its neighbours, and those neighbours are simply not
+drawn: the table works out which places are taken, so nothing has to return a
+nought to say it is covered. A span asking for more columns or rows than there
+are takes what there is.
+
+The body is then laid out by hand rather than as a grid — a cell reaching
+across two columns cannot be a cell of a `Table` — against the same measured
+widths the heading and the summary are given. Which means, as with rows that
+open, **a table whose cells span is not lazy**.
+
+The rules go on the cells rather than on the rows, or a line would be drawn
+straight through the middle of a cell that reaches down.
+
+A cell reaching **down** needs to know how tall a row is before it can be laid
+over two of them, so a table with one holds every row to one height — as a
+lazy body does, and for the same reason. Spanning columns alone leaves the
+rows to their content. A body with a cell reaching down is one placed block,
+so there is nowhere between its rows to open a panel: `expandable` and a row
+span do not combine.
+
 ## Around the rows
 
 | Prop | |
@@ -597,4 +630,6 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-Spanned cells are still to come.
+Pinned columns that stack as you scroll are still to come: pinning moves a
+column to the edge, so a pinned column with a loose one between it and the
+edge is drawn beside its fellows rather than catching up with them.

@@ -4610,6 +4610,108 @@ void main() {
       }
     });
 
+    testWidgets('a scrolling table keeps its spans and stays lazy',
+        (tester) async {
+      // The rows of a lazy body are all one height, so a cell reaching down
+      // three of them is three times that — known before anything is laid
+      // out. What the viewport needs is a plan of where each cell starts,
+      // worked out for every row and kept: a cell starting above the screen
+      // still reaches into it, and the walk begins as far back as the
+      // deepest span goes.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            bordered: true,
+            scroll: const TableScroll(y: 240),
+            data: [for (var i = 0; i < 300; i++) i],
+            columns: [
+              TableColumn<int>(
+                title: const Text('A'),
+                value: (v) => 'a$v',
+                span: (_, v, i) => i % 10 == 0
+                    ? const TableCellSpan(columns: 2)
+                    : const TableCellSpan(),
+              ),
+              TableColumn<int>(title: const Text('B'), value: (v) => 'b$v'),
+              TableColumn<int>(
+                title: const Text('C'),
+                value: (v) => 'c$v',
+                span: (_, v, i) => i % 7 == 1
+                    ? const TableCellSpan(rows: 3)
+                    : const TableCellSpan(),
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RichText).evaluate().length, lessThan(70),
+          reason: 'three hundred rows built twelve hundred cells before');
+
+      expect(find.text('b0'), findsNothing, reason: 'covered across by a0');
+      expect(find.text('b1'), findsOneWidget);
+      expect(find.text('c2'), findsNothing, reason: 'covered down by c1');
+
+      Rect boxOf(String text) => tester.getRect(
+            find
+                .ancestor(
+                  of: find.text(text),
+                  matching: find.byType(DecoratedBox),
+                )
+                .first,
+          );
+      expect(boxOf('c1').height, closeTo(boxOf('a1').height * 3, 1),
+          reason: 'three rows tall, and the rows are of a height');
+    });
+
+    testWidgets('a cell reaching in from above the screen is still drawn',
+        (tester) async {
+      // The whole reason the plan covers every row rather than the ones on
+      // show. The span is deeper than the cache the viewport keeps either
+      // side, so nothing but the look-back can find it.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(y: 200),
+            data: [for (var i = 0; i < 120; i++) i],
+            columns: [
+              TableColumn<int>(
+                title: const Text('N'),
+                value: (v) => 'n$v',
+                span: (_, v, i) => i == 20
+                    ? const TableCellSpan(rows: 30)
+                    : const TableCellSpan(),
+              ),
+              TableColumn<int>(title: const Text('M'), value: (v) => 'm$v'),
+            ],
+          ),
+          width: 400,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('m1'))),
+      );
+      // Well inside the cell's range, and well past where it started.
+      for (var i = 0; i < 10; i++) {
+        await tester.sendEventToBinding(pointer.scroll(const Offset(0, 160)));
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('m36'), findsOneWidget, reason: 'we are in its range');
+      expect(find.text('n20'), findsOneWidget,
+          reason: 'and the cell that started at row twenty is still there');
+      expect(find.text('n36'), findsNothing, reason: 'covered by it');
+
+      // And only the rows on show are built: the look-back is a walk over
+      // the plan, not over the cells.
+      expect(find.byType(RichText).evaluate().length, lessThan(40));
+    });
+
     test('a span covers at least its own place', () {
       expect(() => TableCellSpan(columns: 0), throwsAssertionError);
       expect(() => TableCellSpan(rows: 0), throwsAssertionError);

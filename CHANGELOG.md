@@ -347,7 +347,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
   sideways where that is wider than its box. `y` as well for both ways.
 
-  Two things turn the lazy body off, since finding a row by multiplying is the
+  One thing turns the lazy body off, since finding a row by multiplying is the
   whole of how it works: `expandable`, a column with a `span`, a column with
   `children`, — a panel is whatever height its
   content is, and a cell reaching down needs the rows under it laid out first. `sticky` is not among them: a table
@@ -396,6 +396,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one whose heading was tapped, so a sortable first column with a selection
   simply did nothing; and a second drag of a heading moved the wrong column,
   since the drag spoke in names while the order it changed was in places.
+
+  On a table with a `scroll.y` a span is a plan for the body, like the
+  heading's: the rows are all one height, so a cell reaching down three of them
+  is three times that, known before anything is laid out. The plan covers every
+  row rather than the ones on show, since a cell starting above the screen
+  still reaches into it, and the walk begins as far back as the deepest span
+  goes. Three hundred rows built twelve hundred cells before and thirty-three
+  after.
 
   On a table with a `scroll.y` both kinds of dragging are a shift the viewport
   adds where it places a column or a row, and the viewport is asked where a

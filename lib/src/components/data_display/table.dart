@@ -1756,6 +1756,67 @@ class _TableState<T> extends State<Table<T>> {
   List<TableColumn<T>> get _leaves =>
       widget.columns.expand((c) => c.leaves).toList();
 
+  /// Where every body cell starts, and how much of the grid it covers.
+  ///
+  /// One entry per row, from the column a cell starts in to what it takes.
+  /// A place absent from its row's entry is covered by something above or
+  /// beside it, and nothing is built for it.
+  ///
+  /// Worked out for every row at once and kept, rather than for the rows on
+  /// screen: asking a column what it spans is a function call, and a cell is
+  /// a widget — the lazy body is about not building the widgets, and the
+  /// answer has to be exact or a cell reaching in from above the screen would
+  /// be missed.
+  List<Map<int, ({int across, int down})>>? _bodySpans;
+  Object? _bodySpansFor;
+  int _deepestSpan = 1;
+
+  List<Map<int, ({int across, int down})>> _spansOfBody(
+    List<TableColumn<T>> columns,
+  ) {
+    final rows = _rows;
+    final asked = Object.hash(
+      identityHashCode(rows),
+      columns.length,
+      _orderRevision,
+    );
+    final kept = _bodySpans;
+    if (kept != null && _bodySpansFor == asked) return kept;
+
+    final plan = [
+      for (var i = 0; i < rows.length; i++) <int, ({int across, int down})>{},
+    ];
+    final taken = <int, Set<int>>{};
+    var deepest = 1;
+
+    for (var y = 0; y < rows.length; y++) {
+      var x = 0;
+      while (x < columns.length) {
+        if (taken[y]?.contains(x) ?? false) {
+          x++;
+          continue;
+        }
+        final asked =
+            columns[x].span?.call(context, rows[y], y) ?? const TableCellSpan();
+        final across = math.min(asked.columns, columns.length - x);
+        final down = math.min(asked.rows, rows.length - y);
+        if (down > deepest) deepest = down;
+        for (var dy = 0; dy < down; dy++) {
+          for (var dx = 0; dx < across; dx++) {
+            if (dy == 0 && dx == 0) continue;
+            (taken[y + dy] ??= {}).add(x + dx);
+          }
+        }
+        plan[y][x] = (across: across, down: down);
+        x += across;
+      }
+    }
+
+    _deepestSpan = deepest;
+    _bodySpansFor = asked;
+    return _bodySpans = plan;
+  }
+
   /// Where every heading cell stands, and how much of the grid it covers.
   ///
   /// A group's title reaches across the columns under it; a column heading
@@ -2300,7 +2361,7 @@ class _TableState<T> extends State<Table<T>> {
     if (widget.expandable != null ||
         (_hasGroups && !_detached) ||
         (_hasSummary && !_detached) ||
-        _hasSpans ||
+        (_hasSpans && !_detached) ||
         _isSticky ||
         (widget.columnsDraggable && !_detached) ||
         (widget.rowsDraggable && !_detached)) {
@@ -3960,16 +4021,35 @@ class _TableState<T> extends State<Table<T>> {
     BorderSide rule,
   ) {
     final depth = _showHeader ? _headingDepth : 0;
+    var covering = 1;
+    var spanning = 1;
     final column = columns[at.xIndex];
     final heading = at.yIndex < depth;
     final summary = _hasSummary && at.yIndex == _rows.length + depth;
     final index = at.yIndex - depth;
     final last = index == _rows.length - 1;
 
+    // A place covered by a cell above or beside it is asked for and given
+    // nothing, which is how the grid comes to have the hole that cell fills.
+    // Asked before the rules are worked out, since a merged cell's rule
+    // stands after the columns it took.
+    if (_hasSpans && !heading && !summary && index >= 0) {
+      final plan = _spansOfBody(columns);
+      if (index < plan.length) {
+        final start = plan[index][at.xIndex];
+        if (start == null) return null;
+        covering = start.down;
+        spanning = start.across;
+      }
+    }
+
     final border = Border(
       bottom: heading || !last ? rule : BorderSide.none,
-      right:
-          _bordered && at.xIndex != columns.length - 1 ? rule : BorderSide.none,
+      // After the columns the cell actually took, not after its own place:
+      // a rule through the middle of a merged cell is a rule through a cell.
+      right: _bordered && at.xIndex + spanning < columns.length
+          ? rule
+          : BorderSide.none,
     );
 
     if (heading) {
@@ -4121,7 +4201,7 @@ class _TableState<T> extends State<Table<T>> {
       );
     }
     return MouseRegion(
-      onEnter: (_) => _hovered.value = (from: index, to: index + 1),
+      onEnter: (_) => _hovered.value = (from: index, to: index + covering),
       onExit: (_) {
         if (_hovered.value?.from == index) _hovered.value = null;
       },
@@ -4129,7 +4209,13 @@ class _TableState<T> extends State<Table<T>> {
         valueListenable: _hovered,
         builder: (context, hovered, child) => ColoredBox(
           color: ground(
-            _rowFill(index, hovered: hovered?.from == index, r: r),
+            _rowFill(
+              index,
+              hovered: hovered != null &&
+                  hovered.from < index + covering &&
+                  index < hovered.to,
+              r: r,
+            ),
           ),
           child: child,
         ),
@@ -4227,6 +4313,8 @@ class _TableState<T> extends State<Table<T>> {
                 : const [],
             shifts: _columnShifts(widths.columns),
             rowShifts: _rowShifts(_rows.length, _lazyRowHeight(r, t)),
+            bodySpans: _hasSpans ? _spansOfBody(columns) : const [],
+            deepestSpan: _deepestSpan,
             // The row that adds up is held at the foot as the heading is held
             // at the head: one row, out of the run that scrolls.
             footerRows: _hasSummary ? 1 : 0,
@@ -5012,6 +5100,8 @@ class _Rows extends TwoDimensionalScrollView {
     required this.headerPlan,
     required this.shifts,
     required this.rowShifts,
+    required this.bodySpans,
+    required this.deepestSpan,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -5040,6 +5130,13 @@ class _Rows extends TwoDimensionalScrollView {
   /// And how far each row is, while a row is carried.
   final List<double> rowShifts;
 
+  /// Where every body cell starts and how much it covers.
+  final List<Map<int, ({int across, int down})>> bodySpans;
+
+  /// How far the deepest of them reaches, which is how far back the walk
+  /// has to begin to catch one reaching in from above the screen.
+  final int deepestSpan;
+
   /// How many rows are held at the foot — the row that adds up, or none.
   final int footerRows;
 
@@ -5061,6 +5158,8 @@ class _Rows extends TwoDimensionalScrollView {
         headerPlan: headerPlan,
         shifts: shifts,
         rowShifts: rowShifts,
+        bodySpans: bodySpans,
+        deepestSpan: deepestSpan,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -5082,6 +5181,8 @@ class _RowsViewport extends TwoDimensionalViewport {
     required this.headerPlan,
     required this.shifts,
     required this.rowShifts,
+    required this.bodySpans,
+    required this.deepestSpan,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -5109,6 +5210,13 @@ class _RowsViewport extends TwoDimensionalViewport {
 
   /// And how far each row is, while a row is carried.
   final List<double> rowShifts;
+
+  /// Where every body cell starts and how much it covers.
+  final List<Map<int, ({int across, int down})>> bodySpans;
+
+  /// How far the deepest of them reaches, which is how far back the walk
+  /// has to begin to catch one reaching in from above the screen.
+  final int deepestSpan;
   final List<TableColumnFixed?> pinning;
   final Color shadeColor;
   final double shadeExtent;
@@ -5122,6 +5230,8 @@ class _RowsViewport extends TwoDimensionalViewport {
         headerPlan: headerPlan,
         shifts: shifts,
         rowShifts: rowShifts,
+        bodySpans: bodySpans,
+        deepestSpan: deepestSpan,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -5144,6 +5254,7 @@ class _RowsViewport extends TwoDimensionalViewport {
       ..headerPlan = headerPlan
       ..shifts = shifts
       ..rowShifts = rowShifts
+      ..setBodySpans(bodySpans, deepestSpan)
       ..footerRows = footerRows
       ..pinning = pinning
       ..shadeColor = shadeColor
@@ -5165,6 +5276,8 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     required List<({int x, int y, int across, int down})> headerPlan,
     required List<double> shifts,
     required List<double> rowShifts,
+    required List<Map<int, ({int across, int down})>> bodySpans,
+    required int deepestSpan,
     required int footerRows,
     required List<TableColumnFixed?> pinning,
     required Color shadeColor,
@@ -5182,6 +5295,8 @@ class _RenderRows extends RenderTwoDimensionalViewport {
         _headerPlan = headerPlan,
         _shifts = shifts,
         _rowShifts = rowShifts,
+        _bodySpans = bodySpans,
+        _deepestSpan = deepestSpan,
         _footerRows = footerRows,
         _pinning = pinning,
         _shadeColor = shadeColor,
@@ -5356,6 +5471,20 @@ class _RenderRows extends RenderTwoDimensionalViewport {
 
   double _shiftOf(int column) => column < _shifts.length ? _shifts[column] : 0;
 
+  /// Where every body cell starts and how much it covers, or empty where
+  /// nothing spans.
+  List<Map<int, ({int across, int down})>> _bodySpans = const [];
+  int _deepestSpan = 1;
+  void setBodySpans(
+    List<Map<int, ({int across, int down})>> value,
+    int deepest,
+  ) {
+    if (identical(_bodySpans, value) && _deepestSpan == deepest) return;
+    _bodySpans = value;
+    _deepestSpan = deepest;
+    markNeedsLayout();
+  }
+
   /// How far each row has been slid aside while one is being carried.
   List<double> _rowShifts = const [];
   set rowShifts(List<double> value) {
@@ -5522,11 +5651,46 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       }
     }
 
-    for (var y = _firstRow; y <= _lastRow; y++) {
-      band(
-        y + _headerRows,
-        _headerHeight + y * _rowHeight - down + _rowShiftOf(y),
-      );
+    if (_bodySpans.isEmpty) {
+      for (var y = _firstRow; y <= _lastRow; y++) {
+        band(
+          y + _headerRows,
+          _headerHeight + y * _rowHeight - down + _rowShiftOf(y),
+        );
+      }
+    } else {
+      // A cell that starts above the screen can still reach into it, so the
+      // walk begins as far back as the deepest span goes and no further —
+      // which is why the plan is worked out for every row rather than for
+      // the ones on show.
+      final from = math.max(0, _firstRow - _deepestSpan + 1);
+      for (var y = from; y <= _lastRow && y < _bodySpans.length; y++) {
+        for (final start in _bodySpans[y].entries) {
+          if (y + start.value.down <= _firstRow) continue;
+          final i = start.key;
+          if (_pinning[i] == null) {
+            final at = placeOf(i);
+            var width = 0.0;
+            for (var k = 0;
+                k < start.value.across && i + k < _columnCount;
+                k++) {
+              width += _widths[i + k];
+            }
+            if (at + width <= -_cache(freeWidth) ||
+                at >= size.width + _cache(freeWidth)) {
+              continue;
+            }
+          }
+          _place(
+            i,
+            y + _headerRows,
+            placeOf(i),
+            _headerHeight + y * _rowHeight - down + _rowShiftOf(y),
+            across: start.value.across,
+            down: start.value.down,
+          );
+        }
+      }
     }
     if (_footerRows > 0) {
       band(rows - 1, size.height - _footerHeight);

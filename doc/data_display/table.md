@@ -316,7 +316,11 @@ it is marked, and the mark arrives with a `defaultSort` before anybody has
 touched anything.
 
 Both carets are always drawn: one alone would say the column *is* sorted that
-way, and a column that merely *can* be sorted has to say so too. They stand at
+way, and a column that merely *can* be sorted has to say so too. They darken
+under the hand, and take their time about it — a mark that is only offered
+says so quietly, and under the pointer it says the heading will answer. The
+one in force keeps its own colour: the hand has nothing to add to a column
+already sorted by. They stand at
 the cell's trailing edge rather than beside the word, or a column of headings
 would have each pair at the end of a word of its own length, and a ragged edge
 with it.
@@ -804,6 +808,7 @@ height and the triangles are worked out from it.
 | `headerHoverBg` | `colorFillSecondary` — behind a sortable heading under the pointer, and behind the one being sorted by |
 | `headerMarkActiveColor` | `primary.base` — a mark in force: the caret of the order, a funnel that is narrowing |
 | `headerMarkColor` | `colorTextQuaternary` — a mark merely offered |
+| `headerMarkHoverColor` | `colorTextTertiary` — what it darkens to under the hand |
 | `sortCaretSize` | `fontSizeSM` — how tall the pair of carets stands, all told |
 | `pinnedBg` | `colorBgContainer` — behind anything held in place, a column at an edge or a heading held in view, which has to be opaque |
 | `pinnedShadowColor` | `colorSplit` — the shade a held column casts over the rows going past it |

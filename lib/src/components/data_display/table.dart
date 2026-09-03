@@ -833,6 +833,7 @@ class TableToken {
     this.headerHoverBg,
     this.headerMarkActiveColor,
     this.headerMarkColor,
+    this.headerMarkHoverColor,
     this.sortCaretSize,
     this.filterIconSize,
     this.filterMenuMaxHeight,
@@ -923,6 +924,13 @@ class TableToken {
   /// Colour of one that is merely offered.
   final Color? headerMarkColor;
 
+  /// What it darkens to while the pointer is on the heading.
+  ///
+  /// A mark that is only offered says so quietly; under the hand it says the
+  /// heading will answer. The one in force keeps its own colour — the hand
+  /// has nothing to add to a column already sorted by.
+  final Color? headerMarkHoverColor;
+
   /// How tall the pair of carets stands, all told.
   ///
   /// The reference sets a font size on the two glyphs rather than a size on
@@ -1009,6 +1017,7 @@ class TableToken {
         headerHoverBg: headerHoverBg ?? t.colorFillSecondary,
         headerMarkActiveColor: headerMarkActiveColor ?? t.primary.base,
         headerMarkColor: headerMarkColor ?? t.colorTextQuaternary,
+        headerMarkHoverColor: headerMarkHoverColor ?? t.colorTextTertiary,
         sortCaretSize: sortCaretSize ?? t.fontSizeSM,
         filterIconSize: filterIconSize ?? t.sizeSM,
         filterMenuMaxHeight: filterMenuMaxHeight ?? 264,
@@ -1046,6 +1055,7 @@ class _ResolvedTableToken {
     required this.headerHoverBg,
     required this.headerMarkActiveColor,
     required this.headerMarkColor,
+    required this.headerMarkHoverColor,
     required this.sortCaretSize,
     required this.filterIconSize,
     required this.filterMenuMaxHeight,
@@ -1079,6 +1089,7 @@ class _ResolvedTableToken {
   final Color headerHoverBg;
   final Color headerMarkActiveColor;
   final Color headerMarkColor;
+  final Color headerMarkHoverColor;
   final double sortCaretSize;
   final double filterIconSize;
   final double filterMenuMaxHeight;
@@ -3645,11 +3656,17 @@ class _TableState<T> extends State<Table<T>> {
           ),
         ),
         SizedBox(width: t.sizeXXS),
-        _Carets(
-          order: _orderOf(index),
-          active: r.headerMarkActiveColor,
-          idle: r.headerMarkColor,
-          size: r.sortCaretSize,
+        // Listening on its own, so a pointer arriving at the heading darkens
+        // the marks without rebuilding the cell around them.
+        ValueListenableBuilder<int?>(
+          valueListenable: _hoveredHeading,
+          builder: (context, hovered, _) => _Carets(
+            order: _orderOf(index),
+            active: r.headerMarkActiveColor,
+            idle: hovered == index ? r.headerMarkHoverColor : r.headerMarkColor,
+            size: r.sortCaretSize,
+            duration: t.motionDurationMid,
+          ),
         ),
         if (column.filtersRows) _funnel(column, index, r, t),
       ],
@@ -4773,11 +4790,16 @@ class _Carets extends StatelessWidget {
     required this.active,
     required this.idle,
     required this.size,
+    required this.duration,
   });
 
   final TableSortOrder? order;
   final Color active;
   final Color idle;
+
+  /// How long the idle colour takes to change, which is the only thing that
+  /// changes: the one in force is in force either way.
+  final Duration duration;
 
   /// How tall the pair stands, all told — the mark's own size, as the
   /// reference sets a font size on the two glyphs rather than a size on each
@@ -4787,25 +4809,29 @@ class _Carets extends StatelessWidget {
   double get _caret => size * 0.4;
 
   @override
-  Widget build(BuildContext context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CustomPaint(
-            size: Size(size * 0.62, _caret),
-            painter: _CaretPainter(
-              order == TableSortOrder.ascending ? active : idle,
-              up: true,
+  Widget build(BuildContext context) => TweenAnimationBuilder<Color?>(
+        tween: ColorTween(end: idle),
+        duration: duration,
+        builder: (context, shade, _) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CustomPaint(
+              size: Size(size * 0.62, _caret),
+              painter: _CaretPainter(
+                order == TableSortOrder.ascending ? active : shade ?? idle,
+                up: true,
+              ),
             ),
-          ),
-          SizedBox(height: size * 0.16),
-          CustomPaint(
-            size: Size(size * 0.62, _caret),
-            painter: _CaretPainter(
-              order == TableSortOrder.descending ? active : idle,
-              up: false,
+            SizedBox(height: size * 0.16),
+            CustomPaint(
+              size: Size(size * 0.62, _caret),
+              painter: _CaretPainter(
+                order == TableSortOrder.descending ? active : shade ?? idle,
+                up: false,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
 }
 

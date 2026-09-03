@@ -1627,6 +1627,73 @@ void main() {
           reason: 'and changed nothing itself');
     });
 
+    testWidgets('the carets darken under the hand, and take their time',
+        (tester) async {
+      // The reference gives the sorter a colour and a transition on it, and
+      // darkens it while the heading is hovered. The one in force keeps its
+      // own colour: the hand has nothing to add to a column already sorted.
+      await tester.pumpWidget(table());
+      await tester.pumpAndSettle();
+
+      Color caretColour({required bool up}) => ((tester
+              .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_CaretPainter'))
+              .elementAt(up ? 0 : 1)
+              .painter!) as dynamic)
+          .color as Color;
+
+      final resting = caretColour(up: true);
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(tester.getCenter(find.text('Name')));
+      await tester.pump();
+
+      // Part way through, it is neither what it was nor what it will be.
+      await tester.pump(const Duration(milliseconds: 60));
+      final partWay = caretColour(up: true);
+      expect(partWay, isNot(resting), reason: 'it has started to darken');
+
+      await tester.pumpAndSettle();
+      final darkened = caretColour(up: true);
+      expect(darkened, isNot(resting));
+      expect(darkened, isNot(partWay), reason: 'and it took its time');
+
+      // Away again, and back to what it was.
+      await mouse.moveTo(Offset.zero);
+      await tester.pumpAndSettle();
+      expect(caretColour(up: true), resting);
+    });
+
+    testWidgets('the caret in force keeps its own colour', (tester) async {
+      await tester.pumpWidget(
+        table(defaultSort: const [TableSort(0, TableSortOrder.ascending)]),
+      );
+      await tester.pumpAndSettle();
+
+      Color caretColour({required bool up}) => ((tester
+              .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_CaretPainter'))
+              .elementAt(up ? 0 : 1)
+              .painter!) as dynamic)
+          .color as Color;
+
+      final inForce = caretColour(up: true);
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(tester.getCenter(find.text('Name')));
+      await tester.pumpAndSettle();
+
+      expect(caretColour(up: true), inForce, reason: 'the hand adds nothing');
+      expect(caretColour(up: false), isNot(inForce),
+          reason: 'while the other one darkens with the rest');
+    });
+
     testWidgets('a column that does not sort has no carets and no tap',
         (tester) async {
       await tester.pumpWidget(

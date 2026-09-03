@@ -89,7 +89,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sorted by keeps that fill with no hand on it, arriving with a `defaultSort`
   before anything has been touched. Both carets are always
   drawn: one alone would say the column *is* sorted that way, where a column
-  that merely *can* be sorted has to say so too. They stand at the cell's
+  that merely *can* be sorted has to say so too. They darken under the hand
+  over the theme's slow duration, as the reference transitions the sorter's
+  colour, and the one in force keeps its own — the hand has nothing to add to
+  a column already sorted by. They stand at the cell's
   trailing edge, or a column of headings would carry each pair at the end of a
   word of its own length. `sorter` says how to compare where the value will not do, and
   naming one makes the column sortable by itself.

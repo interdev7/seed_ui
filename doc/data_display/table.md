@@ -487,6 +487,10 @@ this way usually leaves both to the server too.
 The page and the page size are controlled apart: give `page` and a tap only
 reports through `onChanged` while the size changer still works on its own.
 
+The pager stands outside the table's outline — it is about the table rather
+than part of it, and inside the frame it pushed the outline below itself,
+leaving the last row with nothing under it.
+
 `position` says where the pager stands and which edge it is drawn against —
 `topStart`, `topCenter`, `topEnd`, `bottomStart`, `bottomCenter`, `bottomEnd`,
 or `none` for a table paged from somewhere else on the screen. It takes a

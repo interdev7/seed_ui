@@ -3082,6 +3082,46 @@ void main() {
       expect(askedFor, 4, reason: 'the caller fetches that page itself');
     });
 
+    testWidgets('the outline goes round the table, not round the pager',
+        (tester) async {
+      // Drawn inside the frame, the pager pushed the outline below itself and
+      // left the last row with nothing under it — the row's own rule is the
+      // one the outline stands in for.
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            bordered: true,
+            data: many,
+            pagination: const TablePagination(defaultPageSize: 5),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+
+      final outline = tester.getRect(
+        find
+            .byWidgetPredicate((w) =>
+                w is DecoratedBox &&
+                w.decoration is BoxDecoration &&
+                (w.decoration as BoxDecoration).borderRadius != null &&
+                (w.decoration as BoxDecoration).border != null)
+            .first,
+      );
+      final pager = tester.getRect(find.byType(Pagination));
+      final lastRow = tester.getRect(find.text('n4'));
+
+      expect(outline.bottom, lessThanOrEqualTo(pager.top),
+          reason: 'the pager stands outside the frame');
+      expect(lastRow.bottom, lessThan(outline.bottom),
+          reason: 'and the last row is closed off by it');
+    });
+
     testWidgets('no pagination, no pager', (tester) async {
       await tester.pumpWidget(
         _host(
@@ -3399,6 +3439,56 @@ void main() {
       expect(fills.first, token.colorBgContainer);
       expect(fills.first, isNot(token.colorFillQuaternary),
           reason: 'not the heading\'s fill');
+    });
+
+    testWidgets('a bordered table rules it like any other row', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            bordered: true,
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                summary: (_, rows) => const Text('three'),
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+                summary: (_, rows) => const Text('103'),
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+
+      // The cells stand exactly where the body's do, so the rule between them
+      // carries on down.
+      expect(
+        tester.getRect(find.text('three')).left,
+        closeTo(tester.getRect(find.text('Chen')).left, 0.5),
+      );
+      expect(
+        tester.getRect(find.text('103')).left,
+        closeTo(tester.getRect(find.text('27')).left, 0.5),
+      );
+
+      // And the first cell carries the rule on its inner edge.
+      final ruled = tester
+          .widgetList<DecoratedBox>(
+            find.ancestor(
+              of: find.text('three'),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((d) => d.decoration)
+          .whereType<BoxDecoration>()
+          .where((d) => d.border is BorderDirectional)
+          .map((d) => d.border! as BorderDirectional)
+          .where((b) => b.end != BorderSide.none);
+      expect(ruled, isNotEmpty);
     });
 
     testWidgets('a column that says nothing leaves its place empty',

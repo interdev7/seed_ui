@@ -1910,25 +1910,10 @@ class _TableState<T> extends State<Table<T>> {
       );
     }
 
-    if (widget.pagination != null) {
-      final where = widget.pagination!.position;
-      final above = where.where((p) => p.isTop);
-      final below = where.where((p) => p.isBottom);
-      if (above.isNotEmpty || below.isNotEmpty) {
-        body = Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final at in above) _pager(t, at),
-            // Outside the outline: a pager is about the table rather than
-            // part of it.
-            Flexible(child: body),
-            for (final at in below) _pager(t, at),
-          ],
-        );
-      }
-    }
-
+    // The outline goes on before the pager does, so the pager stands outside
+    // it: a pager is about the table rather than part of it, and drawn inside
+    // the frame it left the last row with nothing under it — the row's own
+    // rule is the one the outline stands in for.
     if (_bordered) {
       body = DecoratedBox(
         decoration: BoxDecoration(
@@ -1940,6 +1925,23 @@ class _TableState<T> extends State<Table<T>> {
           child: body,
         ),
       );
+    }
+
+    if (widget.pagination != null) {
+      final where = widget.pagination!.position;
+      final above = where.where((p) => p.isTop);
+      final below = where.where((p) => p.isBottom);
+      if (above.isNotEmpty || below.isNotEmpty) {
+        body = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final at in above) _pager(t, at),
+            Flexible(child: body),
+            for (final at in below) _pager(t, at),
+          ],
+        );
+      }
     }
 
     return Spin(spinning: widget.loading, child: body);

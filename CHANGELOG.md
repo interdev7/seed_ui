@@ -228,6 +228,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer exists lands you on the last one there is, never on an empty one. The
   page and the page size are controlled apart.
 
+  The pager stands outside the outline: drawn inside it, it pushed the frame
+  below itself and left the last row with nothing under it, since the row's own
+  rule is the one the outline stands in for.
+
   `position` says where the pager stands and which edge it is drawn against —
   `topStart` through `bottomEnd`, or `none` for a table paged from elsewhere on
   the screen — and takes a list, so a long table can carry one at both ends.

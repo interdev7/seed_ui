@@ -192,45 +192,32 @@ cut rather than allowed to grow its row. A table with no `scroll.y` keeps the
 grid it always had, where a cell that wraps still grows its row — there is
 nothing to virtualise in a table you can see all of.
 
-### What turns it off
+### What it asks in return
 
 Finding a row by multiplying is the whole of how a lazy body works, so
-anything that breaks a uniform grid of rows takes the laziness with it. One
-thing does, and a table using any of them builds every row it is given even
-with a `scroll.y` — the rows still scroll inside the height you named, they
-are simply all there:
+anything that breaks a uniform grid of rows would take the laziness with it.
+Nothing does any more, but two things ask something first:
 
-| | why |
+| | what it asks |
 | --- | --- |
-| `expandable` | a panel is whatever height its content is, and it sits between two rows |
+| `expandable` | a `panelHeight`, since a panel of whatever height its content happens to be cannot be reckoned with |
+| a pinned column | a `width`, since it is measured before the body is laid out |
 
-It is drawn against one measured set of column widths instead. It cannot be
-made lazy without a body that measures each row as it goes, which is a
-different body from the one that finds a row by multiplying: a panel is
-whatever height its content is, and no plan can say in advance how tall it
-will be.
+Say neither and the table still works — it simply builds every row it was
+given, which for a few dozen is nothing and for a few hundred is the reason
+`pagination` exists.
 
-Five things used to be among them and no longer are. A `summary` is held at
-the foot the way the heading is held at the head. A grouped heading is laid
-out from a plan the viewport is given, saying where every heading cell stands
-and how much of the grid it covers. Both kinds of dragging are a shift the viewport
-adds where it places a column or a row, with the viewport itself asked where
-a carried one would land — it laid them out, so it is the only thing that
-knows. And a span is a plan for the body, like the heading's: the rows of a
-lazy body are all one height, so a cell reaching down three of them is three
-times that, known before anything is laid out. Measured at three hundred rows: twelve hundred cells built
-with any of them before, and forty or so after.
+Everything else the table can do rides on the lazy body as it is. A `summary`
+is held at the foot the way the heading is held at the head. A grouped heading
+and a spanned body are each a plan the viewport is given — where every cell
+starts and how much of the grid it covers — with only the cells that start
+something built. Both kinds of dragging are a shift the viewport adds where it
+places a column or a row, and the viewport itself is asked where a carried one
+would land, since it laid them out. Measured at three hundred rows: twelve
+hundred cells built with any of them before, and forty or so after.
 
-`sticky` is **not** among them, though it looks as though it should be: a
-table with a `scroll.y` already keeps its heading in view inside its own
-height, so `sticky` does not apply to one and takes nothing away. Measured at
-three hundred rows: fifty-two cells built with it and fifty-two without.
-
-The cost is the one this section opened with, in reverse: five hundred rows of
-fifteen columns is seven and a half thousand cells rather than a hundred-odd.
-For a few dozen rows it is nothing. For a few hundred, prefer paging them —
-`pagination` shows a page at a time, and a page is small enough that building
-all of it costs nothing either.
+`sticky` never cost anything either: a table with a `scroll.y` already keeps
+its heading in view inside its own height, so `sticky` does not apply to one.
 
 `scroll.y` is the height of the rows, not of the table. The heading stands
 above them and is not counted in it.
@@ -514,10 +501,13 @@ That measurement is the same one a scrolling table uses, so the same caveat
 applies: a column headed by something other than `Text` should name a `width`
 if its heading is the widest thing in it.
 
-It also means **a table whose rows open is not lazy**, even with `scroll.y`: a
-panel is whatever height its content is, and a lazy body finds a row by
-multiplying. The rows still scroll inside the height you gave; they are all
-built. See [What turns it off](#what-turns-it-off) for the whole list.
+On a table with a `scroll.y`, **name the panel's height** and the rows stay
+lazy: a lazy body finds a row by reckoning where it starts, and it can go on
+doing that with panels among the rows so long as their height is known — the
+rows before a given one are so many ordinary ones and so many panels, which is
+a count and not a measurement. Leave it unsaid and the panel is as tall as
+what is in it, and every row is built. See
+[What it asks in return](#what-it-asks-in-return).
 
 ## A page at a time
 
@@ -632,11 +622,13 @@ drawn: the table works out which places are taken, so nothing has to return a
 nought to say it is covered. A span asking for more columns or rows than there
 are takes what there is.
 
-The body is then laid out by hand rather than as a grid — a cell reaching
-across two columns cannot be a cell of a `Table` — against the same measured
-widths the heading and the summary are given. Which means, as with rows that
-open, **a table whose cells span is not lazy** — see
-[What turns it off](#what-turns-it-off).
+Without a `scroll.y` the body is laid out by hand rather than as a grid — a
+cell reaching across two columns cannot be a cell of a `Table` — against the
+same measured widths the heading and the summary are given. With one, the
+viewport is handed a plan of where each cell starts and what it takes, and
+only the cells that start something are built: the rows stay lazy. The plan
+covers every row rather than the ones on show, since a cell starting above the
+screen still reaches into it.
 
 The rules go on the cells rather than on the rows, or a line would be drawn
 straight through the middle of a cell that reaches down.

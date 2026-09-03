@@ -347,15 +347,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
   sideways where that is wider than its box. `y` as well for both ways.
 
-  One thing turns the lazy body off, since finding a row by multiplying is the
-  whole of how it works: `expandable`, a column with a `span`, a column with
-  `children`, — a panel is whatever height its
-  content is, and a cell reaching down needs the rows under it laid out first. `sticky` is not among them: a table
-  with a `scroll.y` already keeps its heading in view inside its own height, so
-  sticky does not apply to one and costs it nothing. Such a table builds every
-  row it is given even with a `scroll.y` — the rows still scroll inside the
-  height named, they are simply all there. The documentation lists them in one
-  place and says what it costs.
+  Nothing turns the lazy body off. Two things ask something of you first:
+  `expandable` wants a `panelHeight`, since a panel of whatever height its
+  content happens to be cannot be reckoned with, and a pinned column wants a
+  `width`. Say neither and the table still works — it simply builds every row
+  it was given, which for a few dozen is nothing and for a few hundred is the
+  reason `pagination` exists. The documentation says so in one place.
 
   **Rows you can move.** `rowsDraggable` picks a row up and drops it into
   another's place, with the same mechanics as the columns: the others slide

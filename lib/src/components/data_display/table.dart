@@ -353,6 +353,7 @@ class TableExpandable<T> {
     this.onChanged,
     this.expandable,
     this.byRowTap = false,
+    this.panelHeight,
     this.showColumn = true,
     this.columnWidth,
     this.fixed,
@@ -378,6 +379,19 @@ class TableExpandable<T> {
 
   /// Whether a tap anywhere on the row opens it, as well as the chevron.
   final bool byRowTap;
+
+  /// How tall an opened panel is, where you can say.
+  ///
+  /// Worth saying on a table with a `scroll.y`. A lazy body finds a row by
+  /// reckoning where it starts, and a panel of whatever height its content
+  /// happens to be cannot be reckoned with — so a table that opens rows
+  /// builds every one of them unless the panel's height is named, and with
+  /// it named the rows stay lazy.
+  ///
+  /// Left null the panel is as tall as what is in it, and the table builds
+  /// all its rows. Which is the right trade for a few dozen; for a few
+  /// hundred, name a height or page them.
+  final double? panelHeight;
 
   /// Whether the chevrons get a column of their own.
   ///
@@ -1756,6 +1770,33 @@ class _TableState<T> extends State<Table<T>> {
   List<TableColumn<T>> get _leaves =>
       widget.columns.expand((c) => c.leaves).toList();
 
+  /// Whether a lazy body can carry the panels as well as the rows.
+  ///
+  /// It can once the panel's height is named: a row is then found by counting
+  /// how many ordinary rows and how many panels stand before it, which is a
+  /// count and not a measurement.
+  bool get _panelsFit =>
+      widget.expandable == null || widget.expandable!.panelHeight != null;
+
+  /// The body of a lazy table, row by row: either one of the rows given, or
+  /// the panel belonging to the row before it.
+  ///
+  /// Kept as a list because the viewport asks by place, and a place has to
+  /// say which of the two it is.
+  List<({int row, bool panel})> get _lazyRun {
+    final rows = _rows;
+    final expandable = widget.expandable;
+    if (expandable == null || expandable.panelHeight == null) {
+      return [for (var i = 0; i < rows.length; i++) (row: i, panel: false)];
+    }
+    return [
+      for (var i = 0; i < rows.length; i++) ...[
+        (row: i, panel: false),
+        if (_isExpanded(rows[i]) && _canExpand(rows[i])) (row: i, panel: true),
+      ],
+    ];
+  }
+
   /// Where every body cell starts, and how much of the grid it covers.
   ///
   /// One entry per row, from the column a cell starts in to what it takes.
@@ -2358,7 +2399,7 @@ class _TableState<T> extends State<Table<T>> {
     }
 
     Widget table;
-    if (widget.expandable != null ||
+    if ((widget.expandable != null && !(_detached && _panelsFit)) ||
         (_hasGroups && !_detached) ||
         (_hasSummary && !_detached) ||
         (_hasSpans && !_detached) ||
@@ -4024,9 +4065,34 @@ class _TableState<T> extends State<Table<T>> {
     var covering = 1;
     var spanning = 1;
     final column = columns[at.xIndex];
+    final run = _lazyRun;
     final heading = at.yIndex < depth;
-    final summary = _hasSummary && at.yIndex == _rows.length + depth;
-    final index = at.yIndex - depth;
+    final summary = _hasSummary && at.yIndex == run.length + depth;
+    final place = at.yIndex - depth;
+    // A panel is one cell across the whole table, so only its leading place
+    // holds anything.
+    if (!heading &&
+        !summary &&
+        place >= 0 &&
+        place < run.length &&
+        run[place].panel) {
+      if (at.xIndex != 0) return null;
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: r.expandedBg,
+          border: Border(bottom: rule),
+        ),
+        child: Padding(
+          padding: _cellPadding(r, t),
+          child: widget.expandable!.builder(
+            context,
+            _rows[run[place].row],
+            run[place].row,
+          ),
+        ),
+      );
+    }
+    final index = place >= 0 && place < run.length ? run[place].row : place;
     final last = index == _rows.length - 1;
 
     // A place covered by a cell above or beside it is asked for and given
@@ -4264,6 +4330,9 @@ class _TableState<T> extends State<Table<T>> {
   }
 
   Widget _lazyBody(_ResolvedTableToken r, Token t, BorderSide rule) {
+    // Rows and panels together, in the order they are drawn: the viewport
+    // asks by place, and a place has to say which of the two it is.
+    final run = _lazyRun;
     final columns = _ordered;
     final style = _bodyStyle(r, t);
     final inline = _cellPadding(r, t).horizontal;
@@ -4313,6 +4382,11 @@ class _TableState<T> extends State<Table<T>> {
                 : const [],
             shifts: _columnShifts(widths.columns),
             rowShifts: _rowShifts(_rows.length, _lazyRowHeight(r, t)),
+            panelRows: [
+              for (var i = 0; i < run.length; i++)
+                if (run[i].panel) i,
+            ],
+            panelHeight: widget.expandable?.panelHeight ?? 0,
             bodySpans: _hasSpans ? _spansOfBody(columns) : const [],
             deepestSpan: _deepestSpan,
             // The row that adds up is held at the foot as the heading is held
@@ -4330,7 +4404,7 @@ class _TableState<T> extends State<Table<T>> {
               // state no cell has.
               addAutomaticKeepAlives: false,
               maxXIndex: columns.length - 1,
-              maxYIndex: _rows.length -
+              maxYIndex: run.length -
                   1 +
                   (_showHeader ? _headingDepth : 0) +
                   (_hasSummary ? 1 : 0),
@@ -5102,6 +5176,8 @@ class _Rows extends TwoDimensionalScrollView {
     required this.rowShifts,
     required this.bodySpans,
     required this.deepestSpan,
+    required this.panelRows,
+    required this.panelHeight,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -5137,6 +5213,10 @@ class _Rows extends TwoDimensionalScrollView {
   /// has to begin to catch one reaching in from above the screen.
   final int deepestSpan;
 
+  /// Which body rows are panels rather than rows, and how tall one stands.
+  final List<int> panelRows;
+  final double panelHeight;
+
   /// How many rows are held at the foot — the row that adds up, or none.
   final int footerRows;
 
@@ -5160,6 +5240,8 @@ class _Rows extends TwoDimensionalScrollView {
         rowShifts: rowShifts,
         bodySpans: bodySpans,
         deepestSpan: deepestSpan,
+        panelRows: panelRows,
+        panelHeight: panelHeight,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -5183,6 +5265,8 @@ class _RowsViewport extends TwoDimensionalViewport {
     required this.rowShifts,
     required this.bodySpans,
     required this.deepestSpan,
+    required this.panelRows,
+    required this.panelHeight,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -5217,6 +5301,10 @@ class _RowsViewport extends TwoDimensionalViewport {
   /// How far the deepest of them reaches, which is how far back the walk
   /// has to begin to catch one reaching in from above the screen.
   final int deepestSpan;
+
+  /// Which body rows are panels rather than rows, and how tall one stands.
+  final List<int> panelRows;
+  final double panelHeight;
   final List<TableColumnFixed?> pinning;
   final Color shadeColor;
   final double shadeExtent;
@@ -5232,6 +5320,8 @@ class _RowsViewport extends TwoDimensionalViewport {
         rowShifts: rowShifts,
         bodySpans: bodySpans,
         deepestSpan: deepestSpan,
+        panelRows: panelRows,
+        panelHeight: panelHeight,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -5255,6 +5345,7 @@ class _RowsViewport extends TwoDimensionalViewport {
       ..shifts = shifts
       ..rowShifts = rowShifts
       ..setBodySpans(bodySpans, deepestSpan)
+      ..setPanels(panelRows, panelHeight)
       ..footerRows = footerRows
       ..pinning = pinning
       ..shadeColor = shadeColor
@@ -5278,6 +5369,8 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     required List<double> rowShifts,
     required List<Map<int, ({int across, int down})>> bodySpans,
     required int deepestSpan,
+    required List<int> panelRows,
+    required double panelHeight,
     required int footerRows,
     required List<TableColumnFixed?> pinning,
     required Color shadeColor,
@@ -5297,6 +5390,8 @@ class _RenderRows extends RenderTwoDimensionalViewport {
         _rowShifts = rowShifts,
         _bodySpans = bodySpans,
         _deepestSpan = deepestSpan,
+        _panelRows = panelRows,
+        _panelHeight = panelHeight,
         _footerRows = footerRows,
         _pinning = pinning,
         _shadeColor = shadeColor,
@@ -5434,6 +5529,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     double dy, {
     int across = 1,
     int down = 1,
+    double? height,
   }) {
     final child = buildOrObtainChildFor(
       ChildVicinity(xIndex: column, yIndex: row),
@@ -5444,7 +5540,10 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       width += _widths[column + i];
     }
     child.layout(
-      BoxConstraints.tightFor(width: width, height: _rowHeight * down),
+      BoxConstraints.tightFor(
+        width: width,
+        height: height ?? _rowHeight * down,
+      ),
     );
     parentDataOf(child).layoutOffset = Offset(dx, dy);
   }
@@ -5470,6 +5569,83 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   }
 
   double _shiftOf(int column) => column < _shifts.length ? _shifts[column] : 0;
+
+  /// Which body rows are panels, in order, and how tall one stands.
+  ///
+  /// A lazy body finds a row by reckoning where it starts, and it can go on
+  /// doing that with panels among the rows so long as their height is known:
+  /// the rows before a given one are so many ordinary ones and so many
+  /// panels, which is a count rather than a measurement.
+  List<int> _panelRows = const [];
+  double _panelHeight = 0;
+  void setPanels(List<int> rows, double height) {
+    if (_panelHeight == height &&
+        _panelRows.length == rows.length &&
+        () {
+          for (var i = 0; i < rows.length; i++) {
+            if (_panelRows[i] != rows[i]) return false;
+          }
+          return true;
+        }()) {
+      return;
+    }
+    _panelRows = rows;
+    _panelHeight = height;
+    markNeedsLayout();
+  }
+
+  /// How many panels stand before body row [row].
+  int _panelsBefore(int row) {
+    var low = 0;
+    var high = _panelRows.length;
+    while (low < high) {
+      final mid = (low + high) >> 1;
+      if (_panelRows[mid] < row) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    return low;
+  }
+
+  bool _isPanel(int row) =>
+      _panelRows.isNotEmpty &&
+      _panelsBefore(row) < _panelRows.length &&
+      _panelRows[_panelsBefore(row)] == row;
+
+  /// Where body row [row] starts, measured down the run of rows.
+  double _startOfRow(int row) {
+    final panels = _panelsBefore(row);
+    return (row - panels) * _rowHeight + panels * _panelHeight;
+  }
+
+  /// How tall body row [row] stands.
+  double _heightOfRow(int row) => _isPanel(row) ? _panelHeight : _rowHeight;
+
+  /// The whole run of body rows.
+  double _runOfRows(int count) =>
+      (count - _panelRows.length) * _rowHeight +
+      _panelRows.length * _panelHeight;
+
+  /// Which body row is at [offset] down the run.
+  int _rowAtOffset(double offset, int count) {
+    if (count <= 0) return 0;
+    if (_panelRows.isEmpty) {
+      return (offset ~/ _rowHeight).clamp(0, count - 1);
+    }
+    var low = 0;
+    var high = count - 1;
+    while (low < high) {
+      final mid = (low + high) >> 1;
+      if (_startOfRow(mid) + _heightOfRow(mid) <= offset) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    return low;
+  }
 
   /// Where every body cell starts and how much it covers, or empty where
   /// nothing spans.
@@ -5587,7 +5763,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
         math.max(0.0, size.height - _headerHeight - _footerHeight);
     verticalOffset.applyContentDimensions(
       0,
-      math.max(0, bodyRows * _rowHeight - bodyHeight),
+      math.max(0, _runOfRows(bodyRows) - bodyHeight),
     );
 
     final across = horizontalOffset.pixels;
@@ -5598,15 +5774,13 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     // built while the finger is moving.
     _firstRow = bodyRows == 0
         ? 0
-        : ((down - _cache(bodyHeight)) / _rowHeight)
-            .floor()
-            .clamp(0, bodyRows - 1);
+        : _rowAtOffset(
+            math.max(0, down - _cache(bodyHeight)),
+            bodyRows,
+          );
     _lastRow = bodyRows == 0
         ? -1
-        : ((down + bodyHeight + _cache(bodyHeight)) / _rowHeight)
-                .ceil()
-                .clamp(0, bodyRows) -
-            1;
+        : _rowAtOffset(down + bodyHeight + _cache(bodyHeight), bodyRows);
 
     /// Where a column is drawn: its own place, carried by the scroll, unless
     /// it is held at an edge and the scroll would take it past its rest.
@@ -5638,7 +5812,13 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       _lastColumn = -1;
     }
 
-    void band(int row, double dy) {
+    void band(int row, double dy, {double? height, int across = 1}) {
+      if (across > 1) {
+        // A panel is one cell across the whole table, so there is nothing to
+        // walk: it starts at the leading edge and takes every column.
+        _place(0, row, placeOf(0), dy, across: across, height: height);
+        return;
+      }
       for (var i = _firstColumn; i <= _lastColumn; i++) {
         if (_pinning[i] == null) {
           final at = placeOf(i);
@@ -5647,7 +5827,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
             continue;
           }
         }
-        _place(i, row, placeOf(i), dy);
+        _place(i, row, placeOf(i), dy, height: height);
       }
     }
 
@@ -5655,7 +5835,9 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       for (var y = _firstRow; y <= _lastRow; y++) {
         band(
           y + _headerRows,
-          _headerHeight + y * _rowHeight - down + _rowShiftOf(y),
+          _headerHeight + _startOfRow(y) - down + _rowShiftOf(y),
+          height: _heightOfRow(y),
+          across: _isPanel(y) ? _columnCount : 1,
         );
       }
     } else {

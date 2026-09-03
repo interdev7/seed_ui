@@ -3181,6 +3181,76 @@ void main() {
       expect(find.text('about Ann'), findsNothing);
     });
 
+    testWidgets('a named panel height keeps the body lazy', (tester) async {
+      // A lazy body finds a row by reckoning where it starts, and a panel of
+      // whatever height its content happens to be cannot be reckoned with.
+      // Named, it can: the rows before a given one are so many ordinary ones
+      // and so many panels, which is a count and not a measurement.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            bordered: true,
+            scroll: const TableScroll(y: 240),
+            data: [for (var i = 0; i < 300; i++) i],
+            expandable: TableExpandable<int>(
+              panelHeight: 60,
+              defaultExpanded: const [1],
+              builder: (_, v, __) => Text('about $v'),
+            ),
+            columns: [
+              TableColumn<int>(title: const Text('N'), value: (v) => 'n$v'),
+            ],
+          ),
+          width: 600,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RichText).evaluate().length, lessThan(40),
+          reason: 'three hundred rows built six hundred cells before');
+
+      expect(find.text('about 1'), findsOneWidget);
+      final panel = tester.getRect(
+        find
+            .ancestor(
+              of: find.text('about 1'),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      expect(panel.height, closeTo(60, 0.5), reason: 'the height named');
+
+      // And the row after it has been pushed down by exactly that much on
+      // top of its own.
+      final gap = tester.getRect(find.text('n2')).top -
+          tester.getRect(find.text('n1')).top;
+      expect(gap, closeTo(44 + 60, 1));
+    });
+
+    testWidgets('without a named height it opens as it always did',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(y: 240),
+            data: [for (var i = 0; i < 12; i++) i],
+            expandable: TableExpandable<int>(
+              defaultExpanded: const [1],
+              builder: (_, v, __) => Text('about $v'),
+            ),
+            columns: [
+              TableColumn<int>(title: const Text('N'), value: (v) => 'n$v'),
+            ],
+          ),
+          width: 600,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('about 1'), findsOneWidget);
+      expect(find.text('n11'), findsOneWidget,
+          reason: 'every row built, which is the trade for not saying');
+    });
+
     testWidgets('a table with a height of its own scrolls the panels too',
         (tester) async {
       await tester.pumpWidget(table(

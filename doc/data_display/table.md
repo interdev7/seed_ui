@@ -97,6 +97,9 @@ TableColumn(
 A column that heads nothing stands the whole depth of the heading beside a
 group, so nothing has to be spanned downwards by hand.
 
+A table with a group is not lazy — see
+[What turns it off](#what-turns-it-off).
+
 A sort and a filter belong to a leaf and are keyed by its place among the
 leaves — a group has nothing to order or narrow, and tapping one does nothing.
 
@@ -186,9 +189,37 @@ column a `width`:
 **Every row is one height** — the cell's padding plus a line of its text, so a
 scrolling table's rows stand exactly as tall as a still one's. A row is found
 by multiplying, not by laying out the ones above it, so a cell that wraps is
-cut rather than allowed to grow its row. A table with no `scroll.y` keeps the grid it always had, where a cell that
-wraps still grows its row — there is nothing to virtualise in a table you can
-see all of.
+cut rather than allowed to grow its row. A table with no `scroll.y` keeps the
+grid it always had, where a cell that wraps still grows its row — there is
+nothing to virtualise in a table you can see all of.
+
+### What turns it off
+
+Finding a row by multiplying is the whole of how a lazy body works, so
+anything that breaks a uniform grid of rows takes the laziness with it. Five
+things do, and a table using any of them builds every row it is given even
+with a `scroll.y` — the rows still scroll inside the height you named, they
+are simply all there:
+
+| | why |
+| --- | --- |
+| `expandable` | a panel is whatever height its content is, and it sits between two rows |
+| a column with a `span` | a cell reaching across or down cannot be a cell of a grid |
+| a column with `children` | a heading of several rows cannot be a row of the grid either |
+| a column with a `summary` | the row that adds up is laid out beside the heading, against the same measured widths |
+| `sticky` | the heading is drawn over the rows rather than above them |
+
+All five are drawn against one measured set of column widths instead, which is
+what keeps their parts lined up — and the reason they share a fate. Two of
+them could be made lazy again, since a group heading and a summary row leave
+the rows themselves uniform; the other three cannot without a body that
+measures each row as it goes.
+
+The cost is the one this section opened with, in reverse: five hundred rows of
+fifteen columns is seven and a half thousand cells rather than a hundred-odd.
+For a few dozen rows it is nothing. For a few hundred, prefer paging them —
+`pagination` shows a page at a time, and a page is small enough that building
+all of it costs nothing either.
 
 `scroll.y` is the height of the rows, not of the table. The heading stands
 above them and is not counted in it.
@@ -475,7 +506,7 @@ if its heading is the widest thing in it.
 It also means **a table whose rows open is not lazy**, even with `scroll.y`: a
 panel is whatever height its content is, and a lazy body finds a row by
 multiplying. The rows still scroll inside the height you gave; they are all
-built.
+built. See [What turns it off](#what-turns-it-off) for the whole list.
 
 ## A page at a time
 
@@ -564,6 +595,9 @@ It goes on the column rather than in a list of cells, so there is nothing to
 keep in step with the columns: a column that says nothing leaves its place
 empty, and a table where no column says anything draws no such row at all.
 
+A table with a summary is not lazy — see
+[What turns it off](#what-turns-it-off).
+
 The rows handed to it are the rows on show — a page of them where the table is
 paged, and what the filters left — the same rows `header` and `footer` are
 given. A group heads other columns and has no cell of its own to sum up, so
@@ -590,7 +624,8 @@ are takes what there is.
 The body is then laid out by hand rather than as a grid — a cell reaching
 across two columns cannot be a cell of a `Table` — against the same measured
 widths the heading and the summary are given. Which means, as with rows that
-open, **a table whose cells span is not lazy**.
+open, **a table whose cells span is not lazy** — see
+[What turns it off](#what-turns-it-off).
 
 The rules go on the cells rather than on the rows, or a line would be drawn
 straight through the middle of a cell that reaches down.
@@ -614,6 +649,9 @@ Table<User>(sticky: const TableSticky(), columns: columns, data: users)
 It is for a table whose rows are part of the page. One with a `scroll.y` of
 its own already keeps its heading — the rows scroll inside it — so `sticky` is
 ignored there rather than taking the heading away from its own rows.
+
+A sticky table is not lazy — see
+[What turns it off](#what-turns-it-off).
 
 The heading keeps its place in the layout and is only *drawn* lower down, so
 nothing moves and no space is taken twice. It takes `pinnedBg` under it, since

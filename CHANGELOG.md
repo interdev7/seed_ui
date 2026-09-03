@@ -344,6 +344,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
   sideways where that is wider than its box. `y` as well for both ways.
 
+  Five things turn the lazy body off, since finding a row by multiplying is the
+  whole of how it works: `expandable`, a column with a `span`, a column with
+  `children`, a column with a `summary`, and `sticky`. Such a table builds every
+  row it is given even with a `scroll.y` — the rows still scroll inside the
+  height named, they are simply all there. The documentation lists them in one
+  place and says what it costs.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

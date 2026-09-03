@@ -254,6 +254,7 @@ TableSelection
 TableSelectionMode
 TableSort
 TableSortOrder
+TableSticky
 TableToken
 Tabs
 TabsController

@@ -257,6 +257,21 @@ compares — which is why most columns need nothing else said.
 TableColumn(title: const Text('Age'), sortable: true, value: (u) => u.age)
 ```
 
+`sortPriority` lets several columns be in force at once: a column that names
+one joins what is already sorted rather than replacing it, and the higher
+number is compared first. A column that names none sorts alone — tapping it
+puts the table in order by that column and no other.
+
+```dart
+TableColumn(title: const Text('City'), sortable: true, sortPriority: 2, ...)
+TableColumn(title: const Text('Age'),  sortable: true, sortPriority: 1, ...)
+```
+
+`sort`, `defaultSort` and `onSortChanged` all take a list for the same reason.
+The table keeps that list in priority order and reports it that way, so a
+caller naming the sorts in any order still has them compared by what the
+columns say.
+
 A tap cycles ascending, descending, and back to the order the rows came in,
 which is what a reader expects of a third tap: somewhere to put the rows back
 without reaching for anything else. The whole heading answers — padding and
@@ -582,6 +597,27 @@ rows to their content. A body with a cell reaching down is one placed block,
 so there is nowhere between its rows to open a panel: `expandable` and a row
 span do not combine.
 
+## A heading held in view
+
+`sticky` keeps the heading against the top of the page while the rows scroll
+past it.
+
+```dart
+Table<User>(sticky: const TableSticky(), columns: columns, data: users)
+```
+
+It is for a table whose rows are part of the page. One with a `scroll.y` of
+its own already keeps its heading — the rows scroll inside it — so `sticky` is
+ignored there rather than taking the heading away from its own rows.
+
+The heading keeps its place in the layout and is only *drawn* lower down, so
+nothing moves and no space is taken twice. It takes `pinnedBg` under it, since
+a heading's own fill is a two per cent wash and standing over the rows it
+would let them be read straight through. `offsetHeader` holds it below a bar
+of your own. A held heading needs its height known before it is laid out, so a
+sticky table holds its heading to one row's height per level, as a lazy body
+holds its rows.
+
 ## Around the rows
 
 | Prop | |
@@ -621,7 +657,7 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `headerMarkActiveColor` | `primary.base` — a mark in force: the caret of the order, a funnel that is narrowing |
 | `headerMarkColor` | `colorTextQuaternary` — a mark merely offered |
 | `sortCaretSize` | `sizeXXS` — how tall each caret is |
-| `pinnedBg` | `colorBgContainer` — behind a column held at an edge, heading included, since it has to be opaque |
+| `pinnedBg` | `colorBgContainer` — behind anything held in place, a column at an edge or a heading held in view, which has to be opaque |
 | `pinnedShadowColor` | `colorSplit` — the shade a held column casts over the rows going past it |
 | `pinnedShadowExtent` | `sizeSM` — how far that shade reaches before it has faded out |
 

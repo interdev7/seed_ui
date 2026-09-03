@@ -107,6 +107,7 @@ export 'src/components/data_display/table.dart'
         TableSelection,
         TableSelectionMode,
         TableSort,
+        TableSticky,
         TableSortOrder,
         TableToken;
 export 'src/components/data_display/tabs.dart'

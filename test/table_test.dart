@@ -1496,9 +1496,9 @@ void main() {
         .toList();
 
     Widget table({
-      TableSort? sort,
-      TableSort? defaultSort,
-      ValueChanged<TableSort?>? onSortChanged,
+      List<TableSort>? sort,
+      List<TableSort>? defaultSort,
+      ValueChanged<List<TableSort>>? onSortChanged,
       int Function(_User, _User)? sorter,
       TableScroll? scroll,
     }) =>
@@ -1563,23 +1563,23 @@ void main() {
 
     testWidgets('a default sort is what it starts on', (tester) async {
       await tester.pumpWidget(
-        table(defaultSort: const TableSort(1, TableSortOrder.descending)),
+        table(defaultSort: const [TableSort(1, TableSortOrder.descending)]),
       );
       expect(shown(tester), ['Ann', '45', 'Bart', '31', 'Chen', '27']);
     });
 
     testWidgets('a sort given is the sort shown, and tapping only tells',
         (tester) async {
-      TableSort? told;
+      List<TableSort>? told;
       await tester.pumpWidget(table(
-        sort: const TableSort(0, TableSortOrder.ascending),
+        sort: const [TableSort(0, TableSortOrder.ascending)],
         onSortChanged: (next) => told = next,
       ));
       expect(shown(tester), ['Ann', '45', 'Bart', '31', 'Chen', '27']);
 
       await tester.tap(find.text('Name'));
       await tester.pumpAndSettle();
-      expect(told, const TableSort(0, TableSortOrder.descending),
+      expect(told, const [TableSort(0, TableSortOrder.descending)],
           reason: 'it said what it would have become');
       expect(shown(tester), ['Ann', '45', 'Bart', '31', 'Chen', '27'],
           reason: 'and changed nothing itself');
@@ -1631,7 +1631,7 @@ void main() {
           Table<_User>(
             data: same,
             scroll: const TableScroll(y: 300),
-            defaultSort: const TableSort(0, TableSortOrder.ascending),
+            defaultSort: const [TableSort(0, TableSortOrder.ascending)],
             columns: [
               TableColumn<_User>(
                 title: const Text('Age'),
@@ -1664,7 +1664,7 @@ void main() {
         _User('Bart', 31),
         _User('Dee', 50),
       ];
-      Widget host({TableSort? sort}) => _host(
+      Widget host({List<TableSort>? sort}) => _host(
             Table<_User>(
               data: four,
               sort: sort,
@@ -1692,7 +1692,7 @@ void main() {
 
       // Then given one, where a tap may only tell.
       await tester.pumpWidget(
-        host(sort: const TableSort(0, TableSortOrder.ascending)),
+        host(sort: const [TableSort(0, TableSortOrder.ascending)]),
       );
       await tester.tap(find.text('Name'));
       await tester.pumpAndSettle();
@@ -1714,7 +1714,7 @@ void main() {
       Widget host(TableSortOrder order) => _host(
             Table<_User>(
               data: some,
-              defaultSort: TableSort(0, order),
+              defaultSort: [TableSort(0, order)],
               columns: [
                 TableColumn<_User>(
                   title: const Text('Age'),
@@ -1797,7 +1797,7 @@ void main() {
       // Sorted before anybody touched it, so the fill arrives with the sort
       // and not with the hand.
       await tester.pumpWidget(
-        table(defaultSort: const TableSort(1, TableSortOrder.ascending)),
+        table(defaultSort: const [TableSort(1, TableSortOrder.ascending)]),
       );
       expect(fillOver(find.text('Age')), isNotNull);
       expect(fillOver(find.text('Name')), isNull, reason: 'that one only');
@@ -1874,6 +1874,194 @@ void main() {
       expect(carets.left - word.right, greaterThan(100));
     });
 
+    testWidgets('columns with a priority sort together, the higher first',
+        (tester) async {
+      // City first, then age within a city.
+      const crowd = [
+        _User('b', 2),
+        _User('a', 3),
+        _User('b', 1),
+        _User('a', 1),
+      ];
+      List<TableSort>? told;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: crowd,
+            onSortChanged: (next) => told = next,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                sortPriority: 2,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                sortable: true,
+                sortPriority: 1,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+
+      await tester.tap(find.text('Age'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+
+      expect(told!.length, 2, reason: 'the second joined the first');
+      // Name is the more telling, so it is compared first whichever order
+      // they were tapped in.
+      expect(told!.first.column, 0);
+
+      final order = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .whereType<String>()
+          .where((s) => s == 'a' || s == 'b')
+          .toList();
+      expect(order, ['a', 'a', 'b', 'b']);
+
+      final ages = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .whereType<String>()
+          .where((s) => s == '1' || s == '2' || s == '3')
+          .toList();
+      expect(ages, ['1', '3', '1', '2'], reason: 'age orders within each name');
+    });
+
+    testWidgets('a column with no priority sorts alone', (tester) async {
+      List<TableSort>? told;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            onSortChanged: (next) => told = next,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                sortPriority: 2,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                sortable: true,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      expect(told!.length, 1);
+
+      await tester.tap(find.text('Age'));
+      await tester.pumpAndSettle();
+      expect(told!.length, 1, reason: 'it cleared the other');
+      expect(told!.single.column, 1);
+    });
+
+    testWidgets('a third tap drops one column and leaves the rest',
+        (tester) async {
+      List<TableSort>? told;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            onSortChanged: (next) => told = next,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                sortPriority: 2,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                sortable: true,
+                sortPriority: 1,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Age'));
+      await tester.pumpAndSettle();
+      expect(told!.length, 2);
+
+      // Age: ascending, descending, gone — and Name stays.
+      await tester.tap(find.text('Age'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Age'));
+      await tester.pumpAndSettle();
+      expect(told!.length, 1);
+      expect(told!.single.column, 0);
+    });
+
+    testWidgets('the order given is put right by the priorities',
+        (tester) async {
+      // Named the wrong way round on purpose: a priority means one thing
+      // everywhere, so the table compares Name first regardless.
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: const [_User('b', 1), _User('a', 2)],
+            defaultSort: const [
+              TableSort(1, TableSortOrder.ascending),
+              TableSort(0, TableSortOrder.ascending),
+            ],
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                sortPriority: 5,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                sortable: true,
+                sortPriority: 1,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+      final order = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .whereType<String>()
+          .where((s) => s == 'a' || s == 'b')
+          .toList();
+      expect(order, ['a', 'b']);
+    });
+
+    test('a priority needs a column that sorts', () {
+      expect(
+        () => TableColumn<_User>(
+          title: const Text('Name'),
+          value: (u) => u.name,
+          sortPriority: 1,
+        ),
+        throwsAssertionError,
+      );
+    });
+
     test('a sortable column needs something to compare', () {
       expect(
         () => TableColumn<_User>(
@@ -1917,7 +2105,7 @@ void main() {
       ValueChanged<Map<int, List<Object?>>>? onFiltersChanged,
       bool multiple = true,
       bool Function(Object?, _User)? onFilter,
-      TableSort? defaultSort,
+      List<TableSort>? defaultSort,
     }) =>
         host(
           Table<_User>(
@@ -2082,7 +2270,7 @@ void main() {
         defaultFilters: const {
           1: [27]
         },
-        defaultSort: const TableSort(0, TableSortOrder.ascending),
+        defaultSort: const [TableSort(0, TableSortOrder.ascending)],
       ));
       expect(names(tester), ['Chen', 'Dee'],
           reason: 'the twenty-sevens, by name');
@@ -2987,7 +3175,7 @@ void main() {
       TablePagination pagination = const TablePagination(defaultPageSize: 10),
       Map<int, List<Object?>>? defaultFilters,
       Map<int, List<Object?>>? filters,
-      TableSort? defaultSort,
+      List<TableSort>? defaultSort,
       TableSelection<_User>? selection,
     }) =>
         _host(
@@ -3126,7 +3314,7 @@ void main() {
         defaultFilters: const {
           0: ['early'],
         },
-        defaultSort: const TableSort(1, TableSortOrder.descending),
+        defaultSort: const [TableSort(1, TableSortOrder.descending)],
       ));
       // Five rows survive the filter, so one page of them, newest first.
       expect(shown(tester), ['n4', 'n3', 'n2', 'n1', 'n0']);
@@ -4092,6 +4280,136 @@ void main() {
         ),
         throwsAssertionError,
       );
+    });
+  });
+
+  group('a heading held in view', () {
+    final many = [for (var i = 0; i < 30; i++) _User('n$i', i)];
+
+    Widget page({double offsetHeader = 0}) => _host(
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 300, child: Text('above')),
+                Table<_User>(
+                  bordered: true,
+                  sticky: TableSticky(offsetHeader: offsetHeader),
+                  data: many,
+                  columns: [
+                    TableColumn<_User>(
+                      title: const Text('Name'),
+                      value: (u) => u.name,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          width: 400,
+        );
+
+    testWidgets('it holds at the top once the table has gone past',
+        (tester) async {
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+
+      double headingTop() => tester.getRect(find.text('Name')).top;
+      double tableTop() => tester.getRect(find.byType(Table<_User>)).top;
+
+      expect(tableTop(), 300);
+      final resting = headingTop();
+
+      // Still below the top: nothing to hold yet.
+      await tester.drag(find.text('n2'), const Offset(0, -200));
+      await tester.pumpAndSettle();
+      expect(headingTop(), closeTo(resting - 200, 1));
+
+      // Now the table's top has gone above, and the heading stops with it.
+      await tester.drag(find.text('n2'), const Offset(0, -200));
+      await tester.pumpAndSettle();
+      final held = headingTop();
+      expect(tableTop(), lessThan(0));
+      expect(held, lessThan(60), reason: 'up against the top of the page');
+
+      await tester.drag(find.text('n2'), const Offset(0, -200));
+      await tester.pumpAndSettle();
+      expect(tableTop(), lessThan(-200), reason: 'the table went further');
+      expect(headingTop(), closeTo(held, 1), reason: 'the heading did not');
+    });
+
+    testWidgets('it keeps its place in the layout', (tester) async {
+      // Drawn lower down, not moved: the rows must not slide up into the
+      // space the heading came from.
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      double firstRowBelowTable() =>
+          tester.getRect(find.text('n0')).top -
+          tester.getRect(find.byType(Table<_User>)).top;
+      final gap = firstRowBelowTable();
+      // A heading's worth of room, not nothing: the space it leaves is
+      // reserved rather than reclaimed.
+      expect(gap, greaterThan(40));
+
+      await tester.drag(find.text('n2'), const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(firstRowBelowTable(), closeTo(gap, 1));
+    });
+
+    testWidgets('an offset holds it below a bar of your own', (tester) async {
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      await tester.drag(find.text('n2'), const Offset(0, -400));
+      await tester.pumpAndSettle();
+      final plain = tester.getRect(find.text('Name')).top;
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(page(offsetHeader: 40));
+      await tester.pumpAndSettle();
+      await tester.drag(find.text('n2'), const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.text('Name')).top, closeTo(plain + 40, 1));
+    });
+
+    testWidgets('it has a ground of its own', (tester) async {
+      // The heading's own fill is a two per cent wash: held over the rows it
+      // let them be read straight through.
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+
+      final fills = tester
+          .widgetList<ColoredBox>(
+            find.ancestor(
+              of: find.text('Name'),
+              matching: find.byType(ColoredBox),
+            ),
+          )
+          .map((b) => b.color)
+          .where((c) => c.a == 1.0)
+          .toList();
+      expect(fills, isNotEmpty);
+    });
+
+    testWidgets('a table with rows of its own is left alone', (tester) async {
+      // Its heading already stays put; holding it again would only take it
+      // away from its own rows.
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            sticky: const TableSticky(),
+            scroll: const TableScroll(y: 200),
+            data: many,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Name'), findsOneWidget);
+      expect(find.text('n0'), findsOneWidget);
     });
   });
 }

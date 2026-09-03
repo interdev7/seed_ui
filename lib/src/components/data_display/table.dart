@@ -4,7 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/rendering.dart'
-    show CacheExtentStyle, ClipRectLayer, LayerHandle, ViewportOffset;
+    show
+        CacheExtentStyle,
+        ClipRectLayer,
+        LayerHandle,
+        RenderAbstractViewport,
+        ViewportOffset;
 import 'package:flutter/widgets.dart' hide Table, TableRow;
 // Flutter's own Table does the column arithmetic: it measures every cell in a
 // column and gives them all the widest one's width, which is the behaviour a
@@ -306,6 +311,24 @@ class TablePagination {
   final bool? hideOnSinglePage;
 }
 
+/// Keeping the heading in view while the page scrolls past the table.
+///
+/// For a table whose rows are part of the page — one with a `scroll.y` of its
+/// own already keeps its heading, since the rows scroll inside it.
+///
+/// ```dart
+/// Table<User>(sticky: const TableSticky(), columns: columns, data: users)
+/// ```
+@immutable
+class TableSticky {
+  /// Creates a [TableSticky].
+  const TableSticky({this.offsetHeader = 0});
+
+  /// How far below the top of the page the heading comes to rest, for a page
+  /// with a bar of its own standing there.
+  final double offsetHeader;
+}
+
 /// Opening a row to show more under it.
 ///
 /// A column of chevrons goes in front of the others, and the row that is
@@ -492,6 +515,7 @@ class TableColumn<T> {
     this.ellipsis = false,
     this.sortable = false,
     this.sorter,
+    this.sortPriority,
     this.filters,
     this.onFilter,
     this.filterMultiple = true,
@@ -528,6 +552,11 @@ class TableColumn<T> {
           value != null || builder != null || children != null,
           'A column needs a value to read, a builder to draw with, or columns '
           'to head.',
+        ),
+        assert(
+          sortPriority == null || sortable || sorter != null,
+          'A priority says how a column takes part in a sort of several, so '
+          'the column has to sort at all.',
         ),
         assert(
           !sortable || value != null || sorter != null,
@@ -583,6 +612,20 @@ class TableColumn<T> {
   /// else said. Tapping cycles ascending, descending, and back to the order
   /// the rows came in.
   final bool sortable;
+
+  /// How much this column has to say when several columns are sorted at once.
+  ///
+  /// A column that names one takes part in a sort of several: tapping its
+  /// heading adds it to what is already in force rather than replacing it,
+  /// and the higher number is compared first. A column that names none sorts
+  /// alone — tapping it puts the table in order by that column and no other,
+  /// which is what most tables mean by sorting.
+  ///
+  /// ```dart
+  /// TableColumn(title: const Text('City'), sortable: true, sortPriority: 2, ...)
+  /// TableColumn(title: const Text('Age'),  sortable: true, sortPriority: 1, ...)
+  /// ```
+  final int? sortPriority;
 
   /// How two rows compare, where the [value] will not do.
   ///
@@ -871,11 +914,12 @@ class TableToken {
   /// Fill behind the panel under an opened row.
   final Color? expandedBg;
 
-  /// Fill behind a column held at an edge.
+  /// Fill behind anything held in place: a column at an edge, or a heading
+  /// held in view while the page scrolls past.
   ///
-  /// It has to be opaque: a held column stands over the ones sliding under
-  /// it, and a row is only as opaque as its own fill, which is nothing until
-  /// the pointer is on it.
+  /// It has to be opaque. A held column stands over the ones sliding under
+  /// it and a held heading over its own rows, while a row is only as opaque
+  /// as its own fill — which is nothing until the pointer is on it.
   final Color? pinnedBg;
 
   /// Fill behind the row that adds the columns up.
@@ -1088,6 +1132,7 @@ class Table<T> extends StatefulWidget {
     this.selection,
     this.expandable,
     this.pagination,
+    this.sticky,
     this.token,
   });
 
@@ -1137,20 +1182,24 @@ class Table<T> extends StatefulWidget {
   /// Called when a row is tapped.
   final void Function(T record, int index)? onRowTap;
 
-  /// Which column the table is sorted by, and which way (controlled).
+  /// Which columns the table is sorted by, and which way (controlled).
+  ///
+  /// A list, since several columns can be in force at once — see
+  /// [TableColumn.sortPriority]. Compared in the order they stand here, which
+  /// the table keeps in priority order.
   ///
   /// Left null the table keeps its own, starting from [defaultSort]. Give it
   /// a value and the table shows what it is told and nothing else — pair it
   /// with [onSortChanged] or the heading will not answer.
-  final TableSort? sort;
+  final List<TableSort>? sort;
 
   /// What it is sorted by to begin with (uncontrolled).
-  final TableSort? defaultSort;
+  final List<TableSort>? defaultSort;
 
   /// Called when a heading is tapped, with what the sort has become.
   ///
-  /// Null where the rows have gone back to the order they came in.
-  final ValueChanged<TableSort?>? onSortChanged;
+  /// Empty where the rows have gone back to the order they came in.
+  final ValueChanged<List<TableSort>>? onSortChanged;
 
   /// Which choices are in force, per column (controlled).
   ///
@@ -1175,6 +1224,13 @@ class Table<T> extends StatefulWidget {
   ///
   /// Null — the usual — is a table whose rows do not open.
   final TableExpandable<T>? expandable;
+
+  /// Keeps the heading in view while the page scrolls past the table.
+  ///
+  /// Null — the usual — is a heading that goes with its rows. A table with a
+  /// `scroll.y` of its own keeps its heading already, so this is for the
+  /// other kind: rows that are part of the page.
+  final TableSticky? sticky;
 
   /// Showing the rows a page at a time.
   ///
@@ -1437,6 +1493,26 @@ class _TableState<T> extends State<Table<T>> {
   /// Whether any cell covers its neighbours, so the body is drawn row by row
   /// rather than as a grid.
   bool get _hasSpans => _leaves.any((c) => c.span != null);
+
+  /// Whether the heading is held in view while the page scrolls past.
+  ///
+  /// Not where the rows scroll inside a height of their own: there the
+  /// heading already stays where it is, and holding it again would only take
+  /// it away from its own rows.
+  bool get _isSticky => widget.sticky != null && !_detached && _showHeader;
+
+  /// How tall the heading stands, where that has to be known before it is
+  /// laid out.
+  ///
+  /// A held heading needs its height in advance — the space it leaves behind
+  /// has to be reserved before it is drawn over the rows — so a sticky table
+  /// holds its heading to one row's height per level, as a lazy body holds
+  /// its rows.
+  double _headingHeight(_ResolvedTableToken r, Token t) {
+    final deep =
+        _hasGroups ? widget.columns.map((c) => c.depth).reduce(math.max) : 1;
+    return _lazyRowHeight(r, t) * deep;
+  }
 
   List<TableColumn<T>> _pinnedTo(TableColumnFixed side) =>
       _columns.where((c) => c.fixed == side).toList();
@@ -1756,12 +1832,13 @@ class _TableState<T> extends State<Table<T>> {
               i: FixedColumnWidth(measured.columns[i]),
           };
 
+          final head = _showHeader
+              ? _hasGroups
+                  ? _groupedHeading(_columnTree, measured.columns, r, t, rule)
+                  : grid(columns, [headingRow(columns)], widths: widths)
+              : null;
           final children = <Widget>[
-            if (_showHeader)
-              if (_hasGroups)
-                _groupedHeading(_columnTree, measured.columns, r, t, rule)
-              else
-                grid(columns, [headingRow(columns)], widths: widths),
+            if (head != null && !_isSticky) head,
           ];
 
           Widget panelFor(int i) => Expandable(
@@ -1835,17 +1912,31 @@ class _TableState<T> extends State<Table<T>> {
             );
           }
 
-          return Column(
+          final laidOut = Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: children,
+          );
+          if (head == null || !_isSticky) return laidOut;
+          return _Sticky(
+            // A ground under it: the heading's own fill is a two per cent
+            // wash, and held over the rows it let them be read straight
+            // through — the same as a column held at an edge.
+            heading: ColoredBox(color: r.pinnedBg, child: head),
+            headingHeight: _headingHeight(r, t),
+            body: laidOut,
+            offset: widget.sticky!.offsetHeader,
           );
         },
       );
     }
 
     Widget table;
-    if (widget.expandable != null || _hasGroups || _hasSummary || _hasSpans) {
+    if (widget.expandable != null ||
+        _hasGroups ||
+        _hasSummary ||
+        _hasSpans ||
+        _isSticky) {
       // Rows that open are drawn as grids with panels between them, and a
       // heading of more than one row is drawn by hand — a `Table` cannot span
       // a cell across its columns, so a group's title cannot be a cell of the
@@ -2056,17 +2147,39 @@ class _TableState<T> extends State<Table<T>> {
   Object? _widthsAsked;
 
   /// The sort the table keeps for itself while nobody is controlling it.
-  TableSort? _ownSort;
+  List<TableSort>? _ownSort;
   bool _startedSort = false;
 
-  /// The sort in force: the one given, or the one the table is keeping.
-  TableSort? get _sort {
-    if (widget.sort != null) return widget.sort;
+  /// The sorts in force, in the order they are compared.
+  List<TableSort> get _sorts {
+    if (widget.sort != null) return _inPriority(widget.sort!);
     if (!_startedSort) {
       _startedSort = true;
       _ownSort = widget.defaultSort;
     }
-    return _ownSort;
+    return _inPriority(_ownSort ?? const []);
+  }
+
+  /// The same list, most telling column first.
+  ///
+  /// The order is worked out here rather than trusted from outside: a caller
+  /// naming the sorts in any order still has them compared by what the
+  /// columns say, so a priority means one thing everywhere.
+  List<TableSort> _inPriority(List<TableSort> of) {
+    final leaves = _leaves;
+    int priorityOf(TableSort sort) =>
+        sort.column >= 0 && sort.column < leaves.length
+            ? leaves[sort.column].sortPriority ?? 0
+            : 0;
+    return [...of]..sort((a, b) => priorityOf(b).compareTo(priorityOf(a)));
+  }
+
+  /// Which way one column is sorted, or null where it is not.
+  TableSortOrder? _orderOf(int column) {
+    for (final sort in _sorts) {
+      if (sort.column == column) return sort.order;
+    }
+    return null;
   }
 
   /// The choices the table keeps for itself while nobody is controlling them.
@@ -2288,11 +2401,11 @@ class _TableState<T> extends State<Table<T>> {
   Object? _rowsAsked;
 
   List<T> get _narrowed {
-    final sort = _sort;
+    final sorts = _sorts;
     final filters = _filters;
     final asked = Object.hash(
       identityHashCode(widget.data),
-      sort,
+      Object.hashAll(sorts),
       Object.hashAll([
         for (final entry in filters.entries) ...[
           entry.key,
@@ -2303,7 +2416,7 @@ class _TableState<T> extends State<Table<T>> {
     if (_rowsAsked == asked && _rowsCache != null) return _rowsCache!;
 
     _rowsAsked = asked;
-    return _rowsCache = _sorted(_filtered(widget.data, filters), sort);
+    return _rowsCache = _sorted(_filtered(widget.data, filters), sorts);
   }
 
   /// The rows on show: a page of [_narrowed], or every one of them where the
@@ -2347,30 +2460,50 @@ class _TableState<T> extends State<Table<T>> {
     return kept;
   }
 
-  /// The rows in the order the sort asks for, or as they are where none does.
-  List<T> _sorted(List<T> rows, TableSort? sort) {
+  /// The rows in the order the sorts ask for, or as they are where none does.
+  ///
+  /// Each sort in turn, most telling first, and the first that can tell them
+  /// apart decides; the index breaks a tie nothing else could, so a sort is
+  /// stable however many columns take part.
+  List<T> _sorted(List<T> rows, List<TableSort> sorts) {
     final leaves = _leaves;
-    if (sort == null || sort.column < 0 || sort.column >= leaves.length) {
-      return rows;
-    }
-    final column = leaves[sort.column];
-    if (!column.sorts) return rows;
-
-    final ascending = sort.order == TableSortOrder.ascending;
-    final sorter = column.sorter;
+    final live = [
+      for (final sort in sorts)
+        if (sort.column >= 0 &&
+            sort.column < leaves.length &&
+            leaves[sort.column].sorts)
+          sort,
+    ];
+    if (live.isEmpty) return rows;
 
     // Kept beside the row rather than read inside the comparison: a sort asks
-    // for the same value again and again, and the index is what breaks a tie
-    // — Dart's sort is not stable, and twenty rows of one value came out
-    // shuffled without it.
+    // for the same value again and again.
     final keyed = [
       for (var i = 0; i < rows.length; i++)
-        (i, rows[i], sorter == null ? column.value!(rows[i]) : null),
+        (
+          i,
+          rows[i],
+          [
+            for (final sort in live)
+              leaves[sort.column].sorter == null
+                  ? leaves[sort.column].value!(rows[i])
+                  : null,
+          ],
+        ),
     ]..sort((a, b) {
-        final by = sorter != null
-            ? (ascending ? sorter(a.$2, b.$2) : sorter(b.$2, a.$2))
-            : _compare(a.$3, b.$3, ascending: ascending);
-        return by != 0 ? by : a.$1.compareTo(b.$1);
+        for (var s = 0; s < live.length; s++) {
+          final sort = live[s];
+          final column = leaves[sort.column];
+          final ascending = sort.order == TableSortOrder.ascending;
+          final sorter = column.sorter;
+          final by = sorter != null
+              ? (ascending ? sorter(a.$2, b.$2) : sorter(b.$2, a.$2))
+              : _compare(a.$3[s], b.$3[s], ascending: ascending);
+          if (by != 0) return by;
+        }
+        // Dart's sort is not stable past a handful of rows, so the index is
+        // what keeps ties in the order they arrived.
+        return a.$1.compareTo(b.$1);
       });
 
     return [for (final row in keyed) row.$2];
@@ -2405,15 +2538,33 @@ class _TableState<T> extends State<Table<T>> {
   /// Ascending, then descending, then back to the order the rows came in,
   /// which is what a reader expects of a third tap: somewhere to put the
   /// rows back without reaching for anything else.
+  ///
+  /// A column that names a [TableColumn.sortPriority] joins what is already
+  /// in force; one that names none sorts alone and clears the rest, since a
+  /// table sorted by a column that has nothing to say about ties is sorted by
+  /// that column and no other.
   void _cycleSort(int column) {
-    final was = _sort;
-    final next = was == null || was.column != column
-        ? TableSort(column, TableSortOrder.ascending)
-        : was.order == TableSortOrder.ascending
-            ? TableSort(column, TableSortOrder.descending)
+    final leaves = _leaves;
+    final joins = column < leaves.length && leaves[column].sortPriority != null;
+    final was = _sorts;
+    final order = _orderOf(column);
+    final next = order == null
+        ? TableSortOrder.ascending
+        : order == TableSortOrder.ascending
+            ? TableSortOrder.descending
             : null;
-    if (widget.sort == null) setState(() => _ownSort = next);
-    widget.onSortChanged?.call(next);
+
+    // Reported in the order they are compared, not in the order they were
+    // tapped: what comes back is what is in force, and a priority means one
+    // thing everywhere.
+    final sorts = _inPriority([
+      if (joins)
+        for (final sort in was)
+          if (sort.column != column) sort,
+      if (next != null) TableSort(column, next),
+    ]);
+    if (widget.sort == null) setState(() => _ownSort = sorts);
+    widget.onSortChanged?.call(sorts);
   }
 
   /// The rows the cached widths were measured from, kept to be compared
@@ -2978,7 +3129,6 @@ class _TableState<T> extends State<Table<T>> {
       );
     }
 
-    final sort = _sort;
     // The carets stand at the cell's trailing edge rather than beside the
     // word: a column of headings whose carets each sat at the end of a word
     // of its own length is a ragged edge.
@@ -2994,7 +3144,7 @@ class _TableState<T> extends State<Table<T>> {
         ),
         SizedBox(width: t.sizeXXS),
         _Carets(
-          order: sort?.column == index ? sort!.order : null,
+          order: _orderOf(index),
           active: r.headerMarkActiveColor,
           idle: r.headerMarkColor,
           size: r.sortCaretSize,
@@ -3100,7 +3250,7 @@ class _TableState<T> extends State<Table<T>> {
     // A column the table is sorted by keeps the fill, hand or no hand: it is
     // the one doing something, so it is the one marked. Which also means the
     // fill arrives with a `defaultSort`, before anybody has touched it.
-    final sorted = _sort?.column == index;
+    final sorted = _orderOf(index) != null;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => _hoveredHeading.value = index,
@@ -3856,6 +4006,90 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
 }
 
 /// A funnel: the mark at the head of a column that can be narrowed.
+/// Holds a table's heading in view while the page scrolls past it.
+///
+/// The heading keeps its place in the layout — it is only *drawn* lower down,
+/// so nothing moves and no space is taken twice. Which is also why it is
+/// drawn last, over the rows: a heading translated within a column would be
+/// painted before them and disappear underneath.
+class _Sticky extends StatefulWidget {
+  const _Sticky({
+    required this.heading,
+    required this.headingHeight,
+    required this.body,
+    required this.offset,
+  });
+
+  final Widget heading;
+  final double headingHeight;
+  final Widget body;
+  final double offset;
+
+  @override
+  State<_Sticky> createState() => _StickyState();
+}
+
+class _StickyState extends State<_Sticky> {
+  ScrollPosition? _position;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = Scrollable.maybeOf(context)?.position;
+    if (next == _position) return;
+    _position?.removeListener(_onScroll);
+    _position = next?..addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _position?.removeListener(_onScroll);
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (mounted) setState(() {});
+  }
+
+  /// How far the heading has to come down to stay in view.
+  ///
+  /// Nought while the table's top is still on screen, then the distance it
+  /// has gone above — and never so far that the heading leaves the rows it
+  /// belongs to.
+  double get _shift {
+    final position = _position;
+    final box = context.findRenderObject();
+    if (position == null || box is! RenderBox || !box.hasSize) return 0;
+    final viewport = RenderAbstractViewport.maybeOf(box);
+    if (viewport == null) return 0;
+    final reveal = viewport.getOffsetToReveal(box, 0).offset;
+    final past = position.pixels - reveal + widget.offset;
+    return past.clamp(
+        0.0, math.max(0.0, box.size.height - widget.headingHeight));
+  }
+
+  @override
+  Widget build(BuildContext context) => Stack(
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // The heading's place, kept empty: the heading itself is drawn
+              // over everything below.
+              SizedBox(height: widget.headingHeight),
+              widget.body,
+            ],
+          ),
+          Transform.translate(
+            offset: Offset(0, _shift),
+            child:
+                SizedBox(height: widget.headingHeight, child: widget.heading),
+          ),
+        ],
+      );
+}
+
 /// A plus inside a rounded square, which becomes a minus as the row opens.
 ///
 /// [open] runs from nought to one, and the upright of the plus goes with it —

@@ -58,6 +58,7 @@ class _TableDemoState extends State<TableDemo> {
   bool _bordered = false;
   Person? _tapped;
   TableSort? _sort;
+  List<TableSort> _sorts = const [];
   Map<int, List<Object?>> _filters = const {};
   List<Person> _picked = const [];
   bool _radio = false;
@@ -204,7 +205,8 @@ class _TableDemoState extends State<TableDemo> {
               Table<Person>(
                 bordered: true,
                 data: _people,
-                onSortChanged: (next) => setState(() => _sort = next),
+                onSortChanged: (next) =>
+                    setState(() => _sort = next.isEmpty ? null : next.first),
                 columns: [
                   // A value is enough: the column knows what to compare.
                   TableColumn(
@@ -235,6 +237,49 @@ class _TableDemoState extends State<TableDemo> {
                 'rows came in. Name and Age compare their values; City is '
                 'told how, and sorts by the last letter. '
                 '${_sort == null ? 'Unsorted.' : 'Sorted by column ${_sort!.column}, ${_sort!.order.name}.'}',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Sorting by more than one column',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _many.take(9).toList(),
+                onSortChanged: (next) => setState(() => _sorts = next),
+                columns: [
+                  // A priority makes a column join what is already in force;
+                  // the higher number is compared first.
+                  TableColumn(
+                    title: const Text('City'),
+                    sortable: true,
+                    sortPriority: 2,
+                    value: (p) => p.city,
+                  ),
+                  TableColumn(
+                    title: const Text('Age'),
+                    sortable: true,
+                    sortPriority: 1,
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                  ),
+                  // No priority: tapping this one sorts by it alone.
+                  TableColumn(
+                    title: const Text('Name'),
+                    sortable: true,
+                    value: (p) => p.name,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tap City, then Age: both stay, city first and age within a '
+                'city. Tap Name and it sorts by that alone, since it has '
+                'nothing to say about ties. '
+                '${_sorts.isEmpty ? 'Unsorted.' : 'In force: ${_sorts.map((s) => '${s.column} ${s.order.name}').join(', ')}.'}',
               ),
             ],
           ),
@@ -670,7 +715,7 @@ class _TableDemoState extends State<TableDemo> {
               Table<Person>(
                 bordered: true,
                 scroll: const TableScroll(y: 240),
-                defaultSort: const TableSort(1, TableSortOrder.ascending),
+                defaultSort: const [TableSort(1, TableSortOrder.ascending)],
                 data: _crowd,
                 columns: [
                   TableColumn(
@@ -854,6 +899,29 @@ class _TableDemoState extends State<TableDemo> {
                 'with a loose Age between them: the order you wrote is the '
                 'order you see, Age slides under, and City comes to rest right '
                 'behind Name rather than being moved there from the start.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A heading held in view',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                // No scroll.y: the rows are part of the page, and the heading
+                // is held against the top as the page goes past.
+                sticky: const TableSticky(),
+                data: _many,
+                columns: _columns,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Scroll the page: the heading stops at the top and the rows '
+                'carry on under it. It keeps its place in the layout — it is '
+                'only drawn lower down — so nothing shifts. offsetHeader '
+                'holds it below a bar of your own.',
               ),
             ],
           ),

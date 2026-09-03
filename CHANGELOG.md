@@ -318,6 +318,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   heading too, composited over that ground, or the two per cent wash a heading
   carries let the other headings be watched travelling behind it.
 
+  **Sorting by more than one column.** `TableColumn.sortPriority` lets several
+  be in force at once: a column that names one joins what is already sorted,
+  the higher number compared first, and a column that names none sorts alone.
+  `sort`, `defaultSort` and `onSortChanged` take a list, kept and reported in
+  priority order so the priority means one thing everywhere.
+
+  **A heading held in view.** `sticky` keeps the heading against the top of the
+  page while the rows scroll past it, with `offsetHeader` for a bar of your
+  own. It is for a table whose rows are part of the page; one with a `scroll.y`
+  keeps its heading already. The heading keeps its place in the layout and is
+  only drawn lower down, so nothing moves and no space is taken twice, and it
+  takes `pinnedBg` under it — a heading's own fill is a two per cent wash, and
+  held over the rows it let them be read straight through.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

@@ -375,7 +375,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nought against a layout that already matches, and nothing jumps. The drop hands every cell a fresh offset of
   nought rather than an old one to carry into its new place, so it settles at
   once instead of setting off again from the wrong side. Giving the drag up
-  slides them back.
+  slides them back, and carrying one off the table sends the neighbours home
+  until it comes back — leaving is not letting go.
 
   Where a carried column would land is read from the finger's place against
   that layout rather than from whichever cell lies under it: the cells slide,

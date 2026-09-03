@@ -4723,6 +4723,40 @@ void main() {
       expect(lit, isEmpty);
     });
 
+    testWidgets('a hand that wanders off and comes back still moves them',
+        (tester) async {
+      // Leaving the table is not letting go of it. Cleared together with what
+      // it was picked up from, there was nothing left to move the neighbours
+      // for and only the heading's own fill answered.
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+      await tester.pumpAndSettle();
+
+      double leftOf(String text) => tester.getRect(find.text(text).first).left;
+      final atRest = leftOf('City');
+      final atCity = tester.getCenter(find.text('City'));
+
+      final grab =
+          await tester.startGesture(tester.getCenter(find.text('Name')));
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(atCity);
+      await tester.pumpAndSettle();
+      final carried = leftOf('City');
+      expect(carried, lessThan(atRest));
+
+      // Out of the table altogether, and the neighbours go home.
+      await grab.moveTo(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      expect(leftOf('City'), closeTo(atRest, 1));
+
+      // Back again, and they move aside once more.
+      await grab.moveTo(atCity);
+      await tester.pumpAndSettle();
+      expect(leftOf('City'), closeTo(carried, 1));
+
+      await grab.up();
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('a drag given up puts the columns back', (tester) async {
       await tester.pumpWidget(table(onReordered: (_, __) {}));
 
@@ -4993,6 +5027,36 @@ void main() {
 
       expect(topOf('n1'), lessThan(atRest[0]));
       expect(topOf('n2'), lessThan(atRest[1]));
+
+      await grab.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a hand that wanders off and comes back still moves them',
+        (tester) async {
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+      await tester.pumpAndSettle();
+
+      double topOf(String text) => tester.getRect(find.text(text).first).top;
+      final atRest = topOf('n2');
+      final onto = tester.getCenter(find.text('n2'));
+
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('n0')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pumpAndSettle();
+      final carried = topOf('n2');
+      expect(carried, lessThan(atRest));
+
+      await grab.moveTo(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      expect(topOf('n2'), closeTo(atRest, 1));
+
+      await grab.moveTo(onto);
+      await tester.pumpAndSettle();
+      expect(topOf('n2'), closeTo(carried, 1));
 
       await grab.up();
       await tester.pumpAndSettle();

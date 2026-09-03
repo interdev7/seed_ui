@@ -722,6 +722,9 @@ Nothing is reordered until the drop: the layout keeps the order it has and
 only what is painted moves, so when the order does change the offsets fall to
 nought against a layout that already matches it, and nothing jumps.
 
+Carry it off the table and the neighbours go home; bring it back and they move
+aside again — leaving is not letting go.
+
 Where a carried column would land is read from where the finger is against
 that layout, not from whichever cell lies under it. The cells slide, so asking
 them chases the answer: every twitch of the hand found a different cell where

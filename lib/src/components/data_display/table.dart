@@ -3769,7 +3769,10 @@ class _TableState<T> extends State<Table<T>> {
       },
       onAcceptWithDetails: (details) =>
           _moveRow(details.data, _dragRowOver ?? details.data),
-      onLeave: (_) => _endRowDrag(),
+      onLeave: (_) {
+        if (_dragRowOver == null) return;
+        setState(() => _dragRowOver = null);
+      },
       builder: (context, _, __) => KeyedSubtree(key: _bodyAnchor, child: body),
     );
   }
@@ -3799,7 +3802,13 @@ class _TableState<T> extends State<Table<T>> {
       },
       onAcceptWithDetails: (details) =>
           _moveColumn(details.data, _dragOver ?? details.data),
-      onLeave: (_) => _endDrag(),
+      // Only what it is over, not what it was picked up from: leaving the
+      // table is not letting go of it. Cleared together, a hand that wandered
+      // off and came back had nothing left to move the neighbours for.
+      onLeave: (_) {
+        if (_dragOver == null) return;
+        setState(() => _dragOver = null);
+      },
       builder: (context, _, __) =>
           KeyedSubtree(key: _headingAnchor, child: heading),
     );

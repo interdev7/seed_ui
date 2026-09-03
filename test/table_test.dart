@@ -4431,6 +4431,34 @@ void main() {
       expect(fills, isNotEmpty);
     });
 
+    testWidgets('it costs a lazy table nothing, because it never applies',
+        (tester) async {
+      // A table with a height of its own already keeps its heading, so sticky
+      // is ignored there — and must not push it off the lazy body on the way.
+      Future<int> cells({required bool sticky}) async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(
+          _host(
+            Table<int>(
+              scroll: const TableScroll(y: 200),
+              sticky: sticky ? const TableSticky() : null,
+              columns: [
+                TableColumn<int>(title: const Text('N'), value: (v) => 'n$v'),
+              ],
+              data: [for (var i = 0; i < 200; i++) i],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        return find.byType(RichText).evaluate().length;
+      }
+
+      final without = await cells(sticky: false);
+      final with_ = await cells(sticky: true);
+      expect(with_, without);
+      expect(without, lessThan(60), reason: 'and both are lazy');
+    });
+
     testWidgets('a table with rows of its own is left alone', (tester) async {
       // Its heading already stays put; holding it again would only take it
       // away from its own rows.

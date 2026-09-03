@@ -344,11 +344,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
   sideways where that is wider than its box. `y` as well for both ways.
 
-  Seven things turn the lazy body off, since finding a row by multiplying is the
+  Six things turn the lazy body off, since finding a row by multiplying is the
   whole of how it works: `expandable`, a column with a `span`, a column with
-  `children`, a column with a `summary`, `sticky`, `columnsDraggable` and
-  `rowsDraggable` — a column sliding aside has to know how far, which is a
-  width, and rows have to be widgets of their own to be picked up. Such a table builds every
+  `children`, a column with a `summary`, `columnsDraggable` and `rowsDraggable` — a
+  column sliding aside has to know how far, which is a width, and rows have to
+  be widgets of their own to be picked up. `sticky` is not among them: a table
+  with a `scroll.y` already keeps its heading in view inside its own height, so
+  sticky does not apply to one and costs it nothing. Such a table builds every
   row it is given even with a `scroll.y` — the rows still scroll inside the
   height named, they are simply all there. The documentation lists them in one
   place and says what it costs.

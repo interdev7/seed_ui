@@ -196,7 +196,7 @@ nothing to virtualise in a table you can see all of.
 ### What turns it off
 
 Finding a row by multiplying is the whole of how a lazy body works, so
-anything that breaks a uniform grid of rows takes the laziness with it. Seven
+anything that breaks a uniform grid of rows takes the laziness with it. Six
 things do, and a table using any of them builds every row it is given even
 with a `scroll.y` — the rows still scroll inside the height you named, they
 are simply all there:
@@ -207,15 +207,19 @@ are simply all there:
 | a column with a `span` | a cell reaching across or down cannot be a cell of a grid |
 | a column with `children` | a heading of several rows cannot be a row of the grid either |
 | a column with a `summary` | the row that adds up is laid out beside the heading, against the same measured widths |
-| `sticky` | the heading is drawn over the rows rather than above them |
 | `columnsDraggable` | a column sliding aside has to know how far, which is a width |
 | `rowsDraggable` | rows have to be widgets of their own to be picked up |
 
-All five are drawn against one measured set of column widths instead, which is
+All six are drawn against one measured set of column widths instead, which is
 what keeps their parts lined up — and the reason they share a fate. Two of
 them could be made lazy again, since a group heading and a summary row leave
-the rows themselves uniform; the other three cannot without a body that
+the rows themselves uniform; the other four cannot without a body that
 measures each row as it goes.
+
+`sticky` is **not** among them, though it looks as though it should be: a
+table with a `scroll.y` already keeps its heading in view inside its own
+height, so `sticky` does not apply to one and takes nothing away. Measured at
+three hundred rows: fifty-two cells built with it and fifty-two without.
 
 The cost is the one this section opened with, in reverse: five hundred rows of
 fifteen columns is seven and a half thousand cells rather than a hundred-odd.
@@ -652,8 +656,10 @@ It is for a table whose rows are part of the page. One with a `scroll.y` of
 its own already keeps its heading — the rows scroll inside it — so `sticky` is
 ignored there rather than taking the heading away from its own rows.
 
-A sticky table is not lazy — see
-[What turns it off](#what-turns-it-off).
+A table without a `scroll.y` builds all its rows anyway — there is nothing to
+virtualise in a table you can see all of — so `sticky` costs nothing. It is
+not among [what turns laziness off](#what-turns-it-off), because it never
+applies where there is any.
 
 The heading keeps its place in the layout and is only *drawn* lower down, so
 nothing moves and no space is taken twice. It takes `pinnedBg` under it, since

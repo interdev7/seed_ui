@@ -688,8 +688,10 @@ columns are named in.
 While a heading is carried it is lifted, tilted and given a ground of its own,
 and **the columns slide aside as it goes** — each by exactly the width of the
 one being carried, over the theme's own duration. Where it is going is where
-it is already standing, so letting go changes nothing further; giving the drag
-up slides them back. A mark on a neighbour can only say *which* column;
+it is already standing, so letting go changes nothing further — the drop hands
+every cell a fresh offset of nought against a layout that now matches, rather
+than an old one to carry into its new place; giving the drag up slides them
+back instead. A mark on a neighbour can only say *which* column;
 moving them says it outright.
 
 Nothing is reordered until the drop: the layout keeps the order it has and

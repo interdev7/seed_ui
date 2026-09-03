@@ -1541,6 +1541,14 @@ class _TableState<T> extends State<Table<T>> {
   /// key every time, and points at nothing that lasts.
   final GlobalKey _headingAnchor = GlobalKey();
 
+  /// Bumped whenever the order is committed.
+  ///
+  /// It goes into the key of every sliding cell, so the drop hands each one a
+  /// fresh element that starts at nought instead of an old one carrying the
+  /// offset it had. Kept as they were, the cells animated *again* on the
+  /// drop — arriving from opposite sides at places they were already in.
+  int _orderRevision = 0;
+
   /// The order the columns are drawn in, as a list of places among the ones
   /// given.
   List<int> get _order => [
@@ -1558,8 +1566,14 @@ class _TableState<T> extends State<Table<T>> {
   /// The layout does not change while a heading is being carried — only what
   /// is painted moves — so when the drop commits the order the offsets fall
   /// to nought against a layout that already matches, and nothing jumps.
-  Widget _slid(Widget cell, double by, Token t) =>
+  /// [slot] names this cell among all of them — a `Table` flattens its rows
+  /// before checking, so two cells cannot share a key even in different rows.
+  Widget _slid(Widget cell, double by, String slot, Token t) =>
       TweenAnimationBuilder<double>(
+        // Keyed by the order it belongs to as well as the place: a committed
+        // order is a new element, which starts where it is meant to be rather
+        // than travelling there.
+        key: ValueKey<String>('$_orderRevision:$slot'),
         tween: Tween<double>(end: by),
         duration: t.motionDurationMid,
         curve: t.motionEaseInOut,
@@ -1626,8 +1640,11 @@ class _TableState<T> extends State<Table<T>> {
       final moved = order.removeAt(from);
       order.insert(to, moved);
       _ownColumnOrder = order;
+      _orderRevision++;
       _dragFrom = null;
       _dragOver = null;
+      // The heading the hand left is no longer under it.
+      _hoveredHeading.value = null;
     });
     widget.onColumnsReordered?.call(from, to);
   }
@@ -1785,6 +1802,7 @@ class _TableState<T> extends State<Table<T>> {
                   t,
                 ),
                 shiftAt(i),
+                'h$i',
                 t,
               ),
           ],
@@ -1800,7 +1818,12 @@ class _TableState<T> extends State<Table<T>> {
               ),
               children: [
                 for (var x = 0; x < columns.length; x++)
-                  _slid(_rowCell(i, columns[x], r, t), shiftAt(x), t),
+                  _slid(
+                    _rowCell(i, columns[x], r, t),
+                    shiftAt(x),
+                    'r${i}c$x',
+                    t,
+                  ),
               ],
             ),
         ];
@@ -3555,6 +3578,7 @@ class _TableState<T> extends State<Table<T>> {
       _dragFrom = null;
       _dragOver = null;
     });
+    _hoveredHeading.value = null;
   }
 
   /// The heading as one place to drop on, which reads the finger's position

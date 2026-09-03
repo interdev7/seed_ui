@@ -363,8 +363,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   columns slide aside as it goes, each by exactly the width of the one carried.
   Nothing is reordered until the drop — the layout keeps its order and only
   what is painted moves — so when the order does change the offsets fall to
-  nought against a layout that already matches, and nothing jumps. Giving the
-  drag up slides them back.
+  nought against a layout that already matches, and nothing jumps. The drop hands every cell a fresh offset of
+  nought rather than an old one to carry into its new place, so it settles at
+  once instead of setting off again from the wrong side. Giving the drag up
+  slides them back.
 
   Where a carried column would land is read from the finger's place against
   that layout rather than from whichever cell lies under it: the cells slide,

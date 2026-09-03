@@ -4674,6 +4674,55 @@ void main() {
       await tester.pumpAndSettle();
     });
 
+    testWidgets('letting go settles at once, with no second journey',
+        (tester) async {
+      // By the drop the columns are already standing where they will stand,
+      // so committing the order must change nothing. Kept as they were, the
+      // cells carried their offsets into the new order and set off again —
+      // arriving from opposite sides at places they were already in.
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+      await tester.pumpAndSettle();
+
+      double leftOf(String text) => tester.getRect(find.text(text).first).left;
+
+      final atCity = tester.getCenter(find.text('City'));
+      final grab =
+          await tester.startGesture(tester.getCenter(find.text('Name')));
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(atCity);
+      await tester.pumpAndSettle();
+
+      final carried = [leftOf('Age'), leftOf('City')];
+
+      await grab.up();
+      await tester.pump();
+      // One frame later, and already home.
+      expect(
+        [leftOf('Age'), leftOf('City')],
+        [closeTo(carried[0], 1), closeTo(carried[1], 1)],
+      );
+
+      await tester.pumpAndSettle();
+      expect(
+        [leftOf('Age'), leftOf('City')],
+        [closeTo(carried[0], 1), closeTo(carried[1], 1)],
+        reason: 'and it never set off again',
+      );
+
+      // And the heading the hand left goes back to its own colour: it is no
+      // longer under anything.
+      final lit = tester
+          .widgetList<ColoredBox>(
+            find.ancestor(
+              of: find.text('Name'),
+              matching: find.byType(ColoredBox),
+            ),
+          )
+          .map((b) => b.color)
+          .where((c) => c.a != 0);
+      expect(lit, isEmpty);
+    });
+
     testWidgets('a drag given up puts the columns back', (tester) async {
       await tester.pumpWidget(table(onReordered: (_, __) {}));
 

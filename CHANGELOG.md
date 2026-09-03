@@ -347,11 +347,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
   sideways where that is wider than its box. `y` as well for both ways.
 
-  Four things turn the lazy body off, since finding a row by multiplying is the
+  Two things turn the lazy body off, since finding a row by multiplying is the
   whole of how it works: `expandable`, a column with a `span`, a column with
-  `children`, `columnsDraggable` and `rowsDraggable` — a
-  column sliding aside has to know how far, which is a width, and rows have to
-  be widgets of their own to be picked up. `sticky` is not among them: a table
+  `children`, — a panel is whatever height its
+  content is, and a cell reaching down needs the rows under it laid out first. `sticky` is not among them: a table
   with a `scroll.y` already keeps its heading in view inside its own height, so
   sticky does not apply to one and costs it nothing. Such a table builds every
   row it is given even with a `scroll.y` — the rows still scroll inside the
@@ -397,6 +396,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one whose heading was tapped, so a sortable first column with a selection
   simply did nothing; and a second drag of a heading moved the wrong column,
   since the drag spoke in names while the order it changed was in places.
+
+  On a table with a `scroll.y` both kinds of dragging are a shift the viewport
+  adds where it places a column or a row, and the viewport is asked where a
+  carried one would land — it laid them out, so it is the only thing that
+  knows. Three hundred rows keep building forty-odd cells while a heading or a
+  row is carried across them.
 
   On a table with a `scroll.y` a grouped heading is laid out from a plan the
   viewport is handed — where every heading cell stands and how much of the grid

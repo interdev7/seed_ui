@@ -195,7 +195,7 @@ nothing to virtualise in a table you can see all of.
 ### What turns it off
 
 Finding a row by multiplying is the whole of how a lazy body works, so
-anything that breaks a uniform grid of rows takes the laziness with it. Four
+anything that breaks a uniform grid of rows takes the laziness with it. Two
 things do, and a table using any of them builds every row it is given even
 with a `scroll.y` — the rows still scroll inside the height you named, they
 are simply all there:
@@ -204,19 +204,22 @@ are simply all there:
 | --- | --- |
 | `expandable` | a panel is whatever height its content is, and it sits between two rows |
 | a column with a `span` | a cell reaching across or down cannot be a cell of a grid |
-| `columnsDraggable` | a column sliding aside has to know how far, which is a width |
-| `rowsDraggable` | rows have to be widgets of their own to be picked up |
 
-All four are drawn against one measured set of column widths instead, which is
-what keeps their parts lined up — and the reason they share a fate. None of
-the four can be made lazy without a body that measures each row as it goes,
-which is a different body from the one that finds a row by multiplying.
+Both are drawn against one measured set of column widths instead, which is
+what keeps their parts lined up. Neither can be made lazy without a body that
+measures each row as it goes, which is a different body from the one that
+finds a row by multiplying: a panel is whatever height its content is, and a
+cell reaching down needs the rows under it to be laid out before it can know
+how far it reaches.
 
-Two things used to be among them and no longer are. A `summary` is held at the
-foot the way the heading is held at the head; a grouped heading is laid out
-from a plan the viewport is given, saying where every heading cell stands and
-how much of the grid it covers. Measured at three hundred rows: twelve hundred
-cells built with either before, and fifty or so after.
+Four things used to be among them and no longer are. A `summary` is held at
+the foot the way the heading is held at the head. A grouped heading is laid
+out from a plan the viewport is given, saying where every heading cell stands
+and how much of the grid it covers. And both kinds of dragging are a shift the
+viewport adds where it places a column or a row, with the viewport itself
+asked where a carried one would land — it laid them out, so it is the only
+thing that knows. Measured at three hundred rows: twelve hundred cells built
+with any of them before, and forty or so after.
 
 `sticky` is **not** among them, though it looks as though it should be: a
 table with a `scroll.y` already keeps its heading in view inside its own

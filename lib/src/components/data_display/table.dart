@@ -2302,8 +2302,8 @@ class _TableState<T> extends State<Table<T>> {
         (_hasSummary && !_detached) ||
         _hasSpans ||
         _isSticky ||
-        widget.columnsDraggable ||
-        widget.rowsDraggable) {
+        (widget.columnsDraggable && !_detached) ||
+        (widget.rowsDraggable && !_detached)) {
       // Rows that open are drawn as grids with panels between them, and a
       // heading of more than one row is drawn by hand — a `Table` cannot span
       // a cell across its columns, so a group's title cannot be a cell of the
@@ -2330,8 +2330,12 @@ class _TableState<T> extends State<Table<T>> {
         // `scroll.y` is the height of the rows, not of the table, and the
         // heading stands above them. One viewport now holds both, so the
         // heading's row is added back on rather than eating into the body.
-        height: widget.scroll!.y! + (_showHeader ? _lazyRowHeight(r, t) : 0),
-        child: _handOn(_lazyBody(r, t, rule)),
+        height: widget.scroll!.y! +
+            (_showHeader ? _lazyRowHeight(r, t) * _headingDepth : 0) +
+            (_hasSummary ? _lazyRowHeight(r, t) : 0),
+        child: _dropRowsOnRows(
+          _dropOnRows(_handOn(_lazyBody(r, t, rule))),
+        ),
       );
     } else if (!_hasPinned) {
       final all = <flutter.TableRow>[
@@ -3830,6 +3834,85 @@ class _TableState<T> extends State<Table<T>> {
     );
   }
 
+  /// The lazy body as one place to drop a heading on.
+  ///
+  /// Which column is under the finger is asked of the viewport, which laid
+  /// the columns out and is the only thing that knows where a held one came
+  /// to rest. Asking the cells instead would chase them as they slide.
+  Widget _dropOnRows(Widget rows) {
+    if (!widget.columnsDraggable) return rows;
+
+    int? placeAt(Offset global) {
+      final box = _headingAnchor.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) return null;
+      final viewport = _viewportOf(box);
+      if (viewport == null) return null;
+      final at = viewport.columnAtLocal(box.globalToLocal(global).dx);
+      return at == null ? null : at - _serviceColumns;
+    }
+
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (_) => true,
+      onMove: (details) {
+        final over = placeAt(details.offset);
+        if (over == null || over < 0 || over == _dragOver) return;
+        setState(() => _dragOver = over);
+      },
+      onAcceptWithDetails: (details) =>
+          _moveColumn(details.data, _dragOver ?? details.data),
+      onLeave: (_) {
+        if (_dragOver == null) return;
+        setState(() => _dragOver = null);
+      },
+      builder: (context, _, __) =>
+          KeyedSubtree(key: _headingAnchor, child: rows),
+    );
+  }
+
+  /// The lazy body as one place to drop a row into.
+  Widget _dropRowsOnRows(Widget rows) {
+    if (!widget.rowsDraggable) return rows;
+
+    int? rowAt(Offset global) {
+      final box = _bodyAnchor.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) return null;
+      final viewport = _viewportOf(box);
+      return viewport?.rowAtLocal(box.globalToLocal(global).dy);
+    }
+
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (_) => true,
+      onMove: (details) {
+        final over = rowAt(details.offset);
+        if (over == null || over == _dragRowOver) return;
+        setState(() => _dragRowOver = over);
+      },
+      onAcceptWithDetails: (details) =>
+          _moveRow(details.data, _dragRowOver ?? details.data),
+      onLeave: (_) {
+        if (_dragRowOver == null) return;
+        setState(() => _dragRowOver = null);
+      },
+      builder: (context, _, __) => KeyedSubtree(key: _bodyAnchor, child: rows),
+    );
+  }
+
+  /// The viewport under [box], where the columns were laid out.
+  _RenderRows? _viewportOf(RenderObject box) {
+    _RenderRows? found;
+    void look(RenderObject node) {
+      if (found != null) return;
+      if (node is _RenderRows) {
+        found = node;
+        return;
+      }
+      node.visitChildren(look);
+    }
+
+    look(box);
+    return found;
+  }
+
   /// The heading as one place to drop on, which reads the finger's position
   /// against the columns rather than asking whatever lies under it.
   Widget _dropOnHeading(Widget heading, List<double> widths) {
@@ -4002,6 +4085,24 @@ class _TableState<T> extends State<Table<T>> {
         t,
       ),
     );
+    if (widget.rowsDraggable) {
+      // Picked up by any of its cells: a lazy body has no row of its own to
+      // take hold of, only the cells standing in it.
+      cell = Draggable<int>(
+        data: index,
+        axis: Axis.vertical,
+        dragAnchorStrategy: pointerDragAnchorStrategy,
+        onDragStarted: () => setState(() {
+          _dragRowFrom = index;
+          _dragRowOver = index;
+        }),
+        onDraggableCanceled: (_, __) => _endRowDrag(),
+        onDragEnd: (_) => _endRowDrag(),
+        feedback: const SizedBox.shrink(),
+        childWhenDragging: Opacity(opacity: 0.35, child: cell),
+        child: MouseRegion(cursor: SystemMouseCursors.grab, child: cell),
+      );
+    }
     final opens = widget.expandable?.byRowTap ?? false;
     if (widget.onRowTap != null || opens) {
       cell = GestureDetector(
@@ -4124,6 +4225,8 @@ class _TableState<T> extends State<Table<T>> {
                       ),
                   ]
                 : const [],
+            shifts: _columnShifts(widths.columns),
+            rowShifts: _rowShifts(_rows.length, _lazyRowHeight(r, t)),
             // The row that adds up is held at the foot as the heading is held
             // at the head: one row, out of the run that scrolls.
             footerRows: _hasSummary ? 1 : 0,
@@ -4907,6 +5010,8 @@ class _Rows extends TwoDimensionalScrollView {
     required this.rowHeight,
     required this.headerRows,
     required this.headerPlan,
+    required this.shifts,
+    required this.rowShifts,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -4929,6 +5034,12 @@ class _Rows extends TwoDimensionalScrollView {
   /// Where every heading cell stands and how much it covers.
   final List<({int x, int y, int across, int down})> headerPlan;
 
+  /// How far each column is slid aside while a heading is carried.
+  final List<double> shifts;
+
+  /// And how far each row is, while a row is carried.
+  final List<double> rowShifts;
+
   /// How many rows are held at the foot — the row that adds up, or none.
   final int footerRows;
 
@@ -4948,6 +5059,8 @@ class _Rows extends TwoDimensionalScrollView {
         rowHeight: rowHeight,
         headerRows: headerRows,
         headerPlan: headerPlan,
+        shifts: shifts,
+        rowShifts: rowShifts,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -4967,6 +5080,8 @@ class _RowsViewport extends TwoDimensionalViewport {
     required this.rowHeight,
     required this.headerRows,
     required this.headerPlan,
+    required this.shifts,
+    required this.rowShifts,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -4988,6 +5103,12 @@ class _RowsViewport extends TwoDimensionalViewport {
 
   /// Which columns are held at an edge, in the order they are drawn.
   final List<({int x, int y, int across, int down})> headerPlan;
+
+  /// How far each column is slid aside while a heading is carried.
+  final List<double> shifts;
+
+  /// And how far each row is, while a row is carried.
+  final List<double> rowShifts;
   final List<TableColumnFixed?> pinning;
   final Color shadeColor;
   final double shadeExtent;
@@ -4999,6 +5120,8 @@ class _RowsViewport extends TwoDimensionalViewport {
         rowHeight: rowHeight,
         headerRows: headerRows,
         headerPlan: headerPlan,
+        shifts: shifts,
+        rowShifts: rowShifts,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -5019,6 +5142,8 @@ class _RowsViewport extends TwoDimensionalViewport {
       ..rowHeight = rowHeight
       ..headerRows = headerRows
       ..headerPlan = headerPlan
+      ..shifts = shifts
+      ..rowShifts = rowShifts
       ..footerRows = footerRows
       ..pinning = pinning
       ..shadeColor = shadeColor
@@ -5038,6 +5163,8 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     required double rowHeight,
     required int headerRows,
     required List<({int x, int y, int across, int down})> headerPlan,
+    required List<double> shifts,
+    required List<double> rowShifts,
     required int footerRows,
     required List<TableColumnFixed?> pinning,
     required Color shadeColor,
@@ -5053,6 +5180,8 @@ class _RenderRows extends RenderTwoDimensionalViewport {
         _rowHeight = rowHeight,
         _headerRows = headerRows,
         _headerPlan = headerPlan,
+        _shifts = shifts,
+        _rowShifts = rowShifts,
         _footerRows = footerRows,
         _pinning = pinning,
         _shadeColor = shadeColor,
@@ -5205,6 +5334,83 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     parentDataOf(child).layoutOffset = Offset(dx, dy);
   }
 
+  /// How far each column has been slid aside while a heading is carried.
+  ///
+  /// Only what is painted moves; the layout keeps the order it has, so the
+  /// drop commits against a table already standing where it will stand.
+  List<double> _shifts = const [];
+  set shifts(List<double> value) {
+    if (_shifts.length == value.length) {
+      var same = true;
+      for (var i = 0; i < value.length; i++) {
+        if (_shifts[i] != value[i]) {
+          same = false;
+          break;
+        }
+      }
+      if (same) return;
+    }
+    _shifts = value;
+    markNeedsLayout();
+  }
+
+  double _shiftOf(int column) => column < _shifts.length ? _shifts[column] : 0;
+
+  /// How far each row has been slid aside while one is being carried.
+  List<double> _rowShifts = const [];
+  set rowShifts(List<double> value) {
+    if (_rowShifts.length == value.length) {
+      var same = true;
+      for (var i = 0; i < value.length; i++) {
+        if (_rowShifts[i] != value[i]) {
+          same = false;
+          break;
+        }
+      }
+      if (same) return;
+    }
+    _rowShifts = value;
+    markNeedsLayout();
+  }
+
+  double _rowShiftOf(int row) =>
+      row >= 0 && row < _rowShifts.length ? _rowShifts[row] : 0;
+
+  /// Which row is drawn over [y], counting from the viewport's leading edge —
+  /// what a drag asks when it wants to know where a carried row would land.
+  int? rowAtLocal(double y) {
+    if (_rowHeight <= 0) return null;
+    final rows =
+        (delegate as TwoDimensionalChildBuilderDelegate).maxYIndex! + 1;
+    final bodyRows = rows - _headerRows - _footerRows;
+    if (bodyRows <= 0) return null;
+    final at = (y - _headerHeight + verticalOffset.pixels) ~/ _rowHeight;
+    return at.clamp(0, bodyRows - 1);
+  }
+
+  /// Which column is drawn over [x], counting from the viewport's leading
+  /// edge — what a drag asks when it wants to know where it would land.
+  ///
+  /// Asked of the layout rather than of whatever cell lies under the finger:
+  /// the cells slide, so asking them chases the answer.
+  int? columnAtLocal(double x) {
+    if (_widths.isEmpty) return null;
+    final across = horizontalOffset.pixels;
+    for (var i = 0; i < _columnCount; i++) {
+      final natural = _startOf(i) - across;
+      final at = switch (_pinning[i]) {
+        TableColumnFixed.start => math.max(natural, _restStart(i)),
+        TableColumnFixed.end => math.min(
+            natural,
+            viewportDimension.width - _trail + _restEndBefore(i),
+          ),
+        null => natural,
+      };
+      if (x >= at && x < at + _widths[i]) return i;
+    }
+    return null;
+  }
+
   /// Where each heading cell stands and how much it covers.
   ///
   /// A group's title reaches across the columns under it and a column heading
@@ -5276,7 +5482,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     /// Where a column is drawn: its own place, carried by the scroll, unless
     /// it is held at an edge and the scroll would take it past its rest.
     double placeOf(int i) {
-      final natural = _startOf(i) - across;
+      final natural = _startOf(i) - across + _shiftOf(i);
       return switch (_pinning[i]) {
         TableColumnFixed.start => math.max(natural, _restStart(i)),
         TableColumnFixed.end =>
@@ -5317,7 +5523,10 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     }
 
     for (var y = _firstRow; y <= _lastRow; y++) {
-      band(y + _headerRows, _headerHeight + y * _rowHeight - down);
+      band(
+        y + _headerRows,
+        _headerHeight + y * _rowHeight - down + _rowShiftOf(y),
+      );
     }
     if (_footerRows > 0) {
       band(rows - 1, size.height - _footerHeight);

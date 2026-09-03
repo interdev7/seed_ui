@@ -5217,6 +5217,62 @@ void main() {
       expect(told, 0);
     });
 
+    testWidgets('a scrolling table can be rearranged and stays lazy',
+        (tester) async {
+      // The viewport lays the columns out, so it is the viewport that is
+      // asked where a carried heading would land — and the shift it slides
+      // them by goes into the same reckoning that places them.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(y: 240),
+            columnsDraggable: true,
+            data: [for (var i = 0; i < 300; i++) i],
+            columns: [
+              for (final name in ['A', 'B', 'C'])
+                TableColumn<int>(
+                  title: Text(name),
+                  value: (v) => '$name$v',
+                ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RichText).evaluate().length, lessThan(80),
+          reason: 'and it did not cost the lazy body');
+
+      double leftOf(String text) => tester.getRect(find.text(text)).left;
+      final atRest = [leftOf('A0'), leftOf('B0'), leftOf('C0')];
+
+      final onto = tester.getCenter(find.text('C'));
+      final grab = await tester.startGesture(tester.getCenter(find.text('A')));
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pumpAndSettle();
+
+      // Carried: A stands where C stood and the others have closed up behind
+      // it — the columns are of a width, so the places swap exactly.
+      expect(leftOf('A0'), closeTo(atRest[2], 1));
+      expect(leftOf('B0'), closeTo(atRest[0], 1));
+      expect(leftOf('C0'), closeTo(atRest[1], 1));
+
+      final carried = [leftOf('A0'), leftOf('B0'), leftOf('C0')];
+      await grab.up();
+      await tester.pump();
+      expect(
+        [leftOf('A0'), leftOf('B0'), leftOf('C0')],
+        [
+          closeTo(carried[0], 1),
+          closeTo(carried[1], 1),
+          closeTo(carried[2], 1),
+        ],
+        reason: 'letting go settles where it already stood',
+      );
+    });
+
     testWidgets('nothing is draggable unless the table says so',
         (tester) async {
       await tester.pumpWidget(table(draggable: false));
@@ -5446,6 +5502,59 @@ void main() {
       await tester.tap(find.text('n1'));
       await tester.pumpAndSettle();
       expect(tapped?.name, 'n1');
+    });
+
+    testWidgets('a scrolling table can be rearranged and stays lazy',
+        (tester) async {
+      // A lazy body has no row of its own to take hold of, only the cells
+      // standing in it — so a cell carries its row, and the viewport is
+      // asked which row the finger is over.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            scroll: const TableScroll(y: 240),
+            rowsDraggable: true,
+            data: [for (var i = 0; i < 300; i++) i],
+            columns: [
+              TableColumn<int>(title: const Text('N'), value: (v) => 'n$v'),
+            ],
+          ),
+          width: 500,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RichText).evaluate().length, lessThan(60),
+          reason: 'and it did not cost the lazy body');
+
+      double topOf(String text) => tester.getRect(find.text(text)).top;
+      final atRest = [topOf('n0'), topOf('n1'), topOf('n2')];
+
+      final onto = tester.getCenter(find.text('n2'));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('n0')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pumpAndSettle();
+
+      expect(topOf('n0'), closeTo(atRest[2], 1),
+          reason: 'carried to the third');
+      expect(topOf('n1'), closeTo(atRest[0], 1), reason: 'and these closed up');
+      expect(topOf('n2'), closeTo(atRest[1], 1));
+
+      final carried = [topOf('n0'), topOf('n1'), topOf('n2')];
+      await grab.up();
+      await tester.pump();
+      expect(
+        [topOf('n0'), topOf('n1'), topOf('n2')],
+        [
+          closeTo(carried[0], 1),
+          closeTo(carried[1], 1),
+          closeTo(carried[2], 1),
+        ],
+        reason: 'letting go settles where it already stood',
+      );
     });
 
     testWidgets('a sort still has the last word', (tester) async {

@@ -5754,4 +5754,66 @@ void main() {
           reason: 'still in the order the sort asks for');
     });
   });
+
+  group('the marks a heading carries', () {
+    testWidgets('they are sized against each other, not each on its own',
+        (tester) async {
+      // The mark that opens a row is the size of a checkbox — the reference
+      // scales it to the same interactive size — and the carets and the
+      // funnel are both the icon size. Asserted as relations rather than as
+      // numbers: what matters is that a column of boxes and a column of
+      // marks agree.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            data: const [0, 1],
+            selection: const TableSelection<int>(),
+            expandable: TableExpandable<int>(
+              builder: (_, v, __) => const Text('panel'),
+            ),
+            columns: [
+              TableColumn<int>(
+                title: const Text('N'),
+                sortable: true,
+                value: (v) => 'n$v',
+                filters: const [TableFilter('one', 1)],
+              ),
+            ],
+          ),
+          width: 600,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Size painted(String painter) => tester
+          .getRect(
+            find
+                .byWidgetPredicate((w) =>
+                    w is CustomPaint &&
+                    w.painter.runtimeType.toString() == painter)
+                .first,
+          )
+          .size;
+
+      final box = tester
+          .getRect(
+            find
+                .byWidgetPredicate(
+                  (w) => w.runtimeType.toString() == 'CheckboxBox',
+                )
+                .first,
+          )
+          .size;
+
+      expect(painted('_ExpandIconPainter').width, closeTo(box.width, 0.5));
+      expect(painted('_ExpandIconPainter').height, closeTo(box.height, 0.5));
+
+      // The pair of carets stands as tall as the funnel: both are the mark
+      // size, and a heading carrying one of each should not look lopsided.
+      final caret = painted('_CaretPainter');
+      final funnel = painted('_FunnelPainter');
+      expect(
+          caret.height * 2 + funnel.height * 0.16, closeTo(funnel.height, 1.5));
+    });
+  });
 }

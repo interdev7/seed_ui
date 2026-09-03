@@ -418,6 +418,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   heading is held at the head, so it costs the lazy body nothing — three
   hundred rows built twelve hundred cells with one before, and fifty after.
 
+  The marks a heading carries are sized against each other rather than each on
+  its own: the mark that opens a row is a checkbox's size — the reference
+  scales it to the same interactive size — and the carets and the funnel are
+  both the icon size, `sortCaretSize` being the pair's own height rather than
+  one triangle's. The opening mark was a fifth larger than a box beside it, and
+  the carets a fifth smaller than the funnel beside them.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

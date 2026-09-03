@@ -923,7 +923,11 @@ class TableToken {
   /// Colour of one that is merely offered.
   final Color? headerMarkColor;
 
-  /// How tall each of the two carets is.
+  /// How tall the pair of carets stands, all told.
+  ///
+  /// The reference sets a font size on the two glyphs rather than a size on
+  /// each triangle, so this is the mark's own size and the carets are worked
+  /// out from it.
   final double? sortCaretSize;
 
   /// How big the funnel at the head of a filtered column is.
@@ -935,7 +939,10 @@ class TableToken {
   /// How wide the field that narrows a filter menu is.
   final double? filterSearchWidth;
 
-  /// How big the chevron that opens a row is.
+  /// How big the mark that opens a row is.
+  ///
+  /// A checkbox's size, which is what the reference scales it to: a column of
+  /// boxes and a column of marks that open should agree.
   final double? expandIconSize;
 
   /// Fill behind the panel under an opened row.
@@ -1002,13 +1009,13 @@ class TableToken {
         headerHoverBg: headerHoverBg ?? t.colorFillSecondary,
         headerMarkActiveColor: headerMarkActiveColor ?? t.primary.base,
         headerMarkColor: headerMarkColor ?? t.colorTextQuaternary,
-        sortCaretSize: sortCaretSize ?? t.sizeXXS,
+        sortCaretSize: sortCaretSize ?? t.fontSizeSM,
         filterIconSize: filterIconSize ?? t.sizeSM,
         filterMenuMaxHeight: filterMenuMaxHeight ?? 264,
         filterHoverBg: filterHoverBg ?? t.colorFill,
         filterSearchWidth: filterSearchWidth ?? 140,
         selectionColumnWidth: selectionColumnWidth ?? t.controlHeightSM,
-        expandIconSize: expandIconSize ?? t.sizeMD,
+        expandIconSize: expandIconSize ?? t.size,
         expandedBg: expandedBg ?? t.colorFillQuaternary,
         summaryBg: summaryBg ?? t.colorBgContainer,
         pinnedBg: pinnedBg ?? t.colorBgContainer,
@@ -4771,22 +4778,28 @@ class _Carets extends StatelessWidget {
   final TableSortOrder? order;
   final Color active;
   final Color idle;
+
+  /// How tall the pair stands, all told — the mark's own size, as the
+  /// reference sets a font size on the two glyphs rather than a size on each
+  /// triangle. The carets are worked out from it, so one number moves both.
   final double size;
+
+  double get _caret => size * 0.4;
 
   @override
   Widget build(BuildContext context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           CustomPaint(
-            size: Size(size * 1.6, size),
+            size: Size(size * 0.62, _caret),
             painter: _CaretPainter(
               order == TableSortOrder.ascending ? active : idle,
               up: true,
             ),
           ),
-          SizedBox(height: size * 0.3),
+          SizedBox(height: size * 0.16),
           CustomPaint(
-            size: Size(size * 1.6, size),
+            size: Size(size * 0.62, _caret),
             painter: _CaretPainter(
               order == TableSortOrder.descending ? active : idle,
               up: false,

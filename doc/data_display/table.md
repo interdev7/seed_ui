@@ -776,6 +776,14 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 
 ## Tokens
 
+The marks a heading carries are sized against each other rather than each on
+its own: the mark that opens a row is a checkbox's size, since a column of
+boxes and a column of marks should agree, and the carets and the funnel are
+both the icon size — the reference sets a font size on the two caret glyphs
+rather than a size on each triangle, so `sortCaretSize` is the pair's own
+height and the triangles are worked out from it.
+
+
 | Token | Default |
 | --- | --- |
 | `headerBg`, `headerColor` | the heading row |
@@ -788,7 +796,7 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `filterIconSize` | `sizeSM` — how big the funnel is |
 | `filterHoverBg` | `colorFill` — the funnel's own ground under the pointer |
 | `filterSearchWidth` | `140` — how wide the field that narrows a menu is |
-| `expandIconSize` | `sizeMD` — how big the mark that opens a row is |
+| `expandIconSize` | `size` — the mark that opens a row, which is a checkbox's size |
 | `summaryBg` | `colorFillQuaternary` — behind the row that adds the columns up |
 | `expandedBg` | `colorFillQuaternary` — behind the panel under an opened row |
 | `selectionColumnWidth` | `controlHeightSM` — room for the box itself; the column is this plus a cell's padding |
@@ -796,7 +804,7 @@ first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 | `headerHoverBg` | `colorFillSecondary` — behind a sortable heading under the pointer, and behind the one being sorted by |
 | `headerMarkActiveColor` | `primary.base` — a mark in force: the caret of the order, a funnel that is narrowing |
 | `headerMarkColor` | `colorTextQuaternary` — a mark merely offered |
-| `sortCaretSize` | `sizeXXS` — how tall each caret is |
+| `sortCaretSize` | `fontSizeSM` — how tall the pair of carets stands, all told |
 | `pinnedBg` | `colorBgContainer` — behind anything held in place, a column at an edge or a heading held in view, which has to be opaque |
 | `pinnedShadowColor` | `colorSplit` — the shade a held column casts over the rows going past it |
 | `pinnedShadowExtent` | `sizeSM` — how far that shade reaches before it has faded out |

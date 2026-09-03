@@ -334,6 +334,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   takes `pinnedBg` under it — a heading's own fill is a two per cent wash, and
   held over the rows it let them be read straight through.
 
+  **A width of its own.** `TableScroll.toContent()` asks for the width the
+  columns themselves want, rather than a number: each is as wide as its widest
+  cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
+  sideways where that is wider than its box. `y` as well for both ways.
+
+  **A width of its own.** `TableScroll.toContent()` asks for the width the
+  columns themselves want, rather than a number: each is as wide as its widest
+  cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
+  sideways where that is wider than its box. `y` as well for both ways.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

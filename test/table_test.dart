@@ -4454,4 +4454,75 @@ void main() {
       expect(find.text('n0'), findsOneWidget);
     });
   });
+
+  group('a width of its own', () {
+    Widget table({TableScroll? scroll, double box = 300}) => _host(
+          Table<_User>(
+            scroll: scroll,
+            data: const [
+              _User('a name long enough to want room', 27),
+              _User('short', 45),
+            ],
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+          width: box,
+        );
+
+    testWidgets('the columns take what they need, not a share of the box',
+        (tester) async {
+      // Squeezed into the box, the long name has to wrap or be cut; asked for
+      // its own width, it stands out to its full length and the table scrolls.
+      await tester.pumpWidget(table(scroll: const TableScroll.toContent()));
+      await tester.pumpAndSettle();
+
+      final name = tester.getRect(find.text('a name long enough to want room'));
+      expect(name.width, greaterThan(300),
+          reason: 'wider than the box it stands in');
+    });
+
+    testWidgets('and it scrolls sideways', (tester) async {
+      await tester.pumpWidget(table(scroll: const TableScroll.toContent()));
+      await tester.pumpAndSettle();
+      final before = tester.getRect(find.text('Name')).left;
+
+      // Dragged by the heading in view: with a content width the far column
+      // stands off the screen and cannot be hit.
+      await tester.drag(find.text('Name'), const Offset(-120, 0));
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.text('Name')).left, closeTo(before - 120, 1));
+    });
+
+    testWidgets('without it the columns share the box', (tester) async {
+      await tester.pumpWidget(table());
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.byType(Table<_User>)).width, closeTo(300, 1));
+    });
+
+    testWidgets('a scrolling body can take its width from its columns too',
+        (tester) async {
+      await tester.pumpWidget(
+        table(scroll: const TableScroll.toContent(y: 120)),
+      );
+      await tester.pumpAndSettle();
+      final name = tester.getRect(find.text('a name long enough to want room'));
+      expect(name.width, greaterThan(300));
+      expect(tester.getRect(find.byType(Table<_User>)).height, lessThan(220),
+          reason: 'the height it was given, heading and all');
+    });
+
+    test('a content width says so through its own constructor', () {
+      expect(const TableScroll.toContent().isToContent, isTrue);
+      expect(const TableScroll(x: 900).isToContent, isFalse);
+      expect(const TableScroll().isToContent, isFalse);
+    });
+  });
 }

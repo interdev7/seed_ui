@@ -451,8 +451,9 @@ class TableFilter {
 /// How much room a [Table] gives itself, and which way it scrolls.
 ///
 /// ```dart
-/// Table(scroll: const TableScroll(y: 320), ...)   // a body that scrolls
-/// Table(scroll: const TableScroll(x: 1200), ...)  // wider than its box
+/// Table(scroll: const TableScroll(y: 320), ...)     // a body that scrolls
+/// Table(scroll: const TableScroll(x: 1200), ...)    // wider than its box
+/// Table(scroll: const TableScroll.toContent(), ...) // as wide as it needs
 /// ```
 @immutable
 class TableScroll {
@@ -461,10 +462,19 @@ class TableScroll {
       : assert(x == null || x > 0, 'a width to scroll across must be positive'),
         assert(y == null || y > 0, 'a height to scroll down must be positive');
 
+  /// A table as wide as its columns need, scrolling sideways where that is
+  /// wider than its box.
+  ///
+  /// The columns take the width of what is in them rather than a share of the
+  /// box, so nothing is squeezed to fit and nothing is stretched to fill.
+  /// Give [y] as well for a table that scrolls both ways.
+  const TableScroll.toContent({this.y}) : x = double.infinity;
+
   /// The width to lay the table out at, however narrow its box.
   ///
   /// Null keeps it to the room it is given. A number wider than that is what
-  /// puts a scrollbar under it.
+  /// puts a scrollbar under it, and [double.infinity] asks for the width the
+  /// columns themselves want — which is what [TableScroll.toContent] writes.
   final double? x;
 
   /// The height of the scrolling body.
@@ -472,6 +482,9 @@ class TableScroll {
   /// Set this and the heading stops travelling with the rows: it sits above
   /// them and stays.
   final double? y;
+
+  /// Whether the width is the columns' own rather than a number.
+  bool get isToContent => x == double.infinity;
 }
 
 /// Which part of a pane is being built.
@@ -1440,6 +1453,10 @@ class _TableState<T> extends State<Table<T>> {
             // equal share is what they can both work out alike.
             // A share, but never squeezed past what a column can be read at:
             // the table grows and scrolls instead.
+            // A content width leaves the columns to their own devices; a
+            // named one has them share what was named.
+            _ when widget.scroll?.isToContent ?? false =>
+              const IntrinsicColumnWidth(),
             _ when _detached || _across != null => MaxColumnWidth(
                 FixedColumnWidth(r.columnMinWidth),
                 const FlexColumnWidth(),
@@ -2053,7 +2070,12 @@ class _TableState<T> extends State<Table<T>> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        // Stretched to the width it is given, except where that width is the
+        // columns' own: inside a sideways scroll there is no width to fill,
+        // and stretching to it asks the table to be infinitely wide.
+        crossAxisAlignment: (widget.scroll?.isToContent ?? false)
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.stretch,
         children: [
           if (widget.header != null)
             Container(
@@ -2075,7 +2097,13 @@ class _TableState<T> extends State<Table<T>> {
       ),
     );
 
-    if (_across != null && !_hasPinned) {
+    // A named width still goes inside a sideways scroll, which is what gives
+    // the table that width to be laid out at. A content width cannot: there
+    // is no number to lay out at, and a body that scrolls down would be
+    // handed an unbounded width to expand into.
+    if (_across != null &&
+        !_hasPinned &&
+        !(_detached && widget.scroll!.isToContent)) {
       // One scroll view around the heading and the rows together, rather than
       // one each kept in step by hand: laid out side by side inside the same
       // viewport they cannot drift apart, because there is only one offset.
@@ -2084,10 +2112,16 @@ class _TableState<T> extends State<Table<T>> {
       // the middle pane alone, and wrapping the lot would carry the pinned
       // ones off with it — which is exactly what it did before this guard.
       body = _across1D(
-        SizedBox(
-          width: math.max(_across!, _leastWidth(_columns, r)),
-          child: body,
-        ),
+        // Asked for the columns' own width, the table is simply not given
+        // one: inside a scroll view with no width to fill, Flutter's own
+        // `Table` gives every column its widest cell, which is the whole of
+        // what a content width means.
+        widget.scroll!.isToContent
+            ? body
+            : SizedBox(
+                width: math.max(_across!, _leastWidth(_columns, r)),
+                child: body,
+              ),
         t,
         _rowsX,
       );
@@ -3423,6 +3457,9 @@ class _TableState<T> extends State<Table<T>> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        // A width of `infinity` is the ask for the columns' own: `resolve`
+        // shares slack only when the room is finite, so an infinite room is
+        // exactly a table that takes what it needs and no more.
         final available = math.max(
           constraints.hasBoundedWidth ? constraints.maxWidth : 0.0,
           _across ?? 0.0,

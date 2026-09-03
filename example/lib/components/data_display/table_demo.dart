@@ -809,6 +809,34 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'As wide as it needs',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                // No number: the columns take the width of what is in them.
+                scroll: const TableScroll.toContent(),
+                data: _people,
+                columns: [
+                  ..._columns,
+                  for (var i = 0; i < 4; i++)
+                    TableColumn(
+                      title: Text('Note $i'),
+                      value: (p) => 'about ${p.name}, note $i',
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Drag across. Nothing is squeezed to fit and nothing is '
+                'stretched to fill: each column is as wide as its widest '
+                'cell, and the table scrolls when that is wider than the box.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Columns that stay put',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

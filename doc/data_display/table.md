@@ -461,6 +461,29 @@ Narrowing a table until the page you were on no longer exists lands you on the
 last page there is, not back on the first, and never on a page with nothing on
 it.
 
+**Rows that come a page at a time.** Left to itself the table counts what it
+was handed and takes the page out of it — the rows are all here and paging
+them is a matter of showing some. Name a `total` and the arrangement turns
+around: the rows handed over are taken to be one page already, drawn as they
+came, and that number is what the pager counts.
+
+```dart
+Table<Post>(
+  data: page,                                  // just this page's rows
+  pagination: TablePagination(
+    page: current,
+    pageSize: 10,
+    total: 100,                                // what the server says there is
+    onChanged: (page, size) => fetch(page, size),
+  ),
+  columns: columns,
+)
+```
+
+A page is then fetched when it is asked for, never all of them at once.
+Sorting and narrowing still work on what is here — one page — so a table paged
+this way usually leaves both to the server too.
+
 The page and the page size are controlled apart: give `page` and a tap only
 reports through `onChanged` while the size changer still works on its own.
 

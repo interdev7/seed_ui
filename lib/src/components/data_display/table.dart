@@ -223,6 +223,7 @@ class TablePagination {
     this.defaultPage = 1,
     this.pageSize,
     this.defaultPageSize = 10,
+    this.total,
     this.onChanged,
     this.position = const [TablePaginationPosition.bottomEnd],
     this.size,
@@ -245,6 +246,34 @@ class TablePagination {
 
   /// How many it holds to begin with (uncontrolled).
   final int defaultPageSize;
+
+  /// How many rows there are in all, where the table cannot know.
+  ///
+  /// Left null the table counts what it was handed — every row after the
+  /// filters — and takes the page out of it itself. That is the usual case:
+  /// the rows are all here and paging them is a matter of showing some.
+  ///
+  /// Give a number and the arrangement turns around: the rows handed over are
+  /// taken to be **one page already**, drawn as they came, and this is what
+  /// the pager counts. For a table paged by a server, where each page is a
+  /// request:
+  ///
+  /// ```dart
+  /// Table<Post>(
+  ///   data: page,                       // just this page's rows
+  ///   pagination: TablePagination(
+  ///     page: current,
+  ///     pageSize: 10,
+  ///     total: 100,                     // what the server says there is
+  ///     onChanged: (p, size) => fetch(p, size),
+  ///   ),
+  ///   columns: columns,
+  /// )
+  /// ```
+  ///
+  /// Sorting and narrowing still work on what is here, which is one page —
+  /// so a table paged this way usually leaves both to the server too.
+  final int? total;
 
   /// Called with the page and the page size whenever either changes.
   final void Function(int page, int pageSize)? onChanged;
@@ -789,6 +818,9 @@ class TableToken {
   final Color? expandedBg;
 
   /// Fill behind the row that adds the columns up.
+  ///
+  /// The body's own ground by default, not a tint: the rule above it is what
+  /// sets it apart, and a fill would make it read as a second heading.
   final Color? summaryBg;
 
   /// How much room the box itself takes in the column of boxes.
@@ -842,7 +874,7 @@ class TableToken {
         selectionColumnWidth: selectionColumnWidth ?? t.controlHeightSM,
         expandIconSize: expandIconSize ?? t.sizeMD,
         expandedBg: expandedBg ?? t.colorFillQuaternary,
-        summaryBg: summaryBg ?? t.colorFillQuaternary,
+        summaryBg: summaryBg ?? t.colorBgContainer,
       );
 }
 
@@ -1989,6 +2021,7 @@ class _TableState<T> extends State<Table<T>> {
   /// the first, and never on a page with nothing on it.
   int get _page {
     final paging = widget.pagination!;
+    final counted = paging.total ?? _narrowed.length;
     int asked;
     if (paging.page != null) {
       asked = paging.page!;
@@ -1996,7 +2029,7 @@ class _TableState<T> extends State<Table<T>> {
       _startPaging();
       asked = _ownPage!;
     }
-    final pages = math.max(1, (_narrowed.length / _pageSize).ceil());
+    final pages = math.max(1, (counted / _pageSize).ceil());
     return asked.clamp(1, pages);
   }
 
@@ -2181,6 +2214,9 @@ class _TableState<T> extends State<Table<T>> {
   /// is looking at.
   List<T> get _rows {
     if (widget.pagination == null) return _narrowed;
+    // A total the caller named means the rows here are already one page —
+    // taken out by whatever knows the rest — so there is nothing to slice.
+    if (widget.pagination!.total != null) return _narrowed;
     final rows = _narrowed;
     final size = _pageSize;
     final from = (_page - 1) * size;
@@ -2999,7 +3035,7 @@ class _TableState<T> extends State<Table<T>> {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: t.size),
       child: Pagination(
-        total: _narrowed.length,
+        total: paging.total ?? _narrowed.length,
         current: _page,
         pageSize: _pageSize,
         onChange: _goToPage,

@@ -3027,6 +3027,61 @@ void main() {
       expect(shown(tester).length, 10, reason: 'still a page of rows');
     });
 
+    testWidgets('a total the caller names is what the pager counts',
+        (tester) async {
+      // The rows handed over are one page already — taken out by whatever
+      // knows the rest — so the table draws them as they came.
+      final page = [for (var i = 20; i < 30; i++) _User('n$i', i)];
+      var asked = 0;
+      var askedFor = 0;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: page,
+            pagination: TablePagination(
+              page: 3,
+              pageSize: 10,
+              total: 100,
+              onChanged: (p, _) {
+                asked++;
+                askedFor = p;
+              },
+            ),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+
+      // All ten drawn, none sliced away.
+      expect(find.text('n20'), findsOneWidget);
+      expect(find.text('n29'), findsOneWidget);
+
+      // And the pager knows there are ten pages, not one — and that it is
+      // standing on the third.
+      expect(
+        find.descendant(
+          of: find.byType(Pagination),
+          matching: find.text('10'),
+        ),
+        findsOneWidget,
+      );
+      expect(tester.widget<Pagination>(find.byType(Pagination)).current, 3);
+
+      await tester.tap(find.descendant(
+        of: find.byType(Pagination),
+        matching: find.text('4'),
+      ));
+      await tester.pumpAndSettle();
+      expect(asked, 1);
+      expect(askedFor, 4, reason: 'the caller fetches that page itself');
+    });
+
     testWidgets('no pagination, no pager', (tester) async {
       await tester.pumpWidget(
         _host(
@@ -3297,6 +3352,53 @@ void main() {
         tester.getRect(find.text('3 people')).left,
         closeTo(tester.getRect(find.text('Chen')).left, 0.5),
       );
+    });
+
+    testWidgets('it stands on the body\'s own ground, not a tint',
+        (tester) async {
+      // A fill would make it read as a second heading; the rule above it is
+      // what sets it apart. The heading's own fill comes from a TableRow
+      // decoration rather than a box, so the two are compared through the
+      // token they are drawn from.
+      late Token token;
+      await tester.pumpWidget(
+        _host(
+          Builder(
+            builder: (context) {
+              token = context.softToken;
+              return Table<_User>(
+                data: people,
+                columns: [
+                  TableColumn<_User>(
+                    title: const Text('Age'),
+                    value: (u) => u.age,
+                    summary: (_, rows) => const Text('sum'),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      );
+
+      final fills = tester
+          .widgetList<DecoratedBox>(
+            find.ancestor(
+              of: find.text('sum'),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((d) => d.decoration)
+          .whereType<BoxDecoration>()
+          .map((d) => d.color)
+          .whereType<Color>()
+          .where((c) => c.a != 0)
+          .toList();
+
+      expect(fills, isNotEmpty);
+      expect(fills.first, token.colorBgContainer);
+      expect(fills.first, isNot(token.colorFillQuaternary),
+          reason: 'not the heading\'s fill');
     });
 
     testWidgets('a column that says nothing leaves its place empty',

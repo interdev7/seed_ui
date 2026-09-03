@@ -216,6 +216,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Table<User>(pagination: const TablePagination(defaultPageSize: 20), ...)
   ```
 
+  `total` is for rows that come a page at a time: name it and the rows handed
+  over are taken to be one page already, drawn as they came, with that number
+  what the pager counts — so a page is fetched when it is asked for rather
+  than all of them at once. Left null the table counts what it holds and takes
+  the page out of it itself.
+
   Paging happens after narrowing and sorting. Everything that draws works from
   the page, so a row's index is its place on it and the heading's box takes the
   page rather than the whole table. Narrowing until the page you were on no

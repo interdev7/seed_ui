@@ -514,13 +514,14 @@ class _TableDemoState extends State<TableDemo> {
             children: [
               Table<Person>(
                 bordered: true,
-                data: _people,
+                data: _many.take(6).toList(),
                 columns: [
                   TableColumn(
                     title: const Text('Name'),
                     value: (p) => p.name,
-                    // The first row's name runs across the city beside it.
-                    span: (_, p, i) => i == 0
+                    // Runs across the city beside it, on the first row and
+                    // again further down.
+                    span: (_, p, i) => i == 0 || i == 3
                         ? const TableCellSpan(columns: 2)
                         : const TableCellSpan(),
                   ),
@@ -529,10 +530,25 @@ class _TableDemoState extends State<TableDemo> {
                     title: const Text('Age'),
                     align: TableAlign.end,
                     value: (p) => p.age,
-                    // And the last two ages are one cell.
-                    span: (_, p, i) => i == 1
-                        ? const TableCellSpan(rows: 2)
+                    // Three rows as one cell, then two more further down.
+                    span: (_, p, i) => switch (i) {
+                      1 => const TableCellSpan(rows: 3),
+                      4 => const TableCellSpan(rows: 2),
+                      _ => const TableCellSpan(),
+                    },
+                  ),
+                  TableColumn(
+                    title: const Text('Note'),
+                    value: (p) => 'about ${p.city}',
+                    // Two rows *and* two columns at once, taking the last
+                    // column with it.
+                    span: (_, p, i) => i == 2
+                        ? const TableCellSpan(columns: 2, rows: 2)
                         : const TableCellSpan(),
+                  ),
+                  TableColumn(
+                    title: const Text('Last'),
+                    value: (p) => 'x${p.age}',
                   ),
                 ],
               ),
@@ -540,8 +556,9 @@ class _TableDemoState extends State<TableDemo> {
               const Text(
                 'A cell that spans covers its neighbours, and those are simply '
                 'not drawn — the table works out which, so nothing has to '
-                'return a nought. A span asking for more than there is takes '
-                'what there is.',
+                'return a nought. Note on the third row takes two columns and '
+                'two rows at once. Point at any cell: what lights up is that '
+                'cell and the rows it stands over, not the rows beside it.',
               ),
             ],
           ),

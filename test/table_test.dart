@@ -4446,6 +4446,105 @@ void main() {
       expect(lit('city 27'), isFalse, reason: 'and nothing beyond it');
     });
 
+    testWidgets('a grid full of spans loses nothing and draws nothing twice',
+        (tester) async {
+      // Six rows and five columns, with spans across, down, and both at once.
+      // The covered places are worked out by the table, so the way to know it
+      // is right is to count: every cell that should be there exactly once,
+      // and every covered one gone.
+      await tester.pumpWidget(
+        _host(
+          Table<int>(
+            data: [for (var i = 0; i < 6; i++) i],
+            columns: [
+              TableColumn<int>(
+                title: const Text('A'),
+                value: (v) => 'a$v',
+                span: (_, v, i) => i == 0 || i == 3
+                    ? const TableCellSpan(columns: 2)
+                    : const TableCellSpan(),
+              ),
+              TableColumn<int>(title: const Text('B'), value: (v) => 'b$v'),
+              TableColumn<int>(
+                title: const Text('C'),
+                value: (v) => 'c$v',
+                span: (_, v, i) => switch (i) {
+                  1 => const TableCellSpan(rows: 3),
+                  4 => const TableCellSpan(rows: 2),
+                  _ => const TableCellSpan(),
+                },
+              ),
+              TableColumn<int>(
+                title: const Text('D'),
+                value: (v) => 'd$v',
+                span: (_, v, i) => i == 2
+                    ? const TableCellSpan(columns: 2, rows: 2)
+                    : const TableCellSpan(),
+              ),
+              TableColumn<int>(title: const Text('E'), value: (v) => 'e$v'),
+            ],
+          ),
+          width: 800,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // A spans B on rows 0 and 3; C is one cell over rows 1..3 and another
+      // over 4..5; D on row 2 takes E with it and covers row 3 as well.
+      const gone = [
+        'b0', 'b3', // covered across by A
+        'c2', 'c3', // covered down by the C cell that starts at row 1
+        'c5', // covered down by the C cell that starts at row 4
+        'd3', // covered down by the D cell that starts at row 2
+        'e2', 'e3', // covered across and down by that same D cell
+      ];
+      for (final text in gone) {
+        expect(find.text(text), findsNothing, reason: '$text is covered');
+      }
+
+      for (final text in [
+        'a0',
+        'a1',
+        'a2',
+        'a3',
+        'a4',
+        'a5',
+        'b1',
+        'b2',
+        'b4',
+        'b5',
+        'c0',
+        'c1',
+        'c4',
+        'd0',
+        'd1',
+        'd2',
+        'd4',
+        'd5',
+        'e0',
+        'e1',
+        'e4',
+        'e5',
+      ]) {
+        expect(find.text(text), findsOneWidget, reason: '$text is drawn once');
+      }
+
+      // And nothing has drifted: an unspanned cell still stands under its own
+      // heading, however much is merged around it.
+      for (final pair in [
+        ('a1', 'A'),
+        ('b1', 'B'),
+        ('d1', 'D'),
+        ('e1', 'E'),
+      ]) {
+        expect(
+          tester.getRect(find.text(pair.$1)).left,
+          closeTo(tester.getRect(find.text(pair.$2)).left, 0.5),
+          reason: '${pair.$1} under ${pair.$2}',
+        );
+      }
+    });
+
     test('a span covers at least its own place', () {
       expect(() => TableCellSpan(columns: 0), throwsAssertionError);
       expect(() => TableCellSpan(rows: 0), throwsAssertionError);

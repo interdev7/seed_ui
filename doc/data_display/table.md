@@ -196,7 +196,7 @@ nothing to virtualise in a table you can see all of.
 ### What turns it off
 
 Finding a row by multiplying is the whole of how a lazy body works, so
-anything that breaks a uniform grid of rows takes the laziness with it. Five
+anything that breaks a uniform grid of rows takes the laziness with it. Six
 things do, and a table using any of them builds every row it is given even
 with a `scroll.y` — the rows still scroll inside the height you named, they
 are simply all there:
@@ -208,6 +208,7 @@ are simply all there:
 | a column with `children` | a heading of several rows cannot be a row of the grid either |
 | a column with a `summary` | the row that adds up is laid out beside the heading, against the same measured widths |
 | `sticky` | the heading is drawn over the rows rather than above them |
+| `columnsDraggable` | a column sliding aside has to know how far, which is a width |
 
 All five are drawn against one measured set of column widths instead, which is
 what keeps their parts lined up — and the reason they share a fate. Two of
@@ -684,11 +685,30 @@ it was listed, so carrying one about does not quietly point them at its
 neighbour: the table keeps the order it draws in apart from the order the
 columns are named in.
 
-While a heading is carried it is lifted, tilted and given a ground of its own;
-the column it came from stays where it is and fades, rather than leaving a gap
-that would shove its neighbours under the hand; and the column it would land on
-takes the fill a heading takes under the pointer — the same answer a heading
-gives to everything else.
+While a heading is carried it is lifted, tilted and given a ground of its own,
+and **the columns slide aside as it goes** — each by exactly the width of the
+one being carried, over the theme's own duration. Where it is going is where
+it is already standing, so letting go changes nothing further; giving the drag
+up slides them back. A mark on a neighbour can only say *which* column;
+moving them says it outright.
+
+Nothing is reordered until the drop: the layout keeps the order it has and
+only what is painted moves, so when the order does change the offsets fall to
+nought against a layout that already matches it, and nothing jumps.
+
+Where a carried column would land is read from where the finger is against
+that layout, not from whichever cell lies under it. The cells slide, so asking
+them chases the answer: every twitch of the hand found a different cell where
+the last one had been, and the two columns swapped back and forth without the
+hand moving at all.
+
+Dragging columns needs their widths known in advance, so a table with
+`columnsDraggable` is drawn against one measured set of them — which is to say
+[it is not lazy](#what-turns-it-off).
+
+A column with `children` is not draggable, nor are the leaves under it: a
+group's title spans several places at once, and a leaf carried out of its
+group would belong to nothing.
 
 A heading that sorts still sorts: the drag is wrapped round the tapping rather
 than put in its place.

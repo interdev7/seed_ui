@@ -344,9 +344,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cell, nothing is squeezed to fit or stretched to fill, and the table scrolls
   sideways where that is wider than its box. `y` as well for both ways.
 
-  Five things turn the lazy body off, since finding a row by multiplying is the
+  Six things turn the lazy body off, since finding a row by multiplying is the
   whole of how it works: `expandable`, a column with a `span`, a column with
-  `children`, a column with a `summary`, and `sticky`. Such a table builds every
+  `children`, a column with a `summary`, `sticky`, and `columnsDraggable` —
+  a column sliding aside has to know how far, which is a width. Such a table builds every
   row it is given even with a `scroll.y` — the rows still scroll inside the
   height named, they are simply all there. The documentation lists them in one
   place and says what it costs.
@@ -357,11 +358,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   happened rather than what makes it happen.
 
   Only the drawing moves: a sort and a filter go on naming a column by where it
-  was listed, so carrying one about does not point them at its neighbour. While
-  a heading is carried it is lifted, tilted and given a ground of its own, the
-  column it came from fades in place rather than leaving a gap that would shove
-  its neighbours under the hand, and the column it would land on takes the fill
-  a heading takes under the pointer.
+  was listed, so carrying one about does not point them at its neighbour. While a
+  heading is carried it is lifted, tilted and given a ground of its own, and the
+  columns slide aside as it goes, each by exactly the width of the one carried.
+  Nothing is reordered until the drop — the layout keeps its order and only
+  what is painted moves — so when the order does change the offsets fall to
+  nought against a layout that already matches, and nothing jumps. Giving the
+  drag up slides them back.
+
+  Where a carried column would land is read from the finger's place against
+  that layout rather than from whichever cell lies under it: the cells slide,
+  so asking them chased the answer and the two columns swapped back and forth
+  with the hand standing still.
+
+### Fixed
+
+- **A table told a column's place from the column it was named as.** The two
+  are different numbers whenever anything stands in front of the columns
+  given — a column of boxes, a column of chevrons — and the table used one for
+  the other in two places: a sort on the lazy body named the column beside the
+  one whose heading was tapped, so a sortable first column with a selection
+  simply did nothing; and a second drag of a heading moved the wrong column,
+  since the drag spoke in names while the order it changed was in places.
 
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the

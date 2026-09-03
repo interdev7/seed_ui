@@ -4593,21 +4593,96 @@ void main() {
       expect(to, 2);
     });
 
-    testWidgets('the column it would land on lights up', (tester) async {
+    testWidgets('the neighbours slide aside while it is carried',
+        (tester) async {
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+      await tester.pumpAndSettle();
+
+      // The first is the heading in the table; while a drag is under way the
+      // carried copy is a second widget with the same text.
+      double leftOf(String text) => tester.getRect(find.text(text).first).left;
+      final ageAtRest = leftOf('Age');
+      final cityAtRest = leftOf('City');
+      final nameAtRest = leftOf('Name');
+
+      // Taken before the drag: where a column would land is read off the
+      // layout, which does not move, and not off the slid cells.
+      final atCity = tester.getCenter(find.text('City'));
+      final atAge = tester.getCenter(find.text('Age'));
+      final grab =
+          await tester.startGesture(tester.getCenter(find.text('Name')));
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(atCity);
+      await tester.pumpAndSettle();
+
+      // The two it steps over have closed the gap it left, and it stands
+      // where they were — nothing has been reordered, only moved.
+      expect(leftOf('Age'), lessThan(ageAtRest));
+      expect(leftOf('City'), lessThan(cityAtRest));
+      expect(leftOf('Name'), greaterThan(nameAtRest));
+
+      // And it slides rather than jumping. Carried back over Age, City has
+      // nothing to get out of the way of any more and goes home — part way
+      // through, it is between the two places.
+      await grab.moveTo(atAge);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 40));
+      final partWay = leftOf('City');
+      await tester.pumpAndSettle();
+      expect(partWay, isNot(closeTo(leftOf('City'), 0.5)));
+      expect(leftOf('City'), closeTo(cityAtRest, 0.5),
+          reason: 'and it arrives where it started');
+    });
+
+    testWidgets('a hand held still leaves the columns still', (tester) async {
+      // Where a column would land is read off the layout, which does not
+      // move. Asked of whatever cell lay under the finger instead, the
+      // answer chased the cells as they slid and the two columns swapped
+      // back and forth with the hand standing still.
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+      await tester.pumpAndSettle();
+
+      double leftOf(String text) => tester.getRect(find.text(text).first).left;
+
+      final atCity = tester.getCenter(find.text('City'));
+      final grab =
+          await tester.startGesture(tester.getCenter(find.text('Name')));
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(atCity);
+      await tester.pumpAndSettle();
+
+      final settled = [leftOf('Name'), leftOf('Age'), leftOf('City')];
+
+      // A hand is never quite still, and every twitch asks the question
+      // again: with the cells sliding under it, the answer alternated and
+      // the columns swapped back and forth.
+      for (var i = 0; i < 8; i++) {
+        await grab.moveTo(atCity + Offset(i.isEven ? 1 : -1, 0));
+        await tester.pumpAndSettle();
+        expect(
+          [leftOf('Name'), leftOf('Age'), leftOf('City')],
+          [
+            closeTo(settled[0], 1.5),
+            closeTo(settled[1], 1.5),
+            closeTo(settled[2], 1.5),
+          ],
+          reason: 'nothing moved but the finger',
+        );
+      }
+
+      await grab.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a drag given up puts the columns back', (tester) async {
       await tester.pumpWidget(table(onReordered: (_, __) {}));
 
-      List<Color> fillsOver(String text) => tester
-          .widgetList<ColoredBox>(
-            find.ancestor(
-              of: find.text(text),
-              matching: find.byType(ColoredBox),
-            ),
-          )
-          .map((b) => b.color)
-          .where((c) => c.a != 0)
+      List<String> headings() => tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .whereType<String>()
+          .where((s) => s == 'Name' || s == 'Age' || s == 'City')
           .toList();
-
-      expect(fillsOver('City'), isEmpty);
 
       final onto = tester.getCenter(find.text('City'));
       final grab =
@@ -4615,13 +4690,96 @@ void main() {
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pump();
+      await grab.cancel();
+      await tester.pumpAndSettle();
 
-      // The same fill a heading takes under the pointer.
-      expect(fillsOver('City'), isNotEmpty);
+      expect(headings(), ['Name', 'Age', 'City'],
+          reason: 'the preview was only a preview');
+    });
 
+    testWidgets('a column of boxes in front does not shift what is dragged',
+        (tester) async {
+      // The place a column is drawn at and the place it was listed at are two
+      // different numbers, and a column of boxes in front makes them differ:
+      // dragging by the drawn place moved the column beside the one held.
+      final columns = ['Name', 'Age', 'City'];
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            selection: const TableSelection<_User>(),
+            columnsDraggable: true,
+            columns: [
+              for (final name in columns)
+                TableColumn<_User>(
+                  title: Text(name),
+                  value: (u) => '$name-cell',
+                ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+
+      List<String> cells() => tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .whereType<String>()
+          .where((s) => s.endsWith('-cell'))
+          .toList();
+      expect(cells().take(3), ['Name-cell', 'Age-cell', 'City-cell']);
+
+      final onto = tester.getCenter(find.text('City'));
+      final grab =
+          await tester.startGesture(tester.getCenter(find.text('Name')));
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pump();
       await grab.up();
       await tester.pumpAndSettle();
-      expect(fillsOver('City'), isEmpty, reason: 'and it goes again');
+
+      expect(cells().take(3), ['Age-cell', 'City-cell', 'Name-cell']);
+    });
+
+    testWidgets('a column of boxes in front does not shift what a sort names',
+        (tester) async {
+      // The same two numbers, on the lazy body: keyed by the drawn place, a
+      // tap on the first heading sorted by the second column — which here
+      // does not sort at all, so nothing happened.
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            scroll: const TableScroll(y: 200),
+            selection: const TableSelection<_User>(),
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Other'),
+                value: (u) => 'z',
+              ),
+            ],
+          ),
+          width: 700,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      List<String> names() => tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .whereType<String>()
+          .where((s) => s == 'Chen' || s == 'Ann')
+          .toList();
+      expect(names(), ['Chen', 'Ann']);
+
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      expect(names(), ['Ann', 'Chen'], reason: 'it sorted by the column held');
     });
 
     testWidgets('a heading dropped on itself moves nothing', (tester) async {

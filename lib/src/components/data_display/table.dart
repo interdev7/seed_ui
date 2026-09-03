@@ -1521,12 +1521,87 @@ class _TableState<T> extends State<Table<T>> {
   /// neighbour.
   List<int>? _ownColumnOrder;
 
-  List<TableColumn<T>> get _inOwnOrder {
-    final order = _ownColumnOrder;
-    if (order == null || order.length != widget.columns.length) {
-      return widget.columns;
+  /// How many columns the table put in front of the ones it was given.
+  int get _serviceColumns =>
+      (widget.selection != null ? 1 : 0) +
+      ((widget.expandable?.showColumn ?? false) ? 1 : 0);
+
+  /// Where a heading was picked up from, and where it is hovering now — both
+  /// counting among [Table.columns], and both null while nothing is carried.
+  ///
+  /// The columns are drawn as though the drop had already happened, so the
+  /// neighbours move aside and the place the carried one is going is the
+  /// place it is already standing in. A mark on a neighbour can only say
+  /// *which* column; moving them says it outright.
+  int? _dragFrom;
+  int? _dragOver;
+
+  /// Marks the heading so the finger's position can be read against it. Kept
+  /// here rather than made in `build`: a key made afresh every time is a new
+  /// key every time, and points at nothing that lasts.
+  final GlobalKey _headingAnchor = GlobalKey();
+
+  /// The order the columns are drawn in, as a list of places among the ones
+  /// given.
+  List<int> get _order => [
+        if (_ownColumnOrder?.length == widget.columns.length)
+          ..._ownColumnOrder!
+        else
+          for (var i = 0; i < widget.columns.length; i++) i,
+      ];
+
+  List<TableColumn<T>> get _inOwnOrder =>
+      [for (final i in _order) widget.columns[i]];
+
+  /// A cell carried along by a drag, sliding rather than jumping.
+  ///
+  /// The layout does not change while a heading is being carried — only what
+  /// is painted moves — so when the drop commits the order the offsets fall
+  /// to nought against a layout that already matches, and nothing jumps.
+  Widget _slid(Widget cell, double by, Token t) =>
+      TweenAnimationBuilder<double>(
+        tween: Tween<double>(end: by),
+        duration: t.motionDurationMid,
+        curve: t.motionEaseInOut,
+        builder: (context, at, child) =>
+            Transform.translate(offset: Offset(at, 0), child: child),
+        child: cell,
+      );
+
+  /// How far each column has slid out of the way, in pixels, while a heading
+  /// is being carried.
+  ///
+  /// Counted over the columns as they are drawn, service columns included, so
+  /// the answer can be handed straight to a cell. Reordering the layout under
+  /// the hand would work too, but it jumps; sliding is the same information
+  /// arriving at a speed the eye can follow.
+  List<double> _columnShifts(List<double> widths) {
+    final shifts = List<double>.filled(widths.length, 0);
+    final from = _dragFrom;
+    final to = _dragOver;
+    if (from == null || to == null || from == to) return shifts;
+
+    final service = _serviceColumns;
+    final held = service + from;
+    final onto = service + to;
+    if (held >= widths.length || onto >= widths.length) return shifts;
+
+    // The carried column goes the whole way; everything it steps over closes
+    // the gap it left, by exactly its width.
+    var travelled = 0.0;
+    if (onto > held) {
+      for (var i = held + 1; i <= onto; i++) {
+        shifts[i] = -widths[held];
+        travelled += widths[i];
+      }
+    } else {
+      for (var i = onto; i < held; i++) {
+        shifts[i] = widths[held];
+        travelled -= widths[i];
+      }
     }
-    return [for (final i in order) widget.columns[i]];
+    shifts[held] = travelled;
+    return shifts;
   }
 
   /// Moves a column and tells whoever asked.
@@ -1535,19 +1610,24 @@ class _TableState<T> extends State<Table<T>> {
   /// order of its own, and that order would disagree with the table's the
   /// moment a column was added. The callback is left as word of what happened.
   void _moveColumn(int from, int to) {
-    if (from == to) return;
-    final order = [
-      ...?_ownColumnOrder?.length == widget.columns.length
-          ? _ownColumnOrder
-          : [for (var i = 0; i < widget.columns.length; i++) i],
-    ];
-    if (from < 0 || from >= order.length || to < 0 || to >= order.length) {
+    final order = _order;
+    if (from == to ||
+        from < 0 ||
+        from >= order.length ||
+        to < 0 ||
+        to >= order.length) {
+      setState(() {
+        _dragFrom = null;
+        _dragOver = null;
+      });
       return;
     }
     setState(() {
       final moved = order.removeAt(from);
       order.insert(to, moved);
       _ownColumnOrder = order;
+      _dragFrom = null;
+      _dragOver = null;
     });
     widget.onColumnsReordered?.call(from, to);
   }
@@ -1670,6 +1750,12 @@ class _TableState<T> extends State<Table<T>> {
         ._resolve(t);
 
     final rule = BorderSide(color: r.borderColor, width: t.lineWidth);
+    // Filled in by the branch that measures the columns, and empty
+    // everywhere else — a cell asks for its own place and gets nought where
+    // nothing is being carried.
+    var shifts = const <double>[];
+    double shiftAt(int place) =>
+        place >= 0 && place < shifts.length ? shifts[place] : 0;
     // Every band draws the rows in the order they are shown, and the title
     // and summary are handed the same order.
     final rows = _rows;
@@ -1680,18 +1766,25 @@ class _TableState<T> extends State<Table<T>> {
             border: Border(bottom: rule),
           ),
           children: [
-            for (final column in columns)
-              _headingCell(
-                _cell(
-                  _heading(column, _leaves.indexOf(column), r, t),
-                  column,
-                  column.headerAlign ?? column.align ?? TableAlign.start,
+            for (var i = 0; i < columns.length; i++)
+              _slid(
+                _headingCell(
+                  _cell(
+                    _heading(columns[i], _leaves.indexOf(columns[i]), r, t),
+                    columns[i],
+                    columns[i].headerAlign ??
+                        columns[i].align ??
+                        TableAlign.start,
+                    r,
+                    t,
+                  ),
+                  columns[i],
+                  _leaves.indexOf(columns[i]),
+                  i,
                   r,
                   t,
                 ),
-                column,
-                _leaves.indexOf(column),
-                r,
+                shiftAt(i),
                 t,
               ),
           ],
@@ -1706,7 +1799,8 @@ class _TableState<T> extends State<Table<T>> {
                 border: i == rows.length - 1 ? null : Border(bottom: rule),
               ),
               children: [
-                for (final column in columns) _rowCell(i, column, r, t),
+                for (var x = 0; x < columns.length; x++)
+                  _slid(_rowCell(i, columns[x], r, t), shiftAt(x), t),
               ],
             ),
         ];
@@ -1908,11 +2002,18 @@ class _TableState<T> extends State<Table<T>> {
             for (var i = 0; i < columns.length; i++)
               i: FixedColumnWidth(measured.columns[i]),
           };
+          // Now the widths are known, so a carried heading can be told how
+          // far each column has to slide out of its way.
+          shifts = _columnShifts(measured.columns);
 
           final head = _showHeader
-              ? _hasGroups
-                  ? _groupedHeading(_columnTree, measured.columns, r, t, rule)
-                  : grid(columns, [headingRow(columns)], widths: widths)
+              ? _dropOnHeading(
+                  _hasGroups
+                      ? _groupedHeading(
+                          _columnTree, measured.columns, r, t, rule)
+                      : grid(columns, [headingRow(columns)], widths: widths),
+                  measured.columns,
+                )
               : null;
           final children = <Widget>[
             if (head != null && !_isSticky) head,
@@ -2013,7 +2114,8 @@ class _TableState<T> extends State<Table<T>> {
         _hasGroups ||
         _hasSummary ||
         _hasSpans ||
-        _isSticky) {
+        _isSticky ||
+        widget.columnsDraggable) {
       // Rows that open are drawn as grids with panels between them, and a
       // heading of more than one row is drawn by hand — a `Table` cannot span
       // a cell across its columns, so a group's title cannot be a cell of the
@@ -3136,6 +3238,9 @@ class _TableState<T> extends State<Table<T>> {
               ),
               column,
               index,
+              // Not draggable: a leaf inside a group cannot be carried out of
+              // it, and a group's own title spans several places at once.
+              -1,
               r,
               t,
             ),
@@ -3335,32 +3440,37 @@ class _TableState<T> extends State<Table<T>> {
   ///
   /// The whole cell, padding and all: a heading you have to hit exactly is a
   /// heading you miss.
+  /// [named] is where the column was listed among the leaves — what a sort
+  /// and a filter mean by it. [place] is where it is drawn, which a drag
+  /// moves and which a column of boxes in front shifts along. Keeping them
+  /// apart is the whole of what stops one being used for the other.
   Widget _headingCell(
     Widget cell,
     TableColumn<T> column,
-    int index,
+    int named,
+    int place,
     _ResolvedTableToken r,
     Token t,
   ) {
     if (!column.sorts && !widget.columnsDraggable) return cell;
-    if (!column.sorts) return _draggableHeading(cell, index, r, t);
+    if (!column.sorts) return _draggableHeading(cell, place, r, t);
     // A column the table is sorted by keeps the fill, hand or no hand: it is
     // the one doing something, so it is the one marked. Which also means the
     // fill arrives with a `defaultSort`, before anybody has touched it.
-    final sorted = _orderOf(index) != null;
+    final sorted = _orderOf(named) != null;
     final answering = MouseRegion(
       cursor: SystemMouseCursors.click,
-      onEnter: (_) => _hoveredHeading.value = index,
+      onEnter: (_) => _hoveredHeading.value = named,
       onExit: (_) {
-        if (_hoveredHeading.value == index) _hoveredHeading.value = null;
+        if (_hoveredHeading.value == named) _hoveredHeading.value = null;
       },
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => _cycleSort(index),
+        onTap: () => _cycleSort(named),
         child: ValueListenableBuilder<int?>(
           valueListenable: _hoveredHeading,
           builder: (context, hovered, child) => ColoredBox(
-            color: sorted || hovered == index
+            color: sorted || hovered == named
                 ? r.headerHoverBg
                 : const Color(0x00000000),
             child: child,
@@ -3369,7 +3479,7 @@ class _TableState<T> extends State<Table<T>> {
         ),
       ),
     );
-    return _draggableHeading(answering, index, r, t);
+    return _draggableHeading(answering, place, r, t);
   }
 
   /// A heading that can be picked up and dropped on another column's place.
@@ -3379,63 +3489,106 @@ class _TableState<T> extends State<Table<T>> {
   /// pointer — the same answer a heading gives to everything else.
   Widget _draggableHeading(
     Widget cell,
-    int index,
+    int place,
     _ResolvedTableToken r,
     Token t,
   ) {
-    if (!widget.columnsDraggable || index < 0) return cell;
+    // Counted among the columns given, so the boxes and chevrons in front are
+    // neither dragged nor dropped on.
+    final index = place - _serviceColumns;
+    if (!widget.columnsDraggable ||
+        index < 0 ||
+        index >= widget.columns.length) {
+      return cell;
+    }
 
-    // Where the carried heading would land: before this column or after it,
-    // decided by which half of it the finger is over.
-    return DragTarget<int>(
-      onWillAcceptWithDetails: (details) => details.data != index,
-      onAcceptWithDetails: (details) => _moveColumn(details.data, index),
-      builder: (context, candidate, _) => ColoredBox(
-        // The column it would land on takes the same fill a heading takes
-        // under the pointer, so a drop reads like every other answer a
-        // heading gives.
-        color: candidate.isEmpty ? const Color(0x00000000) : r.headerHoverBg,
-        child: Draggable<int>(
-          data: index,
-          axis: Axis.horizontal,
-          dragAnchorStrategy: pointerDragAnchorStrategy,
-          // Carried under the finger with a ground of its own — the cell is
-          // only as opaque as its fill, which is nothing — and a width of its
-          // own, since what it is carried over gives it none and a heading
-          // holds an `Expanded`. Lifted a little and tilted, so it reads as
-          // picked up rather than pasted over.
-          feedback: Transform.rotate(
-            angle: 0.02,
-            child: Transform.scale(
-              scale: 1.04,
-              child: IntrinsicWidth(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: r.pinnedBg,
-                    borderRadius: BorderRadius.circular(r.borderRadius),
-                    boxShadow: t.boxShadowSecondary,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: t.sizeXXS),
-                    child: cell,
-                  ),
-                ),
+    // Only picking up lives on the column. Where it would land is worked out
+    // from where the finger is, against the layout — which does not move —
+    // rather than from whichever cell happens to lie under it: the cells
+    // slide, so a target on each of them chased the finger and the two
+    // columns swapped back and forth without the hand moving at all.
+    return Draggable<int>(
+      data: index,
+      axis: Axis.horizontal,
+      dragAnchorStrategy: pointerDragAnchorStrategy,
+      onDragStarted: () => setState(() {
+        _dragFrom = index;
+        _dragOver = index;
+      }),
+      onDraggableCanceled: (_, __) => _endDrag(),
+      onDragEnd: (_) => _endDrag(),
+      // Carried under the finger with a ground of its own — the cell is only
+      // as opaque as its fill, which is nothing — and a width of its own,
+      // since what it is carried over gives it none and a heading holds an
+      // `Expanded`. Lifted a little and tilted, so it reads as picked up
+      // rather than pasted over.
+      feedback: Transform.rotate(
+        angle: 0.02,
+        child: Transform.scale(
+          scale: 1.04,
+          child: IntrinsicWidth(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: r.pinnedBg,
+                borderRadius: BorderRadius.circular(r.borderRadius),
+                boxShadow: t.boxShadowSecondary,
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: t.sizeXXS),
+                child: cell,
               ),
             ),
           ),
-          // The column it came from stays where it is, faded: a gap opening
-          // where it stood would move every other column under the hand.
-          childWhenDragging: Opacity(opacity: 0.35, child: cell),
-          child: MouseRegion(
-            cursor: SystemMouseCursors.grab,
-            child: cell,
-          ),
         ),
       ),
+      // The column it came from stays where it is, faded: a gap opening where
+      // it stood would move every other column under the hand.
+      childWhenDragging: Opacity(opacity: 0.35, child: cell),
+      child: MouseRegion(cursor: SystemMouseCursors.grab, child: cell),
     );
   }
 
-  /// One cell of the lazy body:  /// One cell of the lazy body:  /// One cell of the lazy body: a heading when it is the top row, a data cell
+  /// Lets go of whatever was being carried.
+  void _endDrag() {
+    if (_dragFrom == null && _dragOver == null) return;
+    setState(() {
+      _dragFrom = null;
+      _dragOver = null;
+    });
+  }
+
+  /// The heading as one place to drop on, which reads the finger's position
+  /// against the columns rather than asking whatever lies under it.
+  Widget _dropOnHeading(Widget heading, List<double> widths) {
+    if (!widget.columnsDraggable) return heading;
+
+    int? placeAt(Offset global) {
+      final box = _headingAnchor.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) return null;
+      var x = box.globalToLocal(global).dx;
+      for (var i = 0; i < widths.length; i++) {
+        x -= widths[i];
+        if (x < 0) return i - _serviceColumns;
+      }
+      return widths.length - 1 - _serviceColumns;
+    }
+
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (_) => true,
+      onMove: (details) {
+        final over = placeAt(details.offset);
+        if (over == null || over < 0 || over == _dragOver) return;
+        setState(() => _dragOver = over);
+      },
+      onAcceptWithDetails: (details) =>
+          _moveColumn(details.data, _dragOver ?? details.data),
+      onLeave: (_) => _endDrag(),
+      builder: (context, _, __) =>
+          KeyedSubtree(key: _headingAnchor, child: heading),
+    );
+  }
+
+  /// One cell of the lazy body:  /// One cell of the lazy body:  /// One cell of the lazy body:  /// One cell of the lazy body: a heading when it is the top row, a data cell
   /// otherwise.
   Widget _lazyCell(
     ChildVicinity at,
@@ -3469,13 +3622,17 @@ class _TableState<T> extends State<Table<T>> {
         ),
         child: _headingCell(
           _padded(
-            _heading(column, at.xIndex, r, t),
+            // Named by where it was listed, not by where it is drawn: a
+            // column of boxes in front shifts every place along by one, and
+            // a sort keyed by the place named the column beside it.
+            _heading(column, _leaves.indexOf(column), r, t),
             column,
             column.headerAlign ?? column.align ?? TableAlign.start,
             r,
             t,
           ),
           column,
+          _leaves.indexOf(column),
           at.xIndex,
           r,
           t,

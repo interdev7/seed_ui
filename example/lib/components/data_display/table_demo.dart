@@ -955,6 +955,30 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Columns you can move',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                columns: _columns,
+                // The table does the moving; the callback is word of it.
+                columnsDraggable: true,
+                onColumnsReordered: (from, to) =>
+                    message.success('Column $from moved to $to'),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Drag a heading onto another: the table moves the column '
+                'itself and keeps the order you leave it in. A line shows '
+                'where it will land. The callback is only word of what '
+                'happened — nothing has to be written to make it work.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Nothing to show',
           Table<Person>(bordered: true, columns: _columns, data: const []),
         ),

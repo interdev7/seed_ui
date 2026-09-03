@@ -1146,6 +1146,8 @@ class Table<T> extends StatefulWidget {
     this.expandable,
     this.pagination,
     this.sticky,
+    this.columnsDraggable = false,
+    this.onColumnsReordered,
     this.token,
   });
 
@@ -1237,6 +1239,22 @@ class Table<T> extends StatefulWidget {
   ///
   /// Null — the usual — is a table whose rows do not open.
   final TableExpandable<T>? expandable;
+
+  /// Lets a heading be picked up and dropped on another column's place.
+  ///
+  /// The table does the moving itself and keeps the order it was left in;
+  /// [onColumnsReordered] is word of what happened rather than the thing that
+  /// makes it happen. A sort and a filter go on naming a column by where it
+  /// was listed, so moving one about does not point them at its neighbour.
+  final bool columnsDraggable;
+
+  /// Called when a heading is dragged into another column's place.
+  ///
+  /// Given the places a column came from and went to, counting among
+  /// [columns]. The move has already been made — this is for whatever else
+  /// you want to do about it.
+  ///
+  final void Function(int from, int to)? onColumnsReordered;
 
   /// Keeps the heading in view while the page scrolls past the table.
   ///
@@ -1482,7 +1500,10 @@ class _TableState<T> extends State<Table<T>> {
   List<TableColumn<T>> get _columns => [
         if (widget.selection != null) _selectionColumn,
         if (widget.expandable?.showColumn ?? false) _expandColumn,
-        ..._leaves,
+        // Drawn in the order a drag has left them, which is not the order
+        // they are named in: [_leaves] keeps that, so a sort and a filter go
+        // on meaning the column they were given.
+        ..._inOwnOrder.expand((c) => c.leaves),
       ];
 
   /// The columns as given, with the box and chevron columns in front: the
@@ -1490,8 +1511,46 @@ class _TableState<T> extends State<Table<T>> {
   List<TableColumn<T>> get _columnTree => [
         if (widget.selection != null) _selectionColumn,
         if (widget.expandable?.showColumn ?? false) _expandColumn,
-        ...widget.columns,
+        ..._inOwnOrder,
       ];
+
+  /// The order the columns are *drawn* in, which a drag can change.
+  ///
+  /// Only the drawing. A sort and a filter go on naming a column by where it
+  /// was listed, so moving one about does not silently point them at its
+  /// neighbour.
+  List<int>? _ownColumnOrder;
+
+  List<TableColumn<T>> get _inOwnOrder {
+    final order = _ownColumnOrder;
+    if (order == null || order.length != widget.columns.length) {
+      return widget.columns;
+    }
+    return [for (final i in order) widget.columns[i]];
+  }
+
+  /// Moves a column and tells whoever asked.
+  ///
+  /// The table does the moving: a caller made to do it would have to keep an
+  /// order of its own, and that order would disagree with the table's the
+  /// moment a column was added. The callback is left as word of what happened.
+  void _moveColumn(int from, int to) {
+    if (from == to) return;
+    final order = [
+      ...?_ownColumnOrder?.length == widget.columns.length
+          ? _ownColumnOrder
+          : [for (var i = 0; i < widget.columns.length; i++) i],
+    ];
+    if (from < 0 || from >= order.length || to < 0 || to >= order.length) {
+      return;
+    }
+    setState(() {
+      final moved = order.removeAt(from);
+      order.insert(to, moved);
+      _ownColumnOrder = order;
+    });
+    widget.onColumnsReordered?.call(from, to);
+  }
 
   /// The columns that hold cells: the ones given, with any group replaced by
   /// what stands under it.
@@ -1633,6 +1692,7 @@ class _TableState<T> extends State<Table<T>> {
                 column,
                 _leaves.indexOf(column),
                 r,
+                t,
               ),
           ],
         );
@@ -3077,6 +3137,7 @@ class _TableState<T> extends State<Table<T>> {
               column,
               index,
               r,
+              t,
             ),
           ),
         );
@@ -3279,13 +3340,15 @@ class _TableState<T> extends State<Table<T>> {
     TableColumn<T> column,
     int index,
     _ResolvedTableToken r,
+    Token t,
   ) {
-    if (!column.sorts) return cell;
+    if (!column.sorts && !widget.columnsDraggable) return cell;
+    if (!column.sorts) return _draggableHeading(cell, index, r, t);
     // A column the table is sorted by keeps the fill, hand or no hand: it is
     // the one doing something, so it is the one marked. Which also means the
     // fill arrives with a `defaultSort`, before anybody has touched it.
     final sorted = _orderOf(index) != null;
-    return MouseRegion(
+    final answering = MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => _hoveredHeading.value = index,
       onExit: (_) {
@@ -3306,9 +3369,73 @@ class _TableState<T> extends State<Table<T>> {
         ),
       ),
     );
+    return _draggableHeading(answering, index, r, t);
   }
 
-  /// One cell of the lazy body:  /// One cell of the lazy body: a heading when it is the top row, a data cell
+  /// A heading that can be picked up and dropped on another column's place.
+  ///
+  /// What is shown while it is carried is a lifted copy of the heading, and
+  /// the column it would land on takes the fill a heading takes under the
+  /// pointer — the same answer a heading gives to everything else.
+  Widget _draggableHeading(
+    Widget cell,
+    int index,
+    _ResolvedTableToken r,
+    Token t,
+  ) {
+    if (!widget.columnsDraggable || index < 0) return cell;
+
+    // Where the carried heading would land: before this column or after it,
+    // decided by which half of it the finger is over.
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (details) => details.data != index,
+      onAcceptWithDetails: (details) => _moveColumn(details.data, index),
+      builder: (context, candidate, _) => ColoredBox(
+        // The column it would land on takes the same fill a heading takes
+        // under the pointer, so a drop reads like every other answer a
+        // heading gives.
+        color: candidate.isEmpty ? const Color(0x00000000) : r.headerHoverBg,
+        child: Draggable<int>(
+          data: index,
+          axis: Axis.horizontal,
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          // Carried under the finger with a ground of its own — the cell is
+          // only as opaque as its fill, which is nothing — and a width of its
+          // own, since what it is carried over gives it none and a heading
+          // holds an `Expanded`. Lifted a little and tilted, so it reads as
+          // picked up rather than pasted over.
+          feedback: Transform.rotate(
+            angle: 0.02,
+            child: Transform.scale(
+              scale: 1.04,
+              child: IntrinsicWidth(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: r.pinnedBg,
+                    borderRadius: BorderRadius.circular(r.borderRadius),
+                    boxShadow: t.boxShadowSecondary,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: t.sizeXXS),
+                    child: cell,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // The column it came from stays where it is, faded: a gap opening
+          // where it stood would move every other column under the hand.
+          childWhenDragging: Opacity(opacity: 0.35, child: cell),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.grab,
+            child: cell,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// One cell of the lazy body:  /// One cell of the lazy body:  /// One cell of the lazy body: a heading when it is the top row, a data cell
   /// otherwise.
   Widget _lazyCell(
     ChildVicinity at,
@@ -3351,6 +3478,7 @@ class _TableState<T> extends State<Table<T>> {
           column,
           at.xIndex,
           r,
+          t,
         ),
       );
     }

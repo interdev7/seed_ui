@@ -351,6 +351,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   height named, they are simply all there. The documentation lists them in one
   place and says what it costs.
 
+  **Columns you can move.** `columnsDraggable` lets a heading be picked up and
+  dropped on another column's place, and the table does the moving itself —
+  there is no reordering logic to write. `onColumnsReordered` is word of what
+  happened rather than what makes it happen.
+
+  Only the drawing moves: a sort and a filter go on naming a column by where it
+  was listed, so carrying one about does not point them at its neighbour. While
+  a heading is carried it is lifted, tilted and given a ground of its own, the
+  column it came from fades in place rather than leaving a gap that would shove
+  its neighbours under the hand, and the column it would land on takes the fill
+  a heading takes under the pointer.
+
   A table inside a scrolling page hands back what its rows cannot use: scroll
   views do not chain, so a table with a height of its own used to freeze the
   page for as long as the pointer was over it — thirteen drags without the page

@@ -4525,4 +4525,190 @@ void main() {
       expect(const TableScroll().isToContent, isFalse);
     });
   });
+
+  group('columns you can move', () {
+    const people = [_User('Chen', 27), _User('Ann', 45)];
+
+    Widget table({
+      bool draggable = true,
+      void Function(int, int)? onReordered,
+    }) =>
+        _host(
+          Table<_User>(
+            data: people,
+            columnsDraggable: draggable,
+            onColumnsReordered: onReordered,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                // Sortable too, so a sort pointed at the wrong column sorts
+                // by something and the difference can be seen.
+                title: const Text('Age'),
+                sortable: true,
+                value: (u) => u.age,
+              ),
+              TableColumn<_User>(
+                title: const Text('City'),
+                value: (u) => 'city',
+              ),
+            ],
+          ),
+          width: 700,
+        );
+
+    testWidgets('a heading carried onto another takes its place',
+        (tester) async {
+      int? from;
+      int? to;
+      await tester.pumpWidget(table(onReordered: (a, b) {
+        from = a;
+        to = b;
+      }));
+
+      List<String> headings() => tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .whereType<String>()
+          .where((s) => s == 'Name' || s == 'Age' || s == 'City')
+          .toList();
+      expect(headings(), ['Name', 'Age', 'City']);
+
+      final onto = tester.getCenter(find.text('City'));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pump();
+      await grab.up();
+      await tester.pumpAndSettle();
+
+      // The table moved it itself; the callback is word of what happened.
+      expect(headings(), ['Age', 'City', 'Name']);
+      expect(from, 0);
+      expect(to, 2);
+    });
+
+    testWidgets('the column it would land on lights up', (tester) async {
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+
+      List<Color> fillsOver(String text) => tester
+          .widgetList<ColoredBox>(
+            find.ancestor(
+              of: find.text(text),
+              matching: find.byType(ColoredBox),
+            ),
+          )
+          .map((b) => b.color)
+          .where((c) => c.a != 0)
+          .toList();
+
+      expect(fillsOver('City'), isEmpty);
+
+      final onto = tester.getCenter(find.text('City'));
+      final grab =
+          await tester.startGesture(tester.getCenter(find.text('Name')));
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pump();
+
+      // The same fill a heading takes under the pointer.
+      expect(fillsOver('City'), isNotEmpty);
+
+      await grab.up();
+      await tester.pumpAndSettle();
+      expect(fillsOver('City'), isEmpty, reason: 'and it goes again');
+    });
+
+    testWidgets('a heading dropped on itself moves nothing', (tester) async {
+      var told = 0;
+      await tester.pumpWidget(table(onReordered: (_, __) => told++));
+
+      // Taken before the drag: while it is under way the carried heading is
+      // a second widget with the same text.
+      final where = tester.getCenter(find.text('Age'));
+      final grab = await tester.startGesture(where);
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(where);
+      await tester.pump();
+      await grab.up();
+      await tester.pumpAndSettle();
+
+      expect(told, 0);
+    });
+
+    testWidgets('nothing is draggable unless the table says so',
+        (tester) async {
+      await tester.pumpWidget(table(draggable: false));
+      expect(find.byType(Draggable<int>), findsNothing);
+      expect(find.byType(DragTarget<int>), findsNothing);
+    });
+
+    testWidgets('moving a column does not move what a sort names',
+        (tester) async {
+      // The order columns are drawn in is not the order they are named in: a
+      // sort keeps meaning the column it was given, not the one that ends up
+      // standing there.
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+
+      List<String> names() => tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .whereType<String>()
+          .where((s) => s == 'Chen' || s == 'Ann')
+          .toList();
+      expect(names(), ['Ann', 'Chen'], reason: 'sorted by name');
+
+      final onto = tester.getCenter(find.text('City'));
+      final grab =
+          await tester.startGesture(tester.getCenter(find.text('Name')));
+      await tester.pump(kLongPressTimeout);
+      await grab.moveTo(onto);
+      await tester.pump();
+      await grab.up();
+      await tester.pumpAndSettle();
+
+      expect(names(), ['Ann', 'Chen'],
+          reason: 'still sorted by name, wherever the column now stands');
+
+      // And the mark is still on Name: the sort names a column, not a place.
+      Color? fillOver(String text) {
+        final fills = tester
+            .widgetList<ColoredBox>(
+              find.ancestor(
+                of: find.text(text),
+                matching: find.byType(ColoredBox),
+              ),
+            )
+            .map((b) => b.color)
+            .where((c) => c.a != 0)
+            .toList();
+        return fills.isEmpty ? null : fills.first;
+      }
+
+      expect(fillOver('Name'), isNotNull);
+      expect(fillOver('Age'), isNull);
+    });
+
+    testWidgets('a heading that sorts can still be tapped', (tester) async {
+      // The drag is wrapped round the sorting, not instead of it.
+      await tester.pumpWidget(table(onReordered: (_, __) {}));
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+
+      final names = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .whereType<String>()
+          .where((s) => s == 'Chen' || s == 'Ann')
+          .toList();
+      expect(names, ['Ann', 'Chen'], reason: 'it sorted');
+    });
+  });
 }

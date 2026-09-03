@@ -661,6 +661,38 @@ of your own. A held heading needs its height known before it is laid out, so a
 sticky table holds its heading to one row's height per level, as a lazy body
 holds its rows.
 
+## Columns you can move
+
+`columnsDraggable` lets a heading be picked up and dropped on another column's
+place. **The table does the moving** and keeps the order it is left in — there
+is no reordering logic to write.
+
+```dart
+Table<User>(
+  columns: columns,
+  data: users,
+  columnsDraggable: true,
+  onColumnsReordered: (from, to) => message.success('moved'),
+)
+```
+
+`onColumnsReordered` is word of what happened rather than the thing that makes
+it happen; leave it off and dragging still works.
+
+**Only the drawing moves.** A sort and a filter go on naming a column by where
+it was listed, so carrying one about does not quietly point them at its
+neighbour: the table keeps the order it draws in apart from the order the
+columns are named in.
+
+While a heading is carried it is lifted, tilted and given a ground of its own;
+the column it came from stays where it is and fades, rather than leaving a gap
+that would shove its neighbours under the hand; and the column it would land on
+takes the fill a heading takes under the pointer — the same answer a heading
+gives to everything else.
+
+A heading that sorts still sorts: the drag is wrapped round the tapping rather
+than put in its place.
+
 ## Around the rows
 
 | Prop | |

@@ -122,6 +122,7 @@ class TableSelection<T> {
     this.onChanged,
     this.selectable,
     this.showSelectAll = true,
+    this.checkStrictly = false,
     this.columnWidth,
     this.fixed,
   });
@@ -136,6 +137,17 @@ class TableSelection<T> {
 
   /// The rows picked to begin with (uncontrolled).
   final List<T>? defaultSelected;
+
+  /// Whether a row of a tree is picked on its own rather than with its own.
+  ///
+  /// Left false, picking a row picks everything under it — however deep, and
+  /// whether or not those rows are on show — and a row with some but not all
+  /// of its own picked stands half-picked. Which is what a box on a branch
+  /// usually means: the branch is a shorthand for what is under it.
+  ///
+  /// Told true, every row answers for itself alone. Nothing to do with a
+  /// table that is not a tree.
+  final bool checkStrictly;
 
   /// Called with the rows picked, whenever that changes.
   final ValueChanged<List<T>>? onChanged;
@@ -3197,10 +3209,41 @@ class _TableState<T> extends State<Table<T>> {
       return;
     }
     final next = [..._selected];
+    void take(T of) {
+      if (!_canSelect(of)) return;
+      if (!next.contains(of)) next.add(of);
+    }
+
     if (on) {
-      if (!next.contains(record)) next.add(record);
+      take(record);
     } else {
       next.remove(record);
+    }
+
+    if (_picksTogether) {
+      // What is under it goes with it, however deep and whether or not it is
+      // on show: a box on a branch is a shorthand for what is inside.
+      for (final under in _descendants(record)) {
+        if (on) {
+          take(under);
+        } else {
+          next.remove(under);
+        }
+      }
+      // And every row above it is picked only while all of its own are, so a
+      // branch never claims more than it holds.
+      final parents = _parents;
+      var above = parents[record];
+      while (above != null) {
+        final under = _descendants(above).where(_canSelect);
+        final whole = under.isNotEmpty && under.every(next.contains);
+        if (whole && _canSelect(above)) {
+          if (!next.contains(above)) next.add(above);
+        } else {
+          next.remove(above);
+        }
+        above = parents[above];
+      }
     }
     _select(next);
   }
@@ -3336,6 +3379,65 @@ class _TableState<T> extends State<Table<T>> {
 
   /// How deep in the tree each row on show stands, filled in as they are.
   Map<T, int> _depths = const {};
+
+  /// Whether picking a row picks what is under it.
+  bool get _picksTogether =>
+      _isTree && !(widget.selection?.checkStrictly ?? false);
+
+  /// Every row under this one, however deep — on show or not.
+  ///
+  /// Over the data as it was given rather than over the rows on show: a
+  /// branch that is picked while shut picks what is inside it, or a box would
+  /// mean one thing open and another closed.
+  List<T> _descendants(T record) {
+    final children = widget.expandable?.children;
+    if (children == null) return const [];
+    final out = <T>[];
+    void walk(T of) {
+      for (final child in children(of) ?? const <Never>[]) {
+        out.add(child);
+        walk(child);
+      }
+    }
+
+    walk(record);
+    return out;
+  }
+
+  /// Which row each row stands under, worked out from the data as given.
+  Map<T, T> get _parents {
+    final children = widget.expandable?.children;
+    if (children == null) return const {};
+    if (_parentsOf == widget.data && _parentsCache != null) {
+      return _parentsCache!;
+    }
+    final out = <T, T>{};
+    void walk(List<T> run) {
+      for (final record in run) {
+        final under = children(record) ?? const [];
+        for (final child in under) {
+          out[child] = record;
+        }
+        walk(under);
+      }
+    }
+
+    walk(widget.data);
+    _parentsOf = widget.data;
+    return _parentsCache = out;
+  }
+
+  Map<T, T>? _parentsCache;
+  List<T>? _parentsOf;
+
+  /// Whether some of what is under this row is picked, but not the row.
+  bool _isHalfSelected(T record) {
+    if (!_picksTogether || _isSelected(record)) return false;
+    for (final under in _descendants(record)) {
+      if (_isSelected(under)) return true;
+    }
+    return false;
+  }
 
   /// Whether this row has rows of its own to show.
   bool _hasChildren(T record) {
@@ -3597,6 +3699,7 @@ class _TableState<T> extends State<Table<T>> {
               )
             : Checkbox(
                 checked: _isSelected(record),
+                indeterminate: _isHalfSelected(record),
                 disabled: !can,
                 onChanged: (on) => _toggleRow(record, on: on),
               );

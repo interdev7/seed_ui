@@ -146,7 +146,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   than in a column of its own, and a row with nothing under it wears none. The
   tree is flattened to the rows on show, so narrowing, sorting and paging go
   on happening to the rows you handed over and a child follows its parent.
-  Rows are let in and out rather than appearing — they grow the way an opened
+  Picking a row of a tree picks everything under it, however deep and whether
+  or not it is on show, and a branch with some of its own picked stands
+  half-picked; `TableSelection.checkStrictly` leaves every row to answer for
+  itself. Rows are let in and out rather than appearing — they grow the way an opened
   panel does, which costs the table its grid and so lays a tree's rows out by
   hand.
 

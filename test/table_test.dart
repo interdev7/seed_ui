@@ -6992,6 +6992,141 @@ void main() {
           greaterThan(tester.getRect(find.text('Ann')).top));
     });
 
+    group('picked with what is under them', () {
+      Widget picking({
+        bool checkStrictly = false,
+        List<_Node>? selected,
+        ValueChanged<List<_Node>>? onChanged,
+        bool Function(_Node)? selectable,
+      }) =>
+          _host(
+            Table<_Node>(
+              data: tree,
+              selection: TableSelection<_Node>(
+                checkStrictly: checkStrictly,
+                selected: selected,
+                onChanged: onChanged,
+                selectable: selectable,
+              ),
+              expandable: TableExpandable<_Node>(children: (n) => n.kids),
+              columns: [
+                TableColumn<_Node>(
+                  title: const Text('Name'),
+                  value: (n) => n.name,
+                ),
+              ],
+            ),
+          );
+
+      List<Checkbox> boxes(WidgetTester tester) =>
+          tester.widgetList<Checkbox>(find.byType(Checkbox)).toList();
+
+      testWidgets('picking a branch picks everything under it', (tester) async {
+        List<_Node>? told;
+        await tester.pumpWidget(picking(onChanged: (next) => told = next));
+
+        // Ann is shut, so Bo, Cy and Dee are nowhere on screen — and they are
+        // picked all the same: a box on a branch is a shorthand for what is
+        // inside it, open or not.
+        await tester.tap(find.byType(Checkbox).at(1));
+        await tester.pumpAndSettle();
+        expect(told, isNotNull);
+        expect(
+          told!.map((n) => n.name).toList(),
+          ['Ann', 'Bo', 'Cy', 'Dee'],
+        );
+      });
+
+      testWidgets('letting a branch go lets its own go too', (tester) async {
+        List<_Node>? told;
+        await tester.pumpWidget(picking(onChanged: (next) => told = next));
+        await tester.tap(find.byType(Checkbox).at(1));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(Checkbox).at(1));
+        await tester.pumpAndSettle();
+        expect(told, isEmpty);
+      });
+
+      testWidgets('a branch with some of its own picked stands half-picked',
+          (tester) async {
+        await tester.pumpWidget(picking());
+        // Open Ann, then pick Bo alone.
+        await tester.tap(marks().first);
+        await tester.pumpAndSettle();
+
+        // Boxes: the heading's, then Ann, Bo, Cy, Eve.
+        await tester.tap(find.byType(Checkbox).at(2));
+        await tester.pumpAndSettle();
+
+        final all = boxes(tester);
+        expect(all[2].checked, isTrue, reason: 'Bo itself');
+        expect(all[1].checked, isFalse, reason: 'Ann is not wholly picked');
+        expect(all[1].indeterminate, isTrue, reason: 'but partly');
+
+        // Picking Cy takes Dee with it, so every row under Ann is picked and
+        // Ann stops being half-picked and is simply picked.
+        await tester.tap(find.byType(Checkbox).at(3));
+        await tester.pumpAndSettle();
+        final then = boxes(tester);
+        expect(then[3].checked, isTrue);
+        expect(then[1].checked, isTrue);
+        expect(then[1].indeterminate, isFalse);
+      });
+
+      testWidgets('a branch whose every row is picked is picked itself',
+          (tester) async {
+        List<_Node>? told;
+        await tester.pumpWidget(picking(onChanged: (next) => told = next));
+        await tester.tap(marks().first);
+        await tester.pumpAndSettle();
+
+        // Bo, then Cy — and Cy takes Dee with it, so Ann is whole.
+        await tester.tap(find.byType(Checkbox).at(2));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(Checkbox).at(3));
+        await tester.pumpAndSettle();
+
+        expect(told!.map((n) => n.name), contains('Ann'));
+        expect(boxes(tester)[1].checked, isTrue);
+        expect(boxes(tester)[1].indeterminate, isFalse);
+      });
+
+      testWidgets('checkStrictly leaves every row to answer for itself',
+          (tester) async {
+        List<_Node>? told;
+        await tester.pumpWidget(
+          picking(checkStrictly: true, onChanged: (next) => told = next),
+        );
+
+        await tester.tap(find.byType(Checkbox).at(1));
+        await tester.pumpAndSettle();
+        expect(told!.map((n) => n.name).toList(), ['Ann']);
+
+        await tester.tap(marks().first);
+        await tester.pumpAndSettle();
+        expect(boxes(tester)[2].checked, isFalse, reason: 'Bo is its own');
+        expect(boxes(tester)[2].indeterminate, isFalse);
+      });
+
+      testWidgets('a row that cannot be picked is passed over', (tester) async {
+        List<_Node>? told;
+        await tester.pumpWidget(
+          picking(
+            selectable: (n) => n.name != 'Bo',
+            onChanged: (next) => told = next,
+          ),
+        );
+
+        await tester.tap(find.byType(Checkbox).at(1));
+        await tester.pumpAndSettle();
+        // Bo is barred, so picking the branch above it takes the rest and
+        // leaves Bo alone — and Ann stands picked all the same, since every
+        // row that *could* be taken was.
+        expect(told!.map((n) => n.name).toList(), ['Ann', 'Cy', 'Dee']);
+      });
+    });
+
     test('a row that opens has to have something to open into', () {
       expect(TableExpandable<_Node>.new, throwsAssertionError);
     });

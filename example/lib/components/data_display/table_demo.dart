@@ -84,6 +84,8 @@ class _TableDemoState extends State<TableDemo> {
   List<Person> _picked = const [];
   bool _radio = false;
   int _page = 1;
+  List<Report> _staff = const [];
+  bool _strictly = false;
 
   List<TableColumn<Person>> get _columns => [
     // A value is the whole of most columns: no builder, no ceremony.
@@ -732,7 +734,11 @@ class _TableDemoState extends State<TableDemo> {
               Table<Report>(
                 bordered: true,
                 data: _org,
-                selection: const TableSelection<Report>(),
+                selection: TableSelection<Report>(
+                  checkStrictly: _strictly,
+                  selected: _staff,
+                  onChanged: (rows) => setState(() => _staff = rows),
+                ),
                 expandable: TableExpandable<Report>(
                   children: (r) => r.under,
                   // A step of your own, where the default is too tight or too
@@ -745,11 +751,25 @@ class _TableDemoState extends State<TableDemo> {
                 ],
               ),
               const SizedBox(height: 8),
-              const Text(
-                'A box column stands in front of the tree as it does in front '
-                'of any other table. Narrowing, sorting and paging happen to '
-                'the rows you handed over — a child follows its parent '
-                'wherever the parent lands.',
+              Segmented<bool>(
+                size: SoftSize.small,
+                value: _strictly,
+                options: const [
+                  SegmentedOption(value: false, label: 'with their own'),
+                  SegmentedOption(value: true, label: 'checkStrictly'),
+                ],
+                onChanged: (v) => setState(() {
+                  _strictly = v;
+                  _staff = const [];
+                }),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Picking a branch picks everyone under it, however deep and '
+                'whether or not they are on show, and a branch with some of '
+                'its own picked stands half-picked. checkStrictly leaves '
+                'every row to answer for itself. '
+                '${_staff.isEmpty ? 'Nobody picked.' : 'Picked: ${_staff.map((r) => r.name.split(' ').first).join(', ')}.'}',
               ),
             ],
           ),

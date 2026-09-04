@@ -643,6 +643,15 @@ arrive without the reveal, for the same reason a panel needs its height named
 — a row is found by counting what stands before it, and something growing
 cannot be counted.
 
+Picking a row of a tree picks everything under it — however deep, and whether
+or not those rows are on show, since a box on a branch is a shorthand for what
+is inside it and would otherwise mean one thing open and another closed. A row
+with some but not all of its own picked stands half-picked, and one whose
+every row is picked is picked itself. `TableSelection.checkStrictly` leaves
+every row to answer for itself instead. A row that cannot be picked is passed
+over, and a branch above it still counts as whole once every row that *could*
+be taken has been.
+
 `indentSize` is how far each step goes, falling back to the `indentSize`
 token. `builder` and `children` are the two things a row can open into, and
 one of them has to be named.

@@ -992,6 +992,30 @@ With no rows the heading stays — the columns are still worth showing — and t
 kit's `Empty` takes the space below it. `ConfigProvider.emptyBuilder` is asked
 first, under `EmptySlot.table`, so a kit-wide placeholder covers tables too.
 
+## What it says out loud
+
+Every heading says it is one, so a reader tells the heading from the rows
+under it without having to work that out from the wording. A heading that
+sorts also answers as a button and carries the state the carets draw — sorted
+ascending, sorted descending, or not sorted — since a picture says nothing to
+somebody who cannot see it.
+
+The marks beside the words are their own things, reachable one at a time: the
+funnel is named apart from the heading it stands in, because tapping the two
+does different things, and it says whether it is narrowing anything. The mark
+that opens a row is named for what it will do rather than for what it is — a
+plus tells a reader nothing.
+
+The boxes in the selection column say which row they take and the one at the
+head says it takes everything; both say whether they are ticked, and the head
+one says when it is only partly. That much comes from `Checkbox` and `Radio`
+themselves, which now carry their own state, so it holds wherever else in the
+kit they are used.
+
+Not here yet: the keyboard. Nothing in the kit is reachable by tab — `Button`
+is a bare gesture detector — so a table alone answering to keys would be out
+of step with everything around it. It wants doing across the kit at once.
+
 ## Tokens
 
 The marks a heading carries are sized against each other rather than each on

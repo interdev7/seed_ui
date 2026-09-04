@@ -6899,6 +6899,196 @@ void main() {
     });
   });
 
+  group('what a table says out loud', () {
+    const people = [_User('Chen', 27), _User('Ann', 45)];
+
+    testWidgets('a heading says it is one, and how it is sorted',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Both are headings; only the one that sorts answers as a button, and
+      // it says which way it is sorted.
+      expect(
+        tester.getSemantics(find.text('Age')),
+        isSemantics(label: 'Age', isHeader: true, isButton: false),
+      );
+      expect(
+        tester.getSemantics(find.text('Name')),
+        isSemantics(
+          label: 'Name',
+          isHeader: true,
+          isButton: true,
+          value: 'not sorted',
+          hasTapAction: true,
+        ),
+      );
+
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSemantics(find.text('Name')),
+        isSemantics(value: 'sorted ascending'),
+      );
+
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSemantics(find.text('Name')),
+        isSemantics(value: 'sorted descending'),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('the mark that narrows is its own thing, and says so',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+
+      // A fresh key each time: defaultFilters is read when the table is
+      // first built, so telling an existing one otherwise says nothing.
+      Widget table({Map<int, List<Object?>>? narrowing}) => _host(
+            Table<_User>(
+              key: ValueKey(narrowing),
+              data: people,
+              defaultFilters: narrowing,
+              columns: [
+                TableColumn<_User>(
+                  title: const Text('Name'),
+                  sortable: true,
+                  value: (u) => u.name,
+                  filters: const [TableFilter('Ann', 'Ann')],
+                ),
+              ],
+            ),
+          );
+
+      Finder funnel() => find.byWidgetPredicate((w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == '_FunnelPainter');
+
+      // Named apart from the heading it stands in — a reader has to be able
+      // to reach the two separately, since they do different things.
+      await tester.pumpWidget(table());
+      expect(
+        tester.getSemantics(funnel()),
+        isSemantics(label: 'Filter', isButton: true, value: ''),
+      );
+      expect(
+        tester.getSemantics(find.text('Name')),
+        isSemantics(label: 'Name', isHeader: true),
+      );
+
+      await tester.pumpWidget(table(narrowing: const {
+        0: ['Ann']
+      }));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSemantics(funnel()),
+        isSemantics(label: 'Filter', value: 'filtering'),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('the mark that opens a row says what it will do',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columns: [_name()],
+            expandable: TableExpandable<_User>(
+              builder: (_, u, __) => Text('about ${u.name}'),
+            ),
+          ),
+        ),
+      );
+
+      Finder mark() => find
+          .byWidgetPredicate((w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_ExpandIconPainter')
+          .first;
+
+      expect(
+        tester.getSemantics(mark()),
+        isSemantics(
+          label: 'Expand row',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+
+      await tester.tap(mark());
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSemantics(mark()),
+        isSemantics(label: 'Collapse row'),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('a box says what it takes and whether it is ticked',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            selection: const TableSelection<_User>(),
+            columns: [_name()],
+          ),
+        ),
+      );
+
+      final boxes = find.byType(Checkbox);
+      expect(
+        tester.getSemantics(boxes.first),
+        isSemantics(
+          label: 'Select all items',
+          hasTapAction: true,
+          isEnabled: true,
+          hasCheckedState: true,
+          isChecked: false,
+        ),
+      );
+      expect(
+        tester.getSemantics(boxes.at(1)),
+        isSemantics(label: 'Select row', isChecked: false),
+      );
+
+      await tester.tap(boxes.at(1));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSemantics(boxes.at(1)),
+        isSemantics(isChecked: true),
+      );
+      // And the one at the head is only partly taken now.
+      expect(
+        tester.getSemantics(boxes.first),
+        isSemantics(isCheckStateMixed: true),
+      );
+      handle.dispose();
+    });
+  });
+
   group('the marks a heading carries', () {
     testWidgets('they are sized against each other, not each on its own',
         (tester) async {

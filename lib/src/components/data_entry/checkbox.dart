@@ -138,39 +138,48 @@ class _SoftCheckboxState extends State<Checkbox> {
             ConfigProvider.componentOf<CheckboxToken>(context) ??
             const CheckboxToken())
         ._resolve(token);
-    return MouseRegion(
-      cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _toggle,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CheckboxBox(
-              value: widget.checked,
-              indeterminate: widget.indeterminate,
-              enabled: _enabled,
-              hovered: _hovered && _enabled,
-              token: token,
-              componentToken: r,
-            ),
-            if (widget.label != null) ...[
-              SizedBox(width: token.sizeXS),
-              DefaultTextStyle.merge(
-                style: TextStyle(
-                  color: _enabled ? token.colorText : token.colorTextQuaternary,
-                  fontSize: r.fontSize,
-                  fontFamily: token.fontFamily,
-                  fontFamilyFallback: token.fontFamilyFallback,
-                  decoration: TextDecoration.none,
-                ),
-                child: widget.label!,
+    return Semantics(
+      // What it is, what state it is in, and that it can be tapped — the
+      // label comes from the words beside it, which are already in the tree.
+      checked: widget.checked,
+      mixed: widget.indeterminate,
+      enabled: _enabled,
+      onTap: _enabled ? _toggle : null,
+      child: MouseRegion(
+        cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _toggle,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              CheckboxBox(
+                value: widget.checked,
+                indeterminate: widget.indeterminate,
+                enabled: _enabled,
+                hovered: _hovered && _enabled,
+                token: token,
+                componentToken: r,
               ),
+              if (widget.label != null) ...[
+                SizedBox(width: token.sizeXS),
+                DefaultTextStyle.merge(
+                  style: TextStyle(
+                    color:
+                        _enabled ? token.colorText : token.colorTextQuaternary,
+                    fontSize: r.fontSize,
+                    fontFamily: token.fontFamily,
+                    fontFamilyFallback: token.fontFamilyFallback,
+                    decoration: TextDecoration.none,
+                  ),
+                  child: widget.label!,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -69,6 +69,14 @@ class SeedLocalizations {
     this.reset = 'Reset',
     this.search = 'Search',
     this.selectAll = 'Select all items',
+    this.sortedAscending = 'sorted ascending',
+    this.sortedDescending = 'sorted descending',
+    this.notSorted = 'not sorted',
+    this.filterColumn = 'Filter',
+    this.filtering = 'filtering',
+    this.expandRow = 'Expand row',
+    this.collapseRow = 'Collapse row',
+    this.selectRow = 'Select row',
     this.noMoreItems = 'No more items',
     this.perPage = '/ page',
     this.selectTime = 'Select time',
@@ -101,6 +109,30 @@ class SeedLocalizations {
 
   /// Takes every choice in a `Table` column's tree of filters at once.
   final String selectAll;
+
+  /// Read out for a `Table` heading whose column is sorted up.
+  final String sortedAscending;
+
+  /// Read out for a `Table` heading whose column is sorted down.
+  final String sortedDescending;
+
+  /// Read out for a `Table` heading whose column could be sorted and is not.
+  final String notSorted;
+
+  /// Names the mark that opens a `Table` column's filters.
+  final String filterColumn;
+
+  /// Read out for a `Table` filter mark that is narrowing the table.
+  final String filtering;
+
+  /// Names the mark that opens a `Table` row.
+  final String expandRow;
+
+  /// Names the mark that shuts a `Table` row.
+  final String collapseRow;
+
+  /// Names the box that picks one `Table` row.
+  final String selectRow;
 
   /// Placeholder of an empty `TimePicker`.
   final String selectTime;
@@ -403,6 +435,14 @@ class SeedLocalizations {
     noData: 'Нет данных',
     reset: 'Сбросить',
     selectAll: 'Выбрать всё',
+    sortedAscending: 'сортировка по возрастанию',
+    sortedDescending: 'сортировка по убыванию',
+    notSorted: 'без сортировки',
+    filterColumn: 'Фильтр',
+    filtering: 'фильтрует',
+    expandRow: 'Раскрыть строку',
+    collapseRow: 'Свернуть строку',
+    selectRow: 'Выбрать строку',
     search: 'Поиск',
     noMoreItems: 'Больше ничего нет',
     perPage: '/ стр.',
@@ -453,6 +493,14 @@ class SeedLocalizations {
     noData: 'Maglumat ýok',
     reset: 'Arassala',
     selectAll: 'Ählisini saýla',
+    sortedAscending: 'ösüş tertibinde',
+    sortedDescending: 'kemelme tertibinde',
+    notSorted: 'tertipsiz',
+    filterColumn: 'Filtr',
+    filtering: 'filtrleýär',
+    expandRow: 'Setiri aç',
+    collapseRow: 'Setiri ýap',
+    selectRow: 'Setiri saýla',
     search: 'Gözleg',
     noMoreItems: 'Başga zat ýok',
     perPage: '/ sahypa',
@@ -502,6 +550,14 @@ class SeedLocalizations {
     noData: 'Keine Daten',
     reset: 'Zurücksetzen',
     selectAll: 'Alle auswählen',
+    sortedAscending: 'aufsteigend sortiert',
+    sortedDescending: 'absteigend sortiert',
+    notSorted: 'nicht sortiert',
+    filterColumn: 'Filter',
+    filtering: 'filtert',
+    expandRow: 'Zeile ausklappen',
+    collapseRow: 'Zeile einklappen',
+    selectRow: 'Zeile auswählen',
     search: 'Suchen',
     noMoreItems: 'Keine weiteren Einträge',
     perPage: '/ Seite',
@@ -551,6 +607,14 @@ class SeedLocalizations {
     noData: 'Aucune donnée',
     reset: 'Réinitialiser',
     selectAll: 'Tout sélectionner',
+    sortedAscending: 'trié par ordre croissant',
+    sortedDescending: 'trié par ordre décroissant',
+    notSorted: 'non trié',
+    filterColumn: 'Filtrer',
+    filtering: 'filtre actif',
+    expandRow: 'Développer la ligne',
+    collapseRow: 'Réduire la ligne',
+    selectRow: 'Sélectionner la ligne',
     search: 'Rechercher',
     noMoreItems: 'Aucun élément supplémentaire',
     perPage: '/ page',
@@ -601,6 +665,14 @@ class SeedLocalizations {
     noData: 'Sin datos',
     reset: 'Restablecer',
     selectAll: 'Seleccionar todo',
+    sortedAscending: 'orden ascendente',
+    sortedDescending: 'orden descendente',
+    notSorted: 'sin ordenar',
+    filterColumn: 'Filtrar',
+    filtering: 'filtrando',
+    expandRow: 'Expandir fila',
+    collapseRow: 'Contraer fila',
+    selectRow: 'Seleccionar fila',
     search: 'Buscar',
     noMoreItems: 'No hay más elementos',
     perPage: '/ página',
@@ -651,6 +723,14 @@ class SeedLocalizations {
     noData: '暂无数据',
     reset: '重置',
     selectAll: '全选',
+    sortedAscending: '升序排序',
+    sortedDescending: '降序排序',
+    notSorted: '未排序',
+    filterColumn: '筛选',
+    filtering: '正在筛选',
+    expandRow: '展开行',
+    collapseRow: '收起行',
+    selectRow: '选择此行',
     search: '搜索',
     noMoreItems: '没有更多了',
     perPage: '条/页',
@@ -700,6 +780,14 @@ class SeedLocalizations {
     noData: 'データなし',
     reset: 'リセット',
     selectAll: 'すべて選択',
+    sortedAscending: '昇順で並べ替え',
+    sortedDescending: '降順で並べ替え',
+    notSorted: '並べ替えなし',
+    filterColumn: '絞り込み',
+    filtering: '絞り込み中',
+    expandRow: '行を展開',
+    collapseRow: '行を折りたたむ',
+    selectRow: '行を選択',
     search: '検索',
     noMoreItems: 'これ以上ありません',
     perPage: '件/ページ',
@@ -750,6 +838,14 @@ class SeedLocalizations {
     noData: 'Veri yok',
     reset: 'Sıfırla',
     selectAll: 'Tümünü seç',
+    sortedAscending: 'artan sırada',
+    sortedDescending: 'azalan sırada',
+    notSorted: 'sıralanmamış',
+    filterColumn: 'Filtre',
+    filtering: 'filtreliyor',
+    expandRow: 'Satırı genişlet',
+    collapseRow: 'Satırı daralt',
+    selectRow: 'Satırı seç',
     search: 'Ara',
     noMoreItems: 'Başka öğe yok',
     perPage: '/ sayfa',
@@ -799,6 +895,14 @@ class SeedLocalizations {
     noData: 'Sem conteúdo',
     reset: 'Redefinir',
     selectAll: 'Selecionar tudo',
+    sortedAscending: 'ordenado crescente',
+    sortedDescending: 'ordenado decrescente',
+    notSorted: 'sem ordenação',
+    filterColumn: 'Filtrar',
+    filtering: 'filtrando',
+    expandRow: 'Expandir linha',
+    collapseRow: 'Recolher linha',
+    selectRow: 'Selecionar linha',
     search: 'Pesquisar',
     noMoreItems: 'Não há mais itens',
     perPage: '/ página',
@@ -849,6 +953,14 @@ class SeedLocalizations {
     noData: 'لا توجد بيانات',
     reset: 'إعادة تعيين',
     selectAll: 'تحديد الكل',
+    sortedAscending: 'مرتب تصاعديًا',
+    sortedDescending: 'مرتب تنازليًا',
+    notSorted: 'غير مرتب',
+    filterColumn: 'تصفية',
+    filtering: 'قيد التصفية',
+    expandRow: 'توسيع الصف',
+    collapseRow: 'طي الصف',
+    selectRow: 'تحديد الصف',
     search: 'بحث',
     noMoreItems: 'لا مزيد من العناصر',
     perPage: '/ صفحة',
@@ -900,6 +1012,14 @@ class SeedLocalizations {
     noData: 'אין נתונים',
     reset: 'איפוס',
     selectAll: 'בחר הכול',
+    sortedAscending: 'ממוין בסדר עולה',
+    sortedDescending: 'ממוין בסדר יורד',
+    notSorted: 'לא ממוין',
+    filterColumn: 'סינון',
+    filtering: 'מסנן',
+    expandRow: 'הרחב שורה',
+    collapseRow: 'כווץ שורה',
+    selectRow: 'בחר שורה',
     search: 'חיפוש',
     noMoreItems: 'אין פריטים נוספים',
     perPage: '/ עמוד',

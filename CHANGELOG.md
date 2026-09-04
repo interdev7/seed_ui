@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they sat beside rather than at the pages they went to. The way the pages run
   is the way the page reads.
 
+- **`Table`** — nothing in it was announced to a screen reader. A heading now
+  says it is one, a heading that sorts answers as a button and carries the
+  state its carets draw, the funnel is named apart from the heading it stands
+  in and says whether it is narrowing, the mark that opens a row is named for
+  what it will do, and the boxes in the selection column say which row they
+  take. The keyboard is not here yet: nothing in the kit is reachable by tab,
+  so it wants doing across the kit at once.
+
+- **`Checkbox`** and **`Radio`** — neither said what it was or what state it
+  was in. Both carry their own semantics now, so anything built out of them
+  gains it, the `Table` selection column included.
+
 - **`Tree`** — in a mirrored layout a shut switcher pointed away from the
   tree rather than into it. The chevron points the way the reading runs, which
   is the way the node would open; open, it points down either way.

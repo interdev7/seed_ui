@@ -3732,29 +3732,37 @@ class _TableState<T> extends State<Table<T>> {
               : Builder(
                   builder: (context) {
                     final state = _selectionState;
-                    return Checkbox(
-                      checked: state.all,
-                      indeterminate: state.some && !state.all,
-                      disabled: _selectableOnShow.isEmpty,
-                      onChanged: (on) => _toggleAll(on: on),
+                    return Semantics(
+                      // A box with nothing beside it says nothing about what
+                      // it takes, so it is named here.
+                      label: context.seedLocale.selectAll,
+                      child: Checkbox(
+                        checked: state.all,
+                        indeterminate: state.some && !state.all,
+                        disabled: _selectableOnShow.isEmpty,
+                        onChanged: (on) => _toggleAll(on: on),
+                      ),
                     );
                   },
                 ),
       builder: (context, record, index) {
         final can = _canSelect(record);
-        return selection.mode == TableSelectionMode.radio
-            ? Radio<bool>(
-                value: true,
-                groupValue: _isSelected(record),
-                disabled: !can,
-                onChanged: (_) => _toggleRow(record, on: true),
-              )
-            : Checkbox(
-                checked: _isSelected(record),
-                indeterminate: _isHalfSelected(record),
-                disabled: !can,
-                onChanged: (on) => _toggleRow(record, on: on),
-              );
+        return Semantics(
+          label: context.seedLocale.selectRow,
+          child: selection.mode == TableSelectionMode.radio
+              ? Radio<bool>(
+                  value: true,
+                  groupValue: _isSelected(record),
+                  disabled: !can,
+                  onChanged: (_) => _toggleRow(record, on: true),
+                )
+              : Checkbox(
+                  checked: _isSelected(record),
+                  indeterminate: _isHalfSelected(record),
+                  disabled: !can,
+                  onChanged: (on) => _toggleRow(record, on: on),
+                ),
+        );
       },
     );
   }
@@ -3776,31 +3784,43 @@ class _TableState<T> extends State<Table<T>> {
         if (!_canExpand(record)) return const SizedBox.shrink();
         final open = _isExpanded(record);
         final t = context.softToken;
-        return MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => _toggleExpanded(record),
-            child: TweenAnimationBuilder<double>(
-              // Beginning where it already stands, not at shut. A mark built
-              // afresh — which is what a row becomes when the panel above it
-              // is let go of and the grid closes up — would otherwise draw
-              // itself a plus and then open, on a row nobody had touched.
-              // A change still animates: the builder carries on from the
-              // value it is at, whatever it was told to begin from.
-              tween: Tween<double>(
-                begin: open ? 1 : 0,
-                end: open ? 1 : 0,
-              ),
-              duration: t.motionDurationMid,
-              curve: t.motionEaseInOut,
-              builder: (context, shut, _) => CustomPaint(
-                size: Size.square(_token.expandIconSize),
-                painter: _ExpandIconPainter(
-                  bar: _token.headerColor,
-                  border: _token.borderColor,
-                  radius: t.borderRadiusSM,
-                  open: shut,
+        final words = context.seedLocale;
+        // Merged, or the name and the tapping would be two nodes and a
+        // reader would meet a nameless button.
+        return MergeSemantics(
+          child: Semantics(
+            button: true,
+            // Named for what it will do rather than for what it is: a mark
+            // drawn as a plus tells a reader nothing, and neither does one it
+            // cannot see.
+            label: open ? words.collapseRow : words.expandRow,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _toggleExpanded(record),
+                child: TweenAnimationBuilder<double>(
+                  // Beginning where it already stands, not at shut. A mark built
+                  // afresh — which is what a row becomes when the panel above it
+                  // is let go of and the grid closes up — would otherwise draw
+                  // itself a plus and then open, on a row nobody had touched.
+                  // A change still animates: the builder carries on from the
+                  // value it is at, whatever it was told to begin from.
+                  tween: Tween<double>(
+                    begin: open ? 1 : 0,
+                    end: open ? 1 : 0,
+                  ),
+                  duration: t.motionDurationMid,
+                  curve: t.motionEaseInOut,
+                  builder: (context, shut, _) => CustomPaint(
+                    size: Size.square(_token.expandIconSize),
+                    painter: _ExpandIconPainter(
+                      bar: _token.headerColor,
+                      border: _token.borderColor,
+                      radius: t.borderRadiusSM,
+                      open: shut,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -4188,9 +4208,27 @@ class _TableState<T> extends State<Table<T>> {
     _ResolvedTableToken r,
     Token t,
   ) {
-    final title = DefaultTextStyle.merge(
-      style: TextStyle(color: r.headerColor, fontWeight: t.fontWeightStrong),
-      child: column.title ?? const SizedBox.shrink(),
+    final words = context.seedLocale;
+    // Round the words alone, not round the whole cell: the marks beside them
+    // are their own things to a reader, and a heading that swallowed them
+    // would be read out as one long run of words with no way to reach either.
+    final title = Semantics(
+      header: true,
+      button: column.sorts,
+      // Which way it is sorted, if at all — the one thing a reader cannot get
+      // from the words, since the carets say it in a picture.
+      value: !column.sorts
+          ? null
+          : switch (_orderOf(index)) {
+              TableSortOrder.ascending => words.sortedAscending,
+              TableSortOrder.descending => words.sortedDescending,
+              null => words.notSorted,
+            },
+      onTap: column.sorts ? () => _cycleSort(index) : null,
+      child: DefaultTextStyle.merge(
+        style: TextStyle(color: r.headerColor, fontWeight: t.fontWeightStrong),
+        child: column.title ?? const SizedBox.shrink(),
+      ),
     );
     if (!column.sorts && !column.filtersRows) return title;
     if (!column.sorts) {
@@ -4282,51 +4320,63 @@ class _TableState<T> extends State<Table<T>> {
           : _filterMenu(column, index, close, r, t),
       // Its own detector under the heading's: the innermost recognizer takes
       // the tap, so opening the menu does not also sort the column.
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {},
-        child: ValueListenableBuilder<int?>(
-          valueListenable: _hoveredFunnel,
-          builder: (context, hovered, child) {
-            final over = hovered == index;
-            return MouseRegion(
-              cursor: SystemMouseCursors.click,
-              onEnter: (_) => _hoveredFunnel.value = index,
-              onExit: (_) {
-                if (_hoveredFunnel.value == index) {
-                  _hoveredFunnel.value = null;
-                }
-              },
-              // The funnel takes a ground of its own under the hand, rounded
-              // and a step stronger than the heading it sits in. Sharing the
-              // heading's would leave the two answering as one, when tapping
-              // the mark and tapping the heading do different things.
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: over ? r.filterHoverBg : const Color(0x00000000),
-                  borderRadius: BorderRadius.circular(t.borderRadiusSM),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: t.sizeXXS,
-                    vertical: t.sizeXXS / 2,
+      // Merged, so the name, the state and the tapping are one thing to a
+      // reader rather than a nameless button beside a word.
+      child: MergeSemantics(
+        child: Semantics(
+          button: true,
+          // Named apart from the heading it stands in, since it does a
+          // different thing, and told whether it is narrowing anything — the
+          // one thing the mark itself says only in a colour.
+          label: context.seedLocale.filterColumn,
+          value: narrowing ? context.seedLocale.filtering : '',
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {},
+            child: ValueListenableBuilder<int?>(
+              valueListenable: _hoveredFunnel,
+              builder: (context, hovered, child) {
+                final over = hovered == index;
+                return MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  onEnter: (_) => _hoveredFunnel.value = index,
+                  onExit: (_) {
+                    if (_hoveredFunnel.value == index) {
+                      _hoveredFunnel.value = null;
+                    }
+                  },
+                  // The funnel takes a ground of its own under the hand, rounded
+                  // and a step stronger than the heading it sits in. Sharing the
+                  // heading's would leave the two answering as one, when tapping
+                  // the mark and tapping the heading do different things.
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: over ? r.filterHoverBg : const Color(0x00000000),
+                      borderRadius: BorderRadius.circular(t.borderRadiusSM),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: t.sizeXXS,
+                        vertical: t.sizeXXS / 2,
+                      ),
+                      child: column.filterIcon != null
+                          ? column.filterIcon!(context, narrowing)
+                          : CustomPaint(
+                              size: Size.square(r.filterIconSize),
+                              painter: _FunnelPainter(
+                                narrowing
+                                    ? r.headerMarkActiveColor
+                                    : over
+                                        ? r.headerColor
+                                        : r.headerMarkColor,
+                              ),
+                            ),
+                    ),
                   ),
-                  child: column.filterIcon != null
-                      ? column.filterIcon!(context, narrowing)
-                      : CustomPaint(
-                          size: Size.square(r.filterIconSize),
-                          painter: _FunnelPainter(
-                            narrowing
-                                ? r.headerMarkActiveColor
-                                : over
-                                    ? r.headerColor
-                                    : r.headerMarkColor,
-                          ),
-                        ),
-                ),
-              ),
-            );
-          },
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

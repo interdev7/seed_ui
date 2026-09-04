@@ -177,37 +177,46 @@ class _SoftRadioState<T> extends State<Radio<T>> {
             ConfigProvider.componentOf<RadioToken>(context) ??
             const RadioToken())
         ._resolve(token);
-    return MouseRegion(
-      cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _select,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioDot(
-              selected: widget._selected,
-              enabled: _enabled,
-              hovered: _hovered && _enabled,
-              token: token,
-              componentToken: r,
-            ),
-            if (widget.child != null) ...[
-              SizedBox(width: token.sizeXS),
-              DefaultTextStyle.merge(
-                style: TextStyle(
-                  color: _enabled ? token.colorText : token.colorTextQuaternary,
-                  fontSize: r.fontSize,
-                  fontFamily: token.fontFamily,
-                  fontFamilyFallback: token.fontFamilyFallback,
-                  decoration: TextDecoration.none,
-                ),
-                child: widget.child!,
+    return Semantics(
+      // One of a set, so the reader is told it is a choice among others as
+      // well as whether it is the one taken.
+      inMutuallyExclusiveGroup: true,
+      checked: widget._selected,
+      enabled: _enabled,
+      onTap: _enabled ? _select : null,
+      child: MouseRegion(
+        cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _select,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioDot(
+                selected: widget._selected,
+                enabled: _enabled,
+                hovered: _hovered && _enabled,
+                token: token,
+                componentToken: r,
               ),
+              if (widget.child != null) ...[
+                SizedBox(width: token.sizeXS),
+                DefaultTextStyle.merge(
+                  style: TextStyle(
+                    color:
+                        _enabled ? token.colorText : token.colorTextQuaternary,
+                    fontSize: r.fontSize,
+                    fontFamily: token.fontFamily,
+                    fontFamilyFallback: token.fontFamilyFallback,
+                    decoration: TextDecoration.none,
+                  ),
+                  child: widget.child!,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

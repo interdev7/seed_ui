@@ -192,7 +192,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   Shutting one open row leaves another open row alone: a panel is keyed by the
   row it belongs to, so the one below does not inherit the element — and the
-  finished animation — of the one being let go of.
+  finished animation — of the one being let go of. The mark on a row begins
+  where the row already stands, so one built afresh as the grid closes up
+  draws itself open rather than drawing a plus and opening again.
 
   The table follows the direction the page reads throughout: the first column
   is the one against the leading edge, the marks a heading carries stand at

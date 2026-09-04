@@ -3328,7 +3328,16 @@ class _TableState<T> extends State<Table<T>> {
             behavior: HitTestBehavior.opaque,
             onTap: () => _toggleExpanded(record),
             child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0, end: open ? 1 : 0),
+              // Beginning where it already stands, not at shut. A mark built
+              // afresh — which is what a row becomes when the panel above it
+              // is let go of and the grid closes up — would otherwise draw
+              // itself a plus and then open, on a row nobody had touched.
+              // A change still animates: the builder carries on from the
+              // value it is at, whatever it was told to begin from.
+              tween: Tween<double>(
+                begin: open ? 1 : 0,
+                end: open ? 1 : 0,
+              ),
               duration: t.motionDurationMid,
               curve: t.motionEaseInOut,
               builder: (context, shut, _) => CustomPaint(

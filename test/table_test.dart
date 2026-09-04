@@ -3361,6 +3361,45 @@ void main() {
       expect(find.text('about Ann'), findsOneWidget);
     });
 
+    testWidgets('the mark on a row nobody touched never flickers shut',
+        (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(chevrons().first);
+      await tester.pumpAndSettle();
+      await tester.tap(chevrons().at(1));
+      await tester.pumpAndSettle();
+
+      // `open` is one when the row stands open: the upright of the plus has
+      // shrunk away and the mark reads as a minus.
+      double openness(int at) =>
+          (tester.widgetList<CustomPaint>(chevrons()).elementAt(at).painter!
+                  as dynamic)
+              .open as double;
+      expect(openness(1), 1);
+
+      // Letting go of the upper one closes the grid up around the lower, so
+      // the lower's mark is built afresh. It must be drawn as it stands, not
+      // begun at shut and opened again on a row nobody touched.
+      await tester.tap(chevrons().first);
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+        if (chevrons().evaluate().length < 2) continue;
+        expect(openness(1), 1, reason: 'the lower mark stayed a minus');
+      }
+      await tester.pumpAndSettle();
+      expect(openness(1), 1);
+
+      // And a mark that is actually toggled still travels: beginning where it
+      // stands is not the same as standing still.
+      await tester.tap(chevrons().first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(openness(0), greaterThan(0));
+      expect(openness(0), lessThan(1));
+      await tester.pumpAndSettle();
+      expect(openness(0), 1);
+    });
+
     testWidgets('the panel reveals and hides the way the kit reveals things',
         (tester) async {
       await tester.pumpWidget(table());

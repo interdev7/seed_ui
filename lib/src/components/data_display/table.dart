@@ -20,6 +20,7 @@ import 'package:flutter/widgets.dart' as flutter show Table, TableRow;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/expandable.dart';
+import '../../utils/popover.dart' show PopoverPlacement;
 import '../../utils/size_resolver.dart';
 import '../data_entry/checkbox.dart';
 import '../data_entry/input.dart';
@@ -443,9 +444,9 @@ class TableCellSpan {
 /// Everything it needs to do its work and nothing else: what is chosen, a way
 /// to change that, and the three things it can do about it.
 @immutable
-class TableFilterPanel {
-  /// Creates a [TableFilterPanel].
-  const TableFilterPanel({
+class TableFilterControls {
+  /// Creates a [TableFilterControls].
+  const TableFilterControls({
     required this.chosen,
     required this.choose,
     required this.apply,
@@ -469,6 +470,30 @@ class TableFilterPanel {
 
   /// Shuts the panel and leaves the table as it was.
   final VoidCallback close;
+}
+
+/// A filter panel of your own, in place of the menu of [TableColumn.filters].
+///
+/// A pair rather than a bare builder because where the panel hangs is the
+/// panel's business as much as what is in it: the funnel it grows from stands
+/// at the far end of the heading, so a panel wide enough to be useful would
+/// sit off to the right of its own column if it were left to align its left
+/// edge with the mark.
+@immutable
+class TableFilterPanel {
+  /// Creates a [TableFilterPanel].
+  const TableFilterPanel({required this.builder, this.placement});
+
+  /// Draws the panel, handed what is chosen and what it can do about it.
+  final Widget Function(BuildContext context, TableFilterControls panel)
+      builder;
+
+  /// Where the panel hangs from the mark that opens it.
+  ///
+  /// [PopoverPlacement.bottomRight] where nothing is said, which puts the
+  /// panel under the column rather than off to the side of it. It still flips
+  /// to stay on screen.
+  final PopoverPlacement? placement;
 }
 
 /// One choice in a column's filter menu.
@@ -808,19 +833,21 @@ class TableColumn<T> {
   /// Draws the filter panel yourself, in place of the menu of [filters].
   ///
   /// Naming one makes the column filterable, [filters] or no: a panel that
-  /// asks for a word to search by has no list of choices to offer. What it is
-  /// handed is a [TableFilterPanel] — what is chosen, a way to change that,
-  /// and apply, clear and close.
+  /// asks for a word to search by has no list of choices to offer. Its builder
+  /// is handed a [TableFilterControls] — what is chosen, a way to change that,
+  /// and apply, clear and close — and its [TableFilterPanel.placement] says
+  /// where it hangs.
   ///
   /// ```dart
-  /// filterPanel: (context, panel) => Input(
-  ///   defaultValue: panel.chosen.firstOrNull as String?,
-  ///   onChanged: (typed) => panel.choose([if (typed.isNotEmpty) typed]),
-  ///   onSubmitted: (_) => panel.apply(),
+  /// filterPanel: TableFilterPanel(
+  ///   builder: (context, panel) => Input(
+  ///     defaultValue: panel.chosen.firstOrNull as String?,
+  ///     onChanged: (typed) => panel.choose([if (typed.isNotEmpty) typed]),
+  ///     onSubmitted: (_) => panel.apply(),
+  ///   ),
   /// )
   /// ```
-  final Widget Function(BuildContext context, TableFilterPanel panel)?
-      filterPanel;
+  final TableFilterPanel? filterPanel;
 
   /// Draws the mark at the head of the column, in place of the funnel.
   ///
@@ -3700,6 +3727,9 @@ class _TableState<T> extends State<Table<T>> {
               child: title,
             ),
           ),
+          // The same breath the carets take: a word ending against the mark
+          // reads as one thing, and an aligned heading ends right there.
+          SizedBox(width: t.sizeXXS),
           _funnel(column, index, r, t),
         ],
       );
@@ -3749,9 +3779,13 @@ class _TableState<T> extends State<Table<T>> {
       // A click, not a hover: a menu with checkboxes and two words to end it
       // is not something to open by passing over it.
       trigger: const [DropdownTrigger.click],
+      // Hung by its right edge, not its left: the mark stands at the far end
+      // of the heading, so aligning left edges would throw the panel out past
+      // its own column.
+      placement: column.filterPanel?.placement ?? PopoverPlacement.bottomRight,
       content: (context, close) => column.filterPanel != null
           ? _OwnFilterPanel(
-              build: column.filterPanel!,
+              build: column.filterPanel!.builder,
               chosen: _filters[index] ?? const [],
               onApply: (chosen) {
                 _applyFilter(index, chosen);
@@ -4924,7 +4958,7 @@ class _OwnFilterPanel extends StatefulWidget {
     required this.onClose,
   });
 
-  final Widget Function(BuildContext context, TableFilterPanel panel) build;
+  final Widget Function(BuildContext context, TableFilterControls panel) build;
   final List<Object?> chosen;
   final ValueChanged<List<Object?>> onApply;
   final VoidCallback onClose;
@@ -4941,7 +4975,7 @@ class _OwnFilterPanelState extends State<_OwnFilterPanel> {
         child: IntrinsicWidth(
           child: widget.build(
             context,
-            TableFilterPanel(
+            TableFilterControls(
               chosen: _chosen,
               choose: (next) => setState(() => _chosen = [...next]),
               apply: () => widget.onApply(_chosen),

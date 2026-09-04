@@ -407,6 +407,9 @@ Left to itself the table keeps its own choices, starting from
 `onFiltersChanged` saying what a menu would have made of them. Both are keyed
 by the column's place in `columns`, as `TableSort` is.
 
+The word and the mark keep `sizeXXS` between them, the same breath the sort
+carets take, so a heading aligned to the end does not run into the funnel.
+
 The funnel answers the hand apart from the heading it stands in: it takes a
 rounded ground of its own, a step stronger than the heading's, and the mark
 darkens with it. Sharing the heading's ground would leave the two answering as
@@ -424,8 +427,8 @@ clipped to the panel's corners, with `sizeXS` either side and
 ### A panel of your own
 
 `filterPanel` puts your own widget where the menu of choices would be — a
-field to search by, a pair of dates, a slider. It is handed a
-[`TableFilterPanel`]: `chosen`, what the column is narrowing by now; `choose`,
+field to search by, a pair of dates, a slider. Its `builder` is handed a
+`TableFilterControls`: `chosen`, what the column is narrowing by now; `choose`,
 to say what it should be narrowing by; `apply`, to narrow the table by it;
 `clear`, to give every row back; and `close`, to shut the panel without
 deciding anything.
@@ -437,13 +440,22 @@ TableColumn(
   onFilter: (choice, u) => u.name.toLowerCase().contains(
         (choice! as String).toLowerCase(),
       ),
-  filterPanel: (context, panel) => Input(
-    defaultValue: panel.chosen.firstOrNull as String?,
-    onChanged: (typed) => panel.choose([if (typed.isNotEmpty) typed]),
-    onSubmitted: (_) => panel.apply(),
+  filterPanel: TableFilterPanel(
+    builder: (context, panel) => Input(
+      defaultValue: panel.chosen.firstOrNull as String?,
+      onChanged: (typed) => panel.choose([if (typed.isNotEmpty) typed]),
+      onSubmitted: (_) => panel.apply(),
+    ),
   ),
 )
 ```
+
+A pair rather than a bare builder because where the panel hangs is the panel's
+business as much as what is in it. The mark that opens it stands at the far end
+of the heading, so a panel that aligned its left edge with the mark would sit
+off to the right of its own column; it hangs by its right edge instead, and
+`placement` says otherwise where a panel wants something else. It still flips
+to stay on screen either way.
 
 `choose` is not `apply`: what the panel gathers is held while it is open and
 only reaches the table when `apply` is called, so a half-typed word does not
@@ -455,6 +467,11 @@ hand back anything at all — give the column a `value` to match against, or an
 `onFilter`. The panel is drawn on the kit's own ground with its corners and
 shadow, and is as wide as it asks to be, so give it a width if what is inside
 has no width of its own.
+
+A panel is an ordinary widget tree, overlays included: a `Popover` or a
+`Tooltip` inside one opens over the panel without the panel taking that as a
+tap outside itself, so a band of ages can explain what it covers where it
+stands.
 
 `filterIcon` draws the mark at the head of the column in place of the funnel,
 told whether the column is narrowing anything — the one thing the funnel says

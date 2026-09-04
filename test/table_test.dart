@@ -2634,41 +2634,43 @@ void main() {
                 title: const Text('Name'),
                 value: (u) => u.name,
                 onFilter: (choice, u) => u.name.startsWith(choice! as String),
-                filterPanel: (context, panel) => SizedBox(
-                  width: 200,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Input(
-                        onChanged: (typed) =>
-                            panel.choose([if (typed.isNotEmpty) typed]),
-                      ),
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: panel.apply,
-                        child: const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text('Go'),
+                filterPanel: TableFilterPanel(
+                  builder: (context, panel) => SizedBox(
+                    width: 200,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Input(
+                          onChanged: (typed) =>
+                              panel.choose([if (typed.isNotEmpty) typed]),
                         ),
-                      ),
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: panel.clear,
-                        child: const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text('Undo'),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: panel.apply,
+                          child: const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Text('Go'),
+                          ),
                         ),
-                      ),
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: panel.close,
-                        child: const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text('Never mind'),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: panel.clear,
+                          child: const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Text('Undo'),
+                          ),
                         ),
-                      ),
-                    ],
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: panel.close,
+                          child: const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Text('Never mind'),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -2740,12 +2742,164 @@ void main() {
       expect(find.text('on'), findsOneWidget, reason: 'told it is narrowing');
     });
 
+    testWidgets('a panel of your own can open an overlay of its own',
+        (tester) async {
+      // A panel is an ordinary widget tree, so a popover inside one has to
+      // open over it without the panel taking the tap as an outside one.
+      await tester.pumpWidget(
+        host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                onFilter: (choice, u) => u.name == choice,
+                filterPanel: TableFilterPanel(
+                  builder: (context, panel) => const SizedBox(
+                    width: 160,
+                    child: Popover(
+                      trigger: PopoverTrigger.tap,
+                      content: Text('What this covers'),
+                      child: Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text('Why?'),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await openMenu(tester, 0);
+      expect(find.text('Why?'), findsOneWidget);
+
+      await tester.tap(find.text('Why?'));
+      await tester.pumpAndSettle();
+      expect(find.text('What this covers'), findsOneWidget);
+      expect(find.text('Why?'), findsOneWidget, reason: 'the panel stays');
+    });
+
+    testWidgets('a panel hangs by its right edge, not off past the column',
+        (tester) async {
+      const key = Key('panel');
+      await tester.pumpWidget(
+        host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+                filterPanel: TableFilterPanel(
+                  builder: (context, panel) => const SizedBox(
+                    key: key,
+                    width: 200,
+                    height: 60,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final mark = tester.getRect(find
+          .byWidgetPredicate((w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_FunnelPainter')
+          .first);
+      await openMenu(tester, 0);
+      final panel = tester.getRect(find.byKey(key));
+
+      // Right edges together, bar the panel's own padding, and so under its
+      // own column rather than out to the side of it: a panel wider than the
+      // mark has to grow leftwards.
+      expect(panel.right, moreOrLessEquals(mark.right, epsilon: 8));
+      expect(panel.left, lessThan(mark.left));
+      expect(panel.top, greaterThanOrEqualTo(mark.bottom - 1));
+    });
+
+    testWidgets('a panel can be told where to hang instead', (tester) async {
+      const key = Key('panel');
+      await tester.pumpWidget(
+        host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                filterPanel: TableFilterPanel(
+                  placement: PopoverPlacement.bottomLeft,
+                  builder: (context, panel) => const SizedBox(
+                    key: key,
+                    width: 120,
+                    height: 60,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final mark = tester.getRect(find
+          .byWidgetPredicate((w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_FunnelPainter')
+          .first);
+      await openMenu(tester, 0);
+      final panel = tester.getRect(find.byKey(key));
+
+      expect(panel.left, moreOrLessEquals(mark.left, epsilon: 8));
+    });
+
+    testWidgets('a heading keeps its distance from the mark', (tester) async {
+      await tester.pumpWidget(
+        host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Age'),
+                // Aligned to the end, so the word ends where the mark begins
+                // unless something keeps them apart.
+                align: TableAlign.end,
+                value: (u) => u.age,
+                filters: const [TableFilter('Old', 30)],
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final word = tester.getRect(find.text('Age'));
+      final mark = tester.getRect(find
+          .byWidgetPredicate((w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_FunnelPainter')
+          .first);
+      // Four of the funnel's own padding is not enough on its own: the word
+      // has to be given a breath of its own as well.
+      expect(mark.left - word.right, greaterThanOrEqualTo(8));
+    });
+
     test('a panel of your own still says what a choice means', () {
       expect(
         () => TableColumn<_User>(
           title: const Text('Name'),
           builder: (_, __, ___) => const Text('x'),
-          filterPanel: (_, __) => const SizedBox.shrink(),
+          filterPanel: TableFilterPanel(
+            builder: (_, __) => const SizedBox.shrink(),
+          ),
         ),
         throwsAssertionError,
       );

@@ -156,9 +156,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead. A choice already ticked stays ticked while it is out of sight.
 
   `filterPanel` puts your own widget where the menu would be — a field to
-  search by, a pair of dates — handed `chosen`, `choose`, `apply`, `clear` and
-  `close`. What it gathers is held while it is open and reaches the table on
-  `apply`, so a half-typed word does not re-narrow the rows. `filterIcon`
+  search by, a pair of dates. Its `builder` is handed a `TableFilterControls`:
+  `chosen`, `choose`, `apply`, `clear` and `close`; its `placement` says where
+  the panel hangs from the mark that opens it, by its right edge where nothing
+  is said, since the mark stands at the far end of the heading and aligning
+  left edges would throw the panel out past its own column. What it gathers is held while it is open and reaches the table on
+  `apply`, so a half-typed word does not re-narrow the rows. A panel is an
+  ordinary widget tree, overlays included: a `Popover` inside one opens over
+  it without shutting it. `filterIcon`
   draws the mark at the head of the column in place of the funnel, told
   whether the column is narrowing anything.
 
@@ -167,9 +172,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     title: const Text('Name'),
     value: (u) => u.name,
     onFilter: (choice, u) => u.name.contains(choice! as String),
-    filterPanel: (context, panel) => Input(
-      onChanged: (typed) => panel.choose([if (typed.isNotEmpty) typed]),
-      onSubmitted: (_) => panel.apply(),
+    filterPanel: TableFilterPanel(
+      builder: (context, panel) => Input(
+        onChanged: (typed) => panel.choose([if (typed.isNotEmpty) typed]),
+        onSubmitted: (_) => panel.apply(),
+      ),
     ),
   )
   ```

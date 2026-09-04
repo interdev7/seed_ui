@@ -247,6 +247,7 @@ TableColumnFixed
 TableDefaults
 TableExpandable
 TableFilter
+TableFilterControls
 TableFilterPanel
 TablePagination
 TablePaginationPosition

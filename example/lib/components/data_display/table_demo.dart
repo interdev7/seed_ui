@@ -741,46 +741,49 @@ class _TableDemoState extends State<TableDemo> {
                     ),
                     // A word to search by has no list of choices to offer, so
                     // the panel is what makes this column filterable at all.
-                    filterPanel: (context, panel) => SizedBox(
-                      width: 200,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Input(
-                              size: SoftSize.small,
-                              defaultValue: panel.chosen.firstOrNull as String?,
-                              placeholder: 'Search a name',
-                              // What is gathered is held while the panel is
-                              // open; only apply reaches the table.
-                              onChanged: (typed) =>
-                                  panel.choose([if (typed.isNotEmpty) typed]),
-                              onSubmitted: (_) => panel.apply(),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Button(
-                                    size: SoftSize.small,
-                                    color: ButtonColor.primary,
-                                    onPressed: panel.apply,
-                                    child: const Text('Search'),
+                    filterPanel: TableFilterPanel(
+                      builder: (context, panel) => SizedBox(
+                        width: 200,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Input(
+                                size: SoftSize.small,
+                                defaultValue:
+                                    panel.chosen.firstOrNull as String?,
+                                placeholder: 'Search a name',
+                                // What is gathered is held while the panel is
+                                // open; only apply reaches the table.
+                                onChanged: (typed) =>
+                                    panel.choose([if (typed.isNotEmpty) typed]),
+                                onSubmitted: (_) => panel.apply(),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Button(
+                                      size: SoftSize.small,
+                                      color: ButtonColor.primary,
+                                      onPressed: panel.apply,
+                                      child: const Text('Search'),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Button(
-                                    size: SoftSize.small,
-                                    onPressed: panel.clear,
-                                    child: const Text('Reset'),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Button(
+                                      size: SoftSize.small,
+                                      onPressed: panel.clear,
+                                      child: const Text('Reset'),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -797,9 +800,116 @@ class _TableDemoState extends State<TableDemo> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'filterPanel puts your own widget where the menu would be, and '
-                'filterIcon puts your own mark where the funnel would be, told '
-                'whether the column is narrowing anything.',
+                'filterPanel puts your own widget where the menu would be, '
+                'hung by its right edge so it sits under its own column — '
+                'placement says otherwise. filterIcon puts your own mark where '
+                'the funnel would be, told whether the column is narrowing '
+                'anything.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A filter panel with a popover in it',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _many.take(8).toList(),
+                columns: [
+                  TableColumn(title: const Text('Name'), value: (p) => p.name),
+                  TableColumn(
+                    title: const Text('Age'),
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                    // The choice is a band, not a value, so the column is
+                    // told what one means.
+                    onFilter: (choice, p) {
+                      final band = choice! as String;
+                      return switch (band) {
+                        'young' => p.age < 30,
+                        'middle' => p.age >= 30 && p.age < 40,
+                        _ => p.age >= 40,
+                      };
+                    },
+                    filterPanel: TableFilterPanel(
+                      builder: (context, panel) {
+                        // A panel of your own is a widget tree like any other,
+                        // overlays included: a popover opens above the panel
+                        // without closing it.
+                        Widget band(
+                          String key,
+                          String label,
+                          String explains,
+                        ) => Popover(
+                          placement: PopoverPlacement.right,
+                          title: Text(label),
+                          content: Text(explains),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Checkbox(
+                              checked: panel.chosen.contains(key),
+                              label: Text(label),
+                              onChanged: (on) => panel.choose([
+                                ...panel.chosen.where((c) => c != key),
+                                if (on) key,
+                              ]),
+                            ),
+                          ),
+                        );
+
+                        return SizedBox(
+                          width: 180,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                band('young', 'Under 30', 'The youngest rows.'),
+                                band(
+                                  'middle',
+                                  '30 to 39',
+                                  'Thirty up to forty.',
+                                ),
+                                band('older', '40 and up', 'Forty and beyond.'),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Button(
+                                        size: SoftSize.small,
+                                        color: ButtonColor.primary,
+                                        onPressed: panel.apply,
+                                        child: const Text('Apply'),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Button(
+                                        size: SoftSize.small,
+                                        onPressed: panel.clear,
+                                        child: const Text('Reset'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Hover a band to see what it covers: the popover opens over '
+                'the panel and the panel stays put, since a panel of your own '
+                'is an ordinary widget tree and an overlay inside one is '
+                'ordinary too.',
               ),
             ],
           ),

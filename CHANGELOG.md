@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.16.0
 
+### Fixed
+
+- **`Popover`** — a click on a trigger that had opened its card by being
+  hovered went to putting the card away and never reached what was under the
+  finger. The trigger is cut out of what dismisses the card, as it already was
+  for `Select`, `DatePicker` and `TimePicker`. Tapping a tap-triggered card's
+  own trigger now closes it, which is what every other floating surface in the
+  kit does.
+
 ### Added
 
 - **`Table`** — rows and columns, with a heading. The first stage: the grid
@@ -181,11 +190,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   )
   ```
 
+  Shutting one open row leaves another open row alone: a panel is keyed by the
+  row it belongs to, so the one below does not inherit the element — and the
+  finished animation — of the one being let go of.
+
   The table follows the direction the page reads throughout: the first column
   is the one against the leading edge, the marks a heading carries stand at
   its trailing edge and the filter panel hangs by that edge, a held column is
   held against the edge it names and casts its shade the way it covers, and a
-  drag lands where the hand is.
+  drag lands where the hand is; the rule between two columns falls on the side
+  the next column is on; the neighbours slide the way the page reads; and a
+  row or heading carried in the hand is drawn the way it was laid out, since
+  the overlay it travels in knows nothing of the table it came from.
 
   Filtering happens before sorting, and the widths are still
   measured from the rows as given — so a column keeps its width while you

@@ -1324,11 +1324,12 @@ void main() {
             (w) =>
                 w is DecoratedBox &&
                 w.decoration is BoxDecoration &&
-                (w.decoration as BoxDecoration).border is Border &&
+                (w.decoration as BoxDecoration).border is BorderDirectional &&
                 // Not the table's own outline, which is a border on every
                 // side and the only one that is rounded.
                 (w.decoration as BoxDecoration).borderRadius == null &&
-                ((w.decoration as BoxDecoration).border! as Border).right !=
+                ((w.decoration as BoxDecoration).border! as BorderDirectional)
+                        .end !=
                     BorderSide.none,
           )
           .evaluate()
@@ -3327,6 +3328,37 @@ void main() {
       await tester.tap(chevrons().at(1));
       await tester.pumpAndSettle();
       expect(find.text('about Ann'), findsNothing);
+    });
+
+    testWidgets('shutting one open row leaves another open row alone',
+        (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(chevrons().first);
+      await tester.pumpAndSettle();
+      await tester.tap(chevrons().at(1));
+      await tester.pumpAndSettle();
+      expect(find.text('about Chen'), findsOneWidget);
+      expect(find.text('about Ann'), findsOneWidget);
+
+      // Measured on the table, not on the words: the reveal clips the panel,
+      // so the text keeps its size while the panel around it does not.
+      double height() => tester.getRect(find.byType(Table<_User>)).height;
+
+      await tester.tap(chevrons().first);
+      var last = height();
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+        final now = height();
+        // One panel shutting is one table shrinking, all the way down. It
+        // grew again at the end when the shutting panel handed the one below
+        // it its element, and with it an animation that had just finished.
+        expect(now, lessThanOrEqualTo(last + 0.01),
+            reason: 'the table only ever shrank');
+        last = now;
+      }
+      await tester.pumpAndSettle();
+      expect(find.text('about Chen'), findsNothing);
+      expect(find.text('about Ann'), findsOneWidget);
     });
 
     testWidgets('the panel reveals and hides the way the kit reveals things',
@@ -6386,6 +6418,151 @@ void main() {
       expect(box.right - name.right, lessThan(40));
       // The far column is away past the trailing edge, which is the left.
       expect(tester.getRect(find.text('Note 7')).right, lessThan(box.left));
+    });
+
+    testWidgets('a rule falls on the side the next column is on',
+        (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            bordered: true,
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Who'),
+                children: [
+                  _name(width: 150),
+                  TableColumn<_User>(
+                    title: const Text('City'),
+                    width: 150,
+                    value: (u) => u.name,
+                  ),
+                ],
+              ),
+              _age(width: 150),
+            ],
+          ),
+        ),
+      );
+
+      // The rule between the group and Age has to be drawn by whichever of
+      // them the other stands beside — which swaps with the page.
+      final ruled = find
+          .byWidgetPredicate((w) =>
+              w is DecoratedBox &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).border is BorderDirectional &&
+              ((w.decoration as BoxDecoration).border! as BorderDirectional)
+                      .end !=
+                  BorderSide.none)
+          .evaluate();
+      expect(ruled, isNotEmpty, reason: 'the group is ruled off from Age');
+
+      // And it is drawn where Age actually is: to the left of the group.
+      final group = tester.getRect(find.text('Who'));
+      final age = tester.getRect(find.text('Age'));
+      expect(age.right, lessThan(group.left));
+    });
+
+    testWidgets('a row in the hand is carried the way it was laid out',
+        (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            data: people,
+            rowsDraggable: true,
+            columns: [
+              _name(width: 150),
+              TableColumn<_User>(
+                title: const Text('City'),
+                width: 150,
+                value: (u) => 'in ${u.name}',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final gesture = await tester.startGesture(tester.getCenter(
+        find.text('Chen'),
+      ));
+      await tester.pump(kLongPressTimeout);
+      await gesture.moveBy(const Offset(0, 40));
+      await tester.pump();
+
+      // Two of each now: the row where it stood, and the one in the hand.
+      // The carried one is drawn in the overlay, which knows nothing of the
+      // table, so it has to be told which way the page reads.
+      final name = tester.getRect(find.text('Chen').last);
+      final city = tester.getRect(find.text('in Chen').last);
+      expect(name.left, greaterThan(city.left));
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a heading without a scroll lands where the hand is too',
+        (tester) async {
+      var moved = '';
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            data: people,
+            columnsDraggable: true,
+            onColumnsReordered: (from, to) => moved = '$from to $to',
+            columns: [
+              _name(width: 200),
+              _age(width: 200),
+              TableColumn<_User>(
+                title: const Text('Note'),
+                width: 200,
+                value: (u) => 'n',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Name is the rightmost. Carrying it onto Note means carrying it to
+      // the far left, and the table has to read that as the last place.
+      final gesture = await tester.startGesture(tester.getCenter(
+        find.text('Name'),
+      ));
+      await tester.pump(kLongPressTimeout);
+      await gesture.moveTo(tester.getCenter(find.text('Note')));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(moved, '0 to 2');
+    });
+
+    testWidgets('the neighbours slide the way the page reads', (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            data: people,
+            columnsDraggable: true,
+            columns: [_name(width: 200), _age(width: 200)],
+          ),
+        ),
+      );
+
+      final before = tester.getRect(find.text('Age'));
+      final gesture = await tester.startGesture(tester.getCenter(
+        find.text('Name'),
+      ));
+      await tester.pump(kLongPressTimeout);
+      await gesture.moveTo(tester.getCenter(find.text('Age')));
+      await tester.pumpAndSettle();
+
+      // Age makes room by moving towards the leading edge, which is the
+      // right — the mirror of the way it moves otherwise.
+      final during = tester.getRect(find.text('Age'));
+      expect(during.left, greaterThan(before.left));
+
+      await gesture.up();
+      await tester.pumpAndSettle();
     });
 
     testWidgets('a column is dropped where the hand is, not where it mirrors',

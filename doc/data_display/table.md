@@ -837,6 +837,10 @@ still lies under its own column. A column held with `TableColumnFixed.start`
 is held against the leading edge and casts its shade over what passes on the
 far side of it.
 
+A row or a heading carried in the hand is drawn the way the table was: it
+travels in the overlay, which knows nothing of the table it came from, so it
+is told.
+
 The rows themselves are laid out from the leading edge and mirrored by the
 viewport, so there is one reckoning rather than two kept in step. The two
 places that turn that reckoning back into pixels are told about the page by

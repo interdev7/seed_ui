@@ -186,6 +186,11 @@ void main() {
     ];
 
     for (final alignment in alignments) {
+      // A fresh tree each time: the card lives in the overlay and outlives a
+      // rebuild, and tapping the trigger again would put it away rather than
+      // open it — the anchor is cut out of what dismisses the card.
+      await tester.pumpWidget(const SizedBox());
+      await _settle(tester);
       await tester.pumpWidget(
         _hostAt(
           Popconfirm(

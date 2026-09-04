@@ -70,6 +70,39 @@ void main() {
     expect(find.text('On hover'), findsNothing);
   });
 
+  testWidgets('a click on a hovered trigger reaches what is under it',
+      (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      _host(
+        Popover(
+          content: const Text('On hover'),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => taps++,
+            child: const Text('trigger'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final pointer = TestPointer(1, PointerDeviceKind.mouse);
+    await tester.sendEventToBinding(
+      pointer.hover(tester.getCenter(find.text('trigger'))),
+    );
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pumpAndSettle();
+    expect(find.text('On hover'), findsOneWidget);
+
+    // What dismisses the card covers the page, and the trigger is cut out of
+    // it: a card that opened on its own from a hover must not eat the click
+    // the hand came to make.
+    await tester.tap(find.text('trigger'));
+    await tester.pumpAndSettle();
+    expect(taps, 1);
+  });
+
   testWidgets('a pointer that reaches the card keeps it open', (tester) async {
     // Without this a hover popover could not hold a link or a button: the card
     // would close on the way to it.

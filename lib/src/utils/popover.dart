@@ -1549,6 +1549,12 @@ class PopoverLayerState extends State<PopoverLayer> {
       anchorRect: topLeft & box.size,
       gap: widget.gap,
       onDismiss: widget.dismissOnOutsideTap ? _requestClose : null,
+      // The anchor is cut out of what dismisses the card, as it is for every
+      // other floating surface in the kit. A card opened by hovering stands
+      // over nothing the hand can reach, but the barrier behind it covered
+      // the anchor itself — so the first click on a hovered trigger went to
+      // shutting the card and never reached what was under the finger.
+      dismissExcludesAnchor: true,
       interactive: widget.interactive,
       arrowColor: widget.arrowColor,
       arrowShadow: widget.arrowShadow,

@@ -1799,8 +1799,15 @@ class _TableState<T> extends State<Table<T>> {
         tween: Tween<double>(end: by),
         duration: t.motionDurationMid,
         curve: t.motionEaseInOut,
-        builder: (context, at, child) =>
-            Transform.translate(offset: Offset(at, 0), child: child),
+        builder: (context, at, child) => Transform.translate(
+          // The shifts are reckoned from the leading edge, as the columns
+          // are; which way that is on the screen the page decides.
+          offset: Offset(
+            Directionality.of(context) == TextDirection.rtl ? -at : at,
+            0,
+          ),
+          child: child,
+        ),
         child: cell,
       );
 
@@ -2397,7 +2404,13 @@ class _TableState<T> extends State<Table<T>> {
             if (head != null && !_isSticky) head,
           ];
 
+          // Keyed by the row it belongs to. Without that, closing the upper
+          // of two open panels handed the lower one the upper's element the
+          // moment the upper was let go of — and with it an animation that
+          // had just finished closing, so the lower one shut and opened again
+          // under the hand.
           Widget panelFor(int i) => Expandable(
+                key: ValueKey<String>('panel$i'),
                 expanded: _isExpanded(rows[i]),
                 destroyWhenCollapsed: true,
                 // The panel is added at the moment its row opens, so it has
@@ -3627,9 +3640,9 @@ class _TableState<T> extends State<Table<T>> {
           width: width,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              border: Border(
+              border: BorderDirectional(
                 bottom: rule,
-                right: !last && _bordered ? rule : BorderSide.none,
+                end: !last && _bordered ? rule : BorderSide.none,
               ),
             ),
             child: _headingCell(
@@ -3663,9 +3676,9 @@ class _TableState<T> extends State<Table<T>> {
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
-                border: Border(
+                border: BorderDirectional(
                   bottom: rule,
-                  right: !last && _bordered ? rule : BorderSide.none,
+                  end: !last && _bordered ? rule : BorderSide.none,
                 ),
               ),
               child: _cell(
@@ -3960,20 +3973,26 @@ class _TableState<T> extends State<Table<T>> {
       // since what it is carried over gives it none and a heading holds an
       // `Expanded`. Lifted a little and tilted, so it reads as picked up
       // rather than pasted over.
-      feedback: Transform.rotate(
-        angle: 0.02,
-        child: Transform.scale(
-          scale: 1.04,
-          child: IntrinsicWidth(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: r.pinnedBg,
-                borderRadius: BorderRadius.circular(r.borderRadius),
-                boxShadow: t.boxShadowSecondary,
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: t.sizeXXS),
-                child: cell,
+      // Carried in the overlay, which knows nothing of the table it came
+      // from: without being told, a mirrored row was drawn the other way
+      // round the moment it left the page.
+      feedback: Directionality(
+        textDirection: Directionality.of(context),
+        child: Transform.rotate(
+          angle: 0.02,
+          child: Transform.scale(
+            scale: 1.04,
+            child: IntrinsicWidth(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: r.pinnedBg,
+                  borderRadius: BorderRadius.circular(r.borderRadius),
+                  boxShadow: t.boxShadowSecondary,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: t.sizeXXS),
+                  child: cell,
+                ),
               ),
             ),
           ),
@@ -4030,18 +4049,24 @@ class _TableState<T> extends State<Table<T>> {
       }),
       onDraggableCanceled: (_, __) => _endRowDrag(),
       onDragEnd: (_) => _endRowDrag(),
-      feedback: Transform.rotate(
-        angle: 0.006,
-        child: Transform.scale(
-          scale: 1.02,
-          child: IntrinsicWidth(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: r.pinnedBg,
-                borderRadius: BorderRadius.circular(r.borderRadius),
-                boxShadow: t.boxShadowSecondary,
+      // Carried in the overlay, which knows nothing of the table it came
+      // from: without being told, a mirrored row was drawn the other way
+      // round the moment it left the page.
+      feedback: Directionality(
+        textDirection: Directionality.of(context),
+        child: Transform.rotate(
+          angle: 0.006,
+          child: Transform.scale(
+            scale: 1.02,
+            child: IntrinsicWidth(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: r.pinnedBg,
+                  borderRadius: BorderRadius.circular(r.borderRadius),
+                  boxShadow: t.boxShadowSecondary,
+                ),
+                child: row,
               ),
-              child: row,
             ),
           ),
         ),
@@ -4167,6 +4192,11 @@ class _TableState<T> extends State<Table<T>> {
       final box = _headingAnchor.currentContext?.findRenderObject();
       if (box is! RenderBox || !box.hasSize) return null;
       var x = box.globalToLocal(global).dx;
+      // Counted from the leading edge, which is the right of the box on a
+      // page that reads the other way.
+      if (Directionality.of(context) == TextDirection.rtl) {
+        x = box.size.width - x;
+      }
       for (var i = 0; i < widths.length; i++) {
         x -= widths[i];
         if (x < 0) return i - _serviceColumns;
@@ -4195,7 +4225,7 @@ class _TableState<T> extends State<Table<T>> {
     );
   }
 
-  /// One cell of the lazy body:  /// One cell of the lazy body:  /// One cell of the lazy body:  /// One cell of the lazy body: a heading when it is the top row, a data cell
+  /// One cell of the lazy body: a heading when it is the top row, a data cell
   /// otherwise.
   Widget? _lazyCell(
     ChildVicinity at,
@@ -4252,11 +4282,13 @@ class _TableState<T> extends State<Table<T>> {
       }
     }
 
-    final border = Border(
+    // Directional, so the rule between two columns falls on the side the
+    // next column is on rather than always on the right.
+    final border = BorderDirectional(
       bottom: heading || !last ? rule : BorderSide.none,
       // After the columns the cell actually took, not after its own place:
       // a rule through the middle of a merged cell is a rule through a cell.
-      right: _bordered && at.xIndex + spanning < columns.length
+      end: _bordered && at.xIndex + spanning < columns.length
           ? rule
           : BorderSide.none,
     );
@@ -4274,9 +4306,9 @@ class _TableState<T> extends State<Table<T>> {
         return DecoratedBox(
           decoration: BoxDecoration(
             color: Color.alphaBlend(r.headerBg, r.pinnedBg),
-            border: Border(
+            border: BorderDirectional(
               bottom: rule,
-              right: _bordered && at.xIndex + plan.first.across < columns.length
+              end: _bordered && at.xIndex + plan.first.across < columns.length
                   ? rule
                   : BorderSide.none,
             ),
@@ -4335,9 +4367,9 @@ class _TableState<T> extends State<Table<T>> {
           color: column.fixed == null
               ? r.summaryBg
               : Color.alphaBlend(r.summaryBg, r.pinnedBg),
-          border: Border(
+          border: BorderDirectional(
             top: rule,
-            right: _bordered && at.xIndex != columns.length - 1
+            end: _bordered && at.xIndex != columns.length - 1
                 ? rule
                 : BorderSide.none,
           ),

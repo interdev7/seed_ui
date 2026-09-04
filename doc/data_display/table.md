@@ -431,6 +431,36 @@ learn twice. Under them a rule runs the whole width of the block of buttons,
 clipped to the panel's corners, with `sizeXS` either side and
 `sizeXS - lineWidth` above and below so the rule does not add to the height.
 
+### Choices with choices under them
+
+A `TableFilter` can carry `children`, and then it stands for the ones under it:
+picking it picks them all, and it stands half-picked while only some are. The
+column is asked about the leaves, never about the branch, so an `onFilter`
+never has to know the choices were grouped at all — and a branch needs no
+value of its own.
+
+```dart
+filters: const [
+  TableFilter('Joe', 'Joe'),
+  TableFilter('Warm', null, children: [
+    TableFilter('Red', 'red'),
+    TableFilter('Amber', 'amber'),
+  ]),
+]
+```
+
+How they are laid out is a separate question, since the same grouped choices
+read either way: `filterMode` is `TableFilterMode.menu` by default, where a
+branch opens beside the panel as every other menu in the kit does, and
+`TableFilterMode.tree` puts the whole tree in one panel, each branch opening
+in place under it. A tree also offers a line that takes everything at once —
+a tree of any depth is a lot of boxes to tick one by one, where a list has its
+choices all in view already.
+
+Searching keeps a branch for the sake of the leaf it leads to, and opens it:
+hiding the very thing it found would be a strange kind of search. A branch
+that matched itself keeps all of its own.
+
 ### A panel of your own
 
 `filterPanel` puts your own widget where the menu of choices would be — a

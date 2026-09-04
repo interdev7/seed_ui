@@ -103,6 +103,7 @@ export 'src/components/data_display/table.dart'
         TableExpandable,
         TableFilter,
         TableFilterControls,
+        TableFilterMode,
         TableFilterPanel,
         TablePagination,
         TablePaginationPosition,

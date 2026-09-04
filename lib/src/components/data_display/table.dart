@@ -30,6 +30,7 @@ import '../general/button.dart';
 import '../navigation/dropdown.dart';
 import '../navigation/pagination.dart';
 import 'empty.dart';
+import 'popover.dart' show Popover, PopoverTrigger;
 
 /// Which edge a column's content is drawn against.
 enum TableAlign {
@@ -542,11 +543,20 @@ class TableFilterPanel {
   final PopoverPlacement? placement;
 }
 
+/// How a column's choices are laid out.
+enum TableFilterMode {
+  /// A list of choices, with anything nested opening as a menu of its own.
+  menu,
+
+  /// A tree of choices in one panel, each branch opening in place.
+  tree,
+}
+
 /// One choice in a column's filter menu.
 @immutable
 class TableFilter {
   /// Creates a [TableFilter].
-  const TableFilter(this.label, this.value);
+  const TableFilter(this.label, this.value, {this.children});
 
   /// What the reader sees against the checkbox.
   final String label;
@@ -556,14 +566,41 @@ class TableFilter {
   ///
   /// Compared with the column's value where nothing else was said, so a
   /// filter over a city is `TableFilter('Galway', 'Galway')`.
+  ///
+  /// A choice with [children] is a shorthand for the ones under it: its own
+  /// value is never asked about and never reported.
   final Object? value;
+
+  /// The choices this one stands for.
+  ///
+  /// Choosing it chooses all of them, and it stands half-chosen while only
+  /// some are. The column is asked about the leaves, so an `onFilter` never
+  /// has to know that the choices were grouped at all.
+  ///
+  /// ```dart
+  /// TableFilter('Warm', null, children: [
+  ///   TableFilter('Red', 'red'),
+  ///   TableFilter('Amber', 'amber'),
+  /// ])
+  /// ```
+  final List<TableFilter>? children;
+
+  /// Whether this choice stands for others rather than for itself.
+  bool get isGroup => children != null && children!.isNotEmpty;
+
+  /// This choice if it stands alone, or every choice under it.
+  List<TableFilter> get leaves =>
+      isGroup ? [for (final child in children!) ...child.leaves] : [this];
 
   @override
   bool operator ==(Object other) =>
-      other is TableFilter && other.label == label && other.value == value;
+      other is TableFilter &&
+      other.label == label &&
+      other.value == value &&
+      listEquals(other.children, children);
 
   @override
-  int get hashCode => Object.hash(label, value);
+  int get hashCode => Object.hash(label, value, Object.hashAll(children ?? []));
 }
 
 /// How much room a [Table] gives itself, and which way it scrolls.
@@ -704,6 +741,7 @@ class TableColumn<T> {
     this.filterMultiple = true,
     this.filterSearch = false,
     this.filterSearchMatch,
+    this.filterMode = TableFilterMode.menu,
     this.filterPanel,
     this.filterIcon,
     this.children,
@@ -947,6 +985,14 @@ class TableColumn<T> {
   /// ```
   final TableFilterPanel? filterPanel;
 
+  /// How the choices are laid out: a list, or a tree in one panel.
+  ///
+  /// Nesting and the way it is shown are two things, not one: the same
+  /// grouped choices read as a menu that opens sideways or as a tree that
+  /// opens in place, and which of those suits depends on the panel rather
+  /// than on the data. [TableFilterMode.menu] where nothing is said.
+  final TableFilterMode filterMode;
+
   /// Draws the mark at the head of the column, in place of the funnel.
   ///
   /// Told whether the column is narrowing anything, since that is the one
@@ -975,6 +1021,7 @@ class TableColumn<T> {
         filterMultiple: filterMultiple,
         filterSearch: filterSearch,
         filterSearchMatch: filterSearchMatch,
+        filterMode: filterMode,
         filterPanel: filterPanel,
         filterIcon: filterIcon,
         // A group holds no cells of its own, so what falls to it falls to its
@@ -990,6 +1037,10 @@ class TableColumn<T> {
 
   /// Whether its menu can be searched.
   bool get filterSearches => filterSearch || filterSearchMatch != null;
+
+  /// Every choice this column offers, groups opened out.
+  List<TableFilter> get filterLeaves =>
+      [for (final filter in filters ?? const <TableFilter>[]) ...filter.leaves];
 
   /// A width in logical pixels.
   ///
@@ -5558,6 +5609,7 @@ class _FilterMenu<T> extends StatefulWidget {
 
 class _FilterMenuState<T> extends State<_FilterMenu<T>> {
   late final Set<Object?> _chosen = {...widget.chosen};
+  final Set<TableFilter> _open = {};
   String _query = '';
 
   /// Whether a choice survives what has been typed.
@@ -5572,6 +5624,193 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
     return choice.label.toLowerCase().contains(typed.toLowerCase());
   }
 
+  /// A choice belongs while it answers what was typed, or something under it
+  /// does: a branch is kept for the sake of the leaf it leads to, or a search
+  /// would hide the very thing it found.
+  bool _survives(TableFilter choice) =>
+      _matches(choice) || choice.leaves.any(_matches);
+
+  /// The choices to draw at one level, narrowed by what has been typed.
+  ///
+  /// A branch that matched itself keeps all of its own; one kept only for a
+  /// leaf keeps that leaf.
+  List<TableFilter> _shown(List<TableFilter> among) => [
+        for (final choice in among)
+          if (_survives(choice))
+            if (!choice.isGroup || _matches(choice))
+              choice
+            else
+              TableFilter(
+                choice.label,
+                choice.value,
+                children: _shown(choice.children!),
+              ),
+      ];
+
+  /// Whether every leaf under this choice is chosen, and whether any is.
+  ({bool all, bool some}) _stateOf(TableFilter choice) {
+    final leaves = choice.leaves;
+    if (leaves.isEmpty) return (all: false, some: false);
+    var taken = 0;
+    for (final leaf in leaves) {
+      if (_chosen.contains(leaf.value)) taken++;
+    }
+    return (all: taken == leaves.length, some: taken > 0);
+  }
+
+  /// Takes or lets go of every leaf a choice stands for.
+  void _choose(TableFilter choice, {required bool on}) {
+    setState(() {
+      // One at a time where the column says so, and the choice replaces the
+      // one before it rather than joining it.
+      if (!widget.column.filterMultiple) _chosen.clear();
+      for (final leaf in choice.leaves) {
+        if (on) {
+          _chosen.add(leaf.value);
+        } else {
+          _chosen.remove(leaf.value);
+        }
+      }
+    });
+  }
+
+  /// The line that takes every choice at once.
+  ///
+  /// A plain box, not a branch: it stands for the whole tree, and a tree that
+  /// could be folded away into a single line would be a strange thing to
+  /// offer above the tree itself.
+  Widget _everything(List<TableFilter> shown, Token t) {
+    final whole = TableFilter('', null, children: shown);
+    final state = _stateOf(whole);
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: t.sizeSM,
+        vertical: t.sizeXXS,
+      ),
+      child: Checkbox(
+        checked: state.all,
+        indeterminate: state.some && !state.all,
+        label: Text(context.seedLocale.selectAll),
+        onChanged: (on) => _choose(whole, on: on),
+      ),
+    );
+  }
+
+  /// One row of the panel: a box, and for a branch a way into what is under
+  /// it — opening in place in a tree, and to the side in a menu.
+  Widget _row(TableFilter choice, _ResolvedTableToken r, Token t) {
+    final state = _stateOf(choice);
+    final tree = widget.column.filterMode == TableFilterMode.tree;
+    final box = Checkbox(
+      checked: state.all,
+      indeterminate: state.some && !state.all,
+      label: Text(choice.label),
+      onChanged: (on) => _choose(choice, on: on),
+    );
+
+    if (!choice.isGroup) {
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: t.sizeSM,
+          vertical: t.sizeXXS,
+        ),
+        child: box,
+      );
+    }
+
+    if (!tree) {
+      // A menu opens what is under a choice beside it, the way every other
+      // menu in the kit does — and on a tap as well as a hover, since a
+      // finger has no hover to open it with.
+      return Popover(
+        trigger: PopoverTrigger.hover,
+        placement: Directionality.of(context) == TextDirection.rtl
+            ? PopoverPlacement.leftTop
+            : PopoverPlacement.rightTop,
+        content: IntrinsicWidth(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final child in choice.children!) _row(child, r, t),
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: t.sizeSM,
+            vertical: t.sizeXXS,
+          ),
+          child: Row(
+            children: [
+              Flexible(child: box),
+              SizedBox(width: t.sizeXS),
+              CustomPaint(
+                size: Size.square(r.sortCaretSize * 0.7),
+                painter: _CaretPainter(r.headerMarkColor, up: false),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final open = _open.contains(choice) || _query.trim().isNotEmpty;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: t.sizeSM,
+            vertical: t.sizeXXS,
+          ),
+          child: Row(
+            children: [
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setState(() {
+                    if (!_open.remove(choice)) _open.add(choice);
+                  }),
+                  child: Padding(
+                    padding: EdgeInsets.only(right: t.sizeXXS),
+                    child: CustomPaint(
+                      size: Size.square(r.expandIconSize),
+                      painter: _ExpandIconPainter(
+                        bar: r.headerColor,
+                        border: r.borderColor,
+                        radius: t.borderRadiusSM,
+                        open: open ? 1 : 0,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Flexible(child: box),
+            ],
+          ),
+        ),
+        if (open)
+          Padding(
+            // Past the branch's own box, not merely past its mark: a child
+            // whose box sits under its parent's reads as its equal.
+            padding: EdgeInsetsDirectional.only(
+              start: r.indentSize + r.expandIconSize + t.sizeXXS,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final child in choice.children!) _row(child, r, t),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
@@ -5581,10 +5820,7 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
 
     // Chosen but out of sight is still chosen: narrowing the menu must not
     // quietly drop a choice the reader has already made.
-    final shown = [
-      for (final filter in column.filters!)
-        if (_matches(filter)) filter,
-    ];
+    final shown = _shown(column.filters!);
 
     // `Dropdown.content` is handed straight to the overlay — that is what it
     // is for, so a caller can draw its own surface. Ours wants the usual one,
@@ -5636,28 +5872,14 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        for (final filter in shown)
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: t.sizeSM,
-                              vertical: t.sizeXXS,
-                            ),
-                            child: Checkbox(
-                              checked: _chosen.contains(filter.value),
-                              label: Text(filter.label),
-                              onChanged: (on) => setState(() {
-                                // One at a time where the column says so, and
-                                // the choice replaces the one before it
-                                // rather than joining it.
-                                if (!column.filterMultiple) _chosen.clear();
-                                if (on) {
-                                  _chosen.add(filter.value);
-                                } else {
-                                  _chosen.remove(filter.value);
-                                }
-                              }),
-                            ),
-                          ),
+                        // A tree offers everything at once, since a tree of
+                        // any depth is a lot of boxes to tick one by one. A
+                        // list does not: its choices are already all in view.
+                        if (column.filterMode == TableFilterMode.tree &&
+                            column.filterMultiple &&
+                            shown.isNotEmpty)
+                          _everything(shown, t),
+                        for (final filter in shown) _row(filter, r, t),
                       ],
                     ),
                   ),

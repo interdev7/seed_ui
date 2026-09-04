@@ -922,6 +922,67 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Choices with choices under them',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _many.take(8).toList(),
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    value: (p) => p.name,
+                    onFilter: (choice, p) =>
+                        p.name.startsWith(choice! as String),
+                    // A tree in one panel: each branch opens in place, and
+                    // the search keeps whatever leads to what it found.
+                    filterMode: TableFilterMode.tree,
+                    filterSearch: true,
+                    filters: const [
+                      TableFilter('Chen', 'Che'),
+                      TableFilter(
+                        'Either of the others',
+                        null,
+                        children: [
+                          TableFilter('Ann', 'Ann'),
+                          TableFilter('Bartholomew', 'Bar'),
+                        ],
+                      ),
+                    ],
+                  ),
+                  TableColumn(
+                    title: const Text('City'),
+                    value: (p) => p.city,
+                    // The same choices, laid out as a list: a branch opens
+                    // beside the menu rather than inside it.
+                    filters: const [
+                      TableFilter('Bristol', 'Bristol'),
+                      TableFilter(
+                        'Elsewhere',
+                        null,
+                        children: [
+                          TableFilter('Galway', 'Galway'),
+                          TableFilter('Chengdu', 'Chengdu'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'A choice with children stands for the ones under it: picking '
+                'it picks them all, and it stands half-picked while only some '
+                'are. The column is asked about the leaves, so an onFilter '
+                'never has to know the choices were grouped. filterMode says '
+                'how they are laid out — Name is a tree in one panel, City a '
+                'list whose branch opens beside it.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'A filter panel of your own',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

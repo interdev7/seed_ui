@@ -195,6 +195,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   side and `sizeXS - lineWidth` above and below so it does not add to the
   height.
 
+  A choice can carry `children` and stand for the ones under it: picking it
+  picks them all, it stands half-picked while only some are, and the column is
+  asked about the leaves so an `onFilter` never learns the choices were
+  grouped. `filterMode` says how they are laid out — `TableFilterMode.menu`
+  opens a branch beside the panel, `TableFilterMode.tree` puts the tree in one
+  panel with a line that takes everything at once.
+
   `filterSearch: true` puts a field above the choices for narrowing the menu
   itself; what is typed is matched against each choice's label, ignoring case
   and surrounding spaces, and `filterSearchMatch` says what typing means

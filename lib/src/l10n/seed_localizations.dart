@@ -68,6 +68,7 @@ class SeedLocalizations {
     this.noData = 'No data',
     this.reset = 'Reset',
     this.search = 'Search',
+    this.selectAll = 'Select all items',
     this.noMoreItems = 'No more items',
     this.perPage = '/ page',
     this.selectTime = 'Select time',
@@ -97,6 +98,9 @@ class SeedLocalizations {
 
   /// Placeholder of the field that narrows a `Table` column's filter menu.
   final String search;
+
+  /// Takes every choice in a `Table` column's tree of filters at once.
+  final String selectAll;
 
   /// Placeholder of an empty `TimePicker`.
   final String selectTime;
@@ -398,6 +402,7 @@ class SeedLocalizations {
     finish: 'Завершить',
     noData: 'Нет данных',
     reset: 'Сбросить',
+    selectAll: 'Выбрать всё',
     search: 'Поиск',
     noMoreItems: 'Больше ничего нет',
     perPage: '/ стр.',
@@ -447,6 +452,7 @@ class SeedLocalizations {
     finish: 'Tamamla',
     noData: 'Maglumat ýok',
     reset: 'Arassala',
+    selectAll: 'Ählisini saýla',
     search: 'Gözleg',
     noMoreItems: 'Başga zat ýok',
     perPage: '/ sahypa',
@@ -495,6 +501,7 @@ class SeedLocalizations {
     finish: 'Fertig',
     noData: 'Keine Daten',
     reset: 'Zurücksetzen',
+    selectAll: 'Alle auswählen',
     search: 'Suchen',
     noMoreItems: 'Keine weiteren Einträge',
     perPage: '/ Seite',
@@ -543,6 +550,7 @@ class SeedLocalizations {
     finish: 'Fin de la visite guidée',
     noData: 'Aucune donnée',
     reset: 'Réinitialiser',
+    selectAll: 'Tout sélectionner',
     search: 'Rechercher',
     noMoreItems: 'Aucun élément supplémentaire',
     perPage: '/ page',
@@ -592,6 +600,7 @@ class SeedLocalizations {
     finish: 'Finalizar',
     noData: 'Sin datos',
     reset: 'Restablecer',
+    selectAll: 'Seleccionar todo',
     search: 'Buscar',
     noMoreItems: 'No hay más elementos',
     perPage: '/ página',
@@ -641,6 +650,7 @@ class SeedLocalizations {
     finish: '结束导览',
     noData: '暂无数据',
     reset: '重置',
+    selectAll: '全选',
     search: '搜索',
     noMoreItems: '没有更多了',
     perPage: '条/页',
@@ -689,6 +699,7 @@ class SeedLocalizations {
     finish: '仕上げる',
     noData: 'データなし',
     reset: 'リセット',
+    selectAll: 'すべて選択',
     search: '検索',
     noMoreItems: 'これ以上ありません',
     perPage: '件/ページ',
@@ -738,6 +749,7 @@ class SeedLocalizations {
     finish: 'Bitir',
     noData: 'Veri yok',
     reset: 'Sıfırla',
+    selectAll: 'Tümünü seç',
     search: 'Ara',
     noMoreItems: 'Başka öğe yok',
     perPage: '/ sayfa',
@@ -786,6 +798,7 @@ class SeedLocalizations {
     finish: 'Finalizar',
     noData: 'Sem conteúdo',
     reset: 'Redefinir',
+    selectAll: 'Selecionar tudo',
     search: 'Pesquisar',
     noMoreItems: 'Não há mais itens',
     perPage: '/ página',
@@ -835,6 +848,7 @@ class SeedLocalizations {
     finish: 'إنهاء',
     noData: 'لا توجد بيانات',
     reset: 'إعادة تعيين',
+    selectAll: 'تحديد الكل',
     search: 'بحث',
     noMoreItems: 'لا مزيد من العناصر',
     perPage: '/ صفحة',
@@ -885,6 +899,7 @@ class SeedLocalizations {
     finish: 'סיום',
     noData: 'אין נתונים',
     reset: 'איפוס',
+    selectAll: 'בחר הכול',
     search: 'חיפוש',
     noMoreItems: 'אין פריטים נוספים',
     perPage: '/ עמוד',

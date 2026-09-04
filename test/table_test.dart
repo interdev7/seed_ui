@@ -3145,6 +3145,182 @@ void main() {
       );
     });
 
+    group('choices with choices under them', () {
+      // Labels apart from the names in the rows, so a finder looking in the
+      // menu does not find the table underneath it.
+      const nested = [
+        TableFilter('the third', 'Chen'),
+        TableFilter('Either', null, children: [
+          TableFilter('the first', 'Ann'),
+          TableFilter('the second', 'Bart'),
+        ]),
+      ];
+
+      Widget grouped({
+        TableFilterMode mode = TableFilterMode.menu,
+        bool filterSearch = false,
+        bool filterMultiple = true,
+        Map<int, List<Object?>>? Function(Map<int, List<Object?>>)? report,
+      }) =>
+          host(
+            Table<_User>(
+              data: people,
+              onFiltersChanged: (next) => report?.call(next),
+              columns: [
+                TableColumn<_User>(
+                  title: const Text('Name'),
+                  value: (u) => u.name,
+                  filters: nested,
+                  filterMode: mode,
+                  filterSearch: filterSearch,
+                  filterMultiple: filterMultiple,
+                ),
+              ],
+            ),
+          );
+
+      List<Checkbox> boxes(WidgetTester tester) =>
+          tester.widgetList<Checkbox>(find.byType(Checkbox)).toList();
+
+      testWidgets('a branch is a shorthand for the leaves under it',
+          (tester) async {
+        Map<int, List<Object?>>? told;
+        await tester.pumpWidget(grouped(
+          mode: TableFilterMode.tree,
+          report: (next) => told = next,
+        ));
+        await openMenu(tester, 0);
+
+        await choose(tester, 'Either');
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+
+        // The leaves, never the branch: an onFilter is asked about values the
+        // column knows, and 'Either' is not one of them.
+        expect(told, {
+          0: ['Ann', 'Bart']
+        });
+        expect(names(tester), ['Ann', 'Bart']);
+      });
+
+      testWidgets('a branch with some of its own stands half-chosen',
+          (tester) async {
+        await tester.pumpWidget(grouped(mode: TableFilterMode.tree));
+        await openMenu(tester, 0);
+
+        // Open the branch, then take one of its two.
+        await tester.tap(find.byWidgetPredicate((w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == '_ExpandIconPainter'));
+        await tester.pumpAndSettle();
+        await choose(tester, 'the first');
+
+        final all = boxes(tester);
+        // Select all, Chen, Either, Ann, Bart.
+        expect(all[2].checked, isFalse, reason: 'Either is not whole');
+        expect(all[2].indeterminate, isTrue);
+        expect(all[0].indeterminate, isTrue, reason: 'nor is everything');
+
+        await choose(tester, 'the second');
+        expect(boxes(tester)[2].checked, isTrue, reason: 'both of its own');
+      });
+
+      testWidgets('a tree offers everything at once, a list does not',
+          (tester) async {
+        await tester.pumpWidget(grouped(mode: TableFilterMode.tree));
+        await openMenu(tester, 0);
+        expect(find.text('Select all items'), findsOneWidget);
+
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+        await tester.pumpWidget(grouped());
+        await openMenu(tester, 0);
+        expect(find.text('Select all items'), findsNothing);
+      });
+
+      testWidgets('a list keeps what is under a choice beside it',
+          (tester) async {
+        await tester.pumpWidget(grouped());
+        await openMenu(tester, 0);
+
+        // Two boxes, not four: the leaves are behind the branch rather than
+        // under it, and there is no select-all.
+        expect(boxes(tester).length, 2);
+        expect(find.text('the first'), findsNothing);
+
+        final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        await mouse.addPointer(location: Offset.zero);
+        addTearDown(mouse.removePointer);
+        await mouse.moveTo(tester.getCenter(find.text('Either')));
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pumpAndSettle();
+        expect(find.text('the first'), findsOneWidget,
+            reason: 'opened beside it');
+      });
+
+      testWidgets('a tree opens a branch in place', (tester) async {
+        await tester.pumpWidget(grouped(mode: TableFilterMode.tree));
+        await openMenu(tester, 0);
+        expect(find.text('the first'), findsNothing,
+            reason: 'shut to begin with');
+
+        await tester.tap(find.byWidgetPredicate((w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == '_ExpandIconPainter'));
+        await tester.pumpAndSettle();
+        expect(find.text('the first'), findsOneWidget);
+
+        // In place: under its branch, and indented past it.
+        final branch = tester.getRect(find.text('Either'));
+        final leaf = tester.getRect(find.text('the first'));
+        expect(leaf.top, greaterThan(branch.top));
+        expect(leaf.left, greaterThan(branch.left));
+      });
+
+      testWidgets('a search keeps the branch that leads to what it found',
+          (tester) async {
+        await tester.pumpWidget(grouped(
+          mode: TableFilterMode.tree,
+          filterSearch: true,
+        ));
+        await openMenu(tester, 0);
+
+        // A word inside the label rather than the whole of it, so the field's
+        // own text is not mistaken for the choice's.
+        await tester.enterText(find.byType(Input), 'second');
+        await tester.pumpAndSettle();
+
+        // Bart is under Either, so Either is kept for its sake — and opened,
+        // or the search would hide the very thing it found. Chen goes.
+        expect(find.text('Either'), findsOneWidget);
+        expect(find.text('the second'), findsOneWidget);
+        expect(find.text('the first'), findsNothing,
+            reason: 'no match under it');
+        expect(find.text('the third'), findsNothing);
+      });
+
+      testWidgets('one at a time still means one at a time', (tester) async {
+        Map<int, List<Object?>>? told;
+        await tester.pumpWidget(grouped(
+          mode: TableFilterMode.tree,
+          filterMultiple: false,
+          report: (next) => told = next,
+        ));
+        await openMenu(tester, 0);
+
+        await choose(tester, 'the third');
+        await choose(tester, 'Either');
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+
+        // The branch replaced the choice before it rather than joining it,
+        // and it is still a shorthand for its leaves.
+        expect(told, {
+          0: ['Ann', 'Bart']
+        });
+      });
+    });
+
     test('a column with filters needs something to match on', () {
       expect(
         () => TableColumn<_User>(

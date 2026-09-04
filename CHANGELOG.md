@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`Pagination`** — in a mirrored layout the arrows pointed at the buttons
+  they sat beside rather than at the pages they went to. The way the pages run
+  is the way the page reads.
+
 - **`Popover`** — a click on a trigger that had opened its card by being
   hovered went to putting the card away and never reached what was under the
   finger. The trigger is cut out of what dismisses the card, as it already was
@@ -135,6 +139,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   doing something and the fill says how far that reaches. `rowSortedBg` is the
   token. A picked row keeps its own fill — what will happen to the row
   outranks what one of its columns is up to.
+
+  **Rows with rows under them.** `TableExpandable.children` makes the table a
+  tree: a row opens into its own rows rather than into a panel, each indented
+  a step further in by `indentSize`. The mark rides in the first column rather
+  than in a column of its own, and a row with nothing under it wears none. The
+  tree is flattened to the rows on show, so narrowing, sorting and paging go
+  on happening to the rows you handed over and a child follows its parent.
+
+  ```dart
+  Table<Person>(
+    data: people,
+    expandable: TableExpandable(children: (p) => p.reports),
+    columns: columns,
+  )
+  ```
+
+  **A house style for the columns.** `columnDefaults` says once what every
+  column falls back to — where the cells sit, whether they cut off, how wide
+  they are, which edge they are held at. A column that names the field wins,
+  and it reaches the leaves of a group.
 
   **Filtering.** `filters` puts a funnel at the head of a column, opening a
   menu of choices; the column's `value` is what a choice is matched against,

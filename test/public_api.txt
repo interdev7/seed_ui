@@ -243,6 +243,7 @@ Table
 TableAlign
 TableCellSpan
 TableColumn
+TableColumnDefaults
 TableColumnFixed
 TableDefaults
 TableExpandable

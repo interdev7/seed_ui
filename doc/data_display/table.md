@@ -536,6 +536,29 @@ Left to itself the table keeps its own picks, starting from
 `onChanged` saying what a tick would have made of them. `columnWidth` and
 `fixed` size and pin the column, as any other column is sized and pinned.
 
+## One thing said once
+
+`columnDefaults` is the house style for the columns: where the cells sit,
+whether they cut off, how wide they are, which edge they are held at. Saying
+the same thing on each of ten columns is ten places to change it and ten to
+get it wrong.
+
+```dart
+Table(
+  columnDefaults: const TableColumnDefaults(
+    align: TableAlign.center,
+    ellipsis: true,
+  ),
+  columns: columns,
+  data: rows,
+)
+```
+
+A column that names the field wins; these are the answers for the ones that
+stay quiet. It reaches the leaves of a group as well, since a group holds no
+cells of its own. What a column *is* — its value, its title, what it sorts and
+filters by — is the column's own business and is not here.
+
 ## Rows that open
 
 `expandable` puts a column of chevrons in front of the others, and the row
@@ -583,6 +606,36 @@ rows before a given one are so many ordinary ones and so many panels, which is
 a count and not a measurement. Leave it unsaid and the panel is as tall as
 what is in it, and every row is built. See
 [What it asks in return](#what-it-asks-in-return).
+
+## Rows with rows under them
+
+`TableExpandable.children` says where a row's own rows are, and the table is a
+tree: a row opens into its children rather than into a panel, each indented a
+step further in.
+
+```dart
+Table<Person>(
+  data: people,
+  expandable: TableExpandable(children: (p) => p.reports),
+  columns: columns,
+)
+```
+
+The mark rides in the first column, before the cell's content, rather than in
+a column of its own — a tree says where a row sits by where it starts, and a
+column of marks off to the side would say it twice. So a tree adds no chevron
+column. A row with nothing under it wears no mark and keeps the space one
+would have taken, so the words of a childless row line up with its siblings'.
+
+Nothing is nested in the layout: the tree is flattened to the rows on show, so
+everything that reckons by rows — the lazy body, the hover, a drag — goes on
+reckoning the same way. Narrowing, sorting and paging happen to the rows you
+handed over, before the children are let in, so a page is a page of what was
+given and a child follows its parent wherever the parent lands.
+
+`indentSize` is how far each step goes, falling back to the `indentSize`
+token. `builder` and `children` are the two things a row can open into, and
+one of them has to be named.
 
 ## A page at a time
 
@@ -895,6 +948,8 @@ height and the triangles are worked out from it.
 | --- | --- |
 | `headerBg`, `headerColor` | the heading row |
 | `rowHoverBg` | the row under the pointer |
+| `dragShadow` | `boxShadowSecondary` — under a row or heading being carried |
+| `indentSize` | `sizeMD` — each step down a tree of rows |
 | `rowSortedBg` | `colorFillQuaternary` — the cells of the column being sorted by |
 | `borderColor` | `colorSplit` |
 | `cellPaddingBlock`, `cellPaddingBlockSM`, `cellPaddingBlockLG` | 12, 8, 16 |

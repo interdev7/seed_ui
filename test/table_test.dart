@@ -55,6 +55,13 @@ Widget _mirrored(Widget child, {double width = 600}) => ConfigProvider(
       ),
     );
 
+/// A row with rows under it.
+class _Node {
+  const _Node(this.name, this.kids);
+  final String name;
+  final List<_Node> kids;
+}
+
 TableColumn<_User> _name({double? width, int? flex, TableAlign? align}) =>
     TableColumn<_User>(
       title: const Text('Name'),
@@ -1536,6 +1543,105 @@ void main() {
         greaterThan(80),
         reason: 'forty above and forty below',
       );
+    });
+  });
+
+  group('a house style for the columns', () {
+    const people = [_User('Chen', 27), _User('Ann', 45)];
+
+    testWidgets('what a column stays quiet about the table answers for',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columnDefaults: const TableColumnDefaults(
+              align: TableAlign.end,
+              width: 150,
+            ),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+              // This one has an answer of its own, and keeps it.
+              TableColumn<_User>(
+                title: const Text('Age'),
+                align: TableAlign.center,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final name = tester.getRect(find.text('Chen'));
+      final age = tester.getRect(find.text('27'));
+      final nameHead = tester.getRect(find.text('Name'));
+      expect(name.right, greaterThan(nameHead.right - 1),
+          reason: 'against the far edge, as the table said');
+      // The centred one is neither against the near edge nor the far one.
+      final ageHead = tester.getRect(find.text('Age'));
+      expect((age.center.dx - ageHead.center.dx).abs(), lessThan(1));
+
+      // A width said once reaches every column that stayed quiet.
+      expect(name.left, greaterThan(140));
+    });
+
+    testWidgets('it reaches the leaves of a group as well', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columnDefaults: const TableColumnDefaults(width: 120),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Who'),
+                children: [
+                  TableColumn<_User>(
+                    title: const Text('Name'),
+                    value: (u) => u.name,
+                  ),
+                  TableColumn<_User>(
+                    title: const Text('Age'),
+                    value: (u) => u.age,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // A group holds no cells of its own, so what falls to it falls to the
+      // leaves under it: two columns of a hundred and twenty apiece.
+      final group = tester.getRect(find.text('Who'));
+      expect(group.center.dx,
+          closeTo(tester.getRect(find.byType(Table<_User>)).left + 120, 4));
+    });
+
+    testWidgets('a table told nothing is the table it always was',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columns: [_name(width: 150), _age(width: 150)],
+          ),
+        ),
+      );
+      final before = tester.getRect(find.text('Chen'));
+
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columnDefaults: const TableColumnDefaults(),
+            columns: [_name(width: 150), _age(width: 150)],
+          ),
+        ),
+      );
+      expect(tester.getRect(find.text('Chen')), before);
     });
   });
 
@@ -6079,6 +6185,37 @@ void main() {
       expect(names, ['Ann', 'Chen'], reason: 'it sorted');
     });
 
+    testWidgets('the shadow under what is carried is a token', (tester) async {
+      const mine = [BoxShadow(color: Color(0xFF00FF00), blurRadius: 9)];
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columnsDraggable: true,
+            token: const TableToken(dragShadow: mine),
+            columns: [_name(width: 200), _age(width: 200)],
+          ),
+        ),
+      );
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await gesture.moveBy(const Offset(60, 0));
+      await tester.pump();
+
+      final carried = tester
+          .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+          .map((w) => w.decoration)
+          .whereType<BoxDecoration>()
+          .where((d) => d.boxShadow != null);
+      expect(carried.map((d) => d.boxShadow), contains(mine));
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('the rule travels with the column it divides', (tester) async {
       await tester.pumpWidget(
         _host(
@@ -6540,12 +6677,223 @@ void main() {
       expect(painted('_ExpandIconPainter').width, closeTo(box.width, 0.5));
       expect(painted('_ExpandIconPainter').height, closeTo(box.height, 0.5));
 
-      // The pair of carets stands as tall as the funnel: both are the mark
-      // size, and a heading carrying one of each should not look lopsided.
+      // The pair of carets stands a step above the funnel beside it: two
+      // small triangles read as less than one solid shape of the same
+      // height, so matching the numbers made the sorter look the smaller.
+      // A step, not a leap — a heading carrying one of each has to look like
+      // one thing.
       final caret = painted('_CaretPainter');
       final funnel = painted('_FunnelPainter');
+      final sorter = caret.height * 2 + caret.height * 0.4;
+      expect(sorter, greaterThan(funnel.height));
+      expect(sorter, lessThan(funnel.height * 1.4));
+    });
+  });
+
+  group('rows with rows under them', () {
+    const tree = [
+      _Node('Ann', [
+        _Node('Bo', []),
+        _Node('Cy', [_Node('Dee', [])]),
+      ]),
+      _Node('Eve', []),
+    ];
+
+    Finder marks() => find.byWidgetPredicate((w) =>
+        w is CustomPaint &&
+        w.painter.runtimeType.toString() == '_ExpandIconPainter');
+
+    Widget table({
+      double? indentSize,
+      List<_Node>? expanded,
+      ValueChanged<List<_Node>>? onChanged,
+      bool Function(_Node)? expandable,
+    }) =>
+        _host(
+          Table<_Node>(
+            data: tree,
+            expandable: TableExpandable<_Node>(
+              children: (n) => n.kids,
+              indentSize: indentSize,
+              expanded: expanded,
+              onChanged: onChanged,
+              expandable: expandable,
+            ),
+            columns: [
+              TableColumn<_Node>(
+                title: const Text('Name'),
+                value: (n) => n.name,
+              ),
+              TableColumn<_Node>(
+                title: const Text('Under'),
+                value: (n) => n.kids.length,
+              ),
+            ],
+          ),
+        );
+
+    List<String> shown(WidgetTester tester) => [
+          for (final name in ['Ann', 'Bo', 'Cy', 'Dee', 'Eve'])
+            if (find.text(name).evaluate().isNotEmpty) name,
+        ];
+
+    testWidgets('a row opens into its own rows, not into a panel',
+        (tester) async {
+      await tester.pumpWidget(table());
+      expect(shown(tester), ['Ann', 'Eve']);
+
+      await tester.tap(marks().first);
+      await tester.pumpAndSettle();
+      expect(shown(tester), ['Ann', 'Bo', 'Cy', 'Eve'],
+          reason: 'let in after their parent, before the next row');
+
+      await tester.tap(marks().first);
+      await tester.pumpAndSettle();
+      expect(shown(tester), ['Ann', 'Eve']);
+    });
+
+    testWidgets('only a row with something under it wears a mark',
+        (tester) async {
+      await tester.pumpWidget(table());
+      // Ann has children; Eve has none.
+      expect(marks(), findsOneWidget);
+
+      await tester.tap(marks().first);
+      await tester.pumpAndSettle();
+      // Cy has a child of its own, Bo does not.
+      expect(marks(), findsNWidgets(2));
+    });
+
+    testWidgets('each step down is a step in', (tester) async {
+      await tester.pumpWidget(table(indentSize: 30));
+      await tester.tap(marks().first);
+      await tester.pumpAndSettle();
+
+      final ann = tester.getRect(find.text('Ann')).left;
+      final bo = tester.getRect(find.text('Bo')).left;
+      expect(bo - ann, closeTo(30, 0.5));
+
+      // The grandchild is two steps in, and the mark that opened it is the
+      // child's own rather than one in a column off to the side.
+      await tester.tap(marks().at(1));
+      await tester.pumpAndSettle();
+      expect(shown(tester), ['Ann', 'Bo', 'Cy', 'Dee', 'Eve']);
+      expect(tester.getRect(find.text('Dee')).left - ann, closeTo(60, 0.5));
+    });
+
+    testWidgets('a childless row keeps the space the mark would take',
+        (tester) async {
+      await tester.pumpWidget(table());
+      // Eve wears no mark, and her words still line up with Ann's.
       expect(
-          caret.height * 2 + funnel.height * 0.16, closeTo(funnel.height, 1.5));
+        tester.getRect(find.text('Eve')).left,
+        closeTo(tester.getRect(find.text('Ann')).left, 0.5),
+      );
+    });
+
+    testWidgets('a tree adds no column of chevrons', (tester) async {
+      await tester.pumpWidget(table());
+      // Two columns, not three: the mark rides in the first cell, and a
+      // column of marks beside it would say where a row sits twice.
+      final heads = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((w) => w.data)
+          .where((w) => w == 'Name' || w == 'Under');
+      expect(heads.length, 2);
+      expect(
+        tester.getRect(find.text('Name')).left,
+        lessThan(tester.getRect(find.text('Ann')).left),
+      );
+    });
+
+    testWidgets('the caller can own which rows stand open', (tester) async {
+      List<_Node>? told;
+      await tester.pumpWidget(
+        table(expanded: const [], onChanged: (next) => told = next),
+      );
+
+      await tester.tap(marks().first);
+      await tester.pumpAndSettle();
+      expect(shown(tester), ['Ann', 'Eve'], reason: 'told to show none');
+      expect(told, isNotNull);
+      expect(told!.length, 1);
+
+      await tester.pumpWidget(table(expanded: [tree.first]));
+      expect(shown(tester), ['Ann', 'Bo', 'Cy', 'Eve']);
+    });
+
+    testWidgets('a tap on a childless row opens nothing', (tester) async {
+      var told = 0;
+      await tester.pumpWidget(
+        _host(
+          Table<_Node>(
+            data: tree,
+            expandable: TableExpandable<_Node>(
+              children: (n) => n.kids,
+              byRowTap: true,
+              onChanged: (_) => told++,
+            ),
+            columns: [
+              TableColumn<_Node>(
+                title: const Text('Name'),
+                value: (n) => n.name,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Eve has nothing under her, so there is nothing for a tap to do —
+      // opening her would leave a row standing open with no rows in it.
+      await tester.tap(find.text('Eve'));
+      await tester.pumpAndSettle();
+      expect(told, 0);
+      expect(shown(tester), ['Ann', 'Eve']);
+
+      await tester.tap(find.text('Ann'));
+      await tester.pumpAndSettle();
+      expect(told, 1);
+      expect(shown(tester), ['Ann', 'Bo', 'Cy', 'Eve']);
+    });
+
+    testWidgets('a row barred from opening wears no mark', (tester) async {
+      await tester.pumpWidget(table(expandable: (n) => false));
+      expect(marks(), findsNothing);
+    });
+
+    testWidgets('a tree is still narrowed and sorted by its top rows',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_Node>(
+            data: tree,
+            defaultSort: const [TableSort(0, TableSortOrder.descending)],
+            expandable: TableExpandable<_Node>(children: (n) => n.kids),
+            columns: [
+              TableColumn<_Node>(
+                title: const Text('Name'),
+                sortable: true,
+                value: (n) => n.name,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(shown(tester), ['Ann', 'Eve']);
+      final eve = tester.getRect(find.text('Eve')).top;
+      final ann = tester.getRect(find.text('Ann')).top;
+      expect(eve, lessThan(ann), reason: 'sorted the rows that were given');
+
+      // A child follows its parent wherever the parent lands.
+      await tester.tap(marks().first);
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.text('Bo')).top,
+          greaterThan(tester.getRect(find.text('Ann')).top));
+    });
+
+    test('a row that opens has to have something to open into', () {
+      expect(TableExpandable<_Node>.new, throwsAssertionError);
     });
   });
 

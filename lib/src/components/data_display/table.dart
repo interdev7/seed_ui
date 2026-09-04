@@ -348,7 +348,9 @@ class TableSticky {
 class TableExpandable<T> {
   /// Creates a [TableExpandable].
   const TableExpandable({
-    required this.builder,
+    this.builder,
+    this.children,
+    this.indentSize,
     this.expanded,
     this.defaultExpanded,
     this.onChanged,
@@ -358,10 +360,41 @@ class TableExpandable<T> {
     this.showColumn = true,
     this.columnWidth,
     this.fixed,
-  });
+  }) : assert(
+          builder != null || children != null,
+          'A row that opens has to have something to open into: name a '
+          'builder for a panel, or children for rows.',
+        );
 
   /// What is drawn under an opened row.
-  final Widget Function(BuildContext context, T record, int index) builder;
+  ///
+  /// One of this and [children] has to be named: a row that opens has to have
+  /// something to open into, whether that is a panel of its own or rows of
+  /// its own.
+  final Widget Function(BuildContext context, T record, int index)? builder;
+
+  /// The rows standing under a row, where the data is a tree.
+  ///
+  /// Named instead of [builder], a row opens into rows rather than into a
+  /// panel: its own children slide in beneath it, indented, each with a mark
+  /// of its own if it has children in turn. Nothing is nested in the layout —
+  /// the tree is flattened to the rows on show, so a table of trees is the
+  /// same table with more rows in it.
+  ///
+  /// ```dart
+  /// TableExpandable<Person>(children: (p) => p.reports)
+  /// ```
+  ///
+  /// The mark stands in the first column, before the cell's own content,
+  /// rather than in a column of its own: a tree says where a row sits by
+  /// where it starts, and a column of marks off to the side would say it
+  /// twice.
+  final List<T>? Function(T record)? children;
+
+  /// How far each step down the tree is indented, in pixels.
+  ///
+  /// [TableToken.indentSize] where nothing is said.
+  final double? indentSize;
 
   /// The rows standing open (controlled).
   final List<T>? expanded;
@@ -579,6 +612,58 @@ enum TableColumnFixed {
 
   /// Against the trailing edge.
   end,
+}
+
+/// What every column of a [Table] falls back to.
+///
+/// Saying the same thing on each of ten columns is ten places to change it
+/// and ten to get it wrong; this says it once. A column that names the field
+/// itself wins — these are the answers for the columns that stay quiet.
+///
+/// ```dart
+/// Table(
+///   columnDefaults: const TableColumnDefaults(
+///     align: TableAlign.center,
+///     ellipsis: true,
+///   ),
+///   columns: columns,
+///   data: rows,
+/// )
+/// ```
+///
+/// Only what reads as a house style is here — where the cells sit, whether
+/// they cut off, how wide they are, which edge they are held at. What a
+/// column *is* — its value, its title, what it sorts and filters by — is the
+/// column's own business and belongs nowhere else.
+@immutable
+class TableColumnDefaults {
+  /// Creates a [TableColumnDefaults].
+  const TableColumnDefaults({
+    this.width,
+    this.flex,
+    this.align,
+    this.headerAlign,
+    this.fixed,
+    this.ellipsis,
+  });
+
+  /// What [TableColumn.width] falls back to.
+  final double? width;
+
+  /// What [TableColumn.flex] falls back to.
+  final int? flex;
+
+  /// What [TableColumn.align] falls back to.
+  final TableAlign? align;
+
+  /// What [TableColumn.headerAlign] falls back to.
+  final TableAlign? headerAlign;
+
+  /// What [TableColumn.fixed] falls back to.
+  final TableColumnFixed? fixed;
+
+  /// What [TableColumn.ellipsis] falls back to.
+  final bool? ellipsis;
 }
 
 /// One column of a [Table].
@@ -856,6 +941,38 @@ class TableColumn<T> {
   /// thing the mark has to say.
   final Widget Function(BuildContext context, bool narrowing)? filterIcon;
 
+  /// This column with the table's answers filled in where it stayed quiet.
+  ///
+  /// A copy rather than a lookup at every reading: one place decides, and
+  /// everything downstream is handed a column that already knows.
+  TableColumn<T> _withDefaults(TableColumnDefaults d) => TableColumn<T>(
+        value: value,
+        builder: builder,
+        title: title,
+        width: width ?? d.width,
+        flex: flex ?? d.flex,
+        align: align ?? d.align,
+        headerAlign: headerAlign ?? d.headerAlign,
+        fixed: fixed ?? d.fixed,
+        ellipsis: ellipsis || (d.ellipsis ?? false),
+        sortable: sortable,
+        sorter: sorter,
+        sortPriority: sortPriority,
+        filters: filters,
+        onFilter: onFilter,
+        filterMultiple: filterMultiple,
+        filterSearch: filterSearch,
+        filterSearchMatch: filterSearchMatch,
+        filterPanel: filterPanel,
+        filterIcon: filterIcon,
+        // A group holds no cells of its own, so what falls to it falls to its
+        // leaves: a width or an alignment named once reaches all the way down.
+        children:
+            children?.map((c) => c._withDefaults(d)).toList(growable: false),
+        summary: summary,
+        span: span,
+      );
+
   /// Whether this column filters at all.
   bool get filtersRows => filters != null || filterPanel != null;
 
@@ -920,6 +1037,8 @@ class TableToken {
     this.borderRadius,
     this.fontSize,
     this.columnMinWidth,
+    this.dragShadow,
+    this.indentSize,
     this.pinnedShadowColor,
     this.pinnedShadowExtent,
     this.headerHoverBg,
@@ -999,6 +1118,16 @@ class TableToken {
   /// fifteen columns sharing eight hundred pixels are thirty-seven pixels
   /// each, which is not a column anybody can read.
   final double? columnMinWidth;
+
+  /// The shadow under a row or a heading being carried.
+  ///
+  /// What is in the hand is lifted off the table, and the shadow is the whole
+  /// of how that is said — the rotation and the scale are too slight to say
+  /// it on their own.
+  final List<BoxShadow>? dragShadow;
+
+  /// How far each step down a tree of rows is indented.
+  final double? indentSize;
 
   /// Colour of the shade a pinned column casts over the rows going past it,
   /// at its darkest against the column's edge.
@@ -1112,13 +1241,18 @@ class TableToken {
         // per cent over twenty-four — measured, an alpha of 34 fading to
         // nothing a full twenty-four pixels out, where the reference is a
         // narrow edge you notice rather than a band you read.
+        dragShadow: dragShadow ?? t.boxShadowSecondary,
+        indentSize: indentSize ?? t.sizeMD,
         pinnedShadowColor: pinnedShadowColor ?? t.colorSplit,
         pinnedShadowExtent: pinnedShadowExtent ?? t.sizeSM,
         headerHoverBg: headerHoverBg ?? t.colorFillSecondary,
         headerMarkActiveColor: headerMarkActiveColor ?? t.primary.base,
         headerMarkColor: headerMarkColor ?? t.colorTextQuaternary,
         headerMarkHoverColor: headerMarkHoverColor ?? t.colorTextTertiary,
-        sortCaretSize: sortCaretSize ?? t.fontSizeSM,
+        // A step above the funnel beside it: two small triangles read as
+        // less than one solid shape of the same height, so matching the
+        // numbers made the sorter look the smaller of the two.
+        sortCaretSize: sortCaretSize ?? t.fontSize,
         filterIconSize: filterIconSize ?? t.sizeSM,
         filterMenuMaxHeight: filterMenuMaxHeight ?? 264,
         filterHoverBg: filterHoverBg ?? t.colorFill,
@@ -1151,6 +1285,8 @@ class _ResolvedTableToken {
     required this.borderRadius,
     required this.fontSize,
     required this.columnMinWidth,
+    required this.dragShadow,
+    required this.indentSize,
     required this.pinnedShadowColor,
     required this.pinnedShadowExtent,
     required this.headerHoverBg,
@@ -1186,6 +1322,8 @@ class _ResolvedTableToken {
   final double borderRadius;
   final double fontSize;
   final double columnMinWidth;
+  final List<BoxShadow> dragShadow;
+  final double indentSize;
   final Color pinnedShadowColor;
   final double pinnedShadowExtent;
   final Color headerHoverBg;
@@ -1259,6 +1397,7 @@ class Table<T> extends StatefulWidget {
   const Table({
     super.key,
     required this.columns,
+    this.columnDefaults,
     required this.data,
     this.size,
     this.bordered,
@@ -1289,6 +1428,12 @@ class Table<T> extends StatefulWidget {
 
   /// The columns, in the order they are drawn.
   final List<TableColumn<T>> columns;
+
+  /// What every column falls back to where it says nothing itself.
+  ///
+  /// A house style said once rather than on each column in turn. A column
+  /// that names the field wins.
+  final TableColumnDefaults? columnDefaults;
 
   /// The rows.
   final List<T> data;
@@ -1660,7 +1805,9 @@ class _TableState<T> extends State<Table<T>> {
   /// sorts nor filters and nothing had to be told to skip it.
   List<TableColumn<T>> get _columns => [
         if (widget.selection != null) _selectionColumn,
-        if (widget.expandable?.showColumn ?? false) _expandColumn,
+        // A tree carries its mark in the first column, so there is no column
+        // of chevrons to add.
+        if (!_isTree && (widget.expandable?.showColumn ?? false)) _expandColumn,
         // Drawn in the order a drag has left them, which is not the order
         // they are named in: [_leaves] keeps that, so a sort and a filter go
         // on meaning the column they were given.
@@ -1671,7 +1818,7 @@ class _TableState<T> extends State<Table<T>> {
   /// heading is drawn from this, since a group only exists here.
   List<TableColumn<T>> get _columnTree => [
         if (widget.selection != null) _selectionColumn,
-        if (widget.expandable?.showColumn ?? false) _expandColumn,
+        if (!_isTree && (widget.expandable?.showColumn ?? false)) _expandColumn,
         ..._inOwnOrder,
       ];
 
@@ -1785,14 +1932,33 @@ class _TableState<T> extends State<Table<T>> {
   /// The order the columns are drawn in, as a list of places among the ones
   /// given.
   List<int> get _order => [
-        if (_ownColumnOrder?.length == widget.columns.length)
+        if (_ownColumnOrder?.length == _asGiven.length)
           ..._ownColumnOrder!
         else
-          for (var i = 0; i < widget.columns.length; i++) i,
+          for (var i = 0; i < _asGiven.length; i++) i,
       ];
 
-  List<TableColumn<T>> get _inOwnOrder =>
-      [for (final i in _order) widget.columns[i]];
+  /// The columns as given, with the table's own answers filled in where one
+  /// stayed quiet — and worked out once a build rather than at each reading,
+  /// since a column is compared by identity all over the table.
+  List<TableColumn<T>> get _asGiven {
+    final defaults = widget.columnDefaults;
+    if (defaults == null) return widget.columns;
+    if (_defaultedFrom == widget.columns && _defaultedBy == defaults) {
+      return _defaulted!;
+    }
+    _defaultedFrom = widget.columns;
+    _defaultedBy = defaults;
+    return _defaulted = widget.columns
+        .map((c) => c._withDefaults(defaults))
+        .toList(growable: false);
+  }
+
+  List<TableColumn<T>>? _defaulted;
+  List<TableColumn<T>>? _defaultedFrom;
+  TableColumnDefaults? _defaultedBy;
+
+  List<TableColumn<T>> get _inOwnOrder => [for (final i in _order) _asGiven[i]];
 
   /// A cell carried along by a drag, sliding rather than jumping.
   ///
@@ -1914,8 +2080,7 @@ class _TableState<T> extends State<Table<T>> {
   ///
   /// A sort and a filter are keyed by a column's place among these, since a
   /// group has nothing to sort or narrow.
-  List<TableColumn<T>> get _leaves =>
-      widget.columns.expand((c) => c.leaves).toList();
+  List<TableColumn<T>> get _leaves => _asGiven.expand((c) => c.leaves).toList();
 
   /// Whether a lazy body can carry the panels as well as the rows.
   ///
@@ -2050,7 +2215,7 @@ class _TableState<T> extends State<Table<T>> {
   int get _headingDepth => _columnTree.map((c) => c.depth).reduce(math.max);
 
   /// Whether any column heads others, so the heading needs more than one row.
-  bool get _hasGroups => widget.columns.any((c) => c.isGroup);
+  bool get _hasGroups => _asGiven.any((c) => c.isGroup);
 
   /// Whether any column adds something up, so there is a row to draw for it.
   bool get _hasSummary => _leaves.any((c) => c.summary != null);
@@ -2074,8 +2239,7 @@ class _TableState<T> extends State<Table<T>> {
   /// holds its heading to one row's height per level, as a lazy body holds
   /// its rows.
   double _headingHeight(_ResolvedTableToken r, Token t) {
-    final deep =
-        _hasGroups ? widget.columns.map((c) => c.depth).reduce(math.max) : 1;
+    final deep = _hasGroups ? _asGiven.map((c) => c.depth).reduce(math.max) : 1;
     return _lazyRowHeight(r, t) * deep;
   }
 
@@ -2091,8 +2255,7 @@ class _TableState<T> extends State<Table<T>> {
   /// know whether anything is pinned: going through [_columns] here was a
   /// stack overflow the first time a table was drawn with a selection.
   bool get _hasPinned =>
-      widget.columns.any((c) => c.fixed != null) ||
-      widget.selection?.fixed != null;
+      _asGiven.any((c) => c.fixed != null) || widget.selection?.fixed != null;
 
   double _pinnedWidth(TableColumnFixed side) =>
       _pinnedTo(side).fold(0, (sum, c) => sum + c.width!);
@@ -2490,7 +2653,7 @@ class _TableState<T> extends State<Table<T>> {
                     ),
                     child: Padding(
                       padding: _cellPadding(r, t),
-                      child: widget.expandable!.builder(context, rows[i], i),
+                      child: widget.expandable!.builder!(context, rows[i], i),
                     ),
                   ),
                 ),
@@ -2945,8 +3108,14 @@ class _TableState<T> extends State<Table<T>> {
 
   bool _isExpanded(T record) => _expanded.contains(record);
 
-  bool _canExpand(T record) =>
-      widget.expandable?.expandable?.call(record) ?? true;
+  bool _canExpand(T record) {
+    final expandable = widget.expandable;
+    if (expandable == null) return false;
+    // In a tree it is the data that decides: a row with nothing under it has
+    // nothing to open, whatever else is said.
+    if (_isTree && !_hasChildren(record)) return false;
+    return expandable.expandable?.call(record) ?? true;
+  }
 
   /// Rows whose panel is on its way shut.
   ///
@@ -2979,7 +3148,8 @@ class _TableState<T> extends State<Table<T>> {
   }
 
   /// The rows a panel is drawn for: the ones open, and the ones closing.
-  bool _hasPanel(T record) => _isExpanded(record) || _closing.contains(record);
+  bool _hasPanel(T record) =>
+      !_isTree && (_isExpanded(record) || _closing.contains(record));
 
   /// The rows the table keeps picked while nobody is controlling them.
   List<T>? _ownSelected;
@@ -3096,7 +3266,9 @@ class _TableState<T> extends State<Table<T>> {
   /// Everything that draws works from this, so a row's index is its place on
   /// the page — and picking, opening and tapping all mean the row the reader
   /// is looking at.
-  List<T> get _rows {
+  List<T> get _rows => _grown(_paged);
+
+  List<T> get _paged {
     if (widget.pagination == null) return _narrowed;
     // A total the caller named means the rows here are already one page —
     // taken out by whatever knows the rest — so there is nothing to slice.
@@ -3106,6 +3278,49 @@ class _TableState<T> extends State<Table<T>> {
     final from = (_page - 1) * size;
     if (from >= rows.length) return const [];
     return rows.sublist(from, math.min(from + size, rows.length));
+  }
+
+  /// Whether the rows are a tree rather than a list.
+  bool get _isTree => widget.expandable?.children != null;
+
+  /// The rows on show with the children of every opened row let in after it.
+  ///
+  /// The tree is flattened rather than nested: a table of trees is the same
+  /// table with more rows in it, so everything that reckons by rows — the
+  /// lazy body, the hover, a drag — goes on reckoning the same way.
+  ///
+  /// Narrowing, sorting and paging happen to the rows that were given, before
+  /// this: a page is a page of what was handed over, and a child follows its
+  /// parent wherever the parent lands.
+  List<T> _grown(List<T> rows) {
+    if (!_isTree) return rows;
+    final children = widget.expandable!.children!;
+    final out = <T>[];
+    final depths = <T, int>{};
+    void walk(List<T> run, int depth) {
+      for (final record in run) {
+        out.add(record);
+        depths[record] = depth;
+        if (!_isExpanded(record)) continue;
+        final under = children(record);
+        if (under != null && under.isNotEmpty) walk(under, depth + 1);
+      }
+    }
+
+    walk(rows, 0);
+    _depths = depths;
+    return out;
+  }
+
+  /// How deep in the tree each row on show stands, filled in as they are.
+  Map<T, int> _depths = const {};
+
+  /// Whether this row has rows of its own to show.
+  bool _hasChildren(T record) {
+    final children = widget.expandable?.children;
+    if (children == null) return false;
+    final under = children(record);
+    return under != null && under.isNotEmpty;
   }
 
   /// The rows that belong under every filter in force.
@@ -4018,9 +4233,7 @@ class _TableState<T> extends State<Table<T>> {
     // Counted among the columns given, so the boxes and chevrons in front are
     // neither dragged nor dropped on.
     final index = place - _serviceColumns;
-    if (!widget.columnsDraggable ||
-        index < 0 ||
-        index >= widget.columns.length) {
+    if (!widget.columnsDraggable || index < 0 || index >= _asGiven.length) {
       return cell;
     }
 
@@ -4058,7 +4271,7 @@ class _TableState<T> extends State<Table<T>> {
                 decoration: BoxDecoration(
                   color: r.pinnedBg,
                   borderRadius: BorderRadius.circular(r.borderRadius),
-                  boxShadow: t.boxShadowSecondary,
+                  boxShadow: r.dragShadow,
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: t.sizeXXS),
@@ -4134,7 +4347,7 @@ class _TableState<T> extends State<Table<T>> {
                 decoration: BoxDecoration(
                   color: r.pinnedBg,
                   borderRadius: BorderRadius.circular(r.borderRadius),
-                  boxShadow: t.boxShadowSecondary,
+                  boxShadow: r.dragShadow,
                 ),
                 child: row,
               ),
@@ -4328,7 +4541,7 @@ class _TableState<T> extends State<Table<T>> {
         ),
         child: Padding(
           padding: _cellPadding(r, t),
-          child: widget.expandable!.builder(
+          child: widget.expandable!.builder!(
             context,
             _rows[run[place].row],
             run[place].row,
@@ -4770,8 +4983,16 @@ class _TableState<T> extends State<Table<T>> {
     int covering = 1,
   }) {
     final record = _rows[index];
+    var content =
+        column.builder?.call(context, record, index) ?? _text(column, record);
+    // In a tree the first column carries the row's place: how far in it
+    // starts, and the mark that opens it. Before the cell's padding, so the
+    // indent is measured from where the words would have begun.
+    if (_isTree && identical(column, _leaves.first)) {
+      content = _treeMark(record, content, r, t);
+    }
     Widget cell = _cell(
-      column.builder?.call(context, record, index) ?? _text(column, record),
+      content,
       column,
       column.align ?? TableAlign.start,
       r,
@@ -4817,6 +5038,61 @@ class _TableState<T> extends State<Table<T>> {
         ),
         child: cell,
       ),
+    );
+  }
+
+  /// A row of a tree, indented by how deep it stands and led by its mark.
+  ///
+  /// A row with nothing under it keeps the space the mark would have taken,
+  /// so the words of a childless row line up with the words of its siblings
+  /// rather than sliding back under their marks.
+  Widget _treeMark(
+    T record,
+    Widget content,
+    _ResolvedTableToken r,
+    Token t,
+  ) {
+    final expandable = widget.expandable!;
+    final depth = _depths[record] ?? 0;
+    final indent = expandable.indentSize ?? r.indentSize;
+    final open = _isExpanded(record);
+    final has = _hasChildren(record) && _canExpand(record);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (depth > 0) SizedBox(width: indent * depth),
+        SizedBox(
+          width: r.expandIconSize,
+          child: has
+              ? MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _toggleExpanded(record),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(
+                        begin: open ? 1 : 0,
+                        end: open ? 1 : 0,
+                      ),
+                      duration: t.motionDurationMid,
+                      curve: t.motionEaseInOut,
+                      builder: (context, shut, _) => CustomPaint(
+                        size: Size.square(r.expandIconSize),
+                        painter: _ExpandIconPainter(
+                          bar: r.headerColor,
+                          border: r.borderColor,
+                          radius: t.borderRadiusSM,
+                          open: shut,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : null,
+        ),
+        SizedBox(width: t.sizeXS),
+        Flexible(child: content),
+      ],
     );
   }
 

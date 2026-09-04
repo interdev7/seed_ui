@@ -677,14 +677,12 @@ class _ArrowState extends State<_Arrow> {
         size: Size(size * 0.65, size * 0.65),
         painter: _ChevronPainter(
           widget.enabled ? t.colorText : t.colorTextQuaternary,
-          widget.direction == _ArrowDir.next,
+          // On, not right: the way the pages run is the way the page reads,
+          // so a mirrored pager points its next arrow the other way.
+          (widget.direction == _ArrowDir.next) !=
+              (Directionality.of(context) == TextDirection.rtl),
         ),
       ),
-
-      // Icon(
-      //   widget.direction == _ArrowDir.next ? Icons.keyboard_arrow_right : Icons.keyboard_arrow_left,
-      //   size: size,
-      // ),
       onPressed: widget.onTap,
     );
   }
@@ -798,8 +796,11 @@ class _EllipsisState extends State<_Ellipsis> {
             child: _hovered && widget.enabled
                 ? CustomPaint(
                     size: const Size(14, 10),
-                    painter:
-                        _DoubleChevronPainter(t.primary.base, widget.forward),
+                    painter: _DoubleChevronPainter(
+                      t.primary.base,
+                      widget.forward !=
+                          (Directionality.of(context) == TextDirection.rtl),
+                    ),
                   )
                 : CustomPaint(
                     size: const Size(16, 16),

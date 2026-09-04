@@ -20,6 +20,27 @@ class Person {
   final String city;
 }
 
+/// A person with people under them, for a table of trees.
+class Report {
+  const Report(this.name, this.title, this.under);
+  final String name;
+  final String title;
+  final List<Report> under;
+}
+
+const _org = [
+  Report('Ann Whitfield', 'Head of everything', [
+    Report('Bartholomew Considine', 'Runs the north', [
+      Report('Chen Wei', 'Keeps the books', []),
+      Report('Dee Okonkwo', 'Keeps the peace', []),
+    ]),
+    Report('Eve Lindqvist', 'Runs the south', [
+      Report('Farid Haddad', 'Keeps the hours', []),
+    ]),
+  ]),
+  Report('Gus Marchetti', 'Answers to nobody', []),
+];
+
 const _people = [
   Person('Ann Whitfield', 31, 'Bristol'),
   Person('Bartholomew Considine', 45, 'Galway'),
@@ -136,6 +157,41 @@ class _TableDemoState extends State<TableDemo> {
               const Text(
                 'Both steer the table above. A preset sets how much padding a '
                 'cell carries; a height of your own sets the row outright.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'One thing said once for every column',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                // Said once rather than on each column in turn.
+                columnDefaults: const TableColumnDefaults(
+                  align: TableAlign.center,
+                  ellipsis: true,
+                  width: 140,
+                ),
+                columns: [
+                  TableColumn(title: const Text('Name'), value: (p) => p.name),
+                  TableColumn(title: const Text('City'), value: (p) => p.city),
+                  // This one has an answer of its own, and keeps it.
+                  TableColumn(
+                    title: const Text('Age'),
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'columnDefaults is the house style: where the cells sit, '
+                'whether they cut off, how wide they are. A column that names '
+                'the field wins — Age is against the far edge while the rest '
+                'are centred.',
               ),
             ],
           ),
@@ -630,6 +686,125 @@ class _TableDemoState extends State<TableDemo> {
                 'The panel sits between two grids, since a table cannot span a '
                 'row across its columns. Both grids are handed the same '
                 'widths, so nothing shifts as a row opens.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Rows with rows under them',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Report>(
+                bordered: true,
+                data: _org,
+                expandable: TableExpandable<Report>(
+                  // Rows rather than a panel: a row opens into its own
+                  // children, indented under it.
+                  children: (r) => r.under,
+                ),
+                columns: [
+                  TableColumn(title: const Text('Name'), value: (r) => r.name),
+                  TableColumn(title: const Text('Does'), value: (r) => r.title),
+                  TableColumn(
+                    title: const Text('Under them'),
+                    align: TableAlign.end,
+                    value: (r) => r.under.length,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The mark rides in the first column, before the words, and '
+                'each step down is a step in. A row with nobody under it '
+                'wears no mark and keeps the space one would take, so the '
+                'names line up. Nothing is nested in the layout: the tree is '
+                'flattened to the rows on show.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A tree that is picked from and paged',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Report>(
+                bordered: true,
+                data: _org,
+                selection: const TableSelection<Report>(),
+                expandable: TableExpandable<Report>(
+                  children: (r) => r.under,
+                  // A step of your own, where the default is too tight or too
+                  // wide for the words in the column.
+                  indentSize: 32,
+                ),
+                columns: [
+                  TableColumn(title: const Text('Name'), value: (r) => r.name),
+                  TableColumn(title: const Text('Does'), value: (r) => r.title),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'A box column stands in front of the tree as it does in front '
+                'of any other table. Narrowing, sorting and paging happen to '
+                'the rows you handed over — a child follows its parent '
+                'wherever the parent lands.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A panel that is told how tall it is',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                scroll: const TableScroll(y: 240),
+                data: _crowd.take(200).toList(),
+                columns: _columns,
+                expandable: TableExpandable<Person>(
+                  // Named, so the body stays lazy: a row is found by counting
+                  // what stands before it, and a panel of any height cannot
+                  // be counted.
+                  panelHeight: 56,
+                  builder: (_, p, __) =>
+                      Text('${p.name} is ${p.age} and lives in ${p.city}.'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Two hundred rows and every panel the same height: only the '
+                'rows on screen are built. Leave panelHeight out and a panel '
+                'is as tall as what is in it, at the cost of building every '
+                'row.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A row that opens by being tapped',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                columns: _columns,
+                expandable: TableExpandable<Person>(
+                  byRowTap: true,
+                  // No column of chevrons: the whole row is the mark.
+                  showColumn: false,
+                  builder: (_, p, __) => Text('More about ${p.name}.'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'byRowTap opens a row from anywhere on it, and showColumn: '
+                'false takes the chevrons away — worth pairing, since a '
+                'chevron that is not the only way in is one the reader has to '
+                'aim at for nothing.',
               ),
             ],
           ),

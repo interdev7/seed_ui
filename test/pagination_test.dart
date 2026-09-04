@@ -8,7 +8,44 @@ Widget _host(Widget child) => MaterialApp(
       home: Scaffold(body: Center(child: child)),
     );
 
+Widget _mirrored(Widget child) => MaterialApp(
+      navigatorKey: UiKit.navigatorKey,
+      home: Scaffold(
+        body: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Center(child: child),
+        ),
+      ),
+    );
+
+/// Whichever way the chevron at [at] is drawn.
+bool _pointsOn(WidgetTester tester, int at) {
+  final painters = tester
+      .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == '_ChevronPainter'))
+      .toList();
+  return (painters[at].painter! as dynamic).forward as bool;
+}
+
 void main() {
+  testWidgets('the arrows point the way the pages run', (tester) async {
+    await tester.pumpWidget(
+      _host(const Pagination(total: 50, defaultCurrent: 2)),
+    );
+    // Back points at what is behind, on points at what is ahead.
+    expect(_pointsOn(tester, 0), isFalse);
+    expect(_pointsOn(tester, 1), isTrue);
+
+    await tester.pumpWidget(
+      _mirrored(const Pagination(total: 50, defaultCurrent: 2)),
+    );
+    // Ahead is the other way on a mirrored page, so both turn round — they
+    // pointed at the buttons they sat beside.
+    expect(_pointsOn(tester, 0), isTrue);
+    expect(_pointsOn(tester, 1), isFalse);
+  });
+
   testWidgets('renders page numbers and reports taps', (tester) async {
     int? page;
     await tester.pumpWidget(

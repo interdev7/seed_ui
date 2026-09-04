@@ -255,6 +255,7 @@ TablePagination
 TablePaginationPosition
 TableScroll
 TableSelection
+TableSelectionEntry
 TableSelectionMode
 TableSort
 TableSortOrder

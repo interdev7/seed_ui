@@ -195,6 +195,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   happened. The grip claims the pointer as it arrives, or a sideways-scrolling
   table takes it for a scroll.
 
+  **What a row is known by.** `rowKey` says what makes two records the same
+  row, for tables whose rows are rebuilt rather than kept — a page fetched
+  afresh hands back new objects, and without it what was picked came back
+  unpicked and what was open came back shut. It answers for both.
+
+  **What is wider than this page.** `selections` puts a menu beside the box at
+  the head: the box takes the page in front of the reader, and once a table is
+  paged there was no way to ask for anything wider.
+  `TableSelectionEntry.all`, `.invert` and `.none` cover most of it.
+  `backToTopOnChange` sends the rows back to the top when the page, the sort
+  or the filters change.
+
   **A row dressed from outside.** `rowStyle` gives one row a ground and words
   of its own — overdue, or not to be acted on — without the table having to
   know what that means. What the table says about a row is drawn over it: the

@@ -429,6 +429,21 @@ around it; `filterSearchMatch` says what typing means instead — the same shape
 as `sorter` against `sortable`. A choice already ticked stays ticked while it
 is out of sight: narrowing the menu must not quietly drop what was chosen.
 
+`selections` puts a menu beside the box at the head. The box takes the page
+in front of the reader, which is what a box in a heading means everywhere;
+anything wider than that — every row there is, the ones not taken, none at all
+— has to be asked for by name, and once a table is paged there is no other way
+to ask. `TableSelectionEntry.all`, `.invert` and `.none` are the three most
+tables want, and an entry of your own is a label and a function from every row
+and what is picked to what should be.
+
+`backToTopOnChange` sends the rows back to the top when what they are has
+changed: turning the page, sorting, or narrowing otherwise leaves the reader
+looking at whatever row happened to be where they had scrolled to. It is done
+after the frame, since what is being scrolled is rebuilt by the very change
+that asks for it. Only where the body has a height of its own; a table that
+scrolls with the page is the page's business.
+
 Nothing chosen is every row — a filter narrows, and one that has been asked
 for nothing narrows nothing. A column present in the map with an empty list is
 the same thing.
@@ -595,6 +610,23 @@ rather than paint, so both read at once — which is why the caller's ground is
 the outer one and paints first. The words are merged rather than replaced, so
 a style that names a colour and nothing else keeps the rest of the table's —
 and a cell's words are merged over its row's, not instead of them.
+
+## What a row is known by
+
+`rowKey` says what makes two records the same row. Left alone a row is itself
+— two records are the same when `==` says so, which for most tables is the
+right answer and needs nothing said.
+
+It needs saying where the rows are rebuilt rather than kept: a page fetched
+afresh hands back new objects with the same identifiers, and without this the
+table would meet them as rows it has never seen. What was picked would come
+back unpicked and what was open would come back shut.
+
+```dart
+Table(rowKey: (order) => order.id, ...)
+```
+
+It answers for both picking and opening, since both had the same flaw.
 
 ## Picking rows
 

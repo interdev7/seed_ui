@@ -82,6 +82,7 @@ class _TableDemoState extends State<TableDemo> {
   List<TableSort> _sorts = const [];
   Map<int, List<Object?>> _filters = const {};
   List<Person> _picked = const [];
+  List<Person> _paged = const [];
   bool _radio = false;
   int _page = 1;
   List<Report> _staff = const [];
@@ -582,7 +583,17 @@ class _TableDemoState extends State<TableDemo> {
                 bordered: true,
                 data: _crowd.take(60).toList(),
                 pagination: const TablePagination(defaultPageSize: 5),
-                selection: const TableSelection<Person>(),
+                selection: TableSelection<Person>(
+                  selected: _paged,
+                  onChanged: (rows) => setState(() => _paged = rows),
+                  // The box at the head takes the page; these are for what is
+                  // wider than that, which nothing else can ask for.
+                  selections: [
+                    TableSelectionEntry.all<Person>('All sixty'),
+                    TableSelectionEntry.invert<Person>('Turn it round'),
+                    TableSelectionEntry.none<Person>('None'),
+                  ],
+                ),
                 columns: [
                   TableColumn(
                     title: const Text('Name'),
@@ -607,11 +618,60 @@ class _TableDemoState extends State<TableDemo> {
                 ],
               ),
               const SizedBox(height: 8),
+              Text(
+                'Picked: ${_paged.length} of 60.',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: context.softToken.primary.base,
+                ),
+              ),
+              const SizedBox(height: 4),
               const Text(
-                'Narrow by city and the pager counts what is left, not sixty. '
-                'Narrow past the page you are on and you land on the last page '
-                'there is, never on an empty one. The box at the head takes '
-                'the page in front of you, not the whole table.',
+                'Tick the box at the head: five — the page in front of you, '
+                'which is what a box in a heading means. Now open the caret '
+                'beside it and take All sixty: that is the whole table, and '
+                'once a table is paged there is no other way to ask for it. '
+                'Turn it round takes the fifty-five you had not.\n\n'
+                'Narrow by city and the pager counts what is left.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Back to the top when the rows change',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                // A page of twenty in a body two hundred tall: each page is
+                // taller than what you can see of it, so there is something
+                // to be halfway down.
+                scroll: const TableScroll(y: 200),
+                backToTopOnChange: true,
+                data: _crowd.take(60).toList(),
+                pagination: const TablePagination(defaultPageSize: 20),
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    sortable: true,
+                    value: (p) => p.name,
+                  ),
+                  TableColumn(
+                    title: const Text('Age'),
+                    align: TableAlign.end,
+                    sortable: true,
+                    value: (p) => p.age,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Scroll the rows down to the middle of the page, then turn to '
+                'page 2 — you start at its first row, not at whatever row was '
+                'under your eyes. Sorting does the same, since the rows under '
+                'you are no longer the rows you were reading. Leave it out and '
+                'the body stays where you left it.',
               ),
             ],
           ),

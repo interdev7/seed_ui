@@ -110,6 +110,7 @@ export 'src/components/data_display/table.dart'
         TableStyle,
         TableScroll,
         TableSelection,
+        TableSelectionEntry,
         TableSelectionMode,
         TableSort,
         TableSticky,

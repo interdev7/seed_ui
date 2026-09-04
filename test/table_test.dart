@@ -34,6 +34,8 @@ List<String> shownNames(WidgetTester tester) => tester
 
 Widget _host(Widget child, {double width = 600}) => ConfigProvider(
       child: m.MaterialApp(
+        // Menus and panels open in the overlay, so the app has to have one.
+        navigatorKey: UiKit.navigatorKey,
         home: m.Scaffold(
           body: Center(child: SizedBox(width: width, child: child)),
         ),
@@ -6896,6 +6898,227 @@ void main() {
 
       expect(shown(tester).take(2), ['n4', 'n3'],
           reason: 'still in the order the sort asks for');
+    });
+  });
+
+  group('what is wider than this page', () {
+    final many = [for (var i = 0; i < 12; i++) _User('n$i', i)];
+
+    testWidgets('the menu takes every row, not the page in front of you',
+        (tester) async {
+      List<_User>? picked;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: many,
+            pagination: const TablePagination(defaultPageSize: 4),
+            selection: TableSelection<_User>(
+              onChanged: (rows) => picked = rows,
+              selections: [
+                TableSelectionEntry.all<_User>('Every row'),
+                TableSelectionEntry.invert<_User>('Turn it round'),
+                TableSelectionEntry.none<_User>('None'),
+              ],
+            ),
+            columns: [_name()],
+          ),
+        ),
+      );
+
+      // The box at the head takes the four in front of the reader.
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pumpAndSettle();
+      expect(picked!.length, 4);
+
+      // The menu beside it takes all twelve, which nothing else can ask for.
+      await tester.tap(find.byWidgetPredicate((w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == '_CaretPainter'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Every row'));
+      await tester.pumpAndSettle();
+      expect(picked!.length, 12);
+
+      // Turned round, none of them are picked.
+      await tester.tap(find.byWidgetPredicate((w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == '_CaretPainter'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Turn it round'));
+      await tester.pumpAndSettle();
+      expect(picked, isEmpty);
+    });
+
+    testWidgets('the box at the head stays over the boxes below it',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: many,
+            selection: TableSelection<_User>(
+              selections: [TableSelectionEntry.all<_User>('Every row')],
+            ),
+            columns: [_name()],
+          ),
+        ),
+      );
+
+      // A caret standing in a row with the box would be centred along with
+      // it and push the box off the column's middle.
+      final boxes = [
+        for (final e in find
+            .byWidgetPredicate((w) => w.runtimeType.toString() == 'CheckboxBox')
+            .evaluate())
+          tester.getCenter(find.byWidget(e.widget)).dx,
+      ];
+      expect(boxes.length, greaterThan(1));
+      for (final x in boxes) {
+        expect(x, closeTo(boxes.first, 0.5));
+      }
+    });
+
+    testWidgets('no menu where none was asked for', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: many,
+            selection: const TableSelection<_User>(),
+            columns: [_name()],
+          ),
+        ),
+      );
+      expect(
+        find.byWidgetPredicate((w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == '_CaretPainter'),
+        findsNothing,
+      );
+    });
+  });
+
+  group('back to the top when the rows change', () {
+    final many = [for (var i = 0; i < 60; i++) _User('n$i', i)];
+
+    Widget table({required bool back}) => _host(
+          Table<_User>(
+            scroll: const TableScroll(y: 200),
+            backToTopOnChange: back,
+            data: many,
+            pagination: const TablePagination(defaultPageSize: 30),
+            // No column of numbers: the pager's own page numbers are the only
+            // digits on screen, so tapping "2" is unambiguous.
+            columns: [_name()],
+          ),
+        );
+
+    /// Whether the first row of the page on show is in view.
+    bool topInView(WidgetTester tester, String name) =>
+        find.text(name).evaluate().isNotEmpty;
+
+    testWidgets('turning the page starts it at the top', (tester) async {
+      await tester.pumpWidget(table(back: true));
+      await tester.pumpAndSettle();
+      expect(topInView(tester, 'n0'), isTrue);
+
+      await tester.drag(find.text('n2'), const Offset(0, -300));
+      await tester.pumpAndSettle();
+      expect(topInView(tester, 'n0'), isFalse, reason: 'scrolled away');
+
+      await tester.tap(find.text('2'));
+      await tester.pumpAndSettle();
+      expect(topInView(tester, 'n30'), isTrue,
+          reason: 'the first row of the new page, not its middle');
+    });
+
+    testWidgets('left alone where the table was not asked', (tester) async {
+      await tester.pumpWidget(table(back: false));
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.text('n2'), const Offset(0, -300));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('2'));
+      await tester.pumpAndSettle();
+      expect(topInView(tester, 'n30'), isFalse,
+          reason: 'still looking at the middle of it');
+    });
+  });
+
+  group('a row known by a key of its own', () {
+    testWidgets('rows rebuilt from a fetch keep what was picked and open',
+        (tester) async {
+      // Two runs of the same rows, as a page fetched twice would hand back:
+      // the same people, in objects the table has never seen before. Built in
+      // a loop rather than written out, or Dart would hand back the very same
+      // constants both times and there would be nothing to recognise.
+      List<_User> page() => [
+            for (final who in const [('Chen', 27), ('Ann', 45)])
+              _User(who.$1, who.$2),
+          ];
+
+      List<_User>? picked;
+      Widget table({required List<_User> data, bool keyed = true}) => _host(
+            Table<_User>(
+              data: data,
+              rowKey: keyed ? (u) => u.name : null,
+              selection: TableSelection<_User>(
+                onChanged: (rows) => picked = rows,
+              ),
+              expandable: TableExpandable<_User>(
+                builder: (_, u, __) => Text('about ${u.name}'),
+              ),
+              columns: [_name()],
+            ),
+          );
+
+      await tester.pumpWidget(table(data: page()));
+      await tester.tap(find.byType(Checkbox).at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find
+          .byWidgetPredicate((w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_ExpandIconPainter')
+          .first);
+      await tester.pumpAndSettle();
+      expect(picked!.length, 1);
+      expect(find.text('about Chen'), findsOneWidget);
+
+      // The same rows come back as new objects. Told what a row is known by,
+      // the table recognises them.
+      await tester.pumpWidget(table(data: page()));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<Checkbox>(find.byType(Checkbox).at(1)).checked,
+        isTrue,
+        reason: 'still picked',
+      );
+      expect(find.text('about Chen'), findsOneWidget, reason: 'still open');
+    });
+
+    testWidgets('a record that is its own key needs nothing said',
+        (tester) async {
+      // The common case: rows the caller keeps, compared as they always were.
+      const people = [_User('Chen', 27), _User('Ann', 45)];
+      List<_User>? picked;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            selection: TableSelection<_User>(
+              onChanged: (rows) => picked = rows,
+            ),
+            columns: [_name()],
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(Checkbox).at(1));
+      await tester.pumpAndSettle();
+      expect(picked, [people.first]);
+      expect(
+        tester.widget<Checkbox>(find.byType(Checkbox).at(1)).checked,
+        isTrue,
+      );
     });
   });
 

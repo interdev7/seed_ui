@@ -129,6 +129,7 @@ class TableSelection<T> {
     this.onChanged,
     this.selectable,
     this.showSelectAll = true,
+    this.selections,
     this.checkStrictly = false,
     this.columnWidth,
     this.fixed,
@@ -171,6 +172,21 @@ class TableSelection<T> {
   /// Never in [TableSelectionMode.radio]: taking every row is not something a
   /// column of dots can mean.
   final bool showSelectAll;
+
+  /// Entries in a menu beside the box at the head.
+  ///
+  /// The box itself takes the page in front of the reader; these are for what
+  /// is wider than that, and there is no way to ask for it otherwise once a
+  /// table is paged. [TableSelectionEntry.all], `.invert` and `.none` are the
+  /// three most tables want.
+  ///
+  /// ```dart
+  /// selections: [
+  ///   TableSelectionEntry.all('Every row'),
+  ///   TableSelectionEntry.invert('Turn it round'),
+  /// ]
+  /// ```
+  final List<TableSelectionEntry<T>>? selections;
 
   /// How wide the column of boxes is.
   final double? columnWidth;
@@ -584,6 +600,43 @@ enum TableFilterMode {
 
   /// A tree of choices in one panel, each branch opening in place.
   tree,
+}
+
+/// One entry in the menu beside a table's select-all box.
+///
+/// The box at the head takes the page in front of the reader, which is what
+/// a box in a heading means everywhere. Anything wider than that — every row
+/// there is, the ones not taken, none at all — is a thing to be asked for by
+/// name, and this is the asking.
+@immutable
+class TableSelectionEntry<T> {
+  /// Creates a [TableSelectionEntry].
+  const TableSelectionEntry(this.label, this.select);
+
+  /// What the reader sees in the menu.
+  final String label;
+
+  /// What is picked when it is chosen, given every row the table was handed
+  /// and what is picked now.
+  final List<T> Function(List<T> all, List<T> picked) select;
+
+  /// Takes every row the table was handed, page or no page.
+  static TableSelectionEntry<T> all<T>(String label) =>
+      TableSelectionEntry<T>(label, (all, picked) => all);
+
+  /// Takes what is not taken and lets go of what is.
+  static TableSelectionEntry<T> invert<T>(String label) =>
+      TableSelectionEntry<T>(label, (all, picked) {
+        final out = <T>[];
+        for (final row in all) {
+          if (!picked.contains(row)) out.add(row);
+        }
+        return out;
+      });
+
+  /// Lets go of everything.
+  static TableSelectionEntry<T> none<T>(String label) =>
+      TableSelectionEntry<T>(label, (all, picked) => const []);
 }
 
 /// One choice in a column's filter menu.
@@ -1602,6 +1655,7 @@ class Table<T> extends StatefulWidget {
     required this.columns,
     this.columnDefaults,
     this.rowStyle,
+    this.rowKey,
     required this.data,
     this.size,
     this.bordered,
@@ -1623,6 +1677,7 @@ class Table<T> extends StatefulWidget {
     this.expandable,
     this.pagination,
     this.sticky,
+    this.backToTopOnChange = false,
     this.columnsDraggable = false,
     this.columnsResizable = false,
     this.onColumnResized,
@@ -1634,6 +1689,22 @@ class Table<T> extends StatefulWidget {
 
   /// The columns, in the order they are drawn.
   final List<TableColumn<T>> columns;
+
+  /// What makes two records the same row.
+  ///
+  /// Left null a row is itself: two records are the same when `==` says so,
+  /// which for most tables is the right answer and needs nothing said.
+  ///
+  /// It needs saying where the rows are rebuilt rather than kept — a page
+  /// fetched afresh from a server hands back new objects with the same
+  /// identifiers, and without this the table would see them as rows it has
+  /// never met: what was picked would come back unpicked and what was open
+  /// would come back shut.
+  ///
+  /// ```dart
+  /// rowKey: (order) => order.id,
+  /// ```
+  final Object Function(T record)? rowKey;
 
   /// Dresses one row, where the table has nothing to say about it.
   ///
@@ -1735,6 +1806,15 @@ class Table<T> extends StatefulWidget {
   ///
   /// Null — the usual — is a table whose rows do not open.
   final TableExpandable<T>? expandable;
+
+  /// Sends the rows back to the top when what they are has changed.
+  ///
+  /// Turning the page, sorting, or narrowing leaves the reader looking at
+  /// whatever row happened to be where they had scrolled to — the fortieth
+  /// row of a page they have not read the top of. Only where the body has a
+  /// height of its own to scroll within; a table that scrolls with the page
+  /// is the page's business, not the table's.
+  final bool backToTopOnChange;
 
   /// Lets a column's trailing border be dragged to change its width.
   ///
@@ -1839,6 +1919,9 @@ class _TableState<T> extends State<Table<T>> {
   /// They agree because they are laid out over the same width — when they were
   /// not, each clamped to its own extent and a two-hundred-pixel drag moved
   /// one of them a hundred and eighty.
+  /// The body's own vertical controller, kept so the table can send the rows
+  /// back to the top when what they are has changed under the reader.
+  final ScrollController _rowsY = ScrollController();
   final ScrollController _rowsX = ScrollController();
   final ScrollController _headingX = ScrollController();
   bool _syncing = false;
@@ -1903,6 +1986,7 @@ class _TableState<T> extends State<Table<T>> {
   @override
   void dispose() {
     _rowsX.dispose();
+    _rowsY.dispose();
     _headingX.dispose();
     _hovered.dispose();
     _hoveredHeading.dispose();
@@ -3349,7 +3433,21 @@ class _TableState<T> extends State<Table<T>> {
   }
 
   /// What a filter menu makes of the choices when it is applied.
+  /// Sends the rows back to the top, where the table was asked to.
+  ///
+  /// After the frame rather than during it: what is being scrolled is rebuilt
+  /// by the very change that calls this, and there is nothing to move until
+  /// that has happened.
+  void _backToTop() {
+    if (!widget.backToTopOnChange) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_rowsY.hasClients) return;
+      _rowsY.jumpTo(0);
+    });
+  }
+
   void _applyFilter(int column, List<Object?> chosen) {
+    _backToTop();
     final next = {
       for (final entry in _filters.entries)
         if (entry.key != column && entry.value.isNotEmpty)
@@ -3399,6 +3497,7 @@ class _TableState<T> extends State<Table<T>> {
   }
 
   void _goToPage(int page, int size) {
+    _backToTop();
     final paging = widget.pagination!;
     if (paging.page == null || paging.pageSize == null) {
       setState(() {
@@ -3425,7 +3524,26 @@ class _TableState<T> extends State<Table<T>> {
     return _ownExpanded ?? const [];
   }
 
-  bool _isExpanded(T record) => _expanded.contains(record);
+  /// What this record is known by: what [Table.rowKey] says, else itself.
+  Object _idOf(T record) => widget.rowKey?.call(record) ?? record as Object;
+
+  /// Whether [among] holds this row — by what it is known by, not by which
+  /// object it happens to be.
+  bool _holds(Iterable<T> among, T record) {
+    final id = _idOf(record);
+    for (final other in among) {
+      if (_idOf(other) == id) return true;
+    }
+    return false;
+  }
+
+  /// Takes this row out of [from], however many objects stand for it.
+  void _drop(List<T> from, T record) {
+    final id = _idOf(record);
+    from.removeWhere((other) => _idOf(other) == id);
+  }
+
+  bool _isExpanded(T record) => _holds(_expanded, record);
 
   bool _canExpand(T record) {
     final expandable = widget.expandable;
@@ -3448,7 +3566,8 @@ class _TableState<T> extends State<Table<T>> {
     final expandable = widget.expandable!;
     if (!_canExpand(record)) return;
     final next = [..._expanded];
-    final shutting = next.remove(record);
+    final shutting = _holds(next, record);
+    if (shutting) _drop(next, record);
     if (!shutting) next.add(record);
     if (expandable.expanded == null) {
       setState(() => _ownExpanded = next);
@@ -3468,7 +3587,7 @@ class _TableState<T> extends State<Table<T>> {
 
   /// The rows a panel is drawn for: the ones open, and the ones closing.
   bool _hasPanel(T record) =>
-      !_isTree && (_isExpanded(record) || _closing.contains(record));
+      !_isTree && (_isExpanded(record) || _holds(_closing, record));
 
   /// The rows the table keeps picked while nobody is controlling them.
   List<T>? _ownSelected;
@@ -3486,7 +3605,7 @@ class _TableState<T> extends State<Table<T>> {
     return _ownSelected ?? const [];
   }
 
-  bool _isSelected(T record) => _selected.contains(record);
+  bool _isSelected(T record) => _holds(_selected, record);
 
   bool _canSelect(T record) =>
       widget.selection?.selectable?.call(record) ?? true;
@@ -3508,13 +3627,13 @@ class _TableState<T> extends State<Table<T>> {
     final next = [..._selected];
     void take(T of) {
       if (!_canSelect(of)) return;
-      if (!next.contains(of)) next.add(of);
+      if (!_holds(next, of)) next.add(of);
     }
 
     if (on) {
       take(record);
     } else {
-      next.remove(record);
+      _drop(next, record);
     }
 
     if (_picksTogether) {
@@ -3524,7 +3643,7 @@ class _TableState<T> extends State<Table<T>> {
         if (on) {
           take(under);
         } else {
-          next.remove(under);
+          _drop(next, under);
         }
       }
       // And every row above it is picked only while all of its own are, so a
@@ -3533,11 +3652,12 @@ class _TableState<T> extends State<Table<T>> {
       var above = parents[record];
       while (above != null) {
         final under = _descendants(above).where(_canSelect);
-        final whole = under.isNotEmpty && under.every(next.contains);
+        final whole =
+            under.isNotEmpty && under.every((row) => _holds(next, row));
         if (whole && _canSelect(above)) {
-          if (!next.contains(above)) next.add(above);
+          if (!_holds(next, above)) next.add(above);
         } else {
-          next.remove(above);
+          _drop(next, above);
         }
         above = parents[above];
       }
@@ -3571,13 +3691,13 @@ class _TableState<T> extends State<Table<T>> {
       // hides rows, it does not un-pick them.
       final next = [..._selected];
       for (final record in available) {
-        if (!next.contains(record)) next.add(record);
+        if (!_holds(next, record)) next.add(record);
       }
       _select(next);
     } else {
       _select([
         for (final record in _selected)
-          if (!available.contains(record)) record,
+          if (!_holds(available, record)) record,
       ]);
     }
   }
@@ -3657,7 +3777,7 @@ class _TableState<T> extends State<Table<T>> {
         depths[record] = depth;
         settling[record] = showing;
         final open = _isExpanded(record);
-        if (!open && !_closing.contains(record)) continue;
+        if (!open && !_holds(_closing, record)) continue;
         final under = children(record);
         if (under == null || under.isEmpty) continue;
         walk(under, depth + 1, showing: showing && open);
@@ -3873,6 +3993,7 @@ class _TableState<T> extends State<Table<T>> {
           if (sort.column != column) sort,
       if (next != null) TableSort(column, next),
     ]);
+    _backToTop();
     if (widget.sort == null) setState(() => _ownSort = sorts);
     widget.onSortChanged?.call(sorts);
   }
@@ -3952,6 +4073,40 @@ class _TableState<T> extends State<Table<T>> {
     return sorted ? r.rowSortedBg : const Color(0x00000000);
   }
 
+  /// How much room the caret beside the head box takes, gap and all.
+  double _caretRoom(_ResolvedTableToken r, Token t) =>
+      t.sizeXXS + r.sortCaretSize * 0.6;
+
+  /// The menu beside the box at the head: what is wider than this page.
+  Widget _selectionsMenu(List<TableSelectionEntry<T>> entries) {
+    final r = _token;
+    final t = context.softToken;
+    return Dropdown<int>(
+      trigger: const [DropdownTrigger.click],
+      menu: [
+        for (var i = 0; i < entries.length; i++)
+          DropdownItem<int>(value: i, label: Text(entries[i].label)),
+      ],
+      onItemTap: (i) {
+        if (i == null || i < 0 || i >= entries.length) return;
+        final entry = entries[i];
+        // Handed everything the table was given, not the page in front of
+        // the reader: that is the whole reason the menu is here.
+        _select(entry.select(widget.data, _selected));
+      },
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Padding(
+          padding: EdgeInsetsDirectional.only(start: t.sizeXXS),
+          child: CustomPaint(
+            size: Size.square(r.sortCaretSize * 0.6),
+            painter: _CaretPainter(r.headerMarkColor, up: false),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// The token, resolved wherever it is wanted rather than only in `build`.
   _ResolvedTableToken get _token => (widget.token ??
           ConfigProvider.componentOf<TableToken>(context) ??
@@ -3969,7 +4124,13 @@ class _TableState<T> extends State<Table<T>> {
       // as a number, since a compact table pads less and a roomy one more.
       width: selection.columnWidth ??
           _cellPadding(_token, context.softToken).horizontal +
-              _token.selectionColumnWidth,
+              _token.selectionColumnWidth +
+              // A caret beside the box, where there is a menu to open, and
+              // as much empty room again before it so the box stays on the
+              // column's middle.
+              ((selection.selections?.isNotEmpty ?? false)
+                  ? _caretRoom(_token, context.softToken) * 2
+                  : 0),
       fixed: selection.fixed,
       title:
           selection.mode == TableSelectionMode.radio || !selection.showSelectAll
@@ -3980,7 +4141,7 @@ class _TableState<T> extends State<Table<T>> {
               : Builder(
                   builder: (context) {
                     final state = _selectionState;
-                    return Semantics(
+                    final box = Semantics(
                       // A box with nothing beside it says nothing about what
                       // it takes, so it is named here.
                       label: context.seedLocale.selectAll,
@@ -3990,6 +4151,22 @@ class _TableState<T> extends State<Table<T>> {
                         disabled: _selectableOnShow.isEmpty,
                         onChanged: (on) => _toggleAll(on: on),
                       ),
+                    );
+                    final entries = selection.selections;
+                    if (entries == null || entries.isEmpty) return box;
+                    // As much empty room before the box as the caret takes
+                    // after it, so the row is centred and the box lands on
+                    // the column's middle, where the boxes in the rows below
+                    // it sit — measured, six pixels out without it. Room
+                    // rather than a `Stack` with the caret hanging outside:
+                    // what hangs outside a stack cannot be tapped.
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(width: _caretRoom(_token, context.softToken)),
+                        box,
+                        _selectionsMenu(entries),
+                      ],
                     );
                   },
                 ),
@@ -5449,7 +5626,9 @@ class _TableState<T> extends State<Table<T>> {
             pinning: [for (final c in columns) c.fixed],
             shadeColor: r.pinnedShadowColor,
             shadeExtent: r.pinnedShadowExtent,
-            verticalDetails: const ScrollableDetails.vertical(),
+            verticalDetails: ScrollableDetails.vertical(
+              controller: _rowsY,
+            ),
             // Leading is the right in a mirrored page, so the rows run the
             // other way and a finger moving right takes the table forwards.
             horizontalDetails: ScrollableDetails.horizontal(

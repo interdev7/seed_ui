@@ -6899,6 +6899,199 @@ void main() {
     });
   });
 
+  group('a border you can drag', () {
+    const people = [_User('Chen', 27), _User('Ann', 45)];
+
+    Widget table({
+      bool resizable = true,
+      bool? column,
+      bool draggable = false,
+      void Function(int, double)? onResized,
+      double? floor,
+    }) =>
+        _host(
+          Table<_User>(
+            bordered: true,
+            // As wide as its columns, so a width is a width: a table with
+            // room to spare scales its columns up to fill it, and then no
+            // number asked for is the number drawn.
+            scroll: const TableScroll.toContent(),
+            columnsResizable: resizable,
+            columnsDraggable: draggable,
+            onColumnResized: onResized,
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                width: 200,
+                minWidth: floor,
+                resizable: column,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                width: 100,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        );
+
+    Finder grips() => find.byWidgetPredicate(
+          (w) =>
+              w is MouseRegion && w.cursor == SystemMouseCursors.resizeColumn,
+        );
+
+    /// How wide the first column stands, measured from the grip that ends it.
+    double widthOfFirst(WidgetTester tester) =>
+        tester.getRect(grips().first).right -
+        tester.getRect(find.text('Name')).left +
+        tester.getRect(find.text('Name')).left -
+        tester.getRect(find.byType(m.Table).first).left;
+
+    testWidgets('dragging a border widens the column it belongs to',
+        (tester) async {
+      int? which;
+      double? to;
+      await tester.pumpWidget(table(onResized: (c, w) {
+        which = c;
+        to = w;
+      }));
+
+      final before = widthOfFirst(tester);
+      final grip = await tester.startGesture(tester.getCenter(grips().first));
+      await tester.pump();
+      await grip.moveBy(const Offset(60, 0));
+      await tester.pump();
+      expect(widthOfFirst(tester), closeTo(before + 60, 1),
+          reason: 'it follows the hand as it goes');
+
+      await grip.up();
+      await tester.pumpAndSettle();
+      expect(widthOfFirst(tester), closeTo(before + 60, 1),
+          reason: 'and stays where it was let go of');
+      expect(which, 0);
+      expect(to, closeTo(before + 60, 1));
+    });
+
+    testWidgets('a column is not dragged past its floor', (tester) async {
+      await tester.pumpWidget(table(floor: 120));
+      final before = widthOfFirst(tester);
+
+      final grip = await tester.startGesture(tester.getCenter(grips().first));
+      await tester.pump();
+      // Far further in than the floor allows.
+      await grip.moveBy(const Offset(-400, 0));
+      await tester.pump();
+      expect(widthOfFirst(tester), closeTo(120, 1));
+      expect(widthOfFirst(tester), lessThan(before));
+      await grip.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a scrolling table takes the width too', (tester) async {
+      // A different path: a table that scrolls works its widths out itself
+      // and caches them, where a plain grid leaves the arithmetic to Flutter.
+      double? to;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            bordered: true,
+            scroll: const TableScroll(x: 900, y: 200),
+            columnsResizable: true,
+            onColumnResized: (c, w) => to = w,
+            data: [for (var i = 0; i < 30; i++) people[i % 2]],
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                width: 200,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                width: 100,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final before = tester.getRect(grips().first).right;
+      final grip = await tester.startGesture(tester.getCenter(grips().first));
+      await tester.pump();
+      await grip.moveBy(const Offset(70, 0));
+      await tester.pump();
+      expect(
+        tester.getRect(grips().first).right,
+        closeTo(before + 70, 1),
+        reason: 'the border followed the hand',
+      );
+      await grip.up();
+      await tester.pumpAndSettle();
+      expect(to, closeTo(270, 1));
+    });
+
+    testWidgets('nothing to take hold of unless the table says so',
+        (tester) async {
+      await tester.pumpWidget(table(resizable: false));
+      expect(grips(), findsNothing);
+
+      // A column may join in on its own where the table says nothing.
+      await tester.pumpWidget(table(resizable: false, column: true));
+      expect(grips(), findsOneWidget);
+
+      // And stand out of it where the table says yes.
+      await tester.pumpWidget(table(column: false));
+      expect(grips(), findsOneWidget, reason: 'the other column only');
+    });
+
+    testWidgets('taking hold of a border is not taking hold of the heading',
+        (tester) async {
+      int? from;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            bordered: true,
+            columnsResizable: true,
+            columnsDraggable: true,
+            onColumnsReordered: (a, b) => from = a,
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                width: 200,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                width: 100,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final grip = await tester.startGesture(tester.getCenter(grips().first));
+      await tester.pump(kLongPressTimeout);
+      await grip.moveBy(const Offset(80, 0));
+      await tester.pump();
+      await grip.up();
+      await tester.pumpAndSettle();
+
+      // The border took the drag; the column stayed where it was.
+      expect(from, isNull, reason: 'nothing was carried anywhere');
+      final heads = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((w) => w.data)
+          .where((w) => w == 'Name' || w == 'Age')
+          .toList();
+      expect(heads, ['Name', 'Age']);
+    });
+  });
+
   group('a row dressed from outside', () {
     const people = [_User('Chen', 27), _User('Ann', 45)];
 

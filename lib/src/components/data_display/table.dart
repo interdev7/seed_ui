@@ -2,7 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/gestures.dart'
+    show
+        GestureDisposition,
+        HorizontalDragGestureRecognizer,
+        PointerDeviceKind,
+        PointerDownEvent;
 import 'package:flutter/rendering.dart'
     show
         CacheExtentStyle,
@@ -785,6 +790,7 @@ class TableColumn<T> {
     this.summary,
     this.span,
     this.cellStyle,
+    this.resizable,
   })  : assert(
           children == null || span == null,
           'A group heads other columns and has no cell of its own to span.',
@@ -1060,6 +1066,14 @@ class TableColumn<T> {
   /// ```
   final TableFilterPanel? filterPanel;
 
+  /// Whether this column's border can be dragged, where the table allows it.
+  ///
+  /// Null follows [Table.columnsResizable]; true or false is this column's
+  /// own word either way — a column of fixed marks has no business being
+  /// stretched, and one column may be worth stretching in a table where the
+  /// rest are not.
+  final bool? resizable;
+
   /// Dresses one cell of this column, where the table has nothing to say.
   ///
   /// The same shape as [Table.rowStyle] and answered the same way — null for
@@ -1124,6 +1138,7 @@ class TableColumn<T> {
         summary: summary,
         span: span,
         cellStyle: cellStyle,
+        resizable: resizable,
       );
 
   /// This column heading a different set of columns.
@@ -1220,6 +1235,8 @@ class TableToken {
     this.filterIconSize,
     this.filterMenuMaxHeight,
     this.filterHoverBg,
+    this.resizeHandleWidth,
+    this.resizeLineColor,
     this.filterSearchWidth,
     this.selectionColumnWidth,
     this.expandIconSize,
@@ -1375,6 +1392,15 @@ class TableToken {
   /// compact table's is narrower without anything being said twice.
   final double? selectionColumnWidth;
 
+  /// How wide the strip is that answers a drag on a column's border.
+  ///
+  /// The border itself is a hair; a hair is not something to aim at, so the
+  /// strip that answers straddles it.
+  final double? resizeHandleWidth;
+
+  /// The line drawn down the table while a column's border is being dragged.
+  final Color? resizeLineColor;
+
   /// Fill behind the funnel itself under the pointer.
   ///
   /// A step stronger than [headerHoverBg], or the mark would not be told
@@ -1427,6 +1453,8 @@ class TableToken {
         filterIconSize: filterIconSize ?? t.sizeSM,
         filterMenuMaxHeight: filterMenuMaxHeight ?? 264,
         filterHoverBg: filterHoverBg ?? t.colorFill,
+        resizeHandleWidth: resizeHandleWidth ?? t.sizeXS,
+        resizeLineColor: resizeLineColor ?? t.primary.base,
         filterSearchWidth: filterSearchWidth ?? 140,
         selectionColumnWidth: selectionColumnWidth ?? t.controlHeightSM,
         expandIconSize: expandIconSize ?? t.size,
@@ -1468,6 +1496,8 @@ class _ResolvedTableToken {
     required this.filterIconSize,
     required this.filterMenuMaxHeight,
     required this.filterHoverBg,
+    required this.resizeHandleWidth,
+    required this.resizeLineColor,
     required this.filterSearchWidth,
     required this.selectionColumnWidth,
     required this.expandIconSize,
@@ -1505,6 +1535,8 @@ class _ResolvedTableToken {
   final double filterIconSize;
   final double filterMenuMaxHeight;
   final Color filterHoverBg;
+  final double resizeHandleWidth;
+  final Color resizeLineColor;
   final double filterSearchWidth;
   final double selectionColumnWidth;
   final double expandIconSize;
@@ -1592,6 +1624,8 @@ class Table<T> extends StatefulWidget {
     this.pagination,
     this.sticky,
     this.columnsDraggable = false,
+    this.columnsResizable = false,
+    this.onColumnResized,
     this.onColumnsReordered,
     this.rowsDraggable = false,
     this.onRowsReordered,
@@ -1701,6 +1735,25 @@ class Table<T> extends StatefulWidget {
   ///
   /// Null — the usual — is a table whose rows do not open.
   final TableExpandable<T>? expandable;
+
+  /// Lets a column's trailing border be dragged to change its width.
+  ///
+  /// Only that column changes: the table grows or shrinks by what the column
+  /// gained or lost, rather than taking it from the neighbour. A table of
+  /// many columns where every drag robbed the one beside it would be a
+  /// puzzle, not a table.
+  ///
+  /// A column may say [TableColumn.resizable] to stand out of it, or to join
+  /// in where the table says nothing.
+  final bool columnsResizable;
+
+  /// Word of a column having been resized: which column, and how wide it is
+  /// now.
+  ///
+  /// The table keeps the width itself, as it keeps an order a drag has left;
+  /// this is only word of it. The column is named by its place among the ones
+  /// you listed, as a sort and a filter are.
+  final void Function(int column, double width)? onColumnResized;
 
   /// Lets a heading be picked up and dropped on another column's place.
   ///
@@ -1952,6 +2005,10 @@ class _TableState<T> extends State<Table<T>> {
           // A floor of its own is held over whatever the column would have
           // been — except an exact width, which is exact.
           i: switch ((columns[i].minWidth, _gridWidth(columns[i], r))) {
+            // A width a drag has left is the width, floor and all: the drag
+            // was already held above the floor as it went.
+            _ when _ownWidths[_leaves.indexOf(columns[i])] != null =>
+              FixedColumnWidth(_ownWidths[_leaves.indexOf(columns[i])]!),
             (final floor?, final base) when columns[i].width == null =>
               MaxColumnWidth(FixedColumnWidth(floor), base),
             (_, final base) => base,
@@ -2130,6 +2187,43 @@ class _TableState<T> extends State<Table<T>> {
       shifts[from] = -height * (from - to);
     }
     return shifts;
+  }
+
+  /// The widths a drag on a border has left, by the column's place among the
+  /// ones given.
+  ///
+  /// Laid over the widths that were worked out rather than fed back into the
+  /// working out: the measurer walks every row to size a column, and it is
+  /// cached against what it was asked. Feeding a new width in each frame of a
+  /// drag would throw that cache away sixty times a second and re-measure the
+  /// whole table to answer a question nobody asked.
+  final Map<int, double> _ownWidths = {};
+
+  /// The column whose border is being dragged, where the pointer took hold of
+  /// it, and how wide it was then.
+  ({int named, double from, double was})? _resizing;
+
+  /// Whether this column's border answers to a drag.
+  bool _resizes(TableColumn<T> column) =>
+      (column.resizable ?? widget.columnsResizable) &&
+      !column.isGroup &&
+      column.flex == null;
+
+  /// The narrowest a column may be dragged: its own floor, else the table's.
+  double _floorOf(TableColumn<T> column, _ResolvedTableToken r) =>
+      column.minWidth ?? r.columnMinWidth;
+
+  void _resizeBy(double delta, _ResolvedTableToken r) {
+    final held = _resizing;
+    if (held == null) return;
+    final leaves = _leaves;
+    if (held.named < 0 || held.named >= leaves.length) return;
+    final want = math.max(
+      _floorOf(leaves[held.named], r),
+      held.was + delta,
+    );
+    if (_ownWidths[held.named] == want) return;
+    setState(() => _ownWidths[held.named] = want);
   }
 
   /// Bumped whenever the order is committed.
@@ -4574,8 +4668,9 @@ class _TableState<T> extends State<Table<T>> {
     _ResolvedTableToken r,
     Token t,
   ) {
-    if (!column.sorts && !widget.columnsDraggable) return cell;
-    if (!column.sorts) return _draggableHeading(cell, place, r, t);
+    final held = _gripped(cell, column, named, r, t);
+    if (!column.sorts && !widget.columnsDraggable) return held;
+    if (!column.sorts) return _draggableHeading(held, place, r, t);
     // A column the table is sorted by keeps the fill, hand or no hand: it is
     // the one doing something, so it is the one marked. Which also means the
     // fill arrives with a `defaultSort`, before anybody has touched it.
@@ -4597,11 +4692,103 @@ class _TableState<T> extends State<Table<T>> {
                 : const Color(0x00000000),
             child: child,
           ),
-          child: cell,
+          child: held,
         ),
       ),
     );
     return _draggableHeading(answering, place, r, t);
+  }
+
+  /// A heading with a grip on its trailing border, where the column allows a
+  /// drag there.
+  ///
+  /// The grip is a strip along the trailing edge of the cell, wider than the
+  /// border it moves: a border is a hair, and a hair is not something to aim
+  /// at. It is the innermost thing under the pointer there, so it takes the
+  /// drag before the heading's own tap or carry — which is what the reader
+  /// means by taking hold of a border rather than of a heading.
+  Widget _gripped(
+    Widget cell,
+    TableColumn<T> column,
+    int named,
+    _ResolvedTableToken r,
+    Token t,
+  ) {
+    if (!_resizes(column) || named < 0) return cell;
+    final grip = r.resizeHandleWidth;
+    final mirrored = Directionality.of(context) == TextDirection.rtl;
+    return Builder(
+      builder: (cellContext) => Stack(
+        children: [
+          cell,
+          PositionedDirectional(
+            // Inside the cell rather than straddling its border: a `Stack`
+            // hit-tests only what lies within it, so half a grip hanging over
+            // the border would be half a grip nobody could take hold of —
+            // measured, and it was the half that looks aimed at.
+            end: 0,
+            top: 0,
+            bottom: 0,
+            width: grip,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.resizeColumn,
+              child: RawGestureDetector(
+                behavior: HitTestBehavior.opaque,
+                gestures: {
+                  _GripDrag: GestureRecognizerFactoryWithHandlers<_GripDrag>(
+                    _GripDrag.new,
+                    (recognizer) => recognizer
+                      ..onStart = (details) {
+                        // Asked of the cell itself rather than of the widths that
+                        // were worked out: a table drawn as a plain grid never works
+                        // them out, and the grid's own arithmetic is the only thing
+                        // that knows how wide the column ended up.
+                        final box = cellContext.findRenderObject();
+                        setState(() {
+                          _resizing = (
+                            named: named,
+                            from: details.globalPosition.dx,
+                            was: box is RenderBox && box.hasSize
+                                ? box.size.width
+                                : _ownWidths[named] ?? _floorOf(column, r),
+                          );
+                        });
+                      }
+                      ..onUpdate = (details) {
+                        final held = _resizing;
+                        if (held == null) return;
+                        final travelled = details.globalPosition.dx - held.from;
+                        // A page that reads the other way grows its columns
+                        // the other way: the border being dragged is the
+                        // leading one on screen.
+                        _resizeBy(mirrored ? -travelled : travelled, r);
+                      }
+                      ..onEnd = ((_) => _dropResize())
+                      ..onCancel = _dropResize,
+                  ),
+                },
+                child: _resizing?.named == named
+                    ? Center(
+                        child: SizedBox(
+                          width: t.lineWidth * 2,
+                          child: ColoredBox(color: r.resizeLineColor),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _dropResize() {
+    final held = _resizing;
+    setState(() => _resizing = null);
+    if (held == null) return;
+    final width = _ownWidths[held.named];
+    if (width != null) widget.onColumnResized?.call(held.named, width);
   }
 
   /// A heading that can be picked up and dropped on another column's place.
@@ -5170,7 +5357,30 @@ class _TableState<T> extends State<Table<T>> {
           );
     _widthsAsked = asked;
     _measuredRows = widget.data;
-    return widths;
+    return _withOwnWidths(columns, widths);
+  }
+
+  /// The widths a border drag has left, laid over the ones worked out.
+  ///
+  /// Over rather than into: the working out walks every row and is cached
+  /// against what it was asked, and a drag that fed a new width back in would
+  /// throw that cache away on every frame.
+  _TableWidths _withOwnWidths(
+    List<TableColumn<T>> columns,
+    _TableWidths widths,
+  ) {
+    if (_ownWidths.isEmpty) return widths;
+    final leaves = _leaves;
+    final out = [...widths.columns];
+    var changed = false;
+    for (var i = 0; i < columns.length; i++) {
+      final own = _ownWidths[leaves.indexOf(columns[i])];
+      if (own == null || own == out[i]) continue;
+      out[i] = own;
+      changed = true;
+    }
+    if (!changed) return widths;
+    return _TableWidths._(out, out.fold(0, (sum, w) => sum + w));
   }
 
   Widget _lazyBody(_ResolvedTableToken r, Token t, BorderSide rule) {
@@ -6273,6 +6483,21 @@ class _FilterWidth extends StatelessWidget {
   Widget build(BuildContext context) => width == null
       ? IntrinsicWidth(child: child)
       : SizedBox(width: width, child: child);
+}
+
+/// A horizontal drag that takes the pointer the moment it arrives.
+///
+/// The grip on a column's border lives inside a table that may scroll
+/// sideways, and an ordinary drag loses that pointer to the scroll view —
+/// measured: the border did not move at all in a scrolling table. The strip
+/// is eight pixels wide and sits on a border, so everything that lands there
+/// is meant for it.
+class _GripDrag extends HorizontalDragGestureRecognizer {
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolve(GestureDisposition.accepted);
+  }
 }
 
 /// A funnel: the mark at the head of a column that can be narrowed.

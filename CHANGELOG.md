@@ -187,6 +187,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they are, which edge they are held at. A column that names the field wins,
   and it reaches the leaves of a group.
 
+  **Borders you can drag.** `columnsResizable` puts a grip on each column's
+  trailing border; dragging it changes that column alone and the table grows
+  or shrinks by the difference, rather than taking width from the neighbour.
+  `TableColumn.resizable` is one column's own word either way, `minWidth` is
+  how far in it may be dragged, and `onColumnResized` is word of what
+  happened. The grip claims the pointer as it arrives, or a sideways-scrolling
+  table takes it for a scroll.
+
   **A row dressed from outside.** `rowStyle` gives one row a ground and words
   of its own — overdue, or not to be acted on — without the table having to
   know what that means. What the table says about a row is drawn over it: the

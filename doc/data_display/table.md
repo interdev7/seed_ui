@@ -948,6 +948,37 @@ Every row is held to one height, as pinning holds them: a row sliding aside
 has to know how far, and that is a height. A row can still be tapped — the
 drag is wrapped round what a row already does rather than put in its place.
 
+## Borders you can drag
+
+`columnsResizable` puts a grip on each column's trailing border. Dragging it
+changes **that column** and nothing else: the table grows or shrinks by what
+the column gained or lost, rather than taking it from the neighbour. A table
+of many columns where every drag robbed the one beside it would be a puzzle
+rather than a table.
+
+A column may say `resizable` for itself — true to join in where the table
+says nothing, false to stand out of a table that says yes. A group has no
+border of its own to drag, and neither has a column with a `flex`, which is a
+share rather than a width.
+
+How far in it may be dragged is the column's `minWidth`, or the
+`columnMinWidth` token where it names none. `onColumnResized` is word of what
+happened — which column, and how wide it is now — with the column named by
+its place among the ones you listed, as a sort and a filter are. The table
+keeps the width itself, as it keeps an order a drag has left.
+
+Two things worth knowing. The grip is a strip along the inside of the border,
+`resizeHandleWidth` wide, rather than one straddling it: a `Stack` hit-tests
+only what lies within it, so a grip hanging half over the border would be half
+a grip nobody could take hold of. And it claims the pointer the moment it
+arrives, because a table that scrolls sideways would otherwise take that
+pointer for a scroll — measured, and the border did not move at all.
+
+A width asked for is the width drawn only where the table is not stretching
+its columns to fill its box. Give it `TableScroll.toContent()`, or more
+columns than fit, and a drag means what it says; in a table with room to spare
+the columns are scaled up to fill it, and a dragged width is a share of that.
+
 ## Columns you can move
 
 `columnsDraggable` lets a heading be picked up and dropped on another column's
@@ -1092,6 +1123,8 @@ height and the triangles are worked out from it.
 | `rowHoverBg` | the row under the pointer |
 | `dragShadow` | `boxShadowSecondary` — under a row or heading being carried |
 | `indentSize` | `sizeMD` — each step down a tree of rows |
+| `resizeHandleWidth` | `sizeXS` — how wide the strip is that answers a drag on a border |
+| `resizeLineColor` | `primary.base` — the line down the border while it is being dragged |
 | `rowSortedBg` | `colorFillQuaternary` — the cells of the column being sorted by |
 | `borderColor` | `colorSplit` |
 | `cellPaddingBlock`, `cellPaddingBlockSM`, `cellPaddingBlockLG` | 12, 8, 16 |

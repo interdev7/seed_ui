@@ -1526,6 +1526,56 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Borders you can drag',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                // As wide as its columns: a table with room to spare scales
+                // them up to fill it, and then a width asked for is not the
+                // width drawn.
+                scroll: const TableScroll.toContent(),
+                data: _people,
+                columnsResizable: true,
+                onColumnResized: (column, width) =>
+                    message.success('Column $column is ${width.round()} wide'),
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    width: 220,
+                    ellipsis: true,
+                    // Its own floor: drag as far in as you like, it stops
+                    // here.
+                    minWidth: 120,
+                    value: (p) => p.name,
+                  ),
+                  TableColumn(
+                    title: const Text('City'),
+                    width: 160,
+                    value: (p) => p.city,
+                  ),
+                  TableColumn(
+                    title: const Text('Age'),
+                    width: 100,
+                    align: TableAlign.end,
+                    // This one keeps its width: a column of short numbers has
+                    // no business being stretched.
+                    // resizable: false,
+                    value: (p) => p.age,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Take hold of a border and drag: only that column changes, '
+                'and the table grows or shrinks by what it gained or lost. '
+                'Name stops at its own floor of 120; Age has no grip at all.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Columns you can move',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

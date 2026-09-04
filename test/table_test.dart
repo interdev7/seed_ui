@@ -6752,6 +6752,106 @@ void main() {
       expect(shown(tester), ['Ann', 'Eve']);
     });
 
+    testWidgets('rows are let in and out rather than appearing',
+        (tester) async {
+      await tester.pumpWidget(table());
+      double height() => tester.getRect(find.byType(Table<_Node>)).height;
+      final shut = height();
+
+      await tester.tap(marks().first);
+      // Part way through, the table is taller than it was and shorter than it
+      // will be: the rows grow in rather than arriving at full height.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      final midway = height();
+      expect(midway, greaterThan(shut));
+      await tester.pumpAndSettle();
+      final open = height();
+      expect(midway, lessThan(open));
+
+      // And out the same way.
+      await tester.tap(marks().first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      final going = height();
+      expect(going, lessThan(open));
+      expect(going, greaterThan(shut));
+      await tester.pumpAndSettle();
+      expect(height(), shut);
+    });
+
+    testWidgets('a row let in beside another arrives shut, not open',
+        (tester) async {
+      await tester.pumpWidget(table());
+      await tester.tap(marks().first);
+      await tester.pumpAndSettle();
+
+      // Cy is let in with Bo. Opening Cy adds Dee beneath it, and Dee has to
+      // grow like anything else rather than inherit a reveal that has
+      // already finished.
+      final before = tester.getRect(find.byType(Table<_Node>)).height;
+      await tester.tap(marks().at(1));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      final midway = tester.getRect(find.byType(Table<_Node>)).height;
+      expect(midway, greaterThan(before));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.byType(Table<_Node>)).height,
+        greaterThan(midway),
+      );
+    });
+
+    testWidgets('a row let in above another does not steal its reveal',
+        (tester) async {
+      // Fay stands after Cy, so opening Cy puts Dee where Fay was. Matched by
+      // place rather than by row, Dee would inherit Fay's reveal — which has
+      // long since finished — and arrive at full height, while Fay animated
+      // in again on a row nobody touched.
+      const wide = [
+        _Node('Ann', [
+          _Node('Bo', []),
+          _Node('Cy', [_Node('Dee', [])]),
+          _Node('Fay', []),
+        ]),
+      ];
+      await tester.pumpWidget(
+        _host(
+          Table<_Node>(
+            data: wide,
+            expandable: TableExpandable<_Node>(children: (n) => n.kids),
+            columns: [
+              TableColumn<_Node>(
+                title: const Text('Name'),
+                value: (n) => n.name,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await tester.tap(marks().first);
+      await tester.pumpAndSettle();
+      final fay = tester.getRect(find.text('Fay'));
+
+      await tester.tap(marks().at(1));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 30));
+
+      // A hair in: Dee has barely begun, so Fay has barely moved. Handed
+      // Fay's finished reveal it would be full height at once and Fay would
+      // be a whole row further down.
+      expect(
+        tester.getRect(find.text('Fay')).top - fay.top,
+        lessThan(fay.height * 0.5),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text('Fay')).top - fay.top,
+        greaterThan(fay.height * 0.8),
+      );
+    });
+
     testWidgets('only a row with something under it wears a mark',
         (tester) async {
       await tester.pumpWidget(table());

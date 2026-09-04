@@ -2659,7 +2659,11 @@ class _TableState<T> extends State<Table<T>> {
                 ),
               );
 
-          if (_hasSpans || widget.rowsDraggable) {
+          // A tree joins the two: its rows are let in and out one at a time,
+          // and a row of a grid cannot grow out of nothing — the grid holds
+          // every row to one height. Laid out by hand, each row is its own
+          // box and can be revealed like anything else in the kit.
+          if (_hasSpans || widget.rowsDraggable || _isTree) {
             // Laid out by hand: a cell reaching across two columns cannot be
             // a cell of the grid, so there is no grid to run. A body with a
             // cell reaching *down* comes back as one placed block, and there
@@ -2672,12 +2676,15 @@ class _TableState<T> extends State<Table<T>> {
               final body = <Widget>[];
               for (var i = 0; i < rows.length; i++) {
                 body.add(
-                  _draggableRow(
-                    _slidDown(laid[i], rowShifts[i], 'row$i', t),
+                  _revealed(
+                    _draggableRow(
+                      _slidDown(laid[i], rowShifts[i], 'row$i', t),
+                      rows[i],
+                      i,
+                      r,
+                      t,
+                    ),
                     rows[i],
-                    i,
-                    r,
-                    t,
                   ),
                 );
                 if (_hasPanel(rows[i])) body.add(panelFor(i));
@@ -2692,7 +2699,10 @@ class _TableState<T> extends State<Table<T>> {
                 rows.length,
               ));
             } else {
-              children.addAll(laid);
+              for (var i = 0; i < laid.length; i++) {
+                children
+                    .add(_revealed(laid[i], i < rows.length ? rows[i] : null));
+              }
               for (var i = 0; i < rows.length; i++) {
                 if (_hasPanel(rows[i])) children.add(panelFor(i));
               }
@@ -3297,20 +3307,32 @@ class _TableState<T> extends State<Table<T>> {
     final children = widget.expandable!.children!;
     final out = <T>[];
     final depths = <T, int>{};
-    void walk(List<T> run, int depth) {
+    final settling = <T, bool>{};
+    // [showing] is whether this row is on its way in rather than on its way
+    // out: a row under a parent being let go of is still drawn, so it has
+    // something to shrink away from.
+    void walk(List<T> run, int depth, {required bool showing}) {
       for (final record in run) {
         out.add(record);
         depths[record] = depth;
-        if (!_isExpanded(record)) continue;
+        settling[record] = showing;
+        final open = _isExpanded(record);
+        if (!open && !_closing.contains(record)) continue;
         final under = children(record);
-        if (under != null && under.isNotEmpty) walk(under, depth + 1);
+        if (under == null || under.isEmpty) continue;
+        walk(under, depth + 1, showing: showing && open);
       }
     }
 
-    walk(rows, 0);
+    walk(rows, 0, showing: true);
     _depths = depths;
+    _settling = settling;
     return out;
   }
+
+  /// Whether each row on show is standing or on its way out, which is what
+  /// the reveal around it is told.
+  Map<T, bool> _settling = const {};
 
   /// How deep in the tree each row on show stands, filled in as they are.
   Map<T, int> _depths = const {};
@@ -5038,6 +5060,27 @@ class _TableState<T> extends State<Table<T>> {
         ),
         child: cell,
       ),
+    );
+  }
+
+  /// A row of a tree, wrapped in the reveal that lets it in and out.
+  ///
+  /// Only the rows that arrive and leave: a top-level row is always there, so
+  /// wrapping it would put a second layout box round every row of every tree
+  /// for nothing.
+  Widget _revealed(Widget row, T? record) {
+    if (!_isTree || record == null) return row;
+    if ((_depths[record] ?? 0) == 0) return row;
+    return Expandable(
+      // Keyed by the row, so a row let in beside another does not inherit
+      // the other's reveal and arrive already open.
+      key: ObjectKey(record),
+      expanded: _settling[record] ?? true,
+      destroyWhenCollapsed: true,
+      // It is added at the moment its parent opens, so it has to start shut
+      // and grow — otherwise it arrives at full height with no reveal.
+      animateOnMount: true,
+      child: row,
     );
   }
 

@@ -633,6 +633,16 @@ reckoning the same way. Narrowing, sorting and paging happen to the rows you
 handed over, before the children are let in, so a page is a page of what was
 given and a child follows its parent wherever the parent lands.
 
+A row is let in and out rather than appearing: it grows out of nothing the
+same way an opened panel does, and shrinks away again when its parent is let
+go of — a parent's children stay drawn until the motion is over. This costs
+the table its grid: a row of a grid is held to the grid's height and cannot
+grow out of nothing, so a tree lays its rows out by hand, as a table with
+spanning cells or draggable rows already does. On a `scroll.y` body the rows
+arrive without the reveal, for the same reason a panel needs its height named
+— a row is found by counting what stands before it, and something growing
+cannot be counted.
+
 `indentSize` is how far each step goes, falling back to the `indentSize`
 token. `builder` and `children` are the two things a row can open into, and
 one of them has to be named.

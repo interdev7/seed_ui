@@ -7,40 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.16.0
 
-### Fixed
-
-- **`Pagination`** — in a mirrored layout the arrows pointed at the buttons
-  they sat beside rather than at the pages they went to. The way the pages run
-  is the way the page reads.
-
-- **`Table`** — a fill covered only as much of its row as the cell it was
-  drawn in. Cells were centred against the tallest rather than sized to it, so
-  a hovered row with one wrapping cell was lit in the middle and bare above
-  and below, which read as a border nobody had asked for.
-
-- **`Table`** — nothing in it was announced to a screen reader. A heading now
-  says it is one, a heading that sorts answers as a button and carries the
-  state its carets draw, the funnel is named apart from the heading it stands
-  in and says whether it is narrowing, the mark that opens a row is named for
-  what it will do, and the boxes in the selection column say which row they
-  take. The keyboard is not here yet: nothing in the kit is reachable by tab,
-  so it wants doing across the kit at once.
-
-- **`Checkbox`** and **`Radio`** — neither said what it was or what state it
-  was in. Both carry their own semantics now, so anything built out of them
-  gains it, the `Table` selection column included.
-
-- **`Tree`** — in a mirrored layout a shut switcher pointed away from the
-  tree rather than into it. The chevron points the way the reading runs, which
-  is the way the node would open; open, it points down either way.
-
-- **`Popover`** — a click on a trigger that had opened its card by being
-  hovered went to putting the card away and never reached what was under the
-  finger. The trigger is cut out of what dismisses the card, as it already was
-  for `Select`, `DatePicker` and `TimePicker`. Tapping a tap-triggered card's
-  own trigger now closes it, which is what every other floating surface in the
-  kit does.
-
 ### Added
 
 - **`Table`** — rows and columns, with a heading. The first stage: the grid
@@ -554,7 +520,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so asking them chased the answer and the two columns swapped back and forth
   with the hand standing still.
 
+- **`Expandable.animateOnMount`** — starts shut and opens even when
+  `expanded` is already set on the first build, for callers that add the
+  widget at the moment the thing opens. `Collapse` and `Tree` mount every
+  panel up front and keep the old behaviour, which stays the default.
+
+- **Words for a `Table`** — `reset` and `search`, the word that clears a `Table`
+  column's filter menu, next to `ok` which applies it, and the placeholder of
+  the field that narrows one; `selectAll` for the line that takes every
+  choice in a tree of filters and for the box at the head of a table; and
+  the words a screen reader is given — `sortedAscending`,
+  `sortedDescending`, `notSorted`, `filterColumn`, `filtering`,
+  `expandRow`, `collapseRow` and `selectRow`. All translated into the
+  eleven languages the kit already carries.
+
 ### Fixed
+
+- **`Pagination`** — in a mirrored layout the arrows pointed at the buttons
+  they sat beside rather than at the pages they went to. The way the pages run
+  is the way the page reads.
+
+- **`Table`** — a fill covered only as much of its row as the cell it was
+  drawn in. Cells were centred against the tallest rather than sized to it, so
+  a hovered row with one wrapping cell was lit in the middle and bare above
+  and below, which read as a border nobody had asked for.
+
+- **`Table`** — nothing in it was announced to a screen reader. A heading now
+  says it is one, a heading that sorts answers as a button and carries the
+  state its carets draw, the funnel is named apart from the heading it stands
+  in and says whether it is narrowing, the mark that opens a row is named for
+  what it will do, and the boxes in the selection column say which row they
+  take. The keyboard is not here yet: nothing in the kit is reachable by tab,
+  so it wants doing across the kit at once.
+
+- **`Checkbox`** and **`Radio`** — neither said what it was or what state it
+  was in. Both carry their own semantics now, so anything built out of them
+  gains it, the `Table` selection column included.
+
+- **`Tree`** — in a mirrored layout a shut switcher pointed away from the
+  tree rather than into it. The chevron points the way the reading runs, which
+  is the way the node would open; open, it points down either way.
+
+- **`Popover`** — a click on a trigger that had opened its card by being
+  hovered went to putting the card away and never reached what was under the
+  finger. The trigger is cut out of what dismisses the card, as it already was
+  for `Select`, `DatePicker` and `TimePicker`. Tapping a tap-triggered card's
+  own trigger now closes it, which is what every other floating surface in the
+  kit does.
 
 - **A table told a column's place from the column it was named as.** The two
   are different numbers whenever anything stands in front of the columns
@@ -633,13 +645,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `import 'package:seed_ui/seed_ui.dart' hide Table;` and the reverse. `Empty`
   gains an `EmptySlot.table` so a kit-wide placeholder covers tables as well.
 
-- **`Expandable.animateOnMount`** — starts shut and opens even when
-  `expanded` is already set on the first build, for callers that add the
-  widget at the moment the thing opens. `Collapse` and `Tree` mount every
-  panel up front and keep the old behaviour, which stays the default.
-
-### Fixed
-
 - **`Expandable` no longer moves its content sideways as it reveals.** The
   reveal passes loose constraints, so a child that hugs what is in it — a line
   of text, a row of buttons — was laid out narrow and centred for the length of
@@ -648,11 +653,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the reveal, then 116 and 568. The width is now read once per layout and
   handed to the reveal, so the content stands where it will stand from the
   first frame. `Collapse` and `Tree` reveal the same way and get the same fix.
-
-- **`SeedLocalizations.reset` and `.search`** — the word that clears a `Table`
-  column's filter menu, next to `ok` which applies it, and the placeholder of
-  the field that narrows one. Both translated into the eleven languages the
-  kit already carries.
 
 ## 0.15.0
 

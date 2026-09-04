@@ -641,9 +641,11 @@ Table<User>(
 )
 ```
 
-A row is itself, not a key: what comes back are the records, and two rows that
-compare equal are one row as far as picking goes. Give records a `==` of their
-own where that matters.
+What comes back are the records themselves, not keys into anything. Two rows
+that compare equal are one row as far as picking goes, so give records a `==`
+of their own where that matters — or tell the table what a row is known by
+with [`rowKey`](#what-a-row-is-known-by), which is what tables whose rows are
+rebuilt rather than kept will want.
 
 `mode: TableSelectionMode.radio` picks one row at a time, and drops the box at
 the head — taking every row is not something a column of dots can mean.
@@ -1206,4 +1208,21 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-Everything the component set out to do is here.
+**The keyboard.** Nothing in the table can be reached by tab, and nothing in
+it answers to a key. That is not the table's own gap: nothing in the kit can —
+`Button` is a bare gesture detector — so a table alone answering to keys would
+be out of step with everything around it. It wants doing across the kit at
+once. It is the one thing left that a reader might reasonably expect and not
+find.
+
+**A column that comes and goes with the room.** A column may be `hidden`, but
+only by a word said in advance: there is no way to say "show this one once
+there are six hundred pixels". Which columns are drawn is settled before the
+table knows how wide it is, so this needs the width carried further in than it
+goes today.
+
+Three smaller things, each written up where it belongs: a row that spans
+cannot also open ([Rows that open](#rows-that-open)), a column inside a group
+cannot be carried ([Columns you can move](#columns-you-can-move)), and a width
+dragged in a table with room to spare is a share rather than a promise
+([Borders you can drag](#borders-you-can-drag)).

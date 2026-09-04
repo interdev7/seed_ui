@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they sat beside rather than at the pages they went to. The way the pages run
   is the way the page reads.
 
+- **`Table`** — a fill covered only as much of its row as the cell it was
+  drawn in. Cells were centred against the tallest rather than sized to it, so
+  a hovered row with one wrapping cell was lit in the middle and bare above
+  and below, which read as a border nobody had asked for.
+
 - **`Table`** — nothing in it was announced to a screen reader. A heading now
   says it is one, a heading that sorts answers as a button and carries the
   state its carets draw, the funnel is named apart from the heading it stands
@@ -181,6 +186,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   column falls back to — where the cells sit, whether they cut off, how wide
   they are, which edge they are held at. A column that names the field wins,
   and it reaches the leaves of a group.
+
+  **What a column keeps to itself.** `hidden` leaves a column out of the
+  table without taking it out of `columns`, so a sort or a filter keyed by its
+  place goes on meaning what it meant; a group whose every leaf is hidden goes
+  too. `minWidth` is a floor for a column that sizes itself, beating the
+  `columnMinWidth` token. `sortDirections` names the orders a heading goes
+  round — `const [TableSortOrder.descending]` for a column that only reads one
+  way — with the unsorted state always closing the round. `sortIcon` draws the
+  mark in place of the carets, the same shape as `filterIcon`.
 
   **Filtering.** `filters` puts a funnel at the head of a column, opening a
   menu of choices; the column's `value` is what a choice is matched against,

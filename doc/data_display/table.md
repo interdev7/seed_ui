@@ -60,6 +60,15 @@ TableColumn(
 There is no key into a map to get wrong: `T` is your own row type, and `value`
 is handed one.
 
+### A column that is not drawn
+
+`hidden` leaves a column out of the table without taking it out of `columns`.
+Which matters more than it sounds: a sort and a filter are keyed by a column's
+place among the ones you listed, so dropping one from the list moves every key
+after it. Hidden, it keeps its place and only stops being drawn. A group whose
+every leaf is hidden goes as well — a title standing over an empty stretch of
+table is worse than no title.
+
 ### How wide a column is
 
 **Say nothing and it fits its content** — the column takes the width of its
@@ -282,6 +291,12 @@ transparent, so the cast used to show through the column as a grey wash.
 A `bordered` table rules between every pair of columns, the pinned ones
 included.
 
+A column may also name a `minWidth`: a floor for one that sizes itself, for a
+column of short words that still has to be reachable, or one whose cells are
+built rather than read and so cannot be measured until they exist. It beats
+the `columnMinWidth` token, which is only what a column that cannot be
+measured falls back to and never widens one that measured narrower.
+
 ## Sorting
 
 `sortable` lets a heading be tapped, and the column's `value` is what it
@@ -321,6 +336,15 @@ that reaches. It is the fill the hand leaves, so a hand over one of those rows
 makes no further difference — there is nothing more to say. A picked row keeps
 its own fill: what will happen to the row outranks what one of its columns is
 up to. `rowSortedBg` is the token.
+
+`sortDirections` names the orders a heading goes round, in the order it goes:
+`const [TableSortOrder.descending]` for a column of dates that wants the
+newest first and nothing else. The unsorted state always closes the round — a
+reader has to be able to put the rows back the way they came. `sortIcon` draws
+the mark in place of the carets, told which way the column is sorted or null
+where it is not, the same shape as `filterIcon`. Draw one rather than typing
+an arrow: a glyph the font has not got is a box, and most fonts have not got
+arrows.
 
 Both carets are always drawn: one alone would say the column *is* sorted that
 way, and a column that merely *can* be sorted has to say so too. They darken
@@ -530,6 +554,12 @@ filterIcon: (context, narrowing) => Icon(
   color: narrowing ? token.colorPrimary : null,
 )
 ```
+
+Every cell in a row is sized as tall as the tallest, not merely centred
+against it, so a fill covers the row it is in. Centred, a fill drawn inside a
+short cell stopped at its own height and left a band of the row bare above and
+below — a hovered row with one wrapping cell was lit in the middle and looked
+as if it had a border nobody had asked for.
 
 Filtering happens before sorting: the rows are narrowed,
 then put in order. The column widths are measured from the rows as given

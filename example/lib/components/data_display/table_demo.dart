@@ -199,6 +199,62 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'What a column keeps to itself',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _people,
+                columns: [
+                  TableColumn(
+                    title: const Text('Name'),
+                    // A floor, so a column of short names is still reachable.
+                    minWidth: 180,
+                    value: (p) => p.name,
+                  ),
+                  // Kept in the list and left out of the table, so the places
+                  // the sorts below are keyed by do not move.
+                  TableColumn(
+                    title: const Text('City'),
+                    hidden: true,
+                    value: (p) => p.city,
+                  ),
+                  TableColumn(
+                    title: const Text('Age'),
+                    align: TableAlign.end,
+                    sortable: true,
+                    // Oldest first, and back to the order they came in — a
+                    // round of one, where up then down says nothing useful.
+                    sortDirections: const [TableSortOrder.descending],
+                    // A mark of our own in place of the carets. An icon
+                    // rather than an arrow glyph: a typed arrow is a box in
+                    // any font that has not got one, and most have not.
+                    sortIcon: (context, order) => Icon(
+                      switch (order) {
+                        TableSortOrder.descending => Icons.arrow_downward,
+                        TableSortOrder.ascending => Icons.arrow_upward,
+                        null => Icons.unfold_more,
+                      },
+                      size: 14,
+                      color: order == null
+                          ? context.softToken.colorTextTertiary
+                          : context.softToken.primary.base,
+                    ),
+                    value: (p) => p.age,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'City is hidden — still the second column, so a sort keyed by '
+                'that place goes on meaning it. Name has a floor of its own. '
+                'Age goes round one order and back, and draws its own mark.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'A width, and a share of the rest',
           Table<Person>(
             bordered: true,

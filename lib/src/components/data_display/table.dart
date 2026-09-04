@@ -690,6 +690,7 @@ class TableColumnDefaults {
   /// Creates a [TableColumnDefaults].
   const TableColumnDefaults({
     this.width,
+    this.minWidth,
     this.flex,
     this.align,
     this.headerAlign,
@@ -699,6 +700,9 @@ class TableColumnDefaults {
 
   /// What [TableColumn.width] falls back to.
   final double? width;
+
+  /// What [TableColumn.minWidth] falls back to.
+  final double? minWidth;
 
   /// What [TableColumn.flex] falls back to.
   final int? flex;
@@ -729,14 +733,18 @@ class TableColumn<T> {
     this.builder,
     this.title,
     this.width,
+    this.minWidth,
     this.flex,
     this.align,
     this.headerAlign,
     this.fixed,
     this.ellipsis = false,
+    this.hidden = false,
     this.sortable = false,
     this.sorter,
     this.sortPriority,
+    this.sortDirections,
+    this.sortIcon,
     this.filters,
     this.onFilter,
     this.filterMultiple = true,
@@ -835,6 +843,22 @@ class TableColumn<T> {
   /// What stands at the head of the column.
   final Widget? title;
 
+  /// Leaves the column out of the table without taking it out of [columns].
+  ///
+  /// Which matters: a sort and a filter are keyed by a column's place among
+  /// the ones you listed, so dropping a column from the list moves every key
+  /// after it. Hidden, it keeps its place and only stops being drawn.
+  final bool hidden;
+
+  /// A floor for a column that sizes itself.
+  ///
+  /// Where a column with no [width] would be narrower than this, it is given
+  /// this instead — a column of short words that still has to be reachable,
+  /// or one whose cells are built rather than read and cannot be measured
+  /// until they exist. Beats the `columnMinWidth` token, which is the floor
+  /// for every column that says nothing.
+  final double? minWidth;
+
   /// Lets the heading be tapped to sort the table by this column.
   ///
   /// The [value] is what is compared, which is why most columns need nothing
@@ -855,6 +879,27 @@ class TableColumn<T> {
   /// TableColumn(title: const Text('Age'),  sortable: true, sortPriority: 1, ...)
   /// ```
   final int? sortPriority;
+
+  /// The orders tapping the heading goes round, in the order it goes.
+  ///
+  /// Left null a heading cycles ascending, descending, and back to the order
+  /// the rows came in. Name your own to start the other way about, or to
+  /// offer one order only — a column of dates most often wants the newest
+  /// first, and a column of ranks only ever reads one way.
+  ///
+  /// ```dart
+  /// sortDirections: const [TableSortOrder.descending]
+  /// ```
+  ///
+  /// The unsorted state is always the last of the round: a reader has to be
+  /// able to put the rows back the way they came.
+  final List<TableSortOrder>? sortDirections;
+
+  /// Draws the mark at the head of the column, in place of the carets.
+  ///
+  /// Told which way the column is sorted, or null where it is not — the one
+  /// thing the mark has to say.
+  final Widget Function(BuildContext context, TableSortOrder? order)? sortIcon;
 
   /// How two rows compare, where the [value] will not do.
   ///
@@ -1009,14 +1054,18 @@ class TableColumn<T> {
         builder: builder,
         title: title,
         width: width ?? d.width,
+        minWidth: minWidth ?? d.minWidth,
         flex: flex ?? d.flex,
         align: align ?? d.align,
         headerAlign: headerAlign ?? d.headerAlign,
         fixed: fixed ?? d.fixed,
         ellipsis: ellipsis || (d.ellipsis ?? false),
+        hidden: hidden,
         sortable: sortable,
         sorter: sorter,
         sortPriority: sortPriority,
+        sortDirections: sortDirections,
+        sortIcon: sortIcon,
         filters: filters,
         onFilter: onFilter,
         filterMultiple: filterMultiple,
@@ -1031,6 +1080,20 @@ class TableColumn<T> {
             children?.map((c) => c._withDefaults(d)).toList(growable: false),
         summary: summary,
         span: span,
+      );
+
+  /// This column heading a different set of columns.
+  TableColumn<T> _withChildren(List<TableColumn<T>> under) => TableColumn<T>(
+        title: title,
+        width: width,
+        minWidth: minWidth,
+        flex: flex,
+        align: align,
+        headerAlign: headerAlign,
+        fixed: fixed,
+        ellipsis: ellipsis,
+        hidden: hidden,
+        children: under,
       );
 
   /// Whether this column filters at all.
@@ -1832,31 +1895,41 @@ class _TableState<T> extends State<Table<T>> {
   ) =>
       {
         for (var i = 0; i < columns.length; i++)
-          i: switch (columns[i]) {
-            TableColumn(:final width?) => FixedColumnWidth(width),
-            TableColumn(:final flex?) => FlexColumnWidth(flex.toDouble()),
-            // Once the heading has stopped travelling with the rows they are
-            // two tables, and an intrinsic width would measure a different
-            // thing in each — the title in one, the cells in the other. An
-            // equal share is what they can both work out alike.
-            // A share, but never squeezed past what a column can be read at:
-            // the table grows and scrolls instead.
-            // A content width leaves the columns to their own devices; a
-            // named one has them share what was named.
-            _ when widget.scroll?.isToContent ?? false =>
-              const IntrinsicColumnWidth(),
-            _ when _detached || _across != null => MaxColumnWidth(
-                FixedColumnWidth(r.columnMinWidth),
-                const FlexColumnWidth(),
-              ),
-            // flex: 1, and not a bare intrinsic width. Left to itself
-            // Flutter shares any slack equally between *every* column, which
-            // quietly inflates a column that asked for an exact width — 100
-            // became 267 in a 600-wide table. Marking the automatic ones as
-            // the flexible ones sends the leftover to them alone, so a width
-            // means the width.
-            _ => const IntrinsicColumnWidth(flex: 1),
+          // A floor of its own is held over whatever the column would have
+          // been — except an exact width, which is exact.
+          i: switch ((columns[i].minWidth, _gridWidth(columns[i], r))) {
+            (final floor?, final base) when columns[i].width == null =>
+              MaxColumnWidth(FixedColumnWidth(floor), base),
+            (_, final base) => base,
           },
+      };
+
+  /// How wide the grid would make a column, before any floor of its own.
+  TableColumnWidth _gridWidth(TableColumn<T> column, _ResolvedTableToken r) =>
+      switch (column) {
+        TableColumn(:final width?) => FixedColumnWidth(width),
+        TableColumn(:final flex?) => FlexColumnWidth(flex.toDouble()),
+        // Once the heading has stopped travelling with the rows they are
+        // two tables, and an intrinsic width would measure a different
+        // thing in each — the title in one, the cells in the other. An
+        // equal share is what they can both work out alike.
+        // A share, but never squeezed past what a column can be read at:
+        // the table grows and scrolls instead.
+        // A content width leaves the columns to their own devices; a
+        // named one has them share what was named.
+        _ when widget.scroll?.isToContent ?? false =>
+          const IntrinsicColumnWidth(),
+        _ when _detached || _across != null => MaxColumnWidth(
+            FixedColumnWidth(r.columnMinWidth),
+            const FlexColumnWidth(),
+          ),
+        // flex: 1, and not a bare intrinsic width. Left to itself
+        // Flutter shares any slack equally between *every* column, which
+        // quietly inflates a column that asked for an exact width — 100
+        // became 267 in a 600-wide table. Marking the automatic ones as
+        // the flexible ones sends the leftover to them alone, so a width
+        // means the width.
+        _ => const IntrinsicColumnWidth(flex: 1),
       };
 
   /// The columns pinned to one edge, in the order they were given.
@@ -1875,7 +1948,11 @@ class _TableState<T> extends State<Table<T>> {
         // Drawn in the order a drag has left them, which is not the order
         // they are named in: [_leaves] keeps that, so a sort and a filter go
         // on meaning the column they were given.
-        ..._inOwnOrder.expand((c) => c.leaves),
+        //
+        // A hidden column is left out here and nowhere else, so it keeps its
+        // place among the ones you listed and a sort keyed by that place goes
+        // on meaning what it meant.
+        ..._inOwnOrder.expand((c) => c.leaves).where((c) => !c.hidden),
       ];
 
   /// The columns as given, with the box and chevron columns in front: the
@@ -1883,8 +1960,24 @@ class _TableState<T> extends State<Table<T>> {
   List<TableColumn<T>> get _columnTree => [
         if (widget.selection != null) _selectionColumn,
         if (!_isTree && (widget.expandable?.showColumn ?? false)) _expandColumn,
-        ..._inOwnOrder,
+        for (final column in _inOwnOrder)
+          if (_shown(column) case final shown?) shown,
       ];
+
+  /// A column with its hidden leaves taken out, or nothing where the whole of
+  /// it is hidden.
+  ///
+  /// A group whose every leaf is hidden heads nothing, so it goes too — a
+  /// title standing over an empty stretch of table is worse than no title.
+  TableColumn<T>? _shown(TableColumn<T> column) {
+    if (column.hidden) return null;
+    if (!column.isGroup) return column;
+    final under = [
+      for (final child in column.children!)
+        if (_shown(child) case final shown?) shown,
+    ];
+    return under.isEmpty ? null : column._withChildren(under);
+  }
 
   /// The order the columns are *drawn* in, which a drag can change.
   ///
@@ -2482,9 +2575,13 @@ class _TableState<T> extends State<Table<T>> {
     }) =>
         flutter.Table(
           columnWidths: widths ?? _widthsFor(columns, r),
-          // Every cell in a row is as tall as the tallest, which is what
-          // keeps a row a row when one cell wraps and its neighbours do not.
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          // Every cell in a row is *sized* as tall as the tallest, not merely
+          // centred against it. Centred, a fill drawn inside a short cell
+          // stopped at its own height and left a band of the row unpainted
+          // above and below it — a hovered row with one wrapping cell was lit
+          // in the middle and bare at the edges. What is inside a cell is
+          // still centred, since the cell aligns it, so nothing moves.
+          defaultVerticalAlignment: TableCellVerticalAlignment.intrinsicHeight,
           border: _bordered && !ruleRides
               ? TableBorder(
                   verticalInside: rule,
@@ -3609,12 +3706,15 @@ class _TableState<T> extends State<Table<T>> {
     final leaves = _leaves;
     final joins = column < leaves.length && leaves[column].sortPriority != null;
     final was = _sorts;
+    // The round this column goes: what it named, else up and then down. The
+    // unsorted state closes the round either way — a reader has to be able to
+    // put the rows back the way they came.
+    final round = column < leaves.length
+        ? leaves[column].sortDirections ?? TableSortOrder.values
+        : TableSortOrder.values;
     final order = _orderOf(column);
-    final next = order == null
-        ? TableSortOrder.ascending
-        : order == TableSortOrder.ascending
-            ? TableSortOrder.descending
-            : null;
+    final at = order == null ? -1 : round.indexOf(order);
+    final next = at + 1 < round.length ? round[at + 1] : null;
 
     // Reported in the order they are compared, not in the order they were
     // tapped: what comes back is what is in force, and a priority means one
@@ -4266,16 +4366,20 @@ class _TableState<T> extends State<Table<T>> {
         SizedBox(width: t.sizeXXS),
         // Listening on its own, so a pointer arriving at the heading darkens
         // the marks without rebuilding the cell around them.
-        ValueListenableBuilder<int?>(
-          valueListenable: _hoveredHeading,
-          builder: (context, hovered, _) => _Carets(
-            order: _orderOf(index),
-            active: r.headerMarkActiveColor,
-            idle: hovered == index ? r.headerMarkHoverColor : r.headerMarkColor,
-            size: r.sortCaretSize,
-            duration: t.motionDurationMid,
+        if (column.sortIcon != null)
+          column.sortIcon!(context, _orderOf(index))
+        else
+          ValueListenableBuilder<int?>(
+            valueListenable: _hoveredHeading,
+            builder: (context, hovered, _) => _Carets(
+              order: _orderOf(index),
+              active: r.headerMarkActiveColor,
+              idle:
+                  hovered == index ? r.headerMarkHoverColor : r.headerMarkColor,
+              size: r.sortCaretSize,
+              duration: t.motionDurationMid,
+            ),
           ),
-        ),
         // The carets and the funnel are two marks, not one: they take the
         // same breath between them that the word takes before them.
         if (column.filtersRows) ...[
@@ -5442,11 +5546,13 @@ class _TableWidths {
         natural[i] = column.width!;
         continue;
       }
+      // Its own floor where it named one, else the table's.
+      final floor = column.minWidth ?? minWidth;
       if (column.flex != null) {
         flexed.add(i);
         // A flexed column still has a floor, or a share of nothing leaves it
         // at nothing.
-        natural[i] = minWidth;
+        natural[i] = floor;
         continue;
       }
       auto.add(i);
@@ -5464,10 +5570,13 @@ class _TableWidths {
       } else {
         // Nothing to read, so the cells that were built have the say. Until
         // one has been, the column asks for its floor rather than nothing.
-        widest =
-            math.max(widest + inlinePadding, builderNatural[i] ?? minWidth);
+        widest = math.max(widest + inlinePadding, builderNatural[i] ?? floor);
       }
-      natural[i] = widest;
+      // A floor of its own is a floor; the table's is only what a column
+      // that cannot be measured falls back to, so it does not widen one that
+      // measured narrower than it.
+      natural[i] =
+          column.minWidth == null ? widest : math.max(widest, column.minWidth!);
     }
 
     // What is left over goes to the flexed columns first — that is what a

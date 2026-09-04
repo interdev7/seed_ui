@@ -6899,6 +6899,233 @@ void main() {
     });
   });
 
+  group('a fill covers the row it is in', () {
+    testWidgets('a short cell is lit to the full height of its row',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<String>(
+            data: const ['a name long enough to wrap over two lines', 'b'],
+            columns: [
+              TableColumn<String>(
+                title: const Text('Name'),
+                width: 200,
+                value: (v) => v,
+              ),
+              TableColumn<String>(
+                title: const Text('Age'),
+                width: 60,
+                align: TableAlign.end,
+                value: (v) => v.length,
+              ),
+            ],
+          ),
+          width: 300,
+        ),
+      );
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(tester.getCenter(find.text('41')));
+      await tester.pumpAndSettle();
+
+      // The two cells of the hovered row are lit over the same stretch: a
+      // cell that is centred rather than stretched leaves a band of its row
+      // bare above and below, which reads as a border nobody asked for.
+      final lit = [
+        for (final box in tester
+            .widgetList<ColoredBox>(find.byType(ColoredBox))
+            .where((b) => b.color.a > 0))
+          tester.getRect(find.byWidget(box)),
+      ];
+      expect(lit.length, greaterThanOrEqualTo(2));
+      expect(lit.first.top, lit.last.top);
+      expect(lit.first.bottom, lit.last.bottom);
+      // And the taller cell's words sit inside that stretch.
+      final wrapped = tester
+          .getRect(find.text('a name long enough to wrap over two lines'));
+      expect(lit.first.top, lessThanOrEqualTo(wrapped.top));
+      expect(lit.first.bottom, greaterThanOrEqualTo(wrapped.bottom));
+    });
+  });
+
+  group('what a column may keep to itself', () {
+    const people = [_User('Chen', 27), _User('Ann', 45)];
+
+    testWidgets('a hidden column is not drawn but keeps its place',
+        (tester) async {
+      List<TableSort>? told;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            onSortChanged: (next) => told = next,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+              ),
+              // Hidden, and still the second column as far as a sort is
+              // concerned — which is the point of hiding rather than
+              // dropping it from the list.
+              TableColumn<_User>(
+                title: const Text('City'),
+                hidden: true,
+                value: (u) => 'nowhere',
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                sortable: true,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('City'), findsNothing);
+      expect(find.text('nowhere'), findsNothing);
+      expect(find.text('Age'), findsOneWidget);
+
+      await tester.tap(find.text('Age'));
+      await tester.pumpAndSettle();
+      expect(told, [const TableSort(2, TableSortOrder.ascending)]);
+    });
+
+    testWidgets('a group with nothing left to head goes as well',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Who'),
+                children: [
+                  TableColumn<_User>(
+                    title: const Text('Name'),
+                    hidden: true,
+                    value: (u) => u.name,
+                  ),
+                ],
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // A title standing over an empty stretch of table is worse than none.
+      expect(find.text('Who'), findsNothing);
+      expect(find.text('Age'), findsOneWidget);
+    });
+
+    testWidgets('a floor of its own widens a column that measured narrower',
+        (tester) async {
+      Widget table({double? floor}) => _host(
+            Table<_User>(
+              key: ValueKey(floor),
+              // Nothing stretched to fill the box, so a column is as wide as
+              // what is in it — and a floor is the only thing that can widen
+              // it.
+              scroll: const TableScroll.toContent(),
+              data: const [_User('x', 1)],
+              columns: [
+                TableColumn<_User>(
+                  title: const Text('N'),
+                  minWidth: floor,
+                  value: (u) => u.name,
+                ),
+                TableColumn<_User>(
+                  title: const Text('Age'),
+                  value: (u) => u.age,
+                ),
+              ],
+            ),
+          );
+
+      // Where the second column begins is how wide the first one is.
+      await tester.pumpWidget(table());
+      final left = tester.getRect(find.byType(Table<_User>)).left;
+      final narrow = tester.getRect(find.text('Age')).left - left;
+      expect(narrow, lessThan(200), reason: 'one letter needs little');
+
+      await tester.pumpWidget(table(floor: 200));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text('Age')).left - left,
+        greaterThanOrEqualTo(200),
+      );
+    });
+
+    testWidgets('a column can say which orders its heading goes round',
+        (tester) async {
+      List<TableSort>? told;
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            onSortChanged: (next) => told = next,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Age'),
+                sortable: true,
+                // Newest first, and nothing else — a round of one.
+                sortDirections: const [TableSortOrder.descending],
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Age'));
+      await tester.pumpAndSettle();
+      expect(told, [const TableSort(0, TableSortOrder.descending)]);
+
+      // And the round closes on the order the rows came in, always.
+      await tester.tap(find.text('Age'));
+      await tester.pumpAndSettle();
+      expect(told, isEmpty);
+    });
+
+    testWidgets('a sort mark of your own takes the carets\' place',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Age'),
+                sortable: true,
+                sortIcon: (context, order) => Text(order?.name ?? 'none'),
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('none'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == '_CaretPainter'),
+        findsNothing,
+        reason: 'ours, not the carets',
+      );
+
+      await tester.tap(find.text('Age'));
+      await tester.pumpAndSettle();
+      expect(find.text('ascending'), findsOneWidget);
+    });
+  });
+
   group('what a table says out loud', () {
     const people = [_User('Chen', 27), _User('Ann', 45)];
 

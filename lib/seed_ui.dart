@@ -107,6 +107,7 @@ export 'src/components/data_display/table.dart'
         TableFilterPanel,
         TablePagination,
         TablePaginationPosition,
+        TableRowStyle,
         TableScroll,
         TableSelection,
         TableSelectionMode,

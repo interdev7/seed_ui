@@ -6899,6 +6899,94 @@ void main() {
     });
   });
 
+  group('a row dressed from outside', () {
+    const people = [_User('Chen', 27), _User('Ann', 45)];
+
+    Widget table({
+      TableRowStyle? Function(BuildContext, _User, int)? style,
+      TableSelection<_User>? selection,
+    }) =>
+        _host(
+          Table<_User>(
+            data: people,
+            rowStyle: style,
+            selection: selection,
+            columns: [_name(), _age()],
+          ),
+        );
+
+    /// The colours painted behind the cell holding [text], outermost first.
+    List<Color> groundsUnder(WidgetTester tester, String text) => [
+          for (final e in find
+              .ancestor(of: find.text(text), matching: find.byType(ColoredBox))
+              .evaluate())
+            (e.widget as ColoredBox).color,
+        ];
+
+    testWidgets('a row can be given a ground of its own', (tester) async {
+      const marked = Color(0xFFFFEECC);
+      await tester.pumpWidget(
+        table(
+          style: (context, user, index) =>
+              user.age > 40 ? const TableRowStyle(color: marked) : null,
+        ),
+      );
+
+      expect(groundsUnder(tester, 'Ann'), contains(marked));
+      // And the rows it said nothing about are left alone.
+      expect(groundsUnder(tester, 'Chen'), isNot(contains(marked)));
+    });
+
+    testWidgets('what the table says about a row is drawn over it',
+        (tester) async {
+      const marked = Color(0xFFFFEECC);
+      await tester.pumpWidget(
+        table(
+            style: (context, user, index) =>
+                const TableRowStyle(color: marked)),
+      );
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(tester.getCenter(find.text('Ann')));
+      await tester.pumpAndSettle();
+
+      // Both are there, the caller's underneath: the hand is a wash, so it
+      // has to have something to wash over. The list runs from the cell
+      // outwards, so the one painted first is the one further down it.
+      final grounds = groundsUnder(tester, 'Ann');
+      final wash = grounds.where((c) => c.a > 0 && c != marked);
+      expect(grounds, contains(marked));
+      expect(wash, isNotEmpty, reason: 'the hand tells');
+      expect(
+        grounds.indexOf(marked),
+        greaterThan(grounds.indexOf(wash.first)),
+        reason: "the caller's ground is the outer one, so it paints first",
+      );
+    });
+
+    testWidgets('a row can be given words of its own', (tester) async {
+      await tester.pumpWidget(
+        table(
+          style: (context, user, index) => user.age > 40
+              ? const TableRowStyle(
+                  textStyle: TextStyle(fontStyle: FontStyle.italic),
+                )
+              : null,
+        ),
+      );
+
+      TextStyle styleOf(String text) =>
+          tester.renderObject<RenderParagraph>(find.text(text)).text.style!;
+
+      expect(styleOf('Ann').fontStyle, FontStyle.italic);
+      expect(styleOf('Chen').fontStyle, isNot(FontStyle.italic));
+      // Merged rather than set: the table's own colour is still there.
+      expect(styleOf('Ann').color, styleOf('Chen').color);
+    });
+  });
+
   group('a fill covers the row it is in', () {
     testWidgets('a short cell is lit to the full height of its row',
         (tester) async {

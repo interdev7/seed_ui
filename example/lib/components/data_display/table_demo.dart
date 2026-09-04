@@ -255,6 +255,36 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'A row dressed from outside',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Table<Person>(
+                bordered: true,
+                data: _many.take(6).toList(),
+                columns: _columns,
+                // The table knows nothing about what makes a row worth
+                // marking; this says it from outside.
+                rowStyle: (context, person, index) => person.age >= 24
+                    ? TableRowStyle(
+                        color: context.softToken.error.bg,
+                        textStyle: TextStyle(
+                          color: context.softToken.error.textActive,
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'rowStyle gives a row a ground and words of its own — a row '
+                'that is overdue, or one nobody is to act on. Point at one: '
+                'what the table says about a row is a wash drawn over that, '
+                'so neither is lost.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'A width, and a share of the rest',
           Table<Person>(
             bordered: true,

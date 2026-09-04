@@ -253,6 +253,7 @@ TableFilterMode
 TableFilterPanel
 TablePagination
 TablePaginationPosition
+TableRowStyle
 TableScroll
 TableSelection
 TableSelectionMode

@@ -544,6 +544,32 @@ class TableFilterPanel {
   final PopoverPlacement? placement;
 }
 
+/// How one row of a [Table] is dressed, decided by the caller.
+///
+/// A ground and the words that stand on it — enough to mark a row out as
+/// overdue, or as one nobody is to act on, without the table having to know
+/// what either of those means.
+///
+/// ```dart
+/// rowStyle: (context, order, index) => order.overdue
+///     ? TableRowStyle(color: Colors.red.withValues(alpha: 0.06))
+///     : null,
+/// ```
+///
+/// What the table itself says about a row is drawn over this: a hand or a
+/// tick still tells, since those fills are washes rather than paint.
+@immutable
+class TableRowStyle {
+  /// Creates a [TableRowStyle].
+  const TableRowStyle({this.color, this.textStyle});
+
+  /// The ground the row stands on.
+  final Color? color;
+
+  /// What the words in the row are merged with.
+  final TextStyle? textStyle;
+}
+
 /// How a column's choices are laid out.
 enum TableFilterMode {
   /// A list of choices, with anything nested opening as a menu of its own.
@@ -1525,6 +1551,7 @@ class Table<T> extends StatefulWidget {
     super.key,
     required this.columns,
     this.columnDefaults,
+    this.rowStyle,
     required this.data,
     this.size,
     this.bordered,
@@ -1555,6 +1582,15 @@ class Table<T> extends StatefulWidget {
 
   /// The columns, in the order they are drawn.
   final List<TableColumn<T>> columns;
+
+  /// Dresses one row, where the table has nothing to say about it.
+  ///
+  /// Called for each row on show, and free to answer null for the rows that
+  /// are like every other. What the table says about a row — a hand over it,
+  /// a tick beside it, a column being sorted by — is drawn over what this
+  /// answers, so neither is lost.
+  final TableRowStyle? Function(BuildContext context, T record, int index)?
+      rowStyle;
 
   /// What every column falls back to where it says nothing itself.
   ///
@@ -5322,12 +5358,14 @@ class _TableState<T> extends State<Table<T>> {
     if (_isTree && identical(column, _leaves.first)) {
       content = _treeMark(record, content, r, t);
     }
+    final dressed = widget.rowStyle?.call(context, record, index);
     Widget cell = _cell(
       content,
       column,
       column.align ?? TableAlign.start,
       r,
       t,
+      style: dressed?.textStyle,
     );
     final opens = widget.expandable?.byRowTap ?? false;
     if (widget.onRowTap != null || opens) {
@@ -5344,10 +5382,20 @@ class _TableState<T> extends State<Table<T>> {
     // only at its head: the heading says which column is doing something and
     // the fill says how far that reaches.
     final sorted = _orderOf(_leaves.indexOf(column)) != null;
+
+    // The caller's ground goes under everything the table says about the
+    // row: a hand or a tick is a wash, so what is underneath shows through
+    // rather than being replaced by it.
+    Widget grounded(Widget over) => dressed?.color == null
+        ? over
+        : ColoredBox(color: dressed!.color!, child: over);
+
     if (!_hoverable) {
-      return sorted ? ColoredBox(color: r.rowSortedBg, child: cell) : cell;
+      return grounded(
+        sorted ? ColoredBox(color: r.rowSortedBg, child: cell) : cell,
+      );
     }
-    return MouseRegion(
+    return grounded(MouseRegion(
       onEnter: (_) => _hovered.value = (from: index, to: index + covering),
       onExit: (_) {
         if (_hovered.value?.from == index) _hovered.value = null;
@@ -5369,7 +5417,7 @@ class _TableState<T> extends State<Table<T>> {
         ),
         child: cell,
       ),
-    );
+    ));
   }
 
   /// A row of a tree, wrapped in the reveal that lets it in and out.
@@ -5460,20 +5508,23 @@ class _TableState<T> extends State<Table<T>> {
     TableColumn<T> column,
     TableAlign align,
     _ResolvedTableToken r,
-    Token t,
-  ) {
+    Token t, {
+    TextStyle? style,
+  }) {
     final exact = _exactHeight(t);
     if (exact != null) {
       // Held to it, not merely kept above it: a cell that needs more is cut
       // rather than allowed to shove its row's neighbours out of line.
       return SizedBox(
         height: exact,
-        child: ClipRect(child: _padded(child, column, align, r, t)),
+        child: ClipRect(
+          child: _padded(child, column, align, r, t, style: style),
+        ),
       );
     }
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: _uniformHeight(t) ?? 0),
-      child: _padded(child, column, align, r, t),
+      child: _padded(child, column, align, r, t, style: style),
     );
   }
 
@@ -5482,8 +5533,9 @@ class _TableState<T> extends State<Table<T>> {
     TableColumn<T> column,
     TableAlign align,
     _ResolvedTableToken r,
-    Token t,
-  ) {
+    Token t, {
+    TextStyle? style,
+  }) {
     return Padding(
       padding: _cellPadding(r, t),
       child: Align(
@@ -5492,6 +5544,9 @@ class _TableState<T> extends State<Table<T>> {
           textAlign: _textAlign(align),
           overflow: column.ellipsis ? TextOverflow.ellipsis : null,
           maxLines: column.ellipsis ? 1 : null,
+          // Merged, not set: a row dressed by the caller says the one or two
+          // things it means to and keeps the rest of the table's own style.
+          style: style,
           child: child,
         ),
       ),

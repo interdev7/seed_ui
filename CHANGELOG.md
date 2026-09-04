@@ -187,6 +187,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they are, which edge they are held at. A column that names the field wins,
   and it reaches the leaves of a group.
 
+  **A row dressed from outside.** `rowStyle` gives one row a ground and words
+  of its own — overdue, or not to be acted on — without the table having to
+  know what that means. What the table says about a row is drawn over it: the
+  hand and the tick are washes, so the caller's ground is the outer one and
+  both read at once. Words are merged rather than replaced.
+
+  ```dart
+  rowStyle: (context, order, index) =>
+      order.overdue ? TableRowStyle(color: token.error.bg) : null,
+  ```
+
   **What a column keeps to itself.** `hidden` leaves a column out of the
   table without taking it out of `columns`, so a sort or a filter keyed by its
   place goes on meaning what it meant; a group whose every leaf is hidden goes

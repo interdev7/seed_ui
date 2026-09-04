@@ -566,6 +566,28 @@ then put in order. The column widths are measured from the rows as given
 rather than as shown, so neither narrowing nor sorting re-measures — a column
 keeps its width while you filter, instead of jumping about under the hand.
 
+## A row dressed from outside
+
+`rowStyle` gives one row a ground and words of its own — a row that is
+overdue, one nobody is to act on — without the table having to know what
+either of those means. It is called for each row on show and may answer null
+for the rows that are like every other.
+
+```dart
+Table(
+  rowStyle: (context, order, index) => order.overdue
+      ? TableRowStyle(color: token.error.bg)
+      : null,
+  ...
+)
+```
+
+What the table says about a row is drawn *over* what this answers: a hand
+across it, a tick beside it, a column being sorted by. Those fills are washes
+rather than paint, so both read at once — which is why the caller's ground is
+the outer one and paints first. The words are merged rather than replaced, so
+a style that names a colour and nothing else keeps the rest of the table's.
+
 ## Picking rows
 
 `selection` puts a column of boxes in front of the others, and a box at the

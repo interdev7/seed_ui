@@ -2786,7 +2786,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(Checkbox), findsOneWidget);
-      expect(find.widgetWithText(Checkbox, 'Ann'), findsOneWidget);
+      // The words stand beside the box rather than inside it, so the row is
+      // what carries both.
+      expect(find.widgetWithText(Row, 'Ann'), findsWidgets);
     });
 
     testWidgets('a choice out of sight is still a choice', (tester) async {
@@ -2816,8 +2818,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(Checkbox), findsOneWidget);
-      expect(find.widgetWithText(Checkbox, 'Ann'), findsOneWidget);
-      expect(find.widgetWithText(Checkbox, 'Bart'), findsNothing);
+      // The words stand beside the box rather than inside it.
+      expect(find.widgetWithText(Row, 'Ann'), findsWidgets);
+      expect(find.widgetWithText(Row, 'Bart'), findsNothing);
     });
 
     test('searching a menu needs a menu to search', () {
@@ -3152,7 +3155,7 @@ void main() {
         TableFilter('the third', 'Chen'),
         TableFilter('Either', null, children: [
           TableFilter('the first', 'Ann'),
-          TableFilter('the second', 'Bart'),
+          TableFilter('the second of the pair', 'Bart'),
         ]),
       ];
 
@@ -3182,6 +3185,43 @@ void main() {
       List<Checkbox> boxes(WidgetTester tester) =>
           tester.widgetList<Checkbox>(find.byType(Checkbox)).toList();
 
+      /// Whatever stands on the same row as [label] — a list hangs the label
+      /// off the box itself, a tree stands the two side by side.
+      Finder beside(String label, Finder what) {
+        final own = find.ancestor(of: find.text(label).last, matching: what);
+        if (own.evaluate().isNotEmpty) return own.last;
+        return find
+            .descendant(
+              of: find.ancestor(
+                of: find.text(label).last,
+                matching: find.byType(Row),
+              ),
+              matching: what,
+            )
+            .last;
+      }
+
+      /// Ticks the box beside [label], wherever the panel put it.
+      Future<void> tick(WidgetTester tester, String label) async {
+        await tester.tap(beside(label, find.byType(Checkbox)));
+        await tester.pumpAndSettle();
+      }
+
+      /// Opens the branch called [label] in a tree of choices.
+      Future<void> unfold(WidgetTester tester, String label) async {
+        await tester.tap(
+          beside(
+            label,
+            find.byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == 'ChevronPainter',
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
       testWidgets('a branch is a shorthand for the leaves under it',
           (tester) async {
         Map<int, List<Object?>>? told;
@@ -3191,7 +3231,7 @@ void main() {
         ));
         await openMenu(tester, 0);
 
-        await choose(tester, 'Either');
+        await tick(tester, 'Either');
         await tester.tap(find.text('OK'));
         await tester.pumpAndSettle();
 
@@ -3209,20 +3249,19 @@ void main() {
         await openMenu(tester, 0);
 
         // Open the branch, then take one of its two.
-        await tester.tap(find.byWidgetPredicate((w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString() == '_ExpandIconPainter'));
-        await tester.pumpAndSettle();
-        await choose(tester, 'the first');
+        await unfold(tester, 'Either');
+        await tick(tester, 'the first');
 
-        final all = boxes(tester);
-        // Select all, Chen, Either, Ann, Bart.
-        expect(all[2].checked, isFalse, reason: 'Either is not whole');
-        expect(all[2].indeterminate, isTrue);
-        expect(all[0].indeterminate, isTrue, reason: 'nor is everything');
+        Checkbox boxFor(String label) =>
+            tester.widget<Checkbox>(beside(label, find.byType(Checkbox)));
 
-        await choose(tester, 'the second');
-        expect(boxes(tester)[2].checked, isTrue, reason: 'both of its own');
+        expect(boxFor('Either').checked, isFalse, reason: 'not whole');
+        expect(boxFor('Either').indeterminate, isTrue);
+        expect(boxFor('Select all items').indeterminate, isTrue,
+            reason: 'nor is everything');
+
+        await tick(tester, 'the second of the pair');
+        expect(boxFor('Either').checked, isTrue, reason: 'both of its own');
       });
 
       testWidgets('a tree offers everything at once, a list does not',
@@ -3264,10 +3303,7 @@ void main() {
         expect(find.text('the first'), findsNothing,
             reason: 'shut to begin with');
 
-        await tester.tap(find.byWidgetPredicate((w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString() == '_ExpandIconPainter'));
-        await tester.pumpAndSettle();
+        await unfold(tester, 'Either');
         expect(find.text('the first'), findsOneWidget);
 
         // In place: under its branch, and indented past it.
@@ -3275,6 +3311,69 @@ void main() {
         final leaf = tester.getRect(find.text('the first'));
         expect(leaf.top, greaterThan(branch.top));
         expect(leaf.left, greaterThan(branch.left));
+      });
+
+      testWidgets('a branch opens the way everything else in the kit opens',
+          (tester) async {
+        await tester.pumpWidget(grouped(mode: TableFilterMode.tree));
+        await openMenu(tester, 0);
+
+        double height() => tester.getRect(find.byType(Tree)).height;
+        final shut = height();
+
+        await tester.tap(
+          beside(
+            'Either',
+            find.byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == 'ChevronPainter',
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 80));
+
+        // Part way: taller than shut and shorter than open. It is the kit's
+        // own Tree doing this, which is the point of using one.
+        final midway = height();
+        expect(midway, greaterThan(shut));
+        await tester.pumpAndSettle();
+        expect(midway, lessThan(height()));
+      });
+
+      testWidgets('the panel is as wide as the widest line in it',
+          (tester) async {
+        // A tree cannot be asked how wide it would like to be, so the panel
+        // is told — and what it is told has to cover the deepest label and
+        // the line that takes everything, or a row overflows.
+        await tester.pumpWidget(grouped(mode: TableFilterMode.tree));
+        await openMenu(tester, 0);
+        await unfold(tester, 'Either');
+
+        final panel = tester.getRect(find.byType(Tree));
+        for (final label in ['the third', 'Either', 'the first']) {
+          expect(
+            tester.getRect(find.text(label)).right,
+            lessThanOrEqualTo(panel.right + 1),
+            reason: '$label fits',
+          );
+        }
+        expect(
+          tester.getRect(find.text('Select all items')).right,
+          lessThanOrEqualTo(panel.right + 1),
+        );
+
+        // And the deepest label gets the room it asked for rather than being
+        // cut down to fit: a step in is a step narrower, and the width has to
+        // know how deep the tree goes.
+        final deep = tester.renderObject<RenderParagraph>(
+          find.text('the second of the pair'),
+        );
+        expect(
+          deep.size.width,
+          closeTo(deep.getMaxIntrinsicWidth(double.infinity), 0.5),
+        );
       });
 
       testWidgets('a search keeps the branch that leads to what it found',
@@ -3293,7 +3392,7 @@ void main() {
         // Bart is under Either, so Either is kept for its sake — and opened,
         // or the search would hide the very thing it found. Chen goes.
         expect(find.text('Either'), findsOneWidget);
-        expect(find.text('the second'), findsOneWidget);
+        expect(find.text('the second of the pair'), findsOneWidget);
         expect(find.text('the first'), findsNothing,
             reason: 'no match under it');
         expect(find.text('the third'), findsNothing);
@@ -3308,8 +3407,8 @@ void main() {
         ));
         await openMenu(tester, 0);
 
-        await choose(tester, 'the third');
-        await choose(tester, 'Either');
+        await tick(tester, 'the third');
+        await tick(tester, 'Either');
         await tester.tap(find.text('OK'));
         await tester.pumpAndSettle();
 

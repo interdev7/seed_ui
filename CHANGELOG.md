@@ -200,7 +200,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   asked about the leaves so an `onFilter` never learns the choices were
   grouped. `filterMode` says how they are laid out — `TableFilterMode.menu`
   opens a branch beside the panel, `TableFilterMode.tree` puts the tree in one
-  panel with a line that takes everything at once.
+  panel with a line that takes everything at once. The tree is the kit's own
+  `Tree`, so a branch opens and shuts the way everything else does.
 
   `filterSearch: true` puts a field above the choices for narrowing the menu
   itself; what is typed is matched against each choice's label, ignoring case

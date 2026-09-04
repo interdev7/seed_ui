@@ -461,6 +461,15 @@ Searching keeps a branch for the sake of the leaf it leads to, and opens it:
 hiding the very thing it found would be a strange kind of search. A branch
 that matched itself keeps all of its own.
 
+The tree is the kit's own `Tree`, so it opens and shuts the way everything
+else does and half-ticks its branches on the same rule. It is told what is
+ticked rather than left to work it out, which means a branch whose every leaf
+is chosen is named along with them. And it is told how wide to be: a tree
+opens and shuts, so it has no one width to be asked for, and the panel is
+measured from the widest line it could ever draw. Labels give way with an
+ellipsis rather than running off the end of a row, so a measurement that is a
+little short costs a few letters and not the layout.
+
 ### A panel of your own
 
 `filterPanel` puts your own widget where the menu of choices would be — a

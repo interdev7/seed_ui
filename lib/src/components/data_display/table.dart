@@ -31,6 +31,7 @@ import '../navigation/dropdown.dart';
 import '../navigation/pagination.dart';
 import 'empty.dart';
 import 'popover.dart' show Popover, PopoverTrigger;
+import 'tree.dart' show Tree, TreeNode;
 
 /// Which edge a column's content is drawn against.
 enum TableAlign {
@@ -5609,7 +5610,6 @@ class _FilterMenu<T> extends StatefulWidget {
 
 class _FilterMenuState<T> extends State<_FilterMenu<T>> {
   late final Set<Object?> _chosen = {...widget.chosen};
-  final Set<TableFilter> _open = {};
   String _query = '';
 
   /// Whether a choice survives what has been typed.
@@ -5680,33 +5680,53 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
   /// could be folded away into a single line would be a strange thing to
   /// offer above the tree itself.
   Widget _everything(List<TableFilter> shown, Token t) {
-    final whole = TableFilter('', null, children: shown);
-    final state = _stateOf(whole);
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: t.sizeSM,
         vertical: t.sizeXXS,
       ),
-      child: Checkbox(
-        checked: state.all,
-        indeterminate: state.some && !state.all,
-        label: Text(context.seedLocale.selectAll),
-        onChanged: (on) => _choose(whole, on: on),
+      child: _box(
+        TableFilter(context.seedLocale.selectAll, null, children: shown),
+        t,
       ),
     );
   }
 
-  /// One row of the panel: a box, and for a branch a way into what is under
-  /// it — opening in place in a tree, and to the side in a menu.
-  Widget _row(TableFilter choice, _ResolvedTableToken r, Token t) {
+  /// A box and its words, the words free to give way.
+  ///
+  /// Built here rather than handed to `Checkbox` as a label, because a label
+  /// takes the width its words want and a row of choices has to fit whatever
+  /// width the panel settled on — a long one ran off the end of its row.
+  Widget _box(TableFilter choice, Token t) {
     final state = _stateOf(choice);
-    final tree = widget.column.filterMode == TableFilterMode.tree;
-    final box = Checkbox(
-      checked: state.all,
-      indeterminate: state.some && !state.all,
-      label: Text(choice.label),
-      onChanged: (on) => _choose(choice, on: on),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        // The words answer as well as the box, which is what a label does —
+        // taking them out of `Checkbox` must not take that with them.
+        onTap: () => _choose(choice, on: !state.all),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Checkbox(
+              checked: state.all,
+              indeterminate: state.some && !state.all,
+              onChanged: (on) => _choose(choice, on: on),
+            ),
+            SizedBox(width: t.sizeXS),
+            Flexible(
+                child: Text(choice.label, overflow: TextOverflow.ellipsis)),
+          ],
+        ),
+      ),
     );
+  }
+
+  /// One row of a list: a box, and for a branch a way into what is under it,
+  /// opening to the side the way every other menu in the kit does.
+  Widget _row(TableFilter choice, _ResolvedTableToken r, Token t) {
+    final box = _box(choice, t);
 
     if (!choice.isGroup) {
       return Padding(
@@ -5718,96 +5738,152 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
       );
     }
 
-    if (!tree) {
-      // A menu opens what is under a choice beside it, the way every other
-      // menu in the kit does — and on a tap as well as a hover, since a
-      // finger has no hover to open it with.
-      return Popover(
-        trigger: PopoverTrigger.hover,
-        placement: Directionality.of(context) == TextDirection.rtl
-            ? PopoverPlacement.leftTop
-            : PopoverPlacement.rightTop,
-        content: IntrinsicWidth(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final child in choice.children!) _row(child, r, t),
-            ],
-          ),
+    return Popover(
+      trigger: PopoverTrigger.hover,
+      placement: Directionality.of(context) == TextDirection.rtl
+          ? PopoverPlacement.leftTop
+          : PopoverPlacement.rightTop,
+      content: IntrinsicWidth(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final child in choice.children!) _row(child, r, t),
+          ],
         ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: t.sizeSM,
-            vertical: t.sizeXXS,
-          ),
-          child: Row(
-            children: [
-              Flexible(child: box),
-              SizedBox(width: t.sizeXS),
-              CustomPaint(
-                size: Size.square(r.sortCaretSize * 0.7),
-                painter: _CaretPainter(r.headerMarkColor, up: false),
-              ),
-            ],
-          ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: t.sizeSM,
+          vertical: t.sizeXXS,
         ),
-      );
+        child: Row(
+          children: [
+            Flexible(child: box),
+            SizedBox(width: t.sizeXS),
+            CustomPaint(
+              size: Size.square(r.sortCaretSize * 0.7),
+              painter: _CaretPainter(r.headerMarkColor, up: false),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The choices as a tree, drawn by the kit's own [Tree].
+  ///
+  /// A tree of choices is a tree: it opens and shuts the way every other one
+  /// in the kit does, half-ticks its branches on the same rule, and animates
+  /// because [Tree] does. Writing a second one here would be a second thing
+  /// to keep in step.
+  /// How wide the tree wants to be, measured rather than asked for.
+  ///
+  /// A tree cannot be asked: it opens and shuts, so it has no one intrinsic
+  /// width, and the `LayoutBuilder` its reveal is built on refuses the
+  /// question outright. The widest line it could ever draw is the answer —
+  /// the deepest label, plus what stands in front of it at that depth.
+  double _treeWidth(List<TableFilter> among, _ResolvedTableToken r, Token t) {
+    final style = DefaultTextStyle.of(context).style;
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    // What a `Tree` puts in front of a label and after it, measured against
+    // one rather than guessed: a step of `controlHeightSM` for the switcher
+    // cell at each depth and one more for the box, with `sizeXS` either side
+    // of the title. A test holds the sum, so a `Tree` that changes its mind
+    // about its own chrome says so rather than overflowing quietly.
+    var widest = 0.0;
+    void walk(List<TableFilter> run, int depth) {
+      for (final choice in run) {
+        final line = (depth + 2) * t.controlHeightSM +
+            t.sizeXS * 2 +
+            _TableWidths.measure(choice.label, style, scaler, direction);
+        if (line > widest) widest = line;
+        if (choice.isGroup) walk(choice.children!, depth + 1);
+      }
     }
 
-    final open = _open.contains(choice) || _query.trim().isNotEmpty;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: t.sizeSM,
-            vertical: t.sizeXXS,
-          ),
-          child: Row(
-            children: [
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => setState(() {
-                    if (!_open.remove(choice)) _open.add(choice);
-                  }),
-                  child: Padding(
-                    padding: EdgeInsets.only(right: t.sizeXXS),
-                    child: CustomPaint(
-                      size: Size.square(r.expandIconSize),
-                      painter: _ExpandIconPainter(
-                        bar: r.headerColor,
-                        border: r.borderColor,
-                        radius: t.borderRadiusSM,
-                        open: open ? 1 : 0,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Flexible(child: box),
-            ],
-          ),
-        ),
-        if (open)
-          Padding(
-            // Past the branch's own box, not merely past its mark: a child
-            // whose box sits under its parent's reads as its equal.
-            padding: EdgeInsetsDirectional.only(
-              start: r.indentSize + r.expandIconSize + t.sizeXXS,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final child in choice.children!) _row(child, r, t),
-              ],
-            ),
-          ),
-      ],
+    walk(among, 0);
+
+    // The line that takes everything is not a tree row: it is a plain box in
+    // the list's own padding, and it carries the longest words in the panel.
+    if (widget.column.filterMultiple) {
+      final line = t.sizeSM * 2 +
+          _boxWidth(t) +
+          _TableWidths.measure(
+            context.seedLocale.selectAll,
+            style,
+            scaler,
+            direction,
+          );
+      if (line > widest) widest = line;
+    }
+    return widest;
+  }
+
+  /// A box and the gap before its words: sixteen and a [Token.sizeXS], as
+  /// `Checkbox` lays itself out.
+  double _boxWidth(Token t) => 16 + t.sizeXS;
+
+  Widget _tree(List<TableFilter> shown) {
+    // Keyed by where a choice stands rather than by its value, since a branch
+    // is allowed to have none — and two choices in different branches are
+    // allowed to share one.
+    final byKey = <String, TableFilter>{};
+    List<TreeNode> nodes(List<TableFilter> among, String under) => [
+          for (var i = 0; i < among.length; i++)
+            () {
+              final choice = among[i];
+              final key = under.isEmpty ? '$i' : '$under/$i';
+              byKey[key] = choice;
+              return TreeNode(
+                key: key,
+                title: Text(choice.label, overflow: TextOverflow.ellipsis),
+                children:
+                    choice.isGroup ? nodes(choice.children!, key) : const [],
+              );
+            }(),
+        ];
+
+    final roots = nodes(shown, '');
+    // Branches as well as leaves: a tree is told what is ticked, not asked to
+    // work it out, so a branch whose every leaf is chosen has to be named or
+    // it stands half-ticked with nothing left to tick.
+    final ticked = [
+      for (final entry in byKey.entries)
+        if (_stateOf(entry.value).all) entry.key,
+    ];
+
+    return Tree(
+      nodes: roots,
+      checkable: true,
+      selectable: false,
+      blockNode: true,
+      checkedKeys: ticked,
+      // A search opens what it found, or it would hide the very thing it was
+      // asked for.
+      expandedKeys: _query.trim().isEmpty ? null : byKey.keys.toList(),
+      onExpand: (_) {},
+      onCheck: (checked, _) {
+        final leaves = <Object?>{
+          for (final key in checked)
+            if (byKey[key]?.isGroup == false) byKey[key]!.value,
+        };
+        setState(() {
+          if (widget.column.filterMultiple) {
+            _chosen
+              ..clear()
+              ..addAll(leaves);
+            return;
+          }
+          // One at a time: what was just taken replaces what was there, and
+          // taking a branch still means taking every leaf under it.
+          final added = leaves.difference(_chosen);
+          _chosen
+            ..clear()
+            ..addAll(added.isEmpty ? leaves : added);
+        });
+      },
     );
   }
 
@@ -5822,13 +5898,21 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
     // quietly drop a choice the reader has already made.
     final shown = _shown(column.filters!);
 
+    // A tree is measured rather than asked. Its reveal is built on a
+    // `LayoutBuilder`, which refuses to answer what it would like to be, so
+    // the panel around one cannot ask for an intrinsic width — it is told the
+    // widest line the tree could draw instead.
+    final tree = column.filterMode == TableFilterMode.tree;
+    final width = tree ? _treeWidth(shown, r, t) + t.sizeXXS * 2 : null;
+
     // `Dropdown.content` is handed straight to the overlay — that is what it
     // is for, so a caller can draw its own surface. Ours wants the usual one,
     // and wants to be as wide as its widest choice: the popover offers loose
-    // constraints, and without a panel and an intrinsic width the menu had no
+    // constraints, and without a panel and a width of its own the menu had no
     // ground of its own and took the whole width of the screen.
     return DropdownPanel(
-      child: IntrinsicWidth(
+      child: _FilterWidth(
+        width: width,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -5848,7 +5932,6 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
                   child: SizedBox(
                     width: r.filterSearchWidth,
                     child: Input(
-                      size: SoftSize.small,
                       placeholder: words.search,
                       onChanged: (typed) => setState(() => _query = typed),
                     ),
@@ -5879,7 +5962,10 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
                             column.filterMultiple &&
                             shown.isNotEmpty)
                           _everything(shown, t),
-                        for (final filter in shown) _row(filter, r, t),
+                        if (tree)
+                          _tree(shown)
+                        else
+                          for (final filter in shown) _row(filter, r, t),
                       ],
                     ),
                   ),
@@ -5929,6 +6015,23 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
       ),
     );
   }
+}
+
+/// A filter panel as wide as it asks to be, or as wide as it is told.
+///
+/// Two ways of settling one width, because the two kinds of panel answer the
+/// question differently: a list of choices knows how wide it wants to be, and
+/// a tree — whose reveal is a `LayoutBuilder` — cannot be asked at all.
+class _FilterWidth extends StatelessWidget {
+  const _FilterWidth({required this.width, required this.child});
+
+  final double? width;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => width == null
+      ? IntrinsicWidth(child: child)
+      : SizedBox(width: width, child: child);
 }
 
 /// A funnel: the mark at the head of a column that can be narrowed.

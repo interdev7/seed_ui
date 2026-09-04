@@ -826,6 +826,17 @@ group would belong to nothing.
 A heading that sorts still sorts: the drag is wrapped round the tapping rather
 than put in its place.
 
+In a bordered table the rule between two columns is hung on the cell rather
+than drawn by the grid, so it travels with the column it divides: a carried
+column takes its rule along and the gap it opens is ruled off like any other.
+Only where a drag can happen — elsewhere the grid draws one line down the
+table rather than one per cell.
+
+Which column goes without a rule is decided by where a column *appears* to
+stand rather than where it is laid out: only the painting moves during a drag,
+so the last column of the layout can be sitting in the middle, and it would
+take its blank edge there with it.
+
 ## A page that reads the other way
 
 Everything the table lays out follows the direction the page reads. The first

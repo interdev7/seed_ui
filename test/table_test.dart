@@ -5503,6 +5503,15 @@ void main() {
   group('columns you can move', () {
     const people = [_User('Chen', 27), _User('Ann', 45)];
 
+    /// The box a cell hangs its own rule on, if it has one.
+    Finder ruledBoxes() => find.byWidgetPredicate((w) =>
+        w is DecoratedBox &&
+        w.position == DecorationPosition.foreground &&
+        w.decoration is BoxDecoration &&
+        (w.decoration as BoxDecoration).border is BorderDirectional &&
+        ((w.decoration as BoxDecoration).border! as BorderDirectional).end !=
+            BorderSide.none);
+
     Widget table({
       bool draggable = true,
       void Function(int, int)? onReordered,
@@ -5980,6 +5989,174 @@ void main() {
           .where((s) => s == 'Chen' || s == 'Ann')
           .toList();
       expect(names, ['Ann', 'Chen'], reason: 'it sorted');
+    });
+
+    testWidgets('the rule travels with the column it divides', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            bordered: true,
+            data: people,
+            columnsDraggable: true,
+            columns: [
+              _name(width: 200),
+              _age(width: 200),
+              TableColumn<_User>(
+                title: const Text('Note'),
+                width: 200,
+                value: (u) => 'n',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // The grid draws its rules where the columns stand, and the cells slide
+      // over them — so a table you can rearrange hangs the rule on the cell.
+      expect(ruledBoxes(), findsWidgets);
+      final grids = tester.widgetList<m.Table>(find.byType(m.Table));
+      for (final g in grids) {
+        expect(g.border?.verticalInside ?? BorderSide.none, BorderSide.none,
+            reason: 'not drawn by the grid as well');
+      }
+
+      // A carried column's rule goes with it: the box the rule hangs on is
+      // the cell, so it stands wherever the cell has slid to.
+      Rect ruleOf(String text) {
+        final box = find.ancestor(of: find.text(text), matching: ruledBoxes());
+        return tester.getRect(box.first);
+      }
+
+      final before = ruleOf('45');
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await gesture.moveTo(tester.getCenter(find.text('Note')));
+      await tester.pumpAndSettle();
+
+      final during = ruleOf('45');
+      final cell = tester.getRect(find.text('45'));
+      expect(during.left, lessThan(before.left), reason: 'Age made room');
+      expect(during.right, greaterThan(cell.right),
+          reason: 'the rule stands at the edge of the cell it followed');
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('carrying the last column does not carry off a rule',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            bordered: true,
+            data: people,
+            columnsDraggable: true,
+            columns: [
+              _name(width: 200),
+              _age(width: 200),
+              TableColumn<_User>(
+                title: const Text('Note'),
+                width: 200,
+                value: (u) => 'n',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      bool ruledAt(String text) => find
+          .ancestor(of: find.text(text), matching: ruledBoxes())
+          .evaluate()
+          .isNotEmpty;
+
+      // At rest the last column has no rule after it and the others do.
+      expect(ruledAt('Chen'), isTrue);
+      expect(ruledAt('27'), isTrue);
+      expect(ruledAt('n'), isFalse);
+
+      // Carry the last column to the front. It is standing in the middle of
+      // the table now, so it needs the rule it does not have at rest — and
+      // whichever column ends up last has to drop its own.
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Note')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await gesture.moveTo(tester.getCenter(find.text('Name')));
+      await tester.pumpAndSettle();
+
+      expect(ruledAt('n'), isTrue, reason: 'no longer last to the eye');
+      expect(ruledAt('45'), isFalse, reason: 'Age is last to the eye now');
+      expect(ruledAt('Chen'), isTrue);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // And the other way about: carry the first column to the far end and
+      // it is the one that has to drop its rule, while what it stepped over
+      // closes up behind it and keeps theirs.
+      final order = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((w) => w.data)
+          .whereType<String>()
+          .where((w) => w == 'Name' || w == 'Age' || w == 'Note')
+          .toList();
+      final forward = await tester.startGesture(
+        tester.getCenter(find.text(order.first)),
+      );
+      await tester.pump(kLongPressTimeout);
+      await forward.moveTo(tester.getCenter(find.text(order.last)));
+      await tester.pumpAndSettle();
+
+      final carried = switch (order.first) {
+        'Name' => 'Chen',
+        'Age' => '27',
+        _ => 'n',
+      };
+      final passed = switch (order[1]) {
+        'Name' => 'Chen',
+        'Age' => '27',
+        _ => 'n',
+      };
+      final onto = switch (order.last) {
+        'Name' => 'Chen',
+        'Age' => '27',
+        _ => 'n',
+      };
+      expect(ruledAt(carried), isFalse, reason: 'last to the eye now');
+      expect(ruledAt(passed), isTrue, reason: 'it closed up behind it');
+      // The one it was dropped on is no longer last either, so it takes a
+      // rule it did not have.
+      expect(ruledAt(onto), isTrue);
+
+      await forward.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a table nobody can rearrange keeps the grid\'s own rules',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            bordered: true,
+            data: people,
+            columns: [_name(width: 200), _age(width: 200)],
+          ),
+        ),
+      );
+
+      // One line down the table rather than one per cell, which is what the
+      // grid is for where nothing moves.
+      expect(ruledBoxes(), findsNothing);
+      expect(
+        tester
+            .widgetList<m.Table>(find.byType(m.Table))
+            .first
+            .border
+            ?.verticalInside,
+        isNot(BorderSide.none),
+      );
     });
   });
 

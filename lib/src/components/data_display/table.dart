@@ -1847,6 +1847,26 @@ class _TableState<T> extends State<Table<T>> {
     return shifts;
   }
 
+  /// Where a column stands to the eye while a heading is being carried.
+  ///
+  /// The layout keeps the order it has and only the painting moves, so the
+  /// place a column is drawn at and the place it appears to hold come apart
+  /// mid-drag. Anything that belongs *between* two columns — the rule — has
+  /// to go by the second of these, or the column that happens to be last in
+  /// the layout drops its rule while standing in the middle.
+  int _visualColumn(int place) {
+    final from = _dragFrom;
+    final to = _dragOver;
+    if (from == null || to == null || from == to) return place;
+    final service = _serviceColumns;
+    final held = service + from;
+    final onto = service + to;
+    if (place == held) return onto;
+    if (held < onto && place > held && place <= onto) return place - 1;
+    if (onto < held && place >= onto && place < held) return place + 1;
+    return place;
+  }
+
   /// Moves a column and tells whoever asked.
   ///
   /// The table does the moving: a caller made to do it would have to keep an
@@ -2138,6 +2158,29 @@ class _TableState<T> extends State<Table<T>> {
     // Every band draws the rows in the order they are shown, and the title
     // and summary are handed the same order.
     final rows = _rows;
+
+    // A column that can be carried takes its rule with it. The grid draws the
+    // rules between its columns itself, at the places the columns stand — and
+    // the cells slide over them, so a carried column left its rule behind and
+    // the gap it opened had none. Hung on the cell instead, the rule travels
+    // with what it divides. Only where a drag can happen: everywhere else the
+    // grid's own rules are one line rather than one per cell.
+    final ruleRides = _bordered && widget.columnsDraggable;
+    // The last column carries no rule, and last is where a column *appears*
+    // to stand: mid-drag the layout's last column can be sitting in the
+    // middle, and it took its blank edge there with it.
+    Widget ruled(Widget cell, int place, int of) => ruleRides
+        ? DecoratedBox(
+            position: DecorationPosition.foreground,
+            decoration: BoxDecoration(
+              border: BorderDirectional(
+                end: _visualColumn(place) == of - 1 ? BorderSide.none : rule,
+              ),
+            ),
+            child: cell,
+          )
+        : cell;
+
     flutter.TableRow headingRow(List<TableColumn<T>> columns) =>
         flutter.TableRow(
           decoration: BoxDecoration(
@@ -2147,21 +2190,25 @@ class _TableState<T> extends State<Table<T>> {
           children: [
             for (var i = 0; i < columns.length; i++)
               _slid(
-                _headingCell(
-                  _cell(
-                    _heading(columns[i], _leaves.indexOf(columns[i]), r, t),
+                ruled(
+                  _headingCell(
+                    _cell(
+                      _heading(columns[i], _leaves.indexOf(columns[i]), r, t),
+                      columns[i],
+                      columns[i].headerAlign ??
+                          columns[i].align ??
+                          TableAlign.start,
+                      r,
+                      t,
+                    ),
                     columns[i],
-                    columns[i].headerAlign ??
-                        columns[i].align ??
-                        TableAlign.start,
+                    _leaves.indexOf(columns[i]),
+                    i,
                     r,
                     t,
                   ),
-                  columns[i],
-                  _leaves.indexOf(columns[i]),
                   i,
-                  r,
-                  t,
+                  columns.length,
                 ),
                 shiftAt(i),
                 'h$i',
@@ -2181,7 +2228,7 @@ class _TableState<T> extends State<Table<T>> {
               children: [
                 for (var x = 0; x < columns.length; x++)
                   _slid(
-                    _rowCell(i, columns[x], r, t),
+                    ruled(_rowCell(i, columns[x], r, t), x, columns.length),
                     shiftAt(x),
                     'r${i}c$x',
                     t,
@@ -2200,7 +2247,7 @@ class _TableState<T> extends State<Table<T>> {
           // Every cell in a row is as tall as the tallest, which is what
           // keeps a row a row when one cell wraps and its neighbours do not.
           defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-          border: _bordered
+          border: _bordered && !ruleRides
               ? TableBorder(
                   verticalInside: rule,
                   horizontalInside: BorderSide.none,

@@ -205,6 +205,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   row or heading carried in the hand is drawn the way it was laid out, since
   the overlay it travels in knows nothing of the table it came from.
 
+  In a bordered table whose columns can be carried, the rule between two
+  columns rides on the cell instead of being drawn by the grid, so it travels
+  with the column rather than standing still while the cells slide over it.
+  Which column goes without one is decided by where a column appears to stand,
+  not by where it is laid out — otherwise the last column carried into the
+  middle took its blank edge along.
+
   Filtering happens before sorting, and the widths are still
   measured from the rows as given — so a column keeps its width while you
   filter rather than jumping about under the hand.

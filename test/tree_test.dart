@@ -271,6 +271,56 @@ void main() {
     await tester.pumpAndSettle();
     expect(checked, ['p']);
   });
+
+  testWidgets('a shut switcher points the way the tree would open',
+      (tester) async {
+    /// How far round the switcher is turned, in turns.
+    double turns(WidgetTester tester) => tester
+        .widget<AnimatedRotation>(find.byType(AnimatedRotation).first)
+        .turns;
+
+    Widget host(TextDirection direction) => ConfigProvider(
+          child: Directionality(
+            textDirection: direction,
+            child: const Align(
+              alignment: Alignment.topLeft,
+              child: Tree(
+                nodes: [
+                  TreeNode(
+                    key: 'p',
+                    title: Text('parent'),
+                    children: [TreeNode(key: 'c', title: Text('child'))],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+    // The glyph is drawn pointing right, so a page that reads that way leaves
+    // it where it is and a mirrored one turns it over.
+    await tester.pumpWidget(host(TextDirection.ltr));
+    expect(turns(tester), 0.0);
+
+    await tester.pumpWidget(host(TextDirection.rtl));
+    await tester.pumpAndSettle();
+    expect(turns(tester), 0.5, reason: 'pointing the other way');
+
+    // Open, it points down whichever way the page reads.
+    await tester.tap(find.byType(CustomPaint).first);
+    await tester.pumpAndSettle();
+    expect(turns(tester), 0.25);
+
+    // It stays open across the change of direction, and still points down.
+    await tester.pumpWidget(host(TextDirection.ltr));
+    await tester.pumpAndSettle();
+    expect(turns(tester), 0.25);
+
+    // Shut again, it goes back to pointing the way this page reads.
+    await tester.tap(find.byType(CustomPaint).first);
+    await tester.pumpAndSettle();
+    expect(turns(tester), 0.0);
+  });
 }
 
 /// A tiny host that lazily loads a node's children after a short delay.

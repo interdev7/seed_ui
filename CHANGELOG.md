@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they sat beside rather than at the pages they went to. The way the pages run
   is the way the page reads.
 
+- **`Tree`** — in a mirrored layout a shut switcher pointed away from the
+  tree rather than into it. The chevron points the way the reading runs, which
+  is the way the node would open; open, it points down either way.
+
 - **`Popover`** — a click on a trigger that had opened its card by being
   hovered went to putting the card away and never reached what was under the
   finger. The trigger is cut out of what dismisses the card, as it already was

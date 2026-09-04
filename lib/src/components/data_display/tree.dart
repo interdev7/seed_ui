@@ -1167,11 +1167,20 @@ class _NodeRowState extends State<_NodeRow> {
       return const SizedBox.shrink();
     }
 
+    // Shut, the chevron points the way the reading runs — which is the way
+    // the tree would open. The glyph is drawn pointing right, so a mirrored
+    // tree turns it over; open, it points down either way, and the quarter
+    // turn between the two simply goes the other way about.
+    final mirrored = Directionality.of(context) == TextDirection.rtl;
     final glyph = widget.switcherIcon ??
         AnimatedRotation(
           duration: t.motionDurationMid,
           curve: t.motionEaseInOut,
-          turns: widget.expanded ? 0.25 : 0.0,
+          turns: widget.expanded
+              ? 0.25
+              : mirrored
+                  ? 0.5
+                  : 0.0,
           child: CustomPaint(
             size: const Size.square(12),
             painter: ChevronPainter(t.colorTextSecondary, strokeWidth: 1.3),

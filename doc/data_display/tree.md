@@ -86,6 +86,11 @@ the cascade; `checkable: false` on a node hides its checkbox entirely.
 
 ## Lazy loading
 
+A shut switcher points the way the reading runs, which is the way the node
+would open — so a mirrored tree turns the chevron over. Open, it points down
+whichever way the page reads, and the quarter turn between the two simply goes
+the other way about.
+
 `loadData` fetches a node's children the first time it expands. Return a future
 that completes once the parent has updated `nodes` with the loaded children; the
 node's switcher shows a spinner while it is pending. A node with no children is

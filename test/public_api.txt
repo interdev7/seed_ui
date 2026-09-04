@@ -253,13 +253,13 @@ TableFilterMode
 TableFilterPanel
 TablePagination
 TablePaginationPosition
-TableRowStyle
 TableScroll
 TableSelection
 TableSelectionMode
 TableSort
 TableSortOrder
 TableSticky
+TableStyle
 TableToken
 Tabs
 TabsController

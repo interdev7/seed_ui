@@ -544,24 +544,26 @@ class TableFilterPanel {
   final PopoverPlacement? placement;
 }
 
-/// How one row of a [Table] is dressed, decided by the caller.
+/// How one row or one cell of a [Table] is dressed, decided by the caller.
 ///
 /// A ground and the words that stand on it — enough to mark a row out as
-/// overdue, or as one nobody is to act on, without the table having to know
-/// what either of those means.
+/// overdue, or one cell of it as the figure that is wrong, without the table
+/// having to know what either of those means. One shape for both, since
+/// dressing a row and dressing a cell is the same small question asked at two
+/// scales.
 ///
 /// ```dart
 /// rowStyle: (context, order, index) => order.overdue
-///     ? TableRowStyle(color: Colors.red.withValues(alpha: 0.06))
+///     ? TableStyle(color: Colors.red.withValues(alpha: 0.06))
 ///     : null,
 /// ```
 ///
 /// What the table itself says about a row is drawn over this: a hand or a
 /// tick still tells, since those fills are washes rather than paint.
 @immutable
-class TableRowStyle {
-  /// Creates a [TableRowStyle].
-  const TableRowStyle({this.color, this.textStyle});
+class TableStyle {
+  /// Creates a [TableStyle].
+  const TableStyle({this.color, this.textStyle});
 
   /// The ground the row stands on.
   final Color? color;
@@ -782,6 +784,7 @@ class TableColumn<T> {
     this.children,
     this.summary,
     this.span,
+    this.cellStyle,
   })  : assert(
           children == null || span == null,
           'A group heads other columns and has no cell of its own to span.',
@@ -1057,6 +1060,20 @@ class TableColumn<T> {
   /// ```
   final TableFilterPanel? filterPanel;
 
+  /// Dresses one cell of this column, where the table has nothing to say.
+  ///
+  /// The same shape as [Table.rowStyle] and answered the same way — null for
+  /// the cells that are like every other. It is the narrower word, so it
+  /// covers what the row said where the two disagree, and what the table
+  /// says about the row is still drawn over both.
+  ///
+  /// ```dart
+  /// cellStyle: (context, order, index) =>
+  ///     order.total < 0 ? TableStyle(color: token.error.bg) : null,
+  /// ```
+  final TableStyle? Function(BuildContext context, T record, int index)?
+      cellStyle;
+
   /// How the choices are laid out: a list, or a tree in one panel.
   ///
   /// Nesting and the way it is shown are two things, not one: the same
@@ -1106,6 +1123,7 @@ class TableColumn<T> {
             children?.map((c) => c._withDefaults(d)).toList(growable: false),
         summary: summary,
         span: span,
+        cellStyle: cellStyle,
       );
 
   /// This column heading a different set of columns.
@@ -1589,7 +1607,7 @@ class Table<T> extends StatefulWidget {
   /// are like every other. What the table says about a row — a hand over it,
   /// a tick beside it, a column being sorted by — is drawn over what this
   /// answers, so neither is lost.
-  final TableRowStyle? Function(BuildContext context, T record, int index)?
+  final TableStyle? Function(BuildContext context, T record, int index)?
       rowStyle;
 
   /// What every column falls back to where it says nothing itself.
@@ -5359,13 +5377,16 @@ class _TableState<T> extends State<Table<T>> {
       content = _treeMark(record, content, r, t);
     }
     final dressed = widget.rowStyle?.call(context, record, index);
+    final own = column.cellStyle?.call(context, record, index);
     Widget cell = _cell(
       content,
       column,
       column.align ?? TableAlign.start,
       r,
       t,
-      style: dressed?.textStyle,
+      // The narrower word wins where the two say the same thing, and adds to
+      // it where they do not.
+      style: dressed?.textStyle?.merge(own?.textStyle) ?? own?.textStyle,
     );
     final opens = widget.expandable?.byRowTap ?? false;
     if (widget.onRowTap != null || opens) {
@@ -5385,10 +5406,16 @@ class _TableState<T> extends State<Table<T>> {
 
     // The caller's ground goes under everything the table says about the
     // row: a hand or a tick is a wash, so what is underneath shows through
-    // rather than being replaced by it.
-    Widget grounded(Widget over) => dressed?.color == null
-        ? over
-        : ColoredBox(color: dressed!.color!, child: over);
+    // rather than being replaced by it. The cell's own ground sits between
+    // the two — narrower than the row's, and still under the table's.
+    Widget grounded(Widget over) {
+      var out = over;
+      if (own?.color != null) out = ColoredBox(color: own!.color!, child: out);
+      if (dressed?.color != null) {
+        out = ColoredBox(color: dressed!.color!, child: out);
+      }
+      return out;
+    }
 
     if (!_hoverable) {
       return grounded(

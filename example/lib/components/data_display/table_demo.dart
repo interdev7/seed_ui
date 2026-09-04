@@ -262,11 +262,29 @@ class _TableDemoState extends State<TableDemo> {
               Table<Person>(
                 bordered: true,
                 data: _many.take(6).toList(),
-                columns: _columns,
+                columns: [
+                  TableColumn(title: const Text('Name'), value: (p) => p.name),
+                  TableColumn(title: const Text('City'), value: (p) => p.city),
+                  TableColumn(
+                    title: const Text('Age'),
+                    align: TableAlign.end,
+                    value: (p) => p.age,
+                    // One cell rather than the row: the narrower word, and it
+                    // fills the cell, padding and all.
+                    cellStyle: (context, person, index) => person.age == 23
+                        ? TableStyle(
+                            color: context.softToken.warning.bg,
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          )
+                        : null,
+                  ),
+                ],
                 // The table knows nothing about what makes a row worth
                 // marking; this says it from outside.
                 rowStyle: (context, person, index) => person.age >= 24
-                    ? TableRowStyle(
+                    ? TableStyle(
                         color: context.softToken.error.bg,
                         textStyle: TextStyle(
                           color: context.softToken.error.textActive,
@@ -277,9 +295,11 @@ class _TableDemoState extends State<TableDemo> {
               const SizedBox(height: 8),
               const Text(
                 'rowStyle gives a row a ground and words of its own — a row '
-                'that is overdue, or one nobody is to act on. Point at one: '
-                'what the table says about a row is a wash drawn over that, '
-                'so neither is lost.',
+                'that is overdue, or one nobody is to act on. cellStyle says '
+                'the same of one cell and is the narrower word: the age of 27 '
+                'is marked inside a row that is already marked. Point at one: '
+                'what the table says about a row is a wash drawn over both, '
+                'so nothing is lost.',
               ),
             ],
           ),

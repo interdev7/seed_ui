@@ -576,17 +576,25 @@ for the rows that are like every other.
 ```dart
 Table(
   rowStyle: (context, order, index) => order.overdue
-      ? TableRowStyle(color: token.error.bg)
+      ? TableStyle(color: token.error.bg)
       : null,
   ...
 )
 ```
 
-What the table says about a row is drawn *over* what this answers: a hand
+`TableColumn.cellStyle` says the same thing about one cell, and is answered
+the same way. It is the narrower word, so it covers what the row said where
+the two disagree and adds to it where they do not — a row marked overdue with
+one figure in it marked wrong. Its ground fills the whole cell, padding and
+all, which is what a `builder` painting its own ground can never do: a builder
+draws *inside* the padding, so it colours the words and not the cell.
+
+What the table says about a row is drawn *over* what these answer: a hand
 across it, a tick beside it, a column being sorted by. Those fills are washes
 rather than paint, so both read at once — which is why the caller's ground is
 the outer one and paints first. The words are merged rather than replaced, so
-a style that names a colour and nothing else keeps the rest of the table's.
+a style that names a colour and nothing else keeps the rest of the table's —
+and a cell's words are merged over its row's, not instead of them.
 
 ## Picking rows
 

@@ -193,9 +193,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hand and the tick are washes, so the caller's ground is the outer one and
   both read at once. Words are merged rather than replaced.
 
+  `TableColumn.cellStyle` says the same of one cell and is the narrower word:
+  it covers what the row said where they disagree and adds to it where they do
+  not. Its ground fills the whole cell, padding and all — a `builder` painting
+  its own ground colours the words only, since it draws inside the padding.
+
   ```dart
   rowStyle: (context, order, index) =>
-      order.overdue ? TableRowStyle(color: token.error.bg) : null,
+      order.overdue ? TableStyle(color: token.error.bg) : null,
   ```
 
   **What a column keeps to itself.** `hidden` leaves a column out of the

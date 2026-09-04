@@ -6903,7 +6903,7 @@ void main() {
     const people = [_User('Chen', 27), _User('Ann', 45)];
 
     Widget table({
-      TableRowStyle? Function(BuildContext, _User, int)? style,
+      TableStyle? Function(BuildContext, _User, int)? style,
       TableSelection<_User>? selection,
     }) =>
         _host(
@@ -6928,7 +6928,7 @@ void main() {
       await tester.pumpWidget(
         table(
           style: (context, user, index) =>
-              user.age > 40 ? const TableRowStyle(color: marked) : null,
+              user.age > 40 ? const TableStyle(color: marked) : null,
         ),
       );
 
@@ -6941,9 +6941,7 @@ void main() {
         (tester) async {
       const marked = Color(0xFFFFEECC);
       await tester.pumpWidget(
-        table(
-            style: (context, user, index) =>
-                const TableRowStyle(color: marked)),
+        table(style: (context, user, index) => const TableStyle(color: marked)),
       );
 
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -6966,11 +6964,93 @@ void main() {
       );
     });
 
+    testWidgets('one cell can be dressed on its own', (tester) async {
+      const marked = Color(0xFFFFEECC);
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            columns: [
+              _name(),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+                cellStyle: (context, user, index) =>
+                    user.age > 40 ? const TableStyle(color: marked) : null,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // The one cell, and nothing else on its row.
+      expect(groundsUnder(tester, '45'), contains(marked));
+      expect(groundsUnder(tester, 'Ann'), isNot(contains(marked)));
+      expect(groundsUnder(tester, '27'), isNot(contains(marked)));
+
+      // And it covers the whole cell, padding and all, which is what a
+      // builder painting its own ground could never do.
+      final ground = tester.getRect(
+        find
+            .ancestor(
+              of: find.text('45'),
+              matching: find.byWidgetPredicate(
+                (w) => w is ColoredBox && w.color == marked,
+              ),
+            )
+            .first,
+      );
+      final words = tester.getRect(find.text('45'));
+      expect(ground.width, greaterThan(words.width));
+      expect(ground.height, greaterThan(words.height));
+    });
+
+    testWidgets('the narrower word wins, and the table still speaks over both',
+        (tester) async {
+      const row = Color(0xFFEEEEFF);
+      const cell = Color(0xFFFFEECC);
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            rowStyle: (context, user, index) => const TableStyle(
+              color: row,
+              textStyle: TextStyle(fontStyle: FontStyle.italic),
+            ),
+            columns: [
+              _name(),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+                cellStyle: (context, user, index) => const TableStyle(
+                  color: cell,
+                  textStyle: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Both grounds are there on the dressed cell, the cell's inside the
+      // row's; the other cell has only the row's.
+      final under = groundsUnder(tester, '45');
+      expect(under, containsAll(<Color>[row, cell]));
+      expect(under.indexOf(cell), lessThan(under.indexOf(row)));
+      expect(groundsUnder(tester, 'Ann'), isNot(contains(cell)));
+
+      // The words take both: the row said italic, the cell said bold.
+      final style =
+          tester.renderObject<RenderParagraph>(find.text('45')).text.style!;
+      expect(style.fontStyle, FontStyle.italic);
+      expect(style.fontWeight, FontWeight.w700);
+    });
+
     testWidgets('a row can be given words of its own', (tester) async {
       await tester.pumpWidget(
         table(
           style: (context, user, index) => user.age > 40
-              ? const TableRowStyle(
+              ? const TableStyle(
                   textStyle: TextStyle(fontStyle: FontStyle.italic),
                 )
               : null,

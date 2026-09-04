@@ -1909,6 +1909,94 @@ void main() {
       expect(fillOver(find.text('Chen')), isNull, reason: 'that one only');
     });
 
+    testWidgets('the cells of a sorted column are marked too', (tester) async {
+      Color? fillOver(Finder of) {
+        final boxes = find
+            .ancestor(of: of, matching: find.byType(ColoredBox))
+            .evaluate()
+            .map((e) => (e.widget as ColoredBox).color)
+            .where((c) => c.a != 0);
+        return boxes.isEmpty ? null : boxes.first;
+      }
+
+      await tester.pumpWidget(table());
+      expect(fillOver(find.text('Chen')), isNull);
+      expect(fillOver(find.text('27')), isNull);
+
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+
+      // The heading says which column is doing something; the fill down the
+      // column says how far that reaches. The other column is untouched.
+      expect(fillOver(find.text('Ann')), isNotNull);
+      expect(fillOver(find.text('Bart')), isNotNull);
+      expect(fillOver(find.text('45')), isNull, reason: 'that column only');
+
+      // And it goes when the sort does.
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Name'));
+      await tester.pumpAndSettle();
+      expect(fillOver(find.text('Chen')), isNull);
+    });
+
+    testWidgets('a picked row keeps its own fill in a sorted column',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            data: people,
+            defaultSort: const [TableSort(0, TableSortOrder.ascending)],
+            selection: const TableSelection<_User>(
+              defaultSelected: [_User('Ann', 45)],
+            ),
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                value: (u) => u.name,
+              ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      Color? fillOver(Finder of) {
+        final boxes = find
+            .ancestor(of: of, matching: find.byType(ColoredBox))
+            .evaluate()
+            .map((e) => (e.widget as ColoredBox).color)
+            .where((c) => c.a != 0);
+        return boxes.isEmpty ? null : boxes.first;
+      }
+
+      // The fill on a picked row says what will happen to the row, which
+      // outranks what one of its columns is up to.
+      final picked = fillOver(find.text('Ann'));
+      final sorted = fillOver(find.text('Bart'));
+      expect(picked, isNotNull);
+      expect(sorted, isNotNull);
+      expect(picked, isNot(sorted));
+    });
+
+    testWidgets('a defaultSort marks its column before anybody has touched it',
+        (tester) async {
+      await tester.pumpWidget(
+        table(defaultSort: const [TableSort(1, TableSortOrder.ascending)]),
+      );
+
+      final ages = find
+          .ancestor(of: find.text('27'), matching: find.byType(ColoredBox))
+          .evaluate()
+          .map((e) => (e.widget as ColoredBox).color)
+          .where((c) => c.a != 0);
+      expect(ages, isNotEmpty);
+    });
+
     testWidgets('the column being sorted by keeps the fill', (tester) async {
       Color? fillOver(Finder heading) {
         final boxes = find

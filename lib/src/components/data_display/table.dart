@@ -906,6 +906,7 @@ class TableToken {
     this.headerBg,
     this.headerColor,
     this.rowHoverBg,
+    this.rowSortedBg,
     this.rowSelectedBg,
     this.rowSelectedHoverBg,
     this.borderColor,
@@ -945,6 +946,13 @@ class TableToken {
 
   /// Fill behind the row under the pointer.
   final Color? rowHoverBg;
+
+  /// Fill behind the cells of a column the table is sorted by.
+  ///
+  /// The same fill the hand leaves, since the two say the same thing: this
+  /// column is the one doing something. A hand over the row does not make it
+  /// darker again — there is nothing more to say.
+  final Color? rowSortedBg;
 
   /// Fill behind a row that has been picked.
   final Color? rowSelectedBg;
@@ -1077,6 +1085,7 @@ class TableToken {
         headerBg: headerBg ?? t.colorFillQuaternary,
         headerColor: headerColor ?? t.colorText,
         rowHoverBg: rowHoverBg ?? t.colorFillQuaternary,
+        rowSortedBg: rowSortedBg ?? t.colorFillQuaternary,
         rowSelectedBg: rowSelectedBg ?? t.primary.bg,
         rowSelectedHoverBg: rowSelectedHoverBg ?? t.primary.bgHover,
         borderColor: borderColor ?? t.colorSplit,
@@ -1128,6 +1137,7 @@ class _ResolvedTableToken {
     required this.headerBg,
     required this.headerColor,
     required this.rowHoverBg,
+    required this.rowSortedBg,
     required this.rowSelectedBg,
     required this.rowSelectedHoverBg,
     required this.borderColor,
@@ -1162,6 +1172,7 @@ class _ResolvedTableToken {
   final Color headerBg;
   final Color headerColor;
   final Color rowHoverBg;
+  final Color rowSortedBg;
   final Color rowSelectedBg;
   final Color rowSelectedHoverBg;
   final Color borderColor;
@@ -3288,14 +3299,18 @@ class _TableState<T> extends State<Table<T>> {
     int index, {
     required bool hovered,
     required _ResolvedTableToken r,
+    bool sorted = false,
   }) {
     final rows = _rows;
     final picked = widget.selection != null &&
         index >= 0 &&
         index < rows.length &&
         _isSelected(rows[index]);
+    // A picked row is picked whatever its columns are up to: the fill says
+    // what will happen to the row, and that outranks what a column is doing.
     if (picked) return hovered ? r.rowSelectedHoverBg : r.rowSelectedBg;
-    return hovered ? r.rowHoverBg : const Color(0x00000000);
+    if (hovered) return r.rowHoverBg;
+    return sorted ? r.rowSortedBg : const Color(0x00000000);
   }
 
   /// The token, resolved wherever it is wanted rather than only in `build`.
@@ -4773,7 +4788,13 @@ class _TableState<T> extends State<Table<T>> {
         child: cell,
       );
     }
-    if (!_hoverable) return cell;
+    // A column the table is sorted by is marked down its whole length, not
+    // only at its head: the heading says which column is doing something and
+    // the fill says how far that reaches.
+    final sorted = _orderOf(_leaves.indexOf(column)) != null;
+    if (!_hoverable) {
+      return sorted ? ColoredBox(color: r.rowSortedBg, child: cell) : cell;
+    }
     return MouseRegion(
       onEnter: (_) => _hovered.value = (from: index, to: index + covering),
       onExit: (_) {
@@ -4789,6 +4810,7 @@ class _TableState<T> extends State<Table<T>> {
             hovered: hovered != null &&
                 hovered.from < index + covering &&
                 index < hovered.to,
+            sorted: sorted,
             r: r,
           ),
           child: child,

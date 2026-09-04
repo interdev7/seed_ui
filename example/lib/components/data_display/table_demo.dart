@@ -234,8 +234,10 @@ class _TableDemoState extends State<TableDemo> {
               const SizedBox(height: 8),
               Text(
                 'Tap a heading: up, then down, then back to the order the '
-                'rows came in. Name and Age compare their values; City is '
-                'told how, and sorts by the last letter. '
+                'rows came in. The column being sorted by is marked down its '
+                'whole length, not only at its head. Name and Age compare '
+                'their values; City is told how, and sorts by the last '
+                'letter. '
                 '${_sort == null ? 'Unsorted.' : 'Sorted by column ${_sort!.column}, ${_sort!.order.name}.'}',
               ),
             ],

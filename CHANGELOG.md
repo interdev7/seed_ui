@@ -130,6 +130,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rows as given rather than as shown — an order does not change how wide a
   word is, so sorting never re-measures.
 
+  The cells of the column the table is sorted by carry the same fill its
+  heading does, down their whole length: the heading says which column is
+  doing something and the fill says how far that reaches. `rowSortedBg` is the
+  token. A picked row keeps its own fill — what will happen to the row
+  outranks what one of its columns is up to.
+
   **Filtering.** `filters` puts a funnel at the head of a column, opening a
   menu of choices; the column's `value` is what a choice is matched against,
   so most columns need nothing else said. `onFilter` says what a choice means

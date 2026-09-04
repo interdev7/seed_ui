@@ -315,6 +315,13 @@ sorted by keeps that fill, hand or no hand: it is the one doing something, so
 it is marked, and the mark arrives with a `defaultSort` before anybody has
 touched anything.
 
+The cells of that column carry the same fill down their whole length, since
+the heading says which column is doing something and the fill says how far
+that reaches. It is the fill the hand leaves, so a hand over one of those rows
+makes no further difference — there is nothing more to say. A picked row keeps
+its own fill: what will happen to the row outranks what one of its columns is
+up to. `rowSortedBg` is the token.
+
 Both carets are always drawn: one alone would say the column *is* sorted that
 way, and a column that merely *can* be sorted has to say so too. They darken
 under the hand, and take their time about it — a mark that is only offered
@@ -888,6 +895,7 @@ height and the triangles are worked out from it.
 | --- | --- |
 | `headerBg`, `headerColor` | the heading row |
 | `rowHoverBg` | the row under the pointer |
+| `rowSortedBg` | `colorFillQuaternary` — the cells of the column being sorted by |
 | `borderColor` | `colorSplit` |
 | `cellPaddingBlock`, `cellPaddingBlockSM`, `cellPaddingBlockLG` | 12, 8, 16 |
 | `cellPaddingInline`, `cellPaddingInlineSM`, `cellPaddingInlineLG` | 16, 8, 20 |

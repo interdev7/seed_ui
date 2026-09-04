@@ -40,6 +40,21 @@ Widget _host(Widget child, {double width = 600}) => ConfigProvider(
       ),
     );
 
+/// The same host, mirrored — everything the table lays out by hand has to be
+/// asked whether it knows which way the page reads.
+Widget _mirrored(Widget child, {double width = 600}) => ConfigProvider(
+      child: m.MaterialApp(
+        // A filter panel opens in the overlay, so the app has to have one.
+        navigatorKey: UiKit.navigatorKey,
+        home: m.Scaffold(
+          body: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Center(child: SizedBox(width: width, child: child)),
+          ),
+        ),
+      ),
+    );
+
 TableColumn<_User> _name({double? width, int? flex, TableAlign? align}) =>
     TableColumn<_User>(
       title: const Text('Name'),
@@ -2890,6 +2905,36 @@ void main() {
       // Four of the funnel's own padding is not enough on its own: the word
       // has to be given a breath of its own as well.
       expect(mark.left - word.right, greaterThanOrEqualTo(8));
+    });
+
+    testWidgets('the carets and the funnel keep their distance too',
+        (tester) async {
+      await tester.pumpWidget(
+        host(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                sortable: true,
+                value: (u) => u.name,
+                filters: const [TableFilter('Ann', 'Ann')],
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final carets = tester.getRect(
+          find.byWidgetPredicate((w) => w.runtimeType.toString() == '_Carets'));
+      final funnel = tester.getRect(find
+          .byWidgetPredicate((w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_FunnelPainter')
+          .first);
+      // Four of the funnel's own padding again, and four of its own between
+      // the two marks.
+      expect(funnel.left - carets.right, greaterThanOrEqualTo(8));
     });
 
     test('a panel of your own still says what a choice means', () {
@@ -6165,6 +6210,330 @@ void main() {
       final funnel = painted('_FunnelPainter');
       expect(
           caret.height * 2 + funnel.height * 0.16, closeTo(funnel.height, 1.5));
+    });
+  });
+
+  group('a page that reads the other way', () {
+    const people = [
+      _User('Chen', 27),
+      _User('Ann', 45),
+      _User('Bart', 31),
+    ];
+
+    Finder funnels() => find.byWidgetPredicate((w) =>
+        w is CustomPaint &&
+        w.painter.runtimeType.toString() == '_FunnelPainter');
+
+    testWidgets('a heading and its cells sit against the leading edge',
+        (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            data: people,
+            columns: [_name(width: 200), _age(width: 200)],
+          ),
+        ),
+      );
+
+      // Leading is the right in a mirrored layout, so the first column is the
+      // rightmost one and its text hugs the right of its own cell.
+      final name = tester.getRect(find.text('Name'));
+      final age = tester.getRect(find.text('Age'));
+      expect(name.left, greaterThan(age.left), reason: 'first column is right');
+
+      final chen = tester.getRect(find.text('Chen'));
+      expect(chen.right, moreOrLessEquals(name.right, epsilon: 1));
+    });
+
+    testWidgets('a heading aligned to the end sits against the left',
+        (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            data: people,
+            columns: [
+              _name(width: 200),
+              _age(width: 200, align: TableAlign.end),
+            ],
+          ),
+        ),
+      );
+
+      final cell = tester.getRect(find.text('27'));
+      final head = tester.getRect(find.text('Age'));
+      expect(cell.left, moreOrLessEquals(head.left, epsilon: 1));
+    });
+
+    testWidgets('the marks stand at the trailing edge of the heading',
+        (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                width: 220,
+                sortable: true,
+                value: (u) => u.name,
+                filters: const [TableFilter('Ann', 'Ann')],
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final word = tester.getRect(find.text('Name'));
+      final funnel = tester.getRect(funnels().first);
+      // Trailing is the left here, so the marks stand left of the word — and
+      // still keep their distance from it.
+      expect(funnel.right, lessThan(word.left));
+      expect(word.left - funnel.right, greaterThanOrEqualTo(8));
+    });
+
+    testWidgets('a filter panel hangs by the edge the mark stands at',
+        (tester) async {
+      const key = Key('panel');
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                value: (u) => u.name,
+                filterPanel: TableFilterPanel(
+                  builder: (context, panel) =>
+                      const SizedBox(key: key, width: 200, height: 60),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final mark = tester.getRect(funnels().first);
+      await tester.tap(funnels().first);
+      await tester.pumpAndSettle();
+      final panel = tester.getRect(find.byKey(key));
+
+      // Left edges together, the mirror of the way round it hangs otherwise,
+      // so the panel still lies under its own column.
+      expect(panel.left, moreOrLessEquals(mark.left, epsilon: 8));
+      expect(panel.right, greaterThan(mark.right));
+    });
+
+    testWidgets('a picked-rows column stands at the leading edge',
+        (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            data: people,
+            selection: const TableSelection<_User>(),
+            columns: [_name(width: 200)],
+          ),
+        ),
+      );
+
+      final box = tester.getRect(find.byType(Checkbox).first);
+      final name = tester.getRect(find.text('Name'));
+      expect(box.left, greaterThan(name.right), reason: 'right of the words');
+    });
+
+    testWidgets('a chevron for a row that opens stands at the leading edge',
+        (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            data: people,
+            expandable: TableExpandable<_User>(
+              builder: (_, u, __) => Text('about ${u.name}'),
+            ),
+            columns: [_name(width: 200)],
+          ),
+        ),
+      );
+
+      final chevron = tester.getRect(find.byType(GestureDetector).first);
+      final name = tester.getRect(find.text('Name'));
+      expect(chevron.center.dx, greaterThan(name.right));
+    });
+
+    testWidgets('a table wider than its box starts at the leading edge',
+        (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            scroll: const TableScroll(x: 1400, y: 200),
+            data: people,
+            columns: [
+              _name(width: 160),
+              for (var i = 0; i < 8; i++)
+                TableColumn<_User>(
+                  title: Text('Note $i'),
+                  width: 140,
+                  value: (u) => 'n$i',
+                ),
+            ],
+          ),
+        ),
+      );
+
+      // The first column is the one you see, and it is against the right.
+      final name = tester.getRect(find.text('Name'));
+      final box = tester.getRect(find.byType(Table<_User>));
+      expect(name.right, lessThanOrEqualTo(box.right + 1));
+      expect(box.right - name.right, lessThan(40));
+      // The far column is away past the trailing edge, which is the left.
+      expect(tester.getRect(find.text('Note 7')).right, lessThan(box.left));
+    });
+
+    testWidgets('a column is dropped where the hand is, not where it mirrors',
+        (tester) async {
+      var moved = '';
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            scroll: const TableScroll(x: 900, y: 200),
+            data: people,
+            columnsDraggable: true,
+            onColumnsReordered: (from, to) => moved = '$from to $to',
+            columns: [
+              _name(width: 160),
+              _age(width: 160),
+              TableColumn<_User>(
+                title: const Text('Note'),
+                width: 160,
+                value: (u) => 'n',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Name is the rightmost; Note the leftmost. Carrying Name onto Note
+      // means carrying it left, however the columns are numbered.
+      final from = tester.getCenter(find.text('Name'));
+      final onto = tester.getCenter(find.text('Note'));
+      final gesture = await tester.startGesture(from);
+      await tester.pump(kLongPressTimeout);
+      await gesture.moveTo(onto);
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(
+          moved,
+          'Column 0 moved to 2'
+              .replaceAll('Column ', '')
+              .replaceAll(' moved to ', ' to '));
+    });
+
+    testWidgets('a held column casts its shade on the side it covers',
+        (tester) async {
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        _mirrored(
+          RepaintBoundary(
+            key: key,
+            child: Table<int>(
+              scroll: const TableScroll(x: 1200, y: 150),
+              columns: [
+                TableColumn<int>(
+                  title: const Text('One'),
+                  width: 100,
+                  fixed: TableColumnFixed.start,
+                  value: (v) => 'one$v',
+                ),
+                for (var c = 0; c < 8; c++)
+                  TableColumn<int>(
+                    title: Text('C$c'),
+                    width: 120,
+                    value: (v) => 'c${c}r$v',
+                  ),
+              ],
+              data: [for (var i = 0; i < 6; i++) i],
+            ),
+          ),
+          width: 400,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final box = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
+      final origin = tester.getRect(find.byKey(key));
+      Future<int> alphaAt(double x) async {
+        final bytes = await tester.runAsync(() async {
+          final image = await box.toImage();
+          final data = await image.toByteData();
+          image.dispose();
+          return data;
+        });
+        final w = box.size.width.round();
+        final y =
+            (tester.getRect(find.text('one0')).top - origin.top - 5).round();
+        return bytes!.getUint8((y * w + (x - origin.left).round()) * 4 + 3);
+      }
+
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.byKey(key))),
+      );
+      await tester.sendEventToBinding(pointer.scroll(const Offset(-200, 0)));
+      await tester.pumpAndSettle();
+
+      // The held column sits against the right, so what it covers is on its
+      // left and that is the side the shade falls on. Painted on the canvas
+      // rather than laid out, this is the one place a mirrored page has to be
+      // told about by hand.
+      final held = tester.getRect(find.text('one0'));
+      expect(await alphaAt(origin.right - 106), greaterThan(0));
+      expect(held.right, greaterThan(origin.right - 110));
+    });
+
+    testWidgets('a held column stays against the edge it was pinned to',
+        (tester) async {
+      await tester.pumpWidget(
+        _mirrored(
+          Table<_User>(
+            scroll: const TableScroll(x: 1400, y: 200),
+            data: people,
+            columns: [
+              TableColumn<_User>(
+                title: const Text('Name'),
+                width: 160,
+                fixed: TableColumnFixed.start,
+                value: (u) => u.name,
+              ),
+              for (var i = 0; i < 8; i++)
+                TableColumn<_User>(
+                  title: Text('Note $i'),
+                  width: 140,
+                  value: (u) => 'n$i',
+                ),
+              TableColumn<_User>(
+                title: const Text('Age'),
+                width: 90,
+                fixed: TableColumnFixed.end,
+                value: (u) => u.age,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final box = tester.getRect(find.byType(Table<_User>));
+      final before = tester.getRect(find.text('Name'));
+      expect(box.right - before.right, lessThan(40), reason: 'held at right');
+      // The far end is held against the left, the trailing edge here.
+      expect(tester.getRect(find.text('Age')).left - box.left, lessThan(40));
+
+      await tester.drag(find.text('Chen'), const Offset(300, 0));
+      await tester.pumpAndSettle();
+
+      expect(tester.getRect(find.text('Name')).right,
+          moreOrLessEquals(before.right, epsilon: 1));
+      expect(tester.getRect(find.text('Age')).left - box.left, lessThan(40));
     });
   });
 }

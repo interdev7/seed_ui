@@ -826,6 +826,23 @@ group would belong to nothing.
 A heading that sorts still sorts: the drag is wrapped round the tapping rather
 than put in its place.
 
+## A page that reads the other way
+
+Everything the table lays out follows the direction the page reads. The first
+column is the one against the leading edge, which is the right in a mirrored
+layout; `TableAlign.start` and `TableAlign.end` are the near and far edges
+rather than the left and the right; the marks a heading carries stand at its
+trailing edge, and the panel a funnel opens hangs by that same edge, so it
+still lies under its own column. A column held with `TableColumnFixed.start`
+is held against the leading edge and casts its shade over what passes on the
+far side of it.
+
+The rows themselves are laid out from the leading edge and mirrored by the
+viewport, so there is one reckoning rather than two kept in step. The two
+places that turn that reckoning back into pixels are told about the page by
+hand: the shade, which is painted on the canvas rather than laid out, and the
+question a drag asks about which column lies under the finger.
+
 ## Around the rows
 
 | Prop | |

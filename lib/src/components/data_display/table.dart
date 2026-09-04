@@ -490,9 +490,10 @@ class TableFilterPanel {
 
   /// Where the panel hangs from the mark that opens it.
   ///
-  /// [PopoverPlacement.bottomRight] where nothing is said, which puts the
-  /// panel under the column rather than off to the side of it. It still flips
-  /// to stay on screen.
+  /// Hung by the heading's trailing edge where nothing is said — bottomRight
+  /// in a left-to-right layout and bottomLeft in a mirrored one — which puts
+  /// the panel under the column rather than off to the side of it. It still
+  /// flips to stay on screen.
   final PopoverPlacement? placement;
 }
 
@@ -3761,7 +3762,12 @@ class _TableState<T> extends State<Table<T>> {
             duration: t.motionDurationMid,
           ),
         ),
-        if (column.filtersRows) _funnel(column, index, r, t),
+        // The carets and the funnel are two marks, not one: they take the
+        // same breath between them that the word takes before them.
+        if (column.filtersRows) ...[
+          SizedBox(width: t.sizeXXS),
+          _funnel(column, index, r, t),
+        ],
       ],
     );
   }
@@ -3779,10 +3785,14 @@ class _TableState<T> extends State<Table<T>> {
       // A click, not a hover: a menu with checkboxes and two words to end it
       // is not something to open by passing over it.
       trigger: const [DropdownTrigger.click],
-      // Hung by its right edge, not its left: the mark stands at the far end
-      // of the heading, so aligning left edges would throw the panel out past
-      // its own column.
-      placement: column.filterPanel?.placement ?? PopoverPlacement.bottomRight,
+      // Hung by the trailing edge, not the leading one: the mark stands at
+      // the far end of the heading, so aligning the near edges would throw
+      // the panel out past its own column. A mirrored layout swaps which edge
+      // that is.
+      placement: column.filterPanel?.placement ??
+          (Directionality.of(context) == TextDirection.rtl
+              ? PopoverPlacement.bottomLeft
+              : PopoverPlacement.bottomRight),
       content: (context, close) => column.filterPanel != null
           ? _OwnFilterPanel(
               build: column.filterPanel!.builder,
@@ -4529,7 +4539,11 @@ class _TableState<T> extends State<Table<T>> {
             shadeColor: r.pinnedShadowColor,
             shadeExtent: r.pinnedShadowExtent,
             verticalDetails: const ScrollableDetails.vertical(),
-            horizontalDetails: const ScrollableDetails.horizontal(),
+            // Leading is the right in a mirrored page, so the rows run the
+            // other way and a finger moving right takes the table forwards.
+            horizontalDetails: ScrollableDetails.horizontal(
+              reverse: Directionality.of(context) == TextDirection.rtl,
+            ),
             delegate: TwoDimensionalChildBuilderDelegate(
               // Nothing in a cell wants keeping alive, and the default wraps
               // every one of them in an AutomaticKeepAlive and a selection
@@ -5739,6 +5753,19 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     parentDataOf(child).layoutOffset = Offset(dx, dy);
   }
 
+  /// Whether the page reads the other way, which the horizontal axis says.
+  ///
+  /// The whole layout is worked out from the leading edge — column nought at
+  /// nought, the scroll carrying it away — and mirrored on the way out, in
+  /// the two places that turn that reckoning into pixels: where a cell is put
+  /// and where a held column's shade is drawn. Reckoning it twice, once each
+  /// way round, would be two of everything to keep in step.
+  bool get _mirrored => horizontalAxisDirection == AxisDirection.left;
+
+  /// A span of [width] starting at [dx] from the leading edge, in pixels.
+  double _mirror(double dx, double width) =>
+      _mirrored ? viewportDimension.width - dx - width : dx;
+
   /// How far each column has been slid aside while a heading is carried.
   ///
   /// Only what is painted moves; the layout keeps the order it has, so the
@@ -5891,6 +5918,8 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   /// the cells slide, so asking them chases the answer.
   int? columnAtLocal(double x) {
     if (_widths.isEmpty) return null;
+    // Asked in pixels, answered from the leading edge.
+    if (_mirrored) x = viewportDimension.width - x;
     final across = horizontalOffset.pixels;
     for (var i = 0; i < _columnCount; i++) {
       final natural = _startOf(i) - across;
@@ -6264,7 +6293,12 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     );
     if (local.isEmpty) return;
 
-    final rect = local.shift(offset);
+    final rect = Rect.fromLTWH(
+      _mirror(local.left, local.width),
+      local.top,
+      local.width,
+      local.height,
+    ).shift(offset);
     final colour = Color.from(
       alpha: _shadeColor.a * strength,
       red: _shadeColor.r,
@@ -6276,8 +6310,13 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       rect,
       Paint()
         ..shader = LinearGradient(
-          begin: atStart ? Alignment.centerLeft : Alignment.centerRight,
-          end: atStart ? Alignment.centerRight : Alignment.centerLeft,
+          // Away from the column it belongs to, whichever side that is on.
+          begin: atStart == !_mirrored
+              ? Alignment.centerLeft
+              : Alignment.centerRight,
+          end: atStart == !_mirrored
+              ? Alignment.centerRight
+              : Alignment.centerLeft,
           colors: [colour, colour.withAlpha(0)],
         ).createShader(rect),
     );

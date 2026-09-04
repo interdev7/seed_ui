@@ -181,6 +181,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   )
   ```
 
+  The table follows the direction the page reads throughout: the first column
+  is the one against the leading edge, the marks a heading carries stand at
+  its trailing edge and the filter panel hangs by that edge, a held column is
+  held against the edge it names and casts its shade the way it covers, and a
+  drag lands where the hand is.
+
   Filtering happens before sorting, and the widths are still
   measured from the rows as given — so a column keeps its width while you
   filter rather than jumping about under the hand.

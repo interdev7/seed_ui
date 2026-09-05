@@ -96,6 +96,47 @@ else
   echo "✓ pub.dev serves $published, so $version is still unreleased"
 fi
 
+# The one criterion of the Flutter Favorite programme that is a plain fact
+# rather than a judgement: the repository must carry a tag matching the version
+# pub.dev serves, so a reader can see exactly which source is in the package.
+# Seven releases went out without one before anybody noticed — nothing else
+# here could have noticed, since every file in the checkout agreed with itself.
+#
+# Asked of the remote first: a shallow CI checkout has the commit and none of
+# the tags, and reporting a missing tag that is sitting on GitHub would be
+# worse than saying nothing.
+if [ -n "$published" ] && command -v git >/dev/null 2>&1 &&
+  git rev-parse --git-dir >/dev/null 2>&1; then
+  tag="v$published"
+  tags=""
+  if git ls-remote --exit-code --tags origin >/dev/null 2>&1; then
+    tags="$(git ls-remote --tags origin 2>/dev/null || true)"
+  fi
+  if [ -n "$tags" ]; then
+    if printf '%s' "$tags" | grep -q "refs/tags/$tag$"; then
+      # A tag that exists is not yet a tag that tells the truth. What it points
+      # at has to be a commit whose own pubspec names that version — a tag put
+      # on the commit *before* the bump, or on an unrelated one, would send a
+      # reader to source that is not what shipped.
+      tagged="$(git show "$tag:pubspec.yaml" 2>/dev/null |
+        awk '/^version:/{print $2; exit}' || true)"
+      if [ -z "$tagged" ]; then
+        echo "✓ $tag is on the remote (this checkout cannot read it to confirm)"
+      elif [ "$tagged" = "$published" ]; then
+        echo "✓ $tag is on the remote, so the published source can be found"
+      else
+        note "$tag points at a commit whose pubspec says $tagged, not $published. Move it to the commit that was published."
+      fi
+    else
+      note "pub.dev serves $published and no $tag tag is on the remote. Tag the commit that was published: git tag -a $tag <commit> -m '$published' && git push origin $tag"
+    fi
+  elif git rev-parse -q --verify "refs/tags/$tag" >/dev/null 2>&1; then
+    echo "✓ $tag exists here (the remote was not reachable to confirm)"
+  else
+    echo "· tags could not be read, so none were checked"
+  fi
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo
   echo "Version references disagree. Fix them before merging."

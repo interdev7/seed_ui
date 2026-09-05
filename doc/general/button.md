@@ -88,6 +88,21 @@ Button(variant: ButtonVariant.outlined, onPressed: () {}, child: const Text('Def
 | `gradient` | `Gradient?` | `null` | Optional background gradient (e.g. `LinearGradient`) |
 | `block` | `bool` | `false` | Stretches to the parent's full width |
 | `disabled` | `bool?` | `null` | Follows `ButtonDefaults.disabled`, then `componentDisabled`, else `false`. Greys out and blocks taps |
+| `onLongPress` | `VoidCallback?` | `null` | Called when the button is held. A button with this and no `onPressed` is a button all the same |
+| `feedback` | `bool?` | `null` | Whether a tap makes the noise the platform makes. Follows the kit, which says yes |
+
+### Held rather than tapped
+
+`onLongPress` is its own callback, not a second reading of the tap: a button
+given both fires one or the other, never both. A button given only a hold is
+enabled and looks it — it does something, so saying otherwise would be a lie.
+
+### The noise the platform makes
+
+`feedback` says whether a tap plays the click Android plays and a hold gives
+the shudder it gives, which is what every other button on the device does. The
+kit says yes; `feedback: false` is for a button that fires often enough that a
+noise each time would be a nuisance.
 
 ## Sizes
 
@@ -158,6 +173,22 @@ The old `type` + `danger` API maps to variant + color:
 | `type: text` | `variant: text` |
 | `type: link` | `variant: link, color: primary` |
 | `danger: true` | `color: danger` |
+
+## A shadow of its own
+
+A button casts nothing until `ButtonToken.shadow` names what it should cast,
+which is how buttons in this kit have always looked. Named, it is cast by the
+variants that stand on a ground of their own — solid, outlined, dashed, and a
+gradient — and never by the flat ones, which have no edge to lift, nor by a
+disabled button, whose look is built apart.
+
+```dart
+Button(
+  token: ButtonToken(shadow: context.softToken.boxShadowSecondary),
+  onPressed: () {},
+  child: const Text('Lifted'),
+)
+```
 
 ## Design tokens
 

@@ -142,6 +142,7 @@ class ButtonToken {
     this.paddingInline,
     this.paddingInlineSM,
     this.paddingInlineLG,
+    this.shadow,
   });
 
   /// Corner radius for standard button.
@@ -180,6 +181,21 @@ class ButtonToken {
   /// Horizontal padding for large button.
   final double? paddingInlineLG;
 
+  /// What a button that carries a shadow casts.
+  ///
+  /// None where nothing is said, which is how buttons in this kit have always
+  /// looked. Named, it is cast by the variants that stand on a ground of
+  /// their own — solid, outlined, dashed and a gradient — and never by the
+  /// flat ones, which have no edge to lift.
+  ///
+  /// ```dart
+  /// Button(
+  ///   token: ButtonToken(shadow: token.boxShadowTertiary),
+  ///   ...
+  /// )
+  /// ```
+  final List<BoxShadow>? shadow;
+
   /// Weight of the button's label. Falls back to the theme's `fontWeight`.
   final FontWeight? fontWeight;
 
@@ -197,6 +213,7 @@ class ButtonToken {
         paddingInline: paddingInline ?? t.sizeSM,
         paddingInlineSM: paddingInlineSM ?? t.sizeXS,
         paddingInlineLG: paddingInlineLG ?? t.size,
+        shadow: shadow,
       );
 }
 
@@ -216,6 +233,7 @@ class _ResolvedButtonToken {
     required this.paddingInline,
     required this.paddingInlineSM,
     required this.paddingInlineLG,
+    required this.shadow,
   });
 
   final FontWeight fontWeight;
@@ -232,6 +250,7 @@ class _ResolvedButtonToken {
   final double paddingInline;
   final double paddingInlineSM;
   final double paddingInlineLG;
+  final List<BoxShadow>? shadow;
 }
 
 /// Defaults for every [Button] under a `ConfigProvider`.
@@ -311,6 +330,8 @@ class Button extends StatefulWidget {
     this.block = false,
     this.disabled,
     this.gradient,
+    this.onLongPress,
+    this.feedback,
     this.token,
   });
 
@@ -352,6 +373,20 @@ class Button extends StatefulWidget {
   /// Greys the button out and blocks taps.
   final bool? disabled;
 
+  /// Called when the button is held rather than tapped.
+  ///
+  /// A button with this and no [onPressed] is a button all the same: it does
+  /// something, so it is not disabled and does not look it.
+  final VoidCallback? onLongPress;
+
+  /// Whether a tap makes the noise the platform makes.
+  ///
+  /// The click Android plays and the shudder a long press gives, which is
+  /// what every other button on the device does. Null follows the kit, which
+  /// says yes; false is for a button that fires often enough that a noise
+  /// each time would be a nuisance.
+  final bool? feedback;
+
   /// Per-instance token overrides.
   final ButtonToken? token;
 
@@ -387,7 +422,12 @@ class _SoftButtonState extends State<Button> {
 
   /// Whether the button answers to a press at all.
   bool get _enabled =>
-      !_disabled && !widget.loading && widget.onPressed != null;
+      !_disabled &&
+      !widget.loading &&
+      (widget.onPressed != null || widget.onLongPress != null);
+
+  /// Whether a tap should make the platform's own noise.
+  bool get _feedback => widget.feedback ?? true;
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
@@ -631,6 +671,11 @@ class _SoftButtonState extends State<Button> {
       decoration: BoxDecoration(
         color: widget.gradient == null ? style.background : null,
         gradient: widget.gradient,
+        // The flag was set in three places and read in none, so no button in
+        // the kit had ever cast one. It casts what the token names, and the
+        // token names nothing until it is told to. A disabled button says no
+        // to it already — its style is built apart, and never carries one.
+        boxShadow: style.shadow ? r.shadow : null,
         borderRadius: _shape == ButtonShape.circle ? null : _radius(r),
         shape:
             _shape == ButtonShape.circle ? BoxShape.circle : BoxShape.rectangle,
@@ -666,7 +711,18 @@ class _SoftButtonState extends State<Button> {
         onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
         onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
         onTapCancel: _enabled ? () => setState(() => _pressed = false) : null,
-        onTap: _enabled ? widget.onPressed : null,
+        onTap: _enabled && widget.onPressed != null
+            ? () {
+                if (_feedback) Feedback.forTap(context);
+                widget.onPressed!();
+              }
+            : null,
+        onLongPress: _enabled && widget.onLongPress != null
+            ? () {
+                if (_feedback) Feedback.forLongPress(context);
+                widget.onLongPress!();
+              }
+            : null,
         child: widget.block
             ? SizedBox(width: double.infinity, child: button)
             : button,

@@ -32,7 +32,7 @@ open a drawer.
 
 ```yaml
 dependencies:
-  seed_ui: ^0.16.0
+  seed_ui: ^0.17.0
 ```
 
 ## Getting started

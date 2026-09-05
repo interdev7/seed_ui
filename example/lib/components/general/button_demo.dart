@@ -114,6 +114,56 @@ class ButtonDemo extends StatelessWidget {
           ),
         ),
         Group(
+          'A shadow, a hold, and the noise it makes',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  Button(
+                    variant: ButtonVariant.solid,
+                    color: ButtonColor.primary,
+                    // Nothing is cast until the token names what to cast.
+                    token: ButtonToken(
+                      shadow: context.softToken.boxShadowSecondary,
+                    ),
+                    onPressed: () {},
+                    child: const Text('Lifted'),
+                  ),
+                  Button(
+                    onPressed: () => message.info('Tapped'),
+                    onLongPress: () => message.success('Held'),
+                    child: const Text('Tap or hold'),
+                  ),
+                  Button(
+                    // Fires often enough that a click each time would be a
+                    // nuisance.
+                    feedback: false,
+                    onPressed: () {},
+                    child: const Text('Quiet'),
+                  ),
+                  Button(
+                    // A hold and nothing else: it does something, so it is
+                    // not disabled and does not look it.
+                    onLongPress: () => message.success('Held'),
+                    child: const Text('Hold only'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'A shadow is cast only where the token names one, and only by '
+                'the variants that stand on a ground of their own. A hold is '
+                'its own callback, not a second reading of the tap. And a tap '
+                'makes the noise the platform makes, unless the button says '
+                'otherwise.',
+              ),
+            ],
+          ),
+        ),
+        Group(
           'Loading / disabled / icon',
           Wrap(
             spacing: 8,

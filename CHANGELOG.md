@@ -5,6 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.17.0
+
+### Added
+
+- **`Button.onLongPress`** — held rather than tapped, as its own callback
+  rather than a second reading of the tap. A button given only a hold is
+  enabled and looks it: it does something.
+
+- **`Button.feedback`** — whether a tap plays the click the platform plays and
+  a hold gives the shudder it gives, which is what every other button on the
+  device does. The kit says yes; `false` is for a button that fires often
+  enough that a noise each time would be a nuisance.
+
+- **`ButtonToken.shadow`** — what a button casts. Nothing until it is named,
+  which is how buttons here have always looked; named, it is cast by the
+  variants that stand on a ground of their own and never by the flat ones or
+  by a disabled button.
+
+### Fixed
+
+- **A button's shadow was never drawn.** The flag saying a variant should cast
+  one was set in three places and read in none, so no button in the kit had
+  ever cast a shadow whatever it was told.
+
 ## 0.16.0
 
 ### Added

@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Form`** — a set of named fields, the values they hold, and the rules they
+  answer to. `FormController` holds the values and does the doing, so a button
+  anywhere can submit; `FormRule` covers required, min, max, pattern, email,
+  url and anything of your own, each with the kit's words in eleven languages
+  and yours where you give one.
+
+  ```dart
+  Form(
+    controller: form,
+    onFinish: save,
+    child: FormItem<String>(
+      name: 'email',
+      label: const Text('Email'),
+      rules: const [FormRule.required(), FormRule.email()],
+      builder: (field) => Input(
+        value: field.value ?? '',
+        status: field.status,
+        onChanged: field.didChange,
+      ),
+    ),
+  )
+  ```
+
+  The control is built rather than handed over, since a form has to put the
+  value into it and take changes back out and Flutter gives nobody a way to
+  reach into a widget somebody else built. `field.status` is what a control
+  that can recolour itself wants, so wiring one up is three lines and no
+  colours.
+
+  Four decisions worth knowing: the first refusal is the one shown; a field
+  that has been told off is watched from then on whatever the trigger says;
+  submitting puts the keyboard away before anything is decided; and a barred
+  field's rules are not asked, since a required one the reader cannot type
+  into would refuse the form for ever.
+
+- **`Input.value`** — the text the field is to show, for a caller that holds
+  it. `defaultValue` is a starting point and cannot be changed afterwards,
+  which is not enough for a form doing `reset()`.
+
 - **`Button.onLongPress`** — held rather than tapped, as its own callback
   rather than a second reading of the tap. A button given only a hold is
   enabled and looks it: it does something.
@@ -24,6 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by a disabled button.
 
 ### Fixed
+
+- **`Checkbox` and `Radio` gave their labels the width the words wanted**, so
+  either in a column narrower than its own label ran off the end of its row
+  rather than wrapping. The label gives way now.
 
 - **A button's shadow was never drawn.** The flag saying a variant should cast
   one was set in three places and read in none, so no button in the kit had

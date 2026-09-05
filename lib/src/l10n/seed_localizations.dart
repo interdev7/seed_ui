@@ -77,6 +77,13 @@ class SeedLocalizations {
     this.expandRow = 'Expand row',
     this.collapseRow = 'Collapse row',
     this.selectRow = 'Select row',
+    this.formRequired = 'This field is required',
+    this.formInvalid = 'This value is not valid',
+    this.formInvalidEmail = 'Enter a valid email address',
+    this.formInvalidUrl = 'Enter a valid web address',
+    this.formTooShort = 'At least {n}',
+    this.formTooLong = 'At most {n}',
+    this.formOptional = '(optional)',
     this.noMoreItems = 'No more items',
     this.perPage = '/ page',
     this.selectTime = 'Select time',
@@ -133,6 +140,30 @@ class SeedLocalizations {
 
   /// Names the box that picks one `Table` row.
   final String selectRow;
+
+  /// Refuses an empty `Form` field.
+  final String formRequired;
+
+  /// Refuses a `Form` value that does not match the pattern asked of it.
+  final String formInvalid;
+
+  /// Refuses a `Form` value that is not an email address.
+  final String formInvalidEmail;
+
+  /// Refuses a `Form` value that is not a web address.
+  final String formInvalidUrl;
+
+  /// Refuses a `Form` value that is shorter or smaller than asked. `{n}` is
+  /// replaced with the number.
+  final String formTooShort;
+
+  /// Refuses a `Form` value that is longer or larger than asked. `{n}` is
+  /// replaced with the number.
+  final String formTooLong;
+
+  /// Marks a `Form` field that need not be answered, where the form marks
+  /// those rather than the ones that must be.
+  final String formOptional;
 
   /// Placeholder of an empty `TimePicker`.
   final String selectTime;
@@ -443,6 +474,13 @@ class SeedLocalizations {
     expandRow: 'Раскрыть строку',
     collapseRow: 'Свернуть строку',
     selectRow: 'Выбрать строку',
+    formRequired: 'Обязательное поле',
+    formInvalid: 'Недопустимое значение',
+    formInvalidEmail: 'Введите корректный адрес почты',
+    formInvalidUrl: 'Введите корректный адрес сайта',
+    formTooShort: 'Не менее {n}',
+    formTooLong: 'Не более {n}',
+    formOptional: '(необязательно)',
     search: 'Поиск',
     noMoreItems: 'Больше ничего нет',
     perPage: '/ стр.',
@@ -501,6 +539,13 @@ class SeedLocalizations {
     expandRow: 'Setiri aç',
     collapseRow: 'Setiri ýap',
     selectRow: 'Setiri saýla',
+    formRequired: 'Hökmany meýdan',
+    formInvalid: 'Nädogry bahа',
+    formInvalidEmail: 'Dogry e-poçta salgysyny giriziň',
+    formInvalidUrl: 'Dogry web salgysyny giriziň',
+    formTooShort: 'Iň azyndan {n}',
+    formTooLong: 'Iň köp {n}',
+    formOptional: '(hökman däl)',
     search: 'Gözleg',
     noMoreItems: 'Başga zat ýok',
     perPage: '/ sahypa',
@@ -558,6 +603,13 @@ class SeedLocalizations {
     expandRow: 'Zeile ausklappen',
     collapseRow: 'Zeile einklappen',
     selectRow: 'Zeile auswählen',
+    formRequired: 'Pflichtfeld',
+    formInvalid: 'Ungültiger Wert',
+    formInvalidEmail: 'Gültige E-Mail-Adresse eingeben',
+    formInvalidUrl: 'Gültige Webadresse eingeben',
+    formTooShort: 'Mindestens {n}',
+    formTooLong: 'Höchstens {n}',
+    formOptional: '(optional)',
     search: 'Suchen',
     noMoreItems: 'Keine weiteren Einträge',
     perPage: '/ Seite',
@@ -615,6 +667,13 @@ class SeedLocalizations {
     expandRow: 'Développer la ligne',
     collapseRow: 'Réduire la ligne',
     selectRow: 'Sélectionner la ligne',
+    formRequired: 'Champ obligatoire',
+    formInvalid: 'Valeur non valide',
+    formInvalidEmail: 'Saisissez une adresse e-mail valide',
+    formInvalidUrl: 'Saisissez une adresse web valide',
+    formTooShort: 'Au moins {n}',
+    formTooLong: 'Au plus {n}',
+    formOptional: '(facultatif)',
     search: 'Rechercher',
     noMoreItems: 'Aucun élément supplémentaire',
     perPage: '/ page',
@@ -673,6 +732,13 @@ class SeedLocalizations {
     expandRow: 'Expandir fila',
     collapseRow: 'Contraer fila',
     selectRow: 'Seleccionar fila',
+    formRequired: 'Campo obligatorio',
+    formInvalid: 'Valor no válido',
+    formInvalidEmail: 'Introduce un correo válido',
+    formInvalidUrl: 'Introduce una dirección web válida',
+    formTooShort: 'Al menos {n}',
+    formTooLong: 'Como máximo {n}',
+    formOptional: '(opcional)',
     search: 'Buscar',
     noMoreItems: 'No hay más elementos',
     perPage: '/ página',
@@ -731,6 +797,13 @@ class SeedLocalizations {
     expandRow: '展开行',
     collapseRow: '收起行',
     selectRow: '选择此行',
+    formRequired: '此项为必填项',
+    formInvalid: '值不合法',
+    formInvalidEmail: '请输入有效的邮箱地址',
+    formInvalidUrl: '请输入有效的网址',
+    formTooShort: '不少于 {n}',
+    formTooLong: '不超过 {n}',
+    formOptional: '（选填）',
     search: '搜索',
     noMoreItems: '没有更多了',
     perPage: '条/页',
@@ -788,6 +861,13 @@ class SeedLocalizations {
     expandRow: '行を展開',
     collapseRow: '行を折りたたむ',
     selectRow: '行を選択',
+    formRequired: '必須項目です',
+    formInvalid: '値が正しくありません',
+    formInvalidEmail: '有効なメールアドレスを入力してください',
+    formInvalidUrl: '有効なURLを入力してください',
+    formTooShort: '{n} 以上',
+    formTooLong: '{n} 以下',
+    formOptional: '（任意）',
     search: '検索',
     noMoreItems: 'これ以上ありません',
     perPage: '件/ページ',
@@ -846,6 +926,13 @@ class SeedLocalizations {
     expandRow: 'Satırı genişlet',
     collapseRow: 'Satırı daralt',
     selectRow: 'Satırı seç',
+    formRequired: 'Zorunlu alan',
+    formInvalid: 'Geçersiz değer',
+    formInvalidEmail: 'Geçerli bir e-posta adresi girin',
+    formInvalidUrl: 'Geçerli bir web adresi girin',
+    formTooShort: 'En az {n}',
+    formTooLong: 'En çok {n}',
+    formOptional: '(isteğe bağlı)',
     search: 'Ara',
     noMoreItems: 'Başka öğe yok',
     perPage: '/ sayfa',
@@ -903,6 +990,13 @@ class SeedLocalizations {
     expandRow: 'Expandir linha',
     collapseRow: 'Recolher linha',
     selectRow: 'Selecionar linha',
+    formRequired: 'Campo obrigatório',
+    formInvalid: 'Valor inválido',
+    formInvalidEmail: 'Informe um e-mail válido',
+    formInvalidUrl: 'Informe um endereço web válido',
+    formTooShort: 'No mínimo {n}',
+    formTooLong: 'No máximo {n}',
+    formOptional: '(opcional)',
     search: 'Pesquisar',
     noMoreItems: 'Não há mais itens',
     perPage: '/ página',
@@ -961,6 +1055,13 @@ class SeedLocalizations {
     expandRow: 'توسيع الصف',
     collapseRow: 'طي الصف',
     selectRow: 'تحديد الصف',
+    formRequired: 'هذا الحقل مطلوب',
+    formInvalid: 'قيمة غير صالحة',
+    formInvalidEmail: 'أدخل بريدًا إلكترونيًا صالحًا',
+    formInvalidUrl: 'أدخل عنوان موقع صالحًا',
+    formTooShort: '{n} على الأقل',
+    formTooLong: '{n} على الأكثر',
+    formOptional: '(اختياري)',
     search: 'بحث',
     noMoreItems: 'لا مزيد من العناصر',
     perPage: '/ صفحة',
@@ -1020,6 +1121,13 @@ class SeedLocalizations {
     expandRow: 'הרחב שורה',
     collapseRow: 'כווץ שורה',
     selectRow: 'בחר שורה',
+    formRequired: 'שדה חובה',
+    formInvalid: 'ערך לא תקין',
+    formInvalidEmail: 'הזן כתובת דוא"ל תקינה',
+    formInvalidUrl: 'הזן כתובת אתר תקינה',
+    formTooShort: 'לפחות {n}',
+    formTooLong: 'לכל היותר {n}',
+    formOptional: '(רשות)',
     search: 'חיפוש',
     noMoreItems: 'אין פריטים נוספים',
     perPage: '/ עמוד',

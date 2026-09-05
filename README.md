@@ -101,6 +101,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Tooltip](doc/data_display/tooltip.md)            | Text hint on hover or tap                                                      |
 | [Progress](doc/feedback/progress.md)              | Bar or ring progress indicator                                                 |
 | [Result](doc/feedback/result.md)                  | Full-page operation outcome                                                    |
+| [Form](doc/data_entry/form.md)                    | Named fields, rules with words in every language, and a controller you hold |
 | [Input](doc/data_entry/input.md)                  | Single- or multi-line text field                                               |
 | [InputNumber](doc/data_entry/input_number.md)     | Numeric input with steppers, range, precision                                  |
 | [Segmented](doc/data_display/segmented.md)        | Segmented single-select control                                                |

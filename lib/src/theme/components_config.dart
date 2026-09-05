@@ -20,6 +20,7 @@ import '../components/data_display/tour.dart';
 import '../components/data_display/tree.dart';
 import '../components/data_entry/checkbox.dart';
 import '../components/data_entry/date_picker.dart';
+import '../components/data_entry/form.dart';
 import '../components/data_entry/input.dart';
 import '../components/data_entry/input_number.dart';
 import '../components/data_entry/radio.dart';
@@ -60,6 +61,7 @@ class ComponentsConfig {
     this.dropdown,
     this.empty,
     this.floatButton,
+    this.form,
     this.input,
     this.inputNumber,
     this.listy,
@@ -120,6 +122,9 @@ class ComponentsConfig {
 
   /// Overrides applied to every [FloatButton] under this provider.
   final FloatButtonToken? floatButton;
+
+  /// Overrides applied to every [Form] under this provider.
+  final FormToken? form;
 
   /// Overrides applied to every [Drawer] under this provider.
   final DrawerToken? drawer;
@@ -237,6 +242,7 @@ class ComponentsConfig {
         dropdown: other.dropdown ?? dropdown,
         empty: other.empty ?? empty,
         floatButton: other.floatButton ?? floatButton,
+        form: other.form ?? form,
         input: other.input ?? input,
         inputNumber: other.inputNumber ?? inputNumber,
         listy: other.listy ?? listy,
@@ -283,6 +289,7 @@ class ComponentsConfig {
     if (T == DrawerToken && drawer != null) return drawer as T;
     if (T == DropdownToken && dropdown != null) return dropdown as T;
     if (T == EmptyToken && empty != null) return empty as T;
+    if (T == FormToken && form != null) return form as T;
     if (T == FloatButtonToken && floatButton != null) {
       return floatButton as T;
     }

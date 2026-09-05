@@ -192,6 +192,18 @@ export 'src/components/data_entry/date_picker.dart'
         DatePickerDefaults,
         DatePickerToken,
         DatePickerVariant;
+export 'src/components/data_entry/form.dart'
+    show
+        Form,
+        FormController,
+        FormFieldHandle,
+        FormItem,
+        FormLayout,
+        FormRequiredMark,
+        FormRule,
+        FormToken,
+        FormTrigger,
+        FormValidator;
 export 'src/components/data_entry/input.dart'
     show
         InputDefaults,

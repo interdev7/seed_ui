@@ -28,6 +28,7 @@ import 'components/data_entry/checkbox_demo.dart';
 import 'components/feedback/drawer_demo.dart';
 import 'components/data_display/empty_demo.dart';
 import 'components/navigation/dropdown_demo.dart';
+import 'components/data_entry/form_demo.dart';
 import 'components/data_entry/input_demo.dart';
 import 'components/data_entry/input_number_demo.dart';
 import 'components/feedback/message_demo.dart';
@@ -419,17 +420,13 @@ final List<Demo> demos = [
   Demo('progress', 'Progress', (_) => const ProgressDemo()),
   Demo('result', 'Result', (_) => const ResultDemo()),
   Demo('spin', 'Spin', (_) => const SpinDemo()),
+  Demo('form', 'Form', (_) => const FormDemo(), isNew: true),
   Demo('input', 'Input', (_) => const InputDemo()),
   Demo('inputnumber', 'InputNumber', (_) => const InputNumberDemo()),
   Demo('segmented', 'Segmented', (_) => const SegmentedDemo()),
-  Demo('table', 'Table', (_) => const TableDemo(), isNew: true),
-  Demo('table2d', 'Table (2D pkg)', (_) => const TableTwoDDemo(), isNew: true),
-  Demo(
-    'tableserver',
-    'Table (server)',
-    (_) => const TableServerDemo(),
-    isNew: true,
-  ),
+  Demo('table', 'Table', (_) => const TableDemo()),
+  Demo('table2d', 'Table (2D pkg)', (_) => const TableTwoDDemo()),
+  Demo('tableserver', 'Table (server)', (_) => const TableServerDemo()),
   Demo('tabs', 'Tabs', (_) => const TabsDemo()),
   Demo('card', 'Card', (_) => const CardDemo()),
   Demo('collapse', 'Collapse', (_) => const CollapseDemo()),

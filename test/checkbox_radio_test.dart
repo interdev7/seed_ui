@@ -182,4 +182,34 @@ void main() {
       expect(find.text('CUSTOM'), findsOneWidget);
     });
   });
+
+  group('a label longer than the room it is in', () {
+    testWidgets('gives way rather than running off the row', (tester) async {
+      // A label takes the width its words want, and in a narrow column that
+      // is more than there is.
+      for (final child in [
+        const Checkbox(
+          checked: false,
+          label: Text('A label far longer than the box it has been given'),
+        ),
+        const Radio<bool>(
+          value: true,
+          groupValue: false,
+          child: Text('A label far longer than the box it has been given'),
+        ),
+      ]) {
+        await tester.pumpWidget(
+          ConfigProvider(
+            child: MaterialApp(
+              home: Scaffold(
+                body: Center(child: SizedBox(width: 90, child: child)),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: '${child.runtimeType}');
+      }
+    });
+  });
 }

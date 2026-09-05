@@ -203,16 +203,23 @@ class _SoftRadioState<T> extends State<Radio<T>> {
               ),
               if (widget.child != null) ...[
                 SizedBox(width: token.sizeXS),
-                DefaultTextStyle.merge(
-                  style: TextStyle(
-                    color:
-                        _enabled ? token.colorText : token.colorTextQuaternary,
-                    fontSize: r.fontSize,
-                    fontFamily: token.fontFamily,
-                    fontFamilyFallback: token.fontFamilyFallback,
-                    decoration: TextDecoration.none,
+                // Flexible, so words longer than the room they are in give
+                // way rather than running off the end of the row: a label
+                // takes the width its words want, and in a narrow column that
+                // is more than there is.
+                Flexible(
+                  child: DefaultTextStyle.merge(
+                    style: TextStyle(
+                      color: _enabled
+                          ? token.colorText
+                          : token.colorTextQuaternary,
+                      fontSize: r.fontSize,
+                      fontFamily: token.fontFamily,
+                      fontFamilyFallback: token.fontFamilyFallback,
+                      decoration: TextDecoration.none,
+                    ),
+                    child: widget.child!,
                   ),
-                  child: widget.child!,
                 ),
               ],
             ],

@@ -331,6 +331,7 @@ class Input extends StatefulWidget {
     this.focusNode,
     this.placeholder,
     this.defaultValue,
+    this.value,
     this.onChanged,
     this.onSubmitted,
     this.disabled,
@@ -369,6 +370,14 @@ class Input extends StatefulWidget {
   /// Initial text for the field's own controller. Ignored when [controller] is
   /// supplied — set the controller's text instead.
   final String? defaultValue;
+
+  /// The text the field is to show, for a caller that holds it.
+  ///
+  /// Given one the field follows it: setting it puts those words in the box,
+  /// which is what a form doing `reset()` needs and what a `defaultValue`
+  /// cannot do, being only a starting point. Pass [onChanged] with it, or the
+  /// words will not answer to typing.
+  final String? value;
 
   /// Called on every edit.
   final ValueChanged<String>? onChanged;
@@ -481,7 +490,9 @@ class _SoftInputState extends State<Input> {
   TextEditingController? _ownController;
   TextEditingController get _controller =>
       widget.controller ??
-      (_ownController ??= TextEditingController(text: widget.defaultValue));
+      (_ownController ??= TextEditingController(
+        text: widget.value ?? widget.defaultValue,
+      ));
 
   FocusNode? _ownFocusNode;
   FocusNode get _focusNode =>
@@ -508,6 +519,16 @@ class _SoftInputState extends State<Input> {
     if (old.controller != widget.controller) {
       (old.controller ?? _ownController)?.removeListener(_onTextChange);
       _controller.addListener(_onTextChange);
+    }
+    // A caller that holds the text is obeyed, but only when it says something
+    // other than what is already in the box: assigning the same words back
+    // while somebody is typing would move the caret to the end of them.
+    final held = widget.value;
+    if (held != null && held != _controller.text) {
+      _controller.value = TextEditingValue(
+        text: held,
+        selection: TextSelection.collapsed(offset: held.length),
+      );
     }
   }
 

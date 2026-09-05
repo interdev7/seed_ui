@@ -166,10 +166,10 @@ class _FormDemoState extends State<FormDemo> {
               Text(
                 _saved == null
                     ? '$_filled of 6 answered. Submit with the fields empty: every one is refused, and '
-                        'the first thing wrong with a value is the only thing '
-                        'said about it. Put one right and the message goes as '
-                        'you type — a field that has been told off is watched '
-                        'from then on.'
+                          'the first thing wrong with a value is the only thing '
+                          'said about it. Put one right and the message goes as '
+                          'you type — a field that has been told off is watched '
+                          'from then on.'
                     : 'Sent: $_saved',
               ),
             ],

@@ -45,6 +45,50 @@ The handle carries what the field holds and what may be done to it:
 | `disabled` | Whether the form or the field has barred it |
 | `validate` | Ask the rules now, whatever the trigger says |
 
+## A field of a kind the kit knows
+
+Nine fields out of ten hold a word, a number, a date or a choice, and writing
+the same three lines for each — `value`, `status`, `onChanged` — is three
+lines too many. There is a named kind per control:
+
+```dart
+FormItem.text(name: 'email', label: const Text('Email'),
+    rules: const [FormRule.required(), FormRule.email()])
+FormItem.number(name: 'seats', min: 0, max: 99)
+FormItem.check(name: 'terms', title: const Text('I agree'))
+```
+
+| Kind | Control | Holds |
+| --- | --- | --- |
+| `FormItem.text` | `Input` | `String` |
+| `FormItem.number` | `InputNumber` | `num` |
+| `FormItem.check` | `Checkbox` | `bool` |
+| `FormItem.toggle` | `Switch` | `bool` |
+| `FormItem.date` | `DatePicker` | `DateTime` |
+| `FormItem.time` | `TimePicker` | `Duration` |
+| `FormItem.select` | `Select` | one value |
+| `FormItem.selectMany` | `Select`, multiple | a list of them |
+| `FormItem.radio` | `RadioGroup` | one value |
+| `FormItem.slider` | `Slider` | `double` |
+
+Each takes everything a `FormItem` takes — `label`, `rules`, `initialValue`,
+`help`, `extra`, `required`, `trigger`, `disabled` — and a handful of the
+control's own: `placeholder` for text, `min`/`max` for a number, `options`
+for a choice. Only a handful, deliberately: passing the whole of a control's
+API through would leave two interfaces to keep in step instead of one. For
+anything further, or for a control the kit has never heard of, the general
+`FormItem<T>` with a `builder` is still there.
+
+They are **static methods, not named constructors**. A constructor of
+`FormItem<T>` cannot fix what `T` is — it would still be inferred at the call
+site and land on `Object?` — where a static one names the type outright.
+`FormItem.text(...)` is a `FormItem<String>`, and nothing has to be written to
+say so.
+
+`select` against `selectMany` is worth a word: a `Select` holds a list
+whatever its mode, and the single kind unwraps it, so the field is of the
+value's own type rather than a list of one.
+
 ## Rules
 
 ```dart

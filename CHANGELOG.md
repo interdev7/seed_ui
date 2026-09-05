@@ -38,7 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that can recolour itself wants, so wiring one up is three lines and no
   colours.
 
-  Four decisions worth knowing: the first refusal is the one shown; a field
+  Ten named kinds save the wiring where the control is one of the kit's own:
+  `FormItem.text`, `.number`, `.check`, `.toggle`, `.date`, `.time`,
+  `.select`, `.selectMany`, `.radio` and `.slider`. Each names its own type —
+  they are static methods rather than named constructors, since a constructor
+  of `FormItem<T>` cannot fix what `T` is — and draws the control that suits
+  it, so the three lines every field used to repeat are gone.
+
+    Four decisions worth knowing: the first refusal is the one shown; a field
   that has been told off is watched from then on whatever the trigger says;
   submitting puts the keyboard away before anything is decided; and a barred
   field's rules are not asked, since a required one the reader cannot type

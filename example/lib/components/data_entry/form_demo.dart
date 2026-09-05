@@ -59,34 +59,26 @@ class _FormDemoState extends State<FormDemo> {
                     message.error('${errors.length} to put right'),
                 child: Column(
                   children: [
-                    FormItem<String>(
+                    // The common kinds, named for what they hold: no type
+                    // to write, no control to wire, and the same rules and
+                    // words as any other field.
+                    FormItem.text(
                       name: 'email',
                       label: const Text('Email'),
                       rules: const [FormRule.required(), FormRule.email()],
-                      builder: (field) => Input(
-                        value: field.value ?? '',
-                        // The handle hands the control its own state: no
-                        // colour to choose, no border to think about.
-                        status: field.status,
-                        placeholder: 'you@example.com',
-                        onChanged: field.didChange,
-                      ),
+                      placeholder: 'you@example.com',
                     ),
-                    FormItem<String>(
+                    FormItem.text(
                       name: 'password',
                       label: const Text('Password'),
                       extra: const Text('Eight characters at the very least'),
                       rules: const [FormRule.required(), FormRule.min(8)],
-                      builder: (field) => Input(
-                        value: field.value ?? '',
-                        status: field.status,
-                        password: const PasswordConfig(),
-                        onChanged: field.didChange,
-                      ),
+                      password: const PasswordConfig(),
                     ),
-                    FormItem<String>(
+                    FormItem.text(
                       name: 'handle',
                       label: const Text('Handle'),
+                      placeholder: 'try "admin"',
                       // A rule that has to ask somebody: an ordinary rule
                       // that happens to return a future.
                       rules: [
@@ -100,12 +92,6 @@ class _FormDemoState extends State<FormDemo> {
                               : null;
                         }),
                       ],
-                      builder: (field) => Input(
-                        value: field.value ?? '',
-                        status: field.status,
-                        placeholder: 'try "admin"',
-                        onChanged: field.didChange,
-                      ),
                     ),
                     FormItem<String>(
                       name: 'about',
@@ -147,16 +133,12 @@ class _FormDemoState extends State<FormDemo> {
                         ],
                       ),
                     ),
-                    FormItem<bool>(
+                    FormItem.check(
                       name: 'terms',
+                      title: const Text('I have read the terms'),
                       rules: const [
                         FormRule.required(message: 'You have to agree'),
                       ],
-                      builder: (field) => Checkbox(
-                        checked: field.value ?? false,
-                        label: const Text('I have read the terms'),
-                        onChanged: field.didChange,
-                      ),
                     ),
                   ],
                 ),
@@ -184,10 +166,10 @@ class _FormDemoState extends State<FormDemo> {
               Text(
                 _saved == null
                     ? '$_filled of 6 answered. Submit with the fields empty: every one is refused, and '
-                          'the first thing wrong with a value is the only thing '
-                          'said about it. Put one right and the message goes as '
-                          'you type — a field that has been told off is watched '
-                          'from then on.'
+                        'the first thing wrong with a value is the only thing '
+                        'said about it. Put one right and the message goes as '
+                        'you type — a field that has been told off is watched '
+                        'from then on.'
                     : 'Sent: $_saved',
               ),
             ],
@@ -273,7 +255,7 @@ class _FormDemoState extends State<FormDemo> {
           ),
         ),
         Group(
-          'Every kind of field',
+          'Every kind of field, named for what it holds',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -282,110 +264,97 @@ class _FormDemoState extends State<FormDemo> {
                 layout: FormLayout.horizontal,
                 labelWidth: 110,
                 labelAlign: TextAlign.end,
-                onFinish: (values) => message.success('Booked: \$values'),
+                onFinish: (values) => message.success('Booked: $values'),
                 child: Column(
                   children: [
-                    // Every control in the kit is told its value and reports
-                    // a change, so wiring one up is the same three lines
-                    // whatever it is — and the four that can recolour
-                    // themselves take the field's status as it stands.
-                    // A Select holds a list whatever its mode, so the field
-                    // is typed for one.
-                    FormItem<List<String>>(
+                    // Ten kinds, one per control. Each names its own type, so
+                    // there is no <String> to write and no Object? to cast,
+                    // and each draws the kit's own control — so the three
+                    // lines every field used to repeat (value, status,
+                    // onChanged) are gone.
+                    FormItem.select<String>(
                       name: 'role',
                       label: const Text('Role'),
                       rules: const [FormRule.required()],
-                      builder: (field) => Select<String>(
-                        value: field.value ?? const [],
-                        status: field.status == null
-                            ? null
-                            : SelectStatus.error,
-                        placeholder: 'Pick one',
-                        options: const [
-                          SelectOption(value: 'reader', label: Text('Reader')),
-                          SelectOption(value: 'author', label: Text('Author')),
-                          SelectOption(value: 'owner', label: Text('Owner')),
-                        ],
-                        onChanged: field.didChange,
-                      ),
+                      placeholder: 'Pick one',
+                      options: const [
+                        SelectOption(value: 'reader', label: Text('Reader')),
+                        SelectOption(value: 'author', label: Text('Author')),
+                        SelectOption(value: 'owner', label: Text('Owner')),
+                      ],
                     ),
-                    FormItem<DateTime>(
+                    FormItem.selectMany<String>(
+                      name: 'rooms',
+                      label: const Text('Rooms'),
+                      placeholder: 'Any number of them',
+                      showSearch: true,
+                      options: const [
+                        SelectOption(value: 'north', label: Text('North')),
+                        SelectOption(value: 'south', label: Text('South')),
+                        SelectOption(value: 'library', label: Text('Library')),
+                      ],
+                    ),
+                    FormItem.date(
                       name: 'start',
                       label: const Text('Starts'),
                       rules: const [FormRule.required()],
-                      builder: (field) => DatePicker(
-                        value: field.value,
-                        status: field.status,
-                        onChanged: field.didChange,
-                      ),
                     ),
-                    FormItem<Duration>(
-                      name: 'at',
-                      label: const Text('At'),
-                      builder: (field) => TimePicker(
-                        value: field.value,
-                        status: field.status,
-                        onChanged: field.didChange,
-                      ),
-                    ),
-                    FormItem<num>(
+                    FormItem.time(name: 'at', label: const Text('At')),
+                    FormItem.number(
                       name: 'seats',
                       label: const Text('Seats'),
-                      // min and max count the number itself here, where for a
+                      min: 0,
+                      max: 99,
+                      // min and max here count the number itself, where for a
                       // string they would count its letters.
                       rules: const [FormRule.min(1), FormRule.max(20)],
-                      builder: (field) => InputNumber(
-                        value: field.value,
-                        status: field.status,
-                        min: 0,
-                        max: 99,
-                        onChanged: field.didChange,
-                      ),
                     ),
-                    FormItem<String>(
+                    FormItem.radio<String>(
                       name: 'billing',
                       label: const Text('Billing'),
-                      builder: (field) => RadioGroup<String>(
-                        value: field.value,
-                        options: const [
-                          RadioOption(value: 'monthly', label: Text('Monthly')),
-                          RadioOption(value: 'yearly', label: Text('Yearly')),
-                        ],
-                        onChanged: field.didChange,
-                      ),
+                      options: const [
+                        RadioOption(value: 'monthly', label: Text('Monthly')),
+                        RadioOption(value: 'yearly', label: Text('Yearly')),
+                      ],
                     ),
-                    FormItem<double>(
+                    FormItem.slider(
                       name: 'budget',
                       label: const Text('Budget'),
                       rules: const [
                         FormRule.min(20, message: 'Twenty at the very least'),
                       ],
-                      builder: (field) => Slider(
-                        value: field.value ?? 0,
-                        onChanged: field.didChange,
-                      ),
                     ),
-                    FormItem<bool>(
+                    FormItem.toggle(
                       name: 'notify',
                       label: const Text('Tell me'),
-                      builder: (field) => Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Switch(
-                          value: field.value ?? false,
-                          onChanged: field.didChange,
-                        ),
-                      ),
                     ),
-                    FormItem<bool>(
+                    FormItem.check(
                       name: 'agreed',
                       label: const Text('Terms'),
+                      title: const Text('I agree to them'),
                       rules: const [
                         FormRule.required(message: 'You have to agree'),
                       ],
-                      builder: (field) => Checkbox(
-                        checked: field.value ?? false,
-                        label: const Text('I agree to them'),
-                        onChanged: field.didChange,
+                    ),
+                    // And the general kind, for a control the kit has never
+                    // heard of: here a pair of tags standing in for one.
+                    FormItem<String>(
+                      name: 'mood',
+                      label: const Text('Mood'),
+                      builder: (field) => Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Wrap(
+                          spacing: 8,
+                          children: [
+                            for (final mood in ['calm', 'busy'])
+                              CheckableTag(
+                                checked: field.value == mood,
+                                onChanged: (on) =>
+                                    field.didChange(on ? mood : null),
+                                child: Text(mood),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -399,13 +368,16 @@ class _FormDemoState extends State<FormDemo> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Eight kinds of control, wired the same way: told a value, '
-                'reporting a change. Nothing here knows what a form is, and '
-                'the form knows nothing about any of them — which is why a '
-                'control the kit has never heard of works just as well. Drag '
-                'the budget below twenty, or leave the role empty, and the '
-                'refusal appears under the field whether or not the control '
-                'itself can show one.',
+                'Ten kinds, one per control: text, number, check, toggle, '
+                'date, time, select, selectMany, radio and slider. Each names '
+                'its own type — no <String> at the call site and no Object? in '
+                'the handle — and draws the kit control that suits it, so the '
+                'three lines every field used to repeat have gone. The last '
+                'field is the general FormItem with a builder, which is what '
+                'a control the kit has never heard of still uses.\n\n'
+                'Note select against selectMany: a Select holds a list '
+                'whatever its mode, and the single kind unwraps it, so the '
+                'field is of the value\'s own type rather than a list of one.',
               ),
             ],
           ),

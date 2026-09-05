@@ -1,11 +1,20 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart' hide Form, FormField;
+import 'package:flutter/widgets.dart' hide Form, FormField, RadioGroup;
 
 import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
-import '../data_entry/input.dart' show InputStatus;
+import '../data_entry/checkbox.dart' show Checkbox;
+import '../data_entry/date_picker.dart' show DatePicker;
+import '../data_entry/input.dart' show Input, InputStatus, PasswordConfig;
+import '../data_entry/input_number.dart' show InputNumber;
+import '../data_entry/radio.dart' show RadioGroup, RadioOption, RadioOptionType;
+import '../data_entry/select.dart'
+    show Select, SelectMode, SelectOption, SelectStatus;
+import '../data_entry/slider.dart' show Slider, SliderMark;
+import '../data_entry/switch.dart' show Switch;
+import '../data_entry/time_picker.dart' show TimePicker;
 
 /// Where a field's label stands in relation to what it labels.
 enum FormLayout {
@@ -697,6 +706,411 @@ class FormItem<T> extends StatefulWidget {
 
   /// Bars this field alone.
   final bool? disabled;
+
+  /// A field of words, drawn with [Input].
+  ///
+  /// A static method rather than a named constructor: a constructor of
+  /// `FormItem<T>` cannot fix what `T` is — it would still be inferred from
+  /// the call site and land on `Object?` — where a static one names the type
+  /// outright and hands it back settled.
+  static FormItem<String> text({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    String? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+    String? placeholder,
+    PasswordConfig? password,
+    Widget? prefix,
+    Widget? suffix,
+    int? maxLines,
+    ValueChanged<String>? onSubmitted,
+  }) =>
+      FormItem<String>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => Input(
+          value: field.value ?? '',
+          status: field.status,
+          disabled: field.disabled,
+          placeholder: placeholder,
+          password: password,
+          prefix: prefix,
+          suffix: suffix,
+          maxLines: maxLines,
+          onSubmitted: onSubmitted,
+          onChanged: field.didChange,
+        ),
+      );
+
+  /// A field of numbers, drawn with [InputNumber].
+  static FormItem<num> number({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    num? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+    num? min,
+    num? max,
+    num step = 1,
+    int? precision,
+    String? placeholder,
+  }) =>
+      FormItem<num>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => InputNumber(
+          value: field.value,
+          status: field.status,
+          disabled: field.disabled,
+          min: min,
+          max: max,
+          step: step,
+          precision: precision,
+          placeholder: placeholder,
+          onChanged: field.didChange,
+        ),
+      );
+
+  /// A field that is ticked or not, drawn with [Checkbox].
+  static FormItem<bool> check({
+    Key? key,
+    required String name,
+    Widget? label,
+    Widget? title,
+    List<FormRule> rules = const [],
+    bool? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+  }) =>
+      FormItem<bool>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Checkbox(
+            checked: field.value ?? false,
+            disabled: field.disabled,
+            label: title,
+            onChanged: field.didChange,
+          ),
+        ),
+      );
+
+  /// A field that is on or off, drawn with [Switch].
+  static FormItem<bool> toggle({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    bool? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+    Widget? checkedChild,
+    Widget? uncheckedChild,
+  }) =>
+      FormItem<bool>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Switch(
+            value: field.value ?? false,
+            disabled: field.disabled,
+            checkedChild: checkedChild,
+            uncheckedChild: uncheckedChild,
+            onChanged: field.didChange,
+          ),
+        ),
+      );
+
+  /// A field holding a date, drawn with [DatePicker].
+  static FormItem<DateTime> date({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    DateTime? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+    DateTime? minDate,
+    DateTime? maxDate,
+    String format = 'yyyy-MM-dd',
+    String? placeholder,
+  }) =>
+      FormItem<DateTime>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => DatePicker(
+          value: field.value,
+          status: field.status,
+          disabled: field.disabled,
+          minDate: minDate,
+          maxDate: maxDate,
+          format: format,
+          placeholder: placeholder,
+          onChanged: field.didChange,
+        ),
+      );
+
+  /// A field holding a time of day, drawn with [TimePicker].
+  static FormItem<Duration> time({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    Duration? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+    String format = 'HH:mm:ss',
+    String? placeholder,
+  }) =>
+      FormItem<Duration>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => TimePicker(
+          value: field.value,
+          status: field.status,
+          disabled: field.disabled,
+          format: format,
+          placeholder: placeholder,
+          onChanged: field.didChange,
+        ),
+      );
+
+  /// A field holding one choice, drawn with [Select].
+  ///
+  /// A `Select` holds a list whatever its mode, so this unwraps it: the field
+  /// is of the value's own type, and the list is the control's business
+  /// rather than the form's.
+  static FormItem<V> select<V>({
+    Key? key,
+    required String name,
+    required List<SelectOption<V>> options,
+    Widget? label,
+    List<FormRule> rules = const [],
+    V? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+    String? placeholder,
+    bool showSearch = false,
+    bool allowClear = false,
+  }) =>
+      FormItem<V>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => Select<V>(
+          value: [if (field.value != null) field.value as V],
+          status: field.status == null ? null : SelectStatus.error,
+          disabled: field.disabled,
+          options: options,
+          placeholder: placeholder,
+          showSearch: showSearch,
+          allowClear: allowClear,
+          onChanged: (chosen) => field.didChange(chosen.firstOrNull),
+        ),
+      );
+
+  /// A field holding several choices, drawn with [Select].
+  static FormItem<List<V>> selectMany<V>({
+    Key? key,
+    required String name,
+    required List<SelectOption<V>> options,
+    Widget? label,
+    List<FormRule> rules = const [],
+    List<V>? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+    String? placeholder,
+    bool showSearch = false,
+    bool allowClear = false,
+  }) =>
+      FormItem<List<V>>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => Select<V>(
+          value: field.value ?? const [],
+          status: field.status == null ? null : SelectStatus.error,
+          disabled: field.disabled,
+          mode: SelectMode.multiple,
+          options: options,
+          placeholder: placeholder,
+          showSearch: showSearch,
+          allowClear: allowClear,
+          onChanged: field.didChange,
+        ),
+      );
+
+  /// A field holding one of a few choices, drawn with [RadioGroup].
+  static FormItem<V> radio<V>({
+    Key? key,
+    required String name,
+    required List<RadioOption<V>> options,
+    Widget? label,
+    List<FormRule> rules = const [],
+    V? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+    Axis? direction,
+    RadioOptionType? optionType,
+  }) =>
+      FormItem<V>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: RadioGroup<V>(
+            value: field.value,
+            disabled: field.disabled,
+            options: options,
+            direction: direction,
+            optionType: optionType,
+            onChanged: field.didChange,
+          ),
+        ),
+      );
+
+  /// A field holding a number chosen by dragging, drawn with [Slider].
+  static FormItem<double> slider({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    double? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    bool? disabled,
+    double min = 0,
+    double max = 100,
+    double step = 1,
+    List<SliderMark> marks = const [],
+  }) =>
+      FormItem<double>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        disabled: disabled,
+        builder: (field) => Slider(
+          value: field.value ?? min,
+          disabled: field.disabled,
+          min: min,
+          max: max,
+          step: step,
+          marks: marks,
+          onChanged: field.didChange,
+        ),
+      );
 
   @override
   State<FormItem<T>> createState() => _FormItemState<T>();

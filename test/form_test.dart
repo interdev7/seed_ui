@@ -757,4 +757,236 @@ void main() {
       expect(inputs.last.disabled, isNot(true));
     });
   });
+
+  group('a field of a kind the kit knows', () {
+    test('each names its own type without being told', () {
+      // The point of them: no <String> at the call site, and no Object? in
+      // the handle either.
+      expect(FormItem.text(name: 'a'), isA<FormItem<String>>());
+      expect(FormItem.number(name: 'a'), isA<FormItem<num>>());
+      expect(FormItem.check(name: 'a'), isA<FormItem<bool>>());
+      expect(FormItem.toggle(name: 'a'), isA<FormItem<bool>>());
+      expect(FormItem.date(name: 'a'), isA<FormItem<DateTime>>());
+      expect(FormItem.time(name: 'a'), isA<FormItem<Duration>>());
+      expect(FormItem.slider(name: 'a'), isA<FormItem<double>>());
+      expect(
+        FormItem.select<String>(name: 'a', options: const []),
+        isA<FormItem<String>>(),
+      );
+      expect(
+        FormItem.selectMany<String>(name: 'a', options: const []),
+        isA<FormItem<List<String>>>(),
+      );
+      expect(
+        FormItem.radio<String>(name: 'a', options: const []),
+        isA<FormItem<String>>(),
+      );
+    });
+
+    testWidgets('a text field holds words', (tester) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: FormItem.text(
+              name: 'email',
+              label: const Text('Email'),
+              rules: const [FormRule.required(), FormRule.email()],
+              placeholder: 'you@example.com',
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Input), findsOneWidget);
+      await tester.enterText(find.byType(Input), 'nope');
+      await tester.pumpAndSettle();
+      expect(form.value('email'), 'nope');
+      expect(form.error('email'), 'Enter a valid email address');
+    });
+
+    testWidgets('a number field holds numbers', (tester) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: FormItem.number(
+              name: 'seats',
+              initialValue: 3,
+              min: 0,
+              max: 99,
+              rules: const [FormRule.min(1)],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(InputNumber), findsOneWidget);
+      expect(form.value('seats'), 3);
+      form.setValue('seats', 0);
+      await tester.pumpAndSettle();
+      expect(await form.validate(), isFalse, reason: 'a rule counts the value');
+    });
+
+    testWidgets('the ticking and toggling kinds hold a yes or no',
+        (tester) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: Column(
+              children: [
+                FormItem.check(
+                  name: 'terms',
+                  title: const Text('I agree'),
+                  rules: const [FormRule.required(message: 'You have to')],
+                ),
+                FormItem.toggle(name: 'notify', label: const Text('Tell me')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Checkbox), findsOneWidget);
+      expect(find.byType(Switch), findsOneWidget);
+
+      expect(await form.validate(), isFalse);
+      await tester.tap(find.text('I agree'));
+      await tester.pumpAndSettle();
+      expect(form.value('terms'), isTrue);
+      expect(await form.validate(), isTrue);
+    });
+
+    testWidgets('the choosing kinds hold one value or a list', (tester) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: Column(
+              children: [
+                FormItem.select<String>(
+                  name: 'role',
+                  label: const Text('Role'),
+                  options: const [
+                    SelectOption(value: 'reader', label: Text('Reader')),
+                    SelectOption(value: 'owner', label: Text('Owner')),
+                  ],
+                ),
+                FormItem.selectMany<String>(
+                  name: 'tags',
+                  options: const [SelectOption(value: 'a', label: Text('A'))],
+                ),
+                FormItem.radio<String>(
+                  name: 'billing',
+                  initialValue: 'monthly',
+                  options: const [
+                    RadioOption(value: 'monthly', label: Text('Monthly')),
+                    RadioOption(value: 'yearly', label: Text('Yearly')),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // One holds the value itself, the other a list of them: a Select is a
+      // list whatever its mode, and the single kind unwraps it so the field
+      // is of the value's own type.
+      expect(form.value('billing'), 'monthly');
+      await tester.tap(find.text('Yearly'));
+      await tester.pumpAndSettle();
+      expect(form.value('billing'), 'yearly');
+
+      // Chosen through the control rather than set from outside: the single
+      // kind unwraps the list a Select always hands back, so the form holds
+      // the value itself and not a list of one.
+      await tester.tap(find.byType(Select<String>).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Owner').last);
+      await tester.pumpAndSettle();
+      expect(form.value('role'), 'owner');
+
+      // And what the form holds is what the control shows.
+      form.setValue('role', 'reader');
+      await tester.pumpAndSettle();
+      expect(find.text('Reader'), findsWidgets);
+      expect(
+        tester.widget<Select<String>>(find.byType(Select<String>).first).value,
+        const ['reader'],
+      );
+
+      form.setValue('tags', const ['a']);
+      await tester.pumpAndSettle();
+      expect(form.value('tags'), const ['a']);
+      // The many-kind asks its control for several, where the single one
+      // asks for one: the same widget, told a different mode.
+      final selects =
+          tester.widgetList<Select<String>>(find.byType(Select<String>));
+      expect(selects.first.mode, SelectMode.single);
+      expect(selects.last.mode, SelectMode.multiple);
+    });
+
+    testWidgets('the dragging and dating kinds are wired too', (tester) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: Column(
+              children: [
+                FormItem.slider(name: 'budget', initialValue: 40),
+                FormItem.date(name: 'start'),
+                FormItem.time(name: 'at'),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Slider), findsOneWidget);
+      expect(find.byType(DatePicker), findsOneWidget);
+      expect(find.byType(TimePicker), findsOneWidget);
+      expect(form.value('budget'), 40);
+    });
+
+    testWidgets("one of a kind still carries the form's own words",
+        (tester) async {
+      // Everything a FormItem can be told, a kind of one can be told too.
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: Column(
+              children: [
+                FormItem.text(
+                  name: 'note',
+                  label: const Text('Note'),
+                  help: 'The server said no',
+                  extra: const Text('A hint'),
+                  disabled: true,
+                  rules: const [FormRule.required()],
+                ),
+                FormItem.number(name: 'spare', label: const Text('Spare')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // The star is worked out from the rules here as it is anywhere else,
+      // and the field with none goes unmarked.
+      expect(find.text('*'), findsOneWidget);
+      expect(find.text('The server said no'), findsOneWidget);
+      expect(find.text('A hint'), findsOneWidget);
+      expect(tester.widget<Input>(find.byType(Input).first).disabled, isTrue);
+      expect(await form.validate(), isTrue, reason: 'barred, so not asked');
+    });
+  });
 }

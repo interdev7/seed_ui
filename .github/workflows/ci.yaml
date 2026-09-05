@@ -22,6 +22,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: ./tool/check_version.sh
 
+  docs:
+    name: Documentation names every property
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./tool/check_docs.sh
+
   analyze:
     name: Format & analyze
     runs-on: ubuntu-latest

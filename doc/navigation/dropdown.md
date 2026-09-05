@@ -193,6 +193,12 @@ every floating menu is painted on, and `DropdownMenuList` renders a list of
 entries as rows. Both are public so you can build custom overlays with the same
 look — as `Select` does for its options.
 
+`DropdownPanel.minWidth` is the least it may shrink to, a hundred and twenty by
+default: a menu narrower than that reads as a mistake however short its words
+are. `DropdownMenuList` takes the `entries` to draw and an `onSelect` called
+with the item chosen — it reports the item rather than its value, so a caller
+can tell two entries carrying the same value apart.
+
 ## Testing
 
 The menu renders into the root navigator's overlay, so the test app must

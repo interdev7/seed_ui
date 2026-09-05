@@ -137,6 +137,9 @@ closed), **Enter** selects the highlighted option (or creates a tag), **Esc**
 closes, and **Backspace** on an empty search removes the last tag in
 multiple/tags modes.
 
+`focusNode` takes a node of your own, for a caller that wants to move focus
+here itself or watch when the field has it. Left null the field keeps one.
+
 ## Dropdown
 
 | Property | Description |

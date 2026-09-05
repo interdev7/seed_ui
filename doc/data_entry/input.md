@@ -228,6 +228,8 @@ apps.
   gap, tint or padding), for full-height affixes such as an `InputNumber`
   stepper or an attached button. Such an affix is clipped to the box's own
   corner, so a hover or pressed fill cannot spill past the rounding.
+- `prefixFlush` — the leading counterpart, for a full-height affix at the
+  other end: the minus button of an `InputNumberMode.spinner` is one.
 
 ## Design tokens
 

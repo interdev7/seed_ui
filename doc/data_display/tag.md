@@ -90,6 +90,8 @@ CheckableTagGroup<String>(
 | `onChanged` | Called with the full new selection |
 | `multiple` | Allow several checked at once (default false — checking one unchecks the rest) |
 | `disabled` | Grey the whole group out |
+| `spacing` | Gap between tags along a row (default 8) |
+| `runSpacing` | Gap between rows once they wrap (default 8) |
 
 The value is a `List<T>` in every mode; single-select simply holds at most one.
 

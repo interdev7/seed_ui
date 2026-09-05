@@ -220,6 +220,14 @@ FloatButton(
 ```
 
 The kit dresses the text — colour, size, the theme's face — and stops there.
+
+`labelPlacement` says which side it hangs on. Left null a button in a group
+asks the group, which works it out from the way the group travels; a button
+standing alone falls back to the leading side.
+
+`semanticLabel` is what a screen reader announces. There is no fallback, so
+give one to any button whose mark is an icon alone — the icon says nothing to
+somebody who cannot see it.
 There is no plate behind it, because a caption that needs one is a caption you
 wrap yourself, which is what `label` being a widget is for:
 

@@ -6,6 +6,7 @@ import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
 import '../../utils/hex_color.dart';
 import '../../utils/size_resolver.dart';
+import 'compact.dart';
 
 /// How a [Button] is filled and bordered.
 enum ButtonVariant {
@@ -481,18 +482,21 @@ class _SoftButtonState extends State<Button> {
         SoftSize.large => r.fontSizeLG,
       };
 
-  BorderRadius _radius(_ResolvedButtonToken r) => switch (_shape) {
-        ButtonShape.circle ||
-        ButtonShape.round =>
-          BorderRadius.circular(_height(r) / 2),
-        ButtonShape.defaultShape => BorderRadius.circular(
-            switch (_preset(r)) {
+  /// The corners to draw. [CompactSlot] squares the ones that meet a
+  /// neighbour, and hands them all back where there is no neighbour — which
+  /// is everywhere but inside a [Compact].
+  BorderRadius _radius(BuildContext context, _ResolvedButtonToken r) =>
+      CompactSlot.radiusOf(
+        context,
+        switch (_shape) {
+          ButtonShape.circle || ButtonShape.round => _height(r) / 2,
+          ButtonShape.defaultShape => switch (_preset(r)) {
               SoftSize.small => r.borderRadiusSM,
               SoftSize.middle => r.borderRadius,
               SoftSize.large => r.borderRadiusLG,
             },
-          ),
-      };
+        },
+      );
 
   bool get _isDefault => _color == ButtonColor.defaultColor;
 
@@ -676,7 +680,7 @@ class _SoftButtonState extends State<Button> {
         // token names nothing until it is told to. A disabled button says no
         // to it already — its style is built apart, and never carries one.
         boxShadow: style.shadow ? r.shadow : null,
-        borderRadius: _shape == ButtonShape.circle ? null : _radius(r),
+        borderRadius: _shape == ButtonShape.circle ? null : _radius(context, r),
         shape:
             _shape == ButtonShape.circle ? BoxShape.circle : BoxShape.rectangle,
         border: style.border == null || style.dashed
@@ -694,7 +698,7 @@ class _SoftButtonState extends State<Button> {
       button = CustomPaint(
         foregroundPainter: DashedBorderPainter(
           color: style.border!,
-          radius: _radius(r),
+          radius: _radius(context, r),
           strokeWidth: token.lineWidth,
         ),
         child: button,

@@ -8,6 +8,7 @@ import '../../utils/size_resolver.dart';
 import '../../utils/time_format.dart';
 import '../data_entry/input.dart' show InputStatus;
 import '../data_entry/select.dart' show ClearIconPainter;
+import '../general/compact.dart';
 
 /// How a [TimePicker] is filled and bordered.
 enum TimePickerVariant {
@@ -752,7 +753,7 @@ class _TimePickerState extends State<TimePicker> {
           padding: EdgeInsetsDirectional.symmetric(horizontal: t.sizeSM),
           decoration: BoxDecoration(
             color: fill,
-            borderRadius: BorderRadius.circular(r.borderRadius),
+            borderRadius: CompactSlot.radiusOf(context, r.borderRadius),
             border: Border.all(color: border, width: t.lineWidth),
           ),
           child: LayoutBuilder(

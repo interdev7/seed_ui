@@ -519,4 +519,55 @@ void main() {
       expect(rowFill(tester, 'Apple')!.a, 0);
     });
   });
+
+  testWidgets('stands exactly as tall as every other control of its size',
+      (tester) async {
+    await tester.pumpWidget(
+      _host(
+        Row(
+          children: [
+            SizedBox(
+              width: 160,
+              child: Select<String>(
+                value: const ['a'],
+                options: const [SelectOption(value: 'a', label: Text('a'))],
+                onChanged: (_) {},
+              ),
+            ),
+            const Expanded(child: Input(placeholder: 'x')),
+          ],
+        ),
+      ),
+    );
+    expect(
+      tester.getSize(find.byType(Select<String>)).height,
+      tester.getSize(find.byType(Input)).height,
+    );
+  });
+
+  testWidgets('grows for the tags it holds', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        SizedBox(
+          width: 200,
+          child: Select<String>(
+            mode: SelectMode.multiple,
+            value: const ['a', 'b', 'c', 'd', 'e'],
+            options: const [
+              SelectOption(value: 'a', label: Text('Alpha')),
+              SelectOption(value: 'b', label: Text('Bravo')),
+              SelectOption(value: 'c', label: Text('Charlie')),
+              SelectOption(value: 'd', label: Text('Delta')),
+              SelectOption(value: 'e', label: Text('Echo')),
+            ],
+            onChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.getSize(find.byType(Select<String>)).height,
+      greaterThan(40),
+    );
+  });
 }

@@ -7,6 +7,7 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/popover.dart';
 import '../../utils/size_resolver.dart';
+import '../general/compact.dart';
 import '../navigation/dropdown.dart' show DropdownPanel;
 
 /// How a [Select] behaves: pick one value, several, or freely create new ones.
@@ -952,7 +953,7 @@ class _SelectState<T> extends State<Select<T>> {
       ),
       decoration: BoxDecoration(
         color: fill,
-        borderRadius: BorderRadius.circular(token.borderRadius),
+        borderRadius: CompactSlot.radiusOf(context, token.borderRadius),
         border: bordered
             ? Border.all(color: _borderColor(token), width: token.lineWidth)
             : null,
@@ -988,10 +989,16 @@ class _SelectState<T> extends State<Select<T>> {
               else
                 SizedBox(width: _naturalWidth(textStyle), child: valueArea),
               SizedBox(width: token.sizeXS),
+              // Width only: a height here would be the height of the
+              // *content*, which the border then stands outside of, leaving
+              // the control two lines taller than every other one of its
+              // size. The row centres it in whatever height there is.
               SizedBox(
                 width: fontSize,
-                height: _height(token),
-                child: Center(child: suffix),
+                // A height factor of one: left to itself a `Center` takes
+                // every bit of height it is offered, which here is the whole
+                // page.
+                child: Center(heightFactor: 1, child: suffix),
               ),
             ],
           );

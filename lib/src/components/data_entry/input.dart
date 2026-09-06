@@ -9,6 +9,7 @@ import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/size_resolver.dart';
+import '../general/compact.dart';
 
 /// A validation status that recolours a [Input]'s border.
 enum InputStatus {
@@ -850,7 +851,9 @@ class _SoftInputState extends State<Input> {
     Widget content, {
     bool flatRight = false,
   }) {
-    final radius = Radius.circular(_radiusVal(r));
+    // Square where a neighbour in a [Compact] meets this field.
+    final corners = CompactSlot.radiusOf(context, _radiusVal(r));
+    final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
     final ring = _focusRing(token);
     final inlinePad = _paddingInline(r);
     final blockPad = _paddingBlock(r);
@@ -880,11 +883,11 @@ class _SoftInputState extends State<Input> {
           decoration: BoxDecoration(
             color: _enabled ? r.colorBgContainer : token.colorFillTertiary,
             // Square where an addon is joined on, rounded at the free end.
-            borderRadius: BorderRadiusDirectional.only(
-              topStart: radius,
-              bottomStart: radius,
-              topEnd: flatRight ? Radius.zero : radius,
-              bottomEnd: flatRight ? Radius.zero : radius,
+            borderRadius: BorderRadius.only(
+              topLeft: flatRight && !ltr ? Radius.zero : corners.topLeft,
+              bottomLeft: flatRight && !ltr ? Radius.zero : corners.bottomLeft,
+              topRight: flatRight && ltr ? Radius.zero : corners.topRight,
+              bottomRight: flatRight && ltr ? Radius.zero : corners.bottomRight,
             ),
             border: Border.all(
               color: _borderColor(token),

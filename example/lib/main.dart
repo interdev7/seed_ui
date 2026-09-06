@@ -11,6 +11,7 @@ import 'components/feedback/alert_demo.dart';
 import 'components/data_display/avatar_demo.dart';
 import 'components/data_display/badge_demo.dart';
 import 'components/general/button_demo.dart';
+import 'components/general/compact_demo.dart';
 import 'components/general/float_button_demo.dart';
 import 'components/data_display/card_demo.dart';
 import 'components/data_entry/slider_demo.dart';
@@ -408,6 +409,7 @@ final List<Demo> demos = [
   Demo('time-picker', 'TimePicker', (_) => const TimePickerDemo()),
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),
+  Demo('compact', 'Compact', (_) => const CompactDemo(), isNew: true),
   Demo('float-button', 'FloatButton', (_) => const FloatButtonDemo()),
   Demo('message', 'message', (_) => const MessageDemo()),
   Demo('notification', 'notification', (_) => const NotificationDemo()),
@@ -420,7 +422,7 @@ final List<Demo> demos = [
   Demo('progress', 'Progress', (_) => const ProgressDemo()),
   Demo('result', 'Result', (_) => const ResultDemo()),
   Demo('spin', 'Spin', (_) => const SpinDemo()),
-  Demo('form', 'Form', (_) => const FormDemo(), isNew: true),
+  Demo('form', 'Form', (_) => const FormDemo()),
   Demo('input', 'Input', (_) => const InputDemo()),
   Demo('inputnumber', 'InputNumber', (_) => const InputNumberDemo()),
   Demo('segmented', 'Segmented', (_) => const SegmentedDemo()),

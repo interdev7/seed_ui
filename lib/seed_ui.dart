@@ -317,6 +317,8 @@ export 'src/components/general/button.dart'
         ButtonShape,
         ButtonToken,
         ButtonVariant;
+export 'src/components/general/compact.dart'
+    show Compact, CompactPosition, CompactSlot;
 export 'src/components/general/float_button.dart'
     show
         FloatButton,

@@ -42,6 +42,9 @@ CollapseItem
 CollapseToken
 CollapsibleTrigger
 ColorGroup
+Compact
+CompactPosition
+CompactSlot
 ComponentDefaults
 ComponentsConfig
 ConfigProvider

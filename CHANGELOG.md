@@ -5,6 +5,39 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.18.0
+
+### Added
+
+- **`Compact`** — joins a run of controls into one: square where they meet,
+  rounded only at the ends, and a single line at the seam rather than two.
+
+  ```dart
+  Compact(
+    children: [
+      Expanded(child: Input(placeholder: 'Search')),
+      Button(icon: const Icon(Icons.search), onPressed: search),
+    ],
+  )
+  ```
+
+  Each control asks `CompactSlot.radiusOf(context, radius)` which corners to
+  draw, so a widget of your own joins in by asking too, and one that never
+  heard of the group still stands in the run. `Button`, `Input`, `InputNumber`,
+  `Select`, `DatePicker` and `TimePicker` ask. The seam is closed in the
+  layout, not only in the painting, so the run ends where its last control
+  ends; the round corners follow the reading direction; `Expanded` children
+  keep their flex, and `block: true` shares the whole width. A row centres its
+  controls rather than stretching them, so it stands in a `Wrap` or an
+  unmeasured `Column` without asking for a height.
+
+### Fixed
+
+- **`Select`** stood two pixels taller than every other control of its size.
+  The arrow named the control's height as its own, which is the height of the
+  *content*, and the border then stood outside that. Plain to see beside an
+  `Input` in a `Compact` run, and there everywhere else besides.
+
 ## 0.17.0
 
 ### Added
@@ -1327,7 +1360,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tool/check_version.sh` — a screenshot now says which version it is.
 
 - **`ConfigProvider.componentSize` and `ConfigProvider.componentDisabled`** —
-  one word for a whole subtree, the way antd's `SizeContext` and
+  one word for a whole subtree, the way a size context and
   `DisabledContext` work. A dense screen sets `componentSize: SoftSize.small`
   and every button, input, select and tab in it follows; a form that goes
   read-only while it saves sets `componentDisabled: saving` instead of
@@ -1514,7 +1547,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a pair.
 
   Reading right to left turns the scale round on its own, and `reverse` flips
-  it back rather than naming a side — the rule Ant Design applies, and the
+  it back rather than naming a side — the usual rule, and the
   only one under which `reverse` means the same thing in both languages. The
   arrow keys move a handle one step, and the key that points along the groove
   is the one that advances the value, so a mirrored scale answers the same key
@@ -1525,7 +1558,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the slider rather than in an overlay, since it has to follow a handle that
   moves every frame — an ancestor that clips will clip it too.
 
-  Ant Design's editable range nodes are not here.
+  Editable range nodes are not here.
 
 ## 0.6.9
 
@@ -1584,7 +1617,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   start of their block, so in the column standing before the axis the lines
   drifted away from the line they belong to instead of meeting it. Text faces
   the axis now — end for the near column, start for the far one, swapping with
-  the item's placement, as Ant Design does. Labels follow the same rule.
+  the item's placement. Labels follow the same rule.
 
   Two settings are needed, not one: the box alignment places a block narrower
   than its column, but a block as wide as the column — any text long enough to
@@ -1634,7 +1667,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A `Segmented` in `block` mode wrapped a label that would not fit, growing
   the whole strip a second line to suit its longest word. A segment is one
-  line: what spills is cut with an ellipsis, as it is in Ant Design, where the
+  line: what spills is cut with an ellipsis, where the
   label carries `text-overflow: ellipsis` and the item `min-width: 0`.
 - A `Pagination` whose run of pages was too wide for its room overflowed
   rather than fitting. The run is atomic by design, so it cannot be given less
@@ -1693,7 +1726,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   back to English rather than throwing — a widget kit has to draw in any
   application.
 
-  Every word but `noMoreItems` is taken from Ant Design's own locale files
+  Every word but `noMoreItems` is taken from the reference locale files
   rather than translated here.
 
 ### Changed
@@ -1706,7 +1739,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `Countdown`. Time to a moment or since one, counting either way, with antd's
+- `Countdown`. Time to a moment or since one, counting either way, with the
   format tokens — `Y M D H m s S`, padded to the width of the run, with square
   brackets kept as written. A unit left out of the format rolls into the next
   one down, so `HH:mm:ss` reads `26:00:00` where `D[d] HH:mm:ss` reads

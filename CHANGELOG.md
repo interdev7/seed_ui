@@ -71,6 +71,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`Select` opened its menu with the highlight on the first row**, whatever
+  was chosen, so the grey sat on one option while the tick sat on another and
+  an arrow key moved from the top rather than from where the reader had left
+  off. It opens on what is chosen, and on the first that can be chosen only
+  where nothing is.
+
 - **`Checkbox` and `Radio` gave their labels the width the words wanted**, so
   either in a column narrower than its own label ran off the end of its row
   rather than wrapping. The label gives way now.

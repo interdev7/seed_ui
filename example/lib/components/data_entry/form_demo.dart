@@ -262,7 +262,7 @@ class _FormDemoState extends State<FormDemo> {
               Form(
                 controller: _every,
                 layout: FormLayout.horizontal,
-                labelWidth: 110,
+                labelWidth: 50,
                 labelAlign: TextAlign.end,
                 onFinish: (values) => message.success('Booked: $values'),
                 child: Column(

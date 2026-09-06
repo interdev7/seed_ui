@@ -540,7 +540,7 @@ class _SelectState<T> extends State<Select<T>> {
     final anchor = box.localToGlobal(Offset.zero) & box.size;
     setState(() {
       _open = true;
-      _highlight = _firstEnabled(_visibleOptions);
+      _highlight = _openingHighlight(_visibleOptions);
     });
     final token = context.softToken;
     _popover.open(
@@ -579,6 +579,23 @@ class _SelectState<T> extends State<Select<T>> {
       if (!options[i].disabled) return i;
     }
     return -1;
+  }
+
+  /// Where the highlight stands when the menu opens: on what is already
+  /// chosen, else on the first thing that can be chosen.
+  ///
+  /// Opening on the first row instead put the grey on one option while the
+  /// tick sat on another, which reads as though the wrong thing were about to
+  /// happen — and a keyboard arrow then moved from the top rather than from
+  /// where the reader had left off.
+  int _openingHighlight(List<SelectOption<T>> options) {
+    final chosen = _current;
+    if (chosen.isNotEmpty) {
+      for (var i = 0; i < options.length; i++) {
+        if (!options[i].disabled && chosen.contains(options[i].value)) return i;
+      }
+    }
+    return _firstEnabled(options);
   }
 
   // --- selection ---

@@ -455,4 +455,68 @@ void main() {
       expect(width, lessThan(800), reason: 'its labels, not the page');
     });
   });
+
+  group('where the highlight stands when the menu opens', () {
+    /// The row's own fill: the nearest decoration above the words, which is
+    /// the one the highlight paints. Anything further out is the panel.
+    Color? rowFill(WidgetTester tester, String text) {
+      final decorations = find
+          .ancestor(of: find.text(text), matching: find.byType(DecoratedBox))
+          .evaluate()
+          .map((e) => (e.widget as DecoratedBox).decoration)
+          .whereType<BoxDecoration>()
+          .map((d) => d.color)
+          .whereType<Color>();
+      return decorations.isEmpty ? null : decorations.first;
+    }
+
+    testWidgets('on what is chosen, not on the first row', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Select<String>(
+            value: ['banana'],
+            options: [
+              SelectOption(value: 'apple', label: Text('Apple')),
+              SelectOption(value: 'banana', label: Text('Banana')),
+              SelectOption(value: 'cherry', label: Text('Cherry')),
+            ],
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(Select<String>));
+      await tester.pumpAndSettle();
+
+      // Grey on one row while the tick sits on another reads as though the
+      // wrong thing were about to happen.
+      // Grey on one row while the tick sits on another reads as though the
+      // wrong thing were about to happen — and an arrow key would then move
+      // from the top rather than from where the reader left off.
+      expect(rowFill(tester, 'Banana')!.a, greaterThan(0));
+      expect(rowFill(tester, 'Apple')!.a, 0);
+      expect(rowFill(tester, 'Cherry')!.a, 0);
+    });
+
+    testWidgets('on the first that can be chosen, where nothing is',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Select<String>(
+            options: [
+              SelectOption(
+                  value: 'apple', label: Text('Apple'), disabled: true),
+              SelectOption(value: 'banana', label: Text('Banana')),
+            ],
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(Select<String>));
+      await tester.pumpAndSettle();
+      // Nothing chosen, so the first that *can* be chosen takes it — the one
+      // above it is barred.
+      expect(rowFill(tester, 'Banana')!.a, greaterThan(0));
+      expect(rowFill(tester, 'Apple')!.a, 0);
+    });
+  });
 }

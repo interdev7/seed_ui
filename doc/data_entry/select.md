@@ -132,6 +132,12 @@ Select<String>(size: SoftSize.large, variant: SelectVariant.filled, options: fru
 
 ## Keyboard
 
+Opening the menu puts the highlight on what is already chosen, and on the
+first option that *can* be chosen only where nothing is. Otherwise the grey
+sat on one row while the tick sat on another — which reads as though the
+wrong thing were about to happen — and an arrow key moved from the top of the
+list rather than from where the reader had left off.
+
 When the field is focused: **↑/↓** move the highlight (opening the dropdown if
 closed), **Enter** selects the highlighted option (or creates a tag), **Esc**
 closes, and **Backspace** on an empty search removes the last tag in

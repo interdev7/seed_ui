@@ -73,8 +73,8 @@ class _CompactDemoState extends State<CompactDemo> {
                   trigger: const [DropdownTrigger.click],
                   placement: PopoverPlacement.bottomRight,
                   menu: const [
-                    DropdownItem(value: 'schedule', label: Text('Schedule…')),
-                    DropdownItem(value: 'draft', label: Text('Save draft')),
+                    DropdownItem(value: 'schedule', label: 'Schedule…'),
+                    DropdownItem(value: 'draft', label: 'Save draft'),
                   ],
                   child: Button(
                     icon: const Icon(Icons.more_vert),

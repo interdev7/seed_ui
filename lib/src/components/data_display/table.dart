@@ -4085,7 +4085,7 @@ class _TableState<T> extends State<Table<T>> {
       trigger: const [DropdownTrigger.click],
       menu: [
         for (var i = 0; i < entries.length; i++)
-          DropdownItem<int>(value: i, label: Text(entries[i].label)),
+          DropdownItem<int>(value: i, label: entries[i].label),
       ],
       onItemTap: (i) {
         if (i == null || i < 0 || i >= entries.length) return;

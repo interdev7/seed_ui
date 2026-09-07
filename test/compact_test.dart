@@ -484,7 +484,7 @@ void main() {
               Button(child: Text('Publish')),
               Dropdown<String>(
                 trigger: [DropdownTrigger.click],
-                menu: [DropdownItem(value: 'a', label: Text('Schedule'))],
+                menu: [DropdownItem(value: 'a', label: 'Schedule')],
                 child: Button(child: Text('More')),
               ),
             ],

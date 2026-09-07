@@ -5,6 +5,46 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.19.0
+
+### Added
+
+- **`Dropdown.itemBuilder`** draws the inside of every row, submenus included:
+
+  ```dart
+  itemBuilder: (context, item, hovered) => Row(
+    children: [
+      Expanded(child: Text(item.label ?? '')),
+      if (hovered) Text(counts[item.value].toString()),
+    ],
+  )
+  ```
+
+  The row's height, its highlight, the caret marking a submenu and the tap
+  that chooses an item stay with the menu, so a builder is never asked to
+  rebuild the machinery in order to change the look. Colour and text style are
+  set around it, so a builder returning bare words is still greyed out when the
+  item is barred and red when it is dangerous. `hovered` is the one thing a
+  builder could not work out from the item it is handed.
+
+### Changed
+
+- **`DropdownItem.label` and `DropdownGroup.label` are `String`, not `Widget`.**
+  An item is what the menu is told; how it is drawn is `itemBuilder`'s
+  business. Kept as data a label can be read — searched, sorted, spoken to a
+  screen reader, handed to a builder that draws it beside a count — none of
+  which a widget could be. A label longer than its row is now cut with an
+  ellipsis rather than running off the end.
+
+  ```dart
+  // before
+  DropdownItem(value: 'edit', label: const Text('Edit'))
+  // after
+  DropdownItem(value: 'edit', label: 'Edit')
+  ```
+
+  A label that was more than words belongs in `itemBuilder`.
+
 ## 0.18.0
 
 ### Added

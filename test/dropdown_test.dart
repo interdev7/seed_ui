@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -10,10 +11,10 @@ Widget _host(Widget child) => MaterialApp(
     );
 
 const List<DropdownEntry<String>> _menu = [
-  DropdownItem(value: 'edit', label: Text('Edit')),
+  DropdownItem(value: 'edit', label: 'Edit'),
   DropdownDivider(),
-  DropdownItem(value: 'delete', label: Text('Delete'), danger: true),
-  DropdownItem(value: 'off', label: Text('Off'), disabled: true),
+  DropdownItem(value: 'delete', label: 'Delete', danger: true),
+  DropdownItem(value: 'off', label: 'Off', disabled: true),
 ];
 
 enum _Action { edit, remove }
@@ -29,8 +30,8 @@ void main() {
           trigger: const [DropdownTrigger.click],
           open: true,
           menu: const [
-            DropdownItem(value: _Action.edit, label: Text('Edit')),
-            DropdownItem(value: _Action.remove, label: Text('Delete')),
+            DropdownItem(value: _Action.edit, label: 'Edit'),
+            DropdownItem(value: _Action.remove, label: 'Delete'),
           ],
           onItemTap: (value) => tapped = value,
           child: const Text('Open'),
@@ -56,9 +57,9 @@ void main() {
           trigger: const [DropdownTrigger.click],
           open: true,
           menu: const [
-            DropdownItem(value: _Action.edit, label: Text('Edit')),
+            DropdownItem(value: _Action.edit, label: 'Edit'),
             DropdownDivider(),
-            DropdownItem(value: _Action.remove, label: Text('Delete')),
+            DropdownItem(value: _Action.remove, label: 'Delete'),
           ],
           onItemTap: (value) => tapped = value,
           child: const Text('Open'),
@@ -179,7 +180,7 @@ void main() {
             trigger: const [],
             open: true,
             menu: [
-              for (final i in items) DropdownItem(value: i, label: Text(i)),
+              for (final i in items) DropdownItem(value: i, label: i),
             ],
             child: const Text('Open'),
           ),
@@ -254,10 +255,8 @@ void main() {
                 menu: const [
                   DropdownItem(
                     value: 'more',
-                    label: Text('More'),
-                    children: [
-                      DropdownItem(value: 'help', label: Text('Help'))
-                    ],
+                    label: 'More',
+                    children: [DropdownItem(value: 'help', label: 'Help')],
                   ),
                 ],
                 child: const Text('open'),
@@ -311,6 +310,133 @@ void main() {
       // Out to the side the menu reads towards, so it opens away from the
       // parent rather than back over it.
       expect(await submenuVsParent(tester, TextDirection.rtl), lessThan(0));
+    });
+  });
+
+  group('drawing a row yourself', () {
+    testWidgets('the builder draws every row, submenus included',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Dropdown<String>(
+            trigger: const [],
+            open: true,
+            menu: const [
+              DropdownItem(
+                value: 'more',
+                label: 'More',
+                children: [DropdownItem(value: 'help', label: 'Help')],
+              ),
+            ],
+            itemBuilder: (context, item, hovered) => Text('<${item.label}>'),
+            child: const Text('Open'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('<More>'), findsOneWidget);
+      expect(find.text('More'), findsNothing);
+
+      await tester.tap(find.text('<More>'));
+      await tester.pumpAndSettle();
+      expect(find.text('<Help>'), findsOneWidget);
+    });
+
+    testWidgets('the builder is told the pointer is over the row',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Dropdown<String>(
+            trigger: const [],
+            open: true,
+            menu: const [DropdownItem(value: 'edit', label: 'Edit')],
+            itemBuilder: (context, item, hovered) =>
+                Text(hovered ? 'over' : 'away'),
+            child: const Text('Open'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('away'), findsOneWidget);
+
+      final pointer = TestPointer(1, PointerDeviceKind.mouse);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('away'))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('over'), findsOneWidget);
+    });
+
+    testWidgets('a built row is dressed like any other', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Dropdown<String>(
+            trigger: const [],
+            open: true,
+            menu: const [
+              DropdownItem(value: 'off', label: 'Off', disabled: true),
+            ],
+            itemBuilder: (context, item, hovered) => Text(item.label ?? ''),
+            child: const Text('Open'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // The colour comes from the row around the builder, so a builder that
+      // returns bare words still greys out when the item is barred.
+      final style = tester.widget<Text>(find.text('Off')).style;
+      final merged = DefaultTextStyle.of(
+        tester.element(find.text('Off')),
+      ).style;
+      expect(style?.color ?? merged.color, isNotNull);
+      expect(
+        style?.color ?? merged.color,
+        ThemeData().token.colorTextQuaternary,
+      );
+    });
+
+    testWidgets('without a builder the menu draws the words it was given',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Dropdown<String>(
+            trigger: [],
+            open: true,
+            menu: [DropdownItem(value: 'edit', label: 'Edit')],
+            child: Text('Open'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Edit'), findsOneWidget);
+    });
+
+    testWidgets('a long label is cut rather than overflowing', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const SizedBox(
+            width: 120,
+            child: Dropdown<String>(
+              trigger: [],
+              open: true,
+              menu: [
+                DropdownItem(
+                  value: 'x',
+                  label: 'A label far too long for the room it is given',
+                ),
+              ],
+              child: Text('Open'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final text = tester.widget<Text>(
+        find.text('A label far too long for the room it is given'),
+      );
+      expect(text.overflow, TextOverflow.ellipsis);
+      expect(text.maxLines, 1);
     });
   });
 }

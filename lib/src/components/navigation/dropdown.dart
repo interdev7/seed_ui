@@ -31,6 +31,18 @@ sealed class DropdownEntry<T> {
   const DropdownEntry();
 }
 
+/// Draws the inside of one menu row: its icon, its words, whatever else.
+///
+/// The row itself — its height, its highlight, the caret marking a submenu,
+/// and the tap that chooses it — stays with the menu, so a builder is never
+/// asked to rebuild the machinery in order to change the look. [hovered] is
+/// the one thing it could not work out from the item alone.
+typedef DropdownItemBuilder<T> = Widget Function(
+  BuildContext context,
+  DropdownItem<T> item,
+  bool hovered,
+);
+
 /// A selectable row in a [Dropdown] menu.
 class DropdownItem<T> extends DropdownEntry<T> {
   /// Creates a [DropdownItem].
@@ -47,8 +59,13 @@ class DropdownItem<T> extends DropdownEntry<T> {
   /// What this item reports through [Dropdown.onItemTap].
   final T? value;
 
-  /// The row's content.
-  final Widget? label;
+  /// The row's words.
+  ///
+  /// A `String`, not a widget: an item is what the menu is told, and how it
+  /// is drawn is [Dropdown.itemBuilder]'s business. Kept as data it can be
+  /// read — searched, sorted, spoken to a screen reader, handed to a builder
+  /// that draws it beside a count. A widget here would be none of those.
+  final String? label;
 
   /// Optional leading icon.
   final Widget? icon;
@@ -86,7 +103,7 @@ class DropdownGroup<T> extends DropdownEntry<T> {
   const DropdownGroup({required this.label, required this.children});
 
   /// The group heading.
-  final Widget label;
+  final String label;
 
   /// The entries under the heading.
   final List<DropdownEntry<T>> children;
@@ -193,9 +210,8 @@ class DropdownDefaults {
 /// ```dart
 /// Dropdown(
 ///   menu: [
-///     DropdownItem(value: Action.edit, label: const Text('Edit')),
-///     DropdownItem(value: Action.remove, label: const Text('Delete'),
-///         danger: true),
+///     DropdownItem(value: Action.edit, label: 'Edit'),
+///     DropdownItem(value: Action.remove, label: 'Delete', danger: true),
 ///   ],
 ///   onItemTap: (value) => handle(value),
 ///   child: Button(child: const Text('Actions')),
@@ -217,6 +233,7 @@ class Dropdown<T> extends StatefulWidget {
     this.onItemTap,
     this.closeOnSelect,
     this.popupRender,
+    this.itemBuilder,
     this.barrierColor,
     this.token,
   }) : assert(
@@ -260,6 +277,10 @@ class Dropdown<T> extends StatefulWidget {
 
   /// Called with an item's [DropdownItem.value] when it is tapped.
   final ValueChanged<T?>? onItemTap;
+
+  /// Draws the inside of every row, in place of the icon and words the menu
+  /// would draw itself. Submenus are drawn by it too.
+  final DropdownItemBuilder<T>? itemBuilder;
 
   /// Whether tapping an item closes the menu (ignored for submenu parents).
   final bool? closeOnSelect;
@@ -435,6 +456,7 @@ class _DropdownState<T> extends State<Dropdown<T>> {
         item.onTap?.call();
         if (_closeOnSelect) _requestOpen(false);
       },
+      itemBuilder: widget.itemBuilder,
     );
     return DropdownPanel(
       child: widget.popupRender != null
@@ -566,6 +588,7 @@ class DropdownMenuList<T> extends StatelessWidget {
     super.key,
     required this.entries,
     required this.onSelect,
+    this.itemBuilder,
   });
 
   /// The rows to render, in order — items, groups and dividers.
@@ -573,6 +596,9 @@ class DropdownMenuList<T> extends StatelessWidget {
 
   /// Called with the item the user chose.
   final ValueChanged<DropdownItem<T>> onSelect;
+
+  /// Draws the inside of every row, in place of the icon and words.
+  final DropdownItemBuilder<T>? itemBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -624,23 +650,32 @@ class DropdownMenuList<T> extends StatelessWidget {
                   fontFamilyFallback: token.fontFamilyFallback,
                   decoration: TextDecoration.none,
                 ),
-                child: label,
+                child: Text(label),
               ),
             ),
             for (final c in children) _buildEntry(context, token, c),
           ],
         );
       case DropdownItem():
-        return _MenuRow<T>(item: entry, onSelect: onSelect);
+        return _MenuRow<T>(
+          item: entry,
+          onSelect: onSelect,
+          itemBuilder: itemBuilder,
+        );
     }
   }
 }
 
 class _MenuRow<T> extends StatefulWidget {
-  const _MenuRow({required this.item, required this.onSelect});
+  const _MenuRow({
+    required this.item,
+    required this.onSelect,
+    required this.itemBuilder,
+  });
 
   final DropdownItem<T> item;
   final ValueChanged<DropdownItem<T>> onSelect;
+  final DropdownItemBuilder<T>? itemBuilder;
 
   @override
   State<_MenuRow<T>> createState() => _MenuRowState<T>();
@@ -698,6 +733,7 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
           child: DropdownMenuList<T>(
             entries: widget.item.children!,
             onSelect: widget.onSelect,
+            itemBuilder: widget.itemBuilder,
           ),
         ),
       ),
@@ -712,6 +748,23 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
       }
     });
   }
+
+  /// The icon and the words, as the menu draws them when nothing else does.
+  Widget _content(Token token, DropdownItem<T> item) => Row(
+        children: [
+          if (item.icon != null) ...[
+            item.icon!,
+            SizedBox(width: token.sizeXS),
+          ],
+          Expanded(
+            child: Text(
+              item.label ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -752,23 +805,25 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
           ),
           child: Row(
             children: [
-              if (item.icon != null) ...[
-                IconTheme.merge(
-                  data: IconThemeData(color: color, size: token.fontSize),
-                  child: item.icon!,
-                ),
-                SizedBox(width: token.sizeXS),
-              ],
+              // The colours and the text style are set around the builder as
+              // well as around the words the menu draws itself, so a builder
+              // that returns a bare `Text` is dressed like every other row —
+              // greyed out when the item is barred, red when it is dangerous
+              // — and one that wants otherwise says so.
               Expanded(
-                child: DefaultTextStyle.merge(
-                  style: TextStyle(
-                    color: color,
-                    fontSize: token.fontSize,
-                    fontFamily: token.fontFamily,
-                    fontFamilyFallback: token.fontFamilyFallback,
-                    decoration: TextDecoration.none,
+                child: IconTheme.merge(
+                  data: IconThemeData(color: color, size: token.fontSize),
+                  child: DefaultTextStyle.merge(
+                    style: TextStyle(
+                      color: color,
+                      fontSize: token.fontSize,
+                      fontFamily: token.fontFamily,
+                      fontFamilyFallback: token.fontFamilyFallback,
+                      decoration: TextDecoration.none,
+                    ),
+                    child: widget.itemBuilder?.call(context, item, _hovered) ??
+                        _content(token, item),
                   ),
-                  child: item.label ?? const SizedBox.shrink(),
                 ),
               ),
               if (item._hasChildren) ...[

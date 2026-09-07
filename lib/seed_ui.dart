@@ -345,6 +345,7 @@ export 'src/components/navigation/dropdown.dart'
         DropdownEntry,
         DropdownGroup,
         DropdownItem,
+        DropdownItemBuilder,
         DropdownMenuList,
         DropdownPanel,
         DropdownToken,

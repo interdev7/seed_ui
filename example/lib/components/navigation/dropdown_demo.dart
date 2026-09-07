@@ -34,27 +34,27 @@ class _DropdownDemoState extends State<DropdownDemo> {
   static const _menu = <DropdownEntry<MenuAction>>[
     DropdownItem(
       value: MenuAction.profile,
-      label: Text('Profile'),
+      label: 'Profile',
       icon: Icon(Icons.person),
     ),
     DropdownItem(
       value: MenuAction.settings,
-      label: Text('Settings'),
+      label: 'Settings',
       icon: Icon(Icons.settings),
     ),
     DropdownDivider(),
     DropdownItem(
       value: MenuAction.more,
-      label: Text('More'),
+      label: 'More',
       children: [
-        DropdownItem(value: MenuAction.help, label: Text('Help')),
-        DropdownItem(value: MenuAction.about, label: Text('About')),
+        DropdownItem(value: MenuAction.help, label: 'Help'),
+        DropdownItem(value: MenuAction.about, label: 'About'),
       ],
     ),
     DropdownDivider(),
     DropdownItem(
       value: MenuAction.logout,
-      label: Text('Log out'),
+      label: 'Log out',
       icon: Icon(Icons.logout),
       danger: true,
     ),
@@ -141,18 +141,18 @@ class _DropdownDemoState extends State<DropdownDemo> {
           Dropdown(
             menu: const [
               DropdownGroup(
-                label: Text('Account'),
+                label: 'Account',
                 children: [
-                  DropdownItem(value: 'billing', label: Text('Billing')),
-                  DropdownItem(value: 'team', label: Text('Team')),
+                  DropdownItem(value: 'billing', label: 'Billing'),
+                  DropdownItem(value: 'team', label: 'Team'),
                 ],
               ),
               DropdownGroup(
-                label: Text('Danger zone'),
+                label: 'Danger zone',
                 children: [
                   DropdownItem(
                     value: 'delete',
-                    label: Text('Delete account'),
+                    label: 'Delete account',
                     danger: true,
                   ),
                 ],
@@ -162,11 +162,33 @@ class _DropdownDemoState extends State<DropdownDemo> {
           ),
         ),
         Group(
+          'itemBuilder (a row drawn by the caller)',
+          Dropdown(
+            trigger: const [DropdownTrigger.click],
+            menu: _menu,
+            // The row's height, highlight, submenu caret and tap stay with
+            // the menu; this draws what is inside it. `hovered` is the one
+            // thing the item itself cannot say.
+            itemBuilder: (context, item, hovered) => Row(
+              children: [
+                if (item.icon != null) ...[
+                  item.icon!,
+                  const SizedBox(width: 8),
+                ],
+                Expanded(child: Text(item.label ?? '')),
+                if (hovered) const Text('↵', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+            onItemTap: (action) => message.info('Tapped: ${action?.name}'),
+            child: Button(onPressed: () {}, child: const Text('Drawn by me')),
+          ),
+        ),
+        Group(
           'popupRender (menu + custom footer)',
           Dropdown(
+            trigger: const [DropdownTrigger.click],
             menu: [
-              for (final item in _items)
-                DropdownItem(value: item, label: Text(item)),
+              for (final item in _items) DropdownItem(value: item, label: item),
             ],
             onItemTap: (k) => message.info('Tapped: $k'),
             // A custom popup body has no anchor width to match, so give it an
@@ -187,7 +209,6 @@ class _DropdownDemoState extends State<DropdownDemo> {
                         Expanded(
                           child: Input(
                             controller: _newItem,
-                            size: SoftSize.small,
                             placeholder: 'New item',
                           ),
                         ),

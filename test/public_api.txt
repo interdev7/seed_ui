@@ -78,6 +78,7 @@ DropdownDivider
 DropdownEntry
 DropdownGroup
 DropdownItem
+DropdownItemBuilder
 DropdownMenuList
 DropdownPanel
 DropdownToken

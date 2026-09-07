@@ -12,8 +12,8 @@ enum RowAction { edit, remove }
 
 Dropdown(
   menu: [
-    DropdownItem(value: RowAction.edit, label: const Text('Edit')),
-    DropdownItem(value: RowAction.remove, label: const Text('Delete'),
+    DropdownItem(value: RowAction.edit, label: 'Edit'),
+    DropdownItem(value: RowAction.remove, label: 'Delete',
         danger: true),
   ],
   onItemTap: (action) => switch (action) {
@@ -50,8 +50,8 @@ A menu of items alone infers `T` from the items — nothing to write:
 ```dart
 Dropdown(
   menu: [
-    DropdownItem(value: RowAction.edit, label: const Text('Edit')),
-    DropdownItem(value: RowAction.remove, label: const Text('Delete')),
+    DropdownItem(value: RowAction.edit, label: 'Edit'),
+    DropdownItem(value: RowAction.remove, label: 'Delete'),
   ],
   onItemTap: handle,
   child: trigger,
@@ -64,9 +64,9 @@ Put a `DropdownDivider` among them and the type has to be named once — on the
 ```dart
 Dropdown<RowAction>(
   menu: const [
-    DropdownItem(value: RowAction.edit, label: Text('Edit')),
+    DropdownItem(value: RowAction.edit, label: 'Edit'),
     DropdownDivider(),
-    DropdownItem(value: RowAction.remove, label: Text('Delete')),
+    DropdownItem(value: RowAction.remove, label: 'Delete'),
   ],
   onItemTap: handle,
   child: trigger,
@@ -90,6 +90,49 @@ Write `<DropdownEntry>` with no argument and it compiles, silently meaning
 `DropdownEntry<dynamic>`: the menu is untyped again and nothing says so. Name
 the type.
 
+
+## The label is a word, not a widget
+
+`label` is a `String`. An item is what the menu is *told*; how it is drawn is
+settled elsewhere. Kept as data it can be read — searched, sorted, spoken to a
+screen reader, handed to a builder that draws it beside a count. A widget could
+be none of those, and the one thing it bought you — an item that does not look
+like an item — is what `itemBuilder` is for.
+
+A label longer than the room it is given is cut with an ellipsis rather than
+running off the end of the row.
+
+## Drawing a row yourself
+
+`itemBuilder` draws the inside of every row, submenus included:
+
+```dart
+Dropdown<String>(
+  menu: entries,
+  itemBuilder: (context, item, hovered) => Row(
+    children: [
+      Expanded(child: Text(item.label ?? '')),
+      if (hovered) Text(counts[item.value]?.toString() ?? ''),
+    ],
+  ),
+  child: Button(child: const Text('Actions')),
+)
+```
+
+What it draws and what it does not is the whole of the design. The row's
+height, its highlight, the caret marking a submenu and the tap that chooses an
+item stay with the menu, so a builder is never asked to rebuild the machinery
+in order to change the look. It replaces the icon and the words, and nothing
+else.
+
+The colour and text style are set *around* the builder, so one that returns a
+bare `Text` is dressed like every other row — greyed out when the item is
+barred, red when it is dangerous — and one that wants otherwise says so.
+
+`hovered` is the one thing a builder could not work out from the item alone.
+Everything else it needs — `value`, `icon`, `disabled`, `danger` — is on the
+item it is handed.
+
 ## Submenus
 
 Give a `DropdownItem` a `children` list and it becomes a submenu parent — a
@@ -97,10 +140,10 @@ caret appears and the nested menu opens to the side on hover.
 
 ```dart
 DropdownItem(
-  label: const Text('More'),
+  label: 'More',
   children: [
-    DropdownItem(value: 'help', label: const Text('Help')),
-    DropdownItem(value: 'about', label: const Text('About')),
+    DropdownItem(value: 'help', label: 'Help'),
+    DropdownItem(value: 'about', label: 'About'),
   ],
 )
 ```

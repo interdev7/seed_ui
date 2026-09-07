@@ -314,22 +314,22 @@ class MainLayout extends StatelessWidget {
                           menu: const [
                             DropdownItem(
                               value: ThemeModeOption.light,
-                              label: Text('Light ☀️'),
+                              label: 'Light ☀️',
                               icon: Icon(Icons.light_mode),
                             ),
                             DropdownItem(
                               value: ThemeModeOption.dark,
-                              label: Text('Dark 🌙'),
+                              label: 'Dark 🌙',
                               icon: Icon(Icons.dark_mode),
                             ),
                             DropdownItem(
                               value: ThemeModeOption.newYear,
-                              label: Text('New Year 🎄'),
+                              label: 'New Year 🎄',
                               icon: Icon(Icons.park),
                             ),
                             DropdownItem(
                               value: ThemeModeOption.newYearNight,
-                              label: Text('New Year night 🌙🎄'),
+                              label: 'New Year night 🌙🎄',
                               icon: Icon(Icons.nights_stay),
                             ),
                           ],
@@ -347,7 +347,7 @@ class MainLayout extends StatelessWidget {
                           trigger: const [DropdownTrigger.click],
                           menu: [
                             for (final e in demoLanguages.entries)
-                              DropdownItem(value: e.key, label: Text(e.value)),
+                              DropdownItem(value: e.key, label: e.value),
                           ],
                           onItemTap: (code) {
                             if (code != null) {

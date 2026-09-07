@@ -245,9 +245,14 @@ can tell two entries carrying the same value apart.
 
 ## Design tokens
 
-A `token` on the dropdown itself overrides these for that menu alone; a
-`ComponentsConfig(dropdown: …)` on a `ConfigProvider` does it for every menu
-under it.
+A `token` on the dropdown itself overrides these for that menu alone — its
+panel, its rows and its submenus alike; a `ComponentsConfig(dropdown: …)` on a
+`ConfigProvider` does it for every menu under it.
+
+The panel is drawn *around* whatever `popupRender` returns, so a
+`ConfigProvider` placed inside that builder cannot reach it: by the time it is
+consulted the panel's background, corners and shadow are already settled. Round
+one menu's corners with `token:` on the dropdown.
 
 `DropdownToken` overrides this component's own tokens. Every field is an
 override; an unset one falls back to the value derived from the global theme.

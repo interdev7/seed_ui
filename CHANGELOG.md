@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.19.1
 
+### Fixed
+
+- **`DropdownToken` was mostly ignored.** A `token:` on the dropdown itself
+  reached only the dismiss barrier: `menuBg` and `borderRadius` had to be set
+  through a `ConfigProvider` to do anything, and `padding` and `itemHoverBg`
+  did nothing wherever they were set — the menu drew its own inset and its own
+  hover colour and never asked. The token now reaches the panel, the rows and
+  any submenu, and every field it names is read.
+
+  A `ConfigProvider` inside `popupRender` still cannot restyle the panel, and
+  that is by design: the panel is drawn around what the builder returns. The
+  document says so now.
+
 ### Changed
 
 - **The documents keep to one shape, and CI holds them to it.** Every one opens

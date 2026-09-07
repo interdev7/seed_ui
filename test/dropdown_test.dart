@@ -439,4 +439,115 @@ void main() {
       expect(text.maxLines, 1);
     });
   });
+
+  group('a token on the dropdown itself', () {
+    Future<void> open(WidgetTester tester, DropdownToken? token) =>
+        tester.pumpWidget(
+          _host(
+            Dropdown<String>(
+              trigger: const [],
+              open: true,
+              token: token,
+              menu: const [DropdownItem(value: 'a', label: 'A')],
+              child: const Text('Open'),
+            ),
+          ),
+        );
+
+    BoxDecoration panel(WidgetTester tester) => tester
+        .widget<DecoratedBox>(
+          find
+              .descendant(
+                of: find.byType(DropdownPanel),
+                matching: find.byType(DecoratedBox),
+              )
+              .first,
+        )
+        .decoration as BoxDecoration;
+
+    testWidgets('rounds the panel it belongs to', (tester) async {
+      await open(tester, null);
+      await tester.pumpAndSettle();
+      final byDefault = (panel(tester).borderRadius! as BorderRadius).topLeft.x;
+
+      await open(tester, const DropdownToken(borderRadius: 20));
+      await tester.pumpAndSettle();
+      expect((panel(tester).borderRadius! as BorderRadius).topLeft.x, 20);
+      expect(byDefault, isNot(20));
+    });
+
+    testWidgets('colours the panel it belongs to', (tester) async {
+      await open(tester, const DropdownToken(menuBg: Color(0xFF00FF00)));
+      await tester.pumpAndSettle();
+      expect(panel(tester).color, const Color(0xFF00FF00));
+    });
+
+    testWidgets('insets the menu by the padding it names', (tester) async {
+      await open(tester, const DropdownToken(padding: EdgeInsets.all(17)));
+      await tester.pumpAndSettle();
+      final padding = tester.widgetList<Padding>(
+        find.descendant(
+          of: find.byType(DropdownMenuList<String>),
+          matching: find.byType(Padding),
+        ),
+      );
+      expect(
+        padding.map((p) => p.padding),
+        contains(const EdgeInsets.all(17)),
+      );
+    });
+
+    testWidgets('paints the hovered row the colour it names', (tester) async {
+      await open(tester, const DropdownToken(itemHoverBg: Color(0xFF0000FF)));
+      await tester.pumpAndSettle();
+      final pointer = TestPointer(1, PointerDeviceKind.mouse);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.text('A'))),
+      );
+      await tester.pumpAndSettle();
+      final row = tester.widget<AnimatedContainer>(
+        find
+            .ancestor(
+              of: find.text('A'),
+              matching: find.byType(AnimatedContainer),
+            )
+            .first,
+      );
+      expect(
+        (row.decoration! as BoxDecoration).color,
+        const Color(0xFF0000FF),
+      );
+    });
+
+    testWidgets('reaches a submenu as well', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Dropdown<String>(
+            trigger: [],
+            open: true,
+            token: DropdownToken(menuBg: Color(0xFF00FF00)),
+            menu: [
+              DropdownItem(
+                value: 'more',
+                label: 'More',
+                children: [DropdownItem(value: 'help', label: 'Help')],
+              ),
+            ],
+            child: Text('Open'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+      final panels = tester.widgetList<DropdownPanel>(
+        find.byType(DropdownPanel),
+      );
+      expect(panels.length, 2);
+      expect(
+        panels.every((p) => p.token?.menuBg == const Color(0xFF00FF00)),
+        isTrue,
+      );
+    });
+  });
 }

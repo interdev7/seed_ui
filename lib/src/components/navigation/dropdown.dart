@@ -457,8 +457,15 @@ class _DropdownState<T> extends State<Dropdown<T>> {
         if (_closeOnSelect) _requestOpen(false);
       },
       itemBuilder: widget.itemBuilder,
+      token: widget.token,
     );
     return DropdownPanel(
+      // The panel is the dropdown's own chrome, so it takes the dropdown's
+      // own token. Without this a `token:` on the widget reached nothing but
+      // the barrier, and `menuBg` or `borderRadius` set there did nothing at
+      // all — they had to be set on a `ConfigProvider` instead, which is a
+      // long way to go to round one menu's corners.
+      token: widget.token,
       child: widget.popupRender != null
           ? widget.popupRender!(context, menu)
           : menu,
@@ -589,6 +596,7 @@ class DropdownMenuList<T> extends StatelessWidget {
     required this.entries,
     required this.onSelect,
     this.itemBuilder,
+    this.token,
   });
 
   /// The rows to render, in order — items, groups and dividers.
@@ -600,14 +608,21 @@ class DropdownMenuList<T> extends StatelessWidget {
   /// Draws the inside of every row, in place of the icon and words.
   final DropdownItemBuilder<T>? itemBuilder;
 
+  /// Per-instance token overrides, as the dropdown was given them.
+  final DropdownToken? token;
+
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
+    final r = (this.token ??
+            ConfigProvider.componentOf<DropdownToken>(context) ??
+            const DropdownToken())
+        ._resolve(token);
     // IntrinsicWidth sizes the menu to its widest row, so the rows' Expanded
     // labels do not stretch the panel to the whole viewport width.
     return IntrinsicWidth(
       child: Padding(
-        padding: EdgeInsets.all(token.sizeXXS),
+        padding: r.padding,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -661,6 +676,7 @@ class DropdownMenuList<T> extends StatelessWidget {
           item: entry,
           onSelect: onSelect,
           itemBuilder: itemBuilder,
+          token: this.token,
         );
     }
   }
@@ -671,11 +687,13 @@ class _MenuRow<T> extends StatefulWidget {
     required this.item,
     required this.onSelect,
     required this.itemBuilder,
+    required this.token,
   });
 
   final DropdownItem<T> item;
   final ValueChanged<DropdownItem<T>> onSelect;
   final DropdownItemBuilder<T>? itemBuilder;
+  final DropdownToken? token;
 
   @override
   State<_MenuRow<T>> createState() => _MenuRowState<T>();
@@ -730,10 +748,12 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
           _closeSubmenuSoon();
         },
         child: DropdownPanel(
+          token: widget.token,
           child: DropdownMenuList<T>(
             entries: widget.item.children!,
             onSelect: widget.onSelect,
             itemBuilder: widget.itemBuilder,
+            token: widget.token,
           ),
         ),
       ),
@@ -773,8 +793,12 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
     final disabled = item.disabled;
     final base = item.danger ? token.error.base : token.colorText;
     final color = disabled ? token.colorTextQuaternary : base;
+    final r = (widget.token ??
+            ConfigProvider.componentOf<DropdownToken>(context) ??
+            const DropdownToken())
+        ._resolve(token);
     final bg = _hovered && !disabled
-        ? (item.danger ? token.error.bg : token.colorFillTertiary)
+        ? (item.danger ? token.error.bg : r.itemHoverBg)
         : const Color(0x00000000);
 
     return MouseRegion(

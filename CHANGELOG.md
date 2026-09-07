@@ -24,27 +24,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Each control asks `CompactSlot.radiusOf(context, radius)` which corners to
   draw, so a widget of your own joins in by asking too, and one that never
   heard of the group still stands in the run. `Button`, `Input`, `InputNumber`,
-  `Select`, `DatePicker` and `TimePicker` ask. The seam is closed in the
-  layout, not only in the painting, so the run ends where its last control
-  ends; the round corners follow the reading direction; `Expanded` children
-  keep their flex, and `block: true` shares the whole width. A row centres its
-  controls rather than stretching them, so it stands in a `Wrap` or an
-  unmeasured `Column` without asking for a height.
+  `Select`, `DatePicker` and `TimePicker` ask, and so does a whole
+  `RadioGroup(optionType: button)`, which divides its outer corners between
+  its two end buttons.
 
-- **`RadioGroup(optionType: button)` joins a `Compact` run.** Its outer corners
-  come from the slot and are divided between the two end buttons, so a set of
-  joined buttons and the button that acts on them read as one control. Standing
-  on its own it looks exactly as it did.
+  The seam is closed in the layout rather than the painting, so the run is a
+  line narrower and ends where its last control ends. Corners and seam both
+  follow the reading direction. A row centres its controls rather than
+  stretching them, so it stands in a `Wrap` or an unmeasured `Column` without
+  asking for a height; `Expanded` children keep their flex; `block: true`
+  shares the whole width; and `direction: Axis.vertical` runs down a column.
 
 ### Fixed
-
-- **A `Compact` run drew a double line at every seam where the words read
-  right to left.** Each control was pulled towards the left whichever way the
-  run was laid out, so instead of meeting its neighbour it parted from it. It
-  is pulled back only where the neighbour lies before it; where the neighbour
-  lies after it, the control is already a line wider than its room and spills
-  over it unaided. A run of radio buttons had the same seam and is mended with
-  it.
 
 - **A run of radio buttons** stood a pixel taller than a button beside it. Each
   button centred its border on its own edge, so half a line hung outside the
@@ -54,8 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`Select`** stood two pixels taller than every other control of its size.
   The arrow named the control's height as its own, which is the height of the
-  *content*, and the border then stood outside that. Plain to see beside an
-  `Input` in a `Compact` run, and there everywhere else besides.
+  *content*, and the border then stood outside that.
 
 ## 0.17.0
 

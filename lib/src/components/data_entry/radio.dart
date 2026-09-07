@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../general/compact.dart';
 
 /// How a [RadioGroup] renders its options.
 enum RadioOptionType {
@@ -468,12 +469,34 @@ class RadioGroup<T> extends StatelessWidget {
         SoftSize.middle;
     final selectedIndex = options.indexWhere((o) => o.value == value);
 
+    // The whole run's corners, asked of [CompactSlot]: all four where the
+    // group stands on its own, and only the outer ones where it has been
+    // joined to a neighbour in a [Compact]. The buttons then divide them
+    // between the two ends.
+    final corners = CompactSlot.radiusOf(context, token.borderRadius);
+
+    BorderRadiusDirectional radiusAt(int i) {
+      // Start and end, not left and right: a run that reads the other way puts
+      // its first button on the right, and the round corners must follow it
+      // there. Square where two buttons meet, whichever way that is.
+      final keepsStart = i == 0;
+      final keepsEnd = i == options.length - 1;
+      return BorderRadiusDirectional.only(
+        topStart: keepsStart ? corners.topStart : Radius.zero,
+        bottomStart: keepsStart ? corners.bottomStart : Radius.zero,
+        topEnd: keepsEnd ? corners.topEnd : Radius.zero,
+        bottomEnd: keepsEnd ? corners.bottomEnd : Radius.zero,
+      );
+    }
+
     _RadioButton<T> button(int i, _ButtonRole role) => _RadioButton<T>(
           option: options[i],
           role: role,
           selected: i == selectedIndex,
-          first: i == 0,
-          last: i == options.length - 1,
+          radius: radiusAt(i),
+          // Every button after the first is laid a line back onto the one
+          // before it, so the two borders that meet draw a single divider.
+          overlap: i == 0 ? 0 : token.lineWidth,
           enabled: !_disabledIn(context) &&
               !options[i].disabled &&
               onChanged != null,
@@ -546,8 +569,8 @@ class _RadioButton<T> extends StatefulWidget {
     required this.option,
     required this.role,
     required this.selected,
-    required this.first,
-    required this.last,
+    required this.radius,
+    required this.overlap,
     required this.enabled,
     required this.style,
     required this.size,
@@ -559,8 +582,14 @@ class _RadioButton<T> extends StatefulWidget {
   final RadioOption<T> option;
   final _ButtonRole role;
   final bool selected;
-  final bool first;
-  final bool last;
+
+  /// The corners this button draws — worked out by the group, which alone
+  /// knows both where the button stands in the run and whether the run
+  /// itself has been joined to something.
+  final BorderRadiusDirectional radius;
+
+  /// How far this button is laid back onto the one before it.
+  final double overlap;
   final bool enabled;
   final RadioButtonStyle style;
   final SoftSize size;
@@ -618,17 +647,6 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
     // Uniform border so the rounded end corners are legal: grey in the base
     // layer, accent in the overlay.
     final borderColor = overlay ? token.primary.hover : token.colorBorder;
-    final r = Radius.circular(token.borderRadius);
-    // Rounded at the ends of the run, square where buttons meet. Directional,
-    // so the run reads the same either way: a right-to-left layout puts the
-    // first button on the right, and left corners would round the join
-    // instead of the end — the two rounded edges meeting in the middle.
-    final borderRadius = BorderRadiusDirectional.only(
-      topStart: widget.first ? r : Radius.zero,
-      bottomStart: widget.first ? r : Radius.zero,
-      topEnd: widget.last ? r : Radius.zero,
-      bottomEnd: widget.last ? r : Radius.zero,
-    );
 
     Widget content = AnimatedContainer(
       duration: token.motionDurationFast,
@@ -638,15 +656,13 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
       padding: EdgeInsets.symmetric(horizontal: token.size),
       decoration: BoxDecoration(
         color: bg,
-        // Centre the stroke on each edge so two adjacent buttons' borders land
-        // on the same line and read as a single 1px divider — the same width
-        // as the top, bottom and end edges.
-        border: Border.all(
-          color: borderColor,
-          width: token.lineWidth,
-          strokeAlign: BorderSide.strokeAlignCenter,
-        ),
-        borderRadius: borderRadius,
+        // Inside, as every other bordered control in the kit draws it: a
+        // stroke centred on the edge stands half a line outside the box, and
+        // the run came out a pixel taller than a button beside it. The
+        // divider is a single line because the buttons overlap, not because
+        // their borders hang over the join.
+        border: Border.all(color: borderColor, width: token.lineWidth),
+        borderRadius: widget.radius,
       ),
       child: Opacity(
         // Only the base layer shows its label; the overlay just reserves the
@@ -689,6 +705,16 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
       );
     }
 
+    if (widget.overlap > 0) {
+      content = CompactOverlap(
+        by: widget.overlap,
+        direction: Axis.horizontal,
+        child: content,
+      );
+    }
+
+    // The flex goes outside the overlap, for the reason a `Compact` puts it
+    // there: `Expanded` speaks only to the row directly above it.
     return widget.block ? Expanded(child: content) : content;
   }
 }

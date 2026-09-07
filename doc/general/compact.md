@@ -33,11 +33,21 @@ where that child stands, and the control looks up and asks:
 borderRadius: CompactSlot.radiusOf(context, token.borderRadius),
 ```
 
-`radiusOf` hands back every corner where there is no group, so a control that
+`radiusOf` names its corners by start and end, so they take their sides when
+the control is painted rather than when it is built: a run that reads the
+other way needs nothing rebuilt, and a control that animates its decoration
+does not morph its corners on the way. It hands back every corner where there
+is no group, so a control that
 asks it instead of building its own `BorderRadius` looks exactly as it always
 did everywhere else. The kit's `Button`, `Input`, `InputNumber`, `Select`,
 `DatePicker` and `TimePicker` ask; a widget of your own joins in by asking too,
 and one that never heard of the group simply stands in the run unjoined.
+
+A whole run joins in the same way — and closes its own seams the same way, by
+overlapping, so its borders are drawn inside the box and it stands exactly as
+tall as a button beside it: `RadioGroup(optionType: button)` asks for
+its outer corners and divides them between its two end buttons, so a set of
+joined buttons and the button that acts on them read as one control.
 
 Asking by context rather than being handed a value is what lets a control sit
 somewhere other than directly under the group — a `Button` inside a `Dropdown`

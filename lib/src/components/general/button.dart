@@ -485,7 +485,10 @@ class _SoftButtonState extends State<Button> {
   /// The corners to draw. [CompactSlot] squares the ones that meet a
   /// neighbour, and hands them all back where there is no neighbour — which
   /// is everywhere but inside a [Compact].
-  BorderRadius _radius(BuildContext context, _ResolvedButtonToken r) =>
+  BorderRadiusDirectional _radius(
+    BuildContext context,
+    _ResolvedButtonToken r,
+  ) =>
       CompactSlot.radiusOf(
         context,
         switch (_shape) {
@@ -698,7 +701,9 @@ class _SoftButtonState extends State<Button> {
       button = CustomPaint(
         foregroundPainter: DashedBorderPainter(
           color: style.border!,
-          radius: _radius(context, r),
+          // A painter has no reading direction of its own, so the corners
+          // are resolved for it here.
+          radius: _radius(context, r).resolve(Directionality.of(context)),
           strokeWidth: token.lineWidth,
         ),
         child: button,

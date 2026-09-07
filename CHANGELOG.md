@@ -31,7 +31,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   controls rather than stretching them, so it stands in a `Wrap` or an
   unmeasured `Column` without asking for a height.
 
+- **`RadioGroup(optionType: button)` joins a `Compact` run.** Its outer corners
+  come from the slot and are divided between the two end buttons, so a set of
+  joined buttons and the button that acts on them read as one control. Standing
+  on its own it looks exactly as it did.
+
 ### Fixed
+
+- **A run of radio buttons** stood a pixel taller than a button beside it. Each
+  button centred its border on its own edge, so half a line hung outside the
+  box top and bottom. The borders are drawn inside now, as every other control
+  in the kit draws them, and the single divider between two buttons comes from
+  their overlapping rather than from their strokes hanging over the join.
 
 - **`Select`** stood two pixels taller than every other control of its size.
   The arrow named the control's height as its own, which is the height of the

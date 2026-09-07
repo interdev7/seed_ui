@@ -853,7 +853,6 @@ class _SoftInputState extends State<Input> {
   }) {
     // Square where a neighbour in a [Compact] meets this field.
     final corners = CompactSlot.radiusOf(context, _radiusVal(r));
-    final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
     final ring = _focusRing(token);
     final inlinePad = _paddingInline(r);
     final blockPad = _paddingBlock(r);
@@ -883,11 +882,11 @@ class _SoftInputState extends State<Input> {
           decoration: BoxDecoration(
             color: _enabled ? r.colorBgContainer : token.colorFillTertiary,
             // Square where an addon is joined on, rounded at the free end.
-            borderRadius: BorderRadius.only(
-              topLeft: flatRight && !ltr ? Radius.zero : corners.topLeft,
-              bottomLeft: flatRight && !ltr ? Radius.zero : corners.bottomLeft,
-              topRight: flatRight && ltr ? Radius.zero : corners.topRight,
-              bottomRight: flatRight && ltr ? Radius.zero : corners.bottomRight,
+            borderRadius: BorderRadiusDirectional.only(
+              topStart: corners.topStart,
+              bottomStart: corners.bottomStart,
+              topEnd: flatRight ? Radius.zero : corners.topEnd,
+              bottomEnd: flatRight ? Radius.zero : corners.bottomEnd,
             ),
             border: Border.all(
               color: _borderColor(token),

@@ -51,33 +51,31 @@ class CompactSlot extends InheritedWidget {
   /// The corners a control should draw, given the ones it would draw alone.
   ///
   /// Handed back whole where there is no group, so a control that asks this
-  /// instead of building its own `BorderRadius` looks exactly as it always
-  /// did everywhere else.
+  /// instead of building its own radius looks exactly as it always did
+  /// everywhere else.
   ///
-  /// Physical corners, not start and end ones: the run itself is laid out by
-  /// the reading direction, so a group that reads the other way keeps its
-  /// round corners on the outside without the control having to know.
-  static BorderRadius radiusOf(BuildContext context, double radius) {
+  /// Named by start and end rather than left and right, and so resolved when
+  /// the control is painted rather than when it is built: the run itself is
+  /// laid out by the reading direction, so a group that reads the other way
+  /// keeps its round corners on the outside without anything having to be
+  /// rebuilt — and a control that animates its decoration does not morph its
+  /// corners on the way.
+  static BorderRadiusDirectional radiusOf(BuildContext context, double radius) {
     final slot = maybeOf(context);
     final round = Radius.circular(radius);
     if (slot == null || slot.position == CompactPosition.only) {
-      return BorderRadius.all(round);
+      return BorderRadiusDirectional.all(round);
     }
     final rows = slot.direction == Axis.horizontal;
-    final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
     final keepsStart = slot.position == CompactPosition.first;
     final keepsEnd = slot.position == CompactPosition.last;
-    // Down a column the ends are top and bottom whichever way the words run;
-    // across a row they swap over with them.
-    final keepsLeft = rows ? (ltr ? keepsStart : keepsEnd) : true;
-    final keepsRight = rows ? (ltr ? keepsEnd : keepsStart) : true;
-    final keepsTop = rows ? true : keepsStart;
-    final keepsBottom = rows ? true : keepsEnd;
-    return BorderRadius.only(
-      topLeft: keepsTop && keepsLeft ? round : Radius.zero,
-      topRight: keepsTop && keepsRight ? round : Radius.zero,
-      bottomLeft: keepsBottom && keepsLeft ? round : Radius.zero,
-      bottomRight: keepsBottom && keepsRight ? round : Radius.zero,
+    // Across a row the ends of the run are its start and end corners; down a
+    // column they are the top and the bottom, both corners of each.
+    return BorderRadiusDirectional.only(
+      topStart: keepsStart ? round : Radius.zero,
+      bottomStart: (rows ? keepsStart : keepsEnd) ? round : Radius.zero,
+      topEnd: (rows ? keepsEnd : keepsStart) ? round : Radius.zero,
+      bottomEnd: keepsEnd ? round : Radius.zero,
     );
   }
 
@@ -185,7 +183,7 @@ class Compact extends StatelessWidget {
       direction: direction,
       child: overlap == 0
           ? inner
-          : _Overlap(by: overlap, direction: direction, child: inner),
+          : CompactOverlap(by: overlap, direction: direction, child: inner),
     );
     if (flex != null) {
       wrapped = Flexible(flex: flex, fit: fit!, child: wrapped);
@@ -200,35 +198,44 @@ class Compact extends StatelessWidget {
 
 /// Pulls a control back onto its neighbour by the width of a line.
 ///
+/// Shared with any control that lays a run out itself — a run of radio
+/// buttons does — so that every seam in the kit is closed the same way. Not
+/// exported: a caller joins controls with [Compact].
+///
 /// In the layout, not merely in the painting: a `Transform` would leave the
 /// run as wide as it was and put a hairline of nothing at the far end. The
 /// child keeps its whole border — a control that dropped a side would have a
 /// gap in its ring the moment it took focus — and the two that meet draw one
 /// line, since the later one is painted over the earlier.
-class _Overlap extends SingleChildRenderObjectWidget {
-  const _Overlap({
+class CompactOverlap extends SingleChildRenderObjectWidget {
+  /// Creates a [CompactOverlap].
+  const CompactOverlap({
+    super.key,
     required this.by,
     required this.direction,
     required super.child,
   });
 
+  /// How far back to pull the child — the width of one line.
   final double by;
+
+  /// Which way the run goes.
   final Axis direction;
 
   @override
-  _RenderOverlap createRenderObject(BuildContext context) =>
-      _RenderOverlap(by: by, direction: direction);
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderCompactOverlap(by: by, direction: direction);
 
   @override
-  void updateRenderObject(BuildContext context, _RenderOverlap render) {
-    render
+  void updateRenderObject(BuildContext context, RenderObject renderObject) {
+    (renderObject as _RenderCompactOverlap)
       ..by = by
       ..direction = direction;
   }
 }
 
-class _RenderOverlap extends RenderShiftedBox {
-  _RenderOverlap({required double by, required Axis direction})
+class _RenderCompactOverlap extends RenderShiftedBox {
+  _RenderCompactOverlap({required double by, required Axis direction})
       : _by = by,
         _direction = direction,
         super(null);

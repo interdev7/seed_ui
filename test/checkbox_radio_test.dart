@@ -212,4 +212,68 @@ void main() {
       }
     });
   });
+
+  testWidgets('a run of buttons stands exactly as tall as a button beside it',
+      (tester) async {
+    await tester.pumpWidget(
+      _host(
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioGroup<String>(
+              value: 'a',
+              optionType: RadioOptionType.button,
+              options: const [
+                RadioOption(value: 'a', label: Text('A')),
+                RadioOption(value: 'b', label: Text('B')),
+              ],
+              onChanged: (_) {},
+            ),
+            Button(onPressed: () {}, child: const Text('Apply')),
+          ],
+        ),
+      ),
+    );
+    expect(
+      tester.getSize(find.byType(RadioGroup<String>)).height,
+      tester.getSize(find.byType(Button)).height,
+    );
+    // Not merely the same in the layout: a stroke centred on the edge stands
+    // half a line outside the box, and the run came out a pixel taller than
+    // the button. Every side is drawn inside, as a button draws its own.
+    final decoration = tester
+        .widget<AnimatedContainer>(find.byType(AnimatedContainer).first)
+        .decoration! as BoxDecoration;
+    expect(
+      decoration.border!.top.strokeAlign,
+      BorderSide.strokeAlignInside,
+    );
+  });
+
+  testWidgets('two buttons of a run share one divider, not two',
+      (tester) async {
+    await tester.pumpWidget(
+      _host(
+        RadioGroup<String>(
+          value: 'a',
+          optionType: RadioOptionType.button,
+          options: const [
+            RadioOption(value: 'a', label: Text('A')),
+            RadioOption(value: 'b', label: Text('B')),
+          ],
+          onChanged: (_) {},
+        ),
+      ),
+    );
+    final boxes = find.byType(AnimatedContainer);
+    final first = tester.getRect(boxes.at(0));
+    final second = tester.getRect(boxes.at(1));
+    final line = ThemeData().token.lineWidth;
+    expect(first.right - second.left, moreOrLessEquals(line, epsilon: 0.01));
+    // And the run ends where its last button ends.
+    expect(
+      tester.getRect(find.byType(RadioGroup<String>)).right,
+      moreOrLessEquals(second.right, epsilon: 0.01),
+    );
+  });
 }

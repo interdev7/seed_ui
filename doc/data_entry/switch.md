@@ -60,6 +60,18 @@ Switch(
 )
 ```
 
+## From the keyboard
+
+The control takes its turn in the tab order and answers **Space** and
+**Enter**. A halo appears around it — the same one a focused `Input` wears —
+but only when the focus arrived by keyboard: a control clicked with a mouse is
+focused too, and a ring around that is noise.
+
+`focusNode` drives the focus yourself; left null the control keeps one.
+`autofocus` puts the focus there as soon as it is built.
+
+The halo sits on the track.
+
 ## Design tokens
 
 `SwitchToken` overrides this component's own tokens. Every field is an override; an

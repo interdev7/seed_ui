@@ -131,7 +131,18 @@ class Radio<T> extends StatefulWidget {
     this.child,
     this.disabled,
     this.token,
+    this.focusNode,
+    this.autofocus = false,
   });
+
+  /// A focus node of your own, for a button whose focus you drive yourself.
+  ///
+  /// Left null the button keeps one. Either way it takes its turn in the tab
+  /// order and answers Space and Enter.
+  final FocusNode? focusNode;
+
+  /// Whether the button takes focus as soon as it is built.
+  final bool autofocus;
 
   /// This button's value.
   final T value;
@@ -165,6 +176,9 @@ class _SoftRadioState<T> extends State<Radio<T>> {
 
   bool _hovered = false;
 
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
+
   bool get _enabled => !_disabled && widget.onChanged != null;
 
   void _select() {
@@ -178,52 +192,70 @@ class _SoftRadioState<T> extends State<Radio<T>> {
             ConfigProvider.componentOf<RadioToken>(context) ??
             const RadioToken())
         ._resolve(token);
-    return Semantics(
-      // One of a set, so the reader is told it is a choice among others as
-      // well as whether it is the one taken.
-      inMutuallyExclusiveGroup: true,
-      checked: widget._selected,
+    return FocusableActionDetector(
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
       enabled: _enabled,
-      onTap: _enabled ? _select : null,
-      child: MouseRegion(
-        cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: _select,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioDot(
-                selected: widget._selected,
-                enabled: _enabled,
-                hovered: _hovered && _enabled,
-                token: token,
-                componentToken: r,
-              ),
-              if (widget.child != null) ...[
-                SizedBox(width: token.sizeXS),
-                // Flexible, so words longer than the room they are in give
-                // way rather than running off the end of the row: a label
-                // takes the width its words want, and in a narrow column that
-                // is more than there is.
-                Flexible(
-                  child: DefaultTextStyle.merge(
-                    style: TextStyle(
-                      color: _enabled
-                          ? token.colorText
-                          : token.colorTextQuaternary,
-                      fontSize: r.fontSize,
-                      fontFamily: token.fontFamily,
-                      fontFamilyFallback: token.fontFamilyFallback,
-                      decoration: TextDecoration.none,
-                    ),
-                    child: widget.child!,
-                  ),
+      onShowFocusHighlight: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
+      },
+      actions: <Type, Action<Intent>>{
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            _select();
+            return null;
+          },
+        ),
+      },
+      child: Semantics(
+        // One of a set, so the reader is told it is a choice among others as
+        // well as whether it is the one taken.
+        inMutuallyExclusiveGroup: true,
+        checked: widget._selected,
+        enabled: _enabled,
+        onTap: _enabled ? _select : null,
+        child: MouseRegion(
+          cursor:
+              _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _select,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioDot(
+                  focused: _focusVisible,
+                  selected: widget._selected,
+                  enabled: _enabled,
+                  hovered: _hovered && _enabled,
+                  token: token,
+                  componentToken: r,
                 ),
+                if (widget.child != null) ...[
+                  SizedBox(width: token.sizeXS),
+                  // Flexible, so words longer than the room they are in give
+                  // way rather than running off the end of the row: a label
+                  // takes the width its words want, and in a narrow column that
+                  // is more than there is.
+                  Flexible(
+                    child: DefaultTextStyle.merge(
+                      style: TextStyle(
+                        color: _enabled
+                            ? token.colorText
+                            : token.colorTextQuaternary,
+                        fontSize: r.fontSize,
+                        fontFamily: token.fontFamily,
+                        fontFamilyFallback: token.fontFamilyFallback,
+                        decoration: TextDecoration.none,
+                      ),
+                      child: widget.child!,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -242,6 +274,7 @@ class RadioDot extends StatelessWidget {
     // ignore: library_private_types_in_public_api
     this.componentToken,
     this.hovered = false,
+    this.focused = false,
   });
 
   /// Whether the dot reads as chosen.
@@ -252,6 +285,9 @@ class RadioDot extends StatelessWidget {
 
   /// Whether the pointer is currently over the dot.
   final bool hovered;
+
+  /// Whether the dot wears the halo that says the keyboard is on it.
+  final bool focused;
 
   /// The resolved theme the dot's colours are read from.
   final Token token;
@@ -286,6 +322,17 @@ class RadioDot extends StatelessWidget {
           color: selected && enabled ? r.colorPrimary : border,
           width: borderWidth,
         ),
+        // Around the dot rather than the label: the words beside it are not
+        // the control.
+        boxShadow: focused && enabled
+            ? [
+                BoxShadow(
+                  color: r.colorPrimary.withValues(alpha: 0.12),
+                  blurRadius: 0,
+                  spreadRadius: 3,
+                ),
+              ]
+            : null,
       ),
     );
   }

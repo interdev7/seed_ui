@@ -333,8 +333,19 @@ class Button extends StatefulWidget {
     this.gradient,
     this.onLongPress,
     this.feedback,
+    this.focusNode,
+    this.autofocus = false,
     this.token,
   });
+
+  /// A focus node of your own, for a button whose focus you drive yourself.
+  ///
+  /// Left null the button keeps one. Either way it takes its turn in the tab
+  /// order and answers Space and Enter.
+  final FocusNode? focusNode;
+
+  /// Whether the button takes focus as soon as it is built.
+  final bool autofocus;
 
   /// Optional background gradient override.
   final Gradient? gradient;
@@ -441,6 +452,11 @@ class _SoftButtonState extends State<Button> {
   bool _hovered = false;
   bool _pressed = false;
 
+  /// Whether the focus should be *seen*. Flutter tells a control this only
+  /// when the focus arrived by keyboard: a button clicked with a mouse is
+  /// focused too, and a ring around it then is noise.
+  bool _focusVisible = false;
+
   /// The button's height — and, for a circle, its diameter.
   ///
   /// A circle takes the larger side of a two-dimensional size, as an [Avatar]
@@ -500,6 +516,13 @@ class _SoftButtonState extends State<Button> {
             },
         },
       );
+
+  /// What the focus halo is coloured with: the button's own accent where it
+  /// has one, and the theme's primary where it is the plain grey default —
+  /// a grey ring around a grey button says nothing.
+  Color _ringColor(Token token, _ButtonStyle style) => _isDefault
+      ? token.primary.base
+      : (style.background ?? style.border ?? token.primary.base);
 
   bool get _isDefault => _color == ButtonColor.defaultColor;
 
@@ -682,7 +705,18 @@ class _SoftButtonState extends State<Button> {
         // the kit had ever cast one. It casts what the token names, and the
         // token names nothing until it is told to. A disabled button says no
         // to it already — its style is built apart, and never carries one.
-        boxShadow: style.shadow ? r.shadow : null,
+        boxShadow: _focusVisible && _enabled
+            ? [
+                // The same halo an Input wears when it has the focus, so the
+                // two read as one idea across the kit.
+                BoxShadow(
+                  color: _ringColor(token, style).withValues(alpha: 0.12),
+                  blurRadius: 0,
+                  spreadRadius: 3,
+                ),
+                if (style.shadow && r.shadow != null) ...r.shadow!,
+              ]
+            : (style.shadow ? r.shadow : null),
         borderRadius: _shape == ButtonShape.circle ? null : _radius(context, r),
         shape:
             _shape == ButtonShape.circle ? BoxShape.circle : BoxShape.rectangle,
@@ -710,31 +744,62 @@ class _SoftButtonState extends State<Button> {
       );
     }
 
-    return MouseRegion(
-      cursor:
-          _enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
-        onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
-        onTapCancel: _enabled ? () => setState(() => _pressed = false) : null,
-        onTap: _enabled && widget.onPressed != null
-            ? () {
-                if (_feedback) Feedback.forTap(context);
-                widget.onPressed!();
-              }
-            : null,
-        onLongPress: _enabled && widget.onLongPress != null
-            ? () {
-                if (_feedback) Feedback.forLongPress(context);
-                widget.onLongPress!();
-              }
-            : null,
-        child: widget.block
-            ? SizedBox(width: double.infinity, child: button)
-            : button,
+    final pressable = _enabled && widget.onPressed != null;
+
+    return FocusableActionDetector(
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      // A button nobody can press is not a stop on the way round: tabbing
+      // through a form should not pause on what does nothing.
+      enabled:
+          _enabled && (widget.onPressed != null || widget.onLongPress != null),
+      onShowFocusHighlight: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
+      },
+      actions: <Type, Action<Intent>>{
+        // Space and Enter both arrive as this, from the app's own shortcuts.
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            if (!pressable) return null;
+            if (_feedback) Feedback.forTap(context);
+            widget.onPressed!();
+            return null;
+          },
+        ),
+      },
+      child: Semantics(
+        button: true,
+        enabled: _enabled,
+        onTap: pressable ? widget.onPressed : null,
+        child: MouseRegion(
+          cursor: _enabled
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.forbidden,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
+            onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
+            onTapCancel:
+                _enabled ? () => setState(() => _pressed = false) : null,
+            onTap: _enabled && widget.onPressed != null
+                ? () {
+                    if (_feedback) Feedback.forTap(context);
+                    widget.onPressed!();
+                  }
+                : null,
+            onLongPress: _enabled && widget.onLongPress != null
+                ? () {
+                    if (_feedback) Feedback.forLongPress(context);
+                    widget.onLongPress!();
+                  }
+                : null,
+            child: widget.block
+                ? SizedBox(width: double.infinity, child: button)
+                : button,
+          ),
+        ),
       ),
     );
   }

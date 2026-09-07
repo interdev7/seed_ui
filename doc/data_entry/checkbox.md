@@ -57,6 +57,19 @@ CheckboxGroup<String>(
 stack the options, or tune `spacing`/`runSpacing`. Disable one option with its
 `disabled` flag, or the whole group with the group's `disabled`.
 
+## From the keyboard
+
+The control takes its turn in the tab order and answers **Space** and
+**Enter**. A halo appears around it — the same one a focused `Input` wears —
+but only when the focus arrived by keyboard: a control clicked with a mouse is
+focused too, and a ring around that is noise.
+
+`focusNode` drives the focus yourself; left null the control keeps one.
+`autofocus` puts the focus there as soon as it is built.
+
+The halo sits on the box, not on the words beside it: the label is not the
+control.
+
 ## Design tokens
 
 `CheckboxToken` overrides this component's own tokens. Every field is an override; an

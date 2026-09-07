@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.22.0
+
+### Added
+
+- **`Button`, `Checkbox`, `Radio` and `Switch` work from the keyboard.** They
+  take their turn in the tab order and answer Space and Enter, and each wears a
+  halo — the one a focused `Input` already wore — when the focus arrived that
+  way. Until now Tab did not reach a button at all and Space did nothing to it,
+  which on the web and the desktop is not a nicety.
+
+  `focusNode` and `autofocus` on each, for a focus you drive yourself. A button
+  that can do nothing is not a stop on the way round, and neither is a disabled
+  control. `Button` and `Switch` gained the semantics to match.
+
 ## 0.21.0
 
 ### Added

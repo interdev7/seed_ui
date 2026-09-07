@@ -115,6 +115,8 @@ class Switch extends StatefulWidget {
     this.checkedChild,
     this.uncheckedChild,
     this.token,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   /// Whether the switch is on.
@@ -142,6 +144,15 @@ class Switch extends StatefulWidget {
   /// Per-instance token overrides.
   final SwitchToken? token;
 
+  /// A focus node of your own, for a switch whose focus you drive yourself.
+  ///
+  /// Left null the switch keeps one. Either way it takes its turn in the tab
+  /// order and answers Space and Enter.
+  final FocusNode? focusNode;
+
+  /// Whether the switch takes focus as soon as it is built.
+  final bool autofocus;
+
   @override
   State<Switch> createState() => _SoftSwitchState();
 }
@@ -153,6 +164,9 @@ class _SoftSwitchState extends State<Switch> {
       widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
 
   bool _pressed = false;
+
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
 
   bool get _enabled =>
       !_disabled && !widget.loading && widget.onChanged != null;
@@ -183,59 +197,93 @@ class _SoftSwitchState extends State<Switch> {
     final trackColor = _enabled ? base : base.withValues(alpha: base.a * 0.4);
     final thumbSize = _thumb(r);
 
-    return MouseRegion(
-      cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _toggle,
-        onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
-        onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
-        onTapCancel: _enabled ? () => setState(() => _pressed = false) : null,
-        child: AnimatedContainer(
-          duration: token.motionDurationMid,
-          curve: token.motionEaseInOut,
-          width: _width(r),
-          height: _height(r),
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            color: trackColor,
-            borderRadius: BorderRadius.circular(_height(r)),
-          ),
-          child: Stack(
-            children: [
-              if (widget.checkedChild != null || widget.uncheckedChild != null)
-                _buildLabel(token, on, thumbSize),
-              AnimatedAlign(
-                duration: token.motionDurationMid,
-                curve: token.motionEaseInOut,
-                // The thumb rests at the start when off and travels to the
-                // end when on — a direction of travel, not a side, so it
-                // turns over with the language as Material's own switch does.
-                alignment: on
-                    ? AlignmentDirectional.centerEnd
-                    : AlignmentDirectional.centerStart,
-                child: AnimatedContainer(
-                  duration: token.motionDurationFast,
-                  curve: token.motionEaseInOut,
-                  // A pressed thumb stretches slightly.
-                  width: _pressed ? thumbSize + 4 : thumbSize,
-                  height: thumbSize,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFFFFF),
-                    borderRadius: BorderRadius.circular(thumbSize),
-                    boxShadow: token.boxShadowSecondary,
-                  ),
-                  child: widget.loading
-                      ? Center(
-                          child: Spinner(
-                            size: thumbSize * 0.85,
-                            color: on ? token.primary.base : _offColor(token),
-                          ),
-                        )
-                      : null,
-                ),
+    return FocusableActionDetector(
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      enabled: _enabled,
+      onShowFocusHighlight: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
+      },
+      actions: <Type, Action<Intent>>{
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            _toggle();
+            return null;
+          },
+        ),
+      },
+      child: Semantics(
+        toggled: widget.value,
+        enabled: _enabled,
+        onTap: _enabled ? _toggle : null,
+        child: MouseRegion(
+          cursor:
+              _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _toggle,
+            onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
+            onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
+            onTapCancel:
+                _enabled ? () => setState(() => _pressed = false) : null,
+            child: AnimatedContainer(
+              duration: token.motionDurationMid,
+              curve: token.motionEaseInOut,
+              width: _width(r),
+              height: _height(r),
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: trackColor,
+                borderRadius: BorderRadius.circular(_height(r)),
+                boxShadow: _focusVisible && _enabled
+                    ? [
+                        BoxShadow(
+                          color: r.colorPrimary.withValues(alpha: 0.12),
+                          blurRadius: 0,
+                          spreadRadius: 3,
+                        ),
+                      ]
+                    : null,
               ),
-            ],
+              child: Stack(
+                children: [
+                  if (widget.checkedChild != null ||
+                      widget.uncheckedChild != null)
+                    _buildLabel(token, on, thumbSize),
+                  AnimatedAlign(
+                    duration: token.motionDurationMid,
+                    curve: token.motionEaseInOut,
+                    // The thumb rests at the start when off and travels to the
+                    // end when on — a direction of travel, not a side, so it
+                    // turns over with the language as Material's own switch does.
+                    alignment: on
+                        ? AlignmentDirectional.centerEnd
+                        : AlignmentDirectional.centerStart,
+                    child: AnimatedContainer(
+                      duration: token.motionDurationFast,
+                      curve: token.motionEaseInOut,
+                      // A pressed thumb stretches slightly.
+                      width: _pressed ? thumbSize + 4 : thumbSize,
+                      height: thumbSize,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFFFF),
+                        borderRadius: BorderRadius.circular(thumbSize),
+                        boxShadow: token.boxShadowSecondary,
+                      ),
+                      child: widget.loading
+                          ? Center(
+                              child: Spinner(
+                                size: thumbSize * 0.85,
+                                color:
+                                    on ? token.primary.base : _offColor(token),
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

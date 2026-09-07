@@ -70,6 +70,10 @@ one you see. A focused control between two others therefore shows its focus
 colour on the side it shares with the one before it, and the plain border of the
 one after it on the other side.
 
+The pull follows the reading direction too: across a run that reads right to
+left the neighbour lies on the other side, and a control pulled the same way
+regardless would part from it and draw two lines instead of one.
+
 ## Where the round corners go
 
 Worked out from the reading direction, so a right-to-left layout keeps the

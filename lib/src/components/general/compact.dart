@@ -222,22 +222,45 @@ class CompactOverlap extends SingleChildRenderObjectWidget {
   /// Which way the run goes.
   final Axis direction;
 
+  /// Whether the neighbour this child overlaps lies before it on the screen.
+  ///
+  /// Down a column it always does. Across a row it is on the left where the
+  /// words run that way and on the right where they do not — and the child,
+  /// being a line wider than the room it takes, then needs no shifting at
+  /// all: it spills over the neighbour by itself.
+  ///
+  /// Read here, and only here, because a render object has no reading
+  /// direction of its own; a run laid out the other way needs nothing from
+  /// its caller.
+  bool _before(BuildContext context) =>
+      direction == Axis.vertical ||
+      Directionality.maybeOf(context) != TextDirection.rtl;
+
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderCompactOverlap(by: by, direction: direction);
+      _RenderCompactOverlap(
+        by: by,
+        direction: direction,
+        before: _before(context),
+      );
 
   @override
   void updateRenderObject(BuildContext context, RenderObject renderObject) {
     (renderObject as _RenderCompactOverlap)
       ..by = by
-      ..direction = direction;
+      ..direction = direction
+      ..before = _before(context);
   }
 }
 
 class _RenderCompactOverlap extends RenderShiftedBox {
-  _RenderCompactOverlap({required double by, required Axis direction})
-      : _by = by,
+  _RenderCompactOverlap({
+    required double by,
+    required Axis direction,
+    required bool before,
+  })  : _by = by,
         _direction = direction,
+        _before = before,
         super(null);
 
   double _by;
@@ -251,6 +274,13 @@ class _RenderCompactOverlap extends RenderShiftedBox {
   set direction(Axis value) {
     if (_direction == value) return;
     _direction = value;
+    markNeedsLayout();
+  }
+
+  bool _before;
+  set before(bool value) {
+    if (_before == value) return;
+    _before = value;
     markNeedsLayout();
   }
 
@@ -284,8 +314,13 @@ class _RenderCompactOverlap extends RenderShiftedBox {
                 : constraints.maxHeight,
           );
     child.layout(inner, parentUsesSize: true);
+    // Only where the neighbour lies before this child: laid out a line wider,
+    // it has to be pulled back to reach the neighbour. Where the neighbour
+    // lies after it, the extra line already spills that way and shifting as
+    // well would carry it a whole line too far.
+    final back = _before ? _by : 0.0;
     (child.parentData! as BoxParentData).offset =
-        _rows ? Offset(-_by, 0) : Offset(0, -_by);
+        _rows ? Offset(-back, 0) : Offset(0, -back);
     size = constraints.constrain(
       _rows
           ? Size(child.size.width - _by, child.size.height)

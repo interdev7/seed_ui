@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `Compact` run drew a double line at every seam where the words read
+  right to left.** Each control was pulled towards the left whichever way the
+  run was laid out, so instead of meeting its neighbour it parted from it. It
+  is pulled back only where the neighbour lies before it; where the neighbour
+  lies after it, the control is already a line wider than its room and spills
+  over it unaided. A run of radio buttons had the same seam and is mended with
+  it.
+
 - **A run of radio buttons** stood a pixel taller than a button beside it. Each
   button centred its border on its own edge, so half a line hung outside the
   box top and bottom. The borders are drawn inside now, as every other control

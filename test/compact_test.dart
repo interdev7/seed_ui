@@ -287,30 +287,37 @@ void main() {
       expect(one, moreOrLessEquals(two, epsilon: 1));
     });
 
-    testWidgets('a column joins top to bottom', (tester) async {
-      await tester.pumpWidget(
-        _host(
-          const SizedBox(
-            width: 200,
-            child: Compact(
-              direction: Axis.vertical,
-              children: [
-                Button(child: Text('Up')),
-                Button(child: Text('Down')),
-              ],
+    testWidgets('a column joins top to bottom, whichever way the words run',
+        (tester) async {
+      // A column's ends are the top and the bottom either way round: nothing
+      // about it is mirrored, and its seam is closed upwards all the same.
+      for (final direction in TextDirection.values) {
+        await tester.pumpWidget(
+          _host(
+            const SizedBox(
+              width: 200,
+              child: Compact(
+                direction: Axis.vertical,
+                children: [
+                  Button(child: Text('Up')),
+                  Button(child: Text('Down')),
+                ],
+              ),
             ),
+            direction: direction,
           ),
-        ),
-      );
-      final up = _radiusOf(tester, 'Up');
-      expect(up.topLeft, isNot(Radius.zero));
-      expect(up.bottomLeft, Radius.zero);
-      final line = ThemeData().token.lineWidth;
-      expect(
-        tester.getBottomLeft(find.byType(Button).at(0)).dy -
-            tester.getTopLeft(find.byType(Button).at(1)).dy,
-        moreOrLessEquals(line, epsilon: 0.01),
-      );
+        );
+        final up = _radiusOf(tester, 'Up', direction: direction);
+        expect(up.topLeft, isNot(Radius.zero), reason: '$direction');
+        expect(up.bottomLeft, Radius.zero, reason: '$direction');
+        final line = ThemeData().token.lineWidth;
+        expect(
+          tester.getBottomLeft(find.byType(Button).at(0)).dy -
+              tester.getTopLeft(find.byType(Button).at(1)).dy,
+          moreOrLessEquals(line, epsilon: 0.01),
+          reason: '$direction',
+        );
+      }
     });
 
     testWidgets('joins an input to a button', (tester) async {
@@ -511,6 +518,77 @@ void main() {
       await tester.pumpAndSettle();
       expect(_radiusOf(tester, 'Two'), BorderRadius.zero);
       expect(_radiusOf(tester, 'Three').topRight, isNot(Radius.zero));
+    });
+
+    testWidgets('the seam is closed the way the run reads', (tester) async {
+      for (final direction in TextDirection.values) {
+        await tester.pumpWidget(
+          _host(
+            const Compact(
+              children: [
+                Button(child: Text('One')),
+                Button(child: Text('Two')),
+              ],
+            ),
+            direction: direction,
+          ),
+        );
+        final buttons = find.byType(Button);
+        final first = tester.getRect(buttons.at(0));
+        final second = tester.getRect(buttons.at(1));
+        final line = ThemeData().token.lineWidth;
+
+        // Whichever way round they stand, the two overlap by exactly the line
+        // they share — pulled the wrong way they would part instead, and draw
+        // two lines with a gap between them.
+        final overlap = direction == TextDirection.ltr
+            ? first.right - second.left
+            : second.right - first.left;
+        expect(
+          overlap,
+          moreOrLessEquals(line, epsilon: 0.01),
+          reason: '$direction',
+        );
+
+        // And the run is no wider than the two of them less that line.
+        expect(
+          tester.getSize(find.byType(Compact)).width,
+          moreOrLessEquals(first.width + second.width - line, epsilon: 0.01),
+          reason: '$direction',
+        );
+      }
+    });
+
+    testWidgets('a run of radio buttons closes its seam either way round',
+        (tester) async {
+      for (final direction in TextDirection.values) {
+        await tester.pumpWidget(
+          _host(
+            RadioGroup<String>(
+              value: 'a',
+              optionType: RadioOptionType.button,
+              options: const [
+                RadioOption(value: 'a', label: Text('A')),
+                RadioOption(value: 'b', label: Text('B')),
+              ],
+              onChanged: (_) {},
+            ),
+            direction: direction,
+          ),
+        );
+        final boxes = find.byType(AnimatedContainer);
+        final first = tester.getRect(boxes.at(0));
+        final second = tester.getRect(boxes.at(1));
+        final line = ThemeData().token.lineWidth;
+        final overlap = direction == TextDirection.ltr
+            ? first.right - second.left
+            : second.right - first.left;
+        expect(
+          overlap,
+          moreOrLessEquals(line, epsilon: 0.01),
+          reason: '$direction',
+        );
+      }
     });
 
     testWidgets('a control still works where it stands', (tester) async {

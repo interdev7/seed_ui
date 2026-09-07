@@ -316,6 +316,9 @@ PopoverLayer(
 `interactive: false` lets pointers fall through to the page — what a tooltip
 wants, so floating text cannot steal hover from what it describes.
 `barrierColor` dims and blocks the page behind, which is how a floating surface
-reads as modal without being a dialog. A layer closes when the page beneath it
+reads as modal without being a dialog. The trigger is dimmed with everything
+else but stays tappable: the hole a barrier leaves over the anchor is about the
+hand, not the eye, so a card opened by hovering can still be clicked through
+without a lit rectangle standing over the dimmed page. A layer closes when the page beneath it
 scrolls, since it is positioned from the trigger's rectangle at the moment it
 opened; [Tour](tour.md) is the exception and re-measures every frame on purpose.

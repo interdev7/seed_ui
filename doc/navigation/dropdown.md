@@ -119,11 +119,16 @@ Dropdown<String>(
 )
 ```
 
-What it draws and what it does not is the whole of the design. The row's
-height, its highlight, the caret marking a submenu and the tap that chooses an
-item stay with the menu, so a builder is never asked to rebuild the machinery
-in order to change the look. It replaces the icon and the words, and nothing
-else.
+What it draws and what it does not is the whole of the design. The highlight,
+the caret marking a submenu and the tap that chooses an item stay with the
+menu, so a builder is never asked to rebuild the machinery in order to change
+the look. It replaces the icon and the words, and nothing else.
+
+**A row is as tall as what is in it.** `itemHeight` is a least, not a height:
+a builder that asks for more takes it, because drawing a row inside a box you
+cannot resize is not drawing it yourself. `itemPadding` says how far the row's
+contents sit from its edges — set it to zero for a builder that paints its own
+background out to them.
 
 The colour and text style are set *around* the builder, so one that returns a
 bare `Text` is dressed like every other row — greyed out when the item is
@@ -340,6 +345,8 @@ override; an unset one falls back to the value derived from the global theme.
 | `shadow` | `boxShadowSecondary` — an empty list casts nothing |
 | `gap` | `sizeXXS` — between a menu and its trigger, and between a submenu and its row |
 | `itemHoverBg` | `colorFillTertiary` |
+| `itemHeight` | `controlHeight` — the least a row may be, not the height it must be |
+| `itemPadding` | `sizeSM` across — how far a row's contents sit from its edges |
 | `barrierColor` | none — no barrier is painted unless one is asked for |
 
 ## Testing

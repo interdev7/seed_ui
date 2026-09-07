@@ -133,4 +133,54 @@ void main() {
       await tester.pumpAndSettle();
     }
   });
+
+  group('a barrier that dims', () {
+    Widget host({required VoidCallback onTap, required bool open}) =>
+        ConfigProvider(
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(
+              body: Center(
+                child: PopoverLayer(
+                  open: open,
+                  onOpenChanged: (_) {},
+                  barrierColor: const Color(0x40000000),
+                  content: (context) => const Text('the card'),
+                  child: GestureDetector(
+                    onTap: onTap,
+                    child: const Text('the trigger'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+    testWidgets('dims the trigger along with the rest of the page',
+        (tester) async {
+      await tester.pumpWidget(host(onTap: () {}, open: true));
+      await tester.pumpAndSettle();
+
+      final wash = tester.getRect(find.byType(ColoredBox).last);
+      final trigger = tester.getRect(find.text('the trigger'));
+      // The dimming is one piece across the page, the trigger included: a lit
+      // rectangle over a dimmed page reads as a mistake.
+      expect(wash.contains(trigger.center), isTrue);
+      expect(
+        tester.widget<ColoredBox>(find.byType(ColoredBox).last).color,
+        const Color(0x40000000),
+      );
+    });
+
+    testWidgets('lets a tap through to the trigger under it', (tester) async {
+      var taps = 0;
+      await tester.pumpWidget(host(onTap: () => taps++, open: true));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('the trigger'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      // The hole is about the hand: the trigger stays live while the card is
+      // open, dimmed or not.
+      expect(taps, 1);
+    });
+  });
 }

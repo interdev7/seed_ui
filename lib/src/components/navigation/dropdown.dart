@@ -33,10 +33,11 @@ sealed class DropdownEntry<T> {
 
 /// Draws the inside of one menu row: its icon, its words, whatever else.
 ///
-/// The row itself — its height, its highlight, the caret marking a submenu,
-/// and the tap that chooses it — stays with the menu, so a builder is never
-/// asked to rebuild the machinery in order to change the look. [hovered] is
-/// the one thing it could not work out from the item alone.
+/// The row's highlight, the caret marking a submenu and the tap that chooses
+/// it stay with the menu, so a builder is never asked to rebuild the
+/// machinery in order to change the look. Its height does not: a builder that
+/// asks for more than `DropdownToken.itemHeight` takes it. [hovered] is the
+/// one thing it could not work out from the item alone.
 typedef DropdownItemBuilder<T> = Widget Function(
   BuildContext context,
   DropdownItem<T> item,
@@ -127,6 +128,8 @@ class DropdownToken {
     this.shadow,
     this.gap,
     this.itemHoverBg,
+    this.itemHeight,
+    this.itemPadding,
     this.barrierColor,
   });
 
@@ -168,6 +171,15 @@ class DropdownToken {
   /// Item hover background color (`itemHoverBg`).
   final Color? itemHoverBg;
 
+  /// The least a row may be tall (`controlHeight`).
+  ///
+  /// A least, not a height: a row drawn by [Dropdown.itemBuilder] that wants
+  /// more takes it, which is the whole point of drawing it yourself.
+  final double? itemHeight;
+
+  /// How far a row's contents are inset from its edges (`sizeSM` across).
+  final EdgeInsets? itemPadding;
+
   /// Dismiss barrier background color (`barrierColor`).
   final Color? barrierColor;
 
@@ -180,6 +192,8 @@ class DropdownToken {
         shadow: shadow ?? t.boxShadowSecondary,
         gap: gap ?? t.sizeXXS,
         itemHoverBg: itemHoverBg ?? t.colorFillTertiary,
+        itemHeight: itemHeight ?? t.controlHeight,
+        itemPadding: itemPadding ?? EdgeInsets.symmetric(horizontal: t.sizeSM),
         barrierColor: barrierColor,
       );
 }
@@ -195,6 +209,8 @@ class _ResolvedDropdownToken {
     required this.gap,
     this.border,
     required this.itemHoverBg,
+    required this.itemHeight,
+    required this.itemPadding,
     this.barrierColor,
   });
 
@@ -206,6 +222,8 @@ class _ResolvedDropdownToken {
   final List<BoxShadow> shadow;
   final double gap;
   final Color itemHoverBg;
+  final double itemHeight;
+  final EdgeInsets itemPadding;
   final Color? barrierColor;
 }
 
@@ -897,9 +915,13 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
                 : () => widget.onSelect(item),
         child: AnimatedContainer(
           duration: token.motionDurationFast,
-          height: token.controlHeight,
+          // A least, not a height. A row drawn by `itemBuilder` that asks
+          // for more gets it — squeezing it back into the kit's own height
+          // would leave the caller drawing inside a box they cannot resize,
+          // which is not drawing it themselves at all.
+          constraints: BoxConstraints(minHeight: r.itemHeight),
           margin: const EdgeInsets.symmetric(vertical: 1),
-          padding: EdgeInsets.symmetric(horizontal: token.sizeSM),
+          padding: r.itemPadding,
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(token.borderRadiusSM),

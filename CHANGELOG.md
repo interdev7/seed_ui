@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.21.0
+
+### Added
+
+- **`DropdownToken.itemHeight` and `DropdownToken.itemPadding`** — how tall a
+  row is at least, and how far its contents sit from its edges.
+
+### Fixed
+
+- **A row drawn by `itemBuilder` could not be taller than the kit's own.** The
+  row named a fixed height, so a builder asking for 52 was squeezed back to
+  `controlHeight` — drawing a row inside a box you cannot resize is not drawing
+  it yourself. The height is a least now, and a builder that asks for more
+  takes it.
+
+- **A dimming barrier left its trigger undimmed.** The barrier leaves a hole
+  over the anchor so the trigger stays tappable while the card is open — but it
+  was built from four strips that painted the dimming too, so the anchor was
+  the one lit thing on a dimmed page and read as a mistake. The wash is one
+  piece across the page now; only the tap-catching is cut away.
+
 ## 0.20.0
 
 ### Added

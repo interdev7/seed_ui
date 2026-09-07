@@ -910,4 +910,77 @@ void main() {
     expect(washes.length, 2);
     expect(washes.every((g) => g == wash), isTrue);
   });
+
+  group('a row drawn by the caller', () {
+    Future<void> open(WidgetTester tester,
+        {DropdownToken? token, DropdownItemBuilder<String>? builder}) async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(
+        _host(
+          Dropdown<String>(
+            trigger: const [],
+            open: true,
+            token: token,
+            itemBuilder: builder,
+            menu: const [DropdownItem(value: 'a', label: 'A')],
+            child: const Text('Open'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    double rowHeight(WidgetTester tester) => tester
+        .getRect(
+          find
+              .ancestor(
+                of: find.text('A'),
+                matching: find.byType(AnimatedContainer),
+              )
+              .first,
+        )
+        .height;
+
+    testWidgets('a taller row than the kit draws takes the height it asks for',
+        (tester) async {
+      await open(tester);
+      final plain = rowHeight(tester);
+
+      await open(
+        tester,
+        builder: (context, item, hovered) =>
+            SizedBox(height: 52, child: Text(item.label ?? '')),
+      );
+      // The kit's height is a least, not a height: drawing a row inside a box
+      // the caller cannot resize is not drawing it yourself.
+      expect(plain, lessThan(52));
+      expect(rowHeight(tester), greaterThanOrEqualTo(52));
+    });
+
+    testWidgets('a shorter one keeps the least the token names',
+        (tester) async {
+      await open(
+        tester,
+        token: const DropdownToken(itemHeight: 60),
+        builder: (context, item, hovered) =>
+            SizedBox(height: 8, child: Text(item.label ?? '')),
+      );
+      // Plus the one-pixel margin the row keeps on each side, which the
+      // measured box includes.
+      expect(rowHeight(tester), moreOrLessEquals(62, epsilon: 0.5));
+    });
+
+    testWidgets('the row is inset by what the token names', (tester) async {
+      await open(tester,
+          token: const DropdownToken(itemPadding: EdgeInsets.zero));
+      final flush = tester.getRect(find.text('A')).left;
+
+      await open(
+        tester,
+        token: const DropdownToken(itemPadding: EdgeInsets.only(left: 40)),
+      );
+      expect(tester.getRect(find.text('A')).left - flush,
+          moreOrLessEquals(40, epsilon: 0.5));
+    });
+  });
 }

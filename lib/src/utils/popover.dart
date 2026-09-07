@@ -1102,9 +1102,13 @@ class _GeniePainter extends SnapshotPainter {
       old.shadows != shadows;
 }
 
-/// A dismiss barrier covering everything except a rectangular [hole] (the
-/// anchor), built from four strips so taps in the hole fall through to the
-/// trigger below.
+/// A dismiss barrier that dims everything and lets taps through a rectangular
+/// [hole] over the anchor.
+///
+/// The hole is about the hand, not the eye: the trigger stays tappable while
+/// the card is open, but a lit rectangle over a dimmed page reads as a
+/// mistake — so the dimming is drawn across the whole barrier, in one piece,
+/// and only the tap-catching is cut away.
 class _HoleBarrier extends StatelessWidget {
   const _HoleBarrier({
     required this.hole,
@@ -1116,16 +1120,23 @@ class _HoleBarrier extends StatelessWidget {
   final VoidCallback onTap;
   final Color? color;
 
+  /// One of the four strips around the hole: it catches the tap that
+  /// dismisses, and paints nothing — the wash below covers it.
   Widget get _strip => GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: onTap,
-        child: color != null ? Container(color: color) : null,
       );
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        if (color != null)
+          // Under the strips and over the page, and never in the way of a
+          // tap: the strips decide what a tap means.
+          Positioned.fill(
+            child: IgnorePointer(child: ColoredBox(color: color!)),
+          ),
         Positioned(left: 0, top: 0, right: 0, height: hole.top, child: _strip),
         Positioned(
           left: 0,

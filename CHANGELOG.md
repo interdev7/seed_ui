@@ -15,12 +15,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   was. Until now the background and the corners could be blanked but the shadow
   could not, so a menu styled that way kept a shadow nobody asked for.
 
+- **`DropdownToken.gap`** — how far a panel stands off what opened it: a menu
+  from its trigger, a submenu from the row it belongs to. It was `sizeXXS`
+  either way and could not be said otherwise, so a theme with no size unit left
+  them touching, reading as one surface rather than two.
+
 - **`DropdownToken.border`** — a line around the panel, none by default. With
   it, a menu's background, corners, border and shadow are all token fields, so
   a house style is said once on a `ConfigProvider` rather than built at each
   call site.
 
 ### Fixed
+
+- **A submenu was dressed by nobody.** It opened without naming the row it
+  came from, so nothing it stood in reached it: a menu styled by a provider —
+  or by a `token:` resolved from one — opened a submenu in the kit's plain
+  chrome.
 
 - **A popover was built outside the providers that stood over its trigger.** An
   overlay is mounted above the app, so a `ConfigProvider` around one screen

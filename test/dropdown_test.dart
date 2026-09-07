@@ -707,4 +707,119 @@ void main() {
       expect(d.border, isNull);
     });
   });
+
+  group('a submenu', () {
+    Widget tree(Widget child) => MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          home: Scaffold(body: Center(child: child)),
+        );
+
+    const nested = [
+      DropdownItem(
+        value: 'more',
+        label: 'More',
+        children: [DropdownItem(value: 'help', label: 'Help')],
+      ),
+    ];
+
+    Future<void> openBoth(WidgetTester tester) async {
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('More'));
+      await tester.pumpAndSettle();
+    }
+
+    List<BoxDecoration> panels(WidgetTester tester) => tester
+        .widgetList<DropdownPanel>(find.byType(DropdownPanel))
+        .map(
+          (p) => tester
+              .widget<DecoratedBox>(
+                find
+                    .descendant(
+                      of: find.byWidget(p),
+                      matching: find.byType(DecoratedBox),
+                    )
+                    .first,
+              )
+              .decoration as BoxDecoration,
+        )
+        .toList();
+
+    testWidgets('is dressed by the provider its parent stood in',
+        (tester) async {
+      await tester.pumpWidget(
+        tree(
+          ConfigProvider(
+            theme: ThemeData(
+              components: const ComponentsConfig(
+                dropdown: DropdownToken(menuBg: Color(0xFF123456)),
+              ),
+            ),
+            child: const Dropdown<String>(
+              trigger: [],
+              open: true,
+              menu: nested,
+              child: Text('Open'),
+            ),
+          ),
+        ),
+      );
+      await openBoth(tester);
+      final seen = panels(tester);
+      expect(seen.length, 2);
+      expect(
+        seen.every((d) => d.color == const Color(0xFF123456)),
+        isTrue,
+        reason: 'both the menu and the submenu wear it',
+      );
+    });
+
+    testWidgets('stands off the row it belongs to', (tester) async {
+      Future<double> distance(double? gap) async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(
+          tree(
+            Dropdown<String>(
+              trigger: const [],
+              open: true,
+              token: DropdownToken(gap: gap),
+              menu: nested,
+              child: const Text('Open'),
+            ),
+          ),
+        );
+        await openBoth(tester);
+        final row = tester.getRect(find.text('More'));
+        final sub = tester.getRect(find.text('Help'));
+        return sub.left - row.right;
+      }
+
+      final near = await distance(0);
+      final far = await distance(40);
+      expect(far - near, moreOrLessEquals(40, epsilon: 0.5));
+    });
+
+    testWidgets('the menu itself stands off its trigger by the same word',
+        (tester) async {
+      Future<double> distance(double gap) async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(
+          tree(
+            Dropdown<String>(
+              trigger: const [],
+              open: true,
+              token: DropdownToken(gap: gap),
+              menu: const [DropdownItem(value: 'a', label: 'A')],
+              child: const Text('Open'),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        return tester.getRect(find.byType(DropdownPanel)).top -
+            tester.getRect(find.text('Open')).bottom;
+      }
+
+      expect(await distance(40) - await distance(0),
+          moreOrLessEquals(40, epsilon: 0.5));
+    });
+  });
 }

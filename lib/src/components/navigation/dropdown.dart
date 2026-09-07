@@ -124,6 +124,7 @@ class DropdownToken {
     this.borderRadius,
     this.border,
     this.shadow,
+    this.gap,
     this.itemHoverBg,
     this.barrierColor,
   });
@@ -149,6 +150,13 @@ class DropdownToken {
   /// put a surface of its own where it was.
   final List<BoxShadow>? shadow;
 
+  /// How far the panel stands off what opened it (`sizeXXS`).
+  ///
+  /// The same distance twice over: between a menu and its trigger, and
+  /// between a submenu and the row it belongs to. A theme with no size unit
+  /// leaves them touching, which reads as one surface rather than two.
+  final double? gap;
+
   /// Item hover background color (`itemHoverBg`).
   final Color? itemHoverBg;
 
@@ -161,6 +169,7 @@ class DropdownToken {
         borderRadius: borderRadius ?? t.borderRadiusLG,
         border: border,
         shadow: shadow ?? t.boxShadowSecondary,
+        gap: gap ?? t.sizeXXS,
         itemHoverBg: itemHoverBg ?? t.colorFillTertiary,
         barrierColor: barrierColor,
       );
@@ -173,6 +182,7 @@ class _ResolvedDropdownToken {
     required this.padding,
     required this.borderRadius,
     required this.shadow,
+    required this.gap,
     this.border,
     required this.itemHoverBg,
     this.barrierColor,
@@ -183,6 +193,7 @@ class _ResolvedDropdownToken {
   final double borderRadius;
   final BorderSide? border;
   final List<BoxShadow> shadow;
+  final double gap;
   final Color itemHoverBg;
   final Color? barrierColor;
 }
@@ -439,7 +450,7 @@ class _DropdownState<T> extends State<Dropdown<T>> {
     _popover.open(
       placement: _placement,
       anchorRect: anchor,
-      gap: token.sizeXXS,
+      gap: r.gap,
       // Hover menus have no dismiss barrier, so hovering elsewhere still works;
       // click/context menus close on an outside tap.
       onDismiss: _hoverMode ? null : () => _requestOpen(false),
@@ -760,6 +771,10 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
     final anchor = box.localToGlobal(Offset.zero) & box.size;
     _submenuOpen = true;
     final token = context.softToken;
+    final r = (widget.token ??
+            ConfigProvider.componentOf<DropdownToken>(context) ??
+            const DropdownToken())
+        ._resolve(token);
     _submenu.open(
       // Out to the side the menu reads towards, so a mirrored layout opens
       // its submenus away from the parent rather than back over it.
@@ -767,8 +782,12 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
           ? PopoverPlacement.leftTop
           : PopoverPlacement.rightTop,
       anchorRect: anchor,
-      gap: token.sizeXXS,
+      gap: r.gap,
       interactive: true,
+      // The row's own context, so whatever dressed this menu dresses the one
+      // opening out of it: an overlay is mounted above the app, and without
+      // this a submenu is built outside every provider its parent stood in.
+      anchorContext: context,
       builder: (context) => MouseRegion(
         onEnter: (_) => _hovered = true,
         onExit: (_) {

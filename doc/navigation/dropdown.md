@@ -267,7 +267,11 @@ ConfigProvider(
 
 The provider need not be at the root. A menu is mounted in an overlay above
 the app, but what stood over the trigger is carried down to the panel, so a
-provider around one screen dresses that screen's menus.
+provider around one screen dresses that screen's menus — submenus with them.
+
+`gap` is the distance a panel stands off what opened it: a menu from its
+trigger, a submenu from its row. A theme with no size unit leaves them
+touching, which reads as one surface rather than two.
 
 ### A surface of your own
 
@@ -296,7 +300,13 @@ Dropdown(
 ```
 
 A panel with no rounding is not clipped, so a shadow or a glow drawn in its
-place is not cut off at its edge. With rounding it is clipped, because a row's
+place is not cut off at its edge.
+
+**`popupRender` dresses the panel it is handed, and only that one.** A submenu
+opens a panel of its own, which wears the token — so a menu whose chrome has
+been blanked for a surface of its own opens its submenus onto nothing. Blank
+the chrome for a menu without submenus; style a nested one through the token,
+which covers background, corners, border, shadow and the gap between the two. With rounding it is clipped, because a row's
 hover fill has to stop at the corner.
 
 For a popup that is not a menu at all, `content:` replaces the body outright
@@ -323,6 +333,7 @@ override; an unset one falls back to the value derived from the global theme.
 | `borderRadius` | `borderRadiusLG` |
 | `border` | none — the shadow tells the panel from the page; a line as well is one edge too many |
 | `shadow` | `boxShadowSecondary` — an empty list casts nothing |
+| `gap` | `sizeXXS` — between a menu and its trigger, and between a submenu and its row |
 | `itemHoverBg` | `colorFillTertiary` |
 | `barrierColor` | none — no barrier is painted unless one is asked for |
 

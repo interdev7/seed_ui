@@ -120,6 +120,7 @@ class DropdownToken {
   /// Creates a [DropdownToken].
   const DropdownToken({
     this.menuBg,
+    this.gradient,
     this.padding,
     this.borderRadius,
     this.border,
@@ -131,6 +132,13 @@ class DropdownToken {
 
   /// Menu background color (`menuBg`).
   final Color? menuBg;
+
+  /// A gradient across the panel, drawn over [menuBg].
+  ///
+  /// None by default. Being a token it reaches every panel of the menu, so a
+  /// submenu carries the same wash as the menu it opened from — which a
+  /// `popupRender` cannot do, dressing as it does only the panel it is handed.
+  final Gradient? gradient;
 
   /// Menu padding (`padding`).
   final EdgeInsets? padding;
@@ -165,6 +173,7 @@ class DropdownToken {
 
   _ResolvedDropdownToken _resolve(Token t) => _ResolvedDropdownToken(
         menuBg: menuBg ?? t.colorBgElevated,
+        gradient: gradient,
         padding: padding ?? EdgeInsets.all(t.sizeXXS),
         borderRadius: borderRadius ?? t.borderRadiusLG,
         border: border,
@@ -179,6 +188,7 @@ class DropdownToken {
 class _ResolvedDropdownToken {
   const _ResolvedDropdownToken({
     required this.menuBg,
+    required this.gradient,
     required this.padding,
     required this.borderRadius,
     required this.shadow,
@@ -189,6 +199,7 @@ class _ResolvedDropdownToken {
   });
 
   final Color menuBg;
+  final Gradient? gradient;
   final EdgeInsets padding;
   final double borderRadius;
   final BorderSide? border;
@@ -606,6 +617,7 @@ class DropdownPanel extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: r.menuBg,
+          gradient: r.gradient,
           borderRadius: BorderRadius.circular(r.borderRadius),
           border: r.border == null ? null : Border.fromBorderSide(r.border!),
           boxShadow: r.shadow,
@@ -768,7 +780,25 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
     if (_submenuOpen) return;
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
-    final anchor = box.localToGlobal(Offset.zero) & box.size;
+    final row = box.localToGlobal(Offset.zero) & box.size;
+
+    // Measured from the panel's edge, not the row's. A row is inset from the
+    // panel by its padding, so a gap counted from the row is that much
+    // smaller than it reads — and with a padding wider than the gap the
+    // submenu lands on top of the menu it came from. Vertically it still
+    // lines up with the row, which is what it belongs to.
+    RenderBox? panelBox;
+    context.visitAncestorElements((element) {
+      if (element.widget is DropdownPanel) {
+        panelBox = element.findRenderObject() as RenderBox?;
+        return false;
+      }
+      return true;
+    });
+    final panel = panelBox != null && panelBox!.hasSize
+        ? panelBox!.localToGlobal(Offset.zero) & panelBox!.size
+        : row;
+    final anchor = Rect.fromLTRB(panel.left, row.top, panel.right, row.bottom);
     _submenuOpen = true;
     final token = context.softToken;
     final r = (widget.token ??

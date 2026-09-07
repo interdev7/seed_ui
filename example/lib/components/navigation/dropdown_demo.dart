@@ -237,20 +237,46 @@ class _DropdownDemoState extends State<DropdownDemo> {
           ),
         ),
         Group(
-          'popupRender (a surface of your own)',
+          'A gradient panel (token)',
+          // A gradient is a token field, so it washes every panel of the
+          // menu — the submenu under `More` carries it on. A popupRender
+          // could not: it dresses the panel it is handed and no other.
           Dropdown(
             trigger: const [DropdownTrigger.click],
-            // For a surface the token cannot describe — a gradient, here.
-            // A plain colour, corners, a border and a shadow are all token
-            // fields; reach for this only past them. The chrome is blanked
-            // first, since the panel is drawn around what this returns, and
-            // nothing is clipped at a radius of zero, so the shadow below is
-            // not cut off at the panel's edge.
-            //
-            // A flat menu on purpose: popupRender dresses the panel it is
-            // handed, and a submenu opens a panel of its own, which wears the
-            // token — blanked here. Style a nested menu through the token
-            // instead, as the group below does.
+            token: DropdownToken(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  context.softToken.primary.bg,
+                  context.softToken.colorBgElevated,
+                ],
+              ),
+              borderRadius: 20,
+              border: BorderSide(color: context.softToken.primary.border),
+              gap: 6,
+            ),
+            menu: _menu,
+            onItemTap: (action) => message.info('Tapped: ${action?.name}'),
+            child: Button(
+              onPressed: () {},
+              child: const Text('A gradient of my own'),
+            ),
+          ),
+        ),
+        Group(
+          'popupRender (a layer behind the menu)',
+          // Past what the token can say: a second layer, drawn behind the
+          // rows. The chrome is blanked first, since the panel is drawn
+          // around what this returns, and nothing is clipped at a radius of
+          // zero, so the badge hanging outside is not cut off.
+          //
+          // A flat menu on purpose: popupRender dresses the panel it is
+          // handed, and a submenu opens a panel of its own, which wears the
+          // token — blanked here. Style a nested menu through the token, as
+          // the group above does.
+          Dropdown(
+            trigger: const [DropdownTrigger.click],
             token: const DropdownToken(
               menuBg: Color(0x00000000),
               borderRadius: 0,
@@ -277,30 +303,46 @@ class _DropdownDemoState extends State<DropdownDemo> {
             onItemTap: (action) => message.info('Tapped: ${action?.name}'),
             popupRender: (context, menu) {
               final t = context.softToken;
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [t.primary.bg, t.colorBgElevated],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: t.primary.border),
-                  boxShadow: [
-                    BoxShadow(
-                      color: t.primary.base.withValues(alpha: 0.24),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: t.colorBgElevated,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: t.primary.border),
+                      boxShadow: t.boxShadowSecondary,
                     ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(6),
-                child: menu,
+                    padding: const EdgeInsets.all(6),
+                    child: menu,
+                  ),
+                  Positioned(
+                    top: -10,
+                    right: -10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: t.primary.base,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'beta',
+                        style: TextStyle(
+                          color: t.colorBgElevated,
+                          fontSize: t.fontSizeSM,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
             child: Button(
               onPressed: () {},
-              child: const Text('A surface of my own'),
+              child: const Text('A layer of my own'),
             ),
           ),
         ),

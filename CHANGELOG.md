@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   was. Until now the background and the corners could be blanked but the shadow
   could not, so a menu styled that way kept a shadow nobody asked for.
 
+- **`DropdownToken.gradient`** — a wash over `menuBg`. Being a token it reaches
+  every panel of the menu, so a submenu carries the same wash as the menu it
+  opened from, which a `popupRender` cannot do: that dresses the panel it is
+  handed and no other.
+
 - **`DropdownToken.gap`** — how far a panel stands off what opened it: a menu
   from its trigger, a submenu from the row it belongs to. It was `sizeXXS`
   either way and could not be said otherwise, so a theme with no size unit left
@@ -26,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   call site.
 
 ### Fixed
+
+- **A submenu stood off its row, not off the menu it came out of.** A row is
+  inset from the panel by the menu's padding, so the gap came out that much
+  smaller than it was asked to be — and with a padding wider than the gap the
+  submenu landed on top of the menu it opened from. It is measured from the
+  panel's edge now, while still lining up with its own row.
 
 - **A submenu was dressed by nobody.** It opened without naming the row it
   came from, so nothing it stood in reached it: a menu styled by a provider —

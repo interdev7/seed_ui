@@ -773,29 +773,63 @@ void main() {
       );
     });
 
-    testWidgets('stands off the row it belongs to', (tester) async {
-      Future<double> distance(double? gap) async {
+    testWidgets('stands off the panel it came from, not the row inside it',
+        (tester) async {
+      // A row is inset from the panel by its padding. Counted from the row, a
+      // gap is that much smaller than it reads, and a padding wider than the
+      // gap drops the submenu on top of the menu it came from.
+      Future<double> clearance(double gap) async {
         await tester.pumpWidget(const SizedBox());
         await tester.pumpWidget(
           tree(
             Dropdown<String>(
               trigger: const [],
               open: true,
-              token: DropdownToken(gap: gap),
+              token: DropdownToken(gap: gap, padding: const EdgeInsets.all(12)),
               menu: nested,
               child: const Text('Open'),
             ),
           ),
         );
         await openBoth(tester);
-        final row = tester.getRect(find.text('More'));
-        final sub = tester.getRect(find.text('Help'));
-        return sub.left - row.right;
+        final panels = find.byType(DropdownPanel);
+        return tester.getRect(panels.at(1)).left -
+            tester.getRect(panels.at(0)).right;
       }
 
-      final near = await distance(0);
-      final far = await distance(40);
-      expect(far - near, moreOrLessEquals(40, epsilon: 0.5));
+      expect(await clearance(0), moreOrLessEquals(0, epsilon: 0.01));
+      expect(await clearance(4), moreOrLessEquals(4, epsilon: 0.01));
+      expect(await clearance(40), moreOrLessEquals(40, epsilon: 0.01));
+    });
+
+    testWidgets('lines up with the row it belongs to', (tester) async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(
+        tree(
+          const Dropdown<String>(
+            trigger: [],
+            open: true,
+            // Rows above it, so a submenu pinned to the top of the panel
+            // instead of to its own row is plain to see.
+            menu: [
+              DropdownItem(value: 'one', label: 'One'),
+              DropdownItem(value: 'two', label: 'Two'),
+              DropdownItem(value: 'three', label: 'Three'),
+              ...nested,
+            ],
+            child: Text('Open'),
+          ),
+        ),
+      );
+      await openBoth(tester);
+      // Measured from the panel sideways, but still level with its own row:
+      // taking the panel's rect wholesale would have pinned it to the top of
+      // the menu instead.
+      final parent = tester.getRect(find.byType(DropdownPanel).at(0));
+      final sub = tester.getRect(find.byType(DropdownPanel).at(1));
+      final row = tester.getRect(find.text('More'));
+      expect(sub.top, moreOrLessEquals(row.top, epsilon: 12));
+      expect(sub.left, greaterThanOrEqualTo(parent.right));
     });
 
     testWidgets('the menu itself stands off its trigger by the same word',
@@ -821,5 +855,59 @@ void main() {
       expect(await distance(40) - await distance(0),
           moreOrLessEquals(40, epsilon: 0.5));
     });
+  });
+
+  testWidgets('a gradient in the token washes every panel of the menu',
+      (tester) async {
+    const wash = LinearGradient(colors: [Color(0xFF112233), Color(0xFF445566)]);
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: UiKit.navigatorKey,
+        home: Scaffold(
+          body: Center(
+            child: ConfigProvider(
+              theme: ThemeData(
+                components: const ComponentsConfig(
+                  dropdown: DropdownToken(gradient: wash),
+                ),
+              ),
+              child: const Dropdown<String>(
+                trigger: [],
+                open: true,
+                menu: [
+                  DropdownItem(
+                    value: 'more',
+                    label: 'More',
+                    children: [DropdownItem(value: 'help', label: 'Help')],
+                  ),
+                ],
+                child: Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('More'));
+    await tester.pumpAndSettle();
+    final washes = tester
+        .widgetList<DropdownPanel>(find.byType(DropdownPanel))
+        .map(
+          (p) => (tester
+                  .widget<DecoratedBox>(
+                    find
+                        .descendant(
+                          of: find.byWidget(p),
+                          matching: find.byType(DecoratedBox),
+                        )
+                        .first,
+                  )
+                  .decoration as BoxDecoration)
+              .gradient,
+        )
+        .toList();
+    expect(washes.length, 2);
+    expect(washes.every((g) => g == wash), isTrue);
   });
 }

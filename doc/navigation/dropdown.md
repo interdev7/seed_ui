@@ -270,8 +270,10 @@ the app, but what stood over the trigger is carried down to the panel, so a
 provider around one screen dresses that screen's menus — submenus with them.
 
 `gap` is the distance a panel stands off what opened it: a menu from its
-trigger, a submenu from its row. A theme with no size unit leaves them
-touching, which reads as one surface rather than two.
+trigger, and a submenu from the **panel** it came out of — not from its row,
+which is inset by the menu's padding and would leave the two overlapping. A
+theme with no size unit leaves them touching, which reads as one surface
+rather than two.
 
 ### A surface of your own
 
@@ -306,7 +308,9 @@ place is not cut off at its edge.
 opens a panel of its own, which wears the token — so a menu whose chrome has
 been blanked for a surface of its own opens its submenus onto nothing. Blank
 the chrome for a menu without submenus; style a nested one through the token,
-which covers background, corners, border, shadow and the gap between the two. With rounding it is clipped, because a row's
+which covers background, gradient, corners, border, shadow and the gap between
+the two. A gradient in particular is a token field for exactly this reason: a
+wash that stopped at the first panel would look like a mistake. With rounding it is clipped, because a row's
 hover fill has to stop at the corner.
 
 For a popup that is not a menu at all, `content:` replaces the body outright
@@ -331,6 +335,7 @@ override; an unset one falls back to the value derived from the global theme.
 | `menuBg` | `colorBgElevated` |
 | `padding` | `sizeXXS` on every side |
 | `borderRadius` | `borderRadiusLG` |
+| `gradient` | none — a wash over `menuBg`, and it reaches submenus |
 | `border` | none — the shadow tells the panel from the page; a line as well is one edge too many |
 | `shadow` | `boxShadowSecondary` — an empty list casts nothing |
 | `gap` | `sizeXXS` — between a menu and its trigger, and between a submenu and its row |

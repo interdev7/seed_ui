@@ -243,6 +243,65 @@ with the item chosen — it reports the item rather than its value, so a caller
 can tell two entries carrying the same value apart.
 
 
+### One look for every menu
+
+Background, corners, border and shadow are all token fields, so a house style
+is said once and every menu under the provider wears it — no builder at the
+call site:
+
+```dart
+ConfigProvider(
+  theme: ThemeData(
+    components: ComponentsConfig(
+      dropdown: DropdownToken(
+        menuBg: brandSurface,
+        borderRadius: 20,
+        border: BorderSide(color: brandLine),
+        shadow: [BoxShadow(color: brandGlow, blurRadius: 24)],
+      ),
+    ),
+  ),
+  child: screen,
+)
+```
+
+The provider need not be at the root. A menu is mounted in an overlay above
+the app, but what stood over the trigger is carried down to the panel, so a
+provider around one screen dresses that screen's menus.
+
+### A surface of your own
+
+`popupRender` fills the panel; it does not replace it. Reach for it past what the token can
+say — a gradient, an image, two layers. To put your own surface where the panel
+was, blank the chrome and draw whatever you like inside:
+
+```dart
+Dropdown(
+  token: const DropdownToken(
+    menuBg: Color(0x00000000),
+    borderRadius: 0,
+    shadow: [],
+  ),
+  popupRender: (context, menu) => Container(
+    decoration: BoxDecoration(
+      color: myBackground,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: mine,
+    ),
+    child: menu,
+  ),
+  menu: entries,
+  child: trigger,
+)
+```
+
+A panel with no rounding is not clipped, so a shadow or a glow drawn in its
+place is not cut off at its edge. With rounding it is clipped, because a row's
+hover fill has to stop at the corner.
+
+For a popup that is not a menu at all, `content:` replaces the body outright
+and the panel with it — see **Custom body**.
+
 ## Design tokens
 
 A `token` on the dropdown itself overrides these for that menu alone — its
@@ -262,6 +321,8 @@ override; an unset one falls back to the value derived from the global theme.
 | `menuBg` | `colorBgElevated` |
 | `padding` | `sizeXXS` on every side |
 | `borderRadius` | `borderRadiusLG` |
+| `border` | none — the shadow tells the panel from the page; a line as well is one edge too many |
+| `shadow` | `boxShadowSecondary` — an empty list casts nothing |
 | `itemHoverBg` | `colorFillTertiary` |
 | `barrierColor` | none — no barrier is painted unless one is asked for |
 

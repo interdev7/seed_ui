@@ -161,10 +161,19 @@ class _Config {
 }
 
 /// Carries the resolved [_Config] down the tree.
-class _ConfigScope extends InheritedWidget {
+class _ConfigScope extends InheritedTheme {
   const _ConfigScope({required this.config, required super.child});
 
   final _Config config;
+
+  // An overlay is mounted above the app, not under the widget that opened it,
+  // so a menu or a picker panel would otherwise be built outside every
+  // provider between the two — a screen that dressed its dropdowns would find
+  // its dropdowns undressed. Being an `InheritedTheme` lets the popover
+  // capture what stood over the anchor and put it back over the panel.
+  @override
+  Widget wrap(BuildContext context, Widget child) =>
+      _ConfigScope(config: config, child: child);
 
   // The config is rebuilt only when something it is made of changed, so
   // identity is the whole comparison — and a provider rebuilding for reasons

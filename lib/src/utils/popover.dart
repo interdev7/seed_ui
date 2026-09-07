@@ -181,6 +181,16 @@ class PopoverController {
   }) {
     if (_entry != null) return;
     _anchor.value = anchorRect;
+    // What stood over the anchor is carried over the panel: theme, text
+    // style, icon theme and the kit's own config. Captured up to the
+    // navigator, so what the app already provides above the overlay is not
+    // applied twice.
+    final captured = anchorContext != null && anchorContext.mounted
+        ? InheritedTheme.capture(
+            from: anchorContext,
+            to: Navigator.maybeOf(anchorContext)?.context,
+          )
+        : null;
     _entry = OverlayEntry(
       builder: (context) => _SoftPopoverLayer(
         key: _layerKey,
@@ -196,7 +206,9 @@ class PopoverController {
         animation: animation,
         duration: duration,
         curve: curve,
-        builder: builder,
+        builder: captured == null
+            ? builder
+            : (context) => captured.wrap(builder(context)),
       ),
     );
     UiKit.requireOverlay().insert(_entry!);

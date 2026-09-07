@@ -236,6 +236,102 @@ class _DropdownDemoState extends State<DropdownDemo> {
             child: Button(onPressed: () {}, child: const Text('popupRender')),
           ),
         ),
+        Group(
+          'popupRender (a surface of your own)',
+          Dropdown(
+            trigger: const [DropdownTrigger.click],
+            // For a surface the token cannot describe — a gradient, here.
+            // A plain colour, corners, a border and a shadow are all token
+            // fields; reach for this only past them. The chrome is blanked
+            // first, since the panel is drawn around what this returns, and
+            // nothing is clipped at a radius of zero, so the shadow below is
+            // not cut off at the panel's edge.
+            token: const DropdownToken(
+              menuBg: Color(0x00000000),
+              borderRadius: 0,
+              shadow: [],
+            ),
+            menu: _menu,
+            onItemTap: (action) => message.info('Tapped: ${action?.name}'),
+            popupRender: (context, menu) {
+              final t = context.softToken;
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [t.primary.bg, t.colorBgElevated],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: t.primary.border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: t.primary.base.withValues(alpha: 0.24),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(6),
+                child: menu,
+              );
+            },
+            child: Button(
+              onPressed: () {},
+              child: const Text('A surface of my own'),
+            ),
+          ),
+        ),
+        Group(
+          'One look for every menu (ComponentsConfig)',
+          // Said once, on the provider, and every menu under it wears it —
+          // no popupRender, no token at the call site. Background, corners,
+          // border and shadow are all the token's, so most house styles
+          // never need a builder at all.
+          ConfigProvider(
+            theme: ThemeData(
+              components: ComponentsConfig(
+                dropdown: DropdownToken(
+                  menuBg: context.softToken.primary.bg,
+                  borderRadius: 20,
+                  border: BorderSide(color: context.softToken.primary.border),
+                  shadow: [
+                    BoxShadow(
+                      color: context.softToken.primary.base.withValues(
+                        alpha: .24,
+                      ),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Dropdown(
+                  trigger: const [DropdownTrigger.click],
+                  menu: _menu,
+                  onItemTap: (a) => message.info('Tapped: ${a?.name}'),
+                  child: Button(
+                    onPressed: () {},
+                    child: const Text('One menu'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Dropdown(
+                  trigger: const [DropdownTrigger.click],
+                  menu: _menu,
+                  onItemTap: (a) => message.info('Tapped: ${a?.name}'),
+                  child: Button(
+                    onPressed: () {},
+                    child: const Text('And another'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }

@@ -550,4 +550,161 @@ void main() {
       );
     });
   });
+
+  group('a surface of your own', () {
+    const blank = DropdownToken(
+      menuBg: Color(0x00000000),
+      borderRadius: 0,
+      shadow: [],
+    );
+
+    Future<void> open(WidgetTester tester, DropdownToken? token) =>
+        tester.pumpWidget(
+          _host(
+            Dropdown<String>(
+              trigger: const [],
+              open: true,
+              token: token,
+              menu: const [DropdownItem(value: 'a', label: 'A')],
+              popupRender: (context, menu) => DecoratedBox(
+                decoration: const BoxDecoration(color: Color(0xFFFF00FF)),
+                child: menu,
+              ),
+              child: const Text('Open'),
+            ),
+          ),
+        );
+
+    BoxDecoration panel(WidgetTester tester) => tester
+        .widget<DecoratedBox>(
+          find
+              .descendant(
+                of: find.byType(DropdownPanel),
+                matching: find.byType(DecoratedBox),
+              )
+              .first,
+        )
+        .decoration as BoxDecoration;
+
+    testWidgets('the chrome casts nothing when told to cast nothing',
+        (tester) async {
+      await open(tester, null);
+      await tester.pumpAndSettle();
+      expect(panel(tester).boxShadow, isNotEmpty);
+
+      await open(tester, blank);
+      await tester.pumpAndSettle();
+      final blanked = panel(tester);
+      expect(blanked.boxShadow, isEmpty);
+      expect(blanked.color, const Color(0x00000000));
+      expect((blanked.borderRadius! as BorderRadius).topLeft.x, 0);
+    });
+
+    testWidgets('a blanked panel does not clip what was drawn in its place',
+        (tester) async {
+      await open(tester, blank);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(DropdownPanel),
+          matching: find.byType(ClipRRect),
+        ),
+        findsNothing,
+      );
+      // The caller's own surface is still there, and so is the menu in it.
+      expect(find.text('A'), findsOneWidget);
+    });
+
+    testWidgets('a rounded panel still clips its rows', (tester) async {
+      await open(tester, null);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(DropdownPanel),
+          matching: find.byType(ClipRRect),
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('one look for every menu', () {
+    // What a design says once, on the provider, rather than at each call.
+    const house = ComponentsConfig(
+      dropdown: DropdownToken(
+        menuBg: Color(0xFFEFF6FF),
+        borderRadius: 20,
+        border: BorderSide(color: Color(0xFF93C5FD)),
+        shadow: [BoxShadow(color: Color(0x3D2563EB), blurRadius: 24)],
+      ),
+    );
+
+    testWidgets('a panel wears what the provider dressed it in',
+        (tester) async {
+      // The provider sits *inside* the app, below the overlay the menu is
+      // mounted in: what a screen says about its own menus has to reach them.
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          home: Scaffold(
+            body: ConfigProvider(
+              theme: ThemeData(components: house),
+              child: const Center(
+                child: Dropdown<String>(
+                  trigger: [],
+                  open: true,
+                  menu: [DropdownItem(value: 'a', label: 'A')],
+                  child: Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final d = tester
+          .widget<DecoratedBox>(
+            find
+                .descendant(
+                  of: find.byType(DropdownPanel),
+                  matching: find.byType(DecoratedBox),
+                )
+                .first,
+          )
+          .decoration as BoxDecoration;
+      expect(d.color, const Color(0xFFEFF6FF));
+      expect((d.borderRadius! as BorderRadius).topLeft.x, 20);
+      expect(
+          d.border,
+          const Border.fromBorderSide(
+            BorderSide(color: Color(0xFF93C5FD)),
+          ));
+      expect(d.boxShadow, isNotEmpty);
+    });
+
+    testWidgets('no border unless one is asked for', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Dropdown<String>(
+            trigger: [],
+            open: true,
+            menu: [DropdownItem(value: 'a', label: 'A')],
+            child: Text('Open'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final d = tester
+          .widget<DecoratedBox>(
+            find
+                .descendant(
+                  of: find.byType(DropdownPanel),
+                  matching: find.byType(DecoratedBox),
+                )
+                .first,
+          )
+          .decoration as BoxDecoration;
+      expect(d.border, isNull);
+    });
+  });
 }

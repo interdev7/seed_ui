@@ -5,6 +5,37 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.20.0
+
+### Added
+
+- **`DropdownToken.shadow`** — what the panel casts, and an empty list casts
+  nothing. With that, a transparent `menuBg` and a `borderRadius` of zero, the
+  panel is invisible and a `popupRender` can put a surface of its own where it
+  was. Until now the background and the corners could be blanked but the shadow
+  could not, so a menu styled that way kept a shadow nobody asked for.
+
+- **`DropdownToken.border`** — a line around the panel, none by default. With
+  it, a menu's background, corners, border and shadow are all token fields, so
+  a house style is said once on a `ConfigProvider` rather than built at each
+  call site.
+
+### Fixed
+
+- **A popover was built outside the providers that stood over its trigger.** An
+  overlay is mounted above the app, so a `ConfigProvider` around one screen
+  reached that screen but not the menus, option lists and picker panels opened
+  from it — a screen that dressed its dropdowns found its dropdowns undressed,
+  and only a provider at the root worked. What stands over the anchor is now
+  carried over the panel, for every popover in the kit.
+
+### Changed
+
+- **A panel with no rounding is no longer clipped.** The clip is there so a
+  row's hover fill stops at a rounded corner; with no rounding there is nothing
+  to stop, and clipping anyway cut off whatever a `popupRender` drew outside
+  the panel — which is what somebody blanking the chrome is trying to do.
+
 ## 0.19.1
 
 ### Fixed

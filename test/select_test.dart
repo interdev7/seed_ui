@@ -570,4 +570,48 @@ void main() {
       greaterThan(40),
     );
   });
+
+  testWidgets('its menu is dressed by the provider it stands in',
+      (tester) async {
+    // The menu is mounted in an overlay above the app, so a provider on the
+    // screen only reaches it because the popover carries what stood over the
+    // control down to the panel.
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: UiKit.navigatorKey,
+        home: Scaffold(
+          body: ConfigProvider(
+            theme: ThemeData(
+              components: const ComponentsConfig(
+                dropdown: DropdownToken(menuBg: Color(0xFF123456)),
+              ),
+            ),
+            child: Center(
+              child: SizedBox(
+                width: 200,
+                child: Select<String>(
+                  options: const [SelectOption(value: 'a', label: Text('A'))],
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byType(Select<String>));
+    await tester.pumpAndSettle();
+    final panel = tester.widget<DecoratedBox>(
+      find
+          .descendant(
+            of: find.byType(DropdownPanel),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    expect(
+      (panel.decoration as BoxDecoration).color,
+      const Color(0xFF123456),
+    );
+  });
 }

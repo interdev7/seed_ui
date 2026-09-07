@@ -122,6 +122,8 @@ class DropdownToken {
     this.menuBg,
     this.padding,
     this.borderRadius,
+    this.border,
+    this.shadow,
     this.itemHoverBg,
     this.barrierColor,
   });
@@ -135,6 +137,18 @@ class DropdownToken {
   /// Menu corner radius (`borderRadius`).
   final double? borderRadius;
 
+  /// A line around the panel. None by default: the panel is told apart from
+  /// the page by its shadow, and a border as well is one edge too many —
+  /// until a design says otherwise, which is what this is for.
+  final BorderSide? border;
+
+  /// What the panel casts (`boxShadowSecondary`).
+  ///
+  /// An empty list casts nothing. With that, a transparent [menuBg] and a
+  /// [borderRadius] of zero, the panel is invisible and a `popupRender` can
+  /// put a surface of its own where it was.
+  final List<BoxShadow>? shadow;
+
   /// Item hover background color (`itemHoverBg`).
   final Color? itemHoverBg;
 
@@ -145,6 +159,8 @@ class DropdownToken {
         menuBg: menuBg ?? t.colorBgElevated,
         padding: padding ?? EdgeInsets.all(t.sizeXXS),
         borderRadius: borderRadius ?? t.borderRadiusLG,
+        border: border,
+        shadow: shadow ?? t.boxShadowSecondary,
         itemHoverBg: itemHoverBg ?? t.colorFillTertiary,
         barrierColor: barrierColor,
       );
@@ -156,6 +172,8 @@ class _ResolvedDropdownToken {
     required this.menuBg,
     required this.padding,
     required this.borderRadius,
+    required this.shadow,
+    this.border,
     required this.itemHoverBg,
     this.barrierColor,
   });
@@ -163,6 +181,8 @@ class _ResolvedDropdownToken {
   final Color menuBg;
   final EdgeInsets padding;
   final double borderRadius;
+  final BorderSide? border;
+  final List<BoxShadow> shadow;
   final Color itemHoverBg;
   final Color? barrierColor;
 }
@@ -576,12 +596,20 @@ class DropdownPanel extends StatelessWidget {
         decoration: BoxDecoration(
           color: r.menuBg,
           borderRadius: BorderRadius.circular(r.borderRadius),
-          boxShadow: token.boxShadowSecondary,
+          border: r.border == null ? null : Border.fromBorderSide(r.border!),
+          boxShadow: r.shadow,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(r.borderRadius),
-          child: child,
-        ),
+        // Clipped only where there is a corner to clip to. The clip is there
+        // so a row's hover fill does not spill past a rounded corner; with no
+        // rounding there is nothing to spill past, and clipping anyway would
+        // cut off whatever a `popupRender` drew outside the panel — the very
+        // thing somebody blanking the chrome is trying to do.
+        child: r.borderRadius == 0
+            ? child
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(r.borderRadius),
+                child: child,
+              ),
       ),
     );
   }

@@ -114,7 +114,7 @@ rebuilt for each one. An ancestor that clips will clip it too.
 | `tooltip` | `String? Function(double)?` | `null` | What the bubble says |
 | `token` | `SliderToken?` | `null` | Per-instance token overrides |
 
-## Tokens
+## Design tokens
 
 `SliderToken`: `railSize`, `handleSize`, `handleSizeHover`, `dotSize`,
 `handleLineWidth`, `handleLineWidthHover`, `railBg`, `railHoverBg`, `trackBg`,
@@ -141,7 +141,7 @@ ConfigProvider(
 )
 ```
 
-## Not yet
+## Not here yet
 
 Editable range nodes — `minCount`, `maxCount` and a draggable track — are not
 here.

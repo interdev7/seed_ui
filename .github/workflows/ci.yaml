@@ -23,7 +23,7 @@ jobs:
       - run: ./tool/check_version.sh
 
   docs:
-    name: Documentation names every property
+    name: Documentation names every property and keeps its shape
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

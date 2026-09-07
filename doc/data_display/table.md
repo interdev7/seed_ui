@@ -119,7 +119,7 @@ that start something are built: the rows stay lazy. The same caveat applies as e
 column headed by something other than `Text` should name a `width` if its
 heading is the widest thing in it.
 
-## Size
+## Sizes
 
 `size` takes a preset or a height of your own.
 
@@ -1141,7 +1141,7 @@ Not here yet: the keyboard. Nothing in the kit is reachable by tab — `Button`
 is a bare gesture detector — so a table alone answering to keys would be out
 of step with everything around it. It wants doing across the kit at once.
 
-## Tokens
+## Design tokens
 
 The marks a heading carries are sized against each other rather than each on
 its own: the mark that opens a row is a checkbox's size, since a column of

@@ -294,7 +294,7 @@ A step's hit area is the step, not the row it sits in. A vertical run is as wide
 as its parent, but each step shrink-wraps to its marker and text, so the pointer
 has to actually be over it.
 
-## Size
+## Sizes
 
 `size` is the run's scale, not the dots' — it sets the marker's diameter and the
 type beside it, and in a panel run the padding, the corner radius, the arrow and

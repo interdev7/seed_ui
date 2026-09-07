@@ -240,7 +240,7 @@ setState(() {
 `name` is plain text rather than a widget because the component shortens it
 when there is not enough room, which it could not do to a widget.
 
-## Tokens
+## Design tokens
 
 `Upload` has its own token set: `dropzoneBorderColor`,
 `dropzoneActiveBorderColor`, `dropzoneBg`, `dropzoneActiveBg`,

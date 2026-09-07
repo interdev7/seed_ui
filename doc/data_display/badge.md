@@ -176,7 +176,7 @@ reads as shadow on every hue rather than going muddy on the darker ones.
 | `placement` | `RibbonPlacement` | `end` | Which corner the band runs off |
 | `token` | `RibbonToken?` | `null` | Per-instance token overrides |
 
-## Tokens
+## Design tokens
 
 `BadgeToken`: `indicatorHeight`, `indicatorHeightSM`, `dotSize`, `statusSize`,
 `fontSize`, `bg`, `textColor`, `ringColor`.

@@ -168,6 +168,25 @@ notification.config(
 Omitting `type` gives a neutral card with no status icon — right for content
 that is not success or failure, such as a chat message or a new-item alert.
 
+
+## Design tokens
+
+A `token` on a single notification overrides these for it alone; a
+`ComponentsConfig(notification: …)` on a `ConfigProvider` does it for every one
+raised under it.
+
+`NotificationToken` overrides this component's own tokens. Every field is an
+override; an unset one falls back to the value derived from the global theme.
+
+| Token | Default |
+| --- | --- |
+| `colorBgElevated` | `colorBgElevated` — the card |
+| `padding` | `sizeMD` on every side |
+| `borderRadius` | `borderRadiusLG` |
+| `titleFontSize` | `fontSizeLG` |
+| `descriptionFontSize` | `fontSize` |
+| `width` | `384` — what the card asks for, before the room it is in has its say |
+
 ## Testing
 
 ```dart

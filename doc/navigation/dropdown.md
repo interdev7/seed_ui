@@ -242,6 +242,24 @@ are. `DropdownMenuList` takes the `entries` to draw and an `onSelect` called
 with the item chosen — it reports the item rather than its value, so a caller
 can tell two entries carrying the same value apart.
 
+
+## Design tokens
+
+A `token` on the dropdown itself overrides these for that menu alone; a
+`ComponentsConfig(dropdown: …)` on a `ConfigProvider` does it for every menu
+under it.
+
+`DropdownToken` overrides this component's own tokens. Every field is an
+override; an unset one falls back to the value derived from the global theme.
+
+| Token | Default |
+| --- | --- |
+| `menuBg` | `colorBgElevated` |
+| `padding` | `sizeXXS` on every side |
+| `borderRadius` | `borderRadiusLG` |
+| `itemHoverBg` | `colorFillTertiary` |
+| `barrierColor` | none — no barrier is painted unless one is asked for |
+
 ## Testing
 
 The menu renders into the root navigator's overlay, so the test app must

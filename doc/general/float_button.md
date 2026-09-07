@@ -310,7 +310,7 @@ FloatButtonGroup<UserAction>(controller: fab, items: items)
 fab.open();   // and close(), and toggle()
 ```
 
-## Tokens
+## Design tokens
 
 | Token | Default |
 | --- | --- |

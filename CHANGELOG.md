@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.19.1
+
+### Changed
+
+- **The documents keep to one shape, and CI holds them to it.** Every one opens
+  with its widget's name, a sentence saying what it is, and an example; every
+  component with a `*Token` class ends with `## Design tokens`, spelled that
+  way and no other. `## Tokens`, `## Size` and `## Not yet` are gone as second
+  spellings of headings that already existed, and `Dropdown`, `Spin` and
+  `Notification` — which had token classes but no section naming them — have
+  one. What goes between the ends is still the writer's: a forced
+  `## Properties` in each of forty-four documents would flatten the prose for
+  nothing. What is fixed is what a reader, or a program reading for one, must
+  be able to find without guessing.
+
 ## 0.19.0
 
 ### Added

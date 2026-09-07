@@ -137,7 +137,7 @@ Countdown(
 | `builder` | `Widget Function(BuildContext, String)?` | `null` | Wraps the formatted time |
 | `token` | `CountdownToken?` | `null` | Per-instance token overrides |
 
-## Tokens
+## Design tokens
 
 `CountdownToken`: `fontSize`, `color`, `fontWeight`.
 

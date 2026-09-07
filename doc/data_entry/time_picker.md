@@ -130,7 +130,7 @@ Each callback names what is **not** available, and the later ones are told what
 has been chosen so far. `hideDisabledOptions: true` takes them off the list
 instead of greying them out.
 
-## Size
+## Sizes
 
 `size` takes either a preset or a measurement:
 

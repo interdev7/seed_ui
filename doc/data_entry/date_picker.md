@@ -89,7 +89,7 @@ format can render and the placeholder. **Told** a width it fills it; merely
 **offered** an upper bound it takes what it needs and gives way when there is
 less.
 
-## Size
+## Sizes
 
 `size` takes either a preset or a measurement:
 
@@ -157,7 +157,7 @@ names: a painted chevron says nothing to a screen reader.
 
 See [localization](../localization.md).
 
-## Not yet
+## Not here yet
 
 `showTime`, `presets`, `multiple`, the `week` and `quarter` panels, and a range
 picker. A range is its own component — start-and-end has its own logic, and

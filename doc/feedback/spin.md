@@ -98,3 +98,20 @@ Spin(
 
 `position` (a `SpinPosition`) places the indicator within its container or
 overlay mask. Defaults to `SpinPosition.center`.
+
+## Design tokens
+
+A `token` on the spin itself overrides these for that one; a
+`ComponentsConfig(spin: …)` on a `ConfigProvider` does it for every spin under
+it.
+
+`SpinToken` overrides this component's own tokens. Every field is an override;
+an unset one falls back to the value derived from the global theme.
+
+| Token | Default |
+| --- | --- |
+| `colorPrimary` | `primary.base` — the dots |
+| `colorBgContainer` | `colorBgContainer` — the mask over what is loading |
+| `dotSize` | `20` |
+| `dotSizeSM` | `14` |
+| `dotSizeLG` | `32` |

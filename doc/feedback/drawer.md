@@ -166,6 +166,16 @@ await tester.pump();
 
 Remember to `hide Drawer` from Material in the test too.
 
+## What a screen reader hears
+
+A drawer says a window has opened and gives its own title as the name, so a reader
+is told what they have entered rather than meeting a stack of loose text over
+a dimmed page. An overlay is not a route the navigator announced, so nobody
+says it otherwise.
+
+Only where the title is words: one built of widgets has no single string to
+read out, and a guess would put half a name in a reader's ear.
+
 ## Design tokens
 
 `DrawerToken` overrides this component's own tokens. It rides on `DrawerConfig`, since a

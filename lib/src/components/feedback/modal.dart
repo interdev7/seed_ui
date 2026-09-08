@@ -583,86 +583,106 @@ class _ModalCardState extends State<_ModalCard>
     final available = MediaQuery.sizeOf(context).width - token.sizeLG * 2;
     final hasIcon = config.icon != null || config.type != null;
 
-    return Container(
-      width: math.min(config.width, math.max(0, available)),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.8,
-      ),
-      padding: r.padding,
-      decoration: BoxDecoration(
-        color: r.colorBgElevated,
-        borderRadius: BorderRadius.circular(r.borderRadius),
-        boxShadow: token.boxShadow,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Flexible bounds the body's height against the dialog's maxHeight,
-          // which is what lets long content scroll instead of overflowing.
-          Flexible(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (hasIcon) ...[
-                  config.icon ?? StatusIcon(type: config.type!, token: token),
-                  SizedBox(width: token.sizeSM),
-                ],
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (config.title != null)
-                        DefaultTextStyle(
-                          style: TextStyle(
-                            color: token.colorText,
-                            fontSize: r.titleFontSize,
-                            fontFamily: token.fontFamily,
-                            fontFamilyFallback: token.fontFamilyFallback,
-                            fontWeight: token.fontWeightStrong,
-                            decoration: TextDecoration.none,
+    // A dialog, and named by its own title. Without this a screen reader
+    // meets a stack of loose text over a dimmed page and is not told that a
+    // window has opened, nor which one — the routes it announces are the
+    // ones a Navigator pushed, and this one is an overlay.
+    return Semantics(
+      scopesRoute: true,
+      namesRoute: true,
+      explicitChildNodes: true,
+      label: _spokenTitle(config),
+      child: Container(
+        width: math.min(config.width, math.max(0, available)),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+        ),
+        padding: r.padding,
+        decoration: BoxDecoration(
+          color: r.colorBgElevated,
+          borderRadius: BorderRadius.circular(r.borderRadius),
+          boxShadow: token.boxShadow,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Flexible bounds the body's height against the dialog's maxHeight,
+            // which is what lets long content scroll instead of overflowing.
+            Flexible(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (hasIcon) ...[
+                    config.icon ?? StatusIcon(type: config.type!, token: token),
+                    SizedBox(width: token.sizeSM),
+                  ],
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (config.title != null)
+                          DefaultTextStyle(
+                            style: TextStyle(
+                              color: token.colorText,
+                              fontSize: r.titleFontSize,
+                              fontFamily: token.fontFamily,
+                              fontFamilyFallback: token.fontFamilyFallback,
+                              fontWeight: token.fontWeightStrong,
+                              decoration: TextDecoration.none,
+                            ),
+                            child: config.title!,
                           ),
-                          child: config.title!,
-                        ),
-                      if (config.title != null && config.content != null)
-                        SizedBox(height: token.sizeXS),
-                      if (config.content != null)
-                        // Scrolls only once the body outgrows the dialog's
-                        // height cap, so short content is unaffected.
-                        Flexible(
-                          child: SingleChildScrollView(
-                            child: DefaultTextStyle(
-                              style: TextStyle(
-                                color: token.colorTextSecondary,
-                                fontSize: r.contentFontSize,
-                                fontFamily: token.fontFamily,
-                                fontFamilyFallback: token.fontFamilyFallback,
-                                height: token.lineHeight,
-                                decoration: TextDecoration.none,
+                        if (config.title != null && config.content != null)
+                          SizedBox(height: token.sizeXS),
+                        if (config.content != null)
+                          // Scrolls only once the body outgrows the dialog's
+                          // height cap, so short content is unaffected.
+                          Flexible(
+                            child: SingleChildScrollView(
+                              child: DefaultTextStyle(
+                                style: TextStyle(
+                                  color: token.colorTextSecondary,
+                                  fontSize: r.contentFontSize,
+                                  fontFamily: token.fontFamily,
+                                  fontFamilyFallback: token.fontFamilyFallback,
+                                  height: token.lineHeight,
+                                  decoration: TextDecoration.none,
+                                ),
+                                child: config.content!,
                               ),
-                              child: config.content!,
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                if (config.closable) ...[
-                  SizedBox(width: token.sizeXS),
-                  _ModalCloseButton(
-                    token: token,
-                    onTap: () => widget.entry.dismiss(false),
-                  ),
+                  if (config.closable) ...[
+                    SizedBox(width: token.sizeXS),
+                    _ModalCloseButton(
+                      token: token,
+                      onTap: () => widget.entry.dismiss(false),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          SizedBox(height: token.sizeLG),
-          _footer(token),
-        ],
+            SizedBox(height: token.sizeLG),
+            _footer(token),
+          ],
+        ),
       ),
     );
+  }
+
+  /// The dialog's own title in words, for the name a screen reader gives the
+  /// window it has just entered.
+  ///
+  /// Only where the title is words. One built of widgets has no single string
+  /// to read out, and a guess would put half a name in a reader's ear.
+  String? _spokenTitle(ModalConfig config) {
+    final title = config.title;
+    return title is Text ? title.data : null;
   }
 
   Widget _footer(Token token) {

@@ -433,7 +433,7 @@ class _Panel extends StatelessWidget {
           )
         : const SizedBox.shrink();
     if (collapsible == CollapsibleTrigger.icon && item.showArrow) {
-      icon = _Tappable(onTap: onToggle, child: icon);
+      icon = _Tappable(onTap: onToggle, expanded: active, child: icon);
     }
 
     final label = DefaultTextStyle(
@@ -476,7 +476,7 @@ class _Panel extends StatelessWidget {
     // The whole header toggles unless the trigger is `icon` (handled above) or
     // `disabled`.
     if (collapsible == CollapsibleTrigger.header) {
-      header = _Tappable(onTap: onToggle, child: header);
+      header = _Tappable(onTap: onToggle, expanded: active, child: header);
     }
 
     // Bordered panels separate the open header from its content with a line and
@@ -532,10 +532,18 @@ class _Panel extends StatelessWidget {
 /// accordion are separate sections rather than one choice among several, and
 /// arrowing between them would say they were alternatives.
 class _Tappable extends StatefulWidget {
-  const _Tappable({required this.onTap, required this.child});
+  const _Tappable({
+    required this.onTap,
+    required this.child,
+    required this.expanded,
+  });
 
   final VoidCallback onTap;
   final Widget child;
+
+  /// Whether the panel under this header is open. The chevron says it in a
+  /// picture, and a picture is not read out.
+  final bool expanded;
 
   @override
   State<_Tappable> createState() => _TappableState();
@@ -562,6 +570,7 @@ class _TappableState extends State<_Tappable> {
       },
       child: Semantics(
         button: true,
+        expanded: widget.expanded,
         onTap: widget.onTap,
         child: MouseRegion(
           cursor: SystemMouseCursors.click,

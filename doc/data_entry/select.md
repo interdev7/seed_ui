@@ -180,6 +180,20 @@ The dropdown's outside-tap barrier covers the screen while open, so a clear
 button (revealed on hover) must be tested with the dropdown closed. See
 [testing](../../README.md#testing-against-the-kit).
 
+## What a screen reader hears
+
+A select said nothing at all: a reader met a box with no name, no role and no
+news of the choice they had just made. Now it says it is a button, whether it
+is open, and what is chosen.
+
+`semanticsLabel` names a select whose label is written outside it; the
+placeholder names one that stands on its own. What is chosen is read from
+`SelectOption.filterText` — the plain text an option already carries for
+searching — since a label built of widgets has no one string to read out. Give
+your options a `filterText` and they are heard as well as seen.
+
+`status: SelectStatus.error` marks the control invalid.
+
 ## Design tokens
 
 `SelectToken` overrides this component's own tokens. Every field is an override; an

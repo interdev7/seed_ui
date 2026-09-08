@@ -1137,6 +1137,17 @@ class _NodeRowState extends State<_NodeRow> {
       ),
     );
 
+    // What the node is, whether it is the one picked, and whether the branch
+    // under it is open. The chevron says the last of those in a picture, and
+    // a picture is not read out.
+    titleRegion = Semantics(
+      button: widget.selectable,
+      selected: widget.selected,
+      enabled: !widget.disabled,
+      expanded: widget.hasChildren ? widget.expanded : null,
+      child: titleRegion,
+    );
+
     if (widget.selectable) {
       titleRegion = MouseRegion(
         cursor: SystemMouseCursors.click,

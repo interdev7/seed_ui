@@ -62,6 +62,11 @@ arrowing between them would say they were alternatives.
 Where `collapsible` is `icon`, the stop is the icon; where it is `disabled`,
 there is no stop at all.
 
+## What a screen reader hears
+
+A header says it can be pressed and whether its panel is open — the chevron
+says the second in a picture, which a reader never sees.
+
 ## Design tokens
 
 `Collapse` has its own token set

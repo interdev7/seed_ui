@@ -157,6 +157,16 @@ the month follows the cursor: walking off the end of March shows April.
 
 The sideways arrows follow the reading direction.
 
+## What a screen reader hears
+
+The field says it is a button, what it is called, and whether its panel is
+open. What it holds is spoken by the editable inside it, so the value is not
+named twice.
+
+`semanticsLabel` names a picker whose label is written outside it — a `Form`
+field's, say; the placeholder names one that stands on its own. An error status
+marks it invalid.
+
 ## Design tokens
 
 | Token | Default |

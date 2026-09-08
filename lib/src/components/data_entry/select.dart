@@ -252,6 +252,7 @@ class Select<T> extends StatefulWidget {
     required this.options,
     this.mode = SelectMode.single,
     this.placeholder,
+    this.semanticsLabel,
     this.disabled,
     this.loading = false,
     this.allowClear,
@@ -298,6 +299,13 @@ class Select<T> extends StatefulWidget {
 
   /// Grey hint shown while nothing is selected.
   final String? placeholder;
+
+  /// What a screen reader calls the control.
+  ///
+  /// The placeholder names a select that stands on its own; give this where
+  /// the name is written outside it — a `Form` field's label, say. What is
+  /// *chosen* is read separately, from the options' own words.
+  final String? semanticsLabel;
 
   /// Greys the field out and blocks interaction.
   final bool? disabled;
@@ -1027,7 +1035,38 @@ class _SelectState<T> extends State<Select<T>> {
       ),
     );
 
-    return named == null ? control : SizedBox(width: named, child: control);
+    final sized =
+        named == null ? control : SizedBox(width: named, child: control);
+
+    // What it is, what it is called, what is in it, and whether it is open.
+    // A select said none of that: a reader met a box with no name, no role
+    // and no news of the choice they had just made.
+    return Semantics(
+      button: true,
+      enabled: _enabled,
+      label: widget.semanticsLabel ?? widget.placeholder,
+      value: _spokenValue,
+      expanded: _open,
+      validationResult: widget.status == SelectStatus.error
+          ? SemanticsValidationResult.invalid
+          : SemanticsValidationResult.none,
+      child: sized,
+    );
+  }
+
+  /// The chosen options in words, for a reader who cannot see the chips.
+  ///
+  /// Taken from [SelectOption.filterText] — the plain text an option already
+  /// carries for searching — since a label built of widgets has no one string
+  /// to read out.
+  String get _spokenValue {
+    final words = <String>[];
+    for (final value in _current) {
+      final option = _optionFor(value);
+      final word = option?.filterText ?? '\$value';
+      if (word.isNotEmpty) words.add(word);
+    }
+    return words.join(', ');
   }
 
   Widget _buildTags(

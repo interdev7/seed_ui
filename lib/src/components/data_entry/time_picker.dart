@@ -1,3 +1,4 @@
+import 'package:flutter/semantics.dart' show SemanticsValidationResult;
 import 'package:flutter/services.dart'
     show KeyEvent, KeyUpEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
@@ -180,6 +181,7 @@ class TimePicker extends StatefulWidget {
     this.size,
     this.variant,
     this.placeholder,
+    this.semanticsLabel,
     this.placement = PopoverPlacement.bottomLeft,
     this.open,
     this.onOpenChange,
@@ -253,6 +255,12 @@ class TimePicker extends StatefulWidget {
 
   /// Shown when there is no value. Null uses the locale's own words.
   final String? placeholder;
+
+  /// What a screen reader calls the field.
+  ///
+  /// The placeholder names one that stands on its own; give this where the
+  /// name is written outside it — a `Form` field's label, say.
+  final String? semanticsLabel;
 
   /// Where the panel opens against the field.
   final PopoverPlacement placement;
@@ -906,7 +914,24 @@ class _TimePickerState extends State<TimePicker> {
       ),
     );
 
-    return named == null ? control : SizedBox(width: named, child: control);
+    final sized =
+        named == null ? control : SizedBox(width: named, child: control);
+
+    // What it is, what it is called, what it holds and whether its panel is
+    // open. A picker said none of it: a reader met a box with no name and no
+    // news of the value inside.
+    return Semantics(
+      button: true,
+      enabled: _enabled,
+      label: widget.semanticsLabel ?? widget.placeholder,
+      // No `value` here: the field inside is an editable, and what it holds
+      // is already spoken. Naming it twice would say it twice.
+      expanded: _open,
+      validationResult: widget.status == InputStatus.error
+          ? SemanticsValidationResult.invalid
+          : SemanticsValidationResult.none,
+      child: sized,
+    );
   }
 }
 

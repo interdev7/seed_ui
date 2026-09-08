@@ -151,6 +151,13 @@ The ends hold rather than wrapping round.
 `focusNode` drives the focus yourself; `autofocus` puts it there as soon as the
 tree is built.
 
+## What a screen reader hears
+
+A node says whether it is the one picked and whether the branch under it is
+open. The chevron says the second of those in a picture, and a picture is not
+read out. A leaf has nothing to open, so it says nothing about opening rather
+than claiming to be shut.
+
 ## Design tokens
 
 `Tree` has its own token set — `titleHeight`, `indentSize`, `nodeHoverBg`,

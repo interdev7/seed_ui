@@ -230,6 +230,16 @@ expect(await future, isTrue);
 Call `Modal.destroyAll()` at the end of tests that leave a dialog open — the
 stack is global and otherwise leaks into the next test.
 
+## What a screen reader hears
+
+A modal says a window has opened and gives its own title as the name, so a reader
+is told what they have entered rather than meeting a stack of loose text over
+a dimmed page. An overlay is not a route the navigator announced, so nobody
+says it otherwise.
+
+Only where the title is words: one built of widgets has no single string to
+read out, and a guess would put half a name in a reader's ear.
+
 ## Design tokens
 
 `ModalToken` overrides this component's own tokens. It rides on `ModalConfig`, since a

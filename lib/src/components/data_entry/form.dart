@@ -912,6 +912,7 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         disabled: disabled,
         builder: (field) => DatePicker(
+          semanticsLabel: field.semanticsLabel,
           value: field.value,
           status: field.status,
           disabled: field.disabled,
@@ -950,6 +951,7 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         disabled: disabled,
         builder: (field) => TimePicker(
+          semanticsLabel: field.semanticsLabel,
           value: field.value,
           status: field.status,
           disabled: field.disabled,
@@ -992,6 +994,7 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         disabled: disabled,
         builder: (field) => Select<V>(
+          semanticsLabel: field.semanticsLabel,
           value: [if (field.value != null) field.value as V],
           status: field.status == null ? null : SelectStatus.error,
           disabled: field.disabled,
@@ -1032,6 +1035,7 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         disabled: disabled,
         builder: (field) => Select<V>(
+          semanticsLabel: field.semanticsLabel,
           value: field.value ?? const [],
           status: field.status == null ? null : SelectStatus.error,
           disabled: field.disabled,

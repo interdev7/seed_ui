@@ -143,6 +143,15 @@ await tester.pump(const Duration(milliseconds: 250)); // enter animation
 expect(find.text('Search'), findsOneWidget);
 ```
 
+## What a screen reader hears
+
+The words are carried on the thing they describe, whether or not the bubble
+ever opens: a tooltip appears on a hover nobody hovering with a keyboard can
+make, and goes again before it is asked for.
+
+Only where the message is words. One built of widgets has no single string to
+read out.
+
 ## Design tokens
 
 `TooltipToken` overrides this component's own tokens. Every field is an override; an

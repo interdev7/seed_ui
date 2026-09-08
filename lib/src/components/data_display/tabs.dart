@@ -1175,23 +1175,31 @@ class _TabsState extends State<Tabs> {
     final key = _tabKeys.putIfAbsent(item.key, GlobalKey.new);
     return KeyedSubtree(
       key: key,
-      child: _TabButton(
-        token: token,
-        style: _r,
-        active: item.key == _active,
-        disabled: item.disabled,
-        card: _card,
-        editable: _editable && item.closable,
-        horizontal: _horizontal,
-        position: _tabPosition,
-        fontSize: _r.fontSize(_size),
-        fontWeightActive: _r.fontWeightActive,
-        padding: _tabPadding(),
-        icon: item.icon,
-        label: item.label,
-        onTap: item.disabled ? null : () => _select(item.key),
-        onClose:
-            _editable && item.closable ? () => _handleRemove(item.key) : null,
+      // What it is and whether it is the one showing. Without this a reader
+      // hears the tab's words and nothing else: not that they can be pressed,
+      // and not which of them is the page in front of them.
+      child: Semantics(
+        button: true,
+        selected: item.key == _active,
+        enabled: !item.disabled,
+        child: _TabButton(
+          token: token,
+          style: _r,
+          active: item.key == _active,
+          disabled: item.disabled,
+          card: _card,
+          editable: _editable && item.closable,
+          horizontal: _horizontal,
+          position: _tabPosition,
+          fontSize: _r.fontSize(_size),
+          fontWeightActive: _r.fontWeightActive,
+          padding: _tabPadding(),
+          icon: item.icon,
+          label: item.label,
+          onTap: item.disabled ? null : () => _select(item.key),
+          onClose:
+              _editable && item.closable ? () => _handleRemove(item.key) : null,
+        ),
       ),
     );
   }

@@ -261,6 +261,17 @@ class _SoftTooltipState extends State<Tooltip> {
 
   @override
   Widget build(BuildContext context) {
+    // A tooltip is words a reader cannot see: it appears on a hover nobody
+    // hovering with a keyboard can make, and vanishes before it is asked for.
+    // Carried on the child as a tooltip, the words reach a screen reader
+    // whether or not the bubble ever opens.
+    return Semantics(
+      tooltip: widget.message is Text ? (widget.message as Text).data : null,
+      child: _trigger(),
+    );
+  }
+
+  Widget _trigger() {
     return switch (widget.trigger) {
       // Hover on a pointer, plus a touch-tap fallback where hover cannot fire.
       TooltipTrigger.hover => MouseRegion(

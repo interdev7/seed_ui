@@ -161,6 +161,12 @@ A halo appears round the bar when the focus arrived by keyboard, and not
 when it arrived by a tap. `focusNode` drives the focus yourself; `autofocus`
 puts it there as soon as the run is built.
 
+## What a screen reader hears
+
+A tab says it can be pressed and whether it is the one showing. Without that a
+reader hears the tab's words and nothing else — not that they are a control,
+and not which of them is the page in front of them.
+
 ## Design tokens
 
 `Tabs` has its own token set (`inkBarColor`,

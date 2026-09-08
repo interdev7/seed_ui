@@ -38,6 +38,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   quarter in the dark. It survives inheritance: a nested provider that flips
   the brightness re-derives and is refined again.
 
+- **A tree node, an accordion header and a tooltip say what a picture was
+  saying.** A node reports whether it is picked and whether its branch is open;
+  a leaf says nothing about opening rather than claiming to be shut. A header
+  reports whether its panel is open. A tooltip carries its words on the thing
+  it describes, whether or not the bubble opens — it appears on a hover nobody
+  hovering with a keyboard can make.
+
+- **A modal and a drawer say a window has opened, and name it.** Both scope and
+  name a route from their own title, so a reader is told what they have entered
+  instead of meeting loose text over a dimmed page — an overlay is not a route
+  the navigator announced, and nobody said it otherwise. **A tab** says it can
+  be pressed and whether it is the one showing.
+
+- **`Select` and the pickers say what they are.** A select said *nothing* — no
+  name, no role, no news of the choice just made. It now reads as a button that
+  is open or shut, named by its `semanticsLabel` or its placeholder, with the
+  chosen options spoken from their `filterText`, the plain words an option
+  already carries for searching. The pickers do the same, and leave the value to
+  the editable inside rather than saying it twice. An error status marks any of
+  them invalid, and a `Form` hands each of them its label.
+
 - **A field says its name and its trouble out loud.** `Input.semanticsLabel`
   names a field whose label is written outside the box — a `Form` field's, a
   label in a column beside it — where before a screen reader heard "text field"

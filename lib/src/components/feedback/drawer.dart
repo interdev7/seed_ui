@@ -367,29 +367,38 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
     final maxExtent = _isHorizontal ? media.width : media.height;
     final extent = config.size.clamp(0.0, maxExtent);
 
-    return Container(
-      // Along the sliding axis the panel is [extent]; across it, it fills the
-      // viewport — a left/right drawer is full height, a top/bottom one full
-      // width.
-      width: _isHorizontal ? extent : double.infinity,
-      height: _isHorizontal ? double.infinity : extent,
-      decoration: BoxDecoration(
-        color: r.colorBgElevated,
-        boxShadow: token.boxShadow,
-      ),
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            if (config.title != null) _header(token),
-            Expanded(
-              child: Padding(
-                padding: config.padding ?? r.padding,
-                child: config.child,
+    // A panel that has come over the page, named by its own title — the same
+    // news a dialog gives. An overlay is not a route the navigator announced,
+    // so nobody says it otherwise.
+    return Semantics(
+      scopesRoute: true,
+      namesRoute: true,
+      explicitChildNodes: true,
+      label: config.title is Text ? (config.title! as Text).data : null,
+      child: Container(
+        // Along the sliding axis the panel is [extent]; across it, it fills the
+        // viewport — a left/right drawer is full height, a top/bottom one full
+        // width.
+        width: _isHorizontal ? extent : double.infinity,
+        height: _isHorizontal ? double.infinity : extent,
+        decoration: BoxDecoration(
+          color: r.colorBgElevated,
+          boxShadow: token.boxShadow,
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              if (config.title != null) _header(token),
+              Expanded(
+                child: Padding(
+                  padding: config.padding ?? r.padding,
+                  child: config.child,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

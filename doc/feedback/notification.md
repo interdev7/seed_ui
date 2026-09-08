@@ -169,6 +169,13 @@ Omitting `type` gives a neutral card with no status icon — right for content
 that is not success or failure, such as a chat message or a new-item alert.
 
 
+## From the keyboard
+
+A notification's cross is a stop in the tab order and answers `Space` and `Enter`, with a ring
+round it while the keyboard is there. What a screen reader calls it comes from
+the kit's own words, in every language it carries — a cross drawn as a glyph
+says nothing out loud.
+
 ## Design tokens
 
 A `token` on a single notification overrides these for it alone; a

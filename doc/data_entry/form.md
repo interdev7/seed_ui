@@ -203,6 +203,20 @@ dead until the form is worth submitting.
 say, for messages that come from somewhere else entirely. `extra` puts one
 **beside** what the rules say, for a hint.
 
+## What a screen reader hears
+
+A label beside a box is not part of the box. `FormItem` hands the control its
+own name — `FormFieldHandle.semanticsLabel` — and the named kinds pass it on,
+so a field says "Email, text field" rather than "text field". A label built of
+widgets rather than words is left unread instead of guessed at: half a label in
+a reader's ear is worse than none.
+
+A field the rules have refused is marked **invalid**, so the news arrives
+without the red border being seen.
+
+Building a control yourself? Hand `field.semanticsLabel` to whatever you build:
+`Input`, `Select` and the pickers all take one.
+
 ## Design tokens
 
 A `token` on the form itself overrides these for that form alone; a

@@ -231,6 +231,21 @@ apps.
 - `prefixFlush` — the leading counterpart, for a full-height affix at the
   other end: the minus button of an `InputNumberMode.spinner` is one.
 
+## What a screen reader hears
+
+The field says it is a text field and reads back what is in it; the rest it has
+to be told.
+
+`semanticsLabel` is what it is called. A `placeholder` names a field that stands
+on its own, which is why one is enough for a search box — but a label written
+*outside* the box is not part of the box, and a reader hearing "text field" and
+nothing else has to guess which one it is. Give the name here where the label
+lives elsewhere; a `Form` field does it for you.
+
+`status: InputStatus.error` also marks the field **invalid**, so a red border is
+not the only way the news arrives. A warning is not an error and is not marked:
+the form still submits on one.
+
 ## Design tokens
 
 `InputToken` overrides this component's own tokens. Every field is an override; an

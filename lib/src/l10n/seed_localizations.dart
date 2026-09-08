@@ -67,6 +67,7 @@ class SeedLocalizations {
     this.finish = 'Finish',
     this.noData = 'No data',
     this.reset = 'Reset',
+    this.close = 'Close',
     this.search = 'Search',
     this.selectAll = 'Select all items',
     this.sortedAscending = 'sorted ascending',
@@ -110,6 +111,10 @@ class SeedLocalizations {
 
   /// Clears a `Table` column's filter menu, next to [ok] which applies it.
   final String reset;
+
+  /// What a screen reader calls a close cross — an alert's, a tag's, a
+  /// notification's. A glyph says nothing out loud.
+  final String close;
 
   /// Placeholder of the field that narrows a `Table` column's filter menu.
   final String search;
@@ -465,6 +470,7 @@ class SeedLocalizations {
     finish: 'Завершить',
     noData: 'Нет данных',
     reset: 'Сбросить',
+    close: 'Закрыть',
     selectAll: 'Выбрать всё',
     sortedAscending: 'сортировка по возрастанию',
     sortedDescending: 'сортировка по убыванию',
@@ -530,6 +536,7 @@ class SeedLocalizations {
     finish: 'Tamamla',
     noData: 'Maglumat ýok',
     reset: 'Arassala',
+    close: 'Ýap',
     selectAll: 'Ählisini saýla',
     sortedAscending: 'ösüş tertibinde',
     sortedDescending: 'kemelme tertibinde',
@@ -594,6 +601,7 @@ class SeedLocalizations {
     finish: 'Fertig',
     noData: 'Keine Daten',
     reset: 'Zurücksetzen',
+    close: 'Schließen',
     selectAll: 'Alle auswählen',
     sortedAscending: 'aufsteigend sortiert',
     sortedDescending: 'absteigend sortiert',
@@ -658,6 +666,7 @@ class SeedLocalizations {
     finish: 'Fin de la visite guidée',
     noData: 'Aucune donnée',
     reset: 'Réinitialiser',
+    close: 'Fermer',
     selectAll: 'Tout sélectionner',
     sortedAscending: 'trié par ordre croissant',
     sortedDescending: 'trié par ordre décroissant',
@@ -723,6 +732,7 @@ class SeedLocalizations {
     finish: 'Finalizar',
     noData: 'Sin datos',
     reset: 'Restablecer',
+    close: 'Cerrar',
     selectAll: 'Seleccionar todo',
     sortedAscending: 'orden ascendente',
     sortedDescending: 'orden descendente',
@@ -788,6 +798,7 @@ class SeedLocalizations {
     finish: '结束导览',
     noData: '暂无数据',
     reset: '重置',
+    close: '关闭',
     selectAll: '全选',
     sortedAscending: '升序排序',
     sortedDescending: '降序排序',
@@ -852,6 +863,7 @@ class SeedLocalizations {
     finish: '仕上げる',
     noData: 'データなし',
     reset: 'リセット',
+    close: '閉じる',
     selectAll: 'すべて選択',
     sortedAscending: '昇順で並べ替え',
     sortedDescending: '降順で並べ替え',
@@ -917,6 +929,7 @@ class SeedLocalizations {
     finish: 'Bitir',
     noData: 'Veri yok',
     reset: 'Sıfırla',
+    close: 'Kapat',
     selectAll: 'Tümünü seç',
     sortedAscending: 'artan sırada',
     sortedDescending: 'azalan sırada',
@@ -981,6 +994,7 @@ class SeedLocalizations {
     finish: 'Finalizar',
     noData: 'Sem conteúdo',
     reset: 'Redefinir',
+    close: 'Fechar',
     selectAll: 'Selecionar tudo',
     sortedAscending: 'ordenado crescente',
     sortedDescending: 'ordenado decrescente',
@@ -1046,6 +1060,7 @@ class SeedLocalizations {
     finish: 'إنهاء',
     noData: 'لا توجد بيانات',
     reset: 'إعادة تعيين',
+    close: 'إغلاق',
     selectAll: 'تحديد الكل',
     sortedAscending: 'مرتب تصاعديًا',
     sortedDescending: 'مرتب تنازليًا',
@@ -1112,6 +1127,7 @@ class SeedLocalizations {
     finish: 'סיום',
     noData: 'אין נתונים',
     reset: 'איפוס',
+    close: 'סגור',
     selectAll: 'בחר הכול',
     sortedAscending: 'ממוין בסדר עולה',
     sortedDescending: 'ממוין בסדר יורד',

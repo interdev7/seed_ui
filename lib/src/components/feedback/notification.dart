@@ -7,6 +7,7 @@ import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/overlay_host.dart';
+import '../../utils/pressable.dart';
 import 'message.dart' show StatusType;
 
 /// Screen corner a notification is anchored to.
@@ -1011,22 +1012,27 @@ class _CloseButtonState extends State<_CloseButton> {
   @override
   Widget build(BuildContext context) {
     final token = widget.token;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-          width: 22,
-          height: 22,
-          decoration: BoxDecoration(
-            color: _hovered ? token.colorFillSecondary : null,
-            borderRadius: BorderRadius.circular(token.borderRadiusSM),
-          ),
-          child: CustomPaint(
-            painter: CrossPainter(
-              _hovered ? token.colorText : token.colorTextTertiary,
+    return Pressable(
+      onPressed: widget.onTap,
+      semanticsLabel: context.seedLocale.close,
+      radius: token.borderRadiusSM,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: _hovered ? token.colorFillSecondary : null,
+              borderRadius: BorderRadius.circular(token.borderRadiusSM),
+            ),
+            child: CustomPaint(
+              painter: CrossPainter(
+                _hovered ? token.colorText : token.colorTextTertiary,
+              ),
             ),
           ),
         ),

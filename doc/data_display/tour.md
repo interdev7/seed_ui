@@ -301,6 +301,12 @@ panel.
 Tour(type: TourType.primary, steps: steps)
 ```
 
+## From the keyboard
+
+The panel's buttons are the kit's own `Button`, so they take their turn in the
+tab order and answer `Space` and `Enter` already. The dots that jump between
+steps are stops too, with a ring round the one the keyboard is on.
+
 ## Design tokens
 
 A panel is as wide as its content and no wider, up to `width` — the

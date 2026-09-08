@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/pressable.dart';
 import 'message.dart' show StatusType;
 
 /// Per-component design tokens for [Alert].
@@ -308,18 +309,23 @@ class _CloseButtonState extends State<_CloseButton> {
   @override
   Widget build(BuildContext context) {
     final token = widget.token;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: SizedBox(
-          width: 22,
-          height: 22,
-          child: CustomPaint(
-            painter: CrossPainter(
-              _hovered ? token.colorText : token.colorTextTertiary,
+    return Pressable(
+      onPressed: widget.onTap,
+      semanticsLabel: context.seedLocale.close,
+      radius: token.borderRadiusSM,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CustomPaint(
+              painter: CrossPainter(
+                _hovered ? token.colorText : token.colorTextTertiary,
+              ),
             ),
           ),
         ),

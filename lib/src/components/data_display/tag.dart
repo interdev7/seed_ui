@@ -5,6 +5,7 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
 import '../../utils/hex_color.dart';
+import '../../utils/pressable.dart';
 
 /// A preset colour for a [Tag], mapping to the theme's status palettes.
 /// The colour a [Tag] draws from: one of the kit's presets, or any colour you
@@ -350,16 +351,23 @@ class Tag extends StatelessWidget {
           ),
           if (_closableIn(context)) ...[
             SizedBox(width: token.sizeXXS),
-            MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: onClose,
-                child: closeIcon ??
-                    CustomPaint(
-                      size: const Size.square(12),
-                      painter:
-                          CrossPainter(style.text, strokeWidth: 1.1, inset: 3),
-                    ),
+            Pressable(
+              onPressed: onClose,
+              semanticsLabel: context.seedLocale.close,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: onClose,
+                  child: closeIcon ??
+                      CustomPaint(
+                        size: const Size.square(12),
+                        painter: CrossPainter(
+                          style.text,
+                          strokeWidth: 1.1,
+                          inset: 3,
+                        ),
+                      ),
+                ),
               ),
             ),
           ],

@@ -1185,4 +1185,73 @@ void main() {
       expect(after, 1);
     });
   });
+
+  group('the small things that answer a press', () {
+    testWidgets('a tag\'s cross is a stop, and space closes it',
+        (tester) async {
+      var closed = 0;
+      await tester.pumpWidget(
+        _host(
+          Tag(
+            closable: true,
+            onClose: () => closed++,
+            child: const Text('A tag'),
+          ),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      expect(closed, 1);
+    });
+
+    testWidgets('a tag that cannot be closed is not a stop', (tester) async {
+      var after = 0;
+      await tester.pumpWidget(
+        _host(
+          Column(
+            children: [
+              const Tag(child: Text('A tag')),
+              Button(onPressed: () => after++, child: const Text('After')),
+            ],
+          ),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      expect(after, 1);
+    });
+
+    testWidgets('an alert\'s cross answers enter', (tester) async {
+      var closed = 0;
+      await tester.pumpWidget(
+        _host(
+          Alert(
+            message: const Text('Something happened'),
+            closable: true,
+            onClose: () => closed++,
+          ),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(closed, 1);
+    });
+
+    testWidgets('a cross says what it is, since a glyph says nothing',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Alert(
+            message: const Text('Something happened'),
+            closable: true,
+            onClose: () {},
+          ),
+        ),
+      );
+      expect(find.bySemanticsLabel('Close'), findsOneWidget);
+    });
+  });
 }

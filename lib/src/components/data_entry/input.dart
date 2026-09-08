@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart'
     show cupertinoTextSelectionHandleControls;
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart' show materialTextSelectionHandleControls;
+import 'package:flutter/semantics.dart' show SemanticsValidationResult;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -345,6 +346,7 @@ class Input extends StatefulWidget {
     this.prefixFlush = false,
     this.size,
     this.status,
+    this.semanticsLabel,
     this.maxLines = 1,
     this.minLines,
     this.maxLength,
@@ -419,7 +421,18 @@ class Input extends StatefulWidget {
   final ControlSize? size;
 
   /// A validation status that recolours the border. Null is the normal state.
+  ///
+  /// [InputStatus.error] also marks the field invalid to a screen reader, so
+  /// a red border is not the only way the news arrives.
   final InputStatus? status;
+
+  /// What a screen reader calls the field.
+  ///
+  /// A placeholder becomes the name where there is one, which covers a field
+  /// that stands on its own. Give this where the name is written *outside*
+  /// the box — a `Form` field's label, a label in a column beside it —
+  /// because a reader hearing "text field" and nothing else has to guess.
+  final String? semanticsLabel;
 
   /// Maximum lines before scrolling. 1 is a single-line field; a higher value
   /// (or null) makes a text area.
@@ -791,8 +804,20 @@ class _SoftInputState extends State<Input> {
     // build have to honour it — the plain field returns early, which is what
     // an earlier attempt at this missed.
     final named = _size.explicitWidth;
-    Widget sized(Widget child) =>
-        named == null ? child : SizedBox(width: named, child: child);
+    Widget sized(Widget child) {
+      final width =
+          named == null ? child : SizedBox(width: named, child: child);
+      // What the field is called and whether it is in trouble. The role and
+      // the value come from the editable inside; a screen reader is told the
+      // rest here.
+      return Semantics(
+        label: widget.semanticsLabel,
+        validationResult: widget.status == InputStatus.error
+            ? SemanticsValidationResult.invalid
+            : SemanticsValidationResult.none,
+        child: width,
+      );
+    }
 
     if (!attached) return sized(box);
 

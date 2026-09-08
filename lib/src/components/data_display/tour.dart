@@ -6,6 +6,7 @@ import '../../icons/icons.dart' show CrossPainter;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/popover.dart';
+import '../../utils/pressable.dart';
 import '../general/button.dart';
 
 /// How a tour panel is painted.
@@ -1814,38 +1815,42 @@ class _CloseButtonState extends State<_CloseButton> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: t.motionDurationMid,
-          curve: t.motionEaseInOut,
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            color: _hovered
-                ? Color.alphaBlend(t.colorFillQuaternary, t.colorBgElevated)
-                    .withValues(alpha: 0.2)
-                : const Color(0x00000000),
-            borderRadius: BorderRadius.circular(t.borderRadiusSM),
-          ),
-          child: Center(
-            child: widget.icon == null
-                ? CustomPaint(
-                    size: Size.square(widget.size * 0.5),
-                    painter: CrossPainter(widget.colour),
-                  )
-                : IconTheme.merge(
-                    data: IconThemeData(
-                      color: widget.colour,
-                      size: widget.size * 0.7,
+    return Pressable(
+      onPressed: widget.onPressed,
+      radius: widget.size,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: t.motionDurationMid,
+            curve: t.motionEaseInOut,
+            width: widget.size,
+            height: widget.size,
+            decoration: BoxDecoration(
+              color: _hovered
+                  ? Color.alphaBlend(t.colorFillQuaternary, t.colorBgElevated)
+                      .withValues(alpha: 0.2)
+                  : const Color(0x00000000),
+              borderRadius: BorderRadius.circular(t.borderRadiusSM),
+            ),
+            child: Center(
+              child: widget.icon == null
+                  ? CustomPaint(
+                      size: Size.square(widget.size * 0.5),
+                      painter: CrossPainter(widget.colour),
+                    )
+                  : IconTheme.merge(
+                      data: IconThemeData(
+                        color: widget.colour,
+                        size: widget.size * 0.7,
+                      ),
+                      child: widget.icon!,
                     ),
-                    child: widget.icon!,
-                  ),
+            ),
           ),
         ),
       ),

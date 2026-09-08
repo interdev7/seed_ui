@@ -95,6 +95,13 @@ CheckableTagGroup<String>(
 
 The value is a `List<T>` in every mode; single-select simply holds at most one.
 
+## From the keyboard
+
+A closable tag's cross is a stop in the tab order and answers `Space` and `Enter`, with a ring
+round it while the keyboard is there. What a screen reader calls it comes from
+the kit's own words, in every language it carries — a cross drawn as a glyph
+says nothing out loud.
+
 ## Design tokens
 
 `TagToken` overrides this component's own tokens. Every field is an override; an

@@ -38,6 +38,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   quarter in the dark. It survives inheritance: a nested provider that flips
   the brightness re-derives and is refined again.
 
+- **A field says its name and its trouble out loud.** `Input.semanticsLabel`
+  names a field whose label is written outside the box — a `Form` field's, a
+  label in a column beside it — where before a screen reader heard "text field"
+  and had to guess which one. `InputStatus.error` marks the field **invalid**,
+  so a red border is not the only way the news arrives; a warning is not an
+  error and is not marked.
+
+  `FormItem` hands its control the name, and `FormFieldHandle.semanticsLabel`
+  passes it to a control you build yourself. A label built of widgets rather
+  than words is left unread instead of guessed at: half a label in a reader's
+  ear is worse than none.
+
+- **The small things that answer a press answer the keyboard too** — a tag's
+  cross, an alert's, a notification's, a tour's step dots. Each is a stop with a
+  ring round it, answers `Space` and `Enter`, and says what it is out loud: the
+  kit carries the word for *close* in every language it speaks, since a cross
+  drawn as a glyph says nothing to a screen reader.
+
 - **`Upload` and `Steps` answer the keyboard.** An upload's drop zone is a stop
   and opens the picker on `Space` or `Enter`, wearing the outline a hover draws;
   each file's preview, download, retry and remove are stops of their own. A run

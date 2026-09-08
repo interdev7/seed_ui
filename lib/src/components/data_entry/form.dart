@@ -202,6 +202,7 @@ class FormFieldHandle<T> {
     required this.didChange,
     required this.validate,
     required this.disabled,
+    this.semanticsLabel,
   });
 
   /// What the field holds now.
@@ -215,6 +216,15 @@ class FormFieldHandle<T> {
 
   /// Whether the field is barred from being changed.
   final bool disabled;
+
+  /// What a screen reader should call the control, taken from the field's
+  /// own [FormItem.label] where that label is words.
+  ///
+  /// A label written beside a box is not part of the box: a reader hearing
+  /// "text field" and nothing else has to guess which one it is. Hand this to
+  /// whatever you build — `Input`, `Select` and the pickers all take a
+  /// `semanticsLabel` — and the field says its name.
+  final String? semanticsLabel;
 
   /// Reports a new value to the form.
   final ValueChanged<T?> didChange;
@@ -746,6 +756,7 @@ class FormItem<T> extends StatefulWidget {
           value: field.value ?? '',
           status: field.status,
           disabled: field.disabled,
+          semanticsLabel: field.semanticsLabel,
           placeholder: placeholder,
           password: password,
           prefix: prefix,
@@ -1253,6 +1264,12 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
               disabled: _disabled,
               didChange: _didChange,
               validate: validate,
+              // Only where the label is words. A label built of widgets —
+              // an icon and a phrase, a link — has no one string to read
+              // out, and guessing at one would put half a label in a
+              // reader's ear.
+              semanticsLabel:
+                  widget.label is Text ? (widget.label! as Text).data : null,
             ),
           ),
         );

@@ -828,6 +828,7 @@ class TableColumn<T> {
     this.fixed,
     this.ellipsis = false,
     this.hidden = false,
+    this.showFrom,
     this.sortable = false,
     this.sorter,
     this.sortPriority,
@@ -932,6 +933,22 @@ class TableColumn<T> {
 
   /// What stands at the head of the column.
   final Widget? title;
+
+  /// The width the table must have before this column is drawn at all.
+  ///
+  /// `hidden` is a word said in advance; this one is said about the room.
+  /// A column that only earns its place on a wide screen — a second date, a
+  /// note — names the width it wants and stands down below it, so a narrow
+  /// table drops it instead of squeezing everything.
+  ///
+  /// Measured against the width the table is *given*, not its content: a
+  /// table inside a horizontal scroll view has no such width, and there every
+  /// column is drawn.
+  ///
+  /// Like [hidden], a column stood down keeps its place among the ones you
+  /// listed, so a sort or a filter keyed by that place goes on meaning what
+  /// it meant.
+  final double? showFrom;
 
   /// Leaves the column out of the table without taking it out of [columns].
   ///
@@ -1899,7 +1916,77 @@ class Table<T> extends StatefulWidget {
   State<Table<T>> createState() => _TableState<T>();
 }
 
-class _TableState<T> extends State<Table<T>> {
+/// How far each panel on the move stands open, kept apart from the table so
+/// a tick re-lays the rows out without rebuilding the table around them.
+///
+/// A lazy body finds a row by reckoning where it starts, and that reckoning
+/// takes each panel's own height. A panel opening is therefore not a special
+/// case to be worked around but simply a panel whose height is on its way
+/// somewhere: the sum in front of it is a running total either way.
+class _PanelMotion extends ChangeNotifier {
+  _PanelMotion({required this.vsync});
+
+  final TickerProvider vsync;
+
+  /// How long a panel takes and the shape it takes it in, told by the theme
+  /// on every build so a change of token reaches a panel already moving.
+  Duration over = Duration.zero;
+  Curve curve = Curves.linear;
+
+  final Map<Object, AnimationController> _moving = {};
+
+  /// How far the panel belonging to [id] stands open, from nothing to all of
+  /// it. A panel nobody has touched is wherever it was left: all the way open
+  /// if the row is open, and shut otherwise.
+  double of(Object id, {required bool open}) {
+    final at = _moving[id];
+    if (at == null) return open ? 1 : 0;
+    return curve.transform(at.value);
+  }
+
+  /// Sets the panel belonging to [id] going, towards open or towards shut.
+  void move(Object id, {required bool open}) {
+    var at = _moving[id];
+    if (at == null) {
+      at = AnimationController(
+        vsync: vsync,
+        duration: over,
+        value: open ? 0 : 1,
+      );
+      at.addListener(notifyListeners);
+      at.addStatusListener((status) {
+        // Let go of a panel that has arrived: `of` reads a settled panel from
+        // whether its row is open, which is the same answer the controller
+        // was holding, and a table where every row has been opened once
+        // would otherwise keep a ticker for every one of them.
+        if (status != AnimationStatus.completed &&
+            status != AnimationStatus.dismissed) {
+          return;
+        }
+        _moving.remove(id)?.dispose();
+        notifyListeners();
+      });
+      _moving[id] = at;
+    }
+    at.duration = over;
+    if (open) {
+      at.forward();
+    } else {
+      at.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final at in _moving.values) {
+      at.dispose();
+    }
+    _moving.clear();
+    super.dispose();
+  }
+}
+
+class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// Which row the pointer is over.
   ///
   /// A notifier and not a field behind setState: the fill used to live on the
@@ -1929,6 +2016,15 @@ class _TableState<T> extends State<Table<T>> {
   /// Which heading the keyboard rests on while the cursor is in the head
   /// row, or null when it is down among the rows.
   final ValueNotifier<int?> _headCursor = ValueNotifier<int?>(null);
+
+  /// The width the table was given at its last build, or null where it was
+  /// given none — inside a horizontal scroll view, say.
+  ///
+  /// Kept because which columns are drawn is settled before anything has been
+  /// laid out, and a column that stands down below a width has to be able to
+  /// ask. Written inside the layout the answer comes from, and read on the
+  /// build that follows it.
+  double? _room;
 
   /// Which column's filter panel is open, or null.
   ///
@@ -2026,6 +2122,28 @@ class _TableState<T> extends State<Table<T>> {
   }
 
   @override
+  void didUpdateWidget(covariant Table<T> old) {
+    super.didUpdateWidget(old);
+    // A caller holding the open rows itself can change them without going
+    // through the table, and a panel that appears or goes has to be set
+    // moving all the same. Only the ones that changed: telling a panel to go
+    // where it already stands would start a ticker for nothing.
+    final now = widget.expandable;
+    if (now?.panelHeight == null) return;
+    final was = old.expandable?.expanded;
+    final is_ = now!.expanded;
+    if (was == null || is_ == null) return;
+    for (final record in [...was, ...is_]) {
+      final id = _idOf(record);
+      final before = was.any((other) => _idOf(other) == id);
+      final after = is_.any((other) => _idOf(other) == id);
+      if (before == after) continue;
+      _panelMotion.move(id, open: after);
+      if (!after) _holdWhileClosing(record);
+    }
+  }
+
+  @override
   void dispose() {
     _rowsX.dispose();
     _rowsY.dispose();
@@ -2039,6 +2157,7 @@ class _TableState<T> extends State<Table<T>> {
     for (final closer in _closers) {
       closer.cancel();
     }
+    _panelMotion.dispose();
     _acrossOffset.dispose();
     _measured.dispose();
     super.dispose();
@@ -2192,8 +2311,17 @@ class _TableState<T> extends State<Table<T>> {
         // A hidden column is left out here and nowhere else, so it keeps its
         // place among the ones you listed and a sort keyed by that place goes
         // on meaning what it meant.
-        ..._inOwnOrder.expand((c) => c.leaves).where((c) => !c.hidden),
+        ..._inOwnOrder
+            .expand((c) => c.leaves)
+            .where((c) => !c.hidden && _hasRoomFor(c)),
       ];
+
+  /// Whether the table is wide enough for [column] to be drawn.
+  ///
+  /// A table with no width of its own — one inside a horizontal scroll view —
+  /// draws every column: there is nothing to be too narrow for.
+  bool _hasRoomFor(TableColumn<T> column) =>
+      column.showFrom == null || _room == null || _room! >= column.showFrom!;
 
   /// The columns as given, with the box and chevron columns in front: the
   /// heading is drawn from this, since a group only exists here.
@@ -2538,9 +2666,18 @@ class _TableState<T> extends State<Table<T>> {
     return [
       for (var i = 0; i < rows.length; i++) ...[
         (row: i, panel: false),
-        if (_isExpanded(rows[i]) && _canExpand(rows[i])) (row: i, panel: true),
+        if (_hasPanel(rows[i]) && _canExpand(rows[i])) (row: i, panel: true),
       ],
     ];
+  }
+
+  /// How much of its named height the panel belonging to body row [row] is
+  /// showing just now: all of it when it stands open, none when shut, and
+  /// somewhere between while it moves.
+  double _panelExtent(int row) {
+    final asked = widget.expandable?.panelHeight ?? 0;
+    final record = _rows[row];
+    return asked * _panelMotion.of(_idOf(record), open: _isExpanded(record));
   }
 
   /// Where every body cell starts, and how much of the grid it covers.
@@ -2750,6 +2887,22 @@ class _TableState<T> extends State<Table<T>> {
 
   @override
   Widget build(BuildContext context) {
+    // The room decides which columns there are, and which columns there are
+    // decides everything after — so it is asked for first, before a single
+    // heading or cell is built.
+    //
+    // A table given no width of its own is inside something that scrolls
+    // sideways; there is nothing to be too narrow for, and every column is
+    // drawn.
+    return LayoutBuilder(
+      builder: (context, room) {
+        _room = room.hasBoundedWidth ? room.maxWidth : null;
+        return _buildTable(context);
+      },
+    );
+  }
+
+  Widget _buildTable(BuildContext context) {
     final t = context.softToken;
     final r = (widget.token ??
             ConfigProvider.componentOf<TableToken>(context) ??
@@ -2773,21 +2926,36 @@ class _TableState<T> extends State<Table<T>> {
     // the gap it opened had none. Hung on the cell instead, the rule travels
     // with what it divides. Only where a drag can happen: everywhere else the
     // grid's own rules are one line rather than one per cell.
-    final ruleRides = _bordered && widget.columnsDraggable;
+    // A dressed row takes its rule with it too. Flutter's `Table` paints a
+    // row's decoration *behind* its cells, so a ground given by `rowStyle` or
+    // `cellStyle` covered the line under the row and the rows ran together.
+    // Hung on the cell, in front, the line is drawn over whatever the row is
+    // wearing — which is what a rule is for.
+    final dressed = widget.rowStyle != null ||
+        _leaves.any((column) => column.cellStyle != null);
+    final ruleRides = _bordered && (widget.columnsDraggable || dressed);
     // The last column carries no rule, and last is where a column *appears*
     // to stand: mid-drag the layout's last column can be sitting in the
     // middle, and it took its blank edge there with it.
-    Widget ruled(Widget cell, int place, int of) => ruleRides
-        ? DecoratedBox(
-            position: DecorationPosition.foreground,
-            decoration: BoxDecoration(
-              border: BorderDirectional(
-                end: _visualColumn(place) == of - 1 ? BorderSide.none : rule,
-              ),
-            ),
-            child: cell,
-          )
-        : cell;
+    Widget ruled(
+      Widget cell,
+      int place,
+      int of, {
+      bool bottom = false,
+    }) =>
+        ruleRides
+            ? DecoratedBox(
+                position: DecorationPosition.foreground,
+                decoration: BoxDecoration(
+                  border: BorderDirectional(
+                    end:
+                        _visualColumn(place) == of - 1 ? BorderSide.none : rule,
+                    bottom: bottom ? rule : BorderSide.none,
+                  ),
+                ),
+                child: cell,
+              )
+            : cell;
 
     flutter.TableRow headingRow(List<TableColumn<T>> columns) =>
         flutter.TableRow(
@@ -2830,8 +2998,13 @@ class _TableState<T> extends State<Table<T>> {
             flutter.TableRow(
               decoration: BoxDecoration(
                 // Every row but the last carries the rule below it, so the
-                // table does not end on a line hanging under nothing.
-                border: i == rows.length - 1 ? null : Border(bottom: rule),
+                // table does not end on a line hanging under nothing. Left to
+                // the cells where they are carrying the rules themselves —
+                // the row's own is painted behind them, and a dressed row
+                // would cover it.
+                border: i == rows.length - 1 || ruleRides
+                    ? null
+                    : Border(bottom: rule),
               ),
               children: [
                 for (var x = 0; x < columns.length; x++)
@@ -2841,6 +3014,7 @@ class _TableState<T> extends State<Table<T>> {
                         _rowCell(i, columns[x], r, t, place: x),
                         x,
                         columns.length,
+                        bottom: i != rows.length - 1,
                       ),
                       i,
                       x,
@@ -3641,6 +3815,10 @@ class _TableState<T> extends State<Table<T>> {
   final Set<T> _closing = {};
   final List<Timer> _closers = [];
 
+  /// The panels on the move. Only a lazy body needs it: a table that builds
+  /// every row lets the reveal around the panel measure the motion itself.
+  late final _PanelMotion _panelMotion = _PanelMotion(vsync: this);
+
   // --- the keyboard ---
 
   /// Which columns a heading cursor may rest on: the ones that answer a
@@ -3821,6 +3999,9 @@ class _TableState<T> extends State<Table<T>> {
     if (!shutting) next.add(record);
     if (expandable.expanded == null) {
       setState(() => _ownExpanded = next);
+    }
+    if (expandable.panelHeight != null) {
+      _panelMotion.move(_idOf(record), open: !shutting);
     }
     expandable.onChanged?.call(next);
     if (shutting) _holdWhileClosing(record);
@@ -5544,17 +5725,37 @@ class _TableState<T> extends State<Table<T>> {
         place < run.length &&
         run[place].panel) {
       if (at.xIndex != 0) return null;
+      final full = widget.expandable!.panelHeight!;
       return DecoratedBox(
         decoration: BoxDecoration(
           color: r.expandedBg,
           border: Border(bottom: rule),
         ),
-        child: Padding(
-          padding: _cellPadding(r, t),
-          child: widget.expandable!.builder!(
-            context,
-            _rows[run[place].row],
-            run[place].row,
+        // The cell is as tall as the panel is showing, which changes every
+        // frame while it opens; what is inside it is built at the full named
+        // height and clipped to the edge on the move. Laying the content out
+        // afresh at each height instead would reflow the text a dozen times
+        // on the way past.
+        child: ClipRect(
+          child: OverflowBox(
+            minHeight: full,
+            maxHeight: full,
+            alignment: Alignment.center,
+            child: Padding(
+              padding: _cellPadding(r, t),
+              // Centred down the panel, since its height was named rather
+              // than measured: what is in it is usually shorter than what
+              // was asked for, and text pinned to the top of a tall panel
+              // reads as a mistake in the height.
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: widget.expandable!.builder!(
+                  context,
+                  _rows[run[place].row],
+                  run[place].row,
+                ),
+              ),
+            ),
           ),
         ),
       );
@@ -5827,6 +6028,9 @@ class _TableState<T> extends State<Table<T>> {
   }
 
   Widget _lazyBody(_ResolvedTableToken r, Token t, BorderSide rule) {
+    _panelMotion
+      ..over = t.motionDurationMid
+      ..curve = t.motionEaseInOut;
     // Rows and panels together, in the order they are drawn: the viewport
     // asks by place, and a place has to say which of the two it is.
     final run = _lazyRun;
@@ -5854,65 +6058,74 @@ class _TableState<T> extends State<Table<T>> {
           scaler,
         );
 
-        return ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(
-            dragDevices: {
-              ...ScrollConfiguration.of(context).dragDevices,
-              PointerDeviceKind.mouse,
-            },
-            scrollbars: false,
-          ),
-          child: _Rows(
-            widths: widths.columns,
-            rowHeight: _lazyRowHeight(r, t),
-            headerRows: _showHeader ? _headingDepth : 0,
-            headerPlan: _showHeader
-                ? [
-                    for (final cell in _headingPlan(_headingDepth))
-                      (
-                        x: cell.x,
-                        y: cell.y,
-                        across: cell.across,
-                        down: cell.down,
-                      ),
-                  ]
-                : const [],
-            shifts: _columnShifts(widths.columns),
-            rowShifts: _rowShifts(_rows.length, _lazyRowHeight(r, t)),
-            panelRows: [
-              for (var i = 0; i < run.length; i++)
-                if (run[i].panel) i,
-            ],
-            panelHeight: widget.expandable?.panelHeight ?? 0,
-            bodySpans: _hasSpans ? _spansOfBody(columns) : const [],
-            deepestSpan: _deepestSpan,
-            // The row that adds up is held at the foot as the heading is held
-            // at the head: one row, out of the run that scrolls.
-            footerRows: _hasSummary ? 1 : 0,
-            pinning: [for (final c in columns) c.fixed],
-            shadeColor: r.pinnedShadowColor,
-            shadeExtent: r.pinnedShadowExtent,
-            verticalDetails: ScrollableDetails.vertical(
-              controller: _rowsY,
+        // Listened to here rather than higher up: a panel on the move changes
+        // how tall it is and nothing else, so a tick has to reach the rows
+        // without the table above them being built again.
+        return ListenableBuilder(
+          listenable: _panelMotion,
+          builder: (context, _) => ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              dragDevices: {
+                ...ScrollConfiguration.of(context).dragDevices,
+                PointerDeviceKind.mouse,
+              },
+              scrollbars: false,
             ),
-            // Leading is the right in a mirrored page, so the rows run the
-            // other way and a finger moving right takes the table forwards.
-            horizontalDetails: ScrollableDetails.horizontal(
-              reverse: Directionality.of(context) == TextDirection.rtl,
-            ),
-            delegate: TwoDimensionalChildBuilderDelegate(
-              // Nothing in a cell wants keeping alive, and the default wraps
-              // every one of them in an AutomaticKeepAlive and a selection
-              // listener — two elements and two notifications a cell, for a
-              // state no cell has.
-              addAutomaticKeepAlives: false,
-              maxXIndex: columns.length - 1,
-              maxYIndex: run.length -
-                  1 +
-                  (_showHeader ? _headingDepth : 0) +
-                  (_hasSummary ? 1 : 0),
-              builder: (context, vicinity) =>
-                  _lazyCell(vicinity, columns, r, t, rule),
+            child: _Rows(
+              widths: widths.columns,
+              rowHeight: _lazyRowHeight(r, t),
+              headerRows: _showHeader ? _headingDepth : 0,
+              headerPlan: _showHeader
+                  ? [
+                      for (final cell in _headingPlan(_headingDepth))
+                        (
+                          x: cell.x,
+                          y: cell.y,
+                          across: cell.across,
+                          down: cell.down,
+                        ),
+                    ]
+                  : const [],
+              shifts: _columnShifts(widths.columns),
+              rowShifts: _rowShifts(_rows.length, _lazyRowHeight(r, t)),
+              panelRows: [
+                for (var i = 0; i < run.length; i++)
+                  if (run[i].panel) i,
+              ],
+              panelHeights: [
+                for (var i = 0; i < run.length; i++)
+                  if (run[i].panel) _panelExtent(run[i].row),
+              ],
+              bodySpans: _hasSpans ? _spansOfBody(columns) : const [],
+              deepestSpan: _deepestSpan,
+              // The row that adds up is held at the foot as the heading is held
+              // at the head: one row, out of the run that scrolls.
+              footerRows: _hasSummary ? 1 : 0,
+              pinning: [for (final c in columns) c.fixed],
+              shadeColor: r.pinnedShadowColor,
+              shadeExtent: r.pinnedShadowExtent,
+              verticalDetails: ScrollableDetails.vertical(
+                controller: _rowsY,
+              ),
+              // Leading is the right in a mirrored page, so the rows run the
+              // other way and a finger moving right takes the table forwards.
+              horizontalDetails: ScrollableDetails.horizontal(
+                reverse: Directionality.of(context) == TextDirection.rtl,
+              ),
+              delegate: TwoDimensionalChildBuilderDelegate(
+                // Nothing in a cell wants keeping alive, and the default wraps
+                // every one of them in an AutomaticKeepAlive and a selection
+                // listener — two elements and two notifications a cell, for a
+                // state no cell has.
+                addAutomaticKeepAlives: false,
+                maxXIndex: columns.length - 1,
+                maxYIndex: run.length -
+                    1 +
+                    (_showHeader ? _headingDepth : 0) +
+                    (_hasSummary ? 1 : 0),
+                builder: (context, vicinity) =>
+                    _lazyCell(vicinity, columns, r, t, rule),
+              ),
             ),
           ),
         );
@@ -7175,7 +7388,7 @@ class _Rows extends TwoDimensionalScrollView {
     required this.bodySpans,
     required this.deepestSpan,
     required this.panelRows,
-    required this.panelHeight,
+    required this.panelHeights,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -7211,9 +7424,13 @@ class _Rows extends TwoDimensionalScrollView {
   /// has to begin to catch one reaching in from above the screen.
   final int deepestSpan;
 
-  /// Which body rows are panels rather than rows, and how tall one stands.
+  /// Which body rows are panels rather than rows, and how tall each stands.
+  ///
+  /// A height each rather than one for all of them: a panel opening is a
+  /// height on its way somewhere, and the rows below it have to be found
+  /// while it moves.
   final List<int> panelRows;
-  final double panelHeight;
+  final List<double> panelHeights;
 
   /// How many rows are held at the foot — the row that adds up, or none.
   final int footerRows;
@@ -7239,7 +7456,7 @@ class _Rows extends TwoDimensionalScrollView {
         bodySpans: bodySpans,
         deepestSpan: deepestSpan,
         panelRows: panelRows,
-        panelHeight: panelHeight,
+        panelHeights: panelHeights,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -7264,7 +7481,7 @@ class _RowsViewport extends TwoDimensionalViewport {
     required this.bodySpans,
     required this.deepestSpan,
     required this.panelRows,
-    required this.panelHeight,
+    required this.panelHeights,
     required this.footerRows,
     required this.pinning,
     required this.shadeColor,
@@ -7300,9 +7517,13 @@ class _RowsViewport extends TwoDimensionalViewport {
   /// has to begin to catch one reaching in from above the screen.
   final int deepestSpan;
 
-  /// Which body rows are panels rather than rows, and how tall one stands.
+  /// Which body rows are panels rather than rows, and how tall each stands.
+  ///
+  /// A height each rather than one for all of them: a panel opening is a
+  /// height on its way somewhere, and the rows below it have to be found
+  /// while it moves.
   final List<int> panelRows;
-  final double panelHeight;
+  final List<double> panelHeights;
   final List<TableColumnFixed?> pinning;
   final Color shadeColor;
   final double shadeExtent;
@@ -7319,7 +7540,7 @@ class _RowsViewport extends TwoDimensionalViewport {
         bodySpans: bodySpans,
         deepestSpan: deepestSpan,
         panelRows: panelRows,
-        panelHeight: panelHeight,
+        panelHeights: panelHeights,
         footerRows: footerRows,
         pinning: pinning,
         shadeColor: shadeColor,
@@ -7343,7 +7564,7 @@ class _RowsViewport extends TwoDimensionalViewport {
       ..shifts = shifts
       ..rowShifts = rowShifts
       ..setBodySpans(bodySpans, deepestSpan)
-      ..setPanels(panelRows, panelHeight)
+      ..setPanels(panelRows, panelHeights)
       ..footerRows = footerRows
       ..pinning = pinning
       ..shadeColor = shadeColor
@@ -7368,7 +7589,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     required List<Map<int, ({int across, int down})>> bodySpans,
     required int deepestSpan,
     required List<int> panelRows,
-    required double panelHeight,
+    required List<double> panelHeights,
     required int footerRows,
     required List<TableColumnFixed?> pinning,
     required Color shadeColor,
@@ -7388,13 +7609,12 @@ class _RenderRows extends RenderTwoDimensionalViewport {
         _rowShifts = rowShifts,
         _bodySpans = bodySpans,
         _deepestSpan = deepestSpan,
-        _panelRows = panelRows,
-        _panelHeight = panelHeight,
         _footerRows = footerRows,
         _pinning = pinning,
         _shadeColor = shadeColor,
         _shadeExtent = shadeExtent {
     _measureColumns();
+    setPanels(panelRows, panelHeights);
   }
 
   List<double> _widths;
@@ -7588,20 +7808,32 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   /// the rows before a given one are so many ordinary ones and so many
   /// panels, which is a count rather than a measurement.
   List<int> _panelRows = const [];
-  double _panelHeight = 0;
-  void setPanels(List<int> rows, double height) {
-    if (_panelHeight == height &&
-        _panelRows.length == rows.length &&
-        () {
-          for (var i = 0; i < rows.length; i++) {
-            if (_panelRows[i] != rows[i]) return false;
-          }
-          return true;
-        }()) {
-      return;
+  List<double> _panelHeights = const [];
+
+  /// How much panel stands before the nth panel — a running total, one longer
+  /// than the panels themselves, so the sum in front of any row is a lookup
+  /// rather than a walk.
+  List<double> _panelBefore = const [0];
+
+  void setPanels(List<int> rows, List<double> heights) {
+    var same = _panelRows.length == rows.length &&
+        _panelHeights.length == heights.length;
+    if (same) {
+      for (var i = 0; i < rows.length; i++) {
+        if (_panelRows[i] != rows[i] || _panelHeights[i] != heights[i]) {
+          same = false;
+          break;
+        }
+      }
     }
+    if (same) return;
     _panelRows = rows;
-    _panelHeight = height;
+    _panelHeights = heights;
+    final before = List<double>.filled(heights.length + 1, 0);
+    for (var i = 0; i < heights.length; i++) {
+      before[i + 1] = before[i] + heights[i];
+    }
+    _panelBefore = before;
     markNeedsLayout();
   }
 
@@ -7626,18 +7858,22 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       _panelRows[_panelsBefore(row)] == row;
 
   /// Where body row [row] starts, measured down the run of rows.
+  ///
+  /// So many ordinary rows, each the one height, and whatever the panels in
+  /// front of it happen to add up to. The panels need not be the same height
+  /// as each other, which is what lets one of them open while the rest stand.
   double _startOfRow(int row) {
     final panels = _panelsBefore(row);
-    return (row - panels) * _rowHeight + panels * _panelHeight;
+    return (row - panels) * _rowHeight + _panelBefore[panels];
   }
 
   /// How tall body row [row] stands.
-  double _heightOfRow(int row) => _isPanel(row) ? _panelHeight : _rowHeight;
+  double _heightOfRow(int row) =>
+      _isPanel(row) ? _panelHeights[_panelsBefore(row)] : _rowHeight;
 
   /// The whole run of body rows.
   double _runOfRows(int count) =>
-      (count - _panelRows.length) * _rowHeight +
-      _panelRows.length * _panelHeight;
+      (count - _panelRows.length) * _rowHeight + _panelBefore.last;
 
   /// Which body row is at [offset] down the run.
   int _rowAtOffset(double offset, int count) {
@@ -7649,6 +7885,9 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     var high = count - 1;
     while (low < high) {
       final mid = (low + high) >> 1;
+      // Not `<`: a panel shut all the way is a row of no height, and a
+      // search that could settle on one would answer with a row nothing is
+      // drawn for.
       if (_startOfRow(mid) + _heightOfRow(mid) <= offset) {
         low = mid + 1;
       } else {

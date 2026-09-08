@@ -7537,6 +7537,157 @@ void main() {
   group('what a column may keep to itself', () {
     const people = [_User('Chen', 27), _User('Ann', 45)];
 
+    testWidgets('a dressed row keeps the line under it', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          RepaintBoundary(
+            child: Table<_User>(
+              bordered: true,
+              data: people,
+              rowStyle: (context, user, index) =>
+                  TableStyle(color: context.softToken.error.bg),
+              columns: [_name(), _age()],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Pixels, because this is a question about painting order and nothing
+      // in the widget tree answers it: Flutter's Table paints a row's
+      // decoration *behind* its cells, so a ground given by rowStyle covered
+      // the rule and the rows ran together.
+      late List<String> strip;
+      await tester.runAsync(() async {
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byType(RepaintBoundary).first,
+        );
+        final image = await boundary.toImage();
+        final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+        final width = image.width;
+        String at(int x, int y) {
+          final i = (y * width + x) * 4;
+          return '${data!.getUint8(i)}.${data.getUint8(i + 1)}.'
+              '${data.getUint8(i + 2)}';
+        }
+
+        final first = tester.getRect(find.text('Chen'));
+        final second = tester.getRect(find.text('Ann'));
+        final x = first.left.round() + 5;
+        strip = [
+          for (var y = first.bottom.round(); y <= second.top.round(); y++)
+            at(x, y),
+        ];
+      });
+
+      // One line of something other than the ground: the rule, drawn over it.
+      expect(strip.toSet().length, 2, reason: 'a ground and a line in it');
+    });
+
+    testWidgets('a panel told its height centres what is in it',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            bordered: true,
+            scroll: const TableScroll(y: 240),
+            data: people,
+            columns: [_name(), _age()],
+            expandable: TableExpandable<_User>(
+              panelHeight: 80,
+              builder: (_, u, __) => Text('about ${u.name}'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_ExpandIconPainter',
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+
+      final words = find.text('about Chen');
+      expect(words, findsOneWidget);
+      final panel = tester.getRect(
+        find.ancestor(of: words, matching: find.byType(Align)).first,
+      );
+      final text = tester.getRect(words);
+      // A height that was named rather than measured is taller than its
+      // words; pinned to the top they read as a mistake in the height.
+      expect(
+        text.center.dy - panel.center.dy,
+        moreOrLessEquals(0, epsilon: 1),
+      );
+    });
+
+    testWidgets('a panel told its height still opens by degrees',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Table<_User>(
+            bordered: true,
+            scroll: const TableScroll(y: 240),
+            data: people,
+            columns: [_name(), _age()],
+            expandable: TableExpandable<_User>(
+              panelHeight: 80,
+              builder: (_, u, __) => Text('about ${u.name}'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final shut = tester.getRect(find.text('Ann')).top;
+
+      await tester.tap(
+        find
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_ExpandIconPainter',
+            )
+            .first,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Part of the way down and no further: the row below has moved, but
+      // not the whole eighty a settled panel would have pushed it.
+      final part = tester.getRect(find.text('Ann')).top - shut;
+      expect(part, greaterThan(1));
+      expect(part, lessThan(79));
+
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text('Ann')).top - shut,
+        moreOrLessEquals(80, epsilon: 1),
+      );
+
+      // And back the same way rather than vanishing.
+      await tester.tap(
+        find
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_ExpandIconPainter',
+            )
+            .first,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      final back = tester.getRect(find.text('Ann')).top - shut;
+      expect(back, greaterThan(1));
+      expect(back, lessThan(79));
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.text('Ann')).top, moreOrLessEquals(shut, epsilon: 1));
+    });
+
     testWidgets('a hidden column is not drawn but keeps its place',
         (tester) async {
       List<TableSort>? told;

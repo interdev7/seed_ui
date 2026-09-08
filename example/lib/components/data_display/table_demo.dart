@@ -256,6 +256,56 @@ class _TableDemoState extends State<TableDemo> {
           ),
         ),
         Group(
+          'Columns that come and go with the room',
+          // Narrow the window (or drag the handle below on a desktop) and the
+          // columns stand down one at a time. The width is read out so the
+          // effect is legible rather than magical.
+          LayoutBuilder(
+            builder: (context, room) {
+              final wide = room.maxWidth;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Table<Person>(
+                    bordered: true,
+                    data: _people,
+                    columns: [
+                      TableColumn(
+                        title: const Text('Name'),
+                        minWidth: 140,
+                        value: (p) => p.name,
+                      ),
+                      TableColumn(
+                        title: const Text('City'),
+                        showFrom: 520,
+                        value: (p) => p.city,
+                      ),
+                      TableColumn(
+                        title: const Text('Age'),
+                        align: TableAlign.end,
+                        showFrom: 700,
+                        // Still the third column wherever it is drawn, so a
+                        // sort keyed by that place goes on meaning it.
+                        sortable: true,
+                        value: (p) => p.age,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The table is ${wide.round()} wide. '
+                    'City needs 520, Age needs 700 — narrow the window and '
+                    'watch them stand down, widen it and they come back.',
+                    style: TextStyle(
+                      color: context.softToken.colorTextTertiary,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        Group(
           'A row dressed from outside',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

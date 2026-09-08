@@ -5,6 +5,50 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.23.0
+
+### Added
+
+- **`TableColumn.showFrom`** — the width the table must have before that column
+  is drawn. `hidden` is a word said in advance; this one is a word about the
+  room, so a column that only earns its place on a wide screen stands down on a
+  narrow one instead of squeezing everything. It keeps its place among the
+  columns you listed while it is down, as `hidden` does, so a sort or a filter
+  keyed by that place goes on meaning what it meant.
+
+  Which columns there are was settled before anything had been laid out; the
+  table asks for its room first now, and everything else follows from that. A
+  table given no width of its own — inside a horizontal scroll view — draws
+  every column, there being nothing to be too narrow for.
+
+  The gallery has a group for it: narrow the window and the columns stand down
+  one at a time, with the table's own width read out beside them.
+
+### Fixed
+
+- **A dressed row lost the line under it.** Flutter's `Table` paints a row's
+  decoration *behind* its cells, so a ground given by `rowStyle` or `cellStyle`
+  covered the rule and the rows ran together. The rule rides the cell now, in
+  front of whatever the row is wearing. Pinned by a pixel test, since painting
+  order is a question no widget tree answers.
+
+- **A panel told its height opened all at once.** A lazy body used to reckon
+  the run of rows with one height for every panel, which left no room for a
+  panel part of the way open. It keeps a running total over the panels
+  instead, so a panel opening is only a term of that sum on the move, and the
+  reveal is as smooth as it is in a table that builds every row.
+
+- **A panel told its height pinned its words to the top.** A named height is
+  usually taller than what is in it; the content is centred down the panel now.
+
+### Changed
+
+- **The table's document no longer claims two things that stopped being true.**
+  A width dragged in a stretched table is the width drawn — measured at 300 to
+  180 in a 600-wide table, the freed room going to the neighbour — where the
+  document still called it a share; and the keyboard is no longer "not here
+  yet". Both are pinned by tests now, so neither can drift back unnoticed.
+
 ## 0.22.0
 
 ### Added

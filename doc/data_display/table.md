@@ -1008,10 +1008,10 @@ a grip nobody could take hold of. And it claims the pointer the moment it
 arrives, because a table that scrolls sideways would otherwise take that
 pointer for a scroll — measured, and the border did not move at all.
 
-A width asked for is the width drawn only where the table is not stretching
-its columns to fill its box. Give it `TableScroll.toContent()`, or more
-columns than fit, and a drag means what it says; in a table with room to spare
-the columns are scaled up to fill it, and a dragged width is a share of that.
+A width asked for is the width drawn, in a stretched table as much as a
+scrolling one: the dragged column is fixed at what the hand left it, and the
+room that frees goes to the columns that sized themselves. A drag means what
+it says.
 
 ## Columns you can move
 
@@ -1180,6 +1180,29 @@ label, and a cursor resting on a label answers nothing.
 `focusNode` drives the focus yourself; `autofocus` puts it there as soon as the
 table is built.
 
+## A column that comes and goes with the room
+
+`hidden` is a word said in advance. `showFrom` is a word about the room: the
+width the table must have before that column is drawn at all.
+
+```dart
+TableColumn<Order>(
+  title: const Text('Placed'),
+  value: (o) => o.placedOn,
+  showFrom: 600,
+)
+```
+
+A column that only earns its place on a wide screen — a second date, a note —
+stands down below that width, so a narrow table drops it rather than squeezing
+everything. It keeps its place among the columns you listed while it is down,
+exactly as `hidden` does, so a sort or a filter keyed by that place goes on
+meaning what it meant.
+
+Measured against the width the table is *given*, not the width of its content.
+A table inside a horizontal scroll view has no such width — there is nothing to
+be too narrow for — and there every column is drawn.
+
 ## Design tokens
 
 The marks a heading carries are sized against each other rather than each on
@@ -1245,16 +1268,28 @@ out again when the question changes, which brought that tap to sixteen
 milliseconds. The rows are compared element by element rather than by the
 list's identity, since `data:` written inline is a new list every build.
 
+### A panel told its height
+
+`panelHeight` is what lets a lazy body keep a panel: a row is found by counting
+what stands before it, and a count needs every panel to be the same known
+height. Two things follow from that, both worth knowing.
+
+It opens by degrees, like any other panel. The height is named so that the
+run of rows can be reckoned rather than measured, and a panel on the move is
+simply one whose height is on its way somewhere: the rows are found by adding
+up what stands in front of them, and a running total does not mind that one of
+its terms is changing. What is inside the panel is built once at the full
+height and clipped to the edge that moves, so the words do not reflow a dozen
+times on the way past.
+
+What is in the panel is centred down it. The height was named rather than
+measured, so it is usually taller than its words, and words pinned to the top
+of a tall panel read as a mistake in the height.
+
 ## Not here yet
 
-**A column that comes and goes with the room.** A column may be `hidden`, but
-only by a word said in advance: there is no way to say "show this one once
-there are six hundred pixels". Which columns are drawn is settled before the
-table knows how wide it is, so this needs the width carried further in than it
-goes today.
-
-Three smaller things, each written up where it belongs: a row that spans
-cannot also open ([Rows that open](#rows-that-open)), a column inside a group
-cannot be carried ([Columns you can move](#columns-you-can-move)), and a width
-dragged in a table with room to spare is a share rather than a promise
-([Borders you can drag](#borders-you-can-drag)).
+Two things, each written up where it belongs: a row that spans cannot also
+open ([Cells that span](#cells-that-span)), since a body drawn by hand has no
+place between its rows to put a panel; and a column inside a group cannot be
+carried ([Columns you can move](#columns-you-can-move)), a group's children
+having no order of their own to be carried within.

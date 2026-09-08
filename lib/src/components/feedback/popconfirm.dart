@@ -267,81 +267,92 @@ class _SoftPopconfirmState extends State<Popconfirm> {
             const PopconfirmToken())
         ._resolve(token);
 
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 260),
-      padding: r.padding,
-      decoration: BoxDecoration(
-        color: r.colorBgElevated,
-        borderRadius: BorderRadius.circular(r.borderRadius),
-        boxShadow: token.boxShadow,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              widget.icon ?? StatusIcon(type: StatusType.warning, token: token),
-              SizedBox(width: token.sizeXS),
-              Flexible(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DefaultTextStyle(
-                      style: TextStyle(
-                        color: token.colorText,
-                        fontSize: r.titleFontSize,
-                        fontFamily: token.fontFamily,
-                        fontFamilyFallback: token.fontFamilyFallback,
-                        fontWeight: token.fontWeightStrong,
-                        decoration: TextDecoration.none,
-                      ),
-                      child: widget.title,
-                    ),
-                    if (widget.description != null) ...[
-                      SizedBox(height: token.sizeXXS),
+    // A question that has come over the page, named by the question itself:
+    // the same news a modal gives, since to a reader the two are the same
+    // event. An overlay is not a route the navigator announced.
+    return Semantics(
+      scopesRoute: true,
+      namesRoute: true,
+      explicitChildNodes: true,
+      label: widget.title is Text ? (widget.title as Text).data : null,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 260),
+        padding: r.padding,
+        decoration: BoxDecoration(
+          color: r.colorBgElevated,
+          borderRadius: BorderRadius.circular(r.borderRadius),
+          boxShadow: token.boxShadow,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                widget.icon ??
+                    StatusIcon(type: StatusType.warning, token: token),
+                SizedBox(width: token.sizeXS),
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       DefaultTextStyle(
                         style: TextStyle(
-                          color: token.colorTextSecondary,
-                          fontSize: r.descriptionFontSize,
+                          color: token.colorText,
+                          fontSize: r.titleFontSize,
                           fontFamily: token.fontFamily,
                           fontFamilyFallback: token.fontFamilyFallback,
-                          height: token.lineHeight,
+                          fontWeight: token.fontWeightStrong,
                           decoration: TextDecoration.none,
                         ),
-                        child: widget.description!,
+                        child: widget.title,
                       ),
+                      if (widget.description != null) ...[
+                        SizedBox(height: token.sizeXXS),
+                        DefaultTextStyle(
+                          style: TextStyle(
+                            color: token.colorTextSecondary,
+                            fontSize: r.descriptionFontSize,
+                            fontFamily: token.fontFamily,
+                            fontFamilyFallback: token.fontFamilyFallback,
+                            height: token.lineHeight,
+                            decoration: TextDecoration.none,
+                          ),
+                          child: widget.description!,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: token.sizeSM),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (_showCancel) ...[
+              ],
+            ),
+            SizedBox(height: token.sizeSM),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (_showCancel) ...[
+                  Button(
+                    size: SoftSize.small,
+                    onPressed: () => _setOpen(false),
+                    child: widget.cancelText ?? Text(context.seedLocale.cancel),
+                  ),
+                  SizedBox(width: token.sizeXS),
+                ],
                 Button(
                   size: SoftSize.small,
-                  onPressed: () => _setOpen(false),
-                  child: widget.cancelText ?? Text(context.seedLocale.cancel),
+                  variant: ButtonVariant.solid,
+                  color:
+                      widget.danger ? ButtonColor.danger : ButtonColor.primary,
+                  loading: _confirming,
+                  onPressed: _confirm,
+                  child: widget.okText ?? Text(context.seedLocale.ok),
                 ),
-                SizedBox(width: token.sizeXS),
               ],
-              Button(
-                size: SoftSize.small,
-                variant: ButtonVariant.solid,
-                color: widget.danger ? ButtonColor.danger : ButtonColor.primary,
-                loading: _confirming,
-                onPressed: _confirm,
-                child: widget.okText ?? Text(context.seedLocale.ok),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

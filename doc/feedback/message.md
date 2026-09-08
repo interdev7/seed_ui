@@ -160,6 +160,13 @@ testWidgets('shows a toast', (tester) async {
 Because the stack is global, always `message.destroy()` at the end of a test —
 a live toast otherwise leaks into the next one.
 
+## What a screen reader hears
+
+A message is a **live region**: it arrives unasked and goes again on its own,
+so a reader is told about it where they stand rather than having to walk the
+screen looking for what changed — which, by the time they got there, would be
+gone.
+
 ## Design tokens
 
 `MessageToken` overrides this component's own tokens. It rides on

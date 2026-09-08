@@ -526,38 +526,46 @@ class _MessageCardState extends State<_MessageCard>
   }
 
   Widget _card(Token token, _ResolvedMessageToken r) {
-    return Center(
-      child: Container(
-        padding: r.padding,
-        decoration: BoxDecoration(
-          color: r.colorBgElevated,
-          borderRadius: BorderRadius.circular(r.borderRadius),
-          boxShadow: token.boxShadow,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            widget.config.icon ??
-                StatusIcon(type: widget.config.type, token: token),
-            SizedBox(width: token.sizeXS),
-            Flexible(
-              // Fully specified because the overlay has no Material ancestor
-              // to inherit from. `height` is deliberately omitted: a taller
-              // line box would push the label down relative to the icon
-              // beside it.
-              child: DefaultTextStyle(
-                style: TextStyle(
-                  color: r.contentColor,
-                  fontSize: token.fontSize,
-                  fontFamily: token.fontFamily,
-                  fontFamilyFallback: token.fontFamilyFallback,
-                  decoration: TextDecoration.none,
+    // A live region: a message arrives unasked and goes again on its own, so
+    // a reader is told about it where it stands rather than having to walk
+    // the screen looking for what changed — which, by the time they got
+    // there, would be gone.
+    return Semantics(
+      liveRegion: true,
+      container: true,
+      child: Center(
+        child: Container(
+          padding: r.padding,
+          decoration: BoxDecoration(
+            color: r.colorBgElevated,
+            borderRadius: BorderRadius.circular(r.borderRadius),
+            boxShadow: token.boxShadow,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              widget.config.icon ??
+                  StatusIcon(type: widget.config.type, token: token),
+              SizedBox(width: token.sizeXS),
+              Flexible(
+                // Fully specified because the overlay has no Material ancestor
+                // to inherit from. `height` is deliberately omitted: a taller
+                // line box would push the label down relative to the icon
+                // beside it.
+                child: DefaultTextStyle(
+                  style: TextStyle(
+                    color: r.contentColor,
+                    fontSize: token.fontSize,
+                    fontFamily: token.fontFamily,
+                    fontFamilyFallback: token.fontFamilyFallback,
+                    decoration: TextDecoration.none,
+                  ),
+                  child: widget.config.content,
                 ),
-                child: widget.config.content,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

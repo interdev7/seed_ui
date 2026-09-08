@@ -30,6 +30,8 @@ Future<void> reading(WidgetTester tester, Future<void> Function() body) async {
 }
 
 void main() {
+  _lastThree();
+
   _theRest();
 
   _windowsAndTabs();
@@ -471,6 +473,101 @@ void _theRest() {
         expect(node.flagsCollection.isHeader, isTrue);
         expect(node.value, isNotEmpty,
             reason: 'the carets say it in a picture');
+      });
+    });
+  });
+}
+
+void _lastThree() {
+  group('a number field', () {
+    testWidgets('offers a way to step it that is not the arrows',
+        (tester) async {
+      await reading(tester, () async {
+        num? changed;
+        await tester.pumpWidget(
+          _host(
+            InputNumber(
+              semanticsLabel: 'Seats',
+              value: 5,
+              onChanged: (v) => changed = v,
+            ),
+          ),
+        );
+        final node = tester.getSemantics(find.byType(InputNumber));
+        expect(node.label, contains('Seats'));
+        expect(node.value, '5');
+        expect(node.increasedValue, '6');
+        expect(node.decreasedValue, '4');
+
+        // The arrows are pictures; this is the way a reader reaches them.
+        tester.semantics.performAction(
+          find.semantics.byLabel('Seats'),
+          SemanticsAction.increase,
+        );
+        await tester.pumpAndSettle();
+        expect(changed, 6);
+      });
+    });
+
+    testWidgets('an empty field is a box to type in, not a stepper',
+        (tester) async {
+      await reading(tester, () async {
+        await tester.pumpWidget(
+          _host(InputNumber(semanticsLabel: 'Seats', onChanged: (_) {})),
+        );
+        final node = tester.getSemantics(find.byType(InputNumber));
+        // A node that can be increased must say what it holds and what it
+        // would hold after; an empty one can say neither.
+        expect(node.increasedValue, isEmpty);
+      });
+    });
+  });
+
+  group('a message', () {
+    testWidgets('is a live region, so its arrival is announced',
+        (tester) async {
+      await reading(tester, () async {
+        await tester.pumpWidget(_host(const Text('the page')));
+        message.info('Saved');
+        // Not pumpAndSettle: a message keeps a timer for its own dismissal,
+        // and settling would wait it out and find nothing there.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        final node = tester.getSemantics(
+          find.ancestor(
+            of: find.text('Saved'),
+            matching: find.byWidgetPredicate(
+              (w) => w is Semantics && (w.properties.liveRegion ?? false),
+            ),
+          ),
+        );
+        expect(node.flagsCollection.isLiveRegion, isTrue);
+        expect(node.label, contains('Saved'));
+
+        // Let the message go before the test ends, or its timer outlives it.
+        await tester.pump(const Duration(seconds: 4));
+      });
+    });
+  });
+
+  group('a popconfirm', () {
+    testWidgets('says a question has come over the page, and names it',
+        (tester) async {
+      await reading(tester, () async {
+        await tester.pumpWidget(
+          _host(
+            Popconfirm(
+              title: const Text('Delete this?'),
+              onOk: () {},
+              child: Button(onPressed: () {}, child: const Text('Delete')),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
+        final node = tester.getSemantics(_theWindow('Delete this?'));
+        expect(node.flagsCollection.scopesRoute, isTrue);
+        expect(node.label, contains('Delete this?'));
       });
     });
   });

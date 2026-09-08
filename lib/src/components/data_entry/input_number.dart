@@ -165,6 +165,7 @@ class InputNumber extends StatefulWidget {
     this.size,
     this.status,
     this.placeholder,
+    this.semanticsLabel,
     this.prefix,
     this.suffix,
     this.formatter,
@@ -221,6 +222,12 @@ class InputNumber extends StatefulWidget {
 
   /// Grey hint shown while the field is empty.
   final String? placeholder;
+
+  /// What a screen reader calls the field.
+  ///
+  /// The placeholder names one that stands on its own; give this where the
+  /// name is written outside it — a `Form` field's label, say.
+  final String? semanticsLabel;
 
   /// Widget shown inside the border, before the number.
   final Widget? prefix;
@@ -468,7 +475,32 @@ class _InputNumberState extends State<InputNumber> {
       ),
     );
 
-    if (!spinner) return field;
+    // A stepper is a value with two ways to move it, and the arrows are
+    // pictures: without these a reader is offered a number and no way to
+    // change it but typing.
+    // Stepping is offered only where there is a number to step: a node that
+    // can be increased has to say both what it holds and what it would hold
+    // after, and an empty field can say neither. Empty, it is a box to type
+    // in — which is what it looks like, too.
+    final held = _controller.text;
+    final steppable = held.isNotEmpty;
+    final base = _current ?? widget.min ?? 0;
+
+    Widget spoken(Widget child) => Semantics(
+          label: widget.semanticsLabel,
+          value: held,
+          increasedValue: steppable && _canStepUp
+              ? _format(_clamp(base + widget.step))
+              : null,
+          decreasedValue: steppable && _canStepDown
+              ? _format(_clamp(base - widget.step))
+              : null,
+          onIncrease: steppable && _canStepUp ? () => _step(1) : null,
+          onDecrease: steppable && _canStepDown ? () => _step(-1) : null,
+          child: child,
+        );
+
+    if (!spinner) return spoken(field);
 
     // A spinner is a stepper, not a text field: it is as wide as its two
     // buttons and the number between them. Align hands its child loose
@@ -476,13 +508,15 @@ class _InputNumberState extends State<InputNumber> {
     // `crossAxisAlignment: stretch`, a wide page — cannot blow it across the
     // screen. `spinnerWidth` on the token is how you widen it, and a
     // two-dimensional size names it outright.
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      widthFactor: 1,
-      heightFactor: 1,
-      child: SizedBox(
-        width: _size.explicitWidth ?? r.spinnerWidth,
-        child: field,
+    return spoken(
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        widthFactor: 1,
+        heightFactor: 1,
+        child: SizedBox(
+          width: _size.explicitWidth ?? r.spinnerWidth,
+          child: field,
+        ),
       ),
     );
   }

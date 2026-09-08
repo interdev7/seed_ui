@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   quarter in the dark. It survives inheritance: a nested provider that flips
   the brightness re-derives and is refined again.
 
+- **`InputNumber`, `Message` and `Popconfirm` finish the round.** A number field
+  offers *increase* and *decrease* — the arrows are pictures — and offers them
+  only where there is a number to step, since a node that can be increased must
+  say both what it holds and what it would hold after. A message is a live
+  region, so its arrival is announced where the reader stands rather than
+  waiting to be found. A popconfirm scopes and names a route from its own
+  question, as a modal does.
+
 - **A tree node, an accordion header and a tooltip say what a picture was
   saying.** A node reports whether it is picked and whether its branch is open;
   a leaf says nothing about opening rather than claiming to be shut. A header

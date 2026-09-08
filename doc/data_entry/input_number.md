@@ -118,6 +118,18 @@ InputNumber(
 The spinner sits flush against the inner border and is clipped to the input's
 own corner, so a fill cannot spill past the rounding.
 
+## What a screen reader hears
+
+The field says its name — `semanticsLabel`, or the placeholder where it stands
+on its own — and the number it holds. The arrows are pictures, so it also
+offers **increase** and **decrease**: the way a reader steps the value without
+seeing them.
+
+Stepping is offered only where there is a number to step. A node that can be
+increased has to say both what it holds and what it would hold after, and an
+empty field can say neither — empty, it is a box to type in, which is what it
+looks like too.
+
 ## Design tokens
 
 `InputNumberToken` overrides this component's own tokens. Every field is an override; an

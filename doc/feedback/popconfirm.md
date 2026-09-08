@@ -166,6 +166,16 @@ await tester.pump(const Duration(milliseconds: 250));
 await tester.pump();
 ```
 
+## What a screen reader hears
+
+The bubble says a question has come over the page and gives the question itself
+as the name — the same news a modal gives, since to a reader the two are the
+same event. An overlay is not a route the navigator announced, so nobody says
+it otherwise.
+
+Only where the title is words: one built of widgets has no single string to
+read out.
+
 ## Design tokens
 
 `PopconfirmToken` overrides this component's own tokens. Every field is an override; an

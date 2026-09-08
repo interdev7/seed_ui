@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
+// The column arithmetic a label column needs — measuring every cell and
+// giving them all the widest one's width — is what Flutter's own Table does.
+import 'package:flutter/widgets.dart' as flutter show Table, TableRow;
 
 import '../../icons/icons.dart' show Spinner;
 import '../../theme/config_provider.dart';
@@ -437,14 +440,14 @@ class Timeline extends StatelessWidget {
       }
     }
 
-    final twoSided = _modeIn(context) == TimelineMode.alternate ||
-        nodes.any((n) => n.item.label != null);
+    final alternate = _modeIn(context) == TimelineMode.alternate;
+    final twoSided = alternate || nodes.any((n) => n.item.label != null);
 
     if (_orientationIn(context) == TimelineOrientation.horizontal) {
       return _buildHorizontal(context, t, r, nodes, twoSided);
     }
 
-    return _buildVertical(context, t, r, nodes, twoSided);
+    return _buildVertical(context, t, r, nodes, twoSided, alternate);
   }
 
   Widget _buildVertical(
@@ -453,7 +456,54 @@ class Timeline extends StatelessWidget {
     _ResolvedTimelineToken r,
     List<_Node> nodes,
     bool twoSided,
+    bool alternate,
   ) {
+    // Half the row each is what *alternate* means: the content takes both
+    // sides by turns, so neither may be narrower than the other. A label is
+    // not that — it is a note beside the line, a time or a word — and half
+    // the row for it leaves the content in a column half as wide as it
+    // should be.
+    //
+    // So a labelled row gives its label column the width of the widest
+    // label, the same in every row, or the axis would jog from row to row.
+    // Flutter's own `Table` does that arithmetic — it measures a column's
+    // cells and gives them all the widest one's width — which is the whole
+    // question here.
+    //
+    // Grouped rows are the exception: a group folds away, so its rows cannot
+    // share a table with the rows outside it, and a table each would put the
+    // axis in a different place per section. There the row splits evenly, as
+    // it always did.
+    final grouped = nodes.any((n) => n.group != null);
+    if (twoSided && !alternate && !grouped) {
+      return flutter.Table(
+        columnWidths: const {
+          0: IntrinsicColumnWidth(),
+          1: IntrinsicColumnWidth(),
+          2: FlexColumnWidth(),
+        },
+        // The label and the content set the row's height between them; the
+        // axis then fills whatever they settled on. Every cell filling would
+        // leave the row nothing to measure itself from — the same trap the
+        // kit's own table fell into.
+        defaultVerticalAlignment: TableCellVerticalAlignment.intrinsicHeight,
+        children: [
+          for (var i = 0; i < nodes.length; i++)
+            flutter.TableRow(
+              children: _verticalCells(
+                context,
+                t,
+                r,
+                nodes[i],
+                i,
+                i == nodes.length - 1,
+                i > 0 && nodes[i - 1].dashedTail,
+              ),
+            ),
+        ],
+      );
+    }
+
     final rows = <Widget>[
       for (var i = 0; i < nodes.length; i++)
         _buildVerticalRow(
@@ -649,14 +699,41 @@ class Timeline extends StatelessWidget {
     );
   }
 
-  Widget _buildVerticalRow(
+  /// The three cells of a vertical row: what stands before the axis, the
+  /// axis, and what stands after it.
+  ///
+  /// Apart from the row so a table can ask for the same three without the
+  /// row built around them.
+  List<Widget> _verticalCells(
     BuildContext context,
     Token t,
     _ResolvedTimelineToken r,
     _Node node,
     int index,
     bool isLast,
-    bool twoSided,
+    bool dashedTop,
+  ) {
+    final parts = _verticalParts(context, t, r, node, index, isLast, dashedTop);
+    return [
+      parts.leading ?? const SizedBox.shrink(),
+      TableCell(
+        verticalAlignment: TableCellVerticalAlignment.fill,
+        child: parts.axis,
+      ),
+      parts.trailing ?? const SizedBox.shrink(),
+    ];
+  }
+
+  /// The pieces a vertical row is made of, before anything decides how wide
+  /// each column should be.
+  ({Widget? leading, Widget axis, Widget? trailing, double? height})
+      _verticalParts(
+    BuildContext context,
+    Token t,
+    _ResolvedTimelineToken r,
+    _Node node,
+    int index,
+    bool isLast,
     bool dashedTop,
   ) {
     final item = node.item;
@@ -747,33 +824,37 @@ class Timeline extends StatelessWidget {
       );
     }
 
+    return (
+      leading: pad(leftChild, leading: true),
+      axis: axis,
+      trailing: pad(rightChild, leading: false),
+      height: item.height,
+    );
+  }
+
+  Widget _buildVerticalRow(
+    BuildContext context,
+    Token t,
+    _ResolvedTimelineToken r,
+    _Node node,
+    int index,
+    bool isLast,
+    bool twoSided,
+    bool dashedTop,
+  ) {
+    final parts = _verticalParts(context, t, r, node, index, isLast, dashedTop);
+    final onRight = _modeIn(context) == TimelineMode.right;
     final children = <Widget>[];
     if (twoSided) {
-      children.add(
-        Expanded(
-          child: pad(leftChild, leading: true) ?? const SizedBox.shrink(),
-        ),
-      );
-      children.add(axis);
-      children.add(
-        Expanded(
-          child: pad(rightChild, leading: false) ?? const SizedBox.shrink(),
-        ),
-      );
-    } else if (_modeIn(context) == TimelineMode.right) {
-      children.add(
-        Expanded(
-          child: pad(content, leading: true) ?? const SizedBox.shrink(),
-        ),
-      );
-      children.add(axis);
+      children.add(Expanded(child: parts.leading ?? const SizedBox.shrink()));
+      children.add(parts.axis);
+      children.add(Expanded(child: parts.trailing ?? const SizedBox.shrink()));
+    } else if (onRight) {
+      children.add(Expanded(child: parts.leading ?? const SizedBox.shrink()));
+      children.add(parts.axis);
     } else {
-      children.add(axis);
-      children.add(
-        Expanded(
-          child: pad(content, leading: false) ?? const SizedBox.shrink(),
-        ),
-      );
+      children.add(parts.axis);
+      children.add(Expanded(child: parts.trailing ?? const SizedBox.shrink()));
     }
 
     final row = Row(
@@ -782,8 +863,8 @@ class Timeline extends StatelessWidget {
     );
     // A fixed height stretches the line to fill it (styles.root.height);
     // otherwise the row hugs its content.
-    return item.height != null
-        ? SizedBox(height: item.height, child: row)
+    return parts.height != null
+        ? SizedBox(height: parts.height, child: row)
         : IntrinsicHeight(child: row);
   }
 

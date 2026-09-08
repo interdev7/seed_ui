@@ -201,6 +201,22 @@ Timeline(
 )
 ```
 
+## How wide the label column is
+
+A label puts the row on two sides of the axis, and the label column takes **the
+width of the widest label** — the same width in every row, or the axis would jog
+from row to row. Flutter's own `Table` does that arithmetic: it measures a
+column's cells and gives them all the widest one's width.
+
+Half the row each is what `alternate` means, and only that: there the content
+takes both sides by turns, so neither side may be the narrower. A label is not
+that — it is a note beside the line — and half a row for a timestamp leaves the
+content in a column half as wide as it should be.
+
+Grouped rows are the exception. A group folds away, so its rows cannot share a
+table with the rows outside it, and a table each would put the axis in a
+different place per section; there the row splits evenly.
+
 ## Design tokens
 
 `Timeline` has its own token set

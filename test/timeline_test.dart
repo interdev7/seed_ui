@@ -557,4 +557,122 @@ void main() {
       );
     });
   });
+
+  group('the width a label column takes', () {
+    Widget run(List<TimelineItem> items,
+            {TimelineMode? mode, double w = 600}) =>
+        _wrap(SizedBox(width: w, child: Timeline(mode: mode, items: items)));
+
+    testWidgets('is its own, not half the row', (tester) async {
+      await tester.pumpWidget(
+        run(const [
+          TimelineItem(label: Text('09:00'), content: Text('Something')),
+          TimelineItem(label: Text('10:00'), content: Text('Else')),
+        ]),
+      );
+      // Half of 600 would put the content at 300 from the run's own left
+      // edge. A label of five figures wants nothing like that much.
+      expect(
+        tester.getRect(find.text('Something')).left -
+            tester.getRect(find.byType(Timeline)).left,
+        lessThan(200),
+      );
+    });
+
+    testWidgets('is the same in every row, so the axis is one straight line',
+        (tester) async {
+      await tester.pumpWidget(
+        run(const [
+          TimelineItem(label: Text('9'), content: Text('One')),
+          TimelineItem(
+            label: Text('a much longer label'),
+            content: Text('Two'),
+          ),
+          TimelineItem(label: Text('10:00'), content: Text('Three')),
+        ]),
+      );
+      final lefts = [
+        for (final word in ['One', 'Two', 'Three'])
+          tester.getRect(find.text(word)).left,
+      ];
+      expect(lefts.toSet(), hasLength(1), reason: 'the axis does not jog');
+    });
+
+    testWidgets('is the widest label\'s', (tester) async {
+      await tester.pumpWidget(
+        run(const [
+          TimelineItem(label: Text('9'), content: Text('One')),
+        ]),
+      );
+      final narrow = tester.getRect(find.text('One')).left;
+
+      await tester.pumpWidget(
+        run(const [
+          TimelineItem(label: Text('9'), content: Text('One')),
+          TimelineItem(
+            label: Text('a much longer label indeed'),
+            content: Text('Two'),
+          ),
+        ]),
+      );
+      expect(
+        tester.getRect(find.text('One')).left,
+        greaterThan(narrow),
+        reason: 'one long label widens the column for all of them',
+      );
+    });
+
+    testWidgets('is half the row where the content alternates', (tester) async {
+      await tester.pumpWidget(
+        run(
+          mode: TimelineMode.alternate,
+          const [
+            TimelineItem(content: Text('One')),
+            TimelineItem(content: Text('Two')),
+          ],
+        ),
+      );
+      // Alternate means the content takes both sides by turns, so neither
+      // side may be the narrower.
+      expect(
+        tester.getRect(find.text('Two')).left -
+            tester.getRect(find.byType(Timeline)).left,
+        greaterThan(280),
+      );
+    });
+
+    testWidgets('is half the row where the rows are grouped', (tester) async {
+      final controller = TimelineGroupController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: 600,
+            child: Timeline(
+              items: [
+                TimelineGroupItem(
+                  controller: controller,
+                  initiallyExpanded: true,
+                  items: const [
+                    TimelineItem(label: Text('09:00'), content: Text('One')),
+                    // Past collapsedCount, so this one really is grouped —
+                    // a head that stands outside the fold is not.
+                    TimelineItem(label: Text('10:00'), content: Text('Two')),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      // A group folds away, so its rows cannot share a table with the rows
+      // outside it — and a table each would put the axis in a different
+      // place per section.
+      expect(
+        tester.getRect(find.text('One')).left -
+            tester.getRect(find.byType(Timeline)).left,
+        greaterThan(280),
+      );
+    });
+  });
 }

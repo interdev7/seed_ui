@@ -111,6 +111,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `Timeline` gave half its width to a label column, whatever was in it.**
+  One `label` anywhere turned the run two-sided, and two-sided meant an even
+  split — so a timestamp, or an icon, took half the row and left the content in
+  a column half as wide as it should be. The label column takes the width of
+  its widest label now, the same in every row so the axis stays one straight
+  line. `alternate` still splits evenly, since there the content takes both
+  sides by turns; so do grouped rows, which cannot share the measuring.
+
 - **`Button(block: true)` threw inside a `Row`.** It asked for an infinite
   width, which a row has none of. The stretching is the box's job now rather
   than the button's own row: given a width it fills it, given none it takes the

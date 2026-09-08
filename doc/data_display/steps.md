@@ -429,6 +429,18 @@ Steps(orientation: StepsOrientation.vertical, current: 1, items: items);
 Steps(responsive: false, items: items); // keep it horizontal, whatever happens
 ```
 
+## From the keyboard
+
+A run that answers a tap is **one** stop in the tab order, and the arrows walk
+it: sideways along a row, up and down a column, `Home` and `End` to the ends. A
+step that is barred, or an ellipsis standing in for steps, is stepped over.
+
+A run that only reports progress — no `onChange`, no controller — is no stop at
+all. It is a picture, and a picture is not somewhere to stand.
+
+`focusNode` drives the focus yourself; `autofocus` puts it there as soon as the
+run is built.
+
 ## Design tokens
 
 `StepsToken` overrides the marker sizes (`iconSize`, `iconSizeSM`,

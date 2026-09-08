@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   quarter in the dark. It survives inheritance: a nested provider that flips
   the brightness re-derives and is refined again.
 
+- **`Upload` and `Steps` answer the keyboard.** An upload's drop zone is a stop
+  and opens the picker on `Space` or `Enter`, wearing the outline a hover draws;
+  each file's preview, download, retry and remove are stops of their own. A run
+  of steps that answers a tap is one stop walked with the arrows, and a run that
+  only reports progress is no stop at all — it is a picture, and a picture is
+  not somewhere to stand.
+
 - **The pickers open and are walked with the keyboard.** `↓` or `Enter` on the
   field opens the panel. In a `DatePicker` the sideways arrows step a day, the
   upright ones a week, `PageUp`/`PageDown` a month, `Enter` takes the day and

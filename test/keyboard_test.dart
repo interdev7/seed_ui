@@ -1077,4 +1077,112 @@ void main() {
       expect(picked, isEmpty, reason: 'nothing was confirmed');
     });
   });
+
+  group('a run of steps', () {
+    testWidgets('is one stop, walked with the arrows', (tester) async {
+      final chosen = <int>[];
+      await tester.pumpWidget(
+        _host(
+          Steps(
+            current: 0,
+            onChange: chosen.add,
+            items: const [
+              StepItem(title: Text('One')),
+              StepItem(title: Text('Two')),
+              StepItem(title: Text('Three')),
+            ],
+          ),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.pumpAndSettle();
+      expect(chosen, [1, 2]);
+    });
+
+    testWidgets('a step nobody may take is stepped over', (tester) async {
+      final chosen = <int>[];
+      await tester.pumpWidget(
+        _host(
+          Steps(
+            current: 0,
+            onChange: chosen.add,
+            items: const [
+              StepItem(title: Text('One')),
+              StepItem(title: Text('Two'), disabled: true),
+              StepItem(title: Text('Three')),
+            ],
+          ),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      expect(chosen, [2]);
+    });
+
+    testWidgets('a run that answers nothing is not a stop', (tester) async {
+      var after = 0;
+      await tester.pumpWidget(
+        _host(
+          Column(
+            children: [
+              const Steps(
+                current: 0,
+                items: [
+                  StepItem(title: Text('One')),
+                  StepItem(title: Text('Two')),
+                ],
+              ),
+              Button(onPressed: () => after++, child: const Text('After')),
+            ],
+          ),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      // A run that merely reports progress is a picture, and a picture is
+      // not somewhere to stop.
+      expect(after, 1);
+    });
+  });
+
+  group('an upload', () {
+    testWidgets('the drop zone is a stop, and space opens the picker',
+        (tester) async {
+      var picks = 0;
+      await tester.pumpWidget(
+        _host(
+          Upload<String>(onPick: () async => picks++),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      expect(picks, 1);
+    });
+
+    testWidgets('a disabled zone is not a stop', (tester) async {
+      var picks = 0;
+      var after = 0;
+      await tester.pumpWidget(
+        _host(
+          Column(
+            children: [
+              Upload<String>(disabled: true, onPick: () async => picks++),
+              Button(onPressed: () => after++, child: const Text('After')),
+            ],
+          ),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      expect(picks, 0);
+      expect(after, 1);
+    });
+  });
 }

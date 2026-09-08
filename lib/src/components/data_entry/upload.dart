@@ -706,12 +706,16 @@ class _Dropzone extends StatefulWidget {
 class _DropzoneState extends State<_Dropzone> {
   bool _hovered = false;
 
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
+
   @override
   Widget build(BuildContext context) {
     final t = widget.token;
     final r = widget.style;
     // A drag reads as a stronger signal than a hover, so it wins the accent.
-    final active = widget.dragging || _hovered;
+    // The keyboard's mark is the hover's: one look, whichever hand is on it.
+    final active = widget.dragging || _hovered || _focusVisible;
     final accent = widget.dragging
         ? r.dropzoneActiveBorderColor
         : (active ? t.primary.borderHover : r.dropzoneBorderColor);
@@ -764,40 +768,62 @@ class _DropzoneState extends State<_Dropzone> {
           ],
         );
 
-    return MouseRegion(
-      cursor:
-          widget.disabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap == null ? null : () => widget.onTap!(),
-        // The dash traces the zone, not what is inside it: as a foreground
-        // painter it takes the container's own box, so a tile is outlined
-        // round its whole edge and a wide zone round its whole width.
-        child: CustomPaint(
-          foregroundPainter: DashedBorderPainter(
-            color: widget.disabled ? t.colorBorderSecondary : accent,
-            radius: BorderRadius.circular(
-              widget.round ? r.cardSize : r.dropzoneRadius,
+    return FocusableActionDetector(
+      enabled: !widget.disabled && widget.onTap != null,
+      onShowFocusHighlight: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
+      },
+      actions: <Type, Action<Intent>>{
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            widget.onTap?.call();
+            return null;
+          },
+        ),
+      },
+      child: Semantics(
+        button: true,
+        enabled: !widget.disabled,
+        onTap: widget.onTap,
+        child: MouseRegion(
+          cursor: widget.disabled
+              ? SystemMouseCursors.basic
+              : SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onTap == null ? null : () => widget.onTap!(),
+            // The dash traces the zone, not what is inside it: as a foreground
+            // painter it takes the container's own box, so a tile is outlined
+            // round its whole edge and a wide zone round its whole width.
+            child: CustomPaint(
+              foregroundPainter: DashedBorderPainter(
+                color: widget.disabled ? t.colorBorderSecondary : accent,
+                radius: BorderRadius.circular(
+                  widget.round ? r.cardSize : r.dropzoneRadius,
+                ),
+                strokeWidth: t.lineWidth,
+              ),
+              child: AnimatedContainer(
+                duration: t.motionDurationMid,
+                curve: t.motionEaseInOut,
+                // Inside the dash now, so the prompt keeps clear of it and a long
+                // hint wraps instead of running edge to edge.
+                padding: widget.compact
+                    ? EdgeInsets.all(t.sizeXS)
+                    : r.dropzonePadding,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: widget.dragging ? r.dropzoneActiveBg : r.dropzoneBg,
+                  shape: widget.round ? BoxShape.circle : BoxShape.rectangle,
+                  borderRadius: widget.round
+                      ? null
+                      : BorderRadius.circular(r.dropzoneRadius),
+                ),
+                child: content,
+              ),
             ),
-            strokeWidth: t.lineWidth,
-          ),
-          child: AnimatedContainer(
-            duration: t.motionDurationMid,
-            curve: t.motionEaseInOut,
-            // Inside the dash now, so the prompt keeps clear of it and a long
-            // hint wraps instead of running edge to edge.
-            padding:
-                widget.compact ? EdgeInsets.all(t.sizeXS) : r.dropzonePadding,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: widget.dragging ? r.dropzoneActiveBg : r.dropzoneBg,
-              shape: widget.round ? BoxShape.circle : BoxShape.rectangle,
-              borderRadius:
-                  widget.round ? null : BorderRadius.circular(r.dropzoneRadius),
-            ),
-            child: content,
           ),
         ),
       ),
@@ -1098,24 +1124,45 @@ class _IconButton extends StatefulWidget {
 class _IconButtonState extends State<_IconButton> {
   bool _hovered = false;
 
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
+
   @override
   Widget build(BuildContext context) {
     final t = widget.token;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
+    return FocusableActionDetector(
+      onShowFocusHighlight: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
+      },
+      actions: <Type, Action<Intent>>{
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            widget.onTap();
+            return null;
+          },
+        ),
+      },
+      child: Semantics(
+        button: true,
         onTap: widget.onTap,
-        child: Container(
-          width: 22,
-          height: 22,
-          decoration: BoxDecoration(
-            color:
-                widget.background ?? (_hovered ? t.colorFillSecondary : null),
-            borderRadius: BorderRadius.circular(t.borderRadiusSM),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                // The mark the pointer leaves, for the keyboard too.
+                color: widget.background ??
+                    (_hovered || _focusVisible ? t.colorFillSecondary : null),
+                borderRadius: BorderRadius.circular(t.borderRadiusSM),
+              ),
+              child: CustomPaint(painter: widget.painter),
+            ),
           ),
-          child: CustomPaint(painter: widget.painter),
         ),
       ),
     );

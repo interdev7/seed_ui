@@ -240,6 +240,16 @@ setState(() {
 `name` is plain text rather than a widget because the component shortens it
 when there is not enough room, which it could not do to a widget.
 
+## From the keyboard
+
+The drop zone is a stop in the tab order, and `Space` or `Enter` opens the
+picker — the same thing a tap does. It wears the outline a hover draws, so the
+hand and the keyboard say the same thing, and a disabled zone is no stop at
+all.
+
+Each file's own actions — preview, download, retry, remove — are stops too, in
+the order they are drawn, and answer `Space` and `Enter`.
+
 ## Design tokens
 
 `Upload` has its own token set: `dropzoneBorderColor`,

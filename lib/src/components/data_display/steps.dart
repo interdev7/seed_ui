@@ -6,6 +6,7 @@ import '../../icons/icons.dart' show CheckPainter, CrossPainter, ChevronPainter;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/rail.dart';
+import '../../utils/roving_focus.dart';
 import '../feedback/progress.dart';
 
 /// How much wider than its marker a progress ring sits — the room a run
@@ -681,6 +682,8 @@ class Steps extends StatefulWidget {
     this.maxCount,
     this.overflow,
     this.token,
+    this.focusNode,
+    this.autofocus = false,
   }) : assert(
           percent == null || (percent >= 0 && percent <= 1),
           'percent is a fraction between 0 and 1',
@@ -779,6 +782,16 @@ class Steps extends StatefulWidget {
   /// Below this width a responsive horizontal run turns vertical.
   static const double responsiveBreakpoint = 532;
 
+  /// A focus node of your own, for a run whose focus you drive yourself.
+  ///
+  /// The run is one stop in the tab order — not one per step — and the arrow
+  /// keys walk it. A run that reports progress without answering to a tap is
+  /// no stop at all.
+  final FocusNode? focusNode;
+
+  /// Whether the run takes focus as soon as it is built.
+  final bool autofocus;
+
   @override
   State<Steps> createState() => _StepsState();
 }
@@ -869,6 +882,28 @@ class _StepsState extends State<Steps> {
   int get _shownCurrent => _shown.current;
 
   bool get _interactive => widget.onChange != null || widget.controller != null;
+
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
+
+  /// Steps the run, skipping what cannot be chosen.
+  ///
+  /// The shown list, not the given one: an ellipsis stands for steps rather
+  /// than being one, and walking onto it would land the reader nowhere.
+  void _walk(RovingStep step) {
+    final shown = _shown;
+    final to = rovingTarget(
+      step: step,
+      from: _shownCurrent,
+      count: shown.origins.length,
+      selectable: (i) {
+        final origin = shown.origins[i];
+        return origin >= 0 && !widget.items[origin].disabled;
+      },
+    );
+    if (to == null || to == _shownCurrent) return;
+    _select(to);
+  }
 
   void _select(int index) {
     final origin = _shown.origins[index];
@@ -995,7 +1030,26 @@ class _StepsState extends State<Steps> {
           widget.maxCount ?? _autoCap(constraints, t, r, orientation),
         );
 
-        return build(orientation);
+        // One stop for the run, walked with the arrows: a wizard of nine
+        // steps that took nine presses to walk past is nine presses nobody
+        // makes. Only where the steps answer at all — a run that merely
+        // reports progress is a picture, and a picture is not a stop.
+        final run = build(orientation);
+        if (!_interactive) return run;
+        return RovingGroup(
+          direction: orientation == StepsOrientation.vertical
+              ? Axis.vertical
+              : Axis.horizontal,
+          focusNode: widget.focusNode,
+          autofocus: widget.autofocus,
+          onStep: _walk,
+          onFocusVisible: (visible) {
+            if (_focusVisible != visible) {
+              setState(() => _focusVisible = visible);
+            }
+          },
+          child: run,
+        );
       },
     );
   }

@@ -7685,7 +7685,8 @@ void main() {
       expect(back, greaterThan(1));
       expect(back, lessThan(79));
       await tester.pumpAndSettle();
-      expect(tester.getRect(find.text('Ann')).top, moreOrLessEquals(shut, epsilon: 1));
+      expect(tester.getRect(find.text('Ann')).top,
+          moreOrLessEquals(shut, epsilon: 1));
     });
 
     testWidgets('a hidden column is not drawn but keeps its place',

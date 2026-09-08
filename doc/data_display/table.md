@@ -1153,13 +1153,28 @@ stops, and one per cell a screenful — and the arrows do the walking:
 | `↓` | in the head row | Back down to the first row |
 | `←` / `→` | in the head row | Between the headings that answer a press |
 | `Enter` | in the head row | Cycle that column's sort |
-| `Enter` | on a row | `onRowTap`, and open it where a tap opens it |
+| `Space` | in the head row | Open that column's filters |
+| `←` / `→` | on a row | The cell before it, and the cell after |
+| `Enter` | on a row | Whatever the cell is: the box picks, the chevron opens, anything else is the row |
 | `Space` | on a row | Pick the row, or let it go |
-| `→` / `←` | on a row that opens | Open it, and shut it |
 | `Home` / `End` | anywhere | The first row, and the last |
 
-The row the cursor rests on wears the mark the pointer leaves, and the heading
-it rests on wears the heading's own: one look, whichever hand is on the table.
+The row the cursor rests on wears the mark the pointer leaves, the cell it
+rests on is outlined, and a heading it rests on wears the heading's own: one
+look, whichever hand is on the table.
+
+A tap carries the cursor with it — the row *and* the cell it landed on — so
+the arrows carry on from where the hand left off rather than from wherever the
+cursor was before. One cursor for both.
+
+The cursor stays where it is when a tap lands on the page outside the table,
+because the focus does: the keys still go to the table, and hiding the cursor
+would leave the next arrow moving something nobody can see. It goes when the
+focus does.
+
+Two keys in the head row for the two things a heading does — `Enter` sorts,
+`Space` opens the filters. A reader who cannot see the funnel has no other way
+in, and overloading one key would make which of the two happens a guess.
 Leaving takes the mark with it. The sideways arrows follow the reading
 direction, and the ends hold rather than wrapping round.
 
@@ -1235,13 +1250,6 @@ milliseconds. The rows are compared element by element rather than by the
 list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
-
-**A cursor per cell.** The keyboard cursor walks rows, not cells, so a table is
-read across by eye rather than by key. Nothing inside a cell — a link, a button
-a `value` builder put there — can be reached without a mouse.
-
-**A key that opens the filters.** `Enter` on a heading sorts it; a funnel still
-opens with the pointer only.
 
 **A column that comes and goes with the room.** A column may be `hidden`, but
 only by a word said in advance: there is no way to say "show this one once

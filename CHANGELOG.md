@@ -103,6 +103,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   once a key has been pressed: a grey box on a panel nobody has walked yet
   reads as a mistake.
 
+- **A tap in a table carries the keyboard cursor with it.** Tapping a row left
+  the cursor wherever it had been, so the next arrow press moved from somewhere
+  else entirely — tap the third row, press down, and the first row answered.
+  The hand and the keyboard share one cursor now, row and cell alike.
+
+- **A table is read across as well as down.** The keyboard cursor walks cells
+  now, not only rows: the sideways arrows move along a row and outline the cell
+  they land on, and `Enter` acts on whatever that cell is — the box picks the
+  row, the chevron opens it, anything else is the row itself. What stands *in*
+  a cell was out of reach before.
+
+  `Space` on a heading opens that column's filters. Two keys for the two things
+  a heading does, since a reader who cannot see the funnel had no way in at all
+  and overloading `Enter` would make which one happens a guess.
+
 - **A `Table` is walked with the keyboard.** One stop for the whole table — a
   stop per row would be a page of stops — and the arrows do the walking. `↓`/`↑`
   move between rows, `Home`/`End` reach the ends, `Enter` taps the row the

@@ -4,10 +4,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
-Widget _host(Widget child, {TextDirection words = TextDirection.ltr}) =>
+Widget _host(
+  Widget child, {
+  TextDirection words = TextDirection.ltr,
+  // Only where the test opens something into the kit's overlay: the key is
+  // one global, and a test that leaves an entry in it upsets the next.
+  bool overlay = false,
+}) =>
     ConfigProvider(
       theme: ThemeData(),
       child: MaterialApp(
+        navigatorKey: overlay ? UiKit.navigatorKey : null,
         home: Directionality(
           textDirection: words,
           child: Scaffold(body: Center(child: child)),
@@ -48,6 +55,8 @@ class _Person {
 }
 
 void main() {
+  _tableCells();
+
   group('a button', () {
     testWidgets('is reached by tab and pressed by space and enter',
         (tester) async {
@@ -1252,6 +1261,194 @@ void main() {
         ),
       );
       expect(find.bySemanticsLabel('Close'), findsOneWidget);
+    });
+  });
+}
+
+void _tableCells() {
+  const people = [
+    _Person('Ada', 36),
+    _Person('Grace', 45),
+  ];
+
+  Widget table({
+    void Function(_Person, int)? onRowTap,
+    TableSelection<_Person>? selection,
+    List<TableFilter>? filters,
+  }) =>
+      _host(
+        overlay: filters != null,
+        SizedBox(
+          width: 400,
+          child: Table<_Person>(
+            data: people,
+            onRowTap: onRowTap,
+            selection: selection,
+            columns: [
+              TableColumn<_Person>(
+                title: const Text('Name'),
+                value: (p) => p.name,
+                filters: filters,
+                onFilter:
+                    filters == null ? null : (value, p) => p.name == value,
+              ),
+              TableColumn<_Person>(
+                title: const Text('Age'),
+                value: (p) => '${p.age}',
+              ),
+            ],
+          ),
+        ),
+      );
+
+  group('a table read across', () {
+    testWidgets('the sideways arrows walk the cells of a row', (tester) async {
+      await tester.pumpWidget(table());
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+
+      // The smallest outlined box: the table wears a ring of its own while it
+      // has the focus, and that one never moves.
+      Rect outlined() {
+        final boxes =
+            tester.widgetList<DecoratedBox>(find.byType(DecoratedBox)).toList();
+        Rect? best;
+        for (var i = 0; i < boxes.length; i++) {
+          final box = boxes[i];
+          final decoration = box.decoration;
+          if (box.position != DecorationPosition.foreground) continue;
+          if (decoration is! BoxDecoration || decoration.border == null) {
+            continue;
+          }
+          final rect = tester.getRect(find.byType(DecoratedBox).at(i));
+          if (best == null ||
+              rect.width * rect.height < best.width * best.height) {
+            best = rect;
+          }
+        }
+        expect(best, isNotNull, reason: 'one cell is outlined');
+        return best!;
+      }
+
+      final first = outlined();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      final second = outlined();
+      // The cursor moved along the row, not down it.
+      expect(second.left, greaterThan(first.left));
+      expect(second.top, first.top);
+    });
+
+    testWidgets(
+        'the box column picks the row, whatever enter would do '
+        'elsewhere', (tester) async {
+      var picked = <_Person>[];
+      final tapped = <String>[];
+      await tester.pumpWidget(
+        table(
+          onRowTap: (p, _) => tapped.add(p.name),
+          selection: TableSelection<_Person>(onChanged: (r) => picked = r),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      // The cursor starts on the box column, which a selection puts first.
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(picked.map((p) => p.name), ['Ada']);
+      expect(tapped, isEmpty, reason: 'the box was pressed, not the row');
+
+      // Two columns on, and enter is the row again.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(tapped, ['Ada']);
+    });
+
+    testWidgets('the ends of the row hold', (tester) async {
+      var picked = <_Person>[];
+      final tapped = <String>[];
+      // With a box column in front: wrapping round would land the cursor
+      // back on it, and Enter would pick the row instead of opening it —
+      // which is how this tells holding from wrapping.
+      await tester.pumpWidget(
+        table(
+          onRowTap: (p, _) => tapped.add(p.name),
+          selection: TableSelection<_Person>(onChanged: (r) => picked = r),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 6; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pumpAndSettle();
+      }
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(tapped, ['Ada']);
+      expect(picked, isEmpty);
+    });
+
+    testWidgets('a tap carries the cursor with it', (tester) async {
+      final tapped = <String>[];
+      await tester.pumpWidget(table(onRowTap: (p, _) => tapped.add(p.name)));
+      await _tab(tester);
+      // The hand puts the cursor on the second row; the arrow carries on
+      // from there rather than from wherever it was before the tap.
+      await tester.tap(find.text('Grace'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(tapped, ['Grace', 'Ada']);
+    });
+
+    testWidgets('and the cell it landed on, not just the row', (tester) async {
+      var picked = <_Person>[];
+      final tapped = <String>[];
+      await tester.pumpWidget(
+        table(
+          onRowTap: (p, _) => tapped.add(p.name),
+          selection: TableSelection<_Person>(onChanged: (r) => picked = r),
+        ),
+      );
+      await _tab(tester);
+      // The cursor starts on the box column. Tapping a word in the row moves
+      // it to that cell, so Enter is the row — not the box it started on.
+      await tester.tap(find.text('Grace'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(tapped, ['Grace', 'Grace']);
+      expect(picked, isEmpty);
+    });
+
+    testWidgets('space on a heading opens its filters', (tester) async {
+      await tester.pumpWidget(
+        table(
+          filters: const [
+            TableFilter('Ada', 'Ada'),
+            TableFilter('Grace', 'Grace'),
+          ],
+        ),
+      );
+      await _tab(tester);
+      // Down into the rows, then up into the head where the marks live.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      expect(find.text('Grace'), findsOneWidget, reason: 'the row, not a menu');
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      // The panel is open: its own two names are on screen as well.
+      expect(find.text('Grace'), findsNWidgets(2));
     });
   });
 }

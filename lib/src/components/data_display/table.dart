@@ -1930,6 +1930,20 @@ class _TableState<T> extends State<Table<T>> {
   /// row, or null when it is down among the rows.
   final ValueNotifier<int?> _headCursor = ValueNotifier<int?>(null);
 
+  /// Which column's filter panel is open, or null.
+  ///
+  /// Held here rather than left to the funnel's own dropdown, because a key
+  /// pressed on the heading has to be able to open it: a panel nobody can
+  /// reach from the keyboard is a filter nobody can reach.
+  int? _filterOpen;
+
+  /// Which cell of the cursor's row the keyboard rests on.
+  ///
+  /// A grid is read across as well as down, and what stands *in* a cell — a
+  /// link, a button a `value` builder put there — cannot be reached at all if
+  /// the cursor only knows which row it is on.
+  final ValueNotifier<int> _cursorColumn = ValueNotifier<int>(0);
+
   /// Whether the focus should be seen: only where it arrived by keyboard.
   bool _focusVisible = false;
 
@@ -2019,6 +2033,7 @@ class _TableState<T> extends State<Table<T>> {
     _hovered.dispose();
     _cursor.dispose();
     _headCursor.dispose();
+    _cursorColumn.dispose();
     _hoveredHeading.dispose();
     _hoveredFunnel.dispose();
     for (final closer in _closers) {
@@ -2821,7 +2836,16 @@ class _TableState<T> extends State<Table<T>> {
               children: [
                 for (var x = 0; x < columns.length; x++)
                   _slid(
-                    ruled(_rowCell(i, columns[x], r, t), x, columns.length),
+                    _underCursor(
+                      ruled(
+                        _rowCell(i, columns[x], r, t, place: x),
+                        x,
+                        columns.length,
+                      ),
+                      i,
+                      x,
+                      t,
+                    ),
                     shiftAt(x),
                     'r${i}c$x',
                     t,
@@ -3719,9 +3743,17 @@ class _TableState<T> extends State<Table<T>> {
         return KeyEventResult.handled;
       }
       if (key == LogicalKeyboardKey.enter ||
-          key == LogicalKeyboardKey.space ||
           key == LogicalKeyboardKey.numpadEnter) {
         if (head < _leaves.length && _leaves[head].sorts) _cycleSort(head);
+        return KeyEventResult.handled;
+      }
+      // Space opens the filters where there are any. Two keys for two things
+      // a heading does: a reader who cannot see the funnel has no other way
+      // in, and overloading Enter would make which one happens a guess.
+      if (key == LogicalKeyboardKey.space) {
+        if (head < _leaves.length && _leaves[head].filtersRows) {
+          setState(() => _filterOpen = _filterOpen == head ? null : head);
+        }
         return KeyEventResult.handled;
       }
       return KeyEventResult.ignored;
@@ -3731,15 +3763,15 @@ class _TableState<T> extends State<Table<T>> {
     if (at == null || at >= rows.length) return KeyEventResult.ignored;
     final record = rows[at];
 
-    // Sideways among the rows opens and shuts, as it does in a tree: there is
-    // one thing to open in a row, and no cell cursor to move instead.
+    // Sideways walks the row's cells. A grid is read across as well as down,
+    // and what stands in a cell — a link, a button a `value` builder put
+    // there — is out of reach otherwise. The ends hold, as everywhere else.
     if (key == onward || key == backward) {
-      if (widget.expandable == null || !_canExpand(record)) {
-        return KeyEventResult.ignored;
-      }
-      final open = _holds(_expanded, record);
-      if (key == onward && !open) _toggleExpanded(record);
-      if (key == backward && open) _toggleExpanded(record);
+      final count = _columns.length;
+      if (count == 0) return KeyEventResult.ignored;
+      final next = _cursorColumn.value + (key == onward ? 1 : -1);
+      if (next < 0 || next >= count) return KeyEventResult.handled;
+      _cursorColumn.value = next;
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.space) {
@@ -3751,6 +3783,26 @@ class _TableState<T> extends State<Table<T>> {
     }
     if (key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.numpadEnter) {
+      // Whatever the cursor is standing on. The chevron column opens the
+      // row, the box column picks it, and an ordinary cell is the row
+      // itself — which is what a tap on it would have done.
+      // The kit's own columns lead the row — the box, then the chevron — so
+      // where the cursor is says what it is on. Asked by place rather than by
+      // identity: both columns are built on demand from a config that may not
+      // be there at all, and asking for one that is not is an error.
+      final place = _cursorColumn.value;
+      final hasBox = widget.selection != null;
+      final hasChevron = !_isTree && (widget.expandable?.showColumn ?? false);
+      if (hasBox && place == 0) {
+        if (_canSelect(record)) {
+          _toggleRow(record, on: !_holds(_selected, record));
+        }
+        return KeyEventResult.handled;
+      }
+      if (hasChevron && place == (hasBox ? 1 : 0)) {
+        if (_canExpand(record)) _toggleExpanded(record);
+        return KeyEventResult.handled;
+      }
       final opens = widget.expandable?.byRowTap ?? false;
       if (widget.onRowTap == null && !opens) return KeyEventResult.ignored;
       widget.onRowTap?.call(record, at);
@@ -4503,20 +4555,25 @@ class _TableState<T> extends State<Table<T>> {
     Token t,
     BorderSide rule,
   ) =>
-      DecoratedBox(
-        decoration: BoxDecoration(
-          border: BorderDirectional(
-            end: x + span.across >= columnCount || !_bordered
-                ? BorderSide.none
-                : rule,
-            // Under the last row this cell covers, and not under the last row
-            // of the table — there the outline stands in for it.
-            bottom: y + span.down >= rowCount
-                ? BorderSide.none
-                : Border(bottom: rule).bottom,
+      _underCursor(
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: BorderDirectional(
+              end: x + span.across >= columnCount || !_bordered
+                  ? BorderSide.none
+                  : rule,
+              // Under the last row this cell covers, and not under the last
+              // row of the table — there the outline stands in for it.
+              bottom: y + span.down >= rowCount
+                  ? BorderSide.none
+                  : Border(bottom: rule).bottom,
+            ),
           ),
+          child: _rowCell(y, column, r, t, covering: span.down, place: x),
         ),
-        child: _rowCell(y, column, r, t, covering: span.down),
+        y,
+        x,
+        t,
       );
 
   /// The body drawn by hand, where a cell may cover its neighbours.
@@ -4926,6 +4983,8 @@ class _TableState<T> extends State<Table<T>> {
       // A click, not a hover: a menu with checkboxes and two words to end it
       // is not something to open by passing over it.
       trigger: const [DropdownTrigger.click],
+      open: _filterOpen == index,
+      onOpenChange: (open) => setState(() => _filterOpen = open ? index : null),
       // Hung by the trailing edge, not the leading one: the mark stands at
       // the far end of the heading, so aligning the near edges would throw
       // the panel out past its own column. A mirrored layout swaps which edge
@@ -5664,6 +5723,11 @@ class _TableState<T> extends State<Table<T>> {
       cell = GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
+          // The hand and the keyboard share one cursor: a row tapped is a row
+          // the arrows carry on from. Left apart, the next press would move a
+          // cursor still sitting where it was before the tap.
+          _cursor.value = index;
+          _cursorColumn.value = at.xIndex;
           widget.onRowTap?.call(record, index);
           if (opens) _toggleExpanded(record);
         },
@@ -5951,12 +6015,34 @@ class _TableState<T> extends State<Table<T>> {
   /// it spans downwards. A merged cell belongs to every row it covers, so it
   /// lights up for any of them: lit for its first row alone, the rest of the
   /// line went dark under the pointer while the merged cell stayed pale.
+  /// Outlines the cell the keyboard is standing on.
+  ///
+  /// Outside the cell's rules rather than inside them: the outline is the
+  /// cursor, and a cursor drawn under the table's own lines reads as part of
+  /// the table. It also keeps the rules the outermost thing a cell wears,
+  /// which is what everything measuring them expects.
+  Widget _underCursor(Widget cell, int index, int place, Token t) =>
+      ListenableBuilder(
+        listenable: Listenable.merge([_cursor, _cursorColumn]),
+        builder: (context, child) => DecoratedBox(
+          position: DecorationPosition.foreground,
+          decoration: BoxDecoration(
+            border: _cursor.value == index && _cursorColumn.value == place
+                ? Border.all(color: t.primary.base, width: t.lineWidth)
+                : null,
+          ),
+          child: child,
+        ),
+        child: cell,
+      );
+
   Widget _rowCell(
     int index,
     TableColumn<T> column,
     _ResolvedTableToken r,
     Token t, {
     int covering = 1,
+    int place = -1,
   }) {
     final record = _rows[index];
     var content =
@@ -5984,6 +6070,11 @@ class _TableState<T> extends State<Table<T>> {
       cell = GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
+          // The hand and the keyboard share one cursor: a row tapped is a row
+          // the arrows carry on from. Left apart, the next press would move a
+          // cursor still sitting where it was before the tap.
+          _cursor.value = index;
+          if (place >= 0) _cursorColumn.value = place;
           widget.onRowTap?.call(record, index);
           if (opens) _toggleExpanded(record);
         },

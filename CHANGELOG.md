@@ -38,6 +38,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   quarter in the dark. It survives inheritance: a nested provider that flips
   the brightness re-derives and is refined again.
 
+- **The pickers open and are walked with the keyboard.** `↓` or `Enter` on the
+  field opens the panel. In a `DatePicker` the sideways arrows step a day, the
+  upright ones a week, `PageUp`/`PageDown` a month, `Enter` takes the day and
+  `Esc` puts the panel away; a barred day is stepped over and the month follows
+  the cursor. In a `TimePicker` the upright arrows step the column and the
+  sideways ones move between them, `Enter` confirms.
+
+  The day the keyboard rests on wears the mark the pointer leaves, and only
+  once a key has been pressed: a grey box on a panel nobody has walked yet
+  reads as a mistake.
+
 - **A `Table` is walked with the keyboard.** One stop for the whole table — a
   stop per row would be a page of stops — and the arrows do the walking. `↓`/`↑`
   move between rows, `Home`/`End` reach the ends, `Enter` taps the row the
@@ -92,6 +103,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   row is at least, and how far its contents sit from its edges.
 
 ### Fixed
+
+- **`Button(block: true)` threw inside a `Row`.** It asked for an infinite
+  width, which a row has none of. The stretching is the box's job now rather
+  than the button's own row: given a width it fills it, given none it takes the
+  width it wanted anyway. `Expanded` still makes it fill a share of a row.
+
 
 - **A row drawn by `itemBuilder` could not be taller than the kit's own.** The
   row named a fixed height, so a builder asking for 52 was squeezed back to

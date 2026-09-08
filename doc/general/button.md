@@ -190,6 +190,14 @@ Button(
 )
 ```
 
+## Block
+
+`block: true` fills the width the button is given. Where it is given none — a
+`Row`, a horizontal scroll view — it takes the width it wanted anyway rather
+than throwing: there is nothing to fill there, and a crash is not the useful
+answer. To fill a share of a row, say so with `Expanded`, which bounds the
+width and brings `block` back to filling it.
+
 ## From the keyboard
 
 The control takes its turn in the tab order and answers **Space** and

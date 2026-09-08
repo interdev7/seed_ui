@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart'
+    show KeyEvent, KeyUpEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 
 import '../../l10n/seed_localizations.dart';
@@ -292,6 +294,7 @@ class _DatePickerState extends State<DatePicker> {
     super.initState();
     _internal = widget.defaultValue;
     _cursor = dateOnly(_value ?? DateTime.now());
+    _focus.onKeyEvent = _onKey;
     // Born open: the same deferral, since the first build is a build too.
     if (widget.open ?? false) _obey(true);
     _popover.onClosed = () {
@@ -435,6 +438,8 @@ class _DatePickerState extends State<DatePicker> {
       _open = true;
       _mode = DatePanelMode.day;
       _cursor = dateOnly(_value ?? DateTime.now());
+      // A panel just opened has no day walked to yet.
+      _keyed = false;
     });
     final token = context.softToken;
     _popover.open(
@@ -461,6 +466,99 @@ class _DatePickerState extends State<DatePicker> {
 
   /// Redraws the floating panel, which a `setState` here cannot reach.
   void _repaintPanel() => _revision.value++;
+
+  // --- the keyboard ---
+
+  /// Whether the cursor came from a key rather than from paging the panel.
+  ///
+  /// The month cursor is also the day the keyboard rests on, and marking a
+  /// day nobody has walked to would put a grey box on the panel the moment it
+  /// opened.
+  bool _keyed = false;
+
+  /// Moves the day the keyboard rests on, skipping the days that are barred.
+  ///
+  /// The month follows the cursor: stepping off the end of a month shows the
+  /// next one, which is what the arrow means.
+  void _walk(Duration by) {
+    var next = dateOnly(_cursor.add(by));
+    // A run of blocked days is stepped over rather than stopped at, up to a
+    // year — beyond that the calendar has nothing to offer and the cursor
+    // stays put.
+    for (var guard = 0; _isBlocked(next) && guard < 366; guard++) {
+      next = dateOnly(next.add(
+          by.isNegative ? const Duration(days: -1) : const Duration(days: 1)));
+    }
+    if (_isBlocked(next)) return;
+    setState(() {
+      _cursor = next;
+      _keyed = true;
+    });
+    _repaintPanel();
+  }
+
+  void _walkMonths(int months) {
+    setState(() {
+      _cursor = addMonths(_cursor, months);
+      _keyed = true;
+    });
+    _repaintPanel();
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
+
+    if (!_open) {
+      // A downward arrow opens the panel, as it does on a menu; so does
+      // Enter, since there is nothing else for it to do on a field whose
+      // whole purpose is the panel.
+      if (key == LogicalKeyboardKey.arrowDown ||
+          key == LogicalKeyboardKey.enter ||
+          key == LogicalKeyboardKey.numpadEnter) {
+        if (!_enabled) return KeyEventResult.ignored;
+        _requestOpen(true);
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    }
+
+    if (key == LogicalKeyboardKey.escape) {
+      _requestOpen(false);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      _pick(_cursor);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowDown) {
+      _walk(const Duration(days: 7));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowUp) {
+      _walk(const Duration(days: -7));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowRight) {
+      _walk(Duration(days: ltr ? 1 : -1));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowLeft) {
+      _walk(Duration(days: ltr ? -1 : 1));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.pageDown) {
+      _walkMonths(1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.pageUp) {
+      _walkMonths(-1);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
 
   void _pick(DateTime day) {
     if (_isBlocked(day)) return;
@@ -928,6 +1026,7 @@ class _DayGrid extends StatelessWidget {
                       outside: !isSameMonth(day, cursor),
                       today: isSameDay(day, today),
                       chosen: chosen != null && isSameDay(day, chosen),
+                      resting: state._keyed && isSameDay(day, cursor),
                       disabled: state._isBlocked(day),
                       onTap: () => state._pick(day),
                     );
@@ -1042,6 +1141,7 @@ class _Cell extends StatefulWidget {
     required this.chosen,
     required this.disabled,
     required this.onTap,
+    this.resting = false,
   });
 
   final String label;
@@ -1050,6 +1150,10 @@ class _Cell extends StatefulWidget {
   final bool outside;
   final bool today;
   final bool chosen;
+
+  /// Whether the keyboard is resting on this cell: the mark the pointer
+  /// leaves, so a reader who swaps hands sees one thing.
+  final bool resting;
   final bool disabled;
   final VoidCallback onTap;
 
@@ -1067,7 +1171,7 @@ class _CellState extends State<_Cell> {
     final Color background;
     if (widget.chosen && !widget.disabled) {
       background = t.primary.base;
-    } else if (_hovered && !widget.disabled) {
+    } else if ((_hovered || widget.resting) && !widget.disabled) {
       background = t.colorFillTertiary;
     } else {
       background = const Color(0x00000000);

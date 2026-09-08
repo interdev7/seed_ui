@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart' show RenderProxyBox;
 import 'package:flutter/widgets.dart';
 
 import '../../icons/icons.dart';
@@ -668,7 +669,11 @@ class _SoftButtonState extends State<Button> {
       ),
       textAlign: TextAlign.center,
       child: Row(
-        mainAxisSize: widget.block ? MainAxisSize.max : MainAxisSize.min,
+        // Always shrink-wrapping. A block button is stretched by the box
+        // around it — see [_FillWidth] — rather than by asking its own row to
+        // fill: a row told to fill a width nobody has bounded is an error,
+        // and `block` inside a `Row` is exactly that.
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (leading != null) leading,
@@ -728,7 +733,7 @@ class _SoftButtonState extends State<Button> {
                 strokeAlign: BorderSide.strokeAlignInside,
               ),
       ),
-      child: Center(widthFactor: widget.block ? null : 1, child: content),
+      child: Center(widthFactor: 1, child: content),
     );
 
     if (style.dashed && style.border != null) {
@@ -795,9 +800,7 @@ class _SoftButtonState extends State<Button> {
                     widget.onLongPress!();
                   }
                 : null,
-            child: widget.block
-                ? SizedBox(width: double.infinity, child: button)
-                : button,
+            child: widget.block ? _FillWidth(child: button) : button,
           ),
         ),
       ),
@@ -819,4 +822,38 @@ class _ButtonStyle {
   final Color foreground;
   final bool dashed;
   final bool shadow;
+}
+
+/// Takes the whole width where there is one, and the child's own where there
+/// is not.
+///
+/// `SizedBox(width: double.infinity)` is the obvious way to say "block", and
+/// it throws the moment the width it is given is unbounded — a `Row`, a
+/// scroll view lying on its side. There is nothing for a block button to fill
+/// there, and the useful answer is the width the button wanted anyway, not a
+/// crash: a caller who does want it to share a row says so with `Expanded`,
+/// which bounds the width and brings this back to filling it.
+class _FillWidth extends SingleChildRenderObjectWidget {
+  const _FillWidth({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderFillWidth();
+}
+
+class _RenderFillWidth extends RenderProxyBox {
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.smallest;
+      return;
+    }
+    child.layout(
+      constraints.hasBoundedWidth
+          ? constraints.tighten(width: constraints.maxWidth)
+          : constraints,
+      parentUsesSize: true,
+    );
+    size = child.size;
+  }
 }

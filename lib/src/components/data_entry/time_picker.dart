@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart'
+    show KeyEvent, KeyUpEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 
 import '../../l10n/seed_localizations.dart';
@@ -354,6 +356,7 @@ class _TimePickerState extends State<TimePicker> {
   void initState() {
     super.initState();
     _internal = widget.defaultValue;
+    _focus.onKeyEvent = _onKey;
     _draft = _value;
     // Reports a layer that closed itself — an outside tap, a route change.
     // It must not close the layer again: it is already gone, and asking twice
@@ -546,6 +549,83 @@ class _TimePickerState extends State<TimePicker> {
       _commit(time);
       if (!_fields.minute && !_fields.second) _requestOpen(false);
     }
+  }
+
+  // --- the keyboard ---
+
+  /// Which column the arrows step: hours, minutes or seconds, counted among
+  /// the ones the format actually shows.
+  int _unit = 0;
+
+  /// The columns on show, biggest first.
+  List<Duration> get _units => [
+        if (_fields.hour) const Duration(hours: 1),
+        if (_fields.minute) const Duration(minutes: 1),
+        if (_fields.second) const Duration(seconds: 1),
+      ];
+
+  /// Steps the column the keyboard is on, wrapping within the day.
+  ///
+  /// A time is a ring, not a run: stepping back from midnight lands on the
+  /// last hour of the same day rather than stopping, which is what every
+  /// clock does and what the panel's own columns do.
+  void _step(int delta) {
+    final units = _units;
+    if (units.isEmpty) return;
+    final by = units[_unit.clamp(0, units.length - 1)] * delta;
+    final from = _draft ?? _value ?? Duration.zero;
+    var next = normalizeTime(from + by, _fields);
+    for (var guard = 0; _isDisabled(next) && guard < 60; guard++) {
+      next = normalizeTime(next + by, _fields);
+    }
+    if (_isDisabled(next)) return;
+    _pick(next);
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
+
+    if (!_open) {
+      if (key == LogicalKeyboardKey.arrowDown ||
+          key == LogicalKeyboardKey.enter ||
+          key == LogicalKeyboardKey.numpadEnter) {
+        if (!_enabled) return KeyEventResult.ignored;
+        _requestOpen(true);
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    }
+
+    if (key == LogicalKeyboardKey.escape) {
+      _requestOpen(false);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      _confirm();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowUp) {
+      _step(-1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowDown) {
+      _step(1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowRight ||
+        key == LogicalKeyboardKey.arrowLeft) {
+      final onward = (key == LogicalKeyboardKey.arrowRight) == ltr;
+      final units = _units;
+      if (units.isEmpty) return KeyEventResult.handled;
+      setState(() {
+        _unit = (_unit + (onward ? 1 : -1)).clamp(0, units.length - 1);
+      });
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 
   void _confirm() {

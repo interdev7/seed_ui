@@ -178,6 +178,26 @@ supply one of the four and leave the rest guessing.
 | `footerBuilder` | `WidgetBuilder?` | — | A row of your own under the panel's footer |
 | `token` | `TimePickerToken?` | — | Per-instance tokens |
 
+## From the keyboard
+
+The field is a stop in the tab order like any other, and `↓` or `Enter` opens
+the panel. Once open:
+
+| Key | What it does |
+| --- | --- |
+| `↑` / `↓` | Step the column the keyboard is on |
+| `←` / `→` | Move between the columns the format shows |
+| `Enter` | Confirm, and put the panel away |
+| `Esc` | Put the panel away, taking nothing |
+
+A time is a ring, not a run: stepping back from midnight lands on the last
+hour of the same day rather than stopping, which is what the panel's own
+columns do. A time `disabledTime` bars is stepped over.
+
+Where the format shows more than one column the panel waits for `Enter`, as it
+waits for OK under the pointer; a single-column picker takes each step as it
+comes. The sideways arrows follow the reading direction.
+
 ## Design tokens
 
 | Token | Default |

@@ -922,4 +922,159 @@ void main() {
       expect(tapped, ['Ada'], reason: 'there was no head row to go up into');
     });
   });
+
+  group('a date picker', () {
+    // A list, not a returned value: the field is an `EditableText`, so what
+    // it shows is not a `Text` to find — what it reported is the fact.
+    Future<List<DateTime?>> pump(
+      WidgetTester tester, {
+      bool Function(DateTime)? blocked,
+    }) async {
+      final picked = <DateTime?>[];
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(),
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 320,
+                  child: DatePicker(
+                    value: DateTime(2026, 3, 10),
+                    disabledDate: blocked,
+                    onChanged: picked.add,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await _tab(tester);
+      return picked;
+    }
+
+    testWidgets('a downward arrow opens the panel', (tester) async {
+      await pump(tester);
+      expect(find.text('Today'), findsNothing);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(find.text('Today'), findsOneWidget);
+    });
+
+    testWidgets('the arrows walk the days and enter takes one', (tester) async {
+      final picked = await pump(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      // One day on, then a week: the 10th became the 18th.
+      expect(picked, [DateTime(2026, 3, 18)]);
+    });
+
+    testWidgets('page down shows the next month', (tester) async {
+      final picked = await pump(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(picked, [DateTime(2026, 4, 10)]);
+    });
+
+    testWidgets('a day nobody may take is stepped over', (tester) async {
+      final picked =
+          await pump(tester, blocked: (d) => d.day == 11 && d.month == 3);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(picked, [DateTime(2026, 3, 12)]);
+    });
+
+    testWidgets('escape puts the panel away, taking nothing', (tester) async {
+      final picked = await pump(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.text('Today'), findsNothing);
+      expect(picked, isEmpty, reason: 'nothing was taken');
+    });
+  });
+
+  group('a time picker', () {
+    Future<List<Duration?>> pump(WidgetTester tester) async {
+      final picked = <Duration?>[];
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(),
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 320,
+                  child: TimePicker(
+                    value: const Duration(hours: 9, minutes: 30),
+                    onChanged: picked.add,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await _tab(tester);
+      return picked;
+    }
+
+    testWidgets('a downward arrow opens the panel', (tester) async {
+      await pump(tester);
+      expect(find.text('Now'), findsNothing);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(find.text('Now'), findsOneWidget);
+    });
+
+    testWidgets('the arrows step the column, sideways changes which',
+        (tester) async {
+      final picked = await pump(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      // An hour on…
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      // …then over to the minutes, and one back.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(picked.last, const Duration(hours: 10, minutes: 29));
+    });
+
+    testWidgets('escape puts the panel away, taking nothing', (tester) async {
+      final picked = await pump(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.text('Now'), findsNothing);
+      expect(picked, isEmpty, reason: 'nothing was confirmed');
+    });
+  });
 }

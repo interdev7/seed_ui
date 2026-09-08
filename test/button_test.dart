@@ -429,4 +429,45 @@ void main() {
       expect(noises, greaterThan(0));
     });
   });
+
+  group('block', () {
+    testWidgets('fills the width it is given', (tester) async {
+      await tester.pumpWidget(
+        _host(const Column(children: [Button(block: true, child: Text('Go'))])),
+      );
+      expect(tester.getSize(find.byType(Button)).width, 800);
+      // And the label stays in the middle of it.
+      expect(
+        tester.getCenter(find.text('Go')).dx,
+        tester.getCenter(find.byType(Button)).dx,
+      );
+    });
+
+    testWidgets('takes its own width where no width is given', (tester) async {
+      await tester.pumpWidget(
+        _host(const Row(children: [Button(block: true, child: Text('Go'))])),
+      );
+      // A row hands down no width to fill, and the useful answer is the
+      // width the button wanted anyway — not an error.
+      expect(tester.takeException(), isNull);
+      final natural = tester.getSize(find.byType(Button)).width;
+      expect(natural, greaterThan(0));
+      expect(natural, lessThan(200));
+    });
+
+    testWidgets('fills its share of a row when told to share', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Row(
+            children: [
+              Expanded(child: Button(block: true, child: Text('Go'))),
+              Expanded(child: Button(child: Text('Other'))),
+            ],
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byType(Button).first).width, 400);
+    });
+  });
 }

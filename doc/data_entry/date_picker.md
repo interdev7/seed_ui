@@ -135,6 +135,28 @@ supply one of the four and leave the rest guessing.
 | `footerBuilder` | `WidgetBuilder?` | — | A row of your own under the footer |
 | `token` | `DatePickerToken?` | — | Per-instance tokens |
 
+## From the keyboard
+
+The field is a stop in the tab order like any other, and `↓` or `Enter` opens
+the panel — there is nothing else for a key to do on a field whose whole
+purpose is the panel. Once open:
+
+| Key | What it does |
+| --- | --- |
+| `←` / `→` | The day before, and the day after |
+| `↑` / `↓` | The same weekday a week back, and a week on |
+| `PageUp` / `PageDown` | The month before, and the month after |
+| `Enter` | Take the day the keyboard rests on |
+| `Esc` | Put the panel away, taking nothing |
+
+The day the keyboard rests on wears the mark the pointer leaves, so the hand
+and the keyboard say the same thing — and it appears only once a key has
+been pressed, since a grey box on a panel nobody has walked yet reads as a
+mistake. A day `disabledDate` bars is stepped over rather than stopped at, and
+the month follows the cursor: walking off the end of March shows April.
+
+The sideways arrows follow the reading direction.
+
 ## Design tokens
 
 | Token | Default |

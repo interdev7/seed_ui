@@ -1137,10 +1137,6 @@ one says when it is only partly. That much comes from `Checkbox` and `Radio`
 themselves, which now carry their own state, so it holds wherever else in the
 kit they are used.
 
-Not here yet: the keyboard. Nothing in the kit is reachable by tab — `Button`
-is a bare gesture detector — so a table alone answering to keys would be out
-of step with everything around it. It wants doing across the kit at once.
-
 ## From the keyboard
 
 The table is **one** stop in the tab order — a stop per row would be a page of

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart' hide Checkbox;
+import 'package:flutter/services.dart'
+    show KeyEvent, KeyUpEvent, LogicalKeyboardKey;
 
 import '../../icons/icons.dart' show ChevronPainter, HolderPainter, Spinner;
 import '../../theme/config_provider.dart';
@@ -292,6 +294,8 @@ class Tree extends StatefulWidget {
     this.onDragStart,
     this.onDragEnd,
     this.token,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   /// The root nodes.
@@ -388,6 +392,15 @@ class Tree extends StatefulWidget {
   /// Per-instance token overrides.
   final TreeToken? token;
 
+  /// A focus node of your own, for a tree whose focus you drive yourself.
+  ///
+  /// The tree is one stop in the tab order — not one per node — and the
+  /// arrow keys walk it.
+  final FocusNode? focusNode;
+
+  /// Whether the tree takes focus as soon as it is built.
+  final bool autofocus;
+
   @override
   State<Tree> createState() => _TreeState();
 }
@@ -421,6 +434,19 @@ class _TreeState extends State<Tree> {
   late final KeyedSet _expanded;
   late final KeyedSet _selected = KeyedSet(widget.defaultSelectedKeys);
   late final KeyedSet _checked = KeyedSet(widget.defaultCheckedKeys);
+
+  /// The node the keyboard is resting on, by key.
+  ///
+  /// One stop for the whole tree, walked with the arrows: a tree of two
+  /// hundred nodes that took two hundred presses to walk past is a tree
+  /// nobody walks past. The keys are the ones a tree is walked with
+  /// everywhere — up and down for the rows that are showing, the outward
+  /// arrow to close a branch or step up to its parent, the inward one to open
+  /// it or step down to its first child.
+  String? _cursor;
+
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
 
   final Map<String, TreeNode> _nodeOf = {};
   final Map<String, String?> _parentOf = {};
@@ -501,6 +527,88 @@ class _TreeState extends State<Tree> {
   bool _expandable(TreeNode n) =>
       !(n.isLeaf ?? false) &&
       (n.children.isNotEmpty || widget.loadData != null);
+
+  /// The nodes on show, in the order they are read.
+  List<TreeNode> _visible(Set<String> expanded) {
+    final out = <TreeNode>[];
+    void walk(List<TreeNode> nodes) {
+      for (final node in nodes) {
+        out.add(node);
+        if (expanded.contains(node.key) && node.children.isNotEmpty) {
+          walk(node.children);
+        }
+      }
+    }
+
+    walk(widget.nodes);
+    return out;
+  }
+
+  void _moveCursor(int delta) {
+    final rows = _visible(_resolveExpanded());
+    if (rows.isEmpty) return;
+    final at = rows.indexWhere((n) => n.key == _cursor);
+    // From nowhere, the first row; otherwise the next that is not barred,
+    // and the ends hold rather than wrapping round.
+    var i = at < 0 ? (delta > 0 ? -1 : rows.length) : at;
+    for (var step = 0; step < rows.length; step++) {
+      i += delta;
+      if (i < 0 || i >= rows.length) return;
+      if (!rows[i].disabled) {
+        setState(() => _cursor = rows[i].key);
+        return;
+      }
+    }
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
+    final inward =
+        ltr ? LogicalKeyboardKey.arrowRight : LogicalKeyboardKey.arrowLeft;
+    final outward =
+        ltr ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight;
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      _moveCursor(1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowUp) {
+      _moveCursor(-1);
+      return KeyEventResult.handled;
+    }
+
+    final current = _cursor == null ? null : _nodeOf[_cursor];
+    if (current == null) return KeyEventResult.ignored;
+    final expanded = _resolveExpanded();
+
+    if (key == inward) {
+      if (_expandable(current) && !expanded.contains(current.key)) {
+        _toggleExpand(current.key);
+      } else if (expanded.contains(current.key) &&
+          current.children.isNotEmpty) {
+        setState(() => _cursor = current.children.first.key);
+      }
+      return KeyEventResult.handled;
+    }
+    if (key == outward) {
+      if (expanded.contains(current.key) && _expandable(current)) {
+        _toggleExpand(current.key);
+      } else {
+        final parent = _parentOf[current.key];
+        if (parent != null) setState(() => _cursor = parent);
+      }
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      if (!current.disabled) _select(current);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
 
   void _toggleExpand(String key) {
     final cur = _resolveExpanded();
@@ -701,19 +809,45 @@ class _TreeState extends State<Tree> {
         ? _halfChecked(checked)
         : const <String>{};
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: _buildLevel(
-        t,
-        r,
-        widget.nodes,
-        0,
-        const [],
-        expanded,
-        selected,
-        checked,
-        half,
+    // A `Focus` rather than a `FocusableActionDetector`: the keys have to be
+    // read on the node that holds the focus, since events travel up from it
+    // and a watcher underneath would never see them.
+    return Focus(
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      canRequestFocus: !_disabled,
+      onKeyEvent: _onKey,
+      onFocusChange: (has) {
+        setState(() {
+          _focusVisible = has;
+          // Leaving takes the mark with it, so a tree nobody is on shows
+          // nothing resting.
+          if (!has) _cursor = null;
+        });
+      },
+      child: DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          border: _focusVisible
+              ? Border.all(color: t.primary.base, width: t.lineWidth)
+              : null,
+          borderRadius: BorderRadius.circular(t.borderRadiusSM),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: _buildLevel(
+            t,
+            r,
+            widget.nodes,
+            0,
+            const [],
+            expanded,
+            selected,
+            checked,
+            half,
+          ),
+        ),
       ),
     );
   }
@@ -774,6 +908,7 @@ class _TreeState extends State<Tree> {
       expanded: isExpanded,
       hasChildren: hasChildren,
       loading: _loading.contains(node.key),
+      highlighted: _cursor == node.key,
       showLine: _showLine,
       showLeafIcon: _showLeafIcon,
       showIcon: _showIcon,
@@ -862,6 +997,7 @@ class _NodeRow extends StatefulWidget {
     required this.checked,
     required this.halfChecked,
     required this.disabled,
+    required this.highlighted,
     required this.switcherIcon,
     required this.onExpand,
     required this.onSelect,
@@ -897,6 +1033,11 @@ class _NodeRow extends StatefulWidget {
   final bool halfChecked;
   final bool disabled;
   final Widget? switcherIcon;
+
+  /// Whether the keyboard is resting on this node: the mark hovering leaves,
+  /// so the hand and the keyboard say the same thing.
+  final bool highlighted;
+
   final VoidCallback onExpand;
   final VoidCallback onSelect;
   final ValueChanged<bool> onCheck;
@@ -964,7 +1105,9 @@ class _NodeRowState extends State<_NodeRow> {
     );
 
     final selectedBg = widget.selected ? r.nodeSelectedBg : null;
-    final hoverBg = _hovered && widget.selectable && !widget.selected
+    final hoverBg = (_hovered || widget.highlighted) &&
+            widget.selectable &&
+            !widget.selected
         ? r.nodeHoverBg
         : null;
     final activeIcon =

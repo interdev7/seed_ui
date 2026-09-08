@@ -52,6 +52,16 @@ By default collapsed content stays mounted (hidden); set
 `destroyInactivePanel: true` to remove it, or a panel's `forceRender: true` to
 keep it even when destroying.
 
+## From the keyboard
+
+Every header is its own stop in the tab order, and `Space` or `Enter` opens and
+shuts it. A stop each, unlike the runs elsewhere in the kit: the panels of an
+accordion are separate sections rather than one choice among several, and
+arrowing between them would say they were alternatives.
+
+Where `collapsible` is `icon`, the stop is the icon; where it is `disabled`,
+there is no stop at all.
+
 ## Design tokens
 
 `Collapse` has its own token set

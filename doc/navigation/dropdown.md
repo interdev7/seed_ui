@@ -321,6 +321,34 @@ hover fill has to stop at the corner.
 For a popup that is not a menu at all, `content:` replaces the body outright
 and the panel with it — see **Custom body**.
 
+## From the keyboard
+
+A downward arrow on the trigger opens the menu — Enter and Space are left to
+the trigger itself, which is usually a `Button` and answers them already;
+taking them here would fire its `onPressed` and open the menu on one press.
+
+Once open the panel takes the focus, so the keys reach the rows rather than
+the button they came from:
+
+| Key | What it does |
+| --- | --- |
+| `↓` / `↑` | Move down and up the rows, stepping over what is barred |
+| `Home` / `End` | The first row that can be taken, and the last |
+| `Enter` / `Space` | Take the row the keyboard rests on |
+| `Esc` | Put the menu away, taking nothing |
+
+The row the keyboard rests on wears the mark hovering leaves, so the hand and
+the keyboard say the same thing — and `itemBuilder` is told `hovered` for it
+too, since to a row being pointed at and being rested on are the same news.
+The ends hold rather than wrapping round.
+
+A menu is walked with a highlight, not with a focus per row: forty rows that
+each took a `Tab` would be forty presses.
+
+`DropdownMenuList` carries the two fields this needs — `autofocus`, whether
+the panel takes the focus as it opens, and `onDismiss`, what `Esc` calls —
+for anyone building a panel of their own out of it.
+
 ## Design tokens
 
 A `token` on the dropdown itself overrides these for that menu alone — its

@@ -19,6 +19,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that can do nothing is not a stop on the way round, and neither is a disabled
   control. `Button` and `Switch` gained the semantics to match.
 
+- **A `Tree` is walked with the keyboard, and an accordion's headers are
+  reached by tab.** The tree is one stop: `↓`/`↑` walk the nodes on show, `→`
+  opens a shut branch and then steps into it, `←` shuts an open one and then
+  steps up to its parent, `Enter` chooses. The inward and outward arrows follow
+  the reading direction. `Collapse` gives each header a stop of its own instead
+  — the panels of an accordion are separate sections rather than one choice
+  among several, and arrowing between them would say they were alternatives.
+
+- **A `Dropdown` menu is walked with the keyboard.** A downward arrow on the
+  trigger opens it; the panel then takes the focus, so `↓`/`↑` walk the rows,
+  `Home`/`End` reach the ends, `Enter` takes the row the keyboard rests on and
+  `Esc` puts the menu away. Barred rows are stepped over and the ends hold.
+
+  A highlight, not a focus per row — forty rows that each took a `Tab` would be
+  forty presses — and it is the mark hovering already left, so `itemBuilder` is
+  told `hovered` for it too: to a row, being pointed at and being rested on are
+  the same news. Enter and Space are left to the trigger, which is usually a
+  `Button` that answers them itself.
+
+- **`Segmented`, `Tabs` and `Pagination` are walked with the arrow keys.** Each
+  is **one** stop in the tab order rather than one per option — a bar of
+  fourteen tabs that took fourteen presses to walk past is a bar nobody walks
+  past — and inside it the arrows move, `Home` and `End` reach the ends, and
+  what cannot be chosen is stepped over.
+
+  Which arrow steps which way follows the run and the reading direction: down a
+  column it is Up and Down, and along a run that reads right to left the key
+  pointing left steps on. A run stops at its ends rather than wrapping round.
+  In a pager the arrows and numbers are the run, while the size changer and the
+  jumper keep stops of their own. `focusNode` and `autofocus` on each.
+
 ## 0.21.0
 
 ### Added

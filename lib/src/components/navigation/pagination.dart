@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/roving_focus.dart';
 import '../data_entry/input.dart';
 import '../data_entry/input_number.dart';
 import '../data_entry/select.dart';
@@ -171,8 +172,19 @@ class Pagination extends StatefulWidget {
     this.hideOnSinglePage,
     this.showLessItems,
     this.align,
+    this.focusNode,
+    this.autofocus = false,
     this.token,
   });
+
+  /// A focus node of your own, for a pager whose focus you drive yourself.
+  ///
+  /// The pager is one stop in the tab order — not one per page number — and
+  /// the arrow keys turn the pages.
+  final FocusNode? focusNode;
+
+  /// Whether the pager takes focus as soon as it is built.
+  final bool autofocus;
 
   /// The total number of items to paginate.
   final int total;
@@ -287,6 +299,19 @@ class _PaginationState extends State<Pagination> {
   bool get _enabled => !_disabled;
   bool get _simpleMode => widget.simple != null;
 
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
+
+  /// Turns a page with the arrows, and jumps to the ends with home and end.
+  void _step(RovingStep step) {
+    _goTo(switch (step) {
+      RovingStep.back => _page - 1,
+      RovingStep.on => _page + 1,
+      RovingStep.first => 1,
+      RovingStep.last => _pageCount,
+    });
+  }
+
   void _goTo(int page) {
     final next = page.clamp(1, _pageCount);
     if (next == _page) return;
@@ -374,7 +399,7 @@ class _PaginationState extends State<Pagination> {
     // pieces never wrap individually. The total, size changer and jumper are
     // separate Wrap children, so only whole blocks flow onto a second line.
     final gap = SizedBox(width: token.sizeXXS);
-    final pager = Row(
+    final Widget pager = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _Arrow(
@@ -400,6 +425,37 @@ class _PaginationState extends State<Pagination> {
       ],
     );
 
+    // One stop for the arrows and the numbers together, moved with the arrow
+    // keys. The buttons inside are taken out of the tab order — a pager of
+    // ten pages that took twelve presses to walk past is a pager nobody walks
+    // past — while the size changer and the jumper keep stops of their own,
+    // being places you type into rather than a run to step along.
+    final steppable = RovingGroup(
+      direction: Axis.horizontal,
+      enabled: _enabled && _pageCount > 1,
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      onStep: _step,
+      onFocusVisible: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
+      },
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(pt.borderRadius),
+          boxShadow: _focusVisible && _enabled
+              ? [
+                  BoxShadow(
+                    color: token.primary.base.withValues(alpha: 0.12),
+                    blurRadius: 0,
+                    spreadRadius: 3,
+                  ),
+                ]
+              : null,
+        ),
+        child: ExcludeFocus(child: pager),
+      ),
+    );
+
     final children = <Widget>[
       if (widget.showTotal != null) _total(token, fontSize),
       // The run of pages is atomic on purpose, so it cannot be given less room
@@ -413,7 +469,7 @@ class _PaginationState extends State<Pagination> {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const ClampingScrollPhysics(),
-          child: pager,
+          child: steppable,
         ),
       ),
       if (_showSizeChanger) _sizeChanger(token),
@@ -421,19 +477,43 @@ class _PaginationState extends State<Pagination> {
         _quickJumper(token, fontSize, height),
     ];
 
-    return Wrap(
-      spacing: token.sizeSM,
-      runSpacing: token.sizeXS,
-      alignment: switch (_align) {
-        MainAxisAlignment.center => WrapAlignment.center,
-        MainAxisAlignment.end => WrapAlignment.end,
-        MainAxisAlignment.spaceBetween => WrapAlignment.spaceBetween,
-        MainAxisAlignment.spaceAround => WrapAlignment.spaceAround,
-        MainAxisAlignment.spaceEvenly => WrapAlignment.spaceEvenly,
-        _ => WrapAlignment.start,
+    return RovingGroup(
+      direction: Axis.horizontal,
+      enabled: _enabled && _pageCount > 1,
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      onStep: _step,
+      onFocusVisible: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
       },
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: children,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(pt.borderRadius),
+          boxShadow: _focusVisible && _enabled
+              ? [
+                  BoxShadow(
+                    color: token.primary.base.withValues(alpha: 0.12),
+                    blurRadius: 0,
+                    spreadRadius: 3,
+                  ),
+                ]
+              : null,
+        ),
+        child: Wrap(
+          spacing: token.sizeSM,
+          runSpacing: token.sizeXS,
+          alignment: switch (_align) {
+            MainAxisAlignment.center => WrapAlignment.center,
+            MainAxisAlignment.end => WrapAlignment.end,
+            MainAxisAlignment.spaceBetween => WrapAlignment.spaceBetween,
+            MainAxisAlignment.spaceAround => WrapAlignment.spaceAround,
+            MainAxisAlignment.spaceEvenly => WrapAlignment.spaceEvenly,
+            _ => WrapAlignment.start,
+          },
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: children,
+        ),
+      ),
     );
   }
 

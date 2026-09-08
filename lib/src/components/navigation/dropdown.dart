@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart' show kTouchSlop;
-import 'package:flutter/services.dart' show BrowserContextMenu;
+import 'package:flutter/services.dart'
+    show BrowserContextMenu, KeyEvent, KeyUpEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 
 import '../../theme/config_provider.dart';
@@ -511,6 +512,10 @@ class _DropdownState<T> extends State<Dropdown<T>> {
     }
     final Widget menu = DropdownMenuList<T>(
       entries: widget.menu!,
+      // The panel takes the focus as it opens, so the keys reach the rows
+      // rather than the trigger they came from; closing gives it back.
+      autofocus: true,
+      onDismiss: () => _requestOpen(false),
       onSelect: (item) {
         widget.onItemTap?.call(item.value);
         item.onTap?.call();
@@ -546,6 +551,25 @@ class _DropdownState<T> extends State<Dropdown<T>> {
     Future<void>.delayed(const Duration(milliseconds: 120), () {
       if (mounted && !_overTrigger && !_overPanel) _requestOpen(false);
     });
+  }
+
+  /// Opens the menu on a downward arrow, the way a menu button does
+  /// everywhere.
+  ///
+  /// Enter and Space are left alone on purpose: the trigger is usually a
+  /// `Button`, which answers those itself, and taking them here would fire
+  /// its `onPressed` and open the menu on one press of one key.
+  KeyEventResult _onTriggerKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent || _open || _disabled) {
+      return KeyEventResult.ignored;
+    }
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.arrowDown ||
+        key == LogicalKeyboardKey.arrowUp) {
+      _requestOpen(true);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -584,6 +608,16 @@ class _DropdownState<T> extends State<Dropdown<T>> {
         child: trigger,
       );
     }
+
+    // Watching, not taking: the trigger keeps whatever focus stop it already
+    // had — usually its own Button's — and this only sees the keys that pass
+    // it by.
+    trigger = Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onKeyEvent: _onTriggerKey,
+      child: trigger,
+    );
 
     if (_hoverMode) {
       trigger = MouseRegion(
@@ -658,7 +692,7 @@ class DropdownPanel extends StatelessWidget {
 
 /// Renders a list of [DropdownEntry]s as menu rows. Used inside a
 /// [DropdownPanel].
-class DropdownMenuList<T> extends StatelessWidget {
+class DropdownMenuList<T> extends StatefulWidget {
   /// Creates a [DropdownMenuList].
   const DropdownMenuList({
     super.key,
@@ -666,6 +700,8 @@ class DropdownMenuList<T> extends StatelessWidget {
     required this.onSelect,
     this.itemBuilder,
     this.token,
+    this.onDismiss,
+    this.autofocus = false,
   });
 
   /// The rows to render, in order — items, groups and dividers.
@@ -680,24 +716,151 @@ class DropdownMenuList<T> extends StatelessWidget {
   /// Per-instance token overrides, as the dropdown was given them.
   final DropdownToken? token;
 
+  /// Called when the reader asks for this panel to go: Escape, or the arrow
+  /// pointing back out of a submenu.
+  final VoidCallback? onDismiss;
+
+  /// Whether the panel takes the focus as it opens, so the keys reach it.
+  final bool autofocus;
+
+  @override
+  State<DropdownMenuList<T>> createState() => _DropdownMenuListState<T>();
+}
+
+class _DropdownMenuListState<T> extends State<DropdownMenuList<T>> {
+  /// Which row the keyboard is on, or -1 for none.
+  ///
+  /// A highlight rather than a focus per row: a menu is one thing to walk
+  /// down, and forty rows that each took a Tab would be forty presses. It is
+  /// the same mark hovering leaves, so a hand and a keyboard show the same
+  /// thing.
+  int _highlight = -1;
+
+  /// The panel's own node. An overlay is mounted into a scope that already
+  /// has a focused child — the trigger — so `autofocus` is not enough: the
+  /// focus has to be asked for once the panel is up.
+  final FocusNode _node = FocusNode(debugLabel: 'seed:menu');
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autofocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _node.requestFocus();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _node.dispose();
+    super.dispose();
+  }
+
+  /// The rows, flattened out of their groups, in the order they are read.
+  List<DropdownItem<T>> get _rows {
+    final out = <DropdownItem<T>>[];
+    void walk(List<DropdownEntry<T>> entries) {
+      for (final entry in entries) {
+        switch (entry) {
+          case DropdownItem():
+            out.add(entry);
+          case DropdownGroup(:final children):
+            walk(children);
+          case DropdownDivider():
+            break;
+        }
+      }
+    }
+
+    walk(widget.entries);
+    return out;
+  }
+
+  void _move(int delta) {
+    final rows = _rows;
+    if (rows.isEmpty) return;
+    var i = _highlight;
+    for (var step = 0; step < rows.length; step++) {
+      i += delta;
+      if (i < 0 || i >= rows.length) return; // the ends hold
+      if (!rows[i].disabled) {
+        setState(() => _highlight = i);
+        return;
+      }
+    }
+  }
+
+  void _moveTo(int from, int delta) {
+    setState(() => _highlight = from);
+    _move(delta);
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final rows = _rows;
+    final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
+    final out =
+        ltr ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight;
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      _move(1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowUp) {
+      _move(-1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.home) {
+      _moveTo(-1, 1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.end) {
+      _moveTo(rows.length, -1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.escape || key == out) {
+      if (widget.onDismiss == null) return KeyEventResult.ignored;
+      widget.onDismiss!();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      if (_highlight < 0 || _highlight >= rows.length) {
+        return KeyEventResult.ignored;
+      }
+      widget.onSelect(rows[_highlight]);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (this.token ??
+    final r = (widget.token ??
             ConfigProvider.componentOf<DropdownToken>(context) ??
             const DropdownToken())
         ._resolve(token);
+    final rows = _rows;
     // IntrinsicWidth sizes the menu to its widest row, so the rows' Expanded
     // labels do not stretch the panel to the whole viewport width.
-    return IntrinsicWidth(
-      child: Padding(
-        padding: r.padding,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final entry in entries) _buildEntry(context, token, entry),
-          ],
+    return Focus(
+      focusNode: _node,
+      onKeyEvent: _onKey,
+      child: IntrinsicWidth(
+        child: Padding(
+          padding: r.padding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final entry in widget.entries)
+                _buildEntry(context, token, entry, rows),
+            ],
+          ),
         ),
       ),
     );
@@ -707,6 +870,7 @@ class DropdownMenuList<T> extends StatelessWidget {
     BuildContext context,
     Token token,
     DropdownEntry<T> entry,
+    List<DropdownItem<T>> rows,
   ) {
     switch (entry) {
       case DropdownDivider():
@@ -737,15 +901,16 @@ class DropdownMenuList<T> extends StatelessWidget {
                 child: Text(label),
               ),
             ),
-            for (final c in children) _buildEntry(context, token, c),
+            for (final c in children) _buildEntry(context, token, c, rows),
           ],
         );
       case DropdownItem():
         return _MenuRow<T>(
           item: entry,
-          onSelect: onSelect,
-          itemBuilder: itemBuilder,
-          token: this.token,
+          onSelect: widget.onSelect,
+          itemBuilder: widget.itemBuilder,
+          token: widget.token,
+          highlighted: rows.indexOf(entry) == _highlight,
         );
     }
   }
@@ -757,7 +922,12 @@ class _MenuRow<T> extends StatefulWidget {
     required this.onSelect,
     required this.itemBuilder,
     required this.token,
+    this.highlighted = false,
   });
+
+  /// Whether the keyboard is resting on this row: the same mark hovering
+  /// leaves, so the hand and the keyboard say the same thing.
+  final bool highlighted;
 
   final DropdownItem<T> item;
   final ValueChanged<DropdownItem<T>> onSelect;
@@ -892,7 +1062,8 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
             ConfigProvider.componentOf<DropdownToken>(context) ??
             const DropdownToken())
         ._resolve(token);
-    final bg = _hovered && !disabled
+    final lit = _hovered || widget.highlighted;
+    final bg = lit && !disabled
         ? (item.danger ? token.error.bg : r.itemHoverBg)
         : const Color(0x00000000);
 
@@ -944,7 +1115,7 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
                       fontFamilyFallback: token.fontFamilyFallback,
                       decoration: TextDecoration.none,
                     ),
-                    child: widget.itemBuilder?.call(context, item, _hovered) ??
+                    child: widget.itemBuilder?.call(context, item, lit) ??
                         _content(token, item),
                   ),
                 ),

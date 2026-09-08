@@ -145,6 +145,22 @@ panel cross-fade.
 is the source of truth and `items` is ignored — reach for it when tabs are added
 or removed from outside the widget.
 
+## From the keyboard
+
+The whole bar is **one stop** in the tab order, not one per tab: a run
+of fourteen that took fourteen presses to walk past is a run nobody walks past.
+Inside it the arrow keys do the moving, `Home` and `End` reach the ends, and a
+tab that cannot be chosen is stepped over.
+
+Which arrow steps which way follows the run and the reading direction: down a
+column it is Up and Down, and along a row that reads right to left the key
+pointing left steps *on*, since that is where the next one is. The run stops at
+its ends rather than wrapping round, so a held arrow does not cycle for ever.
+
+A halo appears round the bar when the focus arrived by keyboard, and not
+when it arrived by a tap. `focusNode` drives the focus yourself; `autofocus`
+puts it there as soon as the run is built.
+
 ## Design tokens
 
 `Tabs` has its own token set (`inkBarColor`,

@@ -6,6 +6,7 @@ import '../../icons/icons.dart';
 import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/roving_focus.dart';
 
 /// Layout axis for a [Segmented].
 enum SegmentedDirection {
@@ -338,6 +339,8 @@ class Segmented<T> extends StatefulWidget {
     this.disabled,
     this.trackColor,
     this.thumbColor,
+    this.focusNode,
+    this.autofocus = false,
     this.token,
   });
 
@@ -390,6 +393,15 @@ class Segmented<T> extends StatefulWidget {
 
   /// Per-instance token overrides.
   final SegmentedToken? token;
+
+  /// A focus node of your own, for a run whose focus you drive yourself.
+  ///
+  /// The run is one stop in the tab order — not one per option — and the
+  /// arrow keys move the choice along it.
+  final FocusNode? focusNode;
+
+  /// Whether the run takes focus as soon as it is built.
+  final bool autofocus;
 
   @override
   State<Segmented<T>> createState() => _SoftSegmentedState<T>();
@@ -622,6 +634,21 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
   bool get _enabled => !_disabled && widget.onChanged != null;
   bool get _vertical => _direction == Axis.vertical;
 
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
+
+  /// Moves the choice along the run, skipping what cannot be chosen.
+  void _moveChoice(RovingStep step) {
+    final to = rovingTarget(
+      step: step,
+      from: _selectedIndex,
+      count: widget.options.length,
+      selectable: (i) => !widget.options[i].disabled,
+    );
+    if (to == null || to == _selectedIndex) return;
+    widget.onChanged!(widget.options[to].value);
+  }
+
   int get _selectedIndex {
     final i = widget.options.indexWhere((o) => o.value == widget.value);
     return i < 0 ? 0 : i;
@@ -669,6 +696,17 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
       decoration: BoxDecoration(
         color: widget.trackColor ?? r.trackBg,
         borderRadius: BorderRadius.circular(_radius(r)),
+        // The halo goes round the track, which is the control: a run is one
+        // thing to the keyboard, however many options it holds.
+        boxShadow: _focusVisible && _enabled
+            ? [
+                BoxShadow(
+                  color: token.primary.base.withValues(alpha: 0.12),
+                  blurRadius: 0,
+                  spreadRadius: 3,
+                ),
+              ]
+            : null,
       ),
       child: _withArrows(
         token,
@@ -706,7 +744,19 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
       ),
     );
 
-    if (block) return control;
+    final reachable = RovingGroup(
+      direction: _direction,
+      enabled: _enabled,
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      onStep: _moveChoice,
+      onFocusVisible: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
+      },
+      child: control,
+    );
+
+    if (block) return reachable;
 
     // the segmented control is `inline-flex`: it is as wide as its
     // options and no wider. A parent that hands down a tight width — a stretch
@@ -720,7 +770,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
       // the incoming constraint: room enough, and the control is exactly its
       // options wide; not enough, and it is clamped, which is what gives the
       // scroll view below something to scroll inside.
-      child: _vertical ? control : IntrinsicWidth(child: control),
+      child: _vertical ? reachable : IntrinsicWidth(child: reachable),
     );
   }
 

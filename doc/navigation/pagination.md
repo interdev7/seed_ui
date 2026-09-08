@@ -61,6 +61,26 @@ test app that opens it must install `UiKit.navigatorKey`. See
 `onShowSizeChange` fires with the new `(page, pageSize)` pair whenever the size
 selector changes, alongside `pageSizeOptions` which lists the offered sizes.
 
+## From the keyboard
+
+The whole pager is **one stop** in the tab order, not one per page: a run
+of fourteen that took fourteen presses to walk past is a run nobody walks past.
+Inside it the arrow keys do the moving, `Home` and `End` reach the ends, and a
+page that cannot be chosen is stepped over.
+
+Which arrow steps which way follows the run and the reading direction: down a
+column it is Up and Down, and along a row that reads right to left the key
+pointing left steps *on*, since that is where the next one is. The run stops at
+its ends rather than wrapping round, so a held arrow does not cycle for ever.
+
+A halo appears round the pager when the focus arrived by keyboard, and not
+when it arrived by a tap. `focusNode` drives the focus yourself; `autofocus`
+puts it there as soon as the run is built.
+
+The arrows and the page numbers are the run; the size changer and the jumper
+keep stops of their own, being places you type into rather than a run to step
+along.
+
 ## Design tokens
 
 `PaginationToken` overrides this component's own tokens. Every field is an override; an

@@ -526,20 +526,65 @@ class _Panel extends StatelessWidget {
 }
 
 /// A minimal tap wrapper with a pointer cursor, avoiding a Material dependency.
-class _Tappable extends StatelessWidget {
+/// A header that a hand can press and a keyboard can reach.
+///
+/// A stop each, unlike the runs elsewhere in the kit: the panels of an
+/// accordion are separate sections rather than one choice among several, and
+/// arrowing between them would say they were alternatives.
+class _Tappable extends StatefulWidget {
   const _Tappable({required this.onTap, required this.child});
 
   final VoidCallback onTap;
   final Widget child;
 
   @override
+  State<_Tappable> createState() => _TappableState();
+}
+
+class _TappableState extends State<_Tappable> {
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
+
+  @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: child,
+    final token = context.softToken;
+    return FocusableActionDetector(
+      onShowFocusHighlight: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
+      },
+      actions: <Type, Action<Intent>>{
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            widget.onTap();
+            return null;
+          },
+        ),
+      },
+      child: Semantics(
+        button: true,
+        onTap: widget.onTap,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onTap,
+            child: DecoratedBox(
+              // Inside the header rather than around it: a halo spread outside
+              // would fall under the panel above, which has its own border
+              // there.
+              position: DecorationPosition.foreground,
+              decoration: BoxDecoration(
+                border: _focusVisible
+                    ? Border.all(
+                        color: token.primary.base,
+                        width: token.lineWidth * 2,
+                      )
+                    : null,
+              ),
+              child: widget.child,
+            ),
+          ),
+        ),
       ),
     );
   }

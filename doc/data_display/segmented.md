@@ -221,6 +221,22 @@ Scrolling only. Which segment is **selected** stays with `value` and
 `onChanged`: a controller that could also select would make two owners of one
 truth, and they disagree sooner or later.
 
+## From the keyboard
+
+The whole run is **one stop** in the tab order, not one per option: a run
+of fourteen that took fourteen presses to walk past is a run nobody walks past.
+Inside it the arrow keys do the moving, `Home` and `End` reach the ends, and a
+option that cannot be chosen is stepped over.
+
+Which arrow steps which way follows the run and the reading direction: down a
+column it is Up and Down, and along a row that reads right to left the key
+pointing left steps *on*, since that is where the next one is. The run stops at
+its ends rather than wrapping round, so a held arrow does not cycle for ever.
+
+A halo appears round the track when the focus arrived by keyboard, and not
+when it arrived by a tap. `focusNode` drives the focus yourself; `autofocus`
+puts it there as soon as the run is built.
+
 ## Design tokens
 
 | `arrowBg` | Fill behind a scroll button — translucent, so the segment under it stays legible |

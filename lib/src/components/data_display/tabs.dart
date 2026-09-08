@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart' show CrossPainter, PlusPainter;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/roving_focus.dart';
 
 /// The visual style of a [Tabs] bar.
 enum TabsType {
@@ -562,8 +563,19 @@ class Tabs extends StatefulWidget {
     this.scrollAlign,
     this.snap,
     this.contentPosition,
+    this.focusNode,
+    this.autofocus = false,
     this.token,
   });
+
+  /// A focus node of your own, for a bar whose focus you drive yourself.
+  ///
+  /// The bar is one stop in the tab order — not one per tab — and the arrow
+  /// keys move along it.
+  final FocusNode? focusNode;
+
+  /// Whether the bar takes focus as soon as it is built.
+  final bool autofocus;
 
   /// The tabs, in order. Ignored when a [controller] is supplied.
   final List<TabItem> items;
@@ -749,6 +761,23 @@ class _TabsState extends State<Tabs> {
     return _horizontal ? _r.linePadding(_size) : _r.verticalItemPadding;
   }
 
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
+
+  /// Moves along the bar, stepping over the tabs that are barred.
+  void _moveChoice(RovingStep step) {
+    final items = _items;
+    final from = items.indexWhere((it) => it.key == _active);
+    final to = rovingTarget(
+      step: step,
+      from: from < 0 ? 0 : from,
+      count: items.length,
+      selectable: (i) => !items[i].disabled,
+    );
+    if (to == null || items[to].key == _active) return;
+    _select(items[to].key);
+  }
+
   void _select(String key) {
     widget.onTabClick?.call(key);
     if (key == _active) return;
@@ -900,7 +929,19 @@ class _TabsState extends State<Tabs> {
     _r = override._resolve(token);
     _scheduleMeasure();
 
-    final bar = _buildBar(token);
+    // One stop for the whole bar, moved along with the arrows: fourteen tabs
+    // that take fourteen presses to walk past are fourteen presses nobody
+    // makes.
+    final bar = RovingGroup(
+      direction: _horizontal ? Axis.horizontal : Axis.vertical,
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      onStep: _moveChoice,
+      onFocusVisible: (visible) {
+        if (_focusVisible != visible) setState(() => _focusVisible = visible);
+      },
+      child: _buildBar(token),
+    );
 
     final panel = _buildPanel(token);
 

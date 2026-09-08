@@ -130,6 +130,27 @@ While dragging, a blue insert line shows `before`/`after`, and an outline shows
 `inside`; the target requires an `Overlay` ancestor (any `MaterialApp` /
 `Navigator` provides one).
 
+## From the keyboard
+
+The tree is **one** stop in the tab order, not one per node: two hundred nodes
+that took two hundred presses to walk past are two hundred presses nobody
+makes. Inside it:
+
+| Key | What it does |
+| --- | --- |
+| `↓` / `↑` | Down and up the nodes on show, stepping over what is barred |
+| `→` | Open a shut branch; on an open one, step down to its first child |
+| `←` | Shut an open branch; on a shut one, step up to its parent |
+| `Enter` / `Space` | Choose the node the keyboard rests on |
+
+The inward and outward arrows follow the reading direction, so a mirrored tree
+opens away from its trunk rather than back over it. The node the keyboard rests
+on wears the mark hovering leaves, and leaving the tree takes the mark with it.
+The ends hold rather than wrapping round.
+
+`focusNode` drives the focus yourself; `autofocus` puts it there as soon as the
+tree is built.
+
 ## Design tokens
 
 `Tree` has its own token set — `titleHeight`, `indentSize`, `nodeHoverBg`,

@@ -19,6 +19,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that can do nothing is not a stop on the way round, and neither is a disabled
   control. `Button` and `Switch` gained the semantics to match.
 
+- **`ThemeData.refine` and `Token.copyWith`** — a way to name a derived value
+  outright. Until now the only inputs to a theme were the seeds, and a value
+  that is itself derived could not be reached at all: the disabled ink is a
+  quarter of the page's own ink, and to change it you had to move
+  `colorTextBase`, which drags the whole typography and every border with it.
+
+  ```dart
+  ThemeData(
+    token: const SeedToken(colorPrimary: brand),
+    refine: (t) => t.copyWith(colorTextQuaternary: disabledInk),
+  )
+  ```
+
+  It takes the derived tokens rather than a list of values, so it can read
+  `t.isDark` and name the light and the dark in one line — which matters here,
+  since the disabled ink is black at a quarter in the light and white at a
+  quarter in the dark. It survives inheritance: a nested provider that flips
+  the brightness re-derives and is refined again.
+
 - **A `Tree` is walked with the keyboard, and an accordion's headers are
   reached by tab.** The tree is one stop: `↓`/`↑` walk the nodes on show, `→`
   opens a shut branch and then steps into it, `←` shuts an open one and then

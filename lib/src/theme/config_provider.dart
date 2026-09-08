@@ -27,6 +27,9 @@ enum EmptySlot {
   table,
 }
 
+/// The last word on a derived token set — see [ThemeData.refine].
+typedef TokenRefinement = Token Function(Token derived);
+
 /// Builds the "no data" placeholder for [slot].
 typedef EmptyBuilder = Widget Function(BuildContext context, EmptySlot slot);
 
@@ -58,10 +61,14 @@ class ThemeData {
     SeedToken? token,
     bool? dark,
     this.components = const ComponentsConfig(),
+    this.refine,
   })  : _seed = token,
         _dark = dark,
         _readyMade = false,
-        token = Token.derive(token ?? const SeedToken(), dark: dark ?? false);
+        token = _refined(
+          Token.derive(token ?? const SeedToken(), dark: dark ?? false),
+          refine,
+        );
 
   /// Wraps an already-derived token set.
   ///
@@ -70,7 +77,8 @@ class ThemeData {
   const ThemeData.raw(this.token, {this.components = const ComponentsConfig()})
       : _seed = null,
         _dark = null,
-        _readyMade = true;
+        _readyMade = true,
+        refine = null;
 
   const ThemeData._merged({
     required this.token,
@@ -78,15 +86,42 @@ class ThemeData {
     required SeedToken? seed,
     required bool? dark,
     required bool readyMade,
+    required this.refine,
   })  : _seed = seed,
         _dark = dark,
         _readyMade = readyMade;
+
+  /// Applies [refine] to a freshly derived token set.
+  static Token _refined(Token derived, TokenRefinement? refine) =>
+      refine == null ? derived : refine(derived);
 
   /// The resolved values components read.
   final Token token;
 
   /// Per-component token overrides.
   final ComponentsConfig components;
+
+  /// The last word on the derived tokens: values a design names outright
+  /// rather than deriving.
+  ///
+  /// ```dart
+  /// ThemeData(
+  ///   token: const SeedToken(colorPrimary: brand),
+  ///   refine: (t) => t.copyWith(colorTextQuaternary: disabledInk),
+  /// )
+  /// ```
+  ///
+  /// A seed is what a theme is derived *from*, so a value that is itself
+  /// derived — the ink a disabled label is written in is a quarter of the
+  /// page's own ink, which is why it turns over with the lights — has no
+  /// place among the seeds. It belongs here, after the deriving, where it can
+  /// read what it is changing: the token handed in says which way the lights
+  /// are, so one line can name both.
+  ///
+  /// Unlike [ThemeData.raw] this survives inheritance: a nested provider that
+  /// flips the brightness re-derives from the seed above it and this is
+  /// applied again, to the new tokens.
+  final TokenRefinement? refine;
 
   /// The seed this theme was derived from, or null when it was left to inherit
   /// (or handed over ready-made).
@@ -115,6 +150,10 @@ class ThemeData {
   /// whole, and a half-stated theme is re-derived from the parent's other half.
   /// Components merge slot by slot, this theme winning where the two overlap.
   ThemeData _inherit(ThemeData parent) {
+    // A refinement is a statement about the tokens, so it outlives a
+    // re-derivation: the nested theme's own if it made one, else the one it
+    // inherits, applied afresh to whatever was derived.
+    final refinement = refine ?? parent.refine;
     final Token merged;
     if (_readyMade) {
       merged = token;
@@ -130,11 +169,16 @@ class ThemeData {
       merged = token;
     }
     return ThemeData._merged(
-      token: merged,
+      // Already refined where this theme derived its own; refined here where
+      // the tokens came from re-deriving or from the parent.
+      token: _readyMade || identical(merged, token)
+          ? merged
+          : _refined(merged, refinement),
       components: parent.components.merge(components),
       seed: _seed ?? parent._seed,
       dark: _dark ?? parent._dark,
       readyMade: _readyMade,
+      refine: refinement,
     );
   }
 }

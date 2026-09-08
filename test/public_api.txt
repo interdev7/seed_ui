@@ -307,6 +307,7 @@ TimelineOrientation
 TimelineToken
 TimelineVariant
 Token
+TokenRefinement
 Tooltip
 TooltipDefaults
 TooltipToken

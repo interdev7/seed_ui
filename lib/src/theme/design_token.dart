@@ -467,6 +467,71 @@ class Token {
     );
   }
 
+  /// This token set with a few values said differently.
+  ///
+  /// The way to pin one derived value exactly. A seed is what a theme is
+  /// *derived from*; a value like the ink a disabled label is written in is
+  /// derived — a quarter of the page's own ink, which is why it turns over
+  /// with the lights. Where a design names it outright rather than deriving
+  /// it, name it here, where it sits beside the surface it is read on.
+  ///
+  /// Handed to `ThemeData(refine: …)` this survives inheritance; handed to
+  /// `ThemeData.raw` it is final.
+  Token copyWith({
+    SeedToken? seed,
+    bool? isDark,
+    ColorGroup? primary,
+    ColorGroup? success,
+    ColorGroup? warning,
+    ColorGroup? error,
+    ColorGroup? info,
+    Color? colorText,
+    Color? colorTextSecondary,
+    Color? colorTextTertiary,
+    Color? colorTextQuaternary,
+    Color? colorBorder,
+    Color? colorBorderSecondary,
+    Color? colorSplit,
+    Color? colorBgContainer,
+    Color? colorBgElevated,
+    Color? colorBgLayout,
+    Color? colorBgSpotlight,
+    Color? colorBgMask,
+    Color? colorFill,
+    Color? colorFillSecondary,
+    Color? colorFillTertiary,
+    Color? colorFillQuaternary,
+    List<BoxShadow>? boxShadow,
+    List<BoxShadow>? boxShadowSecondary,
+  }) =>
+      Token._(
+        seed: seed ?? this.seed,
+        isDark: isDark ?? this.isDark,
+        primary: primary ?? this.primary,
+        success: success ?? this.success,
+        warning: warning ?? this.warning,
+        error: error ?? this.error,
+        info: info ?? this.info,
+        colorText: colorText ?? this.colorText,
+        colorTextSecondary: colorTextSecondary ?? this.colorTextSecondary,
+        colorTextTertiary: colorTextTertiary ?? this.colorTextTertiary,
+        colorTextQuaternary: colorTextQuaternary ?? this.colorTextQuaternary,
+        colorBorder: colorBorder ?? this.colorBorder,
+        colorBorderSecondary: colorBorderSecondary ?? this.colorBorderSecondary,
+        colorSplit: colorSplit ?? this.colorSplit,
+        colorBgContainer: colorBgContainer ?? this.colorBgContainer,
+        colorBgElevated: colorBgElevated ?? this.colorBgElevated,
+        colorBgLayout: colorBgLayout ?? this.colorBgLayout,
+        colorBgSpotlight: colorBgSpotlight ?? this.colorBgSpotlight,
+        colorBgMask: colorBgMask ?? this.colorBgMask,
+        colorFill: colorFill ?? this.colorFill,
+        colorFillSecondary: colorFillSecondary ?? this.colorFillSecondary,
+        colorFillTertiary: colorFillTertiary ?? this.colorFillTertiary,
+        colorFillQuaternary: colorFillQuaternary ?? this.colorFillQuaternary,
+        boxShadow: boxShadow ?? this.boxShadow,
+        boxShadowSecondary: boxShadowSecondary ?? this.boxShadowSecondary,
+      );
+
   /// The seed values this token set was derived from.
   final SeedToken seed;
 

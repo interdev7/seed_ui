@@ -81,6 +81,43 @@ ConfigProvider(
 `Token` is what components read. It is produced by `Token.derive()`
 and never constructed by hand.
 
+### Naming one outright
+
+Some values a design states rather than derives — the ink a disabled label is
+written in, most often. `refine` has the last word, after the deriving:
+
+```dart
+ThemeData(
+  token: const SeedToken(colorPrimary: brand),
+  refine: (t) => t.copyWith(colorTextQuaternary: disabledInk),
+)
+```
+
+It belongs there and not among the seeds, and the reason is worth a moment.
+A seed is what a theme is derived *from*. The disabled ink is derived: a
+quarter of the page's own ink, `alphaOn(colorTextBase, 0.25)` — black at a
+quarter in the light, **white** at a quarter in the dark. One fixed grey cannot
+be both, so a theme that named it in the seeds would look right in the light
+and, in the dark, print its disabled labels at the same weight as its live
+ones.
+
+Which is why `refine` is handed the derived tokens rather than a bare list of
+values: it can read `t.isDark` and name both in one line.
+
+```dart
+refine: (t) => t.copyWith(
+  colorTextQuaternary: t.isDark ? const Color(0xFF4F4F4F) : const Color(0xFFBFBFBF),
+),
+```
+
+A refinement survives inheritance: a nested provider that flips the brightness
+re-derives from the seed above it and the refinement is applied again, to the
+new tokens. A nested one of its own wins where both speak.
+
+`Token.copyWith` is the same thing at arm's length, for a token set you are
+holding — `ThemeData.raw(Token.derive(seed).copyWith(...))` builds a theme that
+takes its tokens as final and never re-derives.
+
 ### Color groups
 
 Each semantic color expands into a `ColorGroup` of ten shades, so a status

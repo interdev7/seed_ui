@@ -372,7 +372,8 @@ export 'src/theme/config_provider.dart'
         EmptyBuilder,
         EmptySlot,
         ThemeContext,
-        ThemeData;
+        ThemeData,
+        TokenRefinement;
 export 'src/theme/design_token.dart'
     show
         ColorGroup,

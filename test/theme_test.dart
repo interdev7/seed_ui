@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 void main() {
+  _refinementTests();
+
   test('default seed leaves fonts to the platform', () {
     const seed = SeedToken();
     // A null primary uses the OS UI font (San Francisco, Roboto, …); a null
@@ -561,6 +563,120 @@ void main() {
       );
       expect(inherited, 'OUTER');
       expect(nearer, 'INNER');
+    });
+  });
+}
+
+void _refinementTests() {
+  group('a value the design names outright', () {
+    const ink = Color(0xFF9CA3AF);
+
+    test('refine has the last word on a derived token', () {
+      final theme = ThemeData(
+        token: const SeedToken(colorPrimary: Color(0xFFEB2F96)),
+        refine: (t) => t.copyWith(colorTextQuaternary: ink),
+      );
+      expect(theme.token.colorTextQuaternary, ink);
+      // And nothing else moved with it.
+      expect(
+        theme.token.colorText,
+        Token.derive(const SeedToken(colorPrimary: Color(0xFFEB2F96)))
+            .colorText,
+      );
+    });
+
+    test('it is told which way the lights are, so one line names both', () {
+      Token refine(Token t) => t.copyWith(
+            colorTextQuaternary:
+                t.isDark ? const Color(0xFF4F4F4F) : const Color(0xFFBFBFBF),
+          );
+      expect(
+        ThemeData(refine: refine).token.colorTextQuaternary,
+        const Color(0xFFBFBFBF),
+      );
+      expect(
+        ThemeData(dark: true, refine: refine).token.colorTextQuaternary,
+        const Color(0xFF4F4F4F),
+      );
+    });
+
+    testWidgets('it survives a nested provider flipping the lights',
+        (tester) async {
+      late Token inner;
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(
+            token: const SeedToken(colorPrimary: Color(0xFFEB2F96)),
+            refine: (t) => t.copyWith(colorTextQuaternary: ink),
+          ),
+          child: ConfigProvider(
+            theme: ThemeData(dark: true),
+            child: Builder(
+              builder: (context) {
+                inner = context.softToken;
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+      expect(inner.isDark, isTrue, reason: 'the lights went out');
+      expect(
+        inner.colorTextQuaternary,
+        ink,
+        reason: 're-derived, then refined again',
+      );
+    });
+
+    testWidgets('a nested refinement wins over the one above it',
+        (tester) async {
+      late Token inner;
+      await tester.pumpWidget(
+        ConfigProvider(
+          // A seed above, so the nested theme re-derives from it rather than
+          // keeping its own tokens whole — which is the path where whose
+          // refinement it is actually decides something.
+          theme: ThemeData(
+            token: const SeedToken(colorPrimary: Color(0xFFEB2F96)),
+            refine: (t) => t.copyWith(colorTextQuaternary: ink),
+          ),
+          child: ConfigProvider(
+            theme: ThemeData(
+              dark: true,
+              refine: (t) => t.copyWith(
+                colorTextQuaternary: const Color(0xFF112233),
+              ),
+            ),
+            child: Builder(
+              builder: (context) {
+                inner = context.softToken;
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+      expect(inner.colorTextQuaternary, const Color(0xFF112233));
+    });
+
+    testWidgets('a disabled control is written in the ink it names',
+        (tester) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(
+            refine: (t) => t.copyWith(colorTextQuaternary: ink),
+          ),
+          child: const MaterialApp(
+            home: Scaffold(
+              body: Center(child: Button(child: Text('Nothing doing'))),
+            ),
+          ),
+        ),
+      );
+      final style = DefaultTextStyle.of(
+        tester.element(find.text('Nothing doing')),
+      ).style;
+      expect(style.color, ink);
     });
   });
 }

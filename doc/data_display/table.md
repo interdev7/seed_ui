@@ -1141,6 +1141,34 @@ Not here yet: the keyboard. Nothing in the kit is reachable by tab — `Button`
 is a bare gesture detector — so a table alone answering to keys would be out
 of step with everything around it. It wants doing across the kit at once.
 
+## From the keyboard
+
+The table is **one** stop in the tab order — a stop per row would be a page of
+stops, and one per cell a screenful — and the arrows do the walking:
+
+| Key | Where the cursor is | What it does |
+| --- | --- | --- |
+| `↓` / `↑` | in the rows | The next row, and the one before |
+| `↑` | on the first row | Up into the head row, where the sorting is |
+| `↓` | in the head row | Back down to the first row |
+| `←` / `→` | in the head row | Between the headings that answer a press |
+| `Enter` | in the head row | Cycle that column's sort |
+| `Enter` | on a row | `onRowTap`, and open it where a tap opens it |
+| `Space` | on a row | Pick the row, or let it go |
+| `→` / `←` | on a row that opens | Open it, and shut it |
+| `Home` / `End` | anywhere | The first row, and the last |
+
+The row the cursor rests on wears the mark the pointer leaves, and the heading
+it rests on wears the heading's own: one look, whichever hand is on the table.
+Leaving takes the mark with it. The sideways arrows follow the reading
+direction, and the ends hold rather than wrapping round.
+
+A heading that neither sorts nor filters is not somewhere to stand: it is a
+label, and a cursor resting on a label answers nothing.
+
+`focusNode` drives the focus yourself; `autofocus` puts it there as soon as the
+table is built.
+
 ## Design tokens
 
 The marks a heading carries are sized against each other rather than each on
@@ -1208,12 +1236,12 @@ list's identity, since `data:` written inline is a new list every build.
 
 ## Not here yet
 
-**The keyboard.** Nothing in the table can be reached by tab, and nothing in
-it answers to a key. That is not the table's own gap: nothing in the kit can —
-`Button` is a bare gesture detector — so a table alone answering to keys would
-be out of step with everything around it. It wants doing across the kit at
-once. It is the one thing left that a reader might reasonably expect and not
-find.
+**A cursor per cell.** The keyboard cursor walks rows, not cells, so a table is
+read across by eye rather than by key. Nothing inside a cell — a link, a button
+a `value` builder put there — can be reached without a mouse.
+
+**A key that opens the filters.** `Enter` on a heading sorts it; a funnel still
+opens with the pointer only.
 
 **A column that comes and goes with the room.** A column may be `hidden`, but
 only by a word said in advance: there is no way to say "show this one once

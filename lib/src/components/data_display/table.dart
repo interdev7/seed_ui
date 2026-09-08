@@ -15,6 +15,8 @@ import 'package:flutter/rendering.dart'
         LayerHandle,
         RenderAbstractViewport,
         ViewportOffset;
+import 'package:flutter/services.dart'
+    show KeyEvent, KeyUpEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart' hide Table, TableRow;
 // Flutter's own Table does the column arithmetic: it measures every cell in a
 // column and gives them all the widest one's width, which is the behaviour a
@@ -1685,6 +1687,8 @@ class Table<T> extends StatefulWidget {
     this.rowsDraggable = false,
     this.onRowsReordered,
     this.token,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   /// The columns, in the order they are drawn.
@@ -1760,6 +1764,15 @@ class Table<T> extends StatefulWidget {
 
   /// Covers the table with a spinner while something is being fetched.
   final bool loading;
+
+  /// A focus node of your own, for a table whose focus you drive yourself.
+  ///
+  /// The table is one stop in the tab order — not one per row — and the arrow
+  /// keys walk it.
+  final FocusNode? focusNode;
+
+  /// Whether the table takes focus as soon as it is built.
+  final bool autofocus;
 
   /// Called when a row is tapped.
   final void Function(T record, int index)? onRowTap;
@@ -1905,6 +1918,21 @@ class _TableState<T> extends State<Table<T>> {
   final ValueNotifier<({int from, int to})?> _hovered =
       ValueNotifier<({int from, int to})?>(null);
 
+  /// Which row the keyboard rests on, or null for none.
+  ///
+  /// A notifier rather than a field, and the same one the pointer uses,
+  /// because a lazy body has no row widget to rebuild: the cells listen for
+  /// themselves. Rebuilding the table for every press of an arrow would
+  /// rebuild every cell on the page.
+  final ValueNotifier<int?> _cursor = ValueNotifier<int?>(null);
+
+  /// Which heading the keyboard rests on while the cursor is in the head
+  /// row, or null when it is down among the rows.
+  final ValueNotifier<int?> _headCursor = ValueNotifier<int?>(null);
+
+  /// Whether the focus should be seen: only where it arrived by keyboard.
+  bool _focusVisible = false;
+
   /// Which heading the pointer is over, or null.
   final ValueNotifier<int?> _hoveredHeading = ValueNotifier<int?>(null);
 
@@ -1989,6 +2017,8 @@ class _TableState<T> extends State<Table<T>> {
     _rowsY.dispose();
     _headingX.dispose();
     _hovered.dispose();
+    _cursor.dispose();
+    _headCursor.dispose();
     _hoveredHeading.dispose();
     _hoveredFunnel.dispose();
     for (final closer in _closers) {
@@ -3369,7 +3399,32 @@ class _TableState<T> extends State<Table<T>> {
       }
     }
 
-    return Spin(spinning: widget.loading, child: body);
+    // One stop for the whole table. A stop per row would be a page of stops,
+    // and a stop per cell a screenful: the arrows do the walking, as they do
+    // in every grid.
+    return Focus(
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      onKeyEvent: _onKey,
+      onFocusChange: (has) {
+        setState(() => _focusVisible = has);
+        if (!has) {
+          // Leaving takes the mark with it: a table nobody is on shows
+          // nothing resting.
+          _cursor.value = null;
+          _headCursor.value = null;
+        }
+      },
+      child: DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          border: _focusVisible
+              ? Border.all(color: t.primary.base, width: t.lineWidth)
+              : null,
+        ),
+        child: Spin(spinning: widget.loading, child: body),
+      ),
+    );
   }
 
   /// What the last width reckoning was asked, and what it answered.
@@ -3561,6 +3616,149 @@ class _TableState<T> extends State<Table<T>> {
   /// the motion is over.
   final Set<T> _closing = {};
   final List<Timer> _closers = [];
+
+  // --- the keyboard ---
+
+  /// Which columns a heading cursor may rest on: the ones that answer a
+  /// press. A heading that neither sorts nor filters is a label, and a label
+  /// is not somewhere to stand.
+  List<int> get _headStops {
+    final out = <int>[];
+    final leaves = _leaves;
+    for (var i = 0; i < leaves.length; i++) {
+      final column = leaves[i];
+      if (column.sorts || column.filters != null) out.add(i);
+    }
+    return out;
+  }
+
+  /// Whether a row should wear the mark: the pointer is over it, or the
+  /// keyboard is resting on it. One look for both, so a reader who swaps
+  /// hands is not told two different stories.
+  bool _lit(int index, int covering) {
+    final hovered = _hovered.value;
+    if (hovered != null &&
+        hovered.from < index + covering &&
+        index < hovered.to) {
+      return true;
+    }
+    final at = _cursor.value;
+    return at != null && at >= index && at < index + covering;
+  }
+
+  void _moveCursor(int delta) {
+    final rows = _rows;
+    if (rows.isEmpty) return;
+    final at = _cursor.value;
+    if (at == null) {
+      // Coming in from nowhere: onto the first row going down, the last
+      // going up.
+      _cursor.value = delta > 0 ? 0 : rows.length - 1;
+      _headCursor.value = null;
+      return;
+    }
+    final next = at + delta;
+    if (next < 0) {
+      // Up off the top lands in the head row, where the sorting lives.
+      final stops = _headStops;
+      if (stops.isEmpty) return;
+      _cursor.value = null;
+      _headCursor.value = stops.first;
+      return;
+    }
+    if (next >= rows.length) return; // the end holds
+    _cursor.value = next;
+  }
+
+  void _moveHeadCursor(int delta) {
+    final stops = _headStops;
+    if (stops.isEmpty) return;
+    final at = stops.indexOf(_headCursor.value ?? -1);
+    final next = (at < 0 ? (delta > 0 ? -1 : stops.length) : at) + delta;
+    if (next < 0 || next >= stops.length) return;
+    _headCursor.value = stops[next];
+  }
+
+  /// Down out of the head row, back to the first row.
+  void _leaveHead() {
+    _headCursor.value = null;
+    if (_rows.isNotEmpty) _cursor.value = 0;
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final rows = _rows;
+    final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
+    final onward =
+        ltr ? LogicalKeyboardKey.arrowRight : LogicalKeyboardKey.arrowLeft;
+    final backward =
+        ltr ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight;
+    final head = _headCursor.value;
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      head != null ? _leaveHead() : _moveCursor(1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowUp) {
+      if (head != null) return KeyEventResult.handled; // nothing above it
+      _moveCursor(-1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.home || key == LogicalKeyboardKey.end) {
+      if (rows.isEmpty) return KeyEventResult.ignored;
+      _headCursor.value = null;
+      _cursor.value = key == LogicalKeyboardKey.home ? 0 : rows.length - 1;
+      return KeyEventResult.handled;
+    }
+
+    // In the head row the sideways arrows walk the headings that answer.
+    if (head != null) {
+      if (key == onward || key == backward) {
+        _moveHeadCursor(key == onward ? 1 : -1);
+        return KeyEventResult.handled;
+      }
+      if (key == LogicalKeyboardKey.enter ||
+          key == LogicalKeyboardKey.space ||
+          key == LogicalKeyboardKey.numpadEnter) {
+        if (head < _leaves.length && _leaves[head].sorts) _cycleSort(head);
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    }
+
+    final at = _cursor.value;
+    if (at == null || at >= rows.length) return KeyEventResult.ignored;
+    final record = rows[at];
+
+    // Sideways among the rows opens and shuts, as it does in a tree: there is
+    // one thing to open in a row, and no cell cursor to move instead.
+    if (key == onward || key == backward) {
+      if (widget.expandable == null || !_canExpand(record)) {
+        return KeyEventResult.ignored;
+      }
+      final open = _holds(_expanded, record);
+      if (key == onward && !open) _toggleExpanded(record);
+      if (key == backward && open) _toggleExpanded(record);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.space) {
+      if (widget.selection == null || !_canSelect(record)) {
+        return KeyEventResult.ignored;
+      }
+      _toggleRow(record, on: !_holds(_selected, record));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      final opens = widget.expandable?.byRowTap ?? false;
+      if (widget.onRowTap == null && !opens) return KeyEventResult.ignored;
+      widget.onRowTap?.call(record, at);
+      if (opens) _toggleExpanded(record);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
 
   void _toggleExpanded(T record) {
     final expandable = widget.expandable!;
@@ -4861,10 +5059,14 @@ class _TableState<T> extends State<Table<T>> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => _cycleSort(named),
-        child: ValueListenableBuilder<int?>(
-          valueListenable: _hoveredHeading,
-          builder: (context, hovered, child) => ColoredBox(
-            color: sorted || hovered == named
+        // The keyboard's mark and the pointer's are the same fill, for the
+        // same reason a row's are: one look, whichever hand is on it.
+        child: ListenableBuilder(
+          listenable: Listenable.merge([_hoveredHeading, _headCursor]),
+          builder: (context, child) => ColoredBox(
+            color: sorted ||
+                    _hoveredHeading.value == named ||
+                    _headCursor.value == named
                 ? r.headerHoverBg
                 : const Color(0x00000000),
             child: child,
@@ -5479,15 +5681,15 @@ class _TableState<T> extends State<Table<T>> {
       onExit: (_) {
         if (_hovered.value?.from == index) _hovered.value = null;
       },
-      child: ValueListenableBuilder<({int from, int to})?>(
-        valueListenable: _hovered,
-        builder: (context, hovered, child) => ColoredBox(
+      // Both marks on one listener: a cell rebuilds when the pointer moves
+      // or the cursor does, and for no other reason.
+      child: ListenableBuilder(
+        listenable: Listenable.merge([_hovered, _cursor]),
+        builder: (context, child) => ColoredBox(
           color: ground(
             _rowFill(
               index,
-              hovered: hovered != null &&
-                  hovered.from < index + covering &&
-                  index < hovered.to,
+              hovered: _lit(index, covering),
               r: r,
             ),
           ),
@@ -5818,14 +6020,12 @@ class _TableState<T> extends State<Table<T>> {
       },
       // Only this row's cells are listening, so a pointer crossing the table
       // rebuilds two rows rather than all of them.
-      child: ValueListenableBuilder<({int from, int to})?>(
-        valueListenable: _hovered,
-        builder: (context, hovered, child) => ColoredBox(
+      child: ListenableBuilder(
+        listenable: Listenable.merge([_hovered, _cursor]),
+        builder: (context, child) => ColoredBox(
           color: _rowFill(
             index,
-            hovered: hovered != null &&
-                hovered.from < index + covering &&
-                index < hovered.to,
+            hovered: _lit(index, covering),
             sorted: sorted,
             r: r,
           ),

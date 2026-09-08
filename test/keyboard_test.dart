@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch;
+    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Table, TableRow;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -37,6 +37,14 @@ bool _haloed(WidgetTester tester, Finder finder) {
 Future<void> _tab(WidgetTester tester) async {
   await tester.sendKeyEvent(LogicalKeyboardKey.tab);
   await tester.pumpAndSettle();
+}
+
+/// A row of the table below.
+class _Person {
+  const _Person(this.name, this.age);
+
+  final String name;
+  final int age;
 }
 
 void main() {
@@ -764,6 +772,154 @@ void main() {
                 (c.decoration! as BoxDecoration).color != null,
           );
       expect(lit, isNotEmpty);
+    });
+  });
+
+  group('a table', () {
+    const people = [
+      _Person('Ada', 36),
+      _Person('Grace', 45),
+      _Person('Alan', 41),
+    ];
+
+    Widget table({
+      void Function(_Person record, int index)? onRowTap,
+      TableSelection<_Person>? selection,
+      bool sortable = false,
+    }) =>
+        _host(
+          SizedBox(
+            width: 400,
+            child: Table<_Person>(
+              data: people,
+              onRowTap: onRowTap,
+              selection: selection,
+              columns: [
+                TableColumn<_Person>(
+                  title: const Text('Name'),
+                  value: (p) => p.name,
+                  sortable: sortable,
+                  sorter: sortable ? (a, b) => a.name.compareTo(b.name) : null,
+                ),
+                TableColumn<_Person>(
+                  title: const Text('Age'),
+                  value: (p) => '${p.age}',
+                ),
+              ],
+            ),
+          ),
+        );
+
+    testWidgets('is one stop, and enter opens the row the cursor is on',
+        (tester) async {
+      final tapped = <String>[];
+      final at = <int>[];
+      await tester.pumpWidget(
+        table(
+          onRowTap: (record, index) {
+            tapped.add(record.name);
+            at.add(index);
+          },
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(tapped, ['Grace']);
+      // The row's own place, not the first: a handler that writes it down
+      // must be told which row it was.
+      expect(at, [1]);
+    });
+
+    testWidgets('home and end reach the first row and the last',
+        (tester) async {
+      final tapped = <String>[];
+      await tester.pumpWidget(
+        table(onRowTap: (record, _) => tapped.add(record.name)),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(tapped, ['Alan', 'Ada']);
+    });
+
+    testWidgets('the last row holds', (tester) async {
+      final tapped = <String>[];
+      await tester.pumpWidget(
+        table(onRowTap: (record, _) => tapped.add(record.name)),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(tapped, ['Alan'], reason: 'still on the last');
+    });
+
+    testWidgets('space picks the row the cursor is on', (tester) async {
+      var picked = <_Person>[];
+      await tester.pumpWidget(
+        table(
+          selection: TableSelection<_Person>(
+            onChanged: (rows) => picked = rows,
+          ),
+        ),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      expect(picked.map((p) => p.name), ['Ada']);
+    });
+
+    testWidgets(
+        'up out of the first row lands in the head, where the '
+        'sorting is', (tester) async {
+      await tester.pumpWidget(table(sortable: true));
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      // Sorted by name: Ada, Alan, Grace.
+      final names = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data)
+          .where((d) => d == 'Ada' || d == 'Alan' || d == 'Grace')
+          .toList();
+      expect(names, ['Ada', 'Alan', 'Grace']);
+    });
+
+    testWidgets('a table with nothing to sort keeps the cursor in the rows',
+        (tester) async {
+      final tapped = <String>[];
+      await tester.pumpWidget(
+        table(onRowTap: (record, _) => tapped.add(record.name)),
+      );
+      await _tab(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(tapped, ['Ada'], reason: 'there was no head row to go up into');
     });
   });
 }

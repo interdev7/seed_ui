@@ -38,6 +38,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   quarter in the dark. It survives inheritance: a nested provider that flips
   the brightness re-derives and is refined again.
 
+- **A `Table` is walked with the keyboard.** One stop for the whole table — a
+  stop per row would be a page of stops — and the arrows do the walking. `↓`/`↑`
+  move between rows, `Home`/`End` reach the ends, `Enter` taps the row the
+  cursor rests on, `Space` picks it, and the sideways arrows open and shut a row
+  that opens. `↑` off the first row lands in the head, where `←`/`→` walk the
+  headings that answer and `Enter` cycles the sort.
+
+  The cursor wears the mark the pointer already left, on rows and on headings
+  alike: one look, whichever hand is on the table. It rides the notifier the
+  pointer uses rather than rebuilding the table, since a lazy body has no row
+  widget to rebuild and every cell on the page would go with it.
+
+  A cursor per cell is not here, nor a key that opens a filter panel; the
+  document says so.
+
 - **A `Tree` is walked with the keyboard, and an accordion's headers are
   reached by tab.** The tree is one stop: `↓`/`↑` walk the nodes on show, `→`
   opens a shut branch and then steps into it, `←` shuts an open one and then

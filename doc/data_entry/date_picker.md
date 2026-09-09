@@ -98,10 +98,10 @@ shorter:
 DatePicker(showTime: true, format: 'yyyy-MM-dd HH:mm')
 ```
 
-The panel's width is named rather than measured: the calendar's seven cells,
-plus one column and one dividing line for each field the format asks for. A
-popover offers the whole screen and a panel's column stretches across what it
-is offered, so a panel left to work its own width out takes all of it.
+The panel measures itself. Add a column by naming a longer format, widen one
+through `timeColumnWidth`, put something broad under it with `footerBuilder` —
+the panel follows, and nothing has to be told a width. It stops at what the
+popover has room for, so a wide footer widens the panel but never the window.
 
 `disabledTime` refuses values in the columns, exactly as it does on
 `TimePicker`. The columns appear beside the **day** panel only: the months of a

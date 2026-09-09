@@ -102,7 +102,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
               value: _preset,
               onChanged: (v) => setState(() => _preset = v),
               presets: [
-                DatePreset.of('Today', DateTime.now),
+                const DatePreset.of('Today', DateTime.now),
                 DatePreset.of(
                   'A week from now',
                   () => DateTime.now().add(const Duration(days: 7)),

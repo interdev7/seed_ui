@@ -782,36 +782,101 @@ void _showTimeTests() {
       );
     });
 
-    testWidgets('the panel is as wide as its columns, not as the screen',
-        (tester) async {
-      Future<double> widthOf(String format) async {
-        await tester.pumpWidget(
-          _host(
-            DatePicker(
-              showTime: true,
-              format: format,
-              value: DateTime(2026, 3, 4),
-            ),
-          ),
-        );
-        await _openPanel(tester);
-        final panel = tester.getRect(
-          find
-              .ancestor(
-                  of: find.text('OK'), matching: find.byType(DecoratedBox))
-              .last,
-        );
-        await tester.tap(find.text('OK'));
-        await tester.pumpAndSettle();
-        return panel.width;
-      }
+    // How wide the panel actually opens, whatever it is built from.
+    Future<double> panelWidth(WidgetTester tester, DatePicker picker) async {
+      await tester.pumpWidget(_host(picker));
+      await _openPanel(tester);
+      final rect = tester.getRect(
+        find
+            .ancestor(
+              of: find.text('OK'),
+              matching: find.byType(DecoratedBox),
+            )
+            .last,
+      );
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      return rect.width;
+    }
 
-      // The calendar's own width: seven cells of 36 and the panel's inset.
-      const calendar = 36.0 * 7 + 12 * 2;
-      // One column of 48 and the line beside it, per field the format names.
-      expect(await widthOf('yyyy-MM-dd HH'), calendar + 49);
-      expect(await widthOf('yyyy-MM-dd HH:mm'), calendar + 49 * 2);
-      expect(await widthOf('yyyy-MM-dd HH:mm:ss'), calendar + 49 * 3);
+    testWidgets('the panel measures itself rather than taking the screen',
+        (tester) async {
+      final one = await panelWidth(
+        tester,
+        DatePicker(
+          showTime: true,
+          format: 'yyyy-MM-dd HH',
+          value: DateTime(2026, 3, 4),
+        ),
+      );
+      final two = await panelWidth(
+        tester,
+        DatePicker(
+          showTime: true,
+          format: 'yyyy-MM-dd HH:mm',
+          value: DateTime(2026, 3, 4),
+        ),
+      );
+      final three = await panelWidth(
+        tester,
+        DatePicker(
+          showTime: true,
+          format: 'yyyy-MM-dd HH:mm:ss',
+          value: DateTime(2026, 3, 4),
+        ),
+      );
+
+      final screen =
+          tester.view.physicalSize.width / tester.view.devicePixelRatio;
+      expect(three, lessThan(screen));
+
+      // Each further column widens the panel by exactly one column and the
+      // line beside it — and nothing in the panel had to be told that.
+      expect(two - one, three - two);
+      expect(two - one, greaterThan(0));
+    });
+
+    testWidgets('a wider token widens the panel, with nothing told to',
+        (tester) async {
+      final standard = await panelWidth(
+        tester,
+        DatePicker(showTime: true, value: DateTime(2026, 3, 4)),
+      );
+      final wider = await panelWidth(
+        tester,
+        DatePicker(
+          showTime: true,
+          value: DateTime(2026, 3, 4),
+          token: const DatePickerToken(timeColumnWidth: 80),
+        ),
+      );
+      // Three columns, forty each. A panel that added its own width up from
+      // a remembered number would have missed this entirely.
+      expect(wider - standard, 3 * (80 - 48));
+    });
+
+    testWidgets('a footer wider than the calendar is not cut off',
+        (tester) async {
+      final plain = await panelWidth(
+        tester,
+        DatePicker(showTime: true, value: DateTime(2026, 3, 4)),
+      );
+      final withFooter = await panelWidth(
+        tester,
+        DatePicker(
+          showTime: true,
+          value: DateTime(2026, 3, 4),
+          footerBuilder: (_) => const SizedBox(width: 900, height: 10),
+        ),
+      );
+      // The panel is as wide as what is in it — up to what the popover has
+      // room for, which is the screen less its own inset. Growing is right;
+      // growing past the window would not be.
+      final screen =
+          tester.view.physicalSize.width / tester.view.devicePixelRatio;
+      expect(withFooter, greaterThan(plain));
+      expect(withFooter, lessThan(900));
+      expect(withFooter, lessThanOrEqualTo(screen));
     });
 
     testWidgets('no time columns without showTime', (tester) async {

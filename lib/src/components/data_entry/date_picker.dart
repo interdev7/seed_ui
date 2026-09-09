@@ -1031,7 +1031,6 @@ class _DatePanel extends StatelessWidget {
             const DatePickerToken())
         ._resolve(t);
 
-    final width = r.cellWidth * 7 + t.sizeSM * 2;
     final presets = state.widget.presets;
     // The columns stand beside the days and nowhere else: the months of a
     // year and the years of a decade are steps on the way to a day, and an
@@ -1050,23 +1049,20 @@ class _DatePanel extends StatelessWidget {
       },
     );
 
-    // Named rather than measured, and named in both cases. A popover offers
-    // the whole screen and the panel's column stretches across what it is
-    // offered, so a panel left to work its own width out takes all of it.
-    // The columns are countable — the format says how many there are — so
-    // the number is there to be added up.
-    final fields = state._timeFields;
-    final columns = (fields.hour ? 1 : 0) +
-        (fields.minute ? 1 : 0) +
-        (fields.second ? 1 : 0) +
-        (fields.meridiem ? 1 : 0);
-    // One line between the calendar and the columns, and one between each
-    // pair of columns: as many lines as there are columns.
-    final panelWidth =
-        withTime ? width + columns * (r.timeColumnWidth + t.lineWidth) : width;
-
-    final calendar = SizedBox(
-      width: panelWidth,
+    // Measured, not named. A popover hands its child loose constraints as
+    // wide as the screen, and a column that stretches takes what it is
+    // offered rather than what it needs — which is why a panel left alone
+    // opens at full width. `IntrinsicWidth` asks the other question: how wide
+    // do the children need to be, and stretch them to that.
+    //
+    // Adding the parts up instead would work today and rot tomorrow: the
+    // number would have to know how many time columns the format asks for,
+    // how wide a token says they are, and how many lines stand between them —
+    // and it would still be wrong the first time a `footerBuilder` put
+    // something wider underneath. The widths live in the widgets that own
+    // them; nobody using the kit should have to add them up, this file
+    // included.
+    final calendar = IntrinsicWidth(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1079,7 +1075,7 @@ class _DatePanel extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(width: width, child: grid),
+                  grid,
                   Container(width: t.lineWidth, color: t.colorSplit),
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: t.sizeXS),

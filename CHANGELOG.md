@@ -32,9 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wherever it is asked for. Nothing is handed back until **Ok**, a day picked
   twice keeps the hour chosen in between, and **Today** becomes **Now**.
   `disabledTime` refuses values in the columns as it does on `TimePicker`.
-  The panel's width is named — the calendar plus a column and a line per field
-  the format asks for — since a popover offers the whole screen and a panel
-  left to work its own width out takes all of it.
+  The panel measures itself, so a longer format, a wider `timeColumnWidth` or
+  a broad `footerBuilder` all just work.
 
 - **`DatePicker.presets`** and `DatePreset` — a rail of named dates beside the
   panel. `DatePreset.of` works its date out when the preset is taken rather

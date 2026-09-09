@@ -24,6 +24,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The gallery has a group for it: narrow the window and the columns stand down
   one at a time, with the table's own width read out beside them.
 
+### Added
+
+- **`DatePicker.showTime`.** The scrolling columns now stand beside the
+  calendar, and they are the very ones `TimePicker` shows — pulled out into
+  one widget rather than written twice, so a time is picked the same way
+  wherever it is asked for. Nothing is handed back until **Ok**, a day picked
+  twice keeps the hour chosen in between, and **Today** becomes **Now**.
+  `disabledTime` refuses values in the columns as it does on `TimePicker`.
+  The panel's width is named — the calendar plus a column and a line per field
+  the format asks for — since a popover offers the whole screen and a panel
+  left to work its own width out takes all of it.
+
+- **`DatePicker.presets`** and `DatePreset` — a rail of named dates beside the
+  panel. `DatePreset.of` works its date out when the preset is taken rather
+  than when the panel is built, so a picker open across midnight cannot hand
+  back yesterday. A preset landing on a blocked day is greyed, as **Today**
+  already was.
+
+- **`DatePickerToken.presetsWidth`** and **`timeColumnWidth`**.
+
 ### Fixed
 
 - **A dressed row lost the line under it.** Flutter's `Table` paints a row's

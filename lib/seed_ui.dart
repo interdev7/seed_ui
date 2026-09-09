@@ -191,7 +191,8 @@ export 'src/components/data_entry/date_picker.dart'
         DatePicker,
         DatePickerDefaults,
         DatePickerToken,
-        DatePickerVariant;
+        DatePickerVariant,
+        DatePreset;
 export 'src/components/data_entry/form.dart'
     show
         Form,
@@ -245,12 +246,7 @@ export 'src/components/data_entry/slider.dart'
 export 'src/components/data_entry/switch.dart'
     show Switch, SwitchSize, SwitchToken;
 export 'src/components/data_entry/time_picker.dart'
-    show
-        DisabledTime,
-        TimePicker,
-        TimePickerDefaults,
-        TimePickerToken,
-        TimePickerVariant;
+    show TimePicker, TimePickerDefaults, TimePickerToken, TimePickerVariant;
 export 'src/components/data_entry/upload.dart'
     show
         UploadDefaults,
@@ -404,5 +400,6 @@ export 'src/utils/overlay_host.dart' show UiKit;
 export 'src/utils/popover.dart'
     show PopoverAnimation, PopoverLayer, PopoverController, PopoverPlacement;
 export 'src/utils/rail.dart' show RailInsets, RailPainter, RailSegment;
+export 'src/utils/time_columns.dart' show DisabledTime;
 export 'src/utils/time_format.dart'
     show TimeFields, formatTime, normalizeTime, parseTime;

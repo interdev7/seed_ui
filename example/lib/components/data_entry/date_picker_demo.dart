@@ -16,6 +16,8 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
   DateTime? _named;
   DateTime? _bounded;
   DateTime? _weekdays;
+  DateTime? _at;
+  DateTime? _preset;
   int _cleared = 0;
   bool _driven = false;
 
@@ -62,6 +64,57 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
               onChanged: (v) => setState(() => _named = v),
             ),
             _named,
+          ),
+        ),
+        Group(
+          'A time as well as a date',
+          // Nothing is handed back until Ok: a date whose time is still
+          // being chosen is half an answer.
+          Row(
+            children: [
+              SizedBox(
+                width: 260,
+                child: DatePicker(
+                  showTime: true,
+                  format: 'yyyy-MM-dd HH:mm',
+                  value: _at,
+                  onChanged: (v) => setState(() => _at = v),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Flexible(
+                child: Text(
+                  _at == null
+                      ? 'nothing chosen'
+                      : formatDate(_at!, 'EEE, d MMM yyyy [at] HH:mm'),
+                  style: TextStyle(color: t.colorTextSecondary),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Named dates on a rail',
+          // `DatePreset.of` is asked for its date when it is taken, so these
+          // stay right however long the panel is left open.
+          row(
+            DatePicker(
+              value: _preset,
+              onChanged: (v) => setState(() => _preset = v),
+              presets: [
+                DatePreset.of('Today', DateTime.now),
+                DatePreset.of(
+                  'A week from now',
+                  () => DateTime.now().add(const Duration(days: 7)),
+                ),
+                DatePreset.of(
+                  'A month from now',
+                  () => DateTime.now().add(const Duration(days: 30)),
+                ),
+                DatePreset('The last day of 2026', DateTime(2026, 12, 31)),
+              ],
+            ),
+            _preset,
           ),
         ),
         const Group(

@@ -22,6 +22,8 @@ String _fieldText(WidgetTester tester) =>
     tester.widget<EditableText>(find.byType(EditableText)).controller.text;
 
 void main() {
+  _presetTests();
+  _showTimeTests();
   testWidgets('shows the placeholder until a date is set', (tester) async {
     await tester.pumpWidget(_host(const DatePicker()));
     expect(find.text('Select date'), findsOneWidget);
@@ -580,6 +582,242 @@ void main() {
       await tester.pumpWidget(driven(open: true, toggle: () {}));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+      expect(find.text('Today'), findsOneWidget);
+    });
+  });
+}
+
+void _presetTests() {
+  group('presets', () {
+    testWidgets('a preset takes its date and closes the panel', (tester) async {
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            value: DateTime(2026, 3, 4),
+            onChanged: (v) => chosen = v,
+            presets: [DatePreset('Midsummer', DateTime(2026, 6, 24))],
+          ),
+        ),
+      );
+      await _openPanel(tester);
+
+      expect(find.text('Midsummer'), findsOneWidget);
+      await tester.tap(find.text('Midsummer'));
+      await tester.pumpAndSettle();
+
+      expect(chosen, DateTime(2026, 6, 24));
+      expect(find.text('Midsummer'), findsNothing, reason: 'the panel closed');
+    });
+
+    testWidgets('no rail is drawn where there are no presets', (tester) async {
+      await tester.pumpWidget(_host(DatePicker(value: DateTime(2026, 3, 4))));
+      await _openPanel(tester);
+      // The rail is the only thing in the panel that scrolls.
+      expect(find.byType(SingleChildScrollView), findsNothing);
+    });
+
+    testWidgets('a preset is asked for its date when it is taken',
+        (tester) async {
+      var asked = 0;
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            value: DateTime(2026, 3, 4),
+            onChanged: (v) => chosen = v,
+            presets: [
+              DatePreset.of('Now', () {
+                asked++;
+                return DateTime(2026, 9, asked);
+              }),
+            ],
+          ),
+        ),
+      );
+      await _openPanel(tester);
+      final atFirstDraw = asked;
+      expect(atFirstDraw, greaterThan(0), reason: 'drawn once to be greyed');
+
+      await tester.tap(find.text('Now'));
+      await tester.pumpAndSettle();
+      // Asked again on the tap rather than handed the date it was drawn
+      // with: a preset reckoned from the clock has moved on since.
+      expect(chosen, DateTime(2026, 9, atFirstDraw + 1));
+    });
+
+    testWidgets('a preset landing on a blocked day does nothing',
+        (tester) async {
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            value: DateTime(2026, 3, 4),
+            onChanged: (v) => chosen = v,
+            maxDate: DateTime(2026, 3, 31),
+            presets: [DatePreset('Midsummer', DateTime(2026, 6, 24))],
+          ),
+        ),
+      );
+      await _openPanel(tester);
+      await tester.tap(find.text('Midsummer'));
+      await tester.pumpAndSettle();
+
+      expect(chosen, isNull);
+      expect(find.text('Midsummer'), findsOneWidget, reason: 'still open');
+      // Greyed rather than hidden, so the rail keeps its shape.
+      final style = tester.widget<Text>(find.text('Midsummer')).style!;
+      expect(style.color, const Color(0xFF000000).withValues(alpha: 0.25));
+    });
+  });
+}
+
+void _showTimeTests() {
+  group('showTime', () {
+    testWidgets('a format naming no time is given a clock', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          DatePicker(showTime: true, value: DateTime(2026, 3, 4, 14, 32, 5)),
+        ),
+      );
+      // Collected and then written nowhere would look broken.
+      expect(find.text('2026-03-04 14:32:05'), findsOneWidget);
+    });
+
+    testWidgets('a format that names its own time is left alone',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            showTime: true,
+            format: 'yyyy-MM-dd HH:mm',
+            value: DateTime(2026, 3, 4, 14, 32, 5),
+          ),
+        ),
+      );
+      expect(find.text('2026-03-04 14:32'), findsOneWidget);
+    });
+
+    testWidgets('picking a day hands nothing back until Ok', (tester) async {
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            showTime: true,
+            value: DateTime(2026, 3, 4, 14, 32, 5),
+            onChanged: (v) => chosen = v,
+          ),
+        ),
+      );
+      await _openPanel(tester);
+      // The day grid stands before the columns, and 15 is a minute as well
+      // as a day.
+      await tester.tap(find.text('15').first);
+      await tester.pumpAndSettle();
+
+      // A date whose time is still being chosen is half an answer.
+      expect(chosen, isNull);
+      expect(find.text('OK'), findsOneWidget, reason: 'the panel stayed open');
+
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      // The clock it was already carrying, kept.
+      expect(chosen, DateTime(2026, 3, 15, 14, 32, 5));
+    });
+
+    testWidgets('a day picked twice keeps the hour chosen in between',
+        (tester) async {
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            showTime: true,
+            format: 'yyyy-MM-dd HH:mm',
+            value: DateTime(2026, 3, 4, 0, 0),
+            onChanged: (v) => chosen = v,
+          ),
+        ),
+      );
+      await _openPanel(tester);
+      // The day grid stands before the columns, and 15 is a minute as well
+      // as a day.
+      await tester.tap(find.text('15').first);
+      await tester.pumpAndSettle();
+      // The hour column. A padded figure, so no day of the month matches it,
+      // and near the top of the column so it is on screen without scrolling.
+      await tester.tap(find.text('03').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('16').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(chosen, DateTime(2026, 3, 16, 3, 0));
+    });
+
+    testWidgets('the footer says Now, and sets the clock too', (tester) async {
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            showTime: true,
+            value: DateTime(2020, 1, 1),
+            onChanged: (v) => chosen = v,
+          ),
+        ),
+      );
+      await _openPanel(tester);
+      expect(find.text('Today'), findsNothing);
+      await tester.tap(find.text('Now'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      // A footer that moved the day and left the hour at midnight would be
+      // half an answer.
+      expect(chosen, isNotNull);
+      expect(
+        chosen!.difference(DateTime.now()).abs(),
+        lessThan(const Duration(minutes: 1)),
+      );
+    });
+
+    testWidgets('the panel is as wide as its columns, not as the screen',
+        (tester) async {
+      Future<double> widthOf(String format) async {
+        await tester.pumpWidget(
+          _host(
+            DatePicker(
+              showTime: true,
+              format: format,
+              value: DateTime(2026, 3, 4),
+            ),
+          ),
+        );
+        await _openPanel(tester);
+        final panel = tester.getRect(
+          find
+              .ancestor(
+                  of: find.text('OK'), matching: find.byType(DecoratedBox))
+              .last,
+        );
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+        return panel.width;
+      }
+
+      // The calendar's own width: seven cells of 36 and the panel's inset.
+      const calendar = 36.0 * 7 + 12 * 2;
+      // One column of 48 and the line beside it, per field the format names.
+      expect(await widthOf('yyyy-MM-dd HH'), calendar + 49);
+      expect(await widthOf('yyyy-MM-dd HH:mm'), calendar + 49 * 2);
+      expect(await widthOf('yyyy-MM-dd HH:mm:ss'), calendar + 49 * 3);
+    });
+
+    testWidgets('no time columns without showTime', (tester) async {
+      await tester.pumpWidget(_host(DatePicker(value: DateTime(2026, 3, 4))));
+      await _openPanel(tester);
+      expect(find.text('OK'), findsNothing, reason: 'nothing to confirm');
       expect(find.text('Today'), findsOneWidget);
     });
   });

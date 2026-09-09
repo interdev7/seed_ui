@@ -67,6 +67,73 @@ Leap years come out right, including the century rules: 2024 and 2400 have a
 29th of February, 2100 does not. The kit asks `DateTime` rather than
 hand-rolling the arithmetic.
 
+## A time as well as a date
+
+```dart
+DatePicker(
+  showTime: true,
+  value: _startsAt,
+  onChanged: (at) => setState(() => _startsAt = at),
+)
+```
+
+The scrolling columns stand beside the calendar — the same ones `TimePicker`
+shows, so a time is picked the same way wherever it is asked for. Three things
+follow from collecting two halves at once:
+
+**Nothing is handed back until Ok.** A date whose time is still being chosen is
+half an answer, so `onChanged` waits for the footer.
+
+**A day picked twice keeps the hour chosen in between.** The draft carries its
+clock; only the day under it moves.
+
+**Today becomes Now**, and sets the clock as well as the day. A footer that
+moved the date and left the hour at midnight would be the same half answer.
+
+A `format` naming no time is given `HH:mm:ss`, since a picker that collected an
+hour and then wrote it nowhere would look broken. Name your own to keep it
+shorter:
+
+```dart
+DatePicker(showTime: true, format: 'yyyy-MM-dd HH:mm')
+```
+
+The panel's width is named rather than measured: the calendar's seven cells,
+plus one column and one dividing line for each field the format asks for. A
+popover offers the whole screen and a panel's column stretches across what it
+is offered, so a panel left to work its own width out takes all of it.
+
+`disabledTime` refuses values in the columns, exactly as it does on
+`TimePicker`. The columns appear beside the **day** panel only: the months of a
+year and the years of a decade are steps on the way to a day, and an hour
+picked against them would belong to no date yet.
+
+## Presets
+
+A rail of named dates beside the panel:
+
+```dart
+DatePicker(
+  presets: [
+    DatePreset.of('Today', DateTime.now),
+    DatePreset.of('A week from now', () => DateTime.now().add(Duration(days: 7))),
+    DatePreset('The end of the quarter', DateTime(2026, 3, 31)),
+  ],
+)
+```
+
+`DatePreset.of` works its date out **when the preset is taken**, not when the
+panel is built: a picker opened at one minute to midnight and tapped a minute
+later would otherwise hand back yesterday. `DatePreset` takes a date that is
+already known.
+
+A preset landing on a day `minDate`, `maxDate` or `disabledDate` bars is greyed
+and does nothing — a name on a rail that reached a blocked day would be a way
+round the block, exactly as **Today** would be.
+
+The rail leads on the side the page reads from, and scrolls inside its own
+height rather than making the panel grow past the calendar beside it.
+
 ## Blocking days
 
 ```dart
@@ -132,6 +199,9 @@ supply one of the four and leave the rest guessing.
 | `prefix` | `Widget?` | — | Sits before the value |
 | `suffixIcon` | `Widget?` | — | Replaces the calendar mark |
 | `onClear` | `VoidCallback?` | — | After the value is dropped |
+| `showTime` | `bool` | `false` | Collects a time of day too |
+| `disabledTime` | `DisabledTime?` | — | Which values the time columns refuse |
+| `presets` | `List<DatePreset>` | `const []` | Named dates on a rail beside the panel |
 | `footerBuilder` | `WidgetBuilder?` | — | A row of your own under the footer |
 | `token` | `DatePickerToken?` | — | Per-instance tokens |
 
@@ -175,6 +245,8 @@ marks it invalid.
 | `cellWidth` | `controlHeightSM * 1.5` (36) |
 | `cellHeight` | `controlHeightSM` (24) |
 | `headerHeight` | `controlHeightLG` (40) |
+| `presetsWidth` | `controlHeightLG * 3` (120) |
+| `timeColumnWidth` | `controlHeightSM * 2` (48) |
 
 ## Localization
 
@@ -191,6 +263,6 @@ See [localization](../localization.md).
 
 ## Not here yet
 
-`showTime`, `presets`, `multiple`, the `week` and `quarter` panels, and a range
-picker. A range is its own component — start-and-end has its own logic, and
-bolting it on as a flag would spoil both.
+`multiple`, the `week` and `quarter` panels, and a range picker. A range is its
+own component — start-and-end has its own logic, and bolting it on as a flag
+would spoil both.

@@ -9,6 +9,8 @@ import '../../theme/design_token.dart';
 import '../../utils/date_format.dart';
 import '../../utils/popover.dart';
 import '../../utils/size_resolver.dart';
+import '../../utils/time_columns.dart';
+import '../../utils/time_format.dart';
 import '../data_entry/input.dart' show InputStatus;
 import '../data_entry/select.dart' show ClearIconPainter;
 import '../general/compact.dart';
@@ -39,6 +41,34 @@ enum DatePanelMode {
 
   /// The ten years of one decade.
   year,
+}
+
+/// A named date on the rail beside the panel — "Today", "This time last
+/// year", whatever the form is about.
+///
+/// The date is asked for when the preset is taken rather than when the panel
+/// is built: a picker opened at one minute to midnight and tapped a minute
+/// later would otherwise hand back yesterday.
+class DatePreset {
+  /// A preset standing for a date that is already known.
+  const DatePreset(this.label, DateTime date)
+      : _date = date,
+        _asked = null;
+
+  /// A preset that works its date out when it is taken — anything reckoned
+  /// from the clock, which is most of them.
+  const DatePreset.of(this.label, DateTime Function() date)
+      : _asked = date,
+        _date = null;
+
+  /// What the rail calls it.
+  final String label;
+
+  final DateTime? _date;
+  final DateTime Function()? _asked;
+
+  /// The date this preset stands for, now.
+  DateTime get date => dateOnly(_date ?? _asked!());
 }
 
 /// Defaults for every [DatePicker] under a `ConfigProvider`.
@@ -85,6 +115,8 @@ class DatePickerToken {
     this.cellWidth,
     this.cellHeight,
     this.headerHeight,
+    this.presetsWidth,
+    this.timeColumnWidth,
   });
 
   /// Corner radius of the field and the panel.
@@ -99,11 +131,19 @@ class DatePickerToken {
   /// Height of the panel's header row.
   final double? headerHeight;
 
+  /// How wide the rail of presets stands, where there is one.
+  final double? presetsWidth;
+
+  /// How wide one column of the time panel stands.
+  final double? timeColumnWidth;
+
   _ResolvedDatePickerToken _resolve(Token t) => _ResolvedDatePickerToken(
         borderRadius: borderRadius ?? t.borderRadius,
         cellWidth: cellWidth ?? t.controlHeightSM * 1.5,
         cellHeight: cellHeight ?? t.controlHeightSM,
         headerHeight: headerHeight ?? t.controlHeightLG,
+        presetsWidth: presetsWidth ?? t.controlHeightLG * 3,
+        timeColumnWidth: timeColumnWidth ?? t.controlHeightSM * 2,
       );
 }
 
@@ -114,12 +154,16 @@ class _ResolvedDatePickerToken {
     required this.cellWidth,
     required this.cellHeight,
     required this.headerHeight,
+    required this.presetsWidth,
+    required this.timeColumnWidth,
   });
 
   final double borderRadius;
   final double cellWidth;
   final double cellHeight;
   final double headerHeight;
+  final double presetsWidth;
+  final double timeColumnWidth;
 }
 
 /// A field that collects a calendar date.
@@ -166,6 +210,9 @@ class DatePicker extends StatefulWidget {
     this.suffixIcon,
     this.onClear,
     this.footerBuilder,
+    this.showTime = false,
+    this.disabledTime,
+    this.presets = const [],
     this.token,
   });
 
@@ -245,6 +292,25 @@ class DatePicker extends StatefulWidget {
   /// Adds a row of your own beneath the panel's footer.
   final WidgetBuilder? footerBuilder;
 
+  /// Whether the panel collects a time of day as well as a date.
+  ///
+  /// The columns stand beside the calendar and the value keeps its clock, so
+  /// a day picked twice does not lose the hour chosen in between. Nothing is
+  /// handed back until **Ok**: a date whose time is still being chosen is
+  /// half an answer.
+  ///
+  /// A [format] that names no time is given `HH:mm:ss`, since a picker that
+  /// collected a time and then wrote it nowhere would look broken.
+  final bool showTime;
+
+  /// Which values the time columns refuse.
+  final DisabledTime? disabledTime;
+
+  /// Named dates on a rail beside the panel.
+  ///
+  /// Empty by default, and the rail is not drawn at all where it is empty.
+  final List<DatePreset> presets;
+
   /// Per-instance token overrides.
   final DatePickerToken? token;
 
@@ -296,6 +362,36 @@ class _DatePickerState extends State<DatePicker> {
   bool get _showToday => widget.showToday ?? _defaults?.showToday ?? true;
 
   bool get _enabled => !_disabled;
+
+  /// The format the picker actually reads and writes.
+  ///
+  /// A picker told to collect a time and given a format that names none would
+  /// take the hour and throw it away, so the clock is added on.
+  String get _format {
+    if (!widget.showTime) return widget.format;
+    final fields = TimeFields.of(widget.format);
+    if (fields.hour || fields.minute || fields.second) return widget.format;
+    return '${widget.format} HH:mm:ss';
+  }
+
+  TimeFields get _timeFields => TimeFields.of(_format);
+
+  /// What the panel is standing on: the draft while a time is being chosen,
+  /// and the value itself otherwise.
+  DateTime? get _shown => _draft ?? _value;
+
+  /// The date and time being put together, held back until **Ok**.
+  ///
+  /// Only a panel that collects a time keeps one: a date on its own is
+  /// finished the moment it is tapped, and there would be nothing to confirm.
+  DateTime? _draft;
+
+  /// The clock the draft is carrying, or midnight where there is none.
+  Duration get _draftTime {
+    final at = _shown;
+    if (at == null) return Duration.zero;
+    return Duration(hours: at.hour, minutes: at.minute, seconds: at.second);
+  }
 
   @override
   void initState() {
@@ -363,7 +459,7 @@ class _DatePickerState extends State<DatePicker> {
         : words.figures(
             formatDate(
               value,
-              widget.format,
+              _format,
               months: words.shortMonths,
               weekdays: words.shortWeekdays,
               am: words.am,
@@ -399,7 +495,7 @@ class _DatePickerState extends State<DatePicker> {
     }
     final parsed = parseDate(
       _plainFigures(text, words),
-      widget.format,
+      _format,
       months: words.shortMonths,
       fallback: _value,
     );
@@ -439,6 +535,9 @@ class _DatePickerState extends State<DatePicker> {
 
   void _openPanel() {
     if (_open || !_enabled) return;
+    // Started from the value rather than from nothing: a picker reopened on
+    // a date it already holds should mark it, and the clock beside it.
+    if (widget.showTime) _draft = _value;
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     final anchor = box.localToGlobal(Offset.zero) & box.size;
@@ -466,6 +565,7 @@ class _DatePickerState extends State<DatePicker> {
   }
 
   void _closePanel() {
+    _draft = null;
     if (!_open) return;
     setState(() => _open = false);
     _popover.close();
@@ -571,12 +671,60 @@ class _DatePickerState extends State<DatePicker> {
   void _pick(DateTime day) {
     if (_isBlocked(day)) return;
     setState(() => _cursor = dateOnly(day));
+    if (widget.showTime) {
+      // The clock the draft was already carrying, so a day picked twice does
+      // not lose the hour chosen in between.
+      final clock = _draftTime;
+      setState(() => _draft = dateOnly(day).add(clock));
+      _repaintPanel();
+      return;
+    }
     _commit(dateOnly(day));
     _syncText();
     _requestOpen(false);
   }
 
-  void _today() => _pick(dateOnly(DateTime.now()));
+  /// Puts a time on the draft, leaving the day where it is.
+  void _pickTime(Duration clock) {
+    final day = dateOnly(_shown ?? _cursor);
+    setState(() => _draft = day.add(clock));
+    _repaintPanel();
+  }
+
+  /// Hands the draft over and puts the panel away.
+  void _confirm() {
+    final at = _draft;
+    if (at == null) {
+      _requestOpen(false);
+      return;
+    }
+    _commit(at);
+    _syncText();
+    _requestOpen(false);
+  }
+
+  void _today() {
+    if (!widget.showTime) {
+      _pick(dateOnly(DateTime.now()));
+      return;
+    }
+    // "Now" rather than "Today" where there is a clock to set: a footer that
+    // moved the day and left the hour at midnight would be half an answer.
+    final now = DateTime.now();
+    if (_isBlocked(now)) return;
+    setState(
+      () => _draft = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        now.hour,
+        now.minute,
+        now.second,
+      ),
+    );
+    setState(() => _cursor = dateOnly(now));
+    _repaintPanel();
+  }
 
   void _clear() {
     _text.clear();
@@ -671,7 +819,7 @@ class _DatePickerState extends State<DatePicker> {
     final sample = words.figures(
       formatDate(
         DateTime(2026, words.shortMonths.indexOf(longestMonth) + 1, 28),
-        widget.format,
+        _format,
         months: words.shortMonths,
         weekdays: words.shortWeekdays,
         am: words.am,
@@ -884,6 +1032,106 @@ class _DatePanel extends StatelessWidget {
         ._resolve(t);
 
     final width = r.cellWidth * 7 + t.sizeSM * 2;
+    final presets = state.widget.presets;
+    // The columns stand beside the days and nowhere else: the months of a
+    // year and the years of a decade are steps on the way to a day, and an
+    // hour picked against them would belong to no date yet.
+    final withTime = state.widget.showTime && state._mode == DatePanelMode.day;
+
+    final grid = Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: t.sizeSM,
+        vertical: t.sizeXS,
+      ),
+      child: switch (state._mode) {
+        DatePanelMode.day => _DayGrid(state: state, token: r),
+        DatePanelMode.month => _MonthGrid(state: state, token: r),
+        DatePanelMode.year => _YearGrid(state: state, token: r),
+      },
+    );
+
+    // Named rather than measured, and named in both cases. A popover offers
+    // the whole screen and the panel's column stretches across what it is
+    // offered, so a panel left to work its own width out takes all of it.
+    // The columns are countable — the format says how many there are — so
+    // the number is there to be added up.
+    final fields = state._timeFields;
+    final columns = (fields.hour ? 1 : 0) +
+        (fields.minute ? 1 : 0) +
+        (fields.second ? 1 : 0) +
+        (fields.meridiem ? 1 : 0);
+    // One line between the calendar and the columns, and one between each
+    // pair of columns: as many lines as there are columns.
+    final panelWidth =
+        withTime ? width + columns * (r.timeColumnWidth + t.lineWidth) : width;
+
+    final calendar = SizedBox(
+      width: panelWidth,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _Header(state: state, token: r),
+          Container(height: t.lineWidth, color: t.colorSplit),
+          if (withTime)
+            IntrinsicHeight(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(width: width, child: grid),
+                  Container(width: t.lineWidth, color: t.colorSplit),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: t.sizeXS),
+                    // Seven rows deep: the six weeks and the row of weekday
+                    // names above them, so the columns finish where the
+                    // calendar does rather than leaving one side long.
+                    child: TimeColumns(
+                      fields: state._timeFields,
+                      value: state._draftTime,
+                      onChanged: state._pickTime,
+                      cellHeight: r.cellHeight,
+                      columnWidth: r.timeColumnWidth,
+                      visibleRows: 7,
+                      disabledTime: state.widget.disabledTime,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            grid,
+          if (state._showToday || withTime) ...[
+            Container(height: t.lineWidth, color: t.colorSplit),
+            Padding(
+              padding: EdgeInsets.all(t.sizeXS),
+              // With a clock to set there are two things to say — where to
+              // jump to, and that the answer is finished — so they take an
+              // end each. Without one there is only Today, in the middle as
+              // it always was.
+              child: withTime
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (state._showToday)
+                          _Action(label: words.now, onTap: state._today)
+                        else
+                          const SizedBox.shrink(),
+                        _Action(label: words.ok, onTap: state._confirm),
+                      ],
+                    )
+                  : Center(
+                      child: _Action(label: words.today, onTap: state._today),
+                    ),
+            ),
+          ],
+          if (state.widget.footerBuilder != null) ...[
+            Container(height: t.lineWidth, color: t.colorSplit),
+            state.widget.footerBuilder!(context),
+          ],
+        ],
+      ),
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -891,39 +1139,110 @@ class _DatePanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(r.borderRadius),
         boxShadow: t.boxShadowSecondary,
       ),
-      child: SizedBox(
-        width: width,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _Header(state: state, token: r),
-            Container(height: t.lineWidth, color: t.colorSplit),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: t.sizeSM,
-                vertical: t.sizeXS,
+      // The rail leads, and it leads on the side the page reads from: a list
+      // of names standing after the calendar in Arabic would be as odd as
+      // one standing before it in English.
+      child: presets.isEmpty
+          ? calendar
+          : IntrinsicHeight(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _PresetRail(state: state, token: r),
+                  Container(width: t.lineWidth, color: t.colorSplit),
+                  calendar,
+                ],
               ),
-              child: switch (state._mode) {
-                DatePanelMode.day => _DayGrid(state: state, token: r),
-                DatePanelMode.month => _MonthGrid(state: state, token: r),
-                DatePanelMode.year => _YearGrid(state: state, token: r),
-              },
             ),
-            if (state._showToday) ...[
-              Container(height: t.lineWidth, color: t.colorSplit),
-              Padding(
-                padding: EdgeInsets.all(t.sizeXS),
-                child: Center(
-                  child: _Action(label: words.today, onTap: state._today),
-                ),
-              ),
-            ],
-            if (state.widget.footerBuilder != null) ...[
-              Container(height: t.lineWidth, color: t.colorSplit),
-              state.widget.footerBuilder!(context),
-            ],
+    );
+  }
+}
+
+/// The rail of named dates beside the panel.
+///
+/// As tall as the calendar and no taller — a long list scrolls inside it
+/// rather than making the panel grow past the calendar it belongs to.
+class _PresetRail extends StatelessWidget {
+  const _PresetRail({required this.state, required this.token});
+
+  final _DatePickerState state;
+  final _ResolvedDatePickerToken token;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.softToken;
+    return SizedBox(
+      width: token.presetsWidth,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(vertical: t.sizeXS),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final preset in state.widget.presets)
+              _PresetTile(state: state, preset: preset),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PresetTile extends StatefulWidget {
+  const _PresetTile({required this.state, required this.preset});
+
+  final _DatePickerState state;
+  final DatePreset preset;
+
+  @override
+  State<_PresetTile> createState() => _PresetTileState();
+}
+
+class _PresetTileState extends State<_PresetTile> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.softToken;
+    // Asked now rather than kept: a preset reckoned from the clock has to be
+    // read at the moment it is drawn, or a panel left open over midnight
+    // would grey the wrong entry.
+    final date = widget.preset.date;
+    // A preset that lands on a day the calendar bars is greyed and does
+    // nothing, exactly as Today is — a name on a rail that reached a blocked
+    // day would be a way round the block.
+    final blocked = widget.state._isBlocked(date);
+
+    return Semantics(
+      button: true,
+      enabled: !blocked,
+      child: MouseRegion(
+        cursor:
+            blocked ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          // Asked again here rather than handed the date the tile was drawn
+          // with: a panel left open over midnight would otherwise take
+          // yesterday.
+          onTap: blocked ? null : () => widget.state._pick(widget.preset.date),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: t.sizeSM,
+              vertical: t.sizeXXS,
+            ),
+            color: _hovered && !blocked ? t.colorFillTertiary : null,
+            child: Text(
+              widget.preset.label,
+              style: TextStyle(
+                fontSize: t.fontSize,
+                height: t.lineHeight,
+                color: blocked ? t.colorTextQuaternary : t.colorText,
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -1000,7 +1319,7 @@ class _DayGrid extends StatelessWidget {
     final words = context.seedLocale;
     final cursor = state._cursor;
     final today = dateOnly(DateTime.now());
-    final chosen = state._value;
+    final chosen = state._shown;
 
     final order = weekdayOrder(firstDayOfWeek: words.firstDayOfWeek);
     final days = monthGrid(
@@ -1075,7 +1394,7 @@ class _MonthGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final words = context.seedLocale;
     final cursor = state._cursor;
-    final chosen = state._value;
+    final chosen = state._shown;
     final width = token.cellWidth * 7 / 3;
 
     return Column(
@@ -1120,7 +1439,7 @@ class _YearGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final words = context.seedLocale;
     final cursor = state._cursor;
-    final chosen = state._value;
+    final chosen = state._shown;
     final start = cursor.year - cursor.year % 10;
     final width = token.cellWidth * 7 / 3;
 

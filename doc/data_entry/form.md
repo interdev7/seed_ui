@@ -89,6 +89,66 @@ say so.
 whatever its mode, and the single kind unwraps it, so the field is of the
 value's own type rather than a list of one.
 
+## A field that repeats
+
+`FormList` is a row the reader adds to and takes from — passengers, addresses,
+line items.
+
+```dart
+FormList(
+  name: 'passengers',
+  initialCount: 1,
+  rules: [FormRule.min(2, message: 'Two passengers at least')],
+  builder: (context, list) => Column(
+    children: [
+      for (final row in list.entries)
+        Row(
+          key: ValueKey(row.key),
+          children: [
+            Expanded(child: FormItem.text(name: row.name)),
+            if (list.entries.length > 1)
+              Button(
+                onPressed: () => list.remove(row),
+                child: const Text('Remove'),
+              ),
+          ],
+        ),
+      Button(onPressed: list.add, child: const Text('Add passenger')),
+    ],
+  ),
+)
+```
+
+**A row is known by a key, never by its place.** `row.name` is built from that
+key, which is the whole reason the list is usable: named after the index,
+taking the middle row out would renumber the last one into the name the middle
+row was using, and its value would slide up with it. Keys do not move, so a
+removal removes exactly one row's worth of anything. Use `row.key` as the
+widget key too, or the row you build keeps the state of the row that used to
+stand there.
+
+**A row of one field or of several.** `row.name` names a row that *is* a
+field; `row.field('street')` names one part of a row that has more than one.
+The first comes out of `values` as a plain value, the second as a map:
+
+```dart
+controller.values['passengers']  // ['Ann', 'Bo']
+controller.values['addresses']   // [{'street': 'Long Lane', 'city': 'Leeds'}]
+```
+
+**The list's rules count the rows.** `FormRule.min(2)` asks for two of them,
+and the message appears under the list. A rule about what is *in* a row belongs
+to that row's own field.
+
+`list.add()`, `list.addAt(0)`, `list.remove(row)` and `list.move(from, to)` are
+what the builder is handed. A moved row carries what it holds, because what it
+holds is filed under its key and the key is what moves.
+
+**Starting rows.** `initialValues` wins where it names the list — a list of
+values becomes a row each. `initialCount` is what to do when there is nothing
+to go on, and it is asked once: a rebuild does not put back the rows the reader
+has just taken out.
+
 ## Rules
 
 ```dart
@@ -175,6 +235,24 @@ where the form is quiet. The form has the say where both speak, since a form
 loading a record knows more than a field describing itself. `reset()` goes back
 to whatever the two settled on.
 
+## How wide a form runs
+
+A form fills what it is given, and what a wide page gives it is the whole
+window — a line of boxes a thousand pixels long with one word in each. Name a
+width:
+
+```dart
+Form(maxWidth: 420, child: ...)
+```
+
+The form is capped and stands against the leading edge, since a form is read
+down its own side and one floated into the middle of a wide page leaves the
+labels nowhere in particular. The page around it stays as wide as it likes. A
+window narrower than the cap still gets all of it — the cap is a ceiling, not
+a width.
+
+Leave it null where the parent already has a width of its own.
+
 ## Around a field
 
 `label`, and `layout` deciding where it stands: `vertical` (the default),
@@ -239,10 +317,6 @@ an unset one falls back to the value derived from the global theme.
 | `itemGap` | `size` — between one field and the next |
 
 ## Not here yet
-
-**A field that repeats.** There is no way to say "and here is a list of
-addresses, add another": you can build one out of a `FormItem` holding a list,
-but nothing helps you.
 
 **Fields that depend on one another** — a rule that has to look at another
 field's value. `FormRule.custom` can read a value through a controller you hold

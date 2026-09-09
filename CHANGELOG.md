@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Form.maxWidth`.** A form fills what it is given, and a wide page gives it
+  the whole window — a line of boxes a thousand pixels long with one word in
+  each. A named width caps it and leaves it against the leading edge; a window
+  narrower than the cap still gets all of it.
+
+- **`FormList` — a field that repeats.** A list of rows the reader adds to and
+  takes from, with `add`, `addAt`, `remove` and `move` handed to the builder.
+  Rows are known by a key rather than by their place: named after the index,
+  taking the middle row out renumbers the last one into the name the middle row
+  was using and its value slides up with it. The list's own rules count the
+  rows, so `FormRule.min(2)` asks for two. A row of one field comes out of
+  `values` as a value and a row of several as a map.
+
 - **`TableColumn.showFrom`** — the width the table must have before that column
   is drawn. `hidden` is a word said in advance; this one is a word about the
   room, so a column that only earns its place on a wide screen stands down on a

@@ -276,6 +276,57 @@ class FormController extends ChangeNotifier {
   final Set<String> _touched = {};
   final Map<String, _Field> _fields = {};
 
+  /// The rows of every repeating field, in the order they stand.
+  ///
+  /// A row is known by a key of its own, never by its place. Naming a row's
+  /// fields after its index looks tidy until a row in the middle is taken
+  /// out: every row below it is renumbered, and the values slide up into the
+  /// names the rows above them were using. Keys do not move, so a removal
+  /// removes exactly one row's worth of anything.
+  final Map<String, List<Object>> _rows = {};
+  int _nextRow = 0;
+
+  /// The rows of one repeating field.
+  List<Object> _rowsOf(String name) => _rows[name] ??= [];
+
+  Object _freshRow() => '#${_nextRow++}';
+
+  /// Puts a row in, at [at] or at the end, and hands back its key.
+  Object _addRow(String name, {int? at, Object? seed}) {
+    final rows = _rowsOf(name);
+    final key = _freshRow();
+    rows.insert(at == null ? rows.length : at.clamp(0, rows.length), key);
+    if (seed != null) _values['$name.$key'] = seed;
+    notifyListeners();
+    return key;
+  }
+
+  /// Takes a row out, and everything it was holding with it.
+  void _removeRow(String name, Object key) {
+    if (!_rowsOf(name).remove(key)) return;
+    final prefix = '$name.$key';
+    for (final held in [
+      for (final k in _values.keys)
+        if (k == prefix || k.startsWith('$prefix.')) k,
+    ]) {
+      _values.remove(held);
+      _errors.remove(held);
+      _warnings.remove(held);
+      _touched.remove(held);
+    }
+    notifyListeners();
+  }
+
+  /// Moves a row, carrying what it holds — which costs nothing, since what
+  /// it holds is filed under its key and the key is what moves.
+  void _moveRow(String name, int from, int to) {
+    final rows = _rowsOf(name);
+    if (from < 0 || from >= rows.length) return;
+    final key = rows.removeAt(from);
+    rows.insert(to.clamp(0, rows.length), key);
+    notifyListeners();
+  }
+
   /// Called by the form it is handed to, so `submit` can put the keyboard
   /// away before it starts.
   VoidCallback? _onSubmitStart;
@@ -287,7 +338,50 @@ class FormController extends ChangeNotifier {
       _onFinishFailed;
 
   /// Every value the form holds, by field name.
-  Map<String, Object?> get values => Map.unmodifiable(_values);
+  ///
+  /// A repeating field comes out as a list, in the order its rows stand: the
+  /// flat names are how the form keeps them, not how anybody reading the
+  /// values should have to think about them.
+  Map<String, Object?> get values {
+    if (_rows.isEmpty) return Map.unmodifiable(_values);
+    final out = <String, Object?>{};
+    final claimed = <String>{};
+    for (final entry in _rows.entries) {
+      final name = entry.key;
+      out[name] = [
+        for (final key in entry.value) _rowValue('$name.$key', claimed),
+      ];
+    }
+    for (final held in _values.entries) {
+      if (claimed.contains(held.key)) continue;
+      if (_rows.containsKey(held.key)) continue;
+      out[held.key] = held.value;
+    }
+    return Map.unmodifiable(out);
+  }
+
+  /// What one row of a repeating field holds: the value filed under the row
+  /// itself where the row is a single field, and a map of its parts where it
+  /// has several.
+  Object? _rowValue(String prefix, Set<String> claimed) {
+    if (_values.containsKey(prefix)) {
+      claimed.add(prefix);
+      return _values[prefix];
+    }
+    final under = <String, Object?>{};
+    for (final held in _values.entries) {
+      if (!held.key.startsWith('$prefix.')) continue;
+      claimed.add(held.key);
+      under[held.key.substring(prefix.length + 1)] = held.value;
+    }
+    return under.isEmpty ? null : under;
+  }
+
+  /// The rows of a repeating field, for a rule that counts them.
+  List<Object?> listValue(String name) {
+    final claimed = <String>{};
+    return [for (final key in _rowsOf(name)) _rowValue('$name.$key', claimed)];
+  }
 
   /// What one field holds.
   Object? value(String name) => _values[name];
@@ -322,6 +416,7 @@ class FormController extends ChangeNotifier {
     _errors.clear();
     _warnings.clear();
     _touched.clear();
+    _rows.clear();
     notifyListeners();
   }
 
@@ -459,6 +554,7 @@ class Form extends StatefulWidget {
     required this.child,
     this.controller,
     this.layout = FormLayout.vertical,
+    this.maxWidth,
     this.labelWidth,
     this.labelAlign = TextAlign.start,
     this.colon = false,
@@ -482,6 +578,18 @@ class Form extends StatefulWidget {
 
   /// Where the labels stand.
   final FormLayout layout;
+
+  /// How wide the form is allowed to run.
+  ///
+  /// A form fills what it is given, and what a wide page gives it is the whole
+  /// window — a line of boxes a thousand pixels long, with one word in each
+  /// and the eye travelling the rest. Naming a width caps the form and leaves
+  /// it against the leading edge; the page around it stays as wide as it
+  /// likes.
+  ///
+  /// Null fills the parent, which is right where the parent has a width of
+  /// its own already.
+  final double? maxWidth;
 
   /// How wide the column of labels is, where they stand beside their fields.
   ///
@@ -612,7 +720,19 @@ class _FormState extends State<Form> {
       trigger: widget.trigger,
       onValuesChanged: widget.onValuesChanged,
       style: r,
-      child: widget.child,
+      // Against the leading edge rather than centred: a form is read down its
+      // left-hand side, and one floated into the middle of a wide page leaves
+      // the labels nowhere in particular. `Align` rather than `SizedBox`, so
+      // a narrow window still gets the whole of what it has.
+      child: widget.maxWidth == null
+          ? widget.child
+          : Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: widget.maxWidth!),
+                child: widget.child,
+              ),
+            ),
     );
   }
 }
@@ -656,6 +776,318 @@ class _FormScope extends InheritedWidget {
       disabled != old.disabled ||
       trigger != old.trigger ||
       style != old.style;
+}
+
+/// One row of a repeating field.
+///
+/// A row is known by a key handed out when it was added, never by where it
+/// stands. Its fields are named after that key, so taking a row out of the
+/// middle leaves every other row's values exactly where they were.
+@immutable
+class FormListEntry {
+  const FormListEntry._(this._list, this.key, this.index);
+
+  final String _list;
+
+  /// What this row is known by, for as long as it stands.
+  ///
+  /// Use it as the widget key of whatever you build for the row: a row built
+  /// under its index keeps the state of the row that used to stand there.
+  final Object key;
+
+  /// Where the row stands now, counting from zero.
+  final int index;
+
+  /// The name of a row that is a single field.
+  String get name => '$_list.$key';
+
+  /// The name of one field inside a row that has several.
+  String field(String part) => '$_list.$key.$part';
+
+  @override
+  bool operator ==(Object other) =>
+      other is FormListEntry && other._list == _list && other.key == key;
+
+  @override
+  int get hashCode => Object.hash(_list, key);
+}
+
+/// What a repeating field is holding and what may be done to it.
+class FormListHandle {
+  const FormListHandle._({
+    required this.entries,
+    required this.error,
+    required this.add,
+    required this.addAt,
+    required this.remove,
+    required this.move,
+  });
+
+  /// The rows, in the order they stand.
+  final List<FormListEntry> entries;
+
+  /// What is wrong with the list itself — too few rows, say. What is wrong
+  /// with a row is the row's own field's business.
+  final String? error;
+
+  /// Adds a row at the end, holding [seed] where the row is a single field.
+  final void Function([Object? seed]) add;
+
+  /// Adds a row at a given place — `addAt(0)` puts one at the head.
+  final void Function(int at, [Object? seed]) addAt;
+
+  /// Takes a row out, and everything it holds with it.
+  final void Function(FormListEntry entry) remove;
+
+  /// Moves a row, carrying what it holds.
+  final void Function(int from, int to) move;
+}
+
+/// A field that repeats: a list of rows the reader adds to and takes from.
+///
+/// ```dart
+/// FormList(
+///   name: 'passengers',
+///   initialCount: 1,
+///   rules: [FormRule.min(2, message: 'Two passengers at least')],
+///   builder: (context, list) => Column(
+///     children: [
+///       for (final row in list.entries)
+///         Row(
+///           key: ValueKey(row.key),
+///           children: [
+///             Expanded(child: FormItem.text(name: row.name)),
+///             Button(
+///               onPressed: () => list.remove(row),
+///               child: const Text('Remove'),
+///             ),
+///           ],
+///         ),
+///       Button(onPressed: list.add, child: const Text('Add')),
+///     ],
+///   ),
+/// )
+/// ```
+///
+/// The rows come out of [FormController.values] as a list under [name], in
+/// the order they stand. A row built of one field holds its value directly;
+/// a row of several — `row.field('name')`, `row.field('age')` — comes out as
+/// a map.
+///
+/// The list's own rules count the rows: `FormRule.min(2)` asks for two of
+/// them. A rule about what is *in* a row belongs to that row's field.
+class FormList extends StatefulWidget {
+  /// Creates a [FormList].
+  const FormList({
+    super.key,
+    required this.name,
+    required this.builder,
+    this.rules = const [],
+    this.initialCount = 0,
+    this.label,
+    this.help,
+    this.extra,
+  });
+
+  /// What the list is called in the form's values.
+  final String name;
+
+  /// Builds the rows, given what stands and what may be done.
+  final Widget Function(BuildContext context, FormListHandle list) builder;
+
+  /// What the list has to satisfy — how many rows, at least or at most.
+  final List<FormRule> rules;
+
+  /// How many rows a list nobody has touched begins with.
+  ///
+  /// A form told `initialValues` for this name begins with those instead: the
+  /// count is what to do when there is nothing to go on.
+  final int initialCount;
+
+  /// What stands above the list.
+  final Widget? label;
+
+  /// A word under the list, in place of whatever the rules would say.
+  final String? help;
+
+  /// A word under the list, beside whatever the rules say.
+  final Widget? extra;
+
+  @override
+  State<FormList> createState() => _FormListState();
+}
+
+class _FormListState extends State<FormList> implements _Field {
+  _FormScope? _scope;
+  String? _error;
+  String? _warning;
+  bool _seeded = false;
+
+  // A list's rows are the list's value; there is nothing separate to start
+  // it with.
+  @override
+  Object? get initialValue => null;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final scope = Form._scopeOf(context);
+    if (!identical(scope.controller, _scope?.controller)) {
+      _scope?.controller._unregister(widget.name, this);
+      _scope = scope;
+      scope.controller._register(widget.name, this);
+    } else {
+      _scope = scope;
+    }
+    _seed();
+  }
+
+  /// Fills a list nobody has said anything about.
+  ///
+  /// Whatever the form was told to start with comes first — a list of values
+  /// under this name becomes a row each — and [FormList.initialCount] is the
+  /// fallback for a list with nothing to go on. Done once: a rebuild is not
+  /// a reason to put the rows back that the reader has just taken out.
+  void _seed() {
+    if (_seeded) return;
+    _seeded = true;
+    final controller = _scope!.controller;
+    if (controller._rowsOf(widget.name).isNotEmpty) return;
+    final told = controller._values[widget.name];
+    if (told is List) {
+      controller._values.remove(widget.name);
+      for (final value in told) {
+        _spread(controller, controller._addRow(widget.name), value);
+      }
+      return;
+    }
+    for (var i = 0; i < widget.initialCount; i++) {
+      controller._addRow(widget.name);
+    }
+  }
+
+  /// Files one row's starting value: straight under the row where it is a
+  /// single value, and part by part where it is a map.
+  void _spread(FormController controller, Object key, Object? value) {
+    final prefix = '${widget.name}.$key';
+    if (value is Map) {
+      for (final part in value.entries) {
+        controller._values['$prefix.${part.key}'] = part.value;
+      }
+      return;
+    }
+    if (value != null) controller._values[prefix] = value;
+  }
+
+  @override
+  void dispose() {
+    _scope?.controller._unregister(widget.name, this);
+    super.dispose();
+  }
+
+  @override
+  Future<bool> validate() async {
+    final controller = _scope!.controller;
+    final words = context.seedLocale;
+    final value = controller.listValue(widget.name);
+    String? error;
+    String? warning;
+    for (final rule in widget.rules) {
+      final said = await rule._test(value, words);
+      if (said == null) continue;
+      if (rule.warningOnly) {
+        warning ??= said;
+      } else {
+        error = said;
+        break;
+      }
+    }
+    controller._report(widget.name, error: error, warning: warning);
+    if (mounted && (error != _error || warning != _warning)) {
+      setState(() {
+        _error = error;
+        _warning = warning;
+      });
+    } else {
+      _error = error;
+      _warning = warning;
+    }
+    return error == null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = _scope!;
+    final r = scope.style;
+
+    return AnimatedBuilder(
+      animation: scope.controller,
+      builder: (context, _) {
+        final controller = scope.controller;
+        final keys = controller._rowsOf(widget.name);
+        final handle = FormListHandle._(
+          entries: [
+            for (var i = 0; i < keys.length; i++)
+              FormListEntry._(widget.name, keys[i], i),
+          ],
+          error: widget.help == null ? _error : null,
+          add: ([Object? seed]) => controller._addRow(widget.name, seed: seed),
+          addAt: (int at, [Object? seed]) =>
+              controller._addRow(widget.name, at: at, seed: seed),
+          remove: (entry) => controller._removeRow(widget.name, entry.key),
+          move: (from, to) => controller._moveRow(widget.name, from, to),
+        );
+
+        final message = widget.help ?? _error ?? _warning;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.label != null)
+              DefaultTextStyle.merge(
+                style: TextStyle(
+                  color: r.labelColor,
+                  fontSize: r.labelFontSize,
+                ),
+                child: widget.label!,
+              ),
+            widget.builder(context, handle),
+            if (message != null || widget.extra != null)
+              Padding(
+                padding: EdgeInsets.only(top: r.messageGap),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (message != null)
+                      Text(
+                        message,
+                        style: TextStyle(
+                          color: widget.help != null
+                              ? r.extraColor
+                              : (_error != null
+                                  ? r.errorColor
+                                  : r.warningColor),
+                          fontSize: r.messageFontSize,
+                        ),
+                      ),
+                    if (widget.extra != null)
+                      DefaultTextStyle.merge(
+                        style: TextStyle(
+                          color: r.extraColor,
+                          fontSize: r.messageFontSize,
+                        ),
+                        child: widget.extra!,
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 /// One field of a [Form]: a label, a control, and whatever the rules have to

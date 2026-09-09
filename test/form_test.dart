@@ -41,6 +41,8 @@ FormItem<String> _text(
     );
 
 void main() {
+  _listTests();
+  _widthTests();
   group('what a form holds', () {
     testWidgets('a field puts what it holds into the form', (tester) async {
       final form = FormController();
@@ -987,6 +989,274 @@ void main() {
       expect(find.text('A hint'), findsOneWidget);
       expect(tester.widget<Input>(find.byType(Input).first).disabled, isTrue);
       expect(await form.validate(), isTrue, reason: 'barred, so not asked');
+    });
+  });
+}
+
+void _listTests() {
+  group('a field that repeats', () {
+    Widget passengers(
+      FormController controller, {
+      int initialCount = 1,
+      List<FormRule> rules = const [],
+    }) =>
+        _host(
+          Form(
+            controller: controller,
+            child: FormList(
+              name: 'passengers',
+              initialCount: initialCount,
+              rules: rules,
+              builder: (context, list) => Column(
+                children: [
+                  for (final row in list.entries)
+                    Row(
+                      key: ValueKey(row.key),
+                      children: [
+                        Expanded(
+                          child: FormItem.text(
+                            name: row.name,
+                            placeholder: 'passenger ${row.index}',
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => list.remove(row),
+                          child: Text('drop ${row.index}'),
+                        ),
+                      ],
+                    ),
+                  GestureDetector(
+                    onTap: list.add,
+                    child: const Text('add'),
+                  ),
+                  GestureDetector(
+                    onTap: () => list.addAt(0),
+                    child: const Text('add at head'),
+                  ),
+                  GestureDetector(
+                    onTap: () => list.move(0, 1),
+                    child: const Text('move'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+    testWidgets('rows are added, filled and handed back in order',
+        (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(passengers(controller));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(EditableText).first, 'Ann');
+      await tester.tap(find.text('add'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(EditableText).last, 'Bo');
+      await tester.pumpAndSettle();
+
+      expect(controller.values['passengers'], ['Ann', 'Bo']);
+    });
+
+    testWidgets('taking a row out does not slide the others up',
+        (tester) async {
+      // The whole reason a row is known by a key and not by its place. Named
+      // after the index, dropping the middle row would renumber the last one
+      // into the name the middle row was using — and its value with it.
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(passengers(controller, initialCount: 3));
+      await tester.pumpAndSettle();
+
+      final boxes = find.byType(EditableText);
+      await tester.enterText(boxes.at(0), 'Ann');
+      await tester.enterText(boxes.at(1), 'Bo');
+      await tester.enterText(boxes.at(2), 'Cai');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('drop 1'));
+      await tester.pumpAndSettle();
+
+      expect(controller.values['passengers'], ['Ann', 'Cai']);
+      // And the boxes on screen say the same thing.
+      expect(
+        tester
+            .widgetList<EditableText>(find.byType(EditableText))
+            .map((e) => e.controller.text),
+        ['Ann', 'Cai'],
+      );
+    });
+
+    testWidgets('a row added at the head is first, and empty', (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(passengers(controller));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(EditableText).first, 'Ann');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('add at head'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(EditableText).first, 'Zoe');
+      await tester.pumpAndSettle();
+
+      expect(controller.values['passengers'], ['Zoe', 'Ann']);
+    });
+
+    testWidgets('a moved row carries what it holds', (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(passengers(controller, initialCount: 2));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(EditableText).at(0), 'Ann');
+      await tester.enterText(find.byType(EditableText).at(1), 'Bo');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('move'));
+      await tester.pumpAndSettle();
+
+      expect(controller.values['passengers'], ['Bo', 'Ann']);
+    });
+
+    testWidgets('the list rules count the rows', (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        passengers(
+          controller,
+          rules: const [FormRule.min(2, message: 'Two passengers at least')],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(await controller.validate(), isFalse);
+      await tester.pumpAndSettle();
+      expect(find.text('Two passengers at least'), findsOneWidget);
+
+      await tester.tap(find.text('add'));
+      await tester.pumpAndSettle();
+      expect(await controller.validate(), isTrue);
+      await tester.pumpAndSettle();
+      expect(find.text('Two passengers at least'), findsNothing);
+    });
+
+    testWidgets('a row of several fields comes out as a map', (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: controller,
+            child: FormList(
+              name: 'addresses',
+              initialCount: 1,
+              builder: (context, list) => Column(
+                children: [
+                  for (final row in list.entries)
+                    Column(
+                      key: ValueKey(row.key),
+                      children: [
+                        FormItem.text(name: row.field('street')),
+                        FormItem.text(name: row.field('city')),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(EditableText).at(0), 'Long Lane');
+      await tester.enterText(find.byType(EditableText).at(1), 'Leeds');
+      await tester.pumpAndSettle();
+
+      expect(controller.values['addresses'], [
+        {'street': 'Long Lane', 'city': 'Leeds'},
+      ]);
+    });
+
+    testWidgets('initial values become a row each', (tester) async {
+      final controller = FormController(
+        initialValues: const {
+          'passengers': ['Ann', 'Bo'],
+        },
+      );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(passengers(controller, initialCount: 5));
+      await tester.pumpAndSettle();
+
+      // What the form was told beats the count, which is only what to do
+      // when there is nothing to go on.
+      expect(find.byType(EditableText), findsNWidgets(2));
+      expect(controller.values['passengers'], ['Ann', 'Bo']);
+    });
+  });
+}
+
+void _widthTests() {
+  group('how wide a form runs', () {
+    Future<double> fieldWidth(
+      WidgetTester tester, {
+      double? maxWidth,
+      double width = 700,
+    }) async {
+      await tester.pumpWidget(
+        _host(
+          Form(
+            maxWidth: maxWidth,
+            child: FormItem.text(name: 'email', label: const Text('Email')),
+          ),
+          width: width,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final measured = tester.getSize(find.byType(Input)).width;
+      // Torn down before the next one is built: two forms alive at once are
+      // two fields called the same thing.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      return measured;
+    }
+
+    testWidgets('a form fills what it is given, unless it is capped',
+        (tester) async {
+      expect(await fieldWidth(tester), 700);
+      expect(await fieldWidth(tester, maxWidth: 360), 360);
+    });
+
+    testWidgets('a capped form stands against the leading edge',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Form(
+            maxWidth: 360,
+            child: FormItem.text(name: 'email', label: const Text('Email')),
+          ),
+          width: 700,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final page = tester.getRect(find.byType(Form));
+      final field = tester.getRect(find.byType(Input));
+      // Read down the left-hand side, not floated into the middle.
+      expect(field.left, page.left);
+    });
+
+    testWidgets('a window narrower than the cap still gets all of it',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          Form(
+            maxWidth: 360,
+            child: FormItem.text(name: 'email', label: const Text('Email')),
+          ),
+          width: 200,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(Input)).width, 200);
     });
   });
 }

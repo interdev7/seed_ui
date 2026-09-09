@@ -16,6 +16,11 @@ class _FormDemoState extends State<FormDemo> {
     initialValues: const {'name': 'Ann Whitfield', 'city': 'Bristol'},
   );
   final _search = FormController();
+  final _trip = FormController(
+    initialValues: const {
+      'passengers': ['Ann Whitfield'],
+    },
+  );
   final _own = FormController();
   final _every = FormController(
     initialValues: const {'seats': 3, 'budget': 40.0, 'billing': 'monthly'},
@@ -30,6 +35,7 @@ class _FormDemoState extends State<FormDemo> {
     _signup.dispose();
     _profile.dispose();
     _search.dispose();
+    _trip.dispose();
     _own.dispose();
     _every.dispose();
     super.dispose();
@@ -47,6 +53,9 @@ class _FormDemoState extends State<FormDemo> {
             children: [
               Form(
                 controller: _signup,
+                // Capped, or the fields run the width of the window and the eye
+                // travels a thousand pixels to read one word.
+                maxWidth: 420,
                 // Word of every change: for a count beside the form, or a
                 // button that stays dead until it is worth pressing.
                 onValuesChanged: (name, values) => setState(
@@ -182,6 +191,7 @@ class _FormDemoState extends State<FormDemo> {
             children: [
               Form(
                 controller: _profile,
+                maxWidth: 480,
                 layout: FormLayout.horizontal,
                 labelWidth: 96,
                 // Against the field rather than away from it, which only
@@ -261,6 +271,7 @@ class _FormDemoState extends State<FormDemo> {
             children: [
               Form(
                 controller: _every,
+                maxWidth: 480,
                 layout: FormLayout.horizontal,
                 labelWidth: 50,
                 labelAlign: TextAlign.end,
@@ -389,6 +400,7 @@ class _FormDemoState extends State<FormDemo> {
             children: [
               Form(
                 controller: _own,
+                maxWidth: 420,
                 // Every field is checked as it is typed…
                 trigger: FormTrigger.change,
                 child: Column(
@@ -547,6 +559,92 @@ class _FormDemoState extends State<FormDemo> {
                 'a value in as a record would, and touched tells a field '
                 'somebody has typed into from one that was filled in for '
                 'them.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A field that repeats',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Form(
+                controller: _trip,
+                maxWidth: 520,
+                onFinish: (values) =>
+                    message.success('Booked for ${values['passengers']}'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FormList(
+                      name: 'passengers',
+                      label: const Text('Passengers'),
+                      rules: const [
+                        FormRule.min(2, message: 'Two passengers at least'),
+                      ],
+                      extra: const Text('A ticket needs everybody named.'),
+                      builder: (context, list) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final row in list.entries)
+                            Padding(
+                              // The row's own key, not its place: a row built
+                              // under its index keeps the state of whichever
+                              // row used to stand there.
+                              key: ValueKey(row.key),
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: FormItem.text(
+                                      name: row.name,
+                                      placeholder: 'Passenger name',
+                                      rules: const [FormRule.required()],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Button(
+                                    onPressed: list.entries.length > 1
+                                        ? () => list.remove(row)
+                                        : null,
+                                    child: const Text('Remove'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Row(
+                            children: [
+                              Button(
+                                variant: ButtonVariant.dashed,
+                                onPressed: list.add,
+                                child: const Text('Add a passenger'),
+                              ),
+                              const SizedBox(width: 8),
+                              Button(
+                                variant: ButtonVariant.dashed,
+                                onPressed: () => list.addAt(0),
+                                child: const Text('Add one at the head'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Button(
+                      variant: ButtonVariant.solid,
+                      color: ButtonColor.primary,
+                      onPressed: _trip.submit,
+                      child: const Text('Book'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Type a name into each, then remove the middle row: the rows '
+                'below it keep what they were holding. A row is known by a '
+                'key rather than by its place, so nothing slides up.',
               ),
             ],
           ),

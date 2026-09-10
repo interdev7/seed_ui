@@ -223,6 +223,17 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
                 placeholder: 'Pick your shifts',
                 onChanged: (v) => setState(() => _shifts = v),
               ),
+              const SizedBox(height: 12),
+              // The same days kept to one line. No width given here either:
+              // the line takes what the tags need, and hides what will not
+              // fit only once the room actually runs out.
+              MultiDatePicker(
+                values: _shifts,
+                maxCount: 5,
+                maxTagCountResponsive: true,
+                placeholder: 'The same days, on one line',
+                onChanged: (v) => setState(() => _shifts = v),
+              ),
               const SizedBox(height: 8),
               Text(
                 'The panel stays open, so a second day is one more tap, and '

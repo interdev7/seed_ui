@@ -27,6 +27,8 @@ void main() {
   _controlledTests();
   _tagDrawingTests();
   _widthTests();
+  _responsiveTests();
+  _responsiveWidthTests();
   group('collecting several days', () {
     testWidgets('the panel stays open, so a second day is one more tap',
         (tester) async {
@@ -477,6 +479,168 @@ void _widthTests() {
         ),
       );
       expect(told.width, 420);
+    });
+  });
+}
+
+void _responsiveTests() {
+  group('tags kept to one line', () {
+    Widget picker(int days, {required double width}) {
+      final now = DateTime.now();
+      return SizedBox(
+        width: width,
+        child: MultiDatePicker(
+          maxTagCountResponsive: true,
+          defaultValues: [
+            for (var d = 1; d <= days; d++) DateTime(now.year, now.month, d),
+          ],
+        ),
+      );
+    }
+
+    testWidgets('what fits is named and the rest is counted', (tester) async {
+      await tester.pumpWidget(_host(picker(8, width: 300)));
+      await tester.pumpAndSettle();
+
+      // Worked out from the room the field has, not from a number decided in
+      // advance.
+      final counted = find.textContaining('...');
+      expect(counted, findsOneWidget);
+      final said = tester.widget<Text>(counted).data!;
+      final hidden = int.parse(RegExp(r'\d+').firstMatch(said)!.group(0)!);
+      expect(hidden, greaterThan(0));
+      expect(hidden, lessThan(8));
+    });
+
+    testWidgets('a wider field names more of them', (tester) async {
+      Future<int> hiddenIn(double width) async {
+        await tester.pumpWidget(
+          _host(KeyedSubtree(
+              key: ValueKey(width), child: picker(8, width: width))),
+        );
+        await tester.pumpAndSettle();
+        final counted = find.textContaining('...');
+        if (counted.evaluate().isEmpty) return 0;
+        final said = tester.widget<Text>(counted).data!;
+        return int.parse(RegExp(r'\d+').firstMatch(said)!.group(0)!);
+      }
+
+      expect(await hiddenIn(560), lessThan(await hiddenIn(240)));
+    });
+
+    testWidgets('the field stays one line tall', (tester) async {
+      await tester.pumpWidget(_host(picker(1, width: 300)));
+      await tester.pumpAndSettle();
+      final one = tester.getSize(find.byType(MultiDatePicker)).height;
+
+      await tester.pumpWidget(
+        _host(KeyedSubtree(
+            key: const ValueKey('many'), child: picker(12, width: 300))),
+      );
+      await tester.pumpAndSettle();
+      final many = tester.getSize(find.byType(MultiDatePicker)).height;
+
+      // Nothing wraps, so nothing makes the field taller — which is the whole
+      // point of keeping to one line.
+      expect(many, one);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('wrapping is still the default', (tester) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 300,
+            child: MultiDatePicker(
+              defaultValues: [
+                for (var d = 1; d <= 12; d++) DateTime(now.year, now.month, d),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // Every day named, and the field as tall as it needs to be.
+      expect(find.textContaining('...'), findsNothing);
+      expect(
+        tester.getSize(find.byType(MultiDatePicker)).height,
+        greaterThan(40),
+      );
+    });
+  });
+}
+
+void _responsiveWidthTests() {
+  group('one line, and no width to be told', () {
+    Widget loose(Widget child) => _host(
+          SizedBox(
+            width: 700,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [child],
+            ),
+          ),
+        );
+
+    Widget picker(int days, {Key? key}) {
+      final now = DateTime.now();
+      return MultiDatePicker(
+        key: key,
+        maxTagCountResponsive: true,
+        defaultValues: [
+          for (var d = 1; d <= days; d++) DateTime(now.year, now.month, d),
+        ],
+      );
+    }
+
+    testWidgets('given no width it still takes only what it holds',
+        (tester) async {
+      await tester.pumpWidget(loose(picker(2)));
+      await tester.pumpAndSettle();
+      final two = tester.getSize(find.byType(MultiDatePicker)).width;
+
+      await tester.pumpWidget(loose(picker(5, key: const ValueKey('five'))));
+      await tester.pumpAndSettle();
+      final five = tester.getSize(find.byType(MultiDatePicker)).width;
+
+      // Claiming the width it was offered is what made a line under a loose
+      // parent grow instead of collapsing: everything fitted, so nothing hid.
+      expect(two, lessThan(700));
+      expect(five, greaterThan(two));
+      expect(five, lessThanOrEqualTo(700));
+    });
+
+    testWidgets('and hides what will not fit when the room runs out',
+        (tester) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 220,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MultiDatePicker(
+                  maxTagCountResponsive: true,
+                  defaultValues: [
+                    for (var d = 1; d <= 8; d++)
+                      DateTime(now.year, now.month, d),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('...'), findsOneWidget);
+      expect(
+        tester.getSize(find.byType(MultiDatePicker)).width,
+        lessThanOrEqualTo(220),
+      );
     });
   });
 }

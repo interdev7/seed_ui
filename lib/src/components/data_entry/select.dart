@@ -9,6 +9,7 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/popover.dart';
 import '../../utils/size_resolver.dart';
+import '../../utils/tag_line.dart';
 import '../../utils/value_tag.dart';
 import '../general/compact.dart';
 import '../navigation/dropdown.dart' show DropdownPanel;
@@ -1159,10 +1160,10 @@ class _SelectState<T> extends State<Select<T>> {
     // No vertical padding — the box's minHeight centres a single line, so the
     // height only grows when tags genuinely wrap.
     if (widget.maxTagCountResponsive) {
-      return _ResponsiveTagLine(
+      return ResponsiveTagLine(
         spacing: token.sizeXXS,
         overflowBuilder: overflowChip,
-        field: field,
+        trailing: field,
         tags: [for (final v in values) tagFor(v)],
       );
     }
@@ -1193,202 +1194,6 @@ class _SelectState<T> extends State<Select<T>> {
 /// any chips that do not fit into a trailing "+N" chip — the responsive tag
 /// mode. The overflow count is resolved during layout, so the chip's label
 /// updates on the following frame (like a popover's caret).
-class _ResponsiveTagLine extends StatefulWidget {
-  const _ResponsiveTagLine({
-    required this.tags,
-    required this.field,
-    required this.overflowBuilder,
-    required this.spacing,
-  });
-
-  final List<Widget> tags;
-  final Widget field;
-  final Widget Function(int hidden) overflowBuilder;
-  final double spacing;
-
-  @override
-  State<_ResponsiveTagLine> createState() => _ResponsiveTagLineState();
-}
-
-class _ResponsiveTagLineState extends State<_ResponsiveTagLine> {
-  final ValueNotifier<int> _hidden = ValueNotifier<int>(0);
-
-  @override
-  void dispose() {
-    _hidden.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: _hidden,
-      builder: (context, hidden, _) {
-        return _TagLineLayout(
-          spacing: widget.spacing,
-          onHidden: (n) {
-            if (_hidden.value != n) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _hidden.value = n;
-              });
-            }
-          },
-          children: [
-            ...widget.tags,
-            // The overflow chip is present but zero-opacity when nothing is
-            // hidden, so its measured width can be reserved during layout.
-            Offstage(
-              offstage: hidden == 0,
-              child: widget.overflowBuilder(hidden),
-            ),
-            widget.field,
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _TagLineLayout extends MultiChildRenderObjectWidget {
-  const _TagLineLayout({
-    required super.children,
-    required this.spacing,
-    required this.onHidden,
-  });
-
-  final double spacing;
-  final ValueChanged<int> onHidden;
-
-  @override
-  _RenderTagLine createRenderObject(BuildContext context) =>
-      _RenderTagLine(spacing: spacing, onHidden: onHidden);
-
-  @override
-  void updateRenderObject(BuildContext context, _RenderTagLine renderObject) {
-    renderObject
-      ..spacing = spacing
-      ..onHidden = onHidden;
-  }
-}
-
-class _TagLineParentData extends ContainerBoxParentData<RenderBox> {}
-
-class _RenderTagLine extends RenderBox
-    with
-        ContainerRenderObjectMixin<RenderBox, _TagLineParentData>,
-        RenderBoxContainerDefaultsMixin<RenderBox, _TagLineParentData> {
-  _RenderTagLine({required double spacing, required ValueChanged<int> onHidden})
-      : _spacing = spacing,
-        _onHidden = onHidden;
-
-  double _spacing;
-  set spacing(double v) {
-    if (_spacing != v) {
-      _spacing = v;
-      markNeedsLayout();
-    }
-  }
-
-  ValueChanged<int> _onHidden;
-  set onHidden(ValueChanged<int> v) => _onHidden = v;
-
-  @override
-  void setupParentData(RenderBox child) {
-    if (child.parentData is! _TagLineParentData) {
-      child.parentData = _TagLineParentData();
-    }
-  }
-
-  // The children painted this layout: the visible tags, then (if anything is
-  // hidden) the overflow chip, then the field. Hidden tags are left out so they
-  // do not paint stacked at the origin.
-  final List<RenderBox> _painted = [];
-
-  @override
-  void performLayout() {
-    _painted.clear();
-    // Children: [tag0..tagN-1, overflowChip, field]. The last two are special.
-    final all = getChildrenAsList();
-    final maxWidth = constraints.maxWidth;
-    if (all.length < 2) {
-      size = constraints.smallest;
-      return;
-    }
-    final field = all.removeLast();
-    final overflow = all.removeLast();
-    final tags = all;
-
-    final loose = BoxConstraints.loose(Size(maxWidth, constraints.maxHeight));
-    for (final c in [...tags, overflow, field]) {
-      c.layout(loose, parentUsesSize: true);
-    }
-    final overflowW = overflow.size.width;
-    final fieldW = field.size.width;
-
-    // Greedily keep tags that fit, reserving room for the field and — once we
-    // know something must hide — the overflow chip.
-    var x = 0.0;
-    var visible = 0;
-    for (var i = 0; i < tags.length; i++) {
-      final w = tags[i].size.width;
-      final isLast = i == tags.length - 1;
-      final reserve = fieldW + (isLast ? 0 : overflowW + _spacing);
-      if (x + w + _spacing + reserve <= maxWidth || i == 0) {
-        x += w + _spacing;
-        visible++;
-      } else {
-        break;
-      }
-    }
-    final hidden = tags.length - visible;
-
-    double height = field.size.height;
-    for (final c in tags) {
-      height = height > c.size.height ? height : c.size.height;
-    }
-
-    var cursor = 0.0;
-    void place(RenderBox c) {
-      (c.parentData as _TagLineParentData).offset =
-          Offset(cursor, (height - c.size.height) / 2);
-      cursor += c.size.width + _spacing;
-      _painted.add(c);
-    }
-
-    for (var i = 0; i < visible; i++) {
-      place(tags[i]);
-    }
-    if (hidden > 0) place(overflow);
-    place(field);
-
-    size = constraints.constrain(Size(maxWidth, height));
-    _onHidden(hidden);
-  }
-
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    for (final child in _painted) {
-      final pd = child.parentData as _TagLineParentData;
-      context.paintChild(child, offset + pd.offset);
-    }
-  }
-
-  @override
-  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    // Only the painted children are interactive; iterate front-to-back.
-    for (final child in _painted.reversed) {
-      final pd = child.parentData as _TagLineParentData;
-      final hit = result.addWithPaintOffset(
-        offset: pd.offset,
-        position: position,
-        hitTest: (r, transformed) => child.hitTest(r, position: transformed),
-      );
-      if (hit) return true;
-    }
-    return false;
-  }
-}
-
 /// The floating options list.
 class _Dropdown<T> extends StatelessWidget {
   const _Dropdown({

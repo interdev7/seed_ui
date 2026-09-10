@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`MultiDatePicker.maxTagCountResponsive`** — the tags keep to one line, as
+  many named as fit and the rest counted, worked out from the room the field
+  has rather than from a number decided in advance. The line is `Select`'s
+  own, pulled out into `lib/src/utils/tag_line.dart` rather than copied — the
+  third such move after the clear mark and the tag itself, and `Select`'s
+  tests pass untouched. It takes a trailing child where a control has one, a
+  caret to type into, and manages without where none does.
+
+  The line takes what the tags put on it rather than the width it was
+  offered: claiming the offer meant a line under a loose parent — a page, a
+  column that hands its children no width — took the whole of it, so
+  everything fitted, nothing hid, and the control grew instead of collapsing.
+  A tag squeezed into less room than its words want now ellipsises them
+  instead of spilling over its own edge.
+
 - **`MultiDatePicker` — a field that collects any number of days**, with
   `MultiDatePickerDefaults`. Its own component rather than a flag: the value
   is a list, the field carries a tag for each day, and the panel stays open —

@@ -58,15 +58,23 @@ class ValueTag extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DefaultTextStyle.merge(
-            style: TextStyle(
-              color: color,
-              fontSize: fontSize,
-              fontFamily: token.fontFamily,
-              fontFamilyFallback: token.fontFamilyFallback,
-              decoration: TextDecoration.none,
+          // Flexible, so a tag squeezed into less room than its words want
+          // ellipsises them rather than spilling over its own edge. A line of
+          // tags hands out what room there is; the last one to be kept may
+          // get less than it asked for.
+          Flexible(
+            child: DefaultTextStyle.merge(
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: TextStyle(
+                color: color,
+                fontSize: fontSize,
+                fontFamily: token.fontFamily,
+                fontFamilyFallback: token.fontFamilyFallback,
+                decoration: TextDecoration.none,
+              ),
+              child: label,
             ),
-            child: label,
           ),
           if (onRemove != null) ...[
             SizedBox(width: token.sizeXXS),

@@ -70,6 +70,27 @@ than it shows words it; left alone, every day is named and the
 field grows to hold them — a picker holding three days should read as three
 days.
 
+### Keeping to one line
+
+```dart
+MultiDatePicker(maxTagCountResponsive: true)
+```
+
+As many days as **fit** are named and the rest are counted, worked out from
+the room the field actually has rather than from a number decided in advance.
+Nothing wraps, so nothing makes the field taller.
+
+It settles the question `maxTagCount` answers, so the two are not used
+together.
+
+It needs no width of its own. The line takes what the tags put on it and hides
+something only once the room runs out — given the whole page it names them
+all, squeezed into a column it collapses. A tag that ends up with less room
+than its words want ellipsises them rather than spilling over its own edge.
+
+The line is the same one `Select` uses. What the tags are and what the chip
+says is each control's business; how many of them fit is the line's.
+
 ## Width
 
 **The field takes what it is holding.** Given no width it is as wide as its
@@ -121,6 +142,7 @@ swapped in for something that does nothing.
 | `minDate` / `maxDate` | `DateTime?` | — | The ends on offer |
 | `maxCount` | `int?` | — | How many days may be held at once |
 | `maxTagCount` | `int?` | `null` | How many are named before the rest are counted |
+| `maxTagCountResponsive` | `bool` | `false` | Keep to one line, naming as many as fit |
 | `allowClear` | `bool?` | `null` | Follows the defaults, else true |
 | `disabled` | `bool?` | `null` | Follows `componentDisabled` |
 | `size` | `ControlSize?` | `null` | A preset, or a measurement |
@@ -171,12 +193,6 @@ week starts on all come from the locale.
 See [localization](../localization.md).
 
 ## Not here yet
-
-**A responsive tag line.** `Select` can keep its tags on one line and collapse
-the overflow to fit the width it is given (`maxTagCountResponsive`); this
-counts to a number you name, or names them all and grows. The machinery is a
-render object of `Select`'s own and is worth sharing rather than copying,
-which is why it is not here yet rather than half here.
 
 Presets, and a limit on which days may be chosen *together* — "any five, but
 no two in the same week" is a rule about the list rather than about a day, and

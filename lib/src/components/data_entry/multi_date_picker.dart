@@ -10,6 +10,7 @@ import '../../theme/design_token.dart';
 import '../../utils/date_format.dart';
 import '../../utils/popover.dart';
 import '../../utils/size_resolver.dart';
+import '../../utils/tag_line.dart';
 import '../../utils/value_tag.dart';
 import '../data_entry/input.dart' show InputStatus;
 import '../general/compact.dart';
@@ -69,6 +70,7 @@ class MultiDatePickerDefaults {
     this.size,
     this.disabled,
     this.maxTagCount,
+    this.maxTagCountResponsive,
   });
 
   /// How pickers are filled and bordered.
@@ -85,6 +87,9 @@ class MultiDatePickerDefaults {
 
   /// How many dates are named before the rest are counted.
   final int? maxTagCount;
+
+  /// Whether the tags keep to one line.
+  final bool? maxTagCountResponsive;
 }
 
 /// A field that collects any number of days.
@@ -118,6 +123,7 @@ class MultiDatePicker extends StatefulWidget {
     this.maxDate,
     this.maxCount,
     this.maxTagCount,
+    this.maxTagCountResponsive = false,
     this.allowClear,
     this.disabled,
     this.size,
@@ -174,6 +180,17 @@ class MultiDatePicker extends StatefulWidget {
   ///
   /// Null names them all, and the field grows to hold them.
   final int? maxTagCount;
+
+  /// Whether the tags keep to one line, however many there are.
+  ///
+  /// As many as fit are named and the rest are counted, worked out from the
+  /// width the field actually has rather than from a number decided in
+  /// advance. Set, it settles the question [maxTagCount] answers, so the two
+  /// are not used together.
+  ///
+  /// A field on one line cannot take what it is holding as its width — it
+  /// would grow instead of collapsing — so give it one.
+  final bool maxTagCountResponsive;
 
   /// Whether the whole lot may be dropped at once.
   final bool? allowClear;
@@ -283,6 +300,10 @@ class _MultiDatePickerState extends State<MultiDatePicker>
   bool get _allowClear => widget.allowClear ?? _defaults?.allowClear ?? true;
 
   int? get _maxTagCount => widget.maxTagCount ?? _defaults?.maxTagCount;
+
+  bool get _responsive =>
+      widget.maxTagCountResponsive ||
+      (_defaults?.maxTagCountResponsive ?? false);
 
   @override
   void initState() {
@@ -664,7 +685,10 @@ class _MultiDatePickerState extends State<MultiDatePicker>
     // How many are named, and how many are left to count. Naming them all
     // and letting the field grow is the default: a picker holding three days
     // should read as three days.
-    final most = _maxTagCount;
+    //
+    // On one line the question is answered by the room instead, so every day
+    // is handed over and the line decides.
+    final most = _responsive ? null : _maxTagCount;
     final named = most == null || held.length <= most ? held : held.take(most);
     final rest = held.length - named.length;
 
@@ -694,17 +718,18 @@ class _MultiDatePickerState extends State<MultiDatePicker>
       );
     }
 
-    final tags = <Widget>[
-      for (final day in named) tagFor(day),
-      // The count reads as the kit's other tag lines do — a `Select` holding
-      // more than it shows says the same thing the same way.
-      if (rest > 0)
-        ValueTag(
+    ValueTag countOf(int rest) => ValueTag(
           token: t,
           fontSize: fontSize,
           enabled: _enabled,
           label: Text('+ $rest ...'),
-        ),
+        );
+
+    final tags = <Widget>[
+      for (final day in named) tagFor(day),
+      // The count reads as the kit's other tag lines do — a `Select` holding
+      // more than it shows says the same thing the same way.
+      if (rest > 0) countOf(rest),
     ];
 
     final named_ = _size.explicitWidth;
@@ -759,12 +784,20 @@ class _MultiDatePickerState extends State<MultiDatePicker>
                           decoration: TextDecoration.none,
                         ),
                       )
-                    : Wrap(
-                        spacing: t.sizeXXS,
-                        runSpacing: t.sizeXXS,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: tags,
-                      ),
+                    : _responsive
+                        // One line, and the line works out how many fit.
+                        // Nothing wraps, so nothing makes the field taller.
+                        ? ResponsiveTagLine(
+                            spacing: t.sizeXXS,
+                            overflowBuilder: countOf,
+                            tags: tags,
+                          )
+                        : Wrap(
+                            spacing: t.sizeXXS,
+                            runSpacing: t.sizeXXS,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: tags,
+                          ),
               ),
               SizedBox(width: t.sizeXS),
               if (canClear)

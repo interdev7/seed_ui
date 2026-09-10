@@ -219,6 +219,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
               MultiDatePicker(
                 values: _shifts,
                 maxCount: 5,
+                maxTagCount: 3,
                 placeholder: 'Pick your shifts',
                 onChanged: (v) => setState(() => _shifts = v),
               ),

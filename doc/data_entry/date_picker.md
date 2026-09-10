@@ -251,7 +251,7 @@ marks it invalid.
 | --- | --- |
 | `borderRadius` | `borderRadius` |
 | `cellWidth` | `controlHeightSM * 1.5` (36) |
-| `cellHeight` | `controlHeightSM` (24) |
+| `cellHeight` | `controlHeightSM + sizeXXS` (28) |
 | `headerHeight` | `controlHeightLG` (40) |
 | `presetsWidth` | `controlHeightLG * 3` (120) |
 | `timeColumnWidth` | `controlHeightSM * 2` (48) |

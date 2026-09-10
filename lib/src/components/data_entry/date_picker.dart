@@ -125,7 +125,7 @@ class DatePickerToken {
   /// Width of one day cell.
   final double? cellWidth;
 
-  /// Height of one day cell.
+  /// Height of one day cell, pill and the air around it both.
   final double? cellHeight;
 
   /// Height of the panel's header row.
@@ -141,7 +141,11 @@ class DatePickerToken {
   DatePanelStyle resolve(Token t) => DatePanelStyle(
         borderRadius: borderRadius ?? t.borderRadius,
         cellWidth: cellWidth ?? t.controlHeightSM * 1.5,
-        cellHeight: cellHeight ?? t.controlHeightSM,
+        // A shade taller than the pill inside it, so the weeks have a line
+        // of air between them. The same height and the rows touch: with a
+        // range drawn across them, a month reads as one grey block rather
+        // than six weeks.
+        cellHeight: cellHeight ?? t.controlHeightSM + t.sizeXXS,
         headerHeight: headerHeight ?? t.controlHeightLG,
         presetsWidth: presetsWidth ?? t.controlHeightLG * 3,
         timeColumnWidth: timeColumnWidth ?? t.controlHeightSM * 2,
@@ -1783,7 +1787,10 @@ class _CellState extends State<_Cell> {
     if (widget.chosen && !widget.disabled) {
       background = t.primary.base;
     } else if ((_hovered || widget.resting) && !widget.disabled) {
-      background = t.colorFillTertiary;
+      // Grey is the hover of a day standing on the panel's own ground. A day
+      // already inside a band has the band under it, and grey over that is a
+      // flash of the wrong colour every time the pointer crosses one.
+      background = banded ? t.primary.bgHover : t.colorFillTertiary;
     } else {
       background = const Color(0x00000000);
     }
@@ -1817,49 +1824,58 @@ class _CellState extends State<_Cell> {
         child: SizedBox(
           width: widget.width,
           height: widget.height,
-          // The band runs the whole width of the cell so the days inside a
-          // range join up, with the gap the pills leave closed. Behind the
-          // pill rather than instead of it: an end of the range wears both,
-          // the band on one side and the fill on top.
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: band,
-              borderRadius: BorderRadiusDirectional.horizontal(
-                start: capStart,
-                end: capEnd,
-              ),
-            ),
-            child: Center(
-              child: AnimatedContainer(
-                // A pick lands at once; only the hover tint eases in. Easing
-                // from the hover grey to the chosen fill shows the grey on the
-                // way, which reads as a flash under the finger.
-                duration: widget.chosen ? Duration.zero : t.motionDurationMid,
-                curve: t.motionEaseInOut,
-                width: widget.width - t.sizeXXS,
-                height: t.controlHeightSM,
+          child: Center(
+            // The band runs the whole width of the cell so the days inside a
+            // range join up sideways, with the gap the pills leave closed —
+            // but only as tall as a pill, so the weeks keep the gap between
+            // them. Full height and one week would run into the next, and a
+            // month of days would read as a single grey block.
+            child: SizedBox(
+              width: widget.width,
+              height: t.controlHeightSM,
+              child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: background,
-                  borderRadius: BorderRadius.circular(t.borderRadiusSM),
-                  // Today is an outline, not a fill: otherwise the day that is
-                  // both today and the chosen one could not be told apart.
-                  border: widget.today && !widget.chosen
-                      ? Border.all(color: t.primary.base, width: t.lineWidth)
-                      : null,
+                  color: band,
+                  borderRadius: BorderRadiusDirectional.horizontal(
+                    start: capStart,
+                    end: capEnd,
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: Text(
-                  widget.label,
-                  maxLines: 1,
-                  style: TextStyle(
-                    color: text,
-                    fontSize: t.fontSize,
-                    fontFamily: t.fontFamily,
-                    fontFamilyFallback: t.fontFamilyFallback,
-                    fontWeight: t.fontWeight,
-                    height: 1.0,
-                    leadingDistribution: TextLeadingDistribution.even,
-                    decoration: TextDecoration.none,
+                child: Center(
+                  child: AnimatedContainer(
+                    // A pick lands at once; only the hover tint eases in. Easing
+                    // from the hover grey to the chosen fill shows the grey on the
+                    // way, which reads as a flash under the finger.
+                    duration:
+                        widget.chosen ? Duration.zero : t.motionDurationMid,
+                    curve: t.motionEaseInOut,
+                    width: widget.width - t.sizeXXS,
+                    height: t.controlHeightSM,
+                    decoration: BoxDecoration(
+                      color: background,
+                      borderRadius: BorderRadius.circular(t.borderRadiusSM),
+                      // Today is an outline, not a fill: otherwise the day that is
+                      // both today and the chosen one could not be told apart.
+                      border: widget.today && !widget.chosen
+                          ? Border.all(
+                              color: t.primary.base, width: t.lineWidth)
+                          : null,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      widget.label,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: text,
+                        fontSize: t.fontSize,
+                        fontFamily: t.fontFamily,
+                        fontFamilyFallback: t.fontFamilyFallback,
+                        fontWeight: t.fontWeight,
+                        height: 1.0,
+                        leadingDistribution: TextLeadingDistribution.even,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
                   ),
                 ),
               ),

@@ -69,6 +69,17 @@ the days that would make too short or too long a range are greyed rather than
 refused after the fact. A refusal that arrives after the tap is one nobody saw
 coming.
 
+## The band
+
+Days inside a range wear a band that runs the full width of their cell, so a
+stretch joins up sideways rather than reading as a row of separate marks. It
+is only as tall as the pill inside it: the same height as the cell and one
+week would run into the next, and a month would read as a single grey block.
+
+A day already inside the band takes a deeper tint of the same colour under the
+pointer, not the grey a day on the panel's own ground takes — grey over the
+band is a flash of the wrong colour every time the pointer crosses a day.
+
 ## Presets
 
 ```dart

@@ -23,6 +23,7 @@ Future<void> _openPanel(WidgetTester tester) async {
 
 void main() {
   _arrowTests();
+  _bandTests();
   group('a range is two dates', () {
     test('the ends are put in order, whichever way round they come', () {
       final forwards = DateRange(DateTime(2026, 3, 4), DateTime(2026, 3, 9));
@@ -328,6 +329,68 @@ void _arrowTests() {
       for (final half in halves) {
         expect(half.textAlign, TextAlign.center);
       }
+    });
+  });
+}
+
+void _bandTests() {
+  group('the band across a range', () {
+    /// Opens the panel and takes a range inside one month.
+    Future<void> takeRange(WidgetTester tester) async {
+      await _openPanel(tester);
+      await tester.tap(find.text('10').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('17').first);
+      await tester.pumpAndSettle();
+      await _openPanel(tester);
+    }
+
+    testWidgets('leaves a line of air between the weeks', (tester) async {
+      await tester.pumpWidget(_host(const DateRangePicker()));
+      await takeRange(tester);
+
+      Rect bandUnder(String day) => tester.getRect(
+            find
+                .ancestor(
+                  of: find.text(day).first,
+                  matching: find.byType(DecoratedBox),
+                )
+                .first,
+          );
+
+      // Two days a week apart, so the same column of the grid. The band under
+      // one has to stop before the band under the other begins, or six weeks
+      // read as one grey block instead of six.
+      final upper = bandUnder('10');
+      final lower = bandUnder('17');
+      expect(lower.top, greaterThan(upper.bottom));
+    });
+
+    testWidgets('a day inside the band does not flash grey under the pointer',
+        (tester) async {
+      await tester.pumpWidget(_host(const DateRangePicker()));
+      await takeRange(tester);
+
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+      // A day in the middle of the range.
+      await gesture.moveTo(tester.getCenter(find.text('14').first));
+      await tester.pumpAndSettle();
+
+      final pill = tester.widget<AnimatedContainer>(
+        find
+            .ancestor(
+              of: find.text('14').first,
+              matching: find.byType(AnimatedContainer),
+            )
+            .first,
+      );
+      final colour = (pill.decoration! as BoxDecoration).color!;
+      // Grey over the band is a flash of the wrong colour every time the
+      // pointer crosses a day. The hover belongs to the same family as the
+      // band under it.
+      expect(colour.b, greaterThan(colour.r));
     });
   });
 }

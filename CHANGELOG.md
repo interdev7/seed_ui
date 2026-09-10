@@ -96,6 +96,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The calendar's weeks ran into one another.** A day cell was exactly as
+  tall as the pill inside it, so the rows touched — invisible until a range
+  drew a band across them, and then a month read as one grey block instead of
+  six weeks. The cell is a shade taller than its pill now (`cellHeight`
+  defaults to `controlHeightSM + sizeXXS`), and the band is only as tall as
+  the pill, so the weeks keep a line of air between them.
+
+- **A day inside a range flashed grey under the pointer.** The hover tint was
+  the grey a day standing on the panel's own ground takes, painted over the
+  band. It is a deeper tint of the band's own colour now.
+
 - **A `Select`'s clear mark drew its cross low in its disc.** The mark took
   its disc from the width of the box and its cross from the height, which
   agrees in a square and nowhere else — and a row that makes its children the

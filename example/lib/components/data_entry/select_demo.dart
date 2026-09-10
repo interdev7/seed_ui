@@ -181,7 +181,6 @@ class _SelectDemoState extends State<SelectDemo> {
         const Group(
           'Sizes',
           Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Select<String>(
                 size: SoftSize.small,
@@ -256,7 +255,6 @@ class _SelectDemoState extends State<SelectDemo> {
         const Group(
           'Variants & status',
           Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Select<String>(
                 variant: SelectVariant.filled,

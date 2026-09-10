@@ -968,20 +968,47 @@ class _RangePanel extends StatelessWidget {
         .resolve(t);
 
     final presets = state.widget.presets;
-    final panes = state._mode == DatePanelMode.day
-        ? Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Pane(state: state, token: r, right: false),
-              Container(width: t.lineWidth, color: t.colorSplit),
-              _Pane(state: state, token: r, right: true),
-            ],
-          )
-        // The deeper panels belong to one pane: months and years are steps on
-        // the way to a day, and two decades side by side would be two ways of
-        // answering the same question.
-        : _Pane(state: state, token: r, right: false);
+    final paneWidth = r.cellWidth * 7 + t.sizeSM * 2;
+    // What the panel would like: two months, the line between them, and the
+    // rail where there is one.
+    final wants = paneWidth * 2 +
+        t.lineWidth +
+        (presets.isEmpty ? 0 : r.presetsWidth + t.lineWidth);
+    // What a popover can actually give it, which on a phone is the window
+    // less the inset it keeps from the edges.
+    final room = MediaQuery.sizeOf(context).width - t.sizeSM * 2;
+    // Under rather than beside. A month that does not fit is a month nobody
+    // can see: the second pane cannot be scrolled to sideways, since the
+    // panel is as wide as it is drawn.
+    final stacked = room < wants;
+
+    Widget panes;
+    if (state._mode != DatePanelMode.day) {
+      // The deeper panels belong to one pane: months and years are steps on
+      // the way to a day, and two decades side by side would be two ways of
+      // answering the same question.
+      panes = _Pane(state: state, token: r, right: false);
+    } else if (stacked) {
+      panes = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _Pane(state: state, token: r, right: false),
+          Container(height: t.lineWidth, color: t.colorSplit),
+          _Pane(state: state, token: r, right: true),
+        ],
+      );
+    } else {
+      panes = Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Pane(state: state, token: r, right: false),
+          Container(width: t.lineWidth, color: t.colorSplit),
+          _Pane(state: state, token: r, right: true),
+        ],
+      );
+    }
 
     final calendar = IntrinsicWidth(
       child: Column(
@@ -996,6 +1023,44 @@ class _RangePanel extends StatelessWidget {
         ],
       ),
     );
+
+    // Stacked, the panel is one month wide, and a rail beside it would take
+    // back the room the stacking just found. It goes above instead, laid
+    // along rather than down.
+    if (stacked && presets.isNotEmpty) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: t.colorBgElevated,
+          borderRadius: BorderRadius.circular(r.borderRadius),
+          boxShadow: t.boxShadowSecondary,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: paneWidth,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(
+                  horizontal: t.sizeXS,
+                  vertical: t.sizeXS,
+                ),
+                child: Row(
+                  spacing: t.sizeXS,
+                  children: [
+                    for (final preset in presets)
+                      _RangeTile(state: state, preset: preset, inline: true),
+                  ],
+                ),
+              ),
+            ),
+            Container(height: t.lineWidth, color: t.colorSplit),
+            calendar,
+          ],
+        ),
+      );
+    }
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -1149,10 +1214,19 @@ class _RangeRail extends StatelessWidget {
 }
 
 class _RangeTile extends StatefulWidget {
-  const _RangeTile({required this.state, required this.preset});
+  const _RangeTile({
+    required this.state,
+    required this.preset,
+    this.inline = false,
+  });
 
   final _DateRangePickerState state;
   final DateRangePreset preset;
+
+  /// Whether it stands in a row along the top rather than down a rail. A
+  /// stacked panel is one month wide, and a rail beside it would take back
+  /// the room the stacking just found.
+  final bool inline;
 
   @override
   State<_RangeTile> createState() => _RangeTileState();
@@ -1184,7 +1258,17 @@ class _RangeTileState extends State<_RangeTile> {
               horizontal: t.sizeSM,
               vertical: t.sizeXXS,
             ),
-            color: _hovered && !blocked ? t.colorFillTertiary : null,
+            decoration: BoxDecoration(
+              color: widget.inline
+                  ? (blocked ? t.colorFillQuaternary : t.colorFillTertiary)
+                  : (_hovered && !blocked ? t.colorFillTertiary : null),
+              borderRadius: widget.inline
+                  ? BorderRadius.circular(t.borderRadiusSM)
+                  : null,
+              border: widget.inline && _hovered && !blocked
+                  ? Border.all(color: t.primary.border, width: t.lineWidth)
+                  : null,
+            ),
             child: Text(
               widget.preset.label,
               style: TextStyle(

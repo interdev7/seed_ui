@@ -24,6 +24,7 @@ Future<void> _openPanel(WidgetTester tester) async {
 void main() {
   _arrowTests();
   _bandTests();
+  _narrowTests();
   group('a range is two dates', () {
     test('the ends are put in order, whichever way round they come', () {
       final forwards = DateRange(DateTime(2026, 3, 4), DateTime(2026, 3, 9));
@@ -391,6 +392,79 @@ void _bandTests() {
       // pointer crosses a day. The hover belongs to the same family as the
       // band under it.
       expect(colour.b, greaterThan(colour.r));
+    });
+  });
+}
+
+void _narrowTests() {
+  group('on a narrow screen', () {
+    /// A phone-shaped window for the length of one test.
+    void phone(WidgetTester tester) {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    testWidgets('the second month goes under the first, not off the side',
+        (tester) async {
+      phone(tester);
+      await tester.pumpWidget(_host(const DateRangePicker()));
+      await _openPanel(tester);
+
+      final grids = find.byType(DayGrid);
+      expect(grids, findsNWidgets(2), reason: 'both months are drawn');
+      final first = tester.getRect(grids.at(0));
+      final second = tester.getRect(grids.at(1));
+
+      // Under, not beside. A month that does not fit is a month nobody can
+      // see: the panel is as wide as it is drawn, so there is nothing to
+      // scroll sideways to.
+      expect(second.top, greaterThan(first.bottom));
+      expect(second.left, first.left);
+    });
+
+    testWidgets('the panel keeps inside the window', (tester) async {
+      phone(tester);
+      await tester.pumpWidget(_host(const DateRangePicker()));
+      await _openPanel(tester);
+      expect(tester.takeException(), isNull);
+
+      final panel = tester.getRect(find.byType(DayGrid).first);
+      expect(panel.right, lessThanOrEqualTo(390));
+    });
+
+    testWidgets('side by side again when there is room', (tester) async {
+      await tester.pumpWidget(_host(const DateRangePicker()));
+      await _openPanel(tester);
+      final grids = find.byType(DayGrid);
+      final first = tester.getRect(grids.at(0));
+      final second = tester.getRect(grids.at(1));
+      expect(second.left, greaterThan(first.right));
+      expect(second.top, first.top);
+    });
+
+    testWidgets('the rail lies along the top rather than down the side',
+        (tester) async {
+      phone(tester);
+      await tester.pumpWidget(
+        _host(
+          DateRangePicker(
+            presets: [
+              DateRangePreset(
+                'That week',
+                DateRange(DateTime(2026, 3, 2), DateTime(2026, 3, 8)),
+              ),
+            ],
+          ),
+        ),
+      );
+      await _openPanel(tester);
+
+      // Beside the calendar it would take back the room the stacking just
+      // found.
+      final preset = tester.getRect(find.text('That week'));
+      final grid = tester.getRect(find.byType(DayGrid).first);
+      expect(preset.bottom, lessThanOrEqualTo(grid.top));
     });
   });
 }

@@ -36,6 +36,12 @@ mid-drag loses the thread. The left pane carries the backward chevron and the
 right the forward one: the two move together, so a chevron between them would
 say nothing.
 
+**On a narrow window the second month goes under the first.** A month that
+does not fit is a month nobody can see: the panel is as wide as it is drawn,
+so there is nothing to scroll sideways to. Stacked, the rail of presets lies
+along the top rather than down the side — beside a one-month panel it would
+take back the room the stacking just found.
+
 The deeper panels — months, years — belong to one pane. They are steps on the
 way to a day, and two decades side by side would be two ways of answering the
 same question.

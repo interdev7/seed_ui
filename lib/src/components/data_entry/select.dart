@@ -7,6 +7,7 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/popover.dart';
 import '../../utils/size_resolver.dart';
+import '../../utils/value_tag.dart';
 import '../general/compact.dart';
 import '../navigation/dropdown.dart' show DropdownPanel;
 
@@ -1081,7 +1082,7 @@ class _SelectState<T> extends State<Select<T>> {
   ) {
     final values = _current;
 
-    _Tag tagFor(T v) => _Tag(
+    ValueTag tagFor(T v) => ValueTag(
           token: token,
           fontSize: fontSize,
           enabled: _enabled,
@@ -1089,7 +1090,7 @@ class _SelectState<T> extends State<Select<T>> {
           onRemove: _enabled ? () => _remove(v) : null,
         );
 
-    _Tag overflowChip(int n) => _Tag(
+    ValueTag overflowChip(int n) => ValueTag(
           token: token,
           fontSize: fontSize,
           enabled: _enabled,
@@ -1574,75 +1575,6 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
 }
 
 /// A removable tag chip in a multiple/tags select.
-class _Tag extends StatelessWidget {
-  const _Tag({
-    required this.token,
-    required this.fontSize,
-    required this.enabled,
-    required this.label,
-    this.onRemove,
-  });
-
-  final Token token;
-  final double fontSize;
-  final bool enabled;
-  final Widget label;
-  final VoidCallback? onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = enabled ? token.colorText : token.colorTextQuaternary;
-    return Container(
-      height: token.controlHeightSM,
-      // The label's own inset, and a narrower one where the remove button
-      // sits — which end that is depends on the reading direction.
-      padding: EdgeInsetsDirectional.only(
-        start: token.sizeXS,
-        end: onRemove == null ? token.sizeXS : token.sizeXXS,
-      ),
-      decoration: BoxDecoration(
-        color: token.colorFillSecondary,
-        borderRadius: BorderRadius.circular(token.borderRadiusSM),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DefaultTextStyle.merge(
-            style: TextStyle(
-              color: color,
-              fontSize: fontSize,
-              fontFamily: token.fontFamily,
-              fontFamilyFallback: token.fontFamilyFallback,
-              decoration: TextDecoration.none,
-            ),
-            child: label,
-          ),
-          if (onRemove != null) ...[
-            SizedBox(width: token.sizeXXS),
-            MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: onRemove,
-                child: SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CustomPaint(
-                    painter: CrossPainter(
-                      token.colorTextTertiary,
-                      strokeWidth: 1.1,
-                      inset: 4,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 /// The clear-all (×) button.
 class _ClearButton extends StatelessWidget {
   const _ClearButton({required this.token, required this.onTap});

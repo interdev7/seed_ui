@@ -21,6 +21,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
   DateTime? _week;
   DateTime? _quarter;
   DateTime? _month;
+  List<DateTime> _shifts = [];
   int _cleared = 0;
   bool _driven = false;
 
@@ -206,6 +207,33 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
                 'A dot under the days with something booked. The builder is '
                 'handed what the panel would have drawn, so nothing about '
                 'chosen or today has to be worked out again.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Any number of days',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 360,
+                child: MultiDatePicker(
+                  values: _shifts,
+                  maxCount: 5,
+                  placeholder: 'Pick your shifts',
+                  onChanged: (v) => setState(() => _shifts = v),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'The panel stays open, so a second day is one more tap, and '
+                'pressing a day already in takes it out. Five at most: once '
+                'the list is full the rest of the month is barred rather than '
+                'refusing a tap that looked available.\n\n'
+                '${_shifts.length} in, and they come back earliest first '
+                'whatever order you press them in.',
+                style: TextStyle(color: t.colorTextSecondary),
               ),
             ],
           ),

@@ -160,6 +160,8 @@ ModalApi
 ModalConfig
 ModalHandle
 ModalToken
+MultiDatePicker
+MultiDatePickerDefaults
 NotificationApi
 NotificationConfig
 NotificationHandle

@@ -367,7 +367,10 @@ See [localization](../localization.md).
 
 ## Not here yet
 
-`multiple`.
+Nothing. Collecting more than one date is
+[`MultiDatePicker`](multi_date_picker.md) and a range is
+[`DateRangePicker`](date_range_picker.md) — each its own component, since each
+has a value of a different shape and a panel that behaves differently.
 
 A range is not here and will not be: it is
 [`DateRangePicker`](date_range_picker.md), its own component. Start-and-end has

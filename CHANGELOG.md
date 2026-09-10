@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`MultiDatePicker` — a field that collects any number of days**, with
+  `MultiDatePickerDefaults`. Its own component rather than a flag: the value
+  is a list, the field carries a tag for each day, and the panel stays open —
+  picking a second day is the ordinary next thing to do, not a fresh start.
+
+  The days come back earliest first whatever order they were pressed in, and
+  the clock is dropped on the way in so the same day twice over is held once.
+  `maxCount` bars the rest of the panel once the list is full rather than
+  refusing a tap that looked available, and a day already in can still be
+  taken out. `maxTagCount` names some and counts the rest.
+
+  The panel is `DatePicker`'s, through the same `PanelHost` the range picker
+  uses; the tag is `Select`'s, pulled out into one widget rather than written
+  twice.
+
+  The panel draws what the owner settled on rather than what the tap asked
+  for: it is redrawn a frame behind, so a controlled picker marks the day on
+  the tap that took it instead of lagging a tap behind, and an owner refusing
+  a change is shown refusing it.
+
+  `DatePicker`'s "Not here yet" is empty with it.
+
 - **`DatePicker.picker`** — `week`, `month`, `quarter` and `year` alongside
   `day`. The value stays a `DateTime`, the first day of whatever was chosen: a
   week is its first day counted from wherever the locale starts its weeks, a

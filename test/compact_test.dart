@@ -49,6 +49,7 @@ BorderRadius _boxRadius(WidgetTester tester, String label) {
 
 void main() {
   _raiseTests();
+  _addonTests();
   group('CompactSlot.radiusOf', () {
     testWidgets('hands back every corner where there is no group',
         (tester) async {
@@ -695,6 +696,134 @@ void _raiseTests() {
       );
       final colours = await stripe(tester, middle, run.left);
       expect(colours.first, colours.last, reason: 'the same edge throughout');
+    });
+  });
+}
+
+void _addonTests() {
+  group('a control with something joined on', () {
+    /// The corners the search button caps the field with.
+    BorderRadiusDirectional addonCorners(WidgetTester tester) {
+      final boxes = tester.widgetList<AnimatedContainer>(
+        find.descendant(
+          of: find.byType(Input),
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      // The addon wears a ring of its own colour; the field's ring is a
+      // different colour from what it holds. Both have square corners on the
+      // side they are joined at, so the corners alone cannot tell them apart.
+      for (final box in boxes) {
+        final decoration = box.decoration! as BoxDecoration;
+        final ring = decoration.border;
+        if (ring is! Border || ring.top.color != decoration.color) continue;
+        final shape = decoration.borderRadius;
+        if (shape is BorderRadiusDirectional) return shape;
+      }
+      fail('no addon found');
+    }
+
+    testWidgets('the addon squares off where the run goes on', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 420,
+            child: Compact(
+              children: [
+                Expanded(
+                  child: Input(
+                    search: SearchConfig(enterButton: true, onSearch: (_) {}),
+                    placeholder: 'Search',
+                  ),
+                ),
+                Button(onPressed: () {}, child: const Text('Go')),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The addon caps the far end of the control, so the far end is its
+      // corners to keep — and in a joined run there is nothing to round,
+      // because something else is standing against it.
+      final corners = addonCorners(tester);
+      expect(corners.topEnd, Radius.zero);
+      expect(corners.bottomEnd, Radius.zero);
+    });
+
+    testWidgets('and keeps them at the end of the run', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 420,
+            child: Compact(
+              children: [
+                Button(onPressed: () {}, child: const Text('Go')),
+                Expanded(
+                  child: Input(
+                    search: SearchConfig(enterButton: true, onSearch: (_) {}),
+                    placeholder: 'Search',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final corners = addonCorners(tester);
+      expect(corners.topEnd, isNot(Radius.zero));
+    });
+
+    testWidgets('it is the same shape as the field it is joined to',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 300,
+            child: Input(
+              search: SearchConfig(enterButton: true, onSearch: (_) {}),
+              placeholder: 'Search',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final boxes = tester
+          .widgetList<AnimatedContainer>(
+            find.descendant(
+              of: find.byType(Input),
+              matching: find.byType(AnimatedContainer),
+            ),
+          )
+          .map((b) => b.decoration! as BoxDecoration)
+          .toList();
+
+      // A bordered box and a plain one have their edges rounded to device
+      // pixels by different sums, and on a screen with more than one pixel to
+      // the point they land apart. Joined, that shows — so both wear a ring
+      // of the same width, the addon's in its own colour.
+      final rings = boxes.map((d) => d.border).whereType<Border>().toList();
+      expect(rings, hasLength(2));
+      expect(rings.first.top.width, rings.last.top.width);
+    });
+
+    testWidgets('standing alone it is round as it always was', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: 300,
+            child: Input(
+              search: SearchConfig(enterButton: true, onSearch: (_) {}),
+              placeholder: 'Search',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(addonCorners(tester).topEnd, isNot(Radius.zero));
     });
   });
 }

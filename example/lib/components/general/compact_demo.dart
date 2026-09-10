@@ -61,28 +61,25 @@ class _CompactDemoState extends State<CompactDemo> {
           // right edge needs room to grow that way, and at the leading edge
           // it has none — it is shifted back into the window, and both
           // placements come out looking alike.
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: Compact(
-              children: [
-                Button(onPressed: () {}, child: const Text('Publish')),
-                // The button is inside the dropdown, not directly inside the
-                // group — and still finds its slot, because a control asks
-                // for it by looking up rather than being handed it.
-                Dropdown<String>(
-                  trigger: const [DropdownTrigger.click],
-                  placement: PopoverPlacement.bottomRight,
-                  menu: const [
-                    DropdownItem(value: 'schedule', label: 'Schedule…'),
-                    DropdownItem(value: 'draft', label: 'Save draft'),
-                  ],
-                  child: Button(
-                    icon: const Icon(Icons.more_vert),
-                    onPressed: () {},
-                  ),
+          Compact(
+            children: [
+              Button(onPressed: () {}, child: const Text('Publish')),
+              // The button is inside the dropdown, not directly inside the
+              // group — and still finds its slot, because a control asks
+              // for it by looking up rather than being handed it.
+              Dropdown<String>(
+                trigger: const [DropdownTrigger.click],
+                placement: PopoverPlacement.bottomRight,
+                menu: const [
+                  DropdownItem(value: 'schedule', label: 'Schedule…'),
+                  DropdownItem(value: 'draft', label: 'Save draft'),
+                ],
+                child: Button(
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: () {},
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         Group(
@@ -116,6 +113,38 @@ class _CompactDemoState extends State<CompactDemo> {
                 ),
               ],
             ),
+          ),
+        ),
+        Group(
+          'A field that already has something joined on',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 460,
+                child: Compact(
+                  children: [
+                    Expanded(
+                      child: Input(
+                        placeholder: 'Search',
+                        search: SearchConfig(
+                          enterButton: true,
+                          onSearch: (_) {},
+                        ),
+                      ),
+                    ),
+                    Button(onPressed: () {}, child: const Text('Advanced')),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The field carries its own button, and the run carries '
+                'another after it. The joined-on button squares off where the '
+                'run goes on rather than rounding an edge something is '
+                'standing against.',
+              ),
+            ],
           ),
         ),
         Group(

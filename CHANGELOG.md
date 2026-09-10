@@ -152,6 +152,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A control's own addon did not join the run.** An `Input` carries its
+  search button attached, and that button worked its corners out for itself —
+  so at the joint it rounded an edge another control was standing against, and
+  the two met as two boxes. The addon asks the run for its corners now, as the
+  control it belongs to already did. `Compact`'s "Not here yet" is empty with
+  it.
+
 - **Only the last control of a `Compact` looked highlighted.** A joined run
   overlaps its controls by a line so their meeting borders draw one line, and
   whichever is painted later covers its neighbour's edge — which is exactly

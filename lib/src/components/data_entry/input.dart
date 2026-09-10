@@ -871,6 +871,7 @@ class _SoftInputState extends State<Input> {
             loading: search.loading,
             label: search.enterButtonLabel,
             icon: search.searchIcon,
+            corners: CompactSlot.radiusOf(context, _radiusVal(r)),
             onTap: _enabled ? _triggerSearch : null,
           ),
         ],
@@ -1196,6 +1197,7 @@ class _SearchButton extends StatefulWidget {
     required this.fontSize,
     required this.loading,
     required this.onTap,
+    required this.corners,
     this.label,
     this.icon,
   });
@@ -1207,6 +1209,14 @@ class _SearchButton extends StatefulWidget {
   final VoidCallback? onTap;
   final Widget? label;
   final Widget? icon;
+
+  /// The corners the whole control keeps, asked of the run it stands in.
+  ///
+  /// The button caps the far end, so the far end's corners are its own — and
+  /// in a joined run they are square, because something else is joined on
+  /// there. Left to work them out itself, the button rounded an edge another
+  /// control was standing against, and the two met as two boxes.
+  final BorderRadiusDirectional corners;
 
   @override
   State<_SearchButton> createState() => _SearchButtonState();
@@ -1225,7 +1235,6 @@ class _SearchButtonState extends State<_SearchButton> {
             ? token.primary.hover
             : token.primary.base;
     final fg = enabled ? const Color(0xFFFFFFFF) : token.colorTextQuaternary;
-    final radius = Radius.circular(token.borderRadius);
 
     final glyph = widget.loading
         ? SizedBox(
@@ -1251,10 +1260,19 @@ class _SearchButtonState extends State<_SearchButton> {
           padding: EdgeInsets.symmetric(horizontal: token.sizeMD),
           decoration: BoxDecoration(
             color: fill,
-            // The addon caps the far end of the field.
+            // A ring of its own colour, the same width as the field's.
+            //
+            // It changes nothing to look at — the line is the fill's colour —
+            // and it makes the two boxes the same shape: a bordered box and a
+            // plain one have their edges rounded to device pixels by
+            // different sums, and on a screen with more than one pixel to the
+            // point they landed half a pixel apart. Joined, that shows.
+            border: Border.all(color: fill, width: token.lineWidth),
+            // The addon caps the far end of the field, and keeps whatever
+            // corners the run leaves it there.
             borderRadius: BorderRadiusDirectional.only(
-              topEnd: radius,
-              bottomEnd: radius,
+              topEnd: widget.corners.topEnd,
+              bottomEnd: widget.corners.bottomEnd,
             ),
           ),
           alignment: Alignment.center,

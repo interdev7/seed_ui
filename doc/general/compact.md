@@ -99,6 +99,22 @@ group wraps the field *inside* it and puts the flex back on the outside.
 
 `block: true` gives every child that did not say otherwise an equal share.
 
+## What a control joins on itself
+
+A control may carry something attached before the run ever sees it: an `Input`
+with its search button is two boxes that already read as one. The addon caps
+the far end of that control, so the far end's corners are **its** to keep —
+and it asks the run for them, exactly as the control does.
+
+Left to work them out itself, the addon rounded an edge another control was
+standing against, and the two met as two boxes with a bulge between them.
+
+The addon also wears a ring of its own colour, the same width as the field's.
+It changes nothing to look at, and it makes the two boxes the same shape: a
+bordered box and a plain one have their edges rounded to device pixels by
+different sums, and on a screen with more than one pixel to the point they
+land apart. Joined, half a pixel shows.
+
 ## The one with something to show is drawn last
 
 Every control after the first is pulled back by a line, so the two borders
@@ -116,6 +132,7 @@ below, and the focus node it uses takes no stop of its own in the tab order.
 
 ## Not here yet
 
-**Nothing joins a control's addons.** An `Input` with an addon on one side and
-a `Button` on the other joins the outer edges, but the addon and the button
-still meet as two separate boxes.
+Nothing. A control that carries something joined on of its own — an `Input`
+with its search button — hands that addon the run's corners too, so it squares
+off where the run goes on rather than rounding an edge another control is
+standing against.

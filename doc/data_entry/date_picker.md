@@ -156,6 +156,14 @@ format can render and the placeholder. **Told** a width it fills it; merely
 **offered** an upper bound it takes what it needs and gives way when there is
 less.
 
+## Clearing it
+
+The mark appears when the pointer is over the field or the panel is open, and
+one click clears. One click, not two: the target is in the slot whenever there
+is something to clear, and only what is *drawn* there follows the pointer — a
+target that came and went with the paint would not be there yet for a mouse
+that arrives and clicks in the same frame.
+
 ## Sizes
 
 `size` takes either a preset or a measurement:

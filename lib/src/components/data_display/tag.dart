@@ -594,7 +594,11 @@ class _CheckableTagGroupState<T> extends State<CheckableTagGroup<T>> {
     } else {
       next = current.contains(value) ? <T>[] : <T>[value];
     }
-    if (widget.value == null) setState(() => _internal = next);
+    // Kept in step whether or not somebody else is driving this: it is only
+    // the fallback for `value`, and a stale one shows through the moment
+    // `value` goes null again. See `DatePicker._commit`, where the same
+    // fallback showed a cleared date back to the reader.
+    setState(() => _internal = next);
     widget.onChanged?.call(next);
   }
 

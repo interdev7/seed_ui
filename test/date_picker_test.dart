@@ -23,6 +23,7 @@ String _fieldText(WidgetTester tester) =>
 
 void main() {
   _presetTests();
+  _clearRaceTests();
   _showTimeTests();
   testWidgets('shows the placeholder until a date is set', (tester) async {
     await tester.pumpWidget(_host(const DatePicker()));
@@ -884,6 +885,140 @@ void _showTimeTests() {
       await _openPanel(tester);
       expect(find.text('OK'), findsNothing, reason: 'nothing to confirm');
       expect(find.text('Today'), findsOneWidget);
+    });
+  });
+}
+
+void _clearRaceTests() {
+  group('the clear mark', () {
+    Future<void> arriveAndClick(WidgetTester tester, Finder field) async {
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+
+      // Where the mark sits, worked out while the field is hovered.
+      await gesture.moveTo(tester.getCenter(field));
+      await tester.pumpAndSettle();
+      final mark = find.byWidgetPredicate(
+        (w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == 'ClearIconPainter',
+      );
+      final spot = tester.getCenter(mark);
+
+      // Away again, so nothing is hovered.
+      await gesture.moveTo(const Offset(5, 5));
+      await tester.pumpAndSettle();
+
+      // And straight back onto the mark and click, without a frame between —
+      // a mouse arriving from the panel above, or from the control beside it.
+      await gesture.moveTo(spot);
+      await gesture.down(spot);
+      await gesture.up();
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('is bigger than the glyph drawn in it', (tester) async {
+      await tester.pumpWidget(
+        _host(DatePicker(value: DateTime(2026, 3, 4))),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+      await gesture.moveTo(tester.getCenter(find.byType(DatePicker)));
+      await tester.pumpAndSettle();
+
+      final mark = find.byWidgetPredicate(
+        (w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == 'ClearIconPainter',
+      );
+      final glyph = tester.getSize(mark);
+      final target = tester.getSize(
+        find.ancestor(of: mark, matching: find.byType(GestureDetector)).first,
+      );
+
+      // Fourteen pixels is what the glyph measures, and it is not what
+      // anybody can be asked to hit. The target is the height of the field;
+      // its width is the slot's, so growing it costs the field nothing.
+      expect(glyph.height, lessThan(20));
+      expect(target.height, greaterThan(glyph.height * 1.5));
+    });
+
+    testWidgets('clears again after a date has been picked', (tester) async {
+      // Clear, pick, clear. The second clear handed back null — the label
+      // beside the field said so — and the box went on showing the date,
+      // because the picker's own fallback value had been left holding it and
+      // `value ?? _internal` reached past the null to find it.
+      DateTime? value = DateTime(2026, 3, 4);
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => SizedBox(
+              width: 220,
+              child: DatePicker(
+                value: value,
+                onChanged: (v) => setState(() => value = v),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+      final mark = find.byWidgetPredicate(
+        (w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == 'ClearIconPainter',
+      );
+      Future<void> clear() async {
+        await gesture.moveTo(tester.getCenter(find.byType(DatePicker)));
+        await tester.pumpAndSettle();
+        await tester.tapAt(tester.getCenter(mark));
+        await tester.pumpAndSettle();
+      }
+
+      await clear();
+      expect(value, isNull);
+
+      await tester.tap(find.byType(DatePicker));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('15'));
+      await tester.pumpAndSettle();
+      expect(value, isNotNull);
+
+      await clear();
+      expect(value, isNull);
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
+        '',
+        reason: 'the box says what the value says',
+      );
+    });
+
+    testWidgets('clears on the first click, not the second', (tester) async {
+      DateTime? value = DateTime(2026, 3, 4);
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => DatePicker(
+              value: value,
+              onChanged: (v) => setState(() => value = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await arriveAndClick(tester, find.byType(DatePicker));
+      // The mark is drawn a frame after the pointer arrives; a target that
+      // came and went with the paint was not there for the first click, and
+      // the click opened the panel instead.
+      expect(value, isNull);
     });
   });
 }

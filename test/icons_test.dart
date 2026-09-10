@@ -21,6 +21,7 @@ Widget _host(Widget child) => ConfigProvider(
     );
 
 void main() {
+  _clearMarkTests();
   testWidgets('renders Spinner', (tester) async {
     await tester.pumpWidget(
       _host(
@@ -153,4 +154,61 @@ void _expectFitsBox(CustomPainter painter, {double side = 16}) {
   // …and one that hugs the middle reads as a dot. It should use its box.
   expect(bounds.width, greaterThan(side * 0.3));
   expect(bounds.height, greaterThan(side * 0.3));
+}
+
+/// Records what a painter draws, so its geometry can be read back.
+class _Recorder implements Canvas {
+  final circles = <({Offset centre, double radius})>[];
+  final lines = <({Offset from, Offset to})>[];
+
+  @override
+  void drawCircle(Offset c, double radius, Paint paint) =>
+      circles.add((centre: c, radius: radius));
+
+  @override
+  void drawLine(Offset from, Offset to, Paint paint) =>
+      lines.add((from: from, to: to));
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
+void _clearMarkTests() {
+  group('the clear mark', () {
+    test('the cross sits in the middle of the disc, whatever the box', () {
+      for (final size in [
+        const Size.square(16),
+        // Taller than it is wide, which is what a row that stretches its
+        // children hands it.
+        const Size(16, 32),
+        const Size(32, 16),
+      ]) {
+        final canvas = _Recorder();
+        ClearIconPainter(const Color(0xFF000000)).paint(canvas, size);
+
+        expect(canvas.circles, hasLength(1));
+        expect(canvas.lines, hasLength(2));
+        final disc = canvas.circles.single;
+        for (final line in canvas.lines) {
+          final middle = (line.from + line.to) / 2;
+          expect(
+            (middle - disc.centre).distance,
+            lessThan(0.01),
+            reason: 'the cross is centred on the disc at $size',
+          );
+          // And inside it, not spilling over the edge.
+          expect((line.from - disc.centre).distance, lessThan(disc.radius));
+        }
+      }
+    });
+
+    test('the disc keeps to the shorter side', () {
+      final canvas = _Recorder();
+      ClearIconPainter(const Color(0xFF000000))
+          .paint(canvas, const Size(16, 32));
+      // Sixteen wide and thirty-two tall makes a mark sixteen across, not one
+      // that spills out of the sides.
+      expect(canvas.circles.single.radius, 8);
+    });
+  });
 }

@@ -73,6 +73,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `Select`'s clear mark drew its cross low in its disc.** The mark took
+  its disc from the width of the box and its cross from the height, which
+  agrees in a square and nowhere else — and a row that makes its children the
+  height of the tallest hands it a box twice as tall as it is wide. Both are
+  drawn from the shorter side and about the middle now, so the mark is right
+  in any box it is given, and the button no longer lets itself be stretched.
+  The kit had **two** classes called `ClearIconPainter` — one among the icons,
+  which `Input` used, and a copy inside `select.dart` used by `Select` and the
+  two pickers. Fixing one left the other wrong, which is how a mark can look
+  right in one control and crooked in the next. There is one now, among the
+  icons where it belongs.
+
+- **A cleared value came back.** Clear, pick a date, clear again: the picker
+  handed back null and went on showing the date. A picker keeps a value of its
+  own as the fallback for `value` — `value ?? _internal` — and only wrote to
+  it while `value` was null, so a date picked during that spell stayed in the
+  fallback for good and showed through the moment `value` went null again,
+  which is exactly what clearing does. The fallback is kept in step now,
+  whether or not somebody else is driving the control. `TimePicker`, `Select`,
+  `InputNumber` and `CheckableTagGroup` all held the same shape and are fixed
+  with it.
+
+- **A `DatePicker` or `TimePicker` cleared on the second click.** The mark is
+  drawn while the field is hovered, and hovering is a rebuild — so the mark
+  was not there yet for a pointer that arrived and clicked in the same frame,
+  which is what a mouse coming from the panel above does. The first click went
+  to the calendar beside it and opened the panel; the second cleared. The slot
+  now holds one target whenever there is anything to clear and decides what to
+  do when it is tapped, by which time the hover is known whether or not a
+  frame has been painted. The mark also shows while the panel is open, as a
+  `Select`'s does — and its target is now the height of the field rather than
+  the fourteen pixels of the glyph, which is what anybody aiming a little
+  high or a little low was missing.
+
 - **No `Input` could be selected with a pointer.** The editable is built with
   `rendererIgnoresPointer`, and what stood above it was a tap-to-focus
   gesture and nothing else — so dragging across the words, double-tapping one

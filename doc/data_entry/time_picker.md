@@ -130,6 +130,14 @@ Each callback names what is **not** available, and the later ones are told what
 has been chosen so far. `hideDisabledOptions: true` takes them off the list
 instead of greying them out.
 
+## Clearing it
+
+The mark appears when the pointer is over the field or the panel is open, and
+one click clears. One click, not two: the target is in the slot whenever there
+is something to clear, and only what is *drawn* there follows the pointer — a
+target that came and went with the paint would not be there yet for a mouse
+that arrives and clicks in the same frame.
+
 ## Sizes
 
 `size` takes either a preset or a measurement:

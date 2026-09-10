@@ -352,7 +352,11 @@ class _InputNumberState extends State<InputNumber> {
   }
 
   void _emit(num? v) {
-    if (widget.value == null) setState(() => _internal = v);
+    // Kept in step whether or not somebody else is driving this: it is only
+    // the fallback for `value`, and a stale one shows through the moment
+    // `value` goes null again. See `DatePicker._commit`, where the same
+    // fallback showed a cleared date back to the reader.
+    setState(() => _internal = v);
     widget.onChanged?.call(v);
   }
 

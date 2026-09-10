@@ -3,6 +3,7 @@ import 'package:flutter/services.dart'
     show KeyEvent, KeyUpEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 
+import '../../icons/icons.dart';
 import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
@@ -11,7 +12,6 @@ import '../../utils/size_resolver.dart';
 import '../../utils/time_columns.dart';
 import '../../utils/time_format.dart';
 import '../data_entry/input.dart' show InputStatus;
-import '../data_entry/select.dart' show ClearIconPainter;
 import '../general/compact.dart';
 
 /// How a [TimePicker] is filled and bordered.
@@ -427,7 +427,13 @@ class _TimePickerState extends State<TimePicker> {
 
   void _commit(Duration? time) {
     if (time == _value) return;
-    if (widget.value == null) setState(() => _internal = time);
+    // The picker's own value is kept in step whether or not somebody else is
+    // driving it. It is only the fallback for `value` — `value ?? _internal` —
+    // and a stale one shows through the moment `value` goes null again, which
+    // is exactly what clearing does. A picker cleared once, given a date, and
+    // cleared again handed back null and then went on showing the date it had
+    // been holding all along.
+    setState(() => _internal = time);
     widget.onChanged?.call(time);
   }
 
@@ -726,7 +732,13 @@ class _TimePickerState extends State<TimePicker> {
     _syncAnchor();
 
     final fontSize = _fontSize(t);
-    final showClear = _allowClear && _enabled && _value != null && _hovered;
+    // One target either way, deciding what to do when it is tapped. A mark
+    // that appears only after `_hovered` has been through a rebuild is not
+    // there yet when a pointer arrives and clicks in the same frame, and the
+    // first click went to the clock beside it instead. See `DatePicker`,
+    // where the same slot is built the same way.
+    final canClear = _allowClear && _enabled && _value != null;
+    final showClear = canClear && (_hovered || _open);
 
     final Color fill;
     if (!_enabled) {
@@ -864,13 +876,42 @@ class _TimePickerState extends State<TimePicker> {
                     // No bound at all, so nothing to give way to.
                     SizedBox(width: valueWidth, child: valueArea),
                   SizedBox(width: t.sizeXS),
-                  if (showClear)
+                  if (canClear)
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: _clear,
-                      child: CustomPaint(
-                        size: Size.square(fontSize),
-                        painter: ClearIconPainter(t.colorTextTertiary),
+                      onTap: () {
+                        if (_hovered || _open) {
+                          _clear();
+                        } else {
+                          _requestOpen(!_open);
+                        }
+                      },
+                      // As tall as the field. The mark is drawn at the type
+                      // size, so the target used to be fourteen pixels tall
+                      // in the middle of a box more than twice that — aim a
+                      // little high or a little low and the click went to the
+                      // field instead, which opened the panel and looked
+                      // exactly like a clear that had not worked. The glyph
+                      // is the size it always was, and so is the slot: only
+                      // what takes the pointer grew, and it grew where there
+                      // was already room.
+                      child: SizedBox(
+                        height: _height(t),
+                        width: fontSize,
+                        child: Center(
+                          child: showClear
+                              ? CustomPaint(
+                                  size: Size.square(fontSize),
+                                  painter:
+                                      ClearIconPainter(t.colorTextTertiary),
+                                )
+                              : widget.suffixIcon ??
+                                  CustomPaint(
+                                    size: Size.square(fontSize),
+                                    painter: _ClockIconPainter(
+                                        statusColor ?? t.colorTextQuaternary),
+                                  ),
+                        ),
                       ),
                     )
                   else

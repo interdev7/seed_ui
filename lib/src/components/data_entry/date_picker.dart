@@ -3,6 +3,7 @@ import 'package:flutter/services.dart'
     show KeyEvent, KeyUpEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 
+import '../../icons/icons.dart';
 import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
@@ -12,7 +13,6 @@ import '../../utils/size_resolver.dart';
 import '../../utils/time_columns.dart';
 import '../../utils/time_format.dart';
 import '../data_entry/input.dart' show InputStatus;
-import '../data_entry/select.dart' show ClearIconPainter;
 import '../general/compact.dart';
 
 /// How a [DatePicker] is filled and bordered.
@@ -471,7 +471,13 @@ class _DatePickerState extends State<DatePicker> {
 
   void _commit(DateTime? date) {
     if (date == _value) return;
-    if (widget.value == null) setState(() => _internal = date);
+    // The picker's own value is kept in step whether or not somebody else is
+    // driving it. It is only the fallback for `value` — `value ?? _internal` —
+    // and a stale one shows through the moment `value` goes null again, which
+    // is exactly what clearing does. A picker cleared once, given a date, and
+    // cleared again handed back null and then went on showing the date it had
+    // been holding all along.
+    setState(() => _internal = date);
     widget.onChanged?.call(date);
   }
 
@@ -847,7 +853,22 @@ class _DatePickerState extends State<DatePicker> {
     _syncAnchor();
 
     final fontSize = _fontSize(t);
-    final showClear = _allowClear && _enabled && _value != null && _hovered;
+    // Whether there is anything to clear at all, and whether the mark for it
+    // is on show. Two questions, because the target must not come and go with
+    // the paint: a mark drawn only once `_hovered` has been through a
+    // rebuild is a mark that is not there yet when the pointer arrives and
+    // clicks in the same frame — a mouse coming straight from the panel, or
+    // from the control beside it. The first click went to whatever the slot
+    // held before, which opened the panel, and only the second one cleared.
+    //
+    // So the slot holds one target either way and decides what to do when it
+    // is tapped, by which time `_hovered` is set whether or not a frame has
+    // been painted.
+    final canClear = _allowClear && _enabled && _value != null;
+    // Open as well as hovered, as a Select's mark is: the panel covers the
+    // pointer's way back to the field on a touchscreen, where there is no
+    // hovering to be done.
+    final showClear = canClear && (_hovered || _open);
 
     final Color fill;
     if (!_enabled) {
@@ -970,13 +991,45 @@ class _DatePickerState extends State<DatePicker> {
                   else
                     SizedBox(width: valueWidth, child: valueArea),
                   SizedBox(width: t.sizeXS),
-                  if (showClear)
+                  if (canClear)
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: _clear,
-                      child: CustomPaint(
-                        size: Size.square(fontSize),
-                        painter: ClearIconPainter(t.colorTextTertiary),
+                      // Asked at the moment of the tap rather than settled
+                      // when the slot was built.
+                      onTap: () {
+                        if (_hovered || _open) {
+                          _clear();
+                        } else {
+                          _requestOpen(!_open);
+                        }
+                      },
+                      // As tall as the field. The mark is drawn at the type
+                      // size, so the target used to be fourteen pixels tall
+                      // in the middle of a box more than twice that — aim a
+                      // little high or a little low and the click went to the
+                      // field instead, which opened the panel and looked
+                      // exactly like a clear that had not worked. The glyph
+                      // is the size it always was, and so is the slot: only
+                      // what takes the pointer grew, and it grew where there
+                      // was already room.
+                      child: SizedBox(
+                        height: _height(t),
+                        width: fontSize,
+                        child: Center(
+                          child: showClear
+                              ? CustomPaint(
+                                  size: Size.square(fontSize),
+                                  painter:
+                                      ClearIconPainter(t.colorTextTertiary),
+                                )
+                              : widget.suffixIcon ??
+                                  CustomPaint(
+                                    size: Size.square(fontSize),
+                                    painter: _CalendarIconPainter(
+                                      statusColor ?? t.colorTextQuaternary,
+                                    ),
+                                  ),
+                        ),
                       ),
                     )
                   else

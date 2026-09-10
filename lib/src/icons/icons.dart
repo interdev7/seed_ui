@@ -391,29 +391,42 @@ class DashedBorderPainter extends CustomPainter {
       old.strokeWidth != strokeWidth;
 }
 
-/// A circular filled icon with a cross inside, commonly used for clear buttons.
+/// A filled disc with a cross inside: the mark that clears a control.
 class ClearIconPainter extends CustomPainter {
   /// Creates a [ClearIconPainter].
   ClearIconPainter(this.color);
 
   /// The fill colour of the disc.
   final Color color;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final r = size.width / 2;
-    canvas.drawCircle(Offset(r, r), r, Paint()..color = color);
+    // Both the disc and the cross are drawn from the shorter side and about
+    // the middle of the box. They used to be drawn from different sides —
+    // the disc from the width, the cross from the height — which agrees in a
+    // square and nowhere else: given a box as tall as the field, the cross
+    // sat low in a disc near the top.
+    final side = math.min(size.width, size.height);
+    final centre = Offset(size.width / 2, size.height / 2);
+    canvas.drawCircle(centre, side / 2, Paint()..color = color);
+
     final stroke = Paint()
       ..color = const Color(0xFFFFFFFF)
-      ..strokeWidth = 1.2
+      // With the side rather than fixed, so the cross keeps its weight at
+      // whatever size the mark is asked for.
+      ..strokeWidth = side * 0.075
       ..strokeCap = StrokeCap.round;
+    // A third of the way out from the middle, which is where 0.34 and 0.66
+    // put it when the box was square.
+    final arm = side * 0.16;
     canvas.drawLine(
-      Offset(size.width * 0.34, size.height * 0.34),
-      Offset(size.width * 0.66, size.height * 0.66),
+      centre - Offset(arm, arm),
+      centre + Offset(arm, arm),
       stroke,
     );
     canvas.drawLine(
-      Offset(size.width * 0.66, size.height * 0.34),
-      Offset(size.width * 0.34, size.height * 0.66),
+      centre + Offset(arm, -arm),
+      centre - Offset(arm, -arm),
       stroke,
     );
   }

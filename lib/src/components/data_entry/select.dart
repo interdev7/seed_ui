@@ -610,7 +610,11 @@ class _SelectState<T> extends State<Select<T>> {
   // --- selection ---
 
   void _emit(List<T> next) {
-    if (widget.value == null) _internal = next;
+    // Kept in step whether or not somebody else is driving this: it is only
+    // the fallback for `value`, and a stale one shows through the moment
+    // `value` goes null again. See `DatePicker._commit`, where the same
+    // fallback showed a cleared date back to the reader.
+    _internal = next;
     widget.onChanged?.call(next);
   }
 
@@ -1652,45 +1656,18 @@ class _ClearButton extends StatelessWidget {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
-        child: CustomPaint(
-          size: const Size.square(16),
-          painter: ClearIconPainter(token.colorTextTertiary),
+        // Centred rather than stretched: a row that makes its children the
+        // height of the tallest would otherwise hand the mark a box far
+        // taller than it is wide.
+        child: Center(
+          child: CustomPaint(
+            size: const Size.square(16),
+            painter: ClearIconPainter(token.colorTextTertiary),
+          ),
         ),
       ),
     );
   }
-}
-
-/// A filled disc with a cross inside — the select's clear button.
-class ClearIconPainter extends CustomPainter {
-  /// Creates a [ClearIconPainter].
-  ClearIconPainter(this.color);
-
-  /// The fill colour of the disc.
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final r = size.width / 2;
-    canvas.drawCircle(Offset(r, r), r, Paint()..color = color);
-    final stroke = Paint()
-      ..color = const Color(0xFFFFFFFF)
-      ..strokeWidth = 1.2
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(size.width * 0.34, size.height * 0.34),
-      Offset(size.width * 0.66, size.height * 0.66),
-      stroke,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.66, size.height * 0.34),
-      Offset(size.width * 0.34, size.height * 0.66),
-      stroke,
-    );
-  }
-
-  @override
-  bool shouldRepaint(ClearIconPainter old) => old.color != color;
 }
 
 /// The trailing chevron, rotating when the dropdown opens.

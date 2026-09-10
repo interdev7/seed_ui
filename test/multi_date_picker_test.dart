@@ -26,6 +26,7 @@ Future<void> _openPanel(WidgetTester tester) async {
 void main() {
   _controlledTests();
   _tagDrawingTests();
+  _widthTests();
   group('collecting several days', () {
     testWidgets('the panel stays open, so a second day is one more tap',
         (tester) async {
@@ -382,6 +383,100 @@ void _tagDrawingTests() {
       await tester.tap(find.byKey(const ValueKey('mark')));
       await tester.pumpAndSettle();
       expect(held, isEmpty);
+    });
+  });
+}
+
+void _widthTests() {
+  group('how wide the field runs', () {
+    // A key per case: pumped twice in one test, the same picker keeps the
+    // state it was built with, and `defaultValues` would be the first call's.
+    var run = 0;
+    Future<Size> sized(WidgetTester tester, Widget picker,
+        {double room = 800}) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: room,
+            child:
+                Align(child: KeyedSubtree(key: ValueKey(run++), child: picker)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return tester.getSize(find.byType(MultiDatePicker));
+    }
+
+    testWidgets('a field holding nothing is as wide as its placeholder',
+        (tester) async {
+      final short = await sized(
+        tester,
+        const MultiDatePicker(placeholder: 'Days'),
+      );
+      final long = await sized(
+        tester,
+        const MultiDatePicker(placeholder: 'Pick the days you are working'),
+      );
+
+      // Taken, not given: a field left to itself used to fill the page
+      // whatever it was holding.
+      expect(short.width, lessThan(400));
+      expect(long.width, greaterThan(short.width));
+    });
+
+    testWidgets('it grows with the days it holds', (tester) async {
+      final now = DateTime.now();
+      final one = await sized(
+        tester,
+        MultiDatePicker(defaultValues: [DateTime(now.year, now.month, 4)]),
+      );
+      final three = await sized(
+        tester,
+        MultiDatePicker(
+          defaultValues: [
+            for (var d = 4; d <= 6; d++) DateTime(now.year, now.month, d),
+          ],
+        ),
+      );
+      expect(three.width, greaterThan(one.width));
+    });
+
+    testWidgets('offered less, the tags wrap rather than the field spilling',
+        (tester) async {
+      final now = DateTime.now();
+      final roomy = await sized(
+        tester,
+        MultiDatePicker(
+          defaultValues: [
+            for (var d = 4; d <= 9; d++) DateTime(now.year, now.month, d),
+          ],
+        ),
+      );
+      final tight = await sized(
+        tester,
+        MultiDatePicker(
+          defaultValues: [
+            for (var d = 4; d <= 9; d++) DateTime(now.year, now.month, d),
+          ],
+        ),
+        room: 260,
+      );
+
+      expect(tester.takeException(), isNull, reason: 'nothing overflowed');
+      expect(tight.width, lessThanOrEqualTo(260));
+      // The height is where the tags went.
+      expect(tight.height, greaterThan(roomy.height));
+    });
+
+    testWidgets('told a width, it fills it', (tester) async {
+      final told = await sized(
+        tester,
+        const SizedBox(
+          width: 420,
+          child: MultiDatePicker(placeholder: 'Days'),
+        ),
+      );
+      expect(told.width, 420);
     });
   });
 }

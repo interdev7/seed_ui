@@ -70,9 +70,16 @@ than it shows words it; left alone, every day is named and the
 field grows to hold them — a picker holding three days should read as three
 days.
 
-The field has a **minimum** height rather than a fixed one: the tags wrap, so
-one holding a fortnight is taller than one holding a day. Fixed, the tags
-would be clipped and the reader would be told nothing about it.
+## Width
+
+**The field takes what it is holding.** Given no width it is as wide as its
+tags, or as its placeholder while it holds none, and it grows as days go in.
+Offered less than that, the tags wrap and it takes what it was offered; told a
+width outright, it fills it.
+
+The height follows: it is a **minimum**, not a fixed height, so a field
+holding a fortnight is taller than one holding a day. Fixed, the tags would be
+clipped and the reader would be told nothing about it.
 
 ## Drawing a tag yourself
 

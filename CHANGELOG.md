@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   uses; the tag is `Select`'s, pulled out into one widget rather than written
   twice.
 
+  The field takes what it is holding rather than filling the page: as wide as
+  its tags, or its placeholder while it holds none, wrapping when it is
+  offered less and filling a width it is told outright.
+
   `tagBuilder` draws one tag given the picker's own, with `DateTag` carrying
   the day, its label, whether the field is usable and how to remove it;
   `removeIcon` replaces the cross without touching where it sits or what it

@@ -734,12 +734,17 @@ class _MultiDatePickerState extends State<MultiDatePicker>
             border: Border.all(color: border, width: t.lineWidth),
           ),
           child: Row(
+            // Min, with the tags merely flexible: the field is as wide as
+            // what is in it and gives way when there is less. `Expanded` in a
+            // row that fills its parent is how it came to take the whole page
+            // whatever it was holding.
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.prefix != null) ...[
                 widget.prefix!,
                 SizedBox(width: t.sizeXS),
               ],
-              Expanded(
+              Flexible(
                 child: tags.isEmpty
                     ? Text(
                         widget.placeholder ?? words.selectDate,

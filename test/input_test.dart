@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
@@ -8,6 +9,7 @@ Widget _host(Widget child) => MaterialApp(
     );
 
 void main() {
+  _selectionTests();
   testWidgets('shows the placeholder while empty, hides it once typed',
       (tester) async {
     await tester.pumpWidget(_host(const Input(placeholder: 'Username')));
@@ -237,6 +239,88 @@ void main() {
         );
         expect(tester.takeException(), isNull, reason: 'overflowed at $h');
       }
+    });
+  });
+}
+
+void _selectionTests() {
+  group('the text can be selected', () {
+    testWidgets('dragging across the words selects them', (tester) async {
+      await tester.pumpWidget(_host(const Input(value: 'hunter22 secret')));
+      await tester.pumpAndSettle();
+
+      final editable = tester.state<EditableTextState>(
+        find.byType(EditableText),
+      );
+      final box = tester.getRect(find.byType(EditableText));
+
+      // Drag from just inside the leading edge to the middle.
+      // A mouse: on a touch platform a drag scrolls the field, and it is a
+      // long press that starts a selection. This is the pointer somebody
+      // copying a password is holding.
+      final drag = await tester.startGesture(
+        Offset(box.left + 4, box.center.dy),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await drag.moveTo(Offset(box.center.dx, box.center.dy));
+      await tester.pump();
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      final selection = editable.textEditingValue.selection;
+      // A field that only takes focus leaves the caret where it is: the text
+      // can be read and never copied.
+      expect(selection.isCollapsed, isFalse);
+      expect(selection.start, 0);
+    });
+
+    testWidgets('a revealed password selects like any other field',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Input(value: 'hunter22', password: PasswordConfig()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The eye, which is the only thing to tap besides the field itself.
+      await tester.tap(find.byType(CustomPaint).last);
+      await tester.pumpAndSettle();
+
+      final editable = tester.state<EditableTextState>(
+        find.byType(EditableText),
+      );
+      expect(editable.widget.obscureText, isFalse);
+
+      final box = tester.getRect(find.byType(EditableText));
+      // A mouse: on a touch platform a drag scrolls the field, and it is a
+      // long press that starts a selection. This is the pointer somebody
+      // copying a password is holding.
+      final drag = await tester.startGesture(
+        Offset(box.left + 4, box.center.dy),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await drag.moveTo(Offset(box.right - 4, box.center.dy));
+      await tester.pump();
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      expect(editable.textEditingValue.selection.isCollapsed, isFalse);
+    });
+
+    testWidgets('a tap still puts the caret in and takes focus',
+        (tester) async {
+      await tester.pumpWidget(_host(const Input(value: 'hunter22')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(EditableText));
+      await tester.pumpAndSettle();
+
+      final editable = tester.state<EditableTextState>(
+        find.byType(EditableText),
+      );
+      expect(editable.widget.focusNode.hasFocus, isTrue);
     });
   });
 }

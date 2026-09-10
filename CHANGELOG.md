@@ -73,6 +73,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **No `Input` could be selected with a pointer.** The editable is built with
+  `rendererIgnoresPointer`, and what stood above it was a tap-to-focus
+  gesture and nothing else — so dragging across the words, double-tapping one
+  and long-pressing for the toolbar all did nothing, in every field the kit
+  has. Text could be read and never copied, which showed up first on a
+  password revealed with the eye. Flutter's own selection gestures are in
+  place now, the ones a Material field uses.
+
+  The field is also named on its own node rather than through an ancestor:
+  an editable gathers what is inside it and stops there, so a name written
+  above it was read out as a caption standing beside an unnamed box. The
+  placeholder names the field once and is no longer announced twice.
+
 - **A dressed row lost the line under it.** Flutter's `Table` paints a row's
   decoration *behind* its cells, so a ground given by `rowStyle` or `cellStyle`
   covered the rule and the rows ran together. The rule rides the cell now, in

@@ -231,6 +231,17 @@ apps.
 - `prefixFlush` — the leading counterpart, for a full-height affix at the
   other end: the minus button of an `InputNumberMode.spinner` is one.
 
+## Selecting the text
+
+The text is selected the way text is selected anywhere: drag across it,
+double-tap a word, triple-tap the line, long-press for the toolbar, or hold
+shift and walk with the arrows. Copy and paste work from the keyboard and from
+the toolbar.
+
+A password reveals with the eye and is then an ordinary field — selectable and
+copyable. While it is hidden it is not: there is nothing readable to copy, and
+a toolbar over dots would only offer to paste them somewhere.
+
 ## What a screen reader hears
 
 The field says it is a text field and reads back what is in it; the rest it has

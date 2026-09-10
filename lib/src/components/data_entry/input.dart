@@ -473,7 +473,39 @@ class Input extends StatefulWidget {
   State<Input> createState() => _SoftInputState();
 }
 
+/// Hands the selection gestures what they need to know about this field.
+///
+/// [EditableText] is built with `rendererIgnoresPointer`, so it draws the
+/// text and leaves every pointer to whatever is above it. Something has to
+/// pick them up, and a plain tap-to-focus is not enough: dragging across the
+/// words, double-tapping one, long-pressing for the toolbar are all gestures
+/// that have to reach the render object underneath. Flutter's own builder
+/// does exactly that, and it is what a Material field uses.
+class _SelectionDelegate
+    implements TextSelectionGestureDetectorBuilderDelegate {
+  _SelectionDelegate(this._state);
+
+  final _SoftInputState _state;
+
+  @override
+  GlobalKey<EditableTextState> get editableTextKey => _state._editableKey;
+
+  @override
+  bool get forcePressEnabled => false;
+
+  @override
+  bool get selectionEnabled => _state._enabled;
+}
+
 class _SoftInputState extends State<Input> {
+  /// The editable underneath, so the gestures above it can reach its render
+  /// object.
+  final GlobalKey<EditableTextState> _editableKey =
+      GlobalKey<EditableTextState>();
+
+  late final TextSelectionGestureDetectorBuilder _selection =
+      TextSelectionGestureDetectorBuilder(delegate: _SelectionDelegate(this));
+
   /// The defaults set for this component in the subtree, if any.
   InputDefaults? get _defaults =>
       ConfigProvider.defaultsOf<InputDefaults>(context);
@@ -647,6 +679,7 @@ class _SoftInputState extends State<Input> {
     );
 
     final field = EditableText(
+      key: _editableKey,
       controller: _controller,
       focusNode: _focusNode,
       readOnly: widget.readOnly || !_enabled,
@@ -682,6 +715,20 @@ class _SoftInputState extends State<Input> {
       enableInteractiveSelection: _enabled,
     );
 
+    // Written on the field's own node rather than on something above it.
+    // An editable is a merge boundary — it gathers what is inside it and
+    // stops there — so a name further up is a second thing standing beside an
+    // unnamed box, which is exactly how a screen reader reads it out. The
+    // placeholder is the name where nothing else names the field: it is what
+    // a sighted reader is going by too.
+    final spoken = Semantics(
+      label: widget.semanticsLabel ?? widget.placeholder,
+      validationResult: widget.status == InputStatus.error
+          ? SemanticsValidationResult.invalid
+          : SemanticsValidationResult.none,
+      child: field,
+    );
+
     // Where the placeholder sits, to match where the typed text will.
     //
     // `left` and `right` are the two the caller asked for by side and stay
@@ -697,27 +744,30 @@ class _SoftInputState extends State<Input> {
       _ => AlignmentDirectional(-1, y),
     };
 
-    // The placeholder sits behind the field and shows through while empty.
     final withPlaceholder = Stack(
       children: [
         if (widget.placeholder != null && _controller.text.isEmpty)
           Positioned.fill(
             child: Align(
               alignment: placeholderAlign,
-              child: IgnorePointer(
-                child: Text(
-                  widget.placeholder!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: widget.textAlign,
-                  style: textStyle.copyWith(color: token.colorTextTertiary),
+              // Not read out: it has already named the field above, and a
+              // screen reader given both says the word twice.
+              child: ExcludeSemantics(
+                child: IgnorePointer(
+                  child: Text(
+                    widget.placeholder!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: widget.textAlign,
+                    style: textStyle.copyWith(color: token.colorTextTertiary),
+                  ),
                 ),
               ),
             ),
           ),
         _multiline
-            ? field
-            : Align(alignment: AlignmentDirectional.centerStart, child: field),
+            ? spoken
+            : Align(alignment: AlignmentDirectional.centerStart, child: spoken),
       ],
     );
 
@@ -804,20 +854,8 @@ class _SoftInputState extends State<Input> {
     // build have to honour it — the plain field returns early, which is what
     // an earlier attempt at this missed.
     final named = _size.explicitWidth;
-    Widget sized(Widget child) {
-      final width =
-          named == null ? child : SizedBox(width: named, child: child);
-      // What the field is called and whether it is in trouble. The role and
-      // the value come from the editable inside; a screen reader is told the
-      // rest here.
-      return Semantics(
-        label: widget.semanticsLabel,
-        validationResult: widget.status == InputStatus.error
-            ? SemanticsValidationResult.invalid
-            : SemanticsValidationResult.none,
-        child: width,
-      );
-    }
+    Widget sized(Widget child) =>
+        named == null ? child : SizedBox(width: named, child: child);
 
     if (!attached) return sized(box);
 
@@ -885,45 +923,59 @@ class _SoftInputState extends State<Input> {
       cursor: _enabled ? SystemMouseCursors.text : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _enabled ? () => _focusNode.requestFocus() : null,
-        child: AnimatedContainer(
-          duration: token.motionDurationMid,
-          curve: token.motionEaseInOut,
-          constraints: BoxConstraints(
-            minHeight: _multiline ? _height(token) : 0,
-          ),
-          height: _multiline ? null : _height(token),
-          // Start and end rather than left and right: the inset belongs to
-          // the prefix's side and the suffix's side, which swap over when the
-          // field reads the other way.
-          padding: EdgeInsetsDirectional.fromSTEB(
-            widget.prefixFlush ? 0 : inlinePad,
-            _multiline ? blockPad : 0,
-            widget.suffixFlush ? 0 : inlinePad,
-            _multiline ? blockPad : 0,
-          ),
-          decoration: BoxDecoration(
-            color: _enabled ? r.colorBgContainer : token.colorFillTertiary,
-            // Square where an addon is joined on, rounded at the free end.
-            borderRadius: BorderRadiusDirectional.only(
-              topStart: corners.topStart,
-              bottomStart: corners.bottomStart,
-              topEnd: flatRight ? Radius.zero : corners.topEnd,
-              bottomEnd: flatRight ? Radius.zero : corners.bottomEnd,
+      // The selection gestures rather than a bare tap: a field that only
+      // takes focus cannot be dragged across, double-tapped for a word or
+      // long-pressed for the toolbar — which is to say its text can be read
+      // and never copied. The whole box, not only the words, so tapping the
+      // padding beside them puts the caret at the nearest end.
+      // The tap says so here rather than in the gesture detector. The
+      // selection gestures stay out of the semantics tree on purpose — a
+      // drag-to-select means nothing to a screen reader — but the old
+      // tap-to-focus detector was also what gathered the field into one node:
+      // an annotation with no container of its own takes in what is under it,
+      // so the placeholder, the name and the editable are read as one thing
+      // rather than as a caption standing beside an unnamed box.
+      child: Semantics(
+          container: true,
+          onTap: _enabled ? () => _focusNode.requestFocus() : null,
+          child: _selection.buildGestureDetector(
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: token.motionDurationMid,
+              curve: token.motionEaseInOut,
+              constraints: BoxConstraints(
+                minHeight: _multiline ? _height(token) : 0,
+              ),
+              height: _multiline ? null : _height(token),
+              // Start and end rather than left and right: the inset belongs to
+              // the prefix's side and the suffix's side, which swap over when the
+              // field reads the other way.
+              padding: EdgeInsetsDirectional.fromSTEB(
+                widget.prefixFlush ? 0 : inlinePad,
+                _multiline ? blockPad : 0,
+                widget.suffixFlush ? 0 : inlinePad,
+                _multiline ? blockPad : 0,
+              ),
+              decoration: BoxDecoration(
+                color: _enabled ? r.colorBgContainer : token.colorFillTertiary,
+                // Square where an addon is joined on, rounded at the free end.
+                borderRadius: BorderRadiusDirectional.only(
+                  topStart: corners.topStart,
+                  bottomStart: corners.bottomStart,
+                  topEnd: flatRight ? Radius.zero : corners.topEnd,
+                  bottomEnd: flatRight ? Radius.zero : corners.bottomEnd,
+                ),
+                border: Border.all(
+                  color: _borderColor(token),
+                  width: token.lineWidth,
+                ),
+                boxShadow: ring == null
+                    ? null
+                    : [BoxShadow(color: ring, blurRadius: 0, spreadRadius: 3)],
+              ),
+              child: content,
             ),
-            border: Border.all(
-              color: _borderColor(token),
-              width: token.lineWidth,
-            ),
-            boxShadow: ring == null
-                ? null
-                : [BoxShadow(color: ring, blurRadius: 0, spreadRadius: 3)],
-          ),
-          child: content,
-        ),
-      ),
+          )),
     );
   }
 

@@ -216,14 +216,11 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 360,
-                child: MultiDatePicker(
-                  values: _shifts,
-                  maxCount: 5,
-                  placeholder: 'Pick your shifts',
-                  onChanged: (v) => setState(() => _shifts = v),
-                ),
+              MultiDatePicker(
+                values: _shifts,
+                maxCount: 5,
+                placeholder: 'Pick your shifts',
+                onChanged: (v) => setState(() => _shifts = v),
               ),
               const SizedBox(height: 8),
               Text(

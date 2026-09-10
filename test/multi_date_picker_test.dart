@@ -25,6 +25,7 @@ Future<void> _openPanel(WidgetTester tester) async {
 
 void main() {
   _controlledTests();
+  _tagDrawingTests();
   group('collecting several days', () {
     testWidgets('the panel stays open, so a second day is one more tap',
         (tester) async {
@@ -135,7 +136,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(ValueTag), findsNWidgets(3));
-      expect(find.text('+3'), findsOneWidget);
+      // Worded as a `Select` holding more than it shows words it.
+      expect(find.text('+ 3 ...'), findsOneWidget);
     });
 
     testWidgets('a picker holding nothing says so', (tester) async {
@@ -289,6 +291,97 @@ void _controlledTests() {
       await tester.tap(find.text('15'));
       await tester.pumpAndSettle();
       expect(fillUnder(tester, '15'), plain);
+    });
+  });
+}
+
+void _tagDrawingTests() {
+  group('tags drawn by the caller', () {
+    testWidgets('a builder is handed the day, its label and the default tag',
+        (tester) async {
+      final now = DateTime.now();
+      final seen = <DateTag>[];
+      List<DateTime>? held;
+      await tester.pumpWidget(
+        _host(
+          MultiDatePicker(
+            defaultValues: [
+              DateTime(now.year, now.month, 4),
+              DateTime(now.year, now.month, 9),
+            ],
+            onChanged: (v) => held = v,
+            tagBuilder: (context, tag, child) {
+              seen.add(tag);
+              return tag.date.day == 4
+                  ? GestureDetector(
+                      onTap: tag.onRemove,
+                      child: Text('mine ${tag.label}'),
+                    )
+                  : child;
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(seen, hasLength(2));
+      // The label is the picker's own writing, so a tag drawn by hand reads
+      // like the ones beside it.
+      expect(seen.first.label, contains('-04'));
+      expect(seen.first.enabled, isTrue);
+
+      // One replaced, one left as the picker drew it.
+      expect(find.textContaining('mine '), findsOneWidget);
+      expect(find.byType(ValueTag), findsOneWidget);
+
+      // And a tag drawn by hand can still take its day out.
+      await tester.tap(find.textContaining('mine '));
+      await tester.pumpAndSettle();
+      expect(held, hasLength(1));
+    });
+
+    testWidgets('a barred field offers no way to remove', (tester) async {
+      final now = DateTime.now();
+      final seen = <DateTag>[];
+      await tester.pumpWidget(
+        _host(
+          MultiDatePicker(
+            disabled: true,
+            defaultValues: [DateTime(now.year, now.month, 4)],
+            tagBuilder: (context, tag, child) {
+              seen.add(tag);
+              return child;
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // A tag nobody may remove should not offer to be removed.
+      expect(seen.single.onRemove, isNull);
+      expect(seen.single.enabled, isFalse);
+    });
+
+    testWidgets('removeIcon replaces the mark and not the target',
+        (tester) async {
+      final now = DateTime.now();
+      List<DateTime>? held;
+      await tester.pumpWidget(
+        _host(
+          MultiDatePicker(
+            defaultValues: [DateTime(now.year, now.month, 4)],
+            onChanged: (v) => held = v,
+            removeIcon: const Text('✕', key: ValueKey('mark')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('mark')), findsOneWidget);
+
+      // Still in the same place, and still removes the day: a picture cannot
+      // be swapped in for something that does nothing.
+      await tester.tap(find.byKey(const ValueKey('mark')));
+      await tester.pumpAndSettle();
+      expect(held, isEmpty);
     });
   });
 }

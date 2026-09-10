@@ -65,13 +65,42 @@ nobody could correct.
 ## What the field shows
 
 A tag for each day, each with a cross that removes it. `maxTagCount` names
-that many and counts the rest as `+3`; left alone, every day is named and the
+that many and counts the rest as `+ 3 ...`, worded as a `Select` holding more
+than it shows words it; left alone, every day is named and the
 field grows to hold them — a picker holding three days should read as three
 days.
 
 The field has a **minimum** height rather than a fixed one: the tags wrap, so
 one holding a fortnight is taller than one holding a day. Fixed, the tags
 would be clipped and the reader would be told nothing about it.
+
+## Drawing a tag yourself
+
+```dart
+MultiDatePicker(
+  tagBuilder: (context, tag, child) => holidays.contains(tag.date)
+      ? Tag(
+          color: TagColor.gold,
+          closable: true,
+          onClose: tag.onRemove,
+          child: Text(tag.label),
+        )
+      : child,
+)
+```
+
+`child` is the tag the picker would have drawn — wrap it to add something, or
+return your own. `tag` carries `date`, `label` (the day written by the
+picker's own format and the locale's figures, so a tag drawn by hand reads
+like the ones beside it), `enabled`, and `onRemove`.
+
+**Take `onRemove` with you.** A tag drawn by hand that drops it leaves the day
+with no way out but the panel. It is null on a barred field: a tag nobody may
+remove should not offer to be removed.
+
+`removeIcon` replaces the cross on every tag. The mark only — where it sits
+and what pressing it does stay the picker's business, so a picture cannot be
+swapped in for something that does nothing.
 
 ## API
 
@@ -99,6 +128,8 @@ would be clipped and the reader would be told nothing about it.
 | `onClear` | `VoidCallback?` | — | After the days are dropped |
 | `footerBuilder` | `WidgetBuilder?` | — | A row of your own under the panel |
 | `cellBuilder` | `DateCellBuilder?` | — | Draws a day cell — see [DatePicker](date_picker.md) |
+| `tagBuilder` | `DateTagBuilder?` | — | Draws one tag, given the picker's own |
+| `removeIcon` | `Widget?` | — | Replaces the cross on every tag |
 | `token` | `DatePickerToken?` | — | The panel is `DatePicker`'s, so its numbers are too |
 
 ## From the keyboard
@@ -133,6 +164,12 @@ week starts on all come from the locale.
 See [localization](../localization.md).
 
 ## Not here yet
+
+**A responsive tag line.** `Select` can keep its tags on one line and collapse
+the overflow to fit the width it is given (`maxTagCountResponsive`); this
+counts to a number you name, or names them all and grows. The machinery is a
+render object of `Select`'s own and is worth sharing rather than copying,
+which is why it is not here yet rather than half here.
 
 Presets, and a limit on which days may be chosen *together* — "any five, but
 no two in the same week" is a rule about the list rather than about a day, and

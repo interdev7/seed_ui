@@ -17,6 +17,7 @@ class ValueTag extends StatelessWidget {
     required this.enabled,
     required this.label,
     this.onRemove,
+    this.removeIcon,
     super.key,
   });
 
@@ -34,6 +35,10 @@ class ValueTag extends StatelessWidget {
 
   /// Takes this one out. A tag with nowhere to go carries no cross.
   final VoidCallback? onRemove;
+
+  /// Replaces the cross. The mark only — where it sits and what pressing it
+  /// does stay the tag's business.
+  final Widget? removeIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -72,13 +77,14 @@ class ValueTag extends StatelessWidget {
                 child: SizedBox(
                   width: 14,
                   height: 14,
-                  child: CustomPaint(
-                    painter: CrossPainter(
-                      token.colorTextTertiary,
-                      strokeWidth: 1.1,
-                      inset: 4,
-                    ),
-                  ),
+                  child: removeIcon ??
+                      CustomPaint(
+                        painter: CrossPainter(
+                          token.colorTextTertiary,
+                          strokeWidth: 1.1,
+                          inset: 4,
+                        ),
+                      ),
                 ),
               ),
             ),

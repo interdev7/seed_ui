@@ -73,6 +73,8 @@ DateRange
 DateRangePicker
 DateRangePickerDefaults
 DateRangePreset
+DateTag
+DateTagBuilder
 DisabledTime
 Drawer
 DrawerApi

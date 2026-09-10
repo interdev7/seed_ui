@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   uses; the tag is `Select`'s, pulled out into one widget rather than written
   twice.
 
+  `tagBuilder` draws one tag given the picker's own, with `DateTag` carrying
+  the day, its label, whether the field is usable and how to remove it;
+  `removeIcon` replaces the cross without touching where it sits or what it
+  does. The overflow count is worded as a `Select`'s is.
+
   The panel draws what the owner settled on rather than what the tap asked
   for: it is redrawn a frame behind, so a controlled picker marks the day on
   the tap that took it instead of lagging a tap behind, and an owner refusing

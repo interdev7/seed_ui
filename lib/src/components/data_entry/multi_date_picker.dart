@@ -15,6 +15,50 @@ import '../data_entry/input.dart' show InputStatus;
 import '../general/compact.dart';
 import 'date_picker.dart';
 
+/// One day the field is holding, as its tag knows it.
+@immutable
+class DateTag {
+  /// Creates a description of one tag.
+  const DateTag({
+    required this.date,
+    required this.label,
+    required this.enabled,
+    required this.onRemove,
+  });
+
+  /// The day it stands for.
+  final DateTime date;
+
+  /// The day written out, by the picker's own format and the locale's
+  /// figures — so a tag drawn by hand reads like the ones beside it.
+  final String label;
+
+  /// Whether the field may be used at all.
+  final bool enabled;
+
+  /// Takes this day out. Null on a barred field: a tag nobody may remove
+  /// should not offer to be removed.
+  final VoidCallback? onRemove;
+}
+
+/// Draws one tag in the field.
+///
+/// [child] is the tag the picker would have drawn. Wrap it to add something,
+/// or return your own and take [DateTag.onRemove] with you — a tag that
+/// cannot be removed leaves the day with no way out but the panel.
+///
+/// ```dart
+/// tagBuilder: (context, tag, child) => holidays.contains(tag.date)
+///     ? Tag(color: TagColor.gold, closable: true, onClose: tag.onRemove,
+///         child: Text(tag.label))
+///     : child,
+/// ```
+typedef DateTagBuilder = Widget Function(
+  BuildContext context,
+  DateTag tag,
+  Widget child,
+);
+
 /// Defaults for every [MultiDatePicker] under a `ConfigProvider`.
 @immutable
 class MultiDatePickerDefaults {
@@ -89,6 +133,8 @@ class MultiDatePicker extends StatefulWidget {
     this.onClear,
     this.footerBuilder,
     this.cellBuilder,
+    this.tagBuilder,
+    this.removeIcon,
     this.token,
   });
 
@@ -173,6 +219,17 @@ class MultiDatePicker extends StatefulWidget {
 
   /// Draws a day cell — see [DatePicker.cellBuilder].
   final DateCellBuilder? cellBuilder;
+
+  /// Draws one tag in the field, given the day and the tag the picker would
+  /// have drawn.
+  final DateTagBuilder? tagBuilder;
+
+  /// Replaces the cross on every tag.
+  ///
+  /// The mark, not the target: whatever is given still sits in the same
+  /// place and still removes the day, so a picture cannot be swapped in for
+  /// something that does nothing.
+  final Widget? removeIcon;
 
   /// Per-instance token overrides. The panel is [DatePicker]'s, so its
   /// numbers are too.
@@ -611,22 +668,42 @@ class _MultiDatePickerState extends State<MultiDatePicker>
     final named = most == null || held.length <= most ? held : held.take(most);
     final rest = held.length - named.length;
 
-    final tags = <Widget>[
-      for (final day in named)
-        ValueTag(
-          key: ValueKey(day),
-          token: t,
-          fontSize: fontSize,
+    Widget tagFor(DateTime day) {
+      final label = _write(day, words);
+      final remove = _enabled ? () => _remove(day) : null;
+      final drawn = ValueTag(
+        key: ValueKey(day),
+        token: t,
+        fontSize: fontSize,
+        enabled: _enabled,
+        label: Text(label),
+        onRemove: remove,
+        removeIcon: widget.removeIcon,
+      );
+      final draw = widget.tagBuilder;
+      if (draw == null) return drawn;
+      return draw(
+        context,
+        DateTag(
+          date: day,
+          label: label,
           enabled: _enabled,
-          label: Text(_write(day, words)),
-          onRemove: _enabled ? () => _remove(day) : null,
+          onRemove: remove,
         ),
+        drawn,
+      );
+    }
+
+    final tags = <Widget>[
+      for (final day in named) tagFor(day),
+      // The count reads as the kit's other tag lines do — a `Select` holding
+      // more than it shows says the same thing the same way.
       if (rest > 0)
         ValueTag(
           token: t,
           fontSize: fontSize,
           enabled: _enabled,
-          label: Text('+$rest'),
+          label: Text('+ $rest ...'),
         ),
     ];
 

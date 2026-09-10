@@ -708,12 +708,18 @@ class _DateRangePickerState extends State<DateRangePicker>
 
     // A date wide in every field, so no real one comes out longer.
     final widest = _write(DateTime(2026, 12, 28, 23, 59, 59), words);
-    return [
+    final longest = [
       measure(widest),
       measure(widget.startPlaceholder ?? words.startDate),
       measure(widget.endPlaceholder ?? words.endDate),
     ].reduce((a, b) => a > b ? a : b);
+    // The room inside the tint counts: without it the half is exactly as wide
+    // as its longest word and the padding pushes it into an ellipsis.
+    return longest + _litPad * 2;
   }
+
+  /// How much room the tint keeps around the words in it.
+  double get _litPad => context.softToken.sizeXXS;
 
   @override
   Widget build(BuildContext context) {
@@ -810,19 +816,28 @@ class _DateRangePickerState extends State<DateRangePicker>
               color: lit ? t.primary.bg : const Color(0x00000000),
               borderRadius: BorderRadius.circular(t.borderRadiusSM),
             ),
-            child: Text(
-              written.isEmpty ? placeholder : written,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              // Centred in its half, so the mark between them is as far from
-              // one date as from the other. Pushed to the start, as a single
-              // field's value is, the left date sits away from the mark and
-              // the right one against it — and a mark meaning "from here to
-              // there" stops reading as between them at all.
-              textAlign: TextAlign.center,
-              style: written.isEmpty
-                  ? textStyle.copyWith(color: t.colorTextTertiary)
-                  : textStyle,
+            // Room inside the tint. Without it the mark is drawn hard against
+            // the letters, which reads as a box that is too small for what is
+            // in it rather than as the half being pointed at.
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: _litPad,
+                vertical: _litPad / 2,
+              ),
+              child: Text(
+                written.isEmpty ? placeholder : written,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                // Centred in its half, so the mark between them is as far from
+                // one date as from the other. Pushed to the start, as a single
+                // field's value is, the left date sits away from the mark and
+                // the right one against it — and a mark meaning "from here to
+                // there" stops reading as between them at all.
+                textAlign: TextAlign.center,
+                style: written.isEmpty
+                    ? textStyle.copyWith(color: t.colorTextTertiary)
+                    : textStyle,
+              ),
             ),
           ),
         );

@@ -54,7 +54,10 @@ handed back until both ends are in** — one end is not a range — and the pane
 closes when the second lands.
 
 The half being filled in is marked in the field, so a reader who has put one
-end down can see which one the panel is waiting for.
+end down can see which one the panel is waiting for. The mark keeps room
+around the words rather than hugging them, and the half is sized for the words
+**and** that room — otherwise the padding would push the date into an
+ellipsis.
 
 ## What is refused
 

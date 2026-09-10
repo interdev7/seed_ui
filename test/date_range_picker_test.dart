@@ -25,6 +25,7 @@ void main() {
   _arrowTests();
   _bandTests();
   _narrowTests();
+  _litTests();
   group('a range is two dates', () {
     test('the ends are put in order, whichever way round they come', () {
       final forwards = DateRange(DateTime(2026, 3, 4), DateTime(2026, 3, 9));
@@ -465,6 +466,41 @@ void _narrowTests() {
       final preset = tester.getRect(find.text('That week'));
       final grid = tester.getRect(find.byType(DayGrid).first);
       expect(preset.bottom, lessThanOrEqualTo(grid.top));
+    });
+  });
+}
+
+void _litTests() {
+  group('the half the panel is waiting on', () {
+    testWidgets('keeps room between the tint and the words', (tester) async {
+      await tester.pumpWidget(_host(const DateRangePicker()));
+      await _openPanel(tester);
+
+      // The leading half is lit while it is the one being filled in.
+      final words = find.text('Start date');
+      expect(words, findsOneWidget);
+      final tint = tester.getRect(
+        find.ancestor(of: words, matching: find.byType(DecoratedBox)).first,
+      );
+      final text = tester.getRect(words);
+
+      // Drawn hard against the letters, the mark reads as a box too small for
+      // what is in it rather than as the half being pointed at.
+      expect(text.left - tint.left, greaterThan(0));
+      expect(tint.right - text.right, greaterThan(0));
+      expect(text.top - tint.top, greaterThan(0));
+      expect(tint.bottom - text.bottom, greaterThan(0));
+    });
+
+    testWidgets('the words are not squeezed into an ellipsis by the room',
+        (tester) async {
+      await tester.pumpWidget(_host(const DateRangePicker()));
+      await _openPanel(tester);
+      // Offered no width of its own, the field asks for what the words need
+      // and the room around them — not for the words alone.
+      final text = tester.renderObject<RenderBox>(find.text('Start date'));
+      expect(text.size.width, greaterThan(0));
+      expect(tester.takeException(), isNull);
     });
   });
 }

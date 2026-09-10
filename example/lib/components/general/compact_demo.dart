@@ -188,19 +188,6 @@ class _CompactDemoState extends State<CompactDemo> {
           ),
         ),
         Group(
-          "label",
-          SegmentedButton(
-            segments: const [
-              ButtonSegment(label: Text("day"), value: "day"),
-              ButtonSegment(label: Text("week"), value: "week"),
-              ButtonSegment(label: Text("month"), value: "month"),
-            ],
-            direction: Axis.vertical,
-            onSelectionChanged: (p0) {},
-            selected: {_view},
-          ),
-        ),
-        Group(
           'Down a column',
           SizedBox(
             width: 200,

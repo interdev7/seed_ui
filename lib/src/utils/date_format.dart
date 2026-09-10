@@ -185,6 +185,14 @@ String formatDate(
       .replaceAllMapped(RegExp('h+'), (m) => pad(hour12, m[0]!.length))
       .replaceAllMapped(RegExp('m+'), (m) => pad(date.minute, m[0]!.length))
       .replaceAllMapped(RegExp('s+'), (m) => pad(date.second, m[0]!.length))
+      .replaceAllMapped(
+        RegExp('w+'),
+        (m) => pad(weekOfYear(date), m[0]!.length),
+      )
+      .replaceAllMapped(
+        RegExp('Q+'),
+        (m) => pad(quarterOf(date), m[0]!.length),
+      )
       .replaceAll('A', isPm ? pm.toUpperCase() : am.toUpperCase())
       .replaceAll('a', isPm ? pm.toLowerCase() : am.toLowerCase());
 
@@ -299,3 +307,32 @@ const List<String> _englishWeekdays = [
   'Sat',
   'Sun',
 ];
+
+/// Which quarter of the year [date] falls in, from 1 to 4.
+int quarterOf(DateTime date) => (date.month - 1) ~/ 3 + 1;
+
+/// The first day of the quarter [date] falls in.
+DateTime startOfQuarter(DateTime date) =>
+    DateTime(date.year, (quarterOf(date) - 1) * 3 + 1);
+
+/// The first day of the week [date] falls in, counting from
+/// [firstDayOfWeek] — which is not Monday everywhere.
+DateTime startOfWeek(DateTime date, {int firstDayOfWeek = DateTime.monday}) {
+  final d = dateOnly(date);
+  final back = (d.weekday - firstDayOfWeek + 7) % 7;
+  return d.subtract(Duration(days: back));
+}
+
+/// Which week of the year [date] falls in, by the ISO reckoning: weeks run
+/// Monday to Sunday, and week one is the one holding the first Thursday.
+///
+/// ISO rather than "the first of January opens week one" because the other
+/// reckoning gives a week 53 that is one day long, and a date library that
+/// hands back a one-day week is a date library nobody trusts twice.
+int weekOfYear(DateTime date) {
+  final d = dateOnly(date);
+  // The Thursday of this week decides which year the week belongs to.
+  final thursday = d.add(Duration(days: 4 - (d.weekday == 7 ? 7 : d.weekday)));
+  final firstOfYear = DateTime(thursday.year);
+  return (thursday.difference(firstOfYear).inDays / 7).floor() + 1;
+}

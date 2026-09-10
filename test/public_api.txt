@@ -59,10 +59,13 @@ CountdownType
 CreateTabData
 CrossPainter
 DashedBorderPainter
+DateCell
+DateCellBuilder
 DateFields
 DatePanelMode
 DatePicker
 DatePickerDefaults
+DatePickerKind
 DatePickerToken
 DatePickerVariant
 DatePreset
@@ -360,5 +363,9 @@ notification
 parseDate
 parseHexColor
 parseTime
+quarterOf
+startOfQuarter
+startOfWeek
 stepsRingPadding
+weekOfYear
 weekdayOrder

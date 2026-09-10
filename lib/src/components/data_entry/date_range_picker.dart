@@ -147,6 +147,7 @@ class DateRangePicker extends StatefulWidget {
     this.onClear,
     this.footerBuilder,
     this.presets = const [],
+    this.cellBuilder,
     this.token,
   });
 
@@ -234,6 +235,10 @@ class DateRangePicker extends StatefulWidget {
 
   /// Named stretches on a rail beside the panel.
   final List<DateRangePreset> presets;
+
+  /// Draws a day cell, given what the panel knows about it and the mark the
+  /// panel would have drawn.
+  final DateCellBuilder? cellBuilder;
 
   /// Per-instance token overrides. The panel is [DatePicker]'s, so its
   /// numbers are too.
@@ -487,6 +492,14 @@ class _DateRangePickerState extends State<DateRangePicker>
     if (atEnd) return PanelCap.end;
     return PanelCap.none;
   }
+
+  @override
+  DateCellBuilder? get panelCellBuilder => widget.cellBuilder;
+
+  // A range is a stretch of days either way; there is no week or quarter
+  // picker to be a range of yet.
+  @override
+  DatePickerKind get panelKind => DatePickerKind.day;
 
   @override
   void panelHover(DateTime? day) {
@@ -1127,6 +1140,10 @@ class _Pane extends StatelessWidget {
             ),
             child: switch (state._mode) {
               DatePanelMode.day => DayGrid(state: host, token: token),
+              // A range picker never asks for a quarter, so the depth never
+              // comes up; the switch names it because the panel's modes are
+              // shared and a silent fall-through is how a mode goes missing.
+              DatePanelMode.quarter => QuarterGrid(state: host, token: token),
               DatePanelMode.month => MonthGrid(state: host, token: token),
               DatePanelMode.year => YearGrid(state: host, token: token),
             },
@@ -1172,6 +1189,12 @@ class _RightPane implements PanelHost {
 
   @override
   PanelCap panelCap(DateTime day) => _it.panelCap(day);
+
+  @override
+  DateCellBuilder? get panelCellBuilder => _it.panelCellBuilder;
+
+  @override
+  DatePickerKind get panelKind => _it.panelKind;
 
   @override
   void panelHover(DateTime? day) => _it.panelHover(day);

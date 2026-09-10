@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 void main() {
+  _weekAndQuarterTests();
   group('DateFields', () {
     test('reads which parts a format names', () {
       final full = DateFields.of('yyyy-MM-dd');
@@ -238,6 +239,52 @@ void main() {
 
     test('a two-digit year is this century', () {
       expect(parseDate('26-03-04', 'yy-MM-dd'), DateTime(2026, 3, 4));
+    });
+  });
+}
+
+void _weekAndQuarterTests() {
+  group('weeks and quarters', () {
+    test('the quarter is the month divided into four', () {
+      expect(quarterOf(DateTime(2026, 1, 1)), 1);
+      expect(quarterOf(DateTime(2026, 3, 31)), 1);
+      expect(quarterOf(DateTime(2026, 4, 1)), 2);
+      expect(quarterOf(DateTime(2026, 12, 31)), 4);
+      expect(startOfQuarter(DateTime(2026, 8, 20)), DateTime(2026, 7, 1));
+    });
+
+    test('a week starts where the locale says it does', () {
+      // The 10th of September 2026 is a Thursday.
+      expect(
+        startOfWeek(DateTime(2026, 9, 10)),
+        DateTime(2026, 9, 7),
+        reason: 'Monday',
+      );
+      expect(
+        startOfWeek(DateTime(2026, 9, 10), firstDayOfWeek: DateTime.sunday),
+        DateTime(2026, 9, 6),
+      );
+      expect(
+        startOfWeek(DateTime(2026, 9, 10), firstDayOfWeek: DateTime.saturday),
+        DateTime(2026, 9, 5),
+      );
+    });
+
+    test('the week number follows the ISO reckoning', () {
+      // Week one is the one holding the first Thursday, which is why the
+      // 1st of January is not always in it.
+      expect(weekOfYear(DateTime(2026, 1, 1)), 1);
+      expect(weekOfYear(DateTime(2027, 1, 1)), 53, reason: 'a Friday');
+      expect(weekOfYear(DateTime(2026, 12, 31)), 53);
+      expect(weekOfYear(DateTime(2024, 12, 30)), 1, reason: 'week one of 2025');
+      expect(weekOfYear(DateTime(2026, 9, 10)), 37);
+    });
+
+    test('the format writes them out', () {
+      expect(formatDate(DateTime(2026, 9, 10), 'yyyy-[W]ww'), '2026-W37');
+      expect(formatDate(DateTime(2026, 8, 20), 'yyyy-[Q]Q'), '2026-Q3');
+      // The other tokens are untouched by the new ones.
+      expect(formatDate(DateTime(2026, 8, 20), 'yyyy-MM-dd'), '2026-08-20');
     });
   });
 }

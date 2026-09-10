@@ -36,6 +36,9 @@ enum DatePanelMode {
   /// The days of one month.
   day,
 
+  /// The four quarters of one year.
+  quarter,
+
   /// The twelve months of one year.
   month,
 
@@ -185,6 +188,91 @@ class DatePanelStyle {
   final double timeColumnWidth;
 }
 
+/// What a [DatePicker] collects.
+///
+/// The value is a [DateTime] whichever it is — the first day of the thing
+/// chosen. A week is its first day, counted from wherever the locale starts
+/// its weeks; a quarter is the first day of its first month. Nothing here
+/// needs a type of its own: a week is a day you can add seven to.
+enum DatePickerKind {
+  /// One day.
+  day,
+
+  /// A whole week, taken by pressing any day in it.
+  week,
+
+  /// A whole month.
+  month,
+
+  /// A quarter of a year.
+  quarter,
+
+  /// A whole year.
+  year,
+}
+
+/// What a day on the panel knows about itself.
+///
+/// Handed to a [DateCellBuilder] along with the mark the panel would have
+/// drawn, so a caller can put something of their own beside it — a dot under
+/// a day with something booked, a price, a count — without working out for
+/// themselves what "chosen" or "today" look like.
+@immutable
+class DateCell {
+  /// Creates a description of one day cell.
+  const DateCell({
+    required this.date,
+    required this.today,
+    required this.chosen,
+    required this.within,
+    required this.outside,
+    required this.disabled,
+    required this.resting,
+  });
+
+  /// The day this cell stands for.
+  final DateTime date;
+
+  /// Whether it is today.
+  final bool today;
+
+  /// Whether the picker holds it — an end of a range counts.
+  final bool chosen;
+
+  /// Whether it lies between the two ends of a range.
+  final bool within;
+
+  /// Whether it belongs to the month either side rather than this one.
+  final bool outside;
+
+  /// Whether it cannot be chosen.
+  final bool disabled;
+
+  /// Whether the keyboard is resting on it.
+  final bool resting;
+}
+
+/// Draws a day cell.
+///
+/// [child] is what the panel would have drawn — the pill, its fill, the band
+/// under a range. Wrap it rather than replacing it and a cell keeps every
+/// state the panel gives it for nothing:
+///
+/// ```dart
+/// cellBuilder: (context, cell, child) => Stack(
+///   alignment: Alignment.bottomCenter,
+///   children: [
+///     child,
+///     if (bookings.containsKey(cell.date)) const _Dot(),
+///   ],
+/// )
+/// ```
+typedef DateCellBuilder = Widget Function(
+  BuildContext context,
+  DateCell cell,
+  Widget child,
+);
+
 /// What the panel needs of whatever is driving it.
 ///
 /// Two pickers drive the same panel: one collecting a date, one collecting a
@@ -223,6 +311,13 @@ abstract class PanelHost {
 
   /// A day the pointer is over, so a range being drawn can follow it.
   void panelHover(DateTime? day) {}
+
+  /// Draws a day cell, where the caller has something to add to it.
+  DateCellBuilder? get panelCellBuilder => null;
+
+  /// What the picker is collecting, which decides what a day cell means: in a
+  /// week picker every day of a row is one press on the same answer.
+  DatePickerKind get panelKind => DatePickerKind.day;
 
   /// Takes this day.
   void panelPick(DateTime day);
@@ -305,6 +400,8 @@ class DatePicker extends StatefulWidget {
     this.showTime = false,
     this.disabledTime,
     this.presets = const [],
+    this.cellBuilder,
+    this.picker = DatePickerKind.day,
     this.token,
   });
 
@@ -403,6 +500,20 @@ class DatePicker extends StatefulWidget {
   /// Empty by default, and the rail is not drawn at all where it is empty.
   final List<DatePreset> presets;
 
+  /// Draws a day cell, given what the panel knows about it and the mark the
+  /// panel would have drawn.
+  final DateCellBuilder? cellBuilder;
+
+  /// What the picker collects: a day, a week, a month, a quarter or a year.
+  ///
+  /// The value stays a [DateTime] — the first day of whatever was chosen — so
+  /// nothing has to be converted on the way out and a week can be walked with
+  /// arithmetic rather than with a type of its own.
+  ///
+  /// A [format] left alone is chosen to suit: `yyyy-[W]ww` for a week,
+  /// `yyyy-MM` for a month, `yyyy-[Q]Q` for a quarter, `yyyy` for a year.
+  final DatePickerKind picker;
+
   /// Per-instance token overrides.
   final DatePickerToken? token;
 
@@ -429,7 +540,14 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   @override
   bool panelChose(DateTime day) {
     final at = _shown;
-    return at != null && isSameDay(day, at);
+    if (at == null) return false;
+    // Every day of the row, for a picker collecting weeks: one press on any
+    // of them is the same answer, so marking one and not the rest would say
+    // the others were something else.
+    if (widget.picker == DatePickerKind.week) {
+      return _settle(day) == _settle(at);
+    }
+    return isSameDay(day, at);
   }
 
   @override
@@ -462,6 +580,12 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
 
   @override
   void panelHover(DateTime? day) {}
+
+  @override
+  DateCellBuilder? get panelCellBuilder => widget.cellBuilder;
+
+  @override
+  DatePickerKind get panelKind => widget.picker;
 
   final PopoverController _popover = PopoverController();
   final TextEditingController _text = TextEditingController();
@@ -511,7 +635,24 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   ///
   /// A picker told to collect a time and given a format that names none would
   /// take the hour and throw it away, so the clock is added on.
+  /// Whether the caller left the format alone, in which case the picker
+  /// chooses one to suit what it collects. A week written `yyyy-MM-dd` would
+  /// name a day and mean seven of them.
+  static const _defaultFormat = 'yyyy-MM-dd';
+
+  String get _kindFormat => switch (widget.picker) {
+        DatePickerKind.day => _defaultFormat,
+        DatePickerKind.week => 'yyyy-[W]ww',
+        DatePickerKind.month => 'yyyy-MM',
+        DatePickerKind.quarter => 'yyyy-[Q]Q',
+        DatePickerKind.year => 'yyyy',
+      };
+
   String get _format {
+    if (widget.format == _defaultFormat &&
+        widget.picker != DatePickerKind.day) {
+      return _kindFormat;
+    }
     if (!widget.showTime) return widget.format;
     final fields = TimeFields.of(widget.format);
     if (fields.hour || fields.minute || fields.second) return widget.format;
@@ -529,6 +670,16 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   /// Only a panel that collects a time keeps one: a date on its own is
   /// finished the moment it is tapped, and there would be nothing to confirm.
   DateTime? _draft;
+
+  /// The depth the panel opens at and comes back to. A month picker has no
+  /// business showing days, and one that walked up to the years has to know
+  /// where down is.
+  DatePanelMode get _floor => switch (widget.picker) {
+        DatePickerKind.day || DatePickerKind.week => DatePanelMode.day,
+        DatePickerKind.month => DatePanelMode.month,
+        DatePickerKind.quarter => DatePanelMode.quarter,
+        DatePickerKind.year => DatePanelMode.year,
+      };
 
   /// The clock the draft is carrying, or midnight where there is none.
   Duration get _draftTime {
@@ -693,7 +844,7 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
     final anchor = box.localToGlobal(Offset.zero) & box.size;
     setState(() {
       _open = true;
-      _mode = DatePanelMode.day;
+      _mode = _floor;
       _cursor = dateOnly(_value ?? DateTime.now());
       // A panel just opened has no day walked to yet.
       _keyed = false;
@@ -818,6 +969,21 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
     return KeyEventResult.ignored;
   }
 
+  /// The value a day stands for, given what the picker collects. A week is
+  /// its first day, a quarter the first day of its first month: the answer is
+  /// always a date, so nothing has to be converted on the way out.
+  DateTime _settle(DateTime day) {
+    final d = dateOnly(day);
+    return switch (widget.picker) {
+      DatePickerKind.day => d,
+      DatePickerKind.week =>
+        startOfWeek(d, firstDayOfWeek: context.seedLocale.firstDayOfWeek),
+      DatePickerKind.month => DateTime(d.year, d.month),
+      DatePickerKind.quarter => startOfQuarter(d),
+      DatePickerKind.year => DateTime(d.year),
+    };
+  }
+
   void _pick(DateTime day) {
     if (_isBlocked(day)) return;
     setState(() => _cursor = dateOnly(day));
@@ -829,7 +995,7 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
       _repaintPanel();
       return;
     }
-    _commit(dateOnly(day));
+    _commit(_settle(day));
     _syncText();
     _requestOpen(false);
   }
@@ -898,6 +1064,10 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   }
 
   void _pickMonth(int month) {
+    if (widget.picker == DatePickerKind.month) {
+      _pick(DateTime(_cursor.year, month));
+      return;
+    }
     setState(() {
       _cursor = DateTime(_cursor.year, month);
       _mode = DatePanelMode.day;
@@ -906,6 +1076,18 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   }
 
   void _pickYear(int year) {
+    if (widget.picker == DatePickerKind.year) {
+      _pick(DateTime(year));
+      return;
+    }
+    if (widget.picker == DatePickerKind.quarter) {
+      setState(() {
+        _cursor = DateTime(year, _cursor.month);
+        _mode = DatePanelMode.quarter;
+      });
+      _repaintPanel();
+      return;
+    }
     setState(() {
       _cursor = DateTime(year, _cursor.month);
       _mode = DatePanelMode.month;
@@ -1241,6 +1423,7 @@ class _DatePanel extends StatelessWidget {
       ),
       child: switch (state._mode) {
         DatePanelMode.day => DayGrid(state: state, token: r),
+        DatePanelMode.quarter => QuarterGrid(state: state, token: r),
         DatePanelMode.month => MonthGrid(state: state, token: r),
         DatePanelMode.year => YearGrid(state: state, token: r),
       },
@@ -1479,7 +1662,9 @@ class PanelHeader extends StatelessWidget {
     final label = switch (state.panelMode) {
       DatePanelMode.day =>
         '${words.shortMonths[cursor.month - 1]} ${words.figures('${cursor.year}')}',
-      DatePanelMode.month => words.figures('${cursor.year}'),
+      DatePanelMode.quarter ||
+      DatePanelMode.month =>
+        words.figures('${cursor.year}'),
       DatePanelMode.year =>
         '${words.figures('${cursor.year - cursor.year % 10}')}'
             '–${words.figures('${cursor.year - cursor.year % 10 + 9}')}',
@@ -1489,18 +1674,23 @@ class PanelHeader extends StatelessWidget {
     // so one chevron always moves one page of what is on screen.
     final backward = switch (state.panelMode) {
       DatePanelMode.day => () => state.panelStep(-1),
-      DatePanelMode.month => () => state.panelStepYears(-1),
+      DatePanelMode.quarter || DatePanelMode.month => () =>
+          state.panelStepYears(-1),
       DatePanelMode.year => () => state.panelStepYears(-10),
     };
     final onward = switch (state.panelMode) {
       DatePanelMode.day => () => state.panelStep(1),
-      DatePanelMode.month => () => state.panelStepYears(1),
+      DatePanelMode.quarter || DatePanelMode.month => () =>
+          state.panelStepYears(1),
       DatePanelMode.year => () => state.panelStepYears(10),
     };
 
     final up = switch (state.panelMode) {
       DatePanelMode.day => () => state.panelSetMode(DatePanelMode.month),
-      DatePanelMode.month => () => state.panelSetMode(DatePanelMode.year),
+      // A quarter panel has nowhere deeper to be: its header is the year, and
+      // the way up from a year is the decade.
+      DatePanelMode.quarter || DatePanelMode.month => () =>
+          state.panelSetMode(DatePanelMode.year),
       DatePanelMode.year => null,
     };
 
@@ -1590,7 +1780,7 @@ class DayGrid extends StatelessWidget {
                 Builder(
                   builder: (context) {
                     final day = days[week * 7 + i];
-                    return _Cell(
+                    final cell = _Cell(
                       label: words.figures('${day.day}'),
                       width: token.cellWidth,
                       height: token.cellHeight,
@@ -1608,6 +1798,26 @@ class DayGrid extends StatelessWidget {
                       disabled: state.panelBlocks(day),
                       onTap: () => state.panelPick(day),
                     );
+                    final draw = state.panelCellBuilder;
+                    if (draw == null) return cell;
+                    // Handed what the panel would have drawn, so a caller
+                    // adding a dot under a day does not have to work out for
+                    // themselves what chosen or today look like.
+                    return draw(
+                      context,
+                      DateCell(
+                        date: day,
+                        today: isSameDay(day, today),
+                        chosen: state.panelChose(day),
+                        within: state.panelWithin(day),
+                        outside: !isSameMonth(day, cursor),
+                        disabled: state.panelBlocks(day),
+                        resting: state.panelKeyed &&
+                            state.panelResting != null &&
+                            isSameDay(day, state.panelResting!),
+                      ),
+                      cell,
+                    );
                   },
                 ),
             ],
@@ -1618,6 +1828,56 @@ class DayGrid extends StatelessWidget {
 }
 
 /// The twelve months of one year.
+/// The four quarters of one year.
+class QuarterGrid extends StatelessWidget {
+  /// Creates the grid.
+  const QuarterGrid({required this.state, required this.token, super.key});
+
+  /// Whatever is driving the panel.
+  final PanelHost state;
+
+  /// The settled numbers the panel is drawn with.
+  final DatePanelStyle token;
+
+  @override
+  Widget build(BuildContext context) {
+    final words = context.seedLocale;
+    final cursor = state.panelCursor;
+    final chosen = state.panelMarked;
+    final width = token.cellWidth * 7 / 2;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var row = 0; row < 2; row++)
+          Row(
+            children: [
+              for (var col = 0; col < 2; col++)
+                Builder(
+                  builder: (context) {
+                    final quarter = row * 2 + col + 1;
+                    final first = DateTime(cursor.year, (quarter - 1) * 3 + 1);
+                    return _Cell(
+                      label: words.quarters[quarter - 1],
+                      width: width,
+                      height: token.cellHeight * 2.4,
+                      outside: false,
+                      today: false,
+                      chosen: chosen != null &&
+                          chosen.year == cursor.year &&
+                          quarterOf(chosen) == quarter,
+                      disabled: state.panelBlocks(first),
+                      onTap: () => state.panelPick(first),
+                    );
+                  },
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
 /// The twelve months of one year.
 class MonthGrid extends StatelessWidget {
   /// Creates the grid.

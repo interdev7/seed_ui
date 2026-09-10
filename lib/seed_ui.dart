@@ -190,9 +190,12 @@ export 'src/components/data_entry/date_picker.dart'
         DatePanelMode,
         DatePicker,
         DatePickerDefaults,
+        DatePickerKind,
         DatePickerToken,
         DatePickerVariant,
-        DatePreset;
+        DatePreset,
+        DateCell,
+        DateCellBuilder;
 export 'src/components/data_entry/date_range_picker.dart'
     show DateRange, DateRangePicker, DateRangePickerDefaults, DateRangePreset;
 export 'src/components/data_entry/form.dart'
@@ -398,6 +401,10 @@ export 'src/utils/date_format.dart'
         isSameDay,
         isSameMonth,
         monthGrid,
+        quarterOf,
+        startOfQuarter,
+        startOfWeek,
+        weekOfYear,
         parseDate,
         weekdayOrder;
 export 'src/utils/hex_color.dart' show parseHexColor;

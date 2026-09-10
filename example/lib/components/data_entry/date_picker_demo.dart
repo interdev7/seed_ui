@@ -18,6 +18,9 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
   DateTime? _weekdays;
   DateTime? _at;
   DateTime? _preset;
+  DateTime? _week;
+  DateTime? _quarter;
+  DateTime? _month;
   int _cleared = 0;
   bool _driven = false;
 
@@ -30,7 +33,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
 
     Widget row(Widget picker, DateTime? value) => Row(
       children: [
-        SizedBox(width: 220, child: picker),
+        picker,
         const SizedBox(width: 16),
         Flexible(
           child: Text(
@@ -40,6 +43,10 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
         ),
       ],
     );
+
+    final weekSaid = _week == null
+        ? 'nothing'
+        : '${formatDate(_week!, 'EEE, d MMM yyyy')} onwards';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -72,14 +79,11 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           // being chosen is half an answer.
           Row(
             children: [
-              SizedBox(
-                width: 260,
-                child: DatePicker(
-                  showTime: true,
-                  format: 'yyyy-MM-dd HH:mm',
-                  value: _at,
-                  onChanged: (v) => setState(() => _at = v),
-                ),
+              DatePicker(
+                showTime: true,
+                format: 'yyyy-MM-dd HH:mm',
+                value: _at,
+                onChanged: (v) => setState(() => _at = v),
               ),
               const SizedBox(width: 16),
               Flexible(
@@ -117,12 +121,94 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             _preset,
           ),
         ),
+        Group(
+          'A week, a month, a quarter, a year',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  DatePicker(
+                    picker: DatePickerKind.week,
+                    value: _week,
+                    onChanged: (v) => setState(() => _week = v),
+                  ),
+                  DatePicker(
+                    picker: DatePickerKind.month,
+                    value: _month,
+                    onChanged: (v) => setState(() => _month = v),
+                  ),
+                  SizedBox(
+                    width: 200,
+                    child: DatePicker(
+                      picker: DatePickerKind.quarter,
+                      value: _quarter,
+                      onChanged: (v) => setState(() => _quarter = v),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 200,
+                    child: DatePicker(picker: DatePickerKind.year),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'The value stays a DateTime — the first day of whatever was '
+                'chosen. Press any day in a week and the whole row is taken: '
+                'one press on any of them is the same answer. A month picker '
+                'has no days to offer, so it shows none.\n\n'
+                'The week reads back as $weekSaid.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'A cell drawn by the caller',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DatePicker(
+                // Wrapping the panel's own mark rather than replacing it:
+                // the cell keeps chosen, today, hovered and barred for
+                // nothing.
+                cellBuilder: (context, cell, child) => Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.bottomLeft,
+                  children: [
+                    child,
+                    if (cell.date.day % 7 == 3)
+                      Positioned(
+                        top: -1,
+                        right: -2,
+                        child: Icon(
+                          // filed
+                          Icons.check_circle_sharp,
+                          size: 13,
+                          color: t.primary.base,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'A dot under the days with something booked. The builder is '
+                'handed what the panel would have drawn, so nothing about '
+                'chosen or today has to be worked out again.',
+              ),
+            ],
+          ),
+        ),
         const Group(
           'Three depths',
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(width: 220, child: DatePicker()),
+              DatePicker(),
               SizedBox(height: 8),
               Text(
                 'Open it and press the month in the header: the panel goes up '
@@ -195,8 +281,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 10,
             children: [
-              for (final size in SoftSize.values)
-                SizedBox(width: 200, child: DatePicker(size: size)),
+              for (final size in SoftSize.values) DatePicker(size: size),
             ],
           ),
         ),
@@ -233,20 +318,11 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  SizedBox(
-                    width: 200,
-                    child: DatePicker(
-                      showToday: false,
-                      placeholder: 'no Today',
-                    ),
-                  ),
-                  SizedBox(
-                    width: 200,
-                    child: DatePicker(
-                      allowClear: false,
-                      defaultValue: null,
-                      placeholder: 'no clear',
-                    ),
+                  DatePicker(showToday: false, placeholder: 'no Today'),
+                  DatePicker(
+                    allowClear: false,
+                    defaultValue: null,
+                    placeholder: 'no clear',
                   ),
                 ],
               ),
@@ -257,21 +333,18 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
         ),
         Group(
           'A prefix, a suffix and a footer of your own',
-          SizedBox(
-            width: 260,
-            child: DatePicker(
-              prefix: Text('on', style: TextStyle(color: t.colorTextSecondary)),
-              suffixIcon: Icon(
-                Icons.event_outlined,
-                size: 16,
-                color: t.colorTextQuaternary,
-              ),
-              footerBuilder: (context) => Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  'Bookings open 30 days ahead',
-                  style: TextStyle(fontSize: 12, color: t.colorTextSecondary),
-                ),
+          DatePicker(
+            prefix: Text('on', style: TextStyle(color: t.colorTextSecondary)),
+            suffixIcon: Icon(
+              Icons.event_outlined,
+              size: 16,
+              color: t.colorTextQuaternary,
+            ),
+            footerBuilder: (context) => Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                'Bookings open 30 days ahead',
+                style: TextStyle(fontSize: 12, color: t.colorTextSecondary),
               ),
             ),
           ),
@@ -283,12 +356,9 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             children: [
               Row(
                 children: [
-                  SizedBox(
-                    width: 200,
-                    child: DatePicker(
-                      open: _driven,
-                      onOpenChange: (v) => setState(() => _driven = v),
-                    ),
+                  DatePicker(
+                    open: _driven,
+                    onOpenChange: (v) => setState(() => _driven = v),
                   ),
                   const SizedBox(width: 12),
                   Button(
@@ -316,31 +386,19 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
                 PopoverPlacement.bottomRight,
                 PopoverPlacement.topLeft,
               ])
-                SizedBox(
-                  width: 200,
-                  child: DatePicker(
-                    placement: placement,
-                    placeholder: placement.name,
-                  ),
-                ),
+                DatePicker(placement: placement, placeholder: placement.name),
             ],
           ),
         ),
-        const Group(
-          'Panel only, no typing',
-          SizedBox(width: 220, child: DatePicker(inputReadOnly: true)),
-        ),
+        const Group('Panel only, no typing', DatePicker(inputReadOnly: true)),
         const Group(
           'Its own tokens',
           // Per instance, without touching the theme.
-          SizedBox(
-            width: 240,
-            child: DatePicker(
-              token: DatePickerToken(
-                borderRadius: 16,
-                cellWidth: 44,
-                cellHeight: 30,
-              ),
+          DatePicker(
+            token: DatePickerToken(
+              borderRadius: 16,
+              cellWidth: 44,
+              cellHeight: 30,
             ),
           ),
         ),
@@ -351,7 +409,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             spacing: 10,
             children: [
               for (final variant in DatePickerVariant.values)
-                SizedBox(width: 200, child: DatePicker(variant: variant)),
+                DatePicker(variant: variant),
             ],
           ),
         ),
@@ -361,19 +419,13 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             spacing: 12,
             runSpacing: 12,
             children: [
-              SizedBox(
-                width: 200,
-                child: DatePicker(
-                  defaultValue: DateTime(2026, 3, 4),
-                  status: InputStatus.warning,
-                ),
+              DatePicker(
+                defaultValue: DateTime(2026, 3, 4),
+                status: InputStatus.warning,
               ),
-              SizedBox(
-                width: 200,
-                child: DatePicker(
-                  defaultValue: DateTime(2026, 3, 4),
-                  status: InputStatus.error,
-                ),
+              DatePicker(
+                defaultValue: DateTime(2026, 3, 4),
+                status: InputStatus.error,
               ),
             ],
           ),
@@ -383,12 +435,9 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 220,
-                child: DatePicker(
-                  defaultValue: DateTime(2026, 3, 4),
-                  onClear: () => setState(() => _cleared++),
-                ),
+              DatePicker(
+                defaultValue: DateTime(2026, 3, 4),
+                onClear: () => setState(() => _cleared++),
               ),
               const SizedBox(height: 8),
               Text(
@@ -404,10 +453,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 220,
-                child: DatePicker(defaultValue: DateTime(2024, 2, 29)),
-              ),
+              DatePicker(defaultValue: DateTime(2024, 2, 29)),
               const SizedBox(height: 8),
               Text(
                 'February 2024 has a 29th; 2100 will not. The kit asks '
@@ -422,7 +468,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(width: 220, child: DatePicker()),
+              const DatePicker(),
               const SizedBox(height: 8),
               Text(
                 'Switch the language in the header. The month and weekday '
@@ -436,10 +482,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
         ),
         const Group(
           'Disabled',
-          SizedBox(
-            width: 220,
-            child: DatePicker(defaultValue: null, value: null, disabled: true),
-          ),
+          DatePicker(defaultValue: null, value: null, disabled: true),
         ),
       ],
     );

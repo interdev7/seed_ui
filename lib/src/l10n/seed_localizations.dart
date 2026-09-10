@@ -93,6 +93,7 @@ class SeedLocalizations {
     this.startDate = 'Start date',
     this.endDate = 'End date',
     this.today = 'Today',
+    this.quarters = const ['Q1', 'Q2', 'Q3', 'Q4'],
     this.shortMonths = englishMonths,
     this.shortWeekdays = englishWeekdays,
     this.firstDayOfWeek = DateTime.monday,
@@ -225,6 +226,13 @@ class SeedLocalizations {
   /// names.
   final List<String> shortMonths;
 
+  /// What each quarter of the year is called.
+  ///
+  /// A quarter is named differently enough to be worth asking about: Q in
+  /// English and German, T for trimestre in the Romance languages, 季度 in
+  /// Chinese.
+  final List<String> quarters;
+
   /// The seven weekdays, shortened, from Monday — the order
   /// [DateTime.weekday] counts in.
   final List<String> shortWeekdays;
@@ -353,6 +361,7 @@ class SeedLocalizations {
     String? startDate,
     String? endDate,
     String? today,
+    List<String>? quarters,
     List<String>? shortMonths,
     List<String>? shortWeekdays,
     int? firstDayOfWeek,
@@ -380,6 +389,7 @@ class SeedLocalizations {
         startDate: startDate ?? this.startDate,
         endDate: endDate ?? this.endDate,
         today: today ?? this.today,
+        quarters: quarters ?? this.quarters,
         shortMonths: shortMonths ?? this.shortMonths,
         shortWeekdays: shortWeekdays ?? this.shortWeekdays,
         firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
@@ -453,6 +463,7 @@ class SeedLocalizations {
     endDate: 'Дата окончания',
     today: 'Сегодня',
     firstDayOfWeek: DateTime.monday,
+    quarters: ['Q1', 'Q2', 'Q3', 'Q4'],
     shortMonths: [
       'янв',
       'фев',
@@ -521,6 +532,7 @@ class SeedLocalizations {
     endDate: 'Ahyrky senesi',
     today: 'Şu gün',
     firstDayOfWeek: DateTime.monday,
+    quarters: ['1-ç', '2-ç', '3-ç', '4-ç'],
     shortMonths: [
       'ýan',
       'few',
@@ -590,6 +602,7 @@ class SeedLocalizations {
     endDate: 'Enddatum',
     today: 'Heute',
     firstDayOfWeek: DateTime.monday,
+    quarters: ['Q1', 'Q2', 'Q3', 'Q4'],
     shortMonths: [
       'Jan',
       'Feb',
@@ -658,6 +671,7 @@ class SeedLocalizations {
     endDate: 'Date de fin',
     today: 'Aujourd\'hui',
     firstDayOfWeek: DateTime.monday,
+    quarters: ['T1', 'T2', 'T3', 'T4'],
     shortMonths: [
       'janv',
       'févr',
@@ -726,6 +740,7 @@ class SeedLocalizations {
     endDate: 'Fecha de fin',
     today: 'Hoy',
     firstDayOfWeek: DateTime.monday,
+    quarters: ['T1', 'T2', 'T3', 'T4'],
     shortMonths: [
       'ene',
       'feb',
@@ -795,6 +810,7 @@ class SeedLocalizations {
     endDate: '结束日期',
     today: '今天',
     firstDayOfWeek: DateTime.monday,
+    quarters: ['一季度', '二季度', '三季度', '四季度'],
     shortMonths: [
       '1月',
       '2月',
@@ -864,6 +880,7 @@ class SeedLocalizations {
     endDate: '終了日',
     today: '今日',
     firstDayOfWeek: DateTime.sunday,
+    quarters: ['第1四半期', '第2四半期', '第3四半期', '第4四半期'],
     shortMonths: [
       '1月',
       '2月',
@@ -932,6 +949,7 @@ class SeedLocalizations {
     endDate: 'Bitiş tarihi',
     today: 'Bugün',
     firstDayOfWeek: DateTime.monday,
+    quarters: ['Ç1', 'Ç2', 'Ç3', 'Ç4'],
     shortMonths: [
       'Oca',
       'Şub',
@@ -1001,6 +1019,7 @@ class SeedLocalizations {
     endDate: 'Data de fim',
     today: 'Hoje',
     firstDayOfWeek: DateTime.sunday,
+    quarters: ['T1', 'T2', 'T3', 'T4'],
     shortMonths: [
       'jan',
       'fev',
@@ -1069,6 +1088,7 @@ class SeedLocalizations {
     endDate: 'تاريخ الانتهاء',
     today: 'اليوم',
     firstDayOfWeek: DateTime.saturday,
+    quarters: ['ر1', 'ر2', 'ر3', 'ر4'],
     shortMonths: [
       'يناير',
       'فبراير',
@@ -1139,6 +1159,7 @@ class SeedLocalizations {
     endDate: 'תאריך סיום',
     today: 'היום',
     firstDayOfWeek: DateTime.sunday,
+    quarters: ['רבעון 1', 'רבעון 2', 'רבעון 3', 'רבעון 4'],
     shortMonths: [
       'ינו',
       'פבר',

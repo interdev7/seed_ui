@@ -134,6 +134,65 @@ round the block, exactly as **Today** would be.
 The rail leads on the side the page reads from, and scrolls inside its own
 height rather than making the panel grow past the calendar beside it.
 
+## What it collects
+
+```dart
+DatePicker(picker: DatePickerKind.week)      // 2026-W11
+DatePicker(picker: DatePickerKind.month)     // 2026-08
+DatePicker(picker: DatePickerKind.quarter)   // 2026-Q3
+DatePicker(picker: DatePickerKind.year)      // 2026
+```
+
+**The value stays a `DateTime`** whichever it is — the first day of the thing
+chosen. A week is its first day, counted from wherever the locale starts its
+weeks; a quarter is the first day of its first month. Nothing here needs a
+type of its own: a week is a day you can add seven to.
+
+The panel opens at the depth that suits and stops there — a month picker has
+no days to offer, so it shows none. A week picker still shows days, because a
+week is chosen by pressing a day in it, and **the whole row is marked**: one
+press on any of them is the same answer, so marking one and not the rest would
+say the others were something else.
+
+A `format` left alone is chosen to suit; name your own and it stands. The
+grammar gains two tokens:
+
+| Token | Means | Example |
+| --- | --- | --- |
+| `ww` / `w` | week of the year, ISO | `11` |
+| `Q` | quarter | `3` |
+
+ISO weeks run Monday to Sunday and week one is the one holding the first
+Thursday — the other reckoning gives a week 53 that is one day long, and a
+date library that hands back a one-day week is one nobody trusts twice.
+
+Quarter names come from the locale: `Q` in English and German, `T` for
+*trimestre* in the Romance languages, 季度 in Chinese.
+
+## Drawing a cell yourself
+
+```dart
+DatePicker(
+  cellBuilder: (context, cell, child) => Stack(
+    alignment: Alignment.bottomCenter,
+    children: [
+      child,
+      if (bookings.containsKey(cell.date)) const _Dot(),
+    ],
+  ),
+)
+```
+
+**`child` is what the panel would have drawn** — the pill, its fill, the band
+under a range. Wrap it rather than replacing it and the cell keeps every state
+the panel gives it for nothing: chosen, today, hovered, barred, the mark the
+keyboard leaves. Replacing it is allowed and is the caller's business, but
+then all of that is theirs to draw too.
+
+`cell` says what the panel knows about the day: `date`, `today`, `chosen`,
+`within` (between the ends of a range), `outside` (a day from the month either
+side), `disabled` and `resting`. `DateRangePicker` takes the same builder.
+
 ## Blocking days
 
 ```dart
@@ -191,7 +250,9 @@ supply one of the four and leave the rest guessing.
 | `value` | `DateTime?` | `null` | Null lets the picker keep its own |
 | `defaultValue` | `DateTime?` | `null` | What an uncontrolled picker starts with |
 | `onChanged` | `ValueChanged<DateTime?>?` | — | Null when cleared |
-| `format` | `String` | `'yyyy-MM-dd'` | See the grammar above |
+| `picker` | `DatePickerKind` | `day` | `day`, `week`, `month`, `quarter`, `year` |
+| `format` | `String` | `'yyyy-MM-dd'` | See the grammar above; follows `picker` unless named |
+| `cellBuilder` | `DateCellBuilder?` | — | Draws a day cell, given the panel's own mark |
 | `disabledDate` | `bool Function(DateTime)?` | — | Asked about every day drawn |
 | `minDate` / `maxDate` | `DateTime?` | — | The ends of the range on offer |
 | `showToday` | `bool?` | `null` | Follows the defaults, else true |
@@ -271,6 +332,8 @@ See [localization](../localization.md).
 
 ## Not here yet
 
-`multiple`, the `week` and `quarter` panels, and a range picker. A range is its
-own component — start-and-end has its own logic, and bolting it on as a flag
-would spoil both.
+`multiple`.
+
+A range is not here and will not be: it is
+[`DateRangePicker`](date_range_picker.md), its own component. Start-and-end has
+its own logic, and bolting it on as a flag would spoil both.

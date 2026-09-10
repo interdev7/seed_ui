@@ -23,6 +23,7 @@ String _fieldText(WidgetTester tester) =>
 
 void main() {
   _presetTests();
+  _kindTests();
   _clearRaceTests();
   _showTimeTests();
   testWidgets('shows the placeholder until a date is set', (tester) async {
@@ -1019,6 +1020,201 @@ void _clearRaceTests() {
       // came and went with the paint was not there for the first click, and
       // the click opened the panel instead.
       expect(value, isNull);
+    });
+  });
+}
+
+void _kindTests() {
+  group('what the picker collects', () {
+    testWidgets('a week is taken by pressing any day in it', (tester) async {
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            picker: DatePickerKind.week,
+            value: DateTime(2026, 3, 4),
+            onChanged: (v) => chosen = v,
+          ),
+        ),
+      );
+      await _openPanel(tester);
+      // The 12th of March 2026 is a Thursday; its week opens on the 9th.
+      await tester.tap(find.text('12'));
+      await tester.pumpAndSettle();
+      expect(chosen, DateTime(2026, 3, 9));
+    });
+
+    testWidgets('a week picker marks the whole row, not one day',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            picker: DatePickerKind.week,
+            // A Thursday, so the week runs from the 9th to the 15th.
+            value: DateTime(2026, 3, 12),
+          ),
+        ),
+      );
+      await _openPanel(tester);
+
+      Color? fillUnder(String day) {
+        final box = tester.widget<AnimatedContainer>(
+          find
+              .ancestor(
+                of: find.text(day),
+                matching: find.byType(AnimatedContainer),
+              )
+              .first,
+        );
+        return (box.decoration! as BoxDecoration).color;
+      }
+
+      // One press on any of them is the same answer, so marking one and not
+      // the rest would say the others were something else.
+      expect(fillUnder('9'), fillUnder('12'));
+      expect(fillUnder('15'), fillUnder('12'));
+      expect(fillUnder('16'), isNot(fillUnder('12')));
+    });
+
+    testWidgets('a week is written as a week', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            picker: DatePickerKind.week,
+            value: DateTime(2026, 3, 9),
+          ),
+        ),
+      );
+      // A week written yyyy-MM-dd would name a day and mean seven of them.
+      expect(find.text('2026-W11'), findsOneWidget);
+    });
+
+    testWidgets('a quarter picker opens on its four quarters', (tester) async {
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            picker: DatePickerKind.quarter,
+            value: DateTime(2026, 8, 20),
+            onChanged: (v) => chosen = v,
+          ),
+        ),
+      );
+      expect(find.text('2026-Q3'), findsOneWidget);
+      await _openPanel(tester);
+      expect(find.text('Q1'), findsOneWidget);
+      expect(find.text('Q4'), findsOneWidget);
+      expect(find.text('15'), findsNothing, reason: 'no days to be had');
+
+      await tester.tap(find.text('Q2'));
+      await tester.pumpAndSettle();
+      expect(chosen, DateTime(2026, 4));
+    });
+
+    testWidgets('a month picker takes a month and stops there', (tester) async {
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            picker: DatePickerKind.month,
+            value: DateTime(2026, 8, 20),
+            onChanged: (v) => chosen = v,
+          ),
+        ),
+      );
+      expect(find.text('2026-08'), findsOneWidget);
+      await _openPanel(tester);
+      expect(find.text('15'), findsNothing, reason: 'no days to be had');
+      await tester.tap(find.text('Apr'));
+      await tester.pumpAndSettle();
+      expect(chosen, DateTime(2026, 4));
+    });
+
+    testWidgets('a year picker takes a year', (tester) async {
+      DateTime? chosen;
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            picker: DatePickerKind.year,
+            value: DateTime(2026, 8, 20),
+            onChanged: (v) => chosen = v,
+          ),
+        ),
+      );
+      expect(find.text('2026'), findsWidgets);
+      await _openPanel(tester);
+      await tester.tap(find.text('2028').last);
+      await tester.pumpAndSettle();
+      expect(chosen, DateTime(2028));
+    });
+
+    testWidgets('a format of your own is left alone', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            picker: DatePickerKind.month,
+            format: 'MMM yyyy',
+            value: DateTime(2026, 8, 20),
+          ),
+        ),
+      );
+      expect(find.text('Aug 2026'), findsOneWidget);
+    });
+  });
+
+  group('a cell drawn by the caller', () {
+    testWidgets('is handed the day, what the panel knows and its own mark',
+        (tester) async {
+      final seen = <DateCell>[];
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            value: DateTime(2026, 3, 4),
+            cellBuilder: (context, cell, child) {
+              seen.add(cell);
+              return Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  child,
+                  if (cell.date.day == 12)
+                    const Text('•', key: ValueKey('dot')),
+                ],
+              );
+            },
+          ),
+        ),
+      );
+      await _openPanel(tester);
+
+      expect(seen, hasLength(42), reason: 'six weeks, drawn by the caller');
+      expect(find.byKey(const ValueKey('dot')), findsOneWidget);
+
+      final fourth = seen.firstWhere((c) => c.date == DateTime(2026, 3, 4));
+      expect(fourth.chosen, isTrue);
+      expect(fourth.outside, isFalse);
+
+      // Wrapping rather than replacing, so the cell keeps every state the
+      // panel gives it for nothing.
+      expect(find.text('12'), findsOneWidget);
+    });
+
+    testWidgets('a barred day says so to the caller', (tester) async {
+      final blocked = <DateTime>[];
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            value: DateTime(2026, 3, 4),
+            disabledDate: (d) => d.weekday == DateTime.sunday,
+            cellBuilder: (context, cell, child) {
+              if (cell.disabled) blocked.add(cell.date);
+              return child;
+            },
+          ),
+        ),
+      );
+      await _openPanel(tester);
+      expect(blocked, isNotEmpty);
+      expect(blocked.every((d) => d.weekday == DateTime.sunday), isTrue);
     });
   });
 }

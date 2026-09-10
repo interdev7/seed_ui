@@ -165,6 +165,7 @@ pixels of the glyph.
 | `onClear` | `VoidCallback?` | — | After the range is dropped |
 | `footerBuilder` | `WidgetBuilder?` | — | A row of your own under the panel |
 | `presets` | `List<DateRangePreset>` | `const []` | Named stretches on a rail |
+| `cellBuilder` | `DateCellBuilder?` | — | Draws a day cell — see [DatePicker](date_picker.md) |
 | `token` | `DatePickerToken?` | — | The panel is `DatePicker`'s, so its numbers are too |
 
 ## From the keyboard

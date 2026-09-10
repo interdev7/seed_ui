@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`DatePicker.picker`** — `week`, `month`, `quarter` and `year` alongside
+  `day`. The value stays a `DateTime`, the first day of whatever was chosen: a
+  week is its first day counted from wherever the locale starts its weeks, a
+  quarter the first day of its first month. Nothing here needs a type of its
+  own — a week is a day you can add seven to. The panel opens at the depth
+  that suits and stops there, and a week picker marks the whole row, since one
+  press on any day of it is the same answer.
+
+- **`DatePicker.cellBuilder`**, with `DateCell` and `DateCellBuilder`, on both
+  pickers. The builder is handed the day, what the panel knows about it, and
+  **the mark the panel would have drawn** — so a dot under a booked day is a
+  `Stack` over that child rather than a reimplementation of chosen, today,
+  hovered and barred.
+
+- **`ww` and `Q` in the date grammar**, with `weekOfYear`, `startOfWeek`,
+  `quarterOf` and `startOfQuarter` beside `dateOnly` and `addMonths`. Weeks
+  are ISO — Monday to Sunday, week one holding the first Thursday — because
+  the other reckoning gives a week 53 that is one day long. Quarter names come
+  from the locale, in all eleven languages.
+
 - **`DateRangePicker` — a field that collects a stretch of days**, with
   `DateRange`, `DateRangePreset` and `DateRangePickerDefaults`. Its own
   component rather than a flag: a range is picked in two goes, the second

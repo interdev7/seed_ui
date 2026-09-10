@@ -120,6 +120,8 @@ class DatePickerToken {
     this.headerHeight,
     this.presetsWidth,
     this.timeColumnWidth,
+    this.mainAxisSpacing,
+    this.crossAxisSpacing,
   });
 
   /// Corner radius of the field and the panel.
@@ -140,6 +142,22 @@ class DatePickerToken {
   /// How wide one column of the time panel stands.
   final double? timeColumnWidth;
 
+  /// The air between one week of the grid and the next.
+  ///
+  /// Added around the cell rather than taken out of it: [cellHeight] is how
+  /// tall a day stands, and a gap that ate into it would shrink the days
+  /// instead of parting them. A wider gap makes the panel taller, which is
+  /// what asking for more air between rows means.
+  final double? mainAxisSpacing;
+
+  /// The air between one day of the grid and the next.
+  ///
+  /// Added around the cell, as [mainAxisSpacing] is. A range's band still
+  /// spans the gap: it is drawn across the whole pitch — the day and the air
+  /// beside it — so a stretch of days joins up rather than coming out in
+  /// pieces.
+  final double? crossAxisSpacing;
+
   /// Settles every number against the theme.
   DatePanelStyle resolve(Token t) => DatePanelStyle(
         borderRadius: borderRadius ?? t.borderRadius,
@@ -148,10 +166,14 @@ class DatePickerToken {
         // of air between them. The same height and the rows touch: with a
         // range drawn across them, a month reads as one grey block rather
         // than six weeks.
-        cellHeight: cellHeight ?? t.controlHeightSM + t.sizeXXS,
+        // The height of a day, not of a day and the air around it: the air
+        // is `mainAxisSpacing`, added on top.
+        cellHeight: cellHeight ?? t.controlHeightSM,
         headerHeight: headerHeight ?? t.controlHeightLG,
         presetsWidth: presetsWidth ?? t.controlHeightLG * 3,
         timeColumnWidth: timeColumnWidth ?? t.controlHeightSM * 2,
+        mainAxisSpacing: mainAxisSpacing ?? t.sizeXXS,
+        crossAxisSpacing: crossAxisSpacing ?? t.sizeXXS,
       );
 }
 
@@ -167,6 +189,8 @@ class DatePanelStyle {
     required this.headerHeight,
     required this.presetsWidth,
     required this.timeColumnWidth,
+    required this.mainAxisSpacing,
+    required this.crossAxisSpacing,
   });
 
   /// Corner radius of the field and the panel.
@@ -186,6 +210,24 @@ class DatePanelStyle {
 
   /// How wide one column of the time panel stands.
   final double timeColumnWidth;
+
+  /// The air between one week of the grid and the next.
+  final double mainAxisSpacing;
+
+  /// The air between one day of the grid and the next.
+  final double crossAxisSpacing;
+
+  /// How much room one day takes in the grid, its share of the air included.
+  ///
+  /// The band a range draws spans this rather than [cellWidth], so a stretch
+  /// of days reads as one band and not as a row of separate ones.
+  double get dayPitchWidth => cellWidth + crossAxisSpacing;
+
+  /// And how much room one week takes.
+  double get dayPitchHeight => cellHeight + mainAxisSpacing;
+
+  /// How wide the seven days come to, air and all.
+  double get gridWidth => dayPitchWidth * 7;
 }
 
 /// What a [DatePicker] collects.
@@ -1754,8 +1796,8 @@ class DayGrid extends StatelessWidget {
           children: [
             for (final weekday in order)
               SizedBox(
-                width: token.cellWidth,
-                height: token.cellHeight,
+                width: token.dayPitchWidth,
+                height: token.dayPitchHeight,
                 child: Center(
                   child: Text(
                     words.shortWeekdays[weekday - 1],
@@ -1782,8 +1824,10 @@ class DayGrid extends StatelessWidget {
                     final day = days[week * 7 + i];
                     final cell = _Cell(
                       label: words.figures('${day.day}'),
-                      width: token.cellWidth,
-                      height: token.cellHeight,
+                      width: token.dayPitchWidth,
+                      height: token.dayPitchHeight,
+                      markHeight: token.cellHeight,
+                      inset: token.crossAxisSpacing,
                       // Days from the months either side are drawn faintly:
                       // they are reachable, but they are not this month.
                       outside: !isSameMonth(day, cursor),
@@ -1841,10 +1885,11 @@ class QuarterGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.softToken;
     final words = context.seedLocale;
     final cursor = state.panelCursor;
     final chosen = state.panelMarked;
-    final width = token.cellWidth * 7 / 2;
+    final width = token.gridWidth / 2;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1861,6 +1906,8 @@ class QuarterGrid extends StatelessWidget {
                       label: words.quarters[quarter - 1],
                       width: width,
                       height: token.cellHeight * 2.4,
+                      markHeight: t.controlHeightSM,
+                      inset: token.crossAxisSpacing,
                       outside: false,
                       today: false,
                       chosen: chosen != null &&
@@ -1891,10 +1938,11 @@ class MonthGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.softToken;
     final words = context.seedLocale;
     final cursor = state.panelCursor;
     final chosen = state.panelMarked;
-    final width = token.cellWidth * 7 / 3;
+    final width = token.gridWidth / 3;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1910,6 +1958,8 @@ class MonthGrid extends StatelessWidget {
                       label: words.shortMonths[month - 1],
                       width: width,
                       height: token.cellHeight * 1.6,
+                      markHeight: t.controlHeightSM,
+                      inset: token.crossAxisSpacing,
                       outside: false,
                       today: false,
                       chosen: chosen != null &&
@@ -1941,11 +1991,12 @@ class YearGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.softToken;
     final words = context.seedLocale;
     final cursor = state.panelCursor;
     final chosen = state.panelMarked;
     final start = cursor.year - cursor.year % 10;
-    final width = token.cellWidth * 7 / 3;
+    final width = token.gridWidth / 3;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1963,6 +2014,8 @@ class YearGrid extends StatelessWidget {
                       label: words.figures('$year'),
                       width: width,
                       height: token.cellHeight * 1.6,
+                      markHeight: t.controlHeightSM,
+                      inset: token.crossAxisSpacing,
                       outside: year < start || year > start + 9,
                       today: false,
                       chosen: chosen != null && chosen.year == year,
@@ -1993,6 +2046,8 @@ class _Cell extends StatefulWidget {
     this.within = false,
     this.cap = PanelCap.none,
     this.onHover,
+    required this.markHeight,
+    required this.inset,
   });
 
   final String label;
@@ -2017,6 +2072,14 @@ class _Cell extends StatefulWidget {
   /// Told when the pointer comes and goes, so a range being drawn can
   /// follow it.
   final ValueChanged<bool>? onHover;
+
+  /// How tall the mark inside the cell stands. What is left over is the air
+  /// between this row and the next.
+  final double markHeight;
+
+  /// How much of the cell's width the mark gives up, half at each side. The
+  /// band under a range keeps the whole width, so a stretch joins up.
+  final double inset;
 
   @override
   State<_Cell> createState() => _CellState();
@@ -2092,7 +2155,7 @@ class _CellState extends State<_Cell> {
             // month of days would read as a single grey block.
             child: SizedBox(
               width: widget.width,
-              height: t.controlHeightSM,
+              height: widget.markHeight,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: band,
@@ -2109,8 +2172,8 @@ class _CellState extends State<_Cell> {
                     duration:
                         widget.chosen ? Duration.zero : t.motionDurationMid,
                     curve: t.motionEaseInOut,
-                    width: widget.width - t.sizeXXS,
-                    height: t.controlHeightSM,
+                    width: widget.width - widget.inset,
+                    height: widget.markHeight,
                     decoration: BoxDecoration(
                       color: background,
                       borderRadius: BorderRadius.circular(t.borderRadiusSM),

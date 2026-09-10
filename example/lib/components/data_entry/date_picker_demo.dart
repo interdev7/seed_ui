@@ -172,6 +172,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DatePicker(
+                token: const DatePickerToken(mainAxisSpacing: 15),
                 // Wrapping the panel's own mark rather than replacing it:
                 // the cell keeps chosen, today, hovered and barred for
                 // nothing.
@@ -182,13 +183,19 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
                     child,
                     if (cell.date.day % 7 == 3)
                       Positioned(
-                        top: -1,
+                        top: 2,
                         right: -2,
-                        child: Icon(
-                          // filed
-                          Icons.check_circle_sharp,
-                          size: 13,
-                          color: t.primary.base,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: t.primary.base,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            // filed
+                            Icons.check_circle_sharp,
+                            size: 13,
+                            color: t.colorTextSecondary,
+                          ),
                         ),
                       ),
                   ],

@@ -996,7 +996,7 @@ class _RangePanel extends StatelessWidget {
         .resolve(t);
 
     final presets = state.widget.presets;
-    final paneWidth = r.cellWidth * 7 + t.sizeSM * 2;
+    final paneWidth = r.gridWidth + t.sizeSM * 2;
     // What the panel would like: two months, the line between them, and the
     // rail where there is one.
     final wants = paneWidth * 2 +
@@ -1126,7 +1126,7 @@ class _Pane extends StatelessWidget {
     final t = context.softToken;
     final host = right ? _RightPane(state) : state;
     return SizedBox(
-      width: token.cellWidth * 7 + t.sizeSM * 2,
+      width: token.gridWidth + t.sizeSM * 2,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

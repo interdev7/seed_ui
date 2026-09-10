@@ -189,9 +189,42 @@ the panel gives it for nothing: chosen, today, hovered, barred, the mark the
 keyboard leaves. Replacing it is allowed and is the caller's business, but
 then all of that is theirs to draw too.
 
-`cell` says what the panel knows about the day: `date`, `today`, `chosen`,
-`within` (between the ends of a range), `outside` (a day from the month either
-side), `disabled` and `resting`. `DateRangePicker` takes the same builder.
+### What `cell` says
+
+`DateCell` is everything the panel knows about that day at the moment it is
+drawn. Every field is settled — none of them is a callback you have to ask
+again — and together they are exactly what the default mark is drawn from, so
+a builder that replaces the child has the same facts the panel had.
+
+| Field | Type | What it means |
+| --- | --- | --- |
+| `date` | `DateTime` | The day, at midnight. This is the value a tap would hand back for a `day` picker — a `week` picker settles it to the week's first day afterwards |
+| `today` | `bool` | Whether it is today, by the clock at the moment of the build. The panel draws today as an outline rather than a fill, so a day that is both today and chosen can still be told apart |
+| `chosen` | `bool` | Whether the picker holds it. **Either end of a range counts**, and in a `week` picker every day of the chosen row is `chosen` — one press on any of them is the same answer |
+| `within` | `bool` | Whether it lies **between** the two ends of a range, ends excluded. Always false in a single-date picker. While a range is being dragged out this follows the pointer, so it changes as the reader moves |
+| `outside` | `bool` | Whether it belongs to the month either side rather than the one on show. The grid is always six weeks, so a few of these are always drawn; the panel greys them |
+| `disabled` | `bool` | Whether it cannot be chosen — `minDate`, `maxDate`, `disabledDate`, and in a range picker `minDays`/`maxDays` while the second end is being chosen |
+| `resting` | `bool` | Whether the keyboard is resting on it. Not the same as hovered: the pointer's own highlight belongs to the mark and is not reported here, because it changes on every frame the pointer moves and a builder rebuilding for that would cost more than it is worth |
+
+Two things it deliberately does not say. **Hovered** is the mark's business,
+for the reason above. **Which pane** a day is drawn in, in a range picker's
+two-month panel: the same date is drawn once, and a builder that cared which
+side it fell on would be building against the layout rather than the date.
+
+`DateRangePicker` takes the same builder, and its cells carry `within` and the
+band under them for real.
+
+### The air in the grid
+
+`mainAxisSpacing` and `crossAxisSpacing` say how far apart the days stand.
+The air is added **around** the cell, not taken out of it: `cellWidth` and
+`cellHeight` are how big a day is, and asking for more air parts the days
+rather than shrinking them. A wider gap therefore makes the panel bigger,
+which is what asking for it means.
+
+The band a range draws still spans the gap. It is laid across the whole
+**pitch** — the day and the air beside it — so a stretch of days reads as one
+band rather than coming out in pieces.
 
 ## Blocking days
 
@@ -312,8 +345,10 @@ marks it invalid.
 | --- | --- |
 | `borderRadius` | `borderRadius` |
 | `cellWidth` | `controlHeightSM * 1.5` (36) |
-| `cellHeight` | `controlHeightSM + sizeXXS` (28) |
+| `cellHeight` | `controlHeightSM` (24) — the day itself, without the air |
 | `headerHeight` | `controlHeightLG` (40) |
+| `mainAxisSpacing` | `sizeXXS` (4) — the air between one week and the next |
+| `crossAxisSpacing` | `sizeXXS` (4) — the air between one day and the next |
 | `presetsWidth` | `controlHeightLG * 3` (120) |
 | `timeColumnWidth` | `controlHeightSM * 2` (48) |
 

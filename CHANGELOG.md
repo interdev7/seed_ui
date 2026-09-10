@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Stack` over that child rather than a reimplementation of chosen, today,
   hovered and barred.
 
+- **`DatePickerToken.mainAxisSpacing` and `crossAxisSpacing`** — how far apart
+  the days stand. The air is added around the cell rather than taken out of
+  it: `cellWidth` and `cellHeight` are how big a day is, so asking for more
+  air parts the days instead of shrinking them, and the panel grows by it. The
+  band a range draws spans the whole pitch — the day and the air beside it —
+  so a stretch still comes out as one band.
+
 - **`ww` and `Q` in the date grammar**, with `weekOfYear`, `startOfWeek`,
   `quarterOf` and `startOfQuarter` beside `dateOnly` and `addMonths`. Weeks
   are ISO — Monday to Sunday, week one holding the first Thursday — because

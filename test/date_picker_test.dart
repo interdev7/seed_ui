@@ -3,6 +3,8 @@ import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
+import 'package:seed_ui/src/components/data_entry/date_picker.dart'
+    show DayGrid;
 
 Widget _host(Widget child) => ConfigProvider(
       child: MaterialApp(
@@ -24,6 +26,7 @@ String _fieldText(WidgetTester tester) =>
 void main() {
   _presetTests();
   _kindTests();
+  _spacingTests();
   _clearRaceTests();
   _showTimeTests();
   testWidgets('shows the placeholder until a date is set', (tester) async {
@@ -1215,6 +1218,150 @@ void _kindTests() {
       await _openPanel(tester);
       expect(blocked, isNotEmpty);
       expect(blocked.every((d) => d.weekday == DateTime.sunday), isTrue);
+    });
+  });
+}
+
+void _spacingTests() {
+  group('the air in the grid', () {
+    /// The mark drawn inside the cell holding [day].
+    Rect markUnder(WidgetTester tester, String day) => tester.getRect(
+          find
+              .ancestor(
+                of: find.text(day),
+                matching: find.byType(AnimatedContainer),
+              )
+              .first,
+        );
+
+    Future<double> gapBetweenWeeks(WidgetTester tester, double gap) async {
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            value: DateTime(2026, 3, 4),
+            token: DatePickerToken(mainAxisSpacing: gap),
+          ),
+        ),
+      );
+      await _openPanel(tester);
+      // The 9th and the 16th of March 2026 stand one above the other.
+      final upper = markUnder(tester, '9');
+      final lower = markUnder(tester, '16');
+      return lower.top - upper.bottom;
+    }
+
+    testWidgets('mainAxisSpacing is the gap between one week and the next',
+        (tester) async {
+      expect(
+        await gapBetweenWeeks(tester, 4),
+        moreOrLessEquals(4, epsilon: 0.5),
+      );
+    });
+
+    testWidgets('and a wider one is wider', (tester) async {
+      expect(
+        await gapBetweenWeeks(tester, 12),
+        moreOrLessEquals(12, epsilon: 0.5),
+      );
+    });
+
+    testWidgets('the mark keeps its size, whatever the gap', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            value: DateTime(2026, 3, 4),
+            token: const DatePickerToken(
+              mainAxisSpacing: 15,
+              crossAxisSpacing: 15,
+            ),
+          ),
+        ),
+      );
+      await _openPanel(tester);
+
+      // Added around the cell, not taken out of it: `cellWidth` and
+      // `cellHeight` say how big a day is, and asking for more air parts the
+      // days rather than shrinking them.
+      final mark = markUnder(tester, '9');
+      expect(mark.height, 24, reason: 'controlHeightSM, the default cell');
+      expect(mark.width, 36, reason: 'controlHeightSM * 1.5');
+
+      // And the grid grew by the air, which is what asking for it means.
+      expect(
+        tester.getRect(find.byType(DayGrid)).height,
+        (24 + 15) * 7,
+        reason: 'six weeks, the weekday names, and the gaps',
+      );
+    });
+
+    Future<double> gapBetweenDays(WidgetTester tester, double gap) async {
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            value: DateTime(2026, 3, 4),
+            token: DatePickerToken(crossAxisSpacing: gap),
+          ),
+        ),
+      );
+      await _openPanel(tester);
+      // The 9th and the 10th of March 2026 stand side by side.
+      final left = markUnder(tester, '9');
+      final right = markUnder(tester, '10');
+      return right.left - left.right;
+    }
+
+    testWidgets('crossAxisSpacing is the gap between one day and the next',
+        (tester) async {
+      expect(await gapBetweenDays(tester, 4), moreOrLessEquals(4, epsilon: .5));
+    });
+
+    testWidgets('and a wider one is wider', (tester) async {
+      expect(
+        await gapBetweenDays(tester, 10),
+        moreOrLessEquals(10, epsilon: 0.5),
+      );
+    });
+
+    testWidgets('the band under a range is not cut by the gap', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const DateRangePicker(token: DatePickerToken(crossAxisSpacing: 10)),
+        ),
+      );
+      await tester.tap(find.byType(DateRangePicker));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('9').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('11').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(DateRangePicker));
+      await tester.pumpAndSettle();
+
+      // The band is the box that spans the whole cell. An AnimatedContainer
+      // makes a DecoratedBox of its own for the pill, which is narrower by
+      // the gap, and the panel is one too — so the band is picked by its
+      // width rather than by its place among the ancestors.
+      // The pitch: the day and its share of the air, which is what the band
+      // spans so a stretch joins up.
+      const cell = 36.0 + 10; // cellWidth plus the crossAxisSpacing asked for
+      Rect bandUnder(String day) {
+        final boxes = find.ancestor(
+          of: find.text(day).first,
+          matching: find.byType(DecoratedBox),
+        );
+        for (final element in boxes.evaluate()) {
+          final rect =
+              tester.getRect(find.byElementPredicate((e) => e == element));
+          if ((rect.width - cell).abs() < 0.5) return rect;
+        }
+        fail('no box the width of a cell stands behind $day');
+      }
+
+      // The gap is taken out of the mark, not out of the cell: a band cut
+      // into pieces would stop reading as one stretch.
+      final ninth = bandUnder('9');
+      final tenth = bandUnder('10');
+      expect(tenth.left, moreOrLessEquals(ninth.right, epsilon: 0.5));
     });
   });
 }

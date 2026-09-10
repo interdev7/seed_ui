@@ -152,6 +152,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A grey flash under the finger when picking in a `Select`.** The pointer
+  is on the row when it is pressed, so the fill eased from the hover grey into
+  the chosen colour — and back the other way when a press in a many-valued
+  select took the value out. Only the row whose answer moved now lands at
+  once; the rest go on easing their hover. The calendar's cells were fixed the
+  same way and for the same reason.
+
 - **`Select` filled whatever width it was given.** It now takes what it needs
   — the widest label it knows about, not the one it is holding, so the field
   does not change width every time somebody chooses something else — gives way

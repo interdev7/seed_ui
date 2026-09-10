@@ -108,16 +108,19 @@ class _SelectDemoState extends State<SelectDemo> {
         ),
         Group(
           'Tags (free entry)',
-          Select<String>(
-            value: _tags,
-            mode: SelectMode.tags,
-            placeholder: 'Add tags',
-            options: const [
-              SelectOption(value: 'red', filterText: 'Red'),
-              SelectOption(value: 'green', filterText: 'Green'),
-              SelectOption(value: 'blue', filterText: 'Blue'),
-            ],
-            onChanged: (v) => setState(() => _tags = v),
+          SizedBox(
+            width: 360,
+            child: Select<String>(
+              value: _tags,
+              mode: SelectMode.tags,
+              placeholder: 'Add tags',
+              options: const [
+                SelectOption(value: 'red', filterText: 'Red'),
+                SelectOption(value: 'green', filterText: 'Green'),
+                SelectOption(value: 'blue', filterText: 'Blue'),
+              ],
+              onChanged: (v) => setState(() => _tags = v),
+            ),
           ),
         ),
         Group(

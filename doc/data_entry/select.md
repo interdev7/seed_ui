@@ -144,6 +144,16 @@ border to `SelectStatus.error` or `.warning`.
 Select<String>(size: SoftSize.large, variant: SelectVariant.filled, options: fruitOptions)
 ```
 
+## A pick lands, a hover eases
+
+The pointer is on a row when it is pressed, so a fill that eased would show
+the hover grey turning into the chosen colour — and in a mode that holds
+several values, the chosen colour easing back to grey when a second press
+takes the value out. Either way it reads as a flash under the finger.
+
+Only the row whose answer moved lands. The rest go on easing their hover as
+they should.
+
 ## Keyboard
 
 Opening the menu puts the highlight on what is already chosen, and on the

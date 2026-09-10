@@ -1514,6 +1514,21 @@ class _OptionRow<T> extends StatefulWidget {
 }
 
 class _OptionRowState<T> extends State<_OptionRow<T>> {
+  /// Whether the answer changed since the row was last drawn.
+  ///
+  /// A hover tint may ease in; a pick may not. The pointer is on the row when
+  /// it is pressed, so the fill would ease from the hover grey to the chosen
+  /// colour — or back the other way, when a pick in a many-valued select
+  /// takes a value out — and the grey on the way reads as a flash under the
+  /// finger.
+  bool _landed = false;
+
+  @override
+  void didUpdateWidget(_OptionRow<T> old) {
+    super.didUpdateWidget(old);
+    if (old.selected != widget.selected) _landed = true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = widget.token;
@@ -1534,6 +1549,9 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
         : widget.selected
             ? t.colorText
             : t.colorText;
+
+    final landed = _landed;
+    _landed = false;
 
     final content = widget.custom != null
         ? widget.custom!(widget.option, widget.selected)
@@ -1580,7 +1598,9 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: t.motionDurationFast,
+          // Read once and put down: the next build works it out afresh from
+          // whether the answer moved again.
+          duration: landed ? Duration.zero : t.motionDurationFast,
           height: t.controlHeight,
           margin: const EdgeInsets.symmetric(vertical: 1),
           padding: r.optionPadding,

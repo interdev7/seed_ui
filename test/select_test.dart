@@ -17,6 +17,7 @@ const _options = [
 
 void main() {
   _autoWidthTests();
+  _pickLandsTests();
   testWidgets('opens and selects a single value', (tester) async {
     List<String>? seen;
     await tester.pumpWidget(
@@ -707,6 +708,95 @@ void _autoWidthTests() {
         ),
       );
       expect(size.width, 420);
+    });
+  });
+}
+
+void _pickLandsTests() {
+  group('a pick under the finger', () {
+    /// The row's own animated box, which is where the fill lives.
+    AnimatedContainer boxFor(WidgetTester tester, String label) =>
+        tester.widget<AnimatedContainer>(
+          find
+              .ancestor(
+                of: find.text(label).last,
+                matching: find.byType(AnimatedContainer),
+              )
+              .first,
+        );
+
+    testWidgets('lands rather than easing from the hover grey', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const SizedBox(
+            width: 260,
+            child: Select<String>(
+              mode: SelectMode.multiple,
+              options: _options,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(Select<String>));
+      await tester.pumpAndSettle();
+
+      // Sitting there, an untouched row eases its hover tint as it should.
+      expect(boxFor(tester, 'Apple').duration, isNot(Duration.zero));
+
+      await tester.tap(find.text('Apple').last);
+      await tester.pump();
+      // The pointer is on the row when it is pressed, so an eased fill would
+      // show the hover grey turning into the chosen colour — a flash under
+      // the finger.
+      expect(boxFor(tester, 'Apple').duration, Duration.zero);
+    });
+
+    testWidgets('and lands again when the pick takes the value out',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const SizedBox(
+            width: 260,
+            child: Select<String>(
+              mode: SelectMode.multiple,
+              // Uncontrolled: a controlled select whose owner never answers
+              // would never deselect, and the test would be measuring
+              // nothing.
+              defaultValue: ['apple'],
+              options: _options,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(Select<String>));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Apple').last);
+      await tester.pump();
+      // The other way round is the same flash: chosen colour easing back to
+      // the hover grey.
+      expect(boxFor(tester, 'Apple').duration, Duration.zero);
+    });
+
+    testWidgets('a row nobody touched goes on easing', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const SizedBox(
+            width: 260,
+            child: Select<String>(
+              mode: SelectMode.multiple,
+              options: _options,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(Select<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Apple').last);
+      await tester.pump();
+
+      // Only the row whose answer moved lands; the rest keep their hover.
+      expect(boxFor(tester, 'Banana').duration, isNot(Duration.zero));
     });
   });
 }

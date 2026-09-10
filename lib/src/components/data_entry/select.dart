@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -987,20 +989,42 @@ class _SelectState<T> extends State<Select<T>> {
       ),
       child: LayoutBuilder(
         builder: (context, available) {
-          // A select fills the width it is given — unlike a picker it has no
-          // format promising what it can hold, and in tags mode the chips
-          // decide their own size. With no width at all it cannot fill
-          // anything, and Expanded would throw, so it falls back to the
-          // widest label it knows about.
+          // Told a width, the select fills it. Merely offered an upper bound,
+          // it takes what it needs and gives way when there is less — the
+          // rule the pickers follow, so three controls of the same kind
+          // behave the same way beside each other.
+          //
+          // What it needs is the widest label it knows about, not the one it
+          // is holding: a field that sized itself to the current value would
+          // change width every time somebody chose something else, and a form
+          // whose fields shuffle as they are filled in is a form nobody
+          // trusts.
           final room = available.maxWidth;
+          final told = room.isFinite && room == available.minWidth;
+          final natural = _naturalWidth(textStyle);
+          final furniture = fontSize + token.sizeXS;
           return Row(
-            mainAxisSize: room.isFinite ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisSize: told ? MainAxisSize.max : MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (room.isFinite)
+              if (told)
                 Expanded(child: valueArea)
               else
-                SizedBox(width: _naturalWidth(textStyle), child: valueArea),
+                Flexible(
+                  // In tags mode the chips decide their own size — they are
+                  // wider than the labels inside them, and forcing the label
+                  // width on them is how they came to spill out of the box.
+                  // Everywhere else the widest label is the width, up to
+                  // whatever room is left once the suffix has taken its own.
+                  child: _multi
+                      ? valueArea
+                      : SizedBox(
+                          width: room.isFinite
+                              ? math.min(natural, room - furniture)
+                              : natural,
+                          child: valueArea,
+                        ),
+                ),
               SizedBox(width: token.sizeXS),
               // Width only: a height here would be the height of the
               // *content*, which the border then stands outside of, leaving
@@ -1020,8 +1044,7 @@ class _SelectState<T> extends State<Select<T>> {
     );
 
     // A two-dimensional size names a width as well; a preset and a bare
-    // dimension say nothing about it, so the field fills its parent as
-    // before.
+    // dimension say nothing about it, and the field then measures itself.
     final named = _size.explicitWidth;
 
     final control = MouseRegion(

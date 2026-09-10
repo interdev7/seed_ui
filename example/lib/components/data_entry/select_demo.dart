@@ -94,13 +94,16 @@ class _SelectDemoState extends State<SelectDemo> {
         ),
         Group(
           'Multiple — responsive tags (one line, +N)',
-          Select<String>(
-            value: _multi,
-            mode: SelectMode.multiple,
-            placeholder: 'Pick several',
-            maxTagCountResponsive: true,
-            options: _fruits,
-            onChanged: (v) => setState(() => _multi = v),
+          SizedBox(
+            width: 360,
+            child: Select<String>(
+              value: _multi,
+              mode: SelectMode.multiple,
+              placeholder: 'Pick several',
+              maxTagCountResponsive: true,
+              options: _fruits,
+              onChanged: (v) => setState(() => _multi = v),
+            ),
           ),
         ),
         Group(

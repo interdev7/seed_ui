@@ -16,6 +16,7 @@ const _options = [
 ];
 
 void main() {
+  _autoWidthTests();
   testWidgets('opens and selects a single value', (tester) async {
     List<String>? seen;
     await tester.pumpWidget(
@@ -613,5 +614,99 @@ void main() {
       (panel.decoration as BoxDecoration).color,
       const Color(0xFF123456),
     );
+  });
+}
+
+void _autoWidthTests() {
+  group('how wide a select runs', () {
+    /// Pumped in the shape of a page: a column that lets its children take
+    /// what they need rather than handing them a width.
+    Future<Size> sized(WidgetTester tester, Widget select,
+        {double room = 800}) async {
+      await tester.pumpWidget(
+        _host(
+          SizedBox(
+            width: room,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [select],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return tester.getSize(find.byType(Select<String>).first);
+    }
+
+    testWidgets('it takes what it needs rather than the whole page',
+        (tester) async {
+      final size = await sized(
+        tester,
+        const Select<String>(
+          placeholder: 'Pick one',
+          options: [
+            SelectOption(value: 'a', label: Text('Apple')),
+            SelectOption(value: 'b', label: Text('Pear')),
+          ],
+        ),
+      );
+      expect(size.width, lessThan(300));
+    });
+
+    testWidgets('the widest label sets it, not the one it is holding',
+        (tester) async {
+      const options = [
+        SelectOption(value: 'a', label: Text('A')),
+        SelectOption(value: 'b', label: Text('An option with a long name')),
+      ];
+      final empty = await sized(
+        tester,
+        const Select<String>(placeholder: '', options: options),
+      );
+      final short = await sized(
+        tester,
+        const Select<String>(
+          placeholder: '',
+          options: options,
+          value: ['a'],
+        ),
+      );
+
+      // A field that sized itself to the current value would change width
+      // every time somebody chose something else, and a form whose fields
+      // shuffle as they are filled in is a form nobody trusts.
+      expect(short.width, empty.width);
+    });
+
+    testWidgets('offered less than it needs, it takes what it was offered',
+        (tester) async {
+      final size = await sized(
+        tester,
+        const Select<String>(
+          placeholder: '',
+          options: [
+            SelectOption(
+              value: 'a',
+              label: Text('An option with a very long name indeed, truly'),
+            ),
+          ],
+        ),
+        room: 180,
+      );
+      expect(tester.takeException(), isNull, reason: 'nothing overflowed');
+      expect(size.width, lessThanOrEqualTo(180));
+    });
+
+    testWidgets('told a width, it fills it', (tester) async {
+      final size = await sized(
+        tester,
+        const SizedBox(
+          width: 420,
+          child: Select<String>(placeholder: 'Pick one', options: []),
+        ),
+      );
+      expect(size.width, 420);
+    });
   });
 }

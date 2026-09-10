@@ -107,6 +107,20 @@ single select marks it by highlight alone.
 | `loading` | Swaps the arrow for a spinner and shows a loading dropdown |
 | `disabled` | Greys out and blocks interaction |
 
+## Width
+
+**The select takes what it needs.** Given no width it is as wide as the widest
+label it knows about — not the one it is holding: a field that sized itself to
+the current value would change width every time somebody chose something else,
+and a form whose fields shuffle as they are filled in is a form nobody trusts.
+
+Offered less than that, it takes what it was offered. **Told** a width, it
+fills it. The pickers follow the same rule, so three controls of the same kind
+behave the same way beside each other.
+
+In a mode that holds several values the tags decide their own size: they are
+wider than the labels inside them, and the widest label is not their measure.
+
 ## Sizes, variants and status
 
 `size` takes either a preset — `small` (24px), `middle` (32px, default) or

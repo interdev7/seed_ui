@@ -133,8 +133,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The gallery has a group for it: narrow the window and the columns stand down
   one at a time, with the table's own width read out beside them.
 
-### Added
-
 - **`DatePicker.showTime`.** The scrolling columns now stand beside the
   calendar, and they are the very ones `TimePicker` shows — pulled out into
   one widget rather than written twice, so a time is picked the same way
@@ -153,6 +151,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`DatePickerToken.presetsWidth`** and **`timeColumnWidth`**.
 
 ### Fixed
+
+- **`Select` filled whatever width it was given.** It now takes what it needs
+  — the widest label it knows about, not the one it is holding, so the field
+  does not change width every time somebody chooses something else — gives way
+  when it is offered less, and fills a width it is told outright. The pickers
+  already followed that rule; three controls of the same kind now behave the
+  same way beside each other. In a mode holding several values the tags decide
+  their own size, since they are wider than the labels inside them.
 
 - **The calendar's weeks ran into one another.** A day cell was exactly as
   tall as the pill inside it, so the rows touched — invisible until a range

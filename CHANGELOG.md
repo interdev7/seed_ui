@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`FormItem.dependsOn`, `FormRule.matches` and `FormRule.against`** — fields
+  that lean on one another. A rule comparing two fields goes stale the moment
+  either moves, and the message sits on the field nobody is touching: change a
+  password and the confirmation below it went on saying they differ. Naming
+  what a field leans on has it asked again whenever one of them changes —
+  typed into, `setValue` or `setValues` alike — and only once it has been
+  asked at least once, so an unanswered form stays quiet. A `matches` whose
+  field is missing from `dependsOn` throws in debug rather than leaving a
+  stale message to be found by looking. `formMismatch` joins the eleven
+  languages.
+
+- **`Form.maxWidth`.** A form fills what it is given, and a wide page gives it
+  the window — a line of boxes with one word in each. Naming a width caps the
+  form against the leading edge.
+
 - **`Form.maxWidth`.** A form fills what it is given, and a wide page gives it
   the whole window — a line of boxes a thousand pixels long with one word in
   each. A named width caps it and leaves it against the leading edge; a window

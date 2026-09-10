@@ -49,6 +49,16 @@ enum FormRequiredMark {
 /// still submits.
 typedef FormValidator = FutureOr<String?> Function(Object? value);
 
+/// A rule that may look at the rest of the form as well as its own value.
+///
+/// [values] is every value the form holds, by field name, so a rule about two
+/// fields — a confirmation, an end that must follow a start — can be written
+/// where it belongs rather than reached for through a controller held outside.
+typedef FormCrossValidator = FutureOr<String?> Function(
+  Object? value,
+  Map<String, Object?> values,
+);
+
 /// One thing a value has to satisfy.
 ///
 /// Built from the named constructors rather than by hand: each carries a
@@ -67,9 +77,13 @@ class FormRule {
     int count = 0,
     RegExp? pattern,
     FormValidator? validator,
+    FormCrossValidator? crossValidator,
+    String? other,
   })  : _count = count,
         _pattern = pattern,
-        _validator = validator;
+        _validator = validator,
+        _crossValidator = crossValidator,
+        _other = other;
 
   /// The value has to be there: not null, not an empty string, not an empty
   /// list, and not a false checkbox.
@@ -105,6 +119,25 @@ class FormRule {
   /// Anything you like, including something that has to be asked of a server.
   ///
   /// Return null where the value is good and a message where it is not.
+  /// The value has to be the same as another field's.
+  ///
+  /// The everyday dependent rule — a password confirmed, an email typed
+  /// twice. Name the field it must match in [FormItem.dependsOn] too, or the
+  /// message will stand until this field is touched again.
+  const FormRule.matches(String other,
+      {String? message, bool warningOnly = false})
+      : this._(_Check.matches,
+            message: message, warningOnly: warningOnly, other: other);
+
+  /// A rule of your own that may read the whole form.
+  const FormRule.against(FormCrossValidator validator,
+      {String? message, bool warningOnly = false})
+      : this._(_Check.against,
+            message: message,
+            warningOnly: warningOnly,
+            crossValidator: validator);
+
+  /// A rule of your own: anything that can say what is wrong, or nothing.
   const FormRule.custom(FormValidator validator,
       {String? message, bool warningOnly = false})
       : this._(_Check.custom,
@@ -114,6 +147,10 @@ class FormRule {
   final int _count;
   final RegExp? _pattern;
   final FormValidator? _validator;
+  final FormCrossValidator? _crossValidator;
+
+  /// The field this one is measured against, for a rule that compares.
+  final String? _other;
 
   /// What to say when the value does not satisfy this rule.
   ///
@@ -130,7 +167,14 @@ class FormRule {
   bool get _demands => _check == _Check.required;
 
   /// What this rule makes of [value], in the words of [words].
-  FutureOr<String?> _test(Object? value, SeedLocalizations words) {
+  /// Whether this rule needs the rest of the form to answer.
+  bool get _crosses => _check == _Check.matches || _check == _Check.against;
+
+  FutureOr<String?> _test(
+    Object? value,
+    Map<String, Object?> values,
+    SeedLocalizations words,
+  ) {
     switch (_check) {
       case _Check.required:
         final empty = value == null ||
@@ -166,8 +210,21 @@ class FormRule {
         return ok ? null : (message ?? words.formInvalidUrl);
       case _Check.custom:
         return _validator!(value);
+      case _Check.matches:
+        // Two empties are the same as each other, and an empty box is
+        // `required`'s business rather than this rule's.
+        final theirs = values[_other!];
+        final mine = value;
+        final bothEmpty = _blank(mine) && _blank(theirs);
+        if (bothEmpty || mine == theirs) return null;
+        return message ?? words.formMismatch;
+      case _Check.against:
+        return _crossValidator!(value, values);
     }
   }
+
+  static bool _blank(Object? value) =>
+      value == null || (value is String && value.isEmpty);
 
   /// How big a value is, for a rule that counts: the length of a string or a
   /// list, or the number itself. Null where the value cannot be counted, and
@@ -185,7 +242,17 @@ class FormRule {
   static final RegExp _email = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 }
 
-enum _Check { required, min, max, pattern, email, url, custom }
+enum _Check {
+  required,
+  min,
+  max,
+  pattern,
+  email,
+  url,
+  custom,
+  matches,
+  against
+}
 
 /// What a field is doing and what may be done to it.
 ///
@@ -398,12 +465,16 @@ class FormController extends ChangeNotifier {
   /// Sets one field, as though the reader had.
   void setValue(String name, Object? value) {
     _values[name] = value;
+    _echo(name);
     notifyListeners();
   }
 
   /// Sets several at once.
   void setValues(Map<String, Object?> values) {
     _values.addAll(values);
+    for (final name in values.keys) {
+      _echo(name);
+    }
     notifyListeners();
   }
 
@@ -492,6 +563,23 @@ class FormController extends ChangeNotifier {
   /// form.
   void _announce() => notifyListeners();
 
+  /// Asks again every field that leans on [changed].
+  ///
+  /// A rule about two fields is stale the moment either of them moves, and
+  /// the one holding the message is usually the one nobody is touching:
+  /// change a password and the confirmation below it still says they differ.
+  /// Only fields that have already been asked, so a form nobody has answered
+  /// stays quiet.
+  void _echo(String changed) {
+    for (final entry in _fields.entries.toList()) {
+      if (entry.key == changed) continue;
+      final field = entry.value;
+      if (!field.dependsOn.contains(changed)) continue;
+      if (!field.asked) continue;
+      unawaited(field.validate().then((_) => notifyListeners()));
+    }
+  }
+
   void _report(String name, {String? error, String? warning}) {
     if (error == null) {
       _errors.remove(name);
@@ -516,6 +604,16 @@ class FormController extends ChangeNotifier {
 abstract class _Field {
   Object? get initialValue;
   Future<bool> validate();
+
+  /// The fields this one is measured against.
+  List<String> get dependsOn;
+
+  /// Whether this field has been asked its rules yet.
+  ///
+  /// A field that has never been asked is not asked because its neighbour
+  /// moved: a form nobody has submitted would light up red around a box the
+  /// reader has not reached.
+  bool get asked;
 }
 
 /// A form: a set of named fields, the values they hold, and the rules they
@@ -928,6 +1026,14 @@ class _FormListState extends State<FormList> implements _Field {
   @override
   Object? get initialValue => null;
 
+  // A list is not compared with anything, and it is asked whenever the form
+  // is: there is no message of its own to leave standing.
+  @override
+  List<String> get dependsOn => const [];
+
+  @override
+  bool get asked => true;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -993,7 +1099,7 @@ class _FormListState extends State<FormList> implements _Field {
     String? error;
     String? warning;
     for (final rule in widget.rules) {
-      final said = await rule._test(value, words);
+      final said = await rule._test(value, controller.values, words);
       if (said == null) continue;
       if (rule.warningOnly) {
         warning ??= said;
@@ -1110,6 +1216,7 @@ class FormItem<T> extends StatefulWidget {
     this.required,
     this.trigger,
     this.disabled,
+    this.dependsOn = const [],
   });
 
   /// What this field is called in the form's values.
@@ -1146,6 +1253,25 @@ class FormItem<T> extends StatefulWidget {
   /// When this field's rules are asked, where it differs from the form's.
   final FormTrigger? trigger;
 
+  /// The fields this one is measured against.
+  ///
+  /// A rule comparing two fields is stale the moment either moves, and the
+  /// message is usually on the field nobody is touching — change a password
+  /// and the confirmation under it still says they differ. Naming what this
+  /// field leans on has it asked again whenever one of them changes.
+  ///
+  /// Only once this field has been asked at least once, so a form nobody has
+  /// answered does not light up around a box the reader has not reached.
+  ///
+  /// ```dart
+  /// FormItem.text(
+  ///   name: 'confirm',
+  ///   dependsOn: const ['password'],
+  ///   rules: const [FormRule.matches('password')],
+  /// )
+  /// ```
+  final List<String> dependsOn;
+
   /// Bars this field alone.
   final bool? disabled;
 
@@ -1165,6 +1291,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
     String? placeholder,
     PasswordConfig? password,
@@ -1183,6 +1310,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => Input(
           value: field.value ?? '',
@@ -1210,6 +1338,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
     num? min,
     num? max,
@@ -1227,6 +1356,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => InputNumber(
           value: field.value,
@@ -1253,6 +1383,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
   }) =>
       FormItem<bool>(
@@ -1265,6 +1396,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => Align(
           alignment: AlignmentDirectional.centerStart,
@@ -1288,6 +1420,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
     Widget? checkedChild,
     Widget? uncheckedChild,
@@ -1302,6 +1435,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => Align(
           alignment: AlignmentDirectional.centerStart,
@@ -1326,6 +1460,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
     DateTime? minDate,
     DateTime? maxDate,
@@ -1342,6 +1477,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => DatePicker(
           semanticsLabel: field.semanticsLabel,
@@ -1367,6 +1503,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
     String format = 'HH:mm:ss',
     String? placeholder,
@@ -1381,6 +1518,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => TimePicker(
           semanticsLabel: field.semanticsLabel,
@@ -1409,6 +1547,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
     String? placeholder,
     bool showSearch = false,
@@ -1424,6 +1563,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => Select<V>(
           semanticsLabel: field.semanticsLabel,
@@ -1450,6 +1590,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
     String? placeholder,
     bool showSearch = false,
@@ -1465,6 +1606,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => Select<V>(
           semanticsLabel: field.semanticsLabel,
@@ -1492,6 +1634,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
     Axis? direction,
     RadioOptionType? optionType,
@@ -1506,6 +1649,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => Align(
           alignment: AlignmentDirectional.centerStart,
@@ -1531,6 +1675,7 @@ class FormItem<T> extends StatefulWidget {
     Widget? extra,
     bool? required,
     FormTrigger? trigger,
+    List<String> dependsOn = const [],
     bool? disabled,
     double min = 0,
     double max = 100,
@@ -1547,6 +1692,7 @@ class FormItem<T> extends StatefulWidget {
         extra: extra,
         required: required,
         trigger: trigger,
+        dependsOn: dependsOn,
         disabled: disabled,
         builder: (field) => Slider(
           value: field.value ?? min,
@@ -1573,6 +1719,36 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
   Object? get initialValue => widget.initialValue;
 
   @override
+  List<String> get dependsOn => widget.dependsOn;
+
+  @override
+  bool get asked => _asked;
+
+  /// Complains about a rule that compares without saying what it leans on.
+  ///
+  /// The rule works — it is asked, and it refuses — but its message goes
+  /// stale the moment the other field moves, and the field holding it is the
+  /// one nobody is touching. That is a hard thing to find by looking.
+  void _checkDependencies() {
+    assert(() {
+      for (final rule in widget.rules) {
+        if (!rule._crosses) continue;
+        final other = rule._other;
+        if (other == null || widget.dependsOn.contains(other)) continue;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          throw FlutterError(
+            'The field "${widget.name}" has a rule measuring it against '
+            '"$other", but does not name "$other" in dependsOn. Its message '
+            'will stand until "${widget.name}" is touched again, however '
+            '"$other" changes.',
+          );
+        });
+      }
+      return true;
+    }());
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final scope = Form._scopeOf(context);
@@ -1583,6 +1759,7 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
     _scope?.controller._unregister(widget.name, this);
     _scope = scope;
     scope.controller._register(widget.name, this);
+    _checkDependencies();
   }
 
   @override
@@ -1628,7 +1805,7 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
     String? error;
     String? warning;
     for (final rule in widget.rules) {
-      final said = await rule._test(value, words);
+      final said = await rule._test(value, _scope!.controller.values, words);
       if (said == null) continue;
       if (rule.warningOnly) {
         warning ??= said;
@@ -1661,6 +1838,7 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
     scope.controller._values[widget.name] = value;
     scope.controller._touched.add(widget.name);
     scope.onValuesChanged?.call(widget.name, scope.controller.values);
+    scope.controller._echo(widget.name);
     // Once a field has been told off it is checked again as it is typed in,
     // whatever the trigger says: leaving a red border under a value that has
     // just been put right is the form arguing with the reader.

@@ -178,6 +178,52 @@ may finish in either order, and the later value has the last word whichever
 answer arrives last — otherwise a field shows a complaint about something the
 reader has already changed.
 
+## Fields that lean on one another
+
+```dart
+FormItem.text(
+  name: 'confirm',
+  dependsOn: const ['password'],
+  rules: const [FormRule.matches('password')],
+)
+```
+
+A rule comparing two fields goes stale the moment either of them moves — and
+the message is on the field nobody is touching. Change the password and the
+confirmation below it still says they differ, until you go back and retype it.
+`dependsOn` names what a field leans on, and the form asks it again whenever
+one of them changes, however it changed: typed into, set through
+`setValue`, or filled in by `setValues`.
+
+Only once the field has been asked at least once. A form nobody has answered
+does not light up around a box the reader has not reached yet.
+
+`FormRule.matches` is the everyday case. For anything else, `FormRule.against`
+hands your rule the whole form:
+
+```dart
+FormItem.date(
+  name: 'ends',
+  dependsOn: const ['starts'],
+  rules: [
+    FormRule.against((value, values) {
+      final from = values['starts'];
+      if (value == null || from is! DateTime) return null;
+      return (value as DateTime).isBefore(from) ? 'The end comes first' : null;
+    }),
+  ],
+)
+```
+
+Two empty boxes are not a mismatch: an empty box is `FormRule.required`'s
+business, and a rule that refused both would refuse every form before it was
+filled in.
+
+**A comparison that names nothing is complained about.** A `FormRule.matches`
+whose field is missing from `dependsOn` still refuses — it just leaves its
+message standing — so in debug the form throws rather than let you find it by
+looking.
+
 ## When the rules are asked
 
 `trigger` on the form, or on one field where it differs:
@@ -318,7 +364,4 @@ an unset one falls back to the value derived from the global theme.
 
 ## Not here yet
 
-**Fields that depend on one another** — a rule that has to look at another
-field's value. `FormRule.custom` can read a value through a controller you hold
-yourself, so it is possible, but the form does not re-check the dependent field
-when the one it depends on changes.
+Nothing. Everything the component set out to do is here.

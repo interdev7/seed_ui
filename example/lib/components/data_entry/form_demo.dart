@@ -22,6 +22,7 @@ class _FormDemoState extends State<FormDemo> {
     },
   );
   final _own = FormController();
+  final _pair = FormController();
   final _every = FormController(
     initialValues: const {'seats': 3, 'budget': 40.0, 'billing': 'monthly'},
   );
@@ -37,6 +38,7 @@ class _FormDemoState extends State<FormDemo> {
     _search.dispose();
     _trip.dispose();
     _own.dispose();
+    _pair.dispose();
     _every.dispose();
     super.dispose();
   }
@@ -594,6 +596,12 @@ class _FormDemoState extends State<FormDemo> {
                               key: ValueKey(row.key),
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Row(
+                                // Level with the box, not with the box and
+                                // the gap under it: a field reserves room
+                                // beneath itself for whatever its rules may
+                                // say, and centring the button against the
+                                // pair of them leaves it riding high.
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Expanded(
                                     child: FormItem.text(
@@ -645,6 +653,83 @@ class _FormDemoState extends State<FormDemo> {
                 'Type a name into each, then remove the middle row: the rows '
                 'below it keep what they were holding. A row is known by a '
                 'key rather than by its place, so nothing slides up.',
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Fields that lean on one another',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Form(
+                controller: _pair,
+                maxWidth: 420,
+                child: Column(
+                  children: [
+                    FormItem.text(
+                      name: 'password',
+                      label: const Text('Password'),
+                      rules: const [FormRule.required(), FormRule.min(8)],
+                      password: const PasswordConfig(),
+                    ),
+                    FormItem.text(
+                      name: 'confirm',
+                      label: const Text('Confirm it'),
+                      // What it leans on. Without this the message below
+                      // stands until you touch this box again, however the
+                      // password above changes.
+                      dependsOn: const ['password'],
+                      rules: const [
+                        FormRule.required(),
+                        FormRule.matches('password'),
+                      ],
+                      password: const PasswordConfig(),
+                    ),
+                    FormItem.date(name: 'starts', label: const Text('Starts')),
+                    FormItem.date(
+                      name: 'ends',
+                      label: const Text('Ends'),
+                      dependsOn: const ['starts'],
+                      rules: [
+                        // The general form: a rule of your own that may read
+                        // the whole form rather than only its own value.
+                        FormRule.against((value, values) {
+                          final from = values['starts'];
+                          if (value == null || from is! DateTime) return null;
+                          return (value as DateTime).isBefore(from)
+                              ? 'The end comes before the start'
+                              : null;
+                        }),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  Button(
+                    variant: ButtonVariant.solid,
+                    color: ButtonColor.primary,
+                    onPressed: _pair.submit,
+                    child: const Text('Check them'),
+                  ),
+                  Button(
+                    onPressed: () => _pair.setValue('password', 'hunter22'),
+                    child: const Text('Change the password from outside'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Type two passwords that differ and press Check them. Now fix '
+                'the one above: the message under the confirmation goes, '
+                'though nobody touched the confirmation. That is what '
+                'dependsOn buys — the message always stands on the field you '
+                'are not looking at.',
               ),
             ],
           ),

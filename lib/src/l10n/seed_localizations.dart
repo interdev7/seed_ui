@@ -80,6 +80,7 @@ class SeedLocalizations {
     this.selectRow = 'Select row',
     this.formRequired = 'This field is required',
     this.formInvalid = 'This value is not valid',
+    this.formMismatch = 'The two do not match',
     this.formInvalidEmail = 'Enter a valid email address',
     this.formInvalidUrl = 'Enter a valid web address',
     this.formTooShort = 'At least {n}',
@@ -151,6 +152,9 @@ class SeedLocalizations {
 
   /// Refuses a `Form` value that does not match the pattern asked of it.
   final String formInvalid;
+
+  /// What a `FormRule.matches` says when two fields differ.
+  final String formMismatch;
 
   /// Refuses a `Form` value that is not an email address.
   final String formInvalidEmail;
@@ -482,6 +486,7 @@ class SeedLocalizations {
     selectRow: 'Выбрать строку',
     formRequired: 'Обязательное поле',
     formInvalid: 'Недопустимое значение',
+    formMismatch: 'Значения не совпадают',
     formInvalidEmail: 'Введите корректный адрес почты',
     formInvalidUrl: 'Введите корректный адрес сайта',
     formTooShort: 'Не менее {n}',
@@ -548,6 +553,7 @@ class SeedLocalizations {
     selectRow: 'Setiri saýla',
     formRequired: 'Hökmany meýdan',
     formInvalid: 'Nädogry bahа',
+    formMismatch: 'Bahalar gabat gelmeýär',
     formInvalidEmail: 'Dogry e-poçta salgysyny giriziň',
     formInvalidUrl: 'Dogry web salgysyny giriziň',
     formTooShort: 'Iň azyndan {n}',
@@ -613,6 +619,7 @@ class SeedLocalizations {
     selectRow: 'Zeile auswählen',
     formRequired: 'Pflichtfeld',
     formInvalid: 'Ungültiger Wert',
+    formMismatch: 'Die Werte stimmen nicht überein',
     formInvalidEmail: 'Gültige E-Mail-Adresse eingeben',
     formInvalidUrl: 'Gültige Webadresse eingeben',
     formTooShort: 'Mindestens {n}',
@@ -678,6 +685,7 @@ class SeedLocalizations {
     selectRow: 'Sélectionner la ligne',
     formRequired: 'Champ obligatoire',
     formInvalid: 'Valeur non valide',
+    formMismatch: 'Les valeurs ne correspondent pas',
     formInvalidEmail: 'Saisissez une adresse e-mail valide',
     formInvalidUrl: 'Saisissez une adresse web valide',
     formTooShort: 'Au moins {n}',
@@ -744,6 +752,7 @@ class SeedLocalizations {
     selectRow: 'Seleccionar fila',
     formRequired: 'Campo obligatorio',
     formInvalid: 'Valor no válido',
+    formMismatch: 'Los valores no coinciden',
     formInvalidEmail: 'Introduce un correo válido',
     formInvalidUrl: 'Introduce una dirección web válida',
     formTooShort: 'Al menos {n}',
@@ -810,6 +819,7 @@ class SeedLocalizations {
     selectRow: '选择此行',
     formRequired: '此项为必填项',
     formInvalid: '值不合法',
+    formMismatch: '两次输入不一致',
     formInvalidEmail: '请输入有效的邮箱地址',
     formInvalidUrl: '请输入有效的网址',
     formTooShort: '不少于 {n}',
@@ -875,6 +885,7 @@ class SeedLocalizations {
     selectRow: '行を選択',
     formRequired: '必須項目です',
     formInvalid: '値が正しくありません',
+    formMismatch: '値が一致しません',
     formInvalidEmail: '有効なメールアドレスを入力してください',
     formInvalidUrl: '有効なURLを入力してください',
     formTooShort: '{n} 以上',
@@ -941,6 +952,7 @@ class SeedLocalizations {
     selectRow: 'Satırı seç',
     formRequired: 'Zorunlu alan',
     formInvalid: 'Geçersiz değer',
+    formMismatch: 'Değerler eşleşmiyor',
     formInvalidEmail: 'Geçerli bir e-posta adresi girin',
     formInvalidUrl: 'Geçerli bir web adresi girin',
     formTooShort: 'En az {n}',
@@ -1006,6 +1018,7 @@ class SeedLocalizations {
     selectRow: 'Selecionar linha',
     formRequired: 'Campo obrigatório',
     formInvalid: 'Valor inválido',
+    formMismatch: 'Os valores não coincidem',
     formInvalidEmail: 'Informe um e-mail válido',
     formInvalidUrl: 'Informe um endereço web válido',
     formTooShort: 'No mínimo {n}',
@@ -1072,6 +1085,7 @@ class SeedLocalizations {
     selectRow: 'تحديد الصف',
     formRequired: 'هذا الحقل مطلوب',
     formInvalid: 'قيمة غير صالحة',
+    formMismatch: 'القيمتان غير متطابقتين',
     formInvalidEmail: 'أدخل بريدًا إلكترونيًا صالحًا',
     formInvalidUrl: 'أدخل عنوان موقع صالحًا',
     formTooShort: '{n} على الأقل',
@@ -1139,6 +1153,7 @@ class SeedLocalizations {
     selectRow: 'בחר שורה',
     formRequired: 'שדה חובה',
     formInvalid: 'ערך לא תקין',
+    formMismatch: 'הערכים אינם תואמים',
     formInvalidEmail: 'הזן כתובת דוא"ל תקינה',
     formInvalidUrl: 'הזן כתובת אתר תקינה',
     formTooShort: 'לפחות {n}',

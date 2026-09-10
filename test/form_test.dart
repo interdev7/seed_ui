@@ -42,6 +42,7 @@ FormItem<String> _text(
 
 void main() {
   _listTests();
+  _dependsOnTests();
   _widthTests();
   group('what a form holds', () {
     testWidgets('a field puts what it holds into the form', (tester) async {
@@ -1257,6 +1258,159 @@ void _widthTests() {
       );
       await tester.pumpAndSettle();
       expect(tester.getSize(find.byType(Input)).width, 200);
+    });
+  });
+}
+
+void _dependsOnTests() {
+  group('fields that depend on one another', () {
+    Widget signup(FormController controller) => _host(
+          Form(
+            controller: controller,
+            child: Column(
+              children: [
+                FormItem.text(name: 'password', label: const Text('Password')),
+                FormItem.text(
+                  name: 'confirm',
+                  label: const Text('Confirm'),
+                  dependsOn: const ['password'],
+                  rules: const [
+                    FormRule.matches('password', message: 'They differ'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+
+    testWidgets('a rule may measure one field against another', (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(signup(controller));
+
+      await tester.enterText(find.byType(EditableText).at(0), 'hunter22');
+      await tester.enterText(find.byType(EditableText).at(1), 'hunter11');
+      await tester.pumpAndSettle();
+      expect(await controller.validate(), isFalse);
+      await tester.pumpAndSettle();
+      expect(find.text('They differ'), findsOneWidget);
+    });
+
+    testWidgets('putting the other field right clears the message',
+        (tester) async {
+      // The point of the whole thing: the message stands on the field nobody
+      // is touching, so nothing but an echo can take it away.
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(signup(controller));
+
+      await tester.enterText(find.byType(EditableText).at(0), 'hunter22');
+      await tester.enterText(find.byType(EditableText).at(1), 'hunter11');
+      await tester.pumpAndSettle();
+      await controller.validate();
+      await tester.pumpAndSettle();
+      expect(find.text('They differ'), findsOneWidget);
+
+      // Typing into the *password*, not the confirmation.
+      await tester.enterText(find.byType(EditableText).at(0), 'hunter11');
+      await tester.pumpAndSettle();
+      expect(find.text('They differ'), findsNothing);
+    });
+
+    testWidgets('a value put in from outside echoes too', (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(signup(controller));
+      await tester.enterText(find.byType(EditableText).at(0), 'hunter22');
+      await tester.enterText(find.byType(EditableText).at(1), 'hunter11');
+      await tester.pumpAndSettle();
+      await controller.validate();
+      await tester.pumpAndSettle();
+      expect(find.text('They differ'), findsOneWidget);
+
+      controller.setValue('password', 'hunter11');
+      await tester.pumpAndSettle();
+      expect(find.text('They differ'), findsNothing);
+    });
+
+    testWidgets('a form nobody has answered stays quiet', (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(signup(controller));
+
+      // Typing into the password alone must not light up a confirmation the
+      // reader has not reached.
+      await tester.enterText(find.byType(EditableText).at(0), 'hunter22');
+      await tester.pumpAndSettle();
+      expect(find.text('They differ'), findsNothing);
+    });
+
+    testWidgets('two empty boxes are not a mismatch', (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(signup(controller));
+      // An empty box is `required`'s business, not this rule's.
+      expect(await controller.validate(), isTrue);
+    });
+
+    testWidgets('a rule of your own may read the whole form', (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: controller,
+            child: Column(
+              children: [
+                FormItem.number(name: 'from', label: const Text('From')),
+                FormItem.number(
+                  name: 'to',
+                  label: const Text('To'),
+                  dependsOn: const ['from'],
+                  rules: [
+                    FormRule.against((value, values) {
+                      final from = values['from'];
+                      if (value == null || from == null) return null;
+                      return (value as num) >= (from as num)
+                          ? null
+                          : 'The end comes first';
+                    }),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      controller.setValues(const {'from': 10, 'to': 4});
+      await tester.pumpAndSettle();
+      expect(await controller.validate(), isFalse);
+      await tester.pumpAndSettle();
+      expect(find.text('The end comes first'), findsOneWidget);
+
+      controller.setValue('from', 2);
+      await tester.pumpAndSettle();
+      expect(find.text('The end comes first'), findsNothing);
+    });
+
+    testWidgets('a comparison that names nothing is complained about',
+        (tester) async {
+      final controller = FormController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: controller,
+            child: FormItem.text(
+              name: 'confirm',
+              // No dependsOn: the rule works but its message goes stale.
+              rules: const [FormRule.matches('password')],
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isFlutterError);
     });
   });
 }

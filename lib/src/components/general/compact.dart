@@ -100,7 +100,7 @@ class CompactSlot extends InheritedWidget {
 /// widget somebody else built — so each control asks [CompactSlot] what to
 /// draw. The kit's own bordered controls do; a widget that does not simply
 /// stands in the run unjoined, which is the worst that can happen to it.
-class Compact extends StatelessWidget {
+class Compact extends StatefulWidget {
   /// Creates a [Compact].
   const Compact({
     super.key,
@@ -119,11 +119,37 @@ class Compact extends StatelessWidget {
   final bool block;
 
   @override
+  State<Compact> createState() => _CompactState();
+}
+
+class _CompactState extends State<Compact> {
+  /// Which control is to be drawn over its neighbours, and why.
+  ///
+  /// Every control after the first is pulled back by a line so the two
+  /// borders that meet draw one. The one pulled back is painted second, so it
+  /// covers that line — and with it the ring its neighbour draws when the
+  /// pointer is over it or the keyboard is on it. Only the last control of a
+  /// run was ever seen highlighted whole.
+  ///
+  /// So the run paints the control that has something to show last. It is
+  /// still laid out in its place: only the order they are painted in moves.
+  int? _raised;
+
+  void _raise(int index, {required bool up}) {
+    if (up ? _raised == index : _raised != index) return;
+    setState(() => _raised = up ? index : null);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final children = widget.children;
+    final direction = widget.direction;
+    final block = widget.block;
     if (children.isEmpty) return const SizedBox.shrink();
     final t = context.softToken;
 
-    return Flex(
+    return _CompactRun(
+      raised: _raised,
       direction: direction,
       mainAxisSize: block ? MainAxisSize.max : MainAxisSize.min,
       // Across a row the controls are centred rather than stretched: a row
@@ -152,6 +178,7 @@ class Compact extends StatelessWidget {
             // borders themselves are left whole: a control that drops a side
             // has a gap in its ring the moment it takes focus.
             overlap: i == 0 ? 0 : t.lineWidth,
+            index: i,
           ),
       ],
     );
@@ -169,7 +196,9 @@ class Compact extends StatelessWidget {
     Widget child, {
     required CompactPosition position,
     required double overlap,
+    required int index,
   }) {
+    final direction = widget.direction;
     var inner = child;
     int? flex;
     FlexFit? fit;
@@ -185,9 +214,23 @@ class Compact extends StatelessWidget {
           ? inner
           : CompactOverlap(by: overlap, direction: direction, child: inner),
     );
+    // Watched rather than intercepted: `opaque: false` lets the control below
+    // have the pointer as it always did, and the focus node takes no stop of
+    // its own. All either does is say which control has something to show.
+    wrapped = MouseRegion(
+      opaque: false,
+      onEnter: (_) => _raise(index, up: true),
+      onExit: (_) => _raise(index, up: false),
+      child: Focus(
+        canRequestFocus: false,
+        skipTraversal: true,
+        onFocusChange: (has) => _raise(index, up: has),
+        child: wrapped,
+      ),
+    );
     if (flex != null) {
       wrapped = Flexible(flex: flex, fit: fit!, child: wrapped);
-    } else if (block) {
+    } else if (widget.block) {
       // Nothing said how the room should be shared, and the run was told to
       // take all of it: share it equally.
       wrapped = Expanded(child: wrapped);
@@ -345,4 +388,89 @@ class _RenderCompactOverlap extends RenderShiftedBox {
   @override
   double computeMaxIntrinsicHeight(double width) =>
       super.computeMaxIntrinsicHeight(width) - (_rows ? 0 : _by);
+}
+
+/// A run that lays its controls out in order and paints one of them last.
+///
+/// Everything but the painting order is [Flex]'s. A joined run overlaps its
+/// controls by a line, so whichever is painted later covers its neighbour's
+/// edge — and the ring a control draws when the pointer is over it or the
+/// keyboard is on it lives on exactly that edge.
+class _CompactRun extends Flex {
+  const _CompactRun({
+    required super.direction,
+    required super.children,
+    required super.mainAxisSize,
+    required super.crossAxisAlignment,
+    required this.raised,
+  });
+
+  /// Which child to paint last, where one is asking for it.
+  final int? raised;
+
+  @override
+  RenderFlex createRenderObject(BuildContext context) => _RenderCompactRun(
+        direction: direction,
+        mainAxisAlignment: mainAxisAlignment,
+        mainAxisSize: mainAxisSize,
+        crossAxisAlignment: crossAxisAlignment,
+        textDirection: getEffectiveTextDirection(context),
+        verticalDirection: verticalDirection,
+        textBaseline: textBaseline,
+        clipBehavior: clipBehavior,
+      )..raised = raised;
+
+  @override
+  void updateRenderObject(BuildContext context, RenderFlex renderObject) {
+    super.updateRenderObject(context, renderObject);
+    (renderObject as _RenderCompactRun).raised = raised;
+  }
+}
+
+class _RenderCompactRun extends RenderFlex {
+  _RenderCompactRun({
+    required super.direction,
+    required super.mainAxisAlignment,
+    required super.mainAxisSize,
+    required super.crossAxisAlignment,
+    required super.textDirection,
+    required super.verticalDirection,
+    required super.textBaseline,
+    required super.clipBehavior,
+  });
+
+  int? _raised;
+  int? get raised => _raised;
+  set raised(int? value) {
+    if (_raised == value) return;
+    _raised = value;
+    markNeedsPaint();
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final lift = _raised;
+    // Nothing to lift, or nothing to lift it over: `Flex`'s own painting,
+    // clipping and overflow reporting stand untouched.
+    if (lift == null || childCount < 2) {
+      super.paint(context, offset);
+      return;
+    }
+    var i = 0;
+    RenderBox? child = firstChild;
+    RenderBox? held;
+    Offset? heldAt;
+    while (child != null) {
+      final at = offset + (child.parentData! as FlexParentData).offset;
+      if (i == lift) {
+        held = child;
+        heldAt = at;
+      } else {
+        context.paintChild(child, at);
+      }
+      child = (child.parentData! as FlexParentData).nextSibling;
+      i++;
+    }
+    if (held != null) context.paintChild(held, heldAt!);
+  }
 }

@@ -99,6 +99,21 @@ group wraps the field *inside* it and puts the flex back on the outside.
 
 `block: true` gives every child that did not say otherwise an equal share.
 
+## The one with something to show is drawn last
+
+Every control after the first is pulled back by a line, so the two borders
+that meet draw one line rather than two. Whichever is painted later therefore
+covers its neighbour's edge — and the ring a control draws when the pointer is
+over it, or the keyboard is on it, lives on exactly that edge. Painted in
+order, only the last control of a run was ever seen highlighted whole.
+
+So the run paints the control that has something to show last. It is still
+laid out in its place: only the order they are painted in moves, and nothing
+else about `Flex` changes.
+
+The run watches rather than intercepts — the pointer still reaches the control
+below, and the focus node it uses takes no stop of its own in the tab order.
+
 ## Not here yet
 
 **Nothing joins a control's addons.** An `Input` with an addon on one side and

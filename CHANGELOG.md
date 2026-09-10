@@ -152,6 +152,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Only the last control of a `Compact` looked highlighted.** A joined run
+  overlaps its controls by a line so their meeting borders draw one line, and
+  whichever is painted later covers its neighbour's edge — which is exactly
+  where the ring a control draws on hover or focus lives. The run now paints
+  the control that has something to show last; it is still laid out in its
+  place, and nothing else about the flex changes.
+
 - **A grey flash under the finger when picking in a `Select`.** The pointer
   is on the row when it is pressed, so the fill eased from the hover grey into
   the chosen colour — and back the other way when a press in a many-valued

@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart' hide ThemeData, Radio, RadioGroup;
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
@@ -46,6 +48,7 @@ BorderRadius _boxRadius(WidgetTester tester, String label) {
 }
 
 void main() {
+  _raiseTests();
   group('CompactSlot.radiusOf', () {
     testWidgets('hands back every corner where there is no group',
         (tester) async {
@@ -626,6 +629,72 @@ void main() {
       );
       expect(find.text('Plain'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+  });
+}
+
+void _raiseTests() {
+  group('the control with something to show', () {
+    /// Every colour down a line through the run, top to bottom.
+    Future<List<String>> stripe(WidgetTester tester, Rect run, double x) async {
+      late List<String> out;
+      await tester.runAsync(() async {
+        final boundary = tester.renderObject<RenderRepaintBoundary>(
+          find.byType(RepaintBoundary).first,
+        );
+        final image = await boundary.toImage();
+        final data = await image.toByteData();
+        String at(int px, int py) {
+          final i = (py * image.width + px) * 4;
+          return '${data!.getUint8(i)}.${data.getUint8(i + 1)}.'
+              '${data.getUint8(i + 2)}';
+        }
+
+        out = [
+          for (var y = run.top.round(); y < run.bottom.round(); y++)
+            at(x.round(), y),
+        ];
+      });
+      return out;
+    }
+
+    testWidgets('is drawn over its neighbours, not under them', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          RepaintBoundary(
+            child: SizedBox(
+              width: 200,
+              child: Compact(
+                direction: Axis.vertical,
+                children: [
+                  for (final name in ['Top', 'Middle', 'Bottom'])
+                    Button(onPressed: () {}, child: Text(name)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final run = tester.getRect(find.byType(Compact));
+
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+
+      // The border column of the middle control, from its top edge to its
+      // bottom one. Painted under the control below it, the last row of that
+      // column is the neighbour's border instead of its own — which is why
+      // only the last control of a run ever looked highlighted whole.
+      await gesture.moveTo(tester.getCenter(find.text('Middle')));
+      await tester.pumpAndSettle();
+
+      final middle = tester.getRect(
+        find.ancestor(of: find.text('Middle'), matching: find.byType(Button)),
+      );
+      final colours = await stripe(tester, middle, run.left);
+      expect(colours.first, colours.last, reason: 'the same edge throughout');
     });
   });
 }

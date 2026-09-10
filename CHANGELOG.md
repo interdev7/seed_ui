@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`DateRangePicker` — a field that collects a stretch of days**, with
+  `DateRange`, `DateRangePreset` and `DateRangePickerDefaults`. Its own
+  component rather than a flag: a range is picked in two goes, the second
+  constrained by the first, and drawn as a band rather than a mark.
+
+  The panel shows two months side by side — a range that crosses one is the
+  ordinary case, and turning the page mid-drag loses the thread. The first tap
+  puts an anchor down and the band then follows the pointer, so the stretch is
+  visible before it is taken; nothing is handed back until both ends are in.
+  `minDays` and `maxDays` are told while the second end is being chosen, so
+  what would make too short or too long a range is greyed rather than refused
+  after the tap. A range built the wrong way round turns itself over.
+
+  The panel itself is `DatePicker`'s, not a copy of it: the grids and the
+  header are built against a `PanelHost`, and the two pickers differ only in
+  what they say about each day. `startDate` and `endDate` join the eleven
+  languages.
+
+- **`DatePicker`'s panel is now shared.** `PanelHost`, `PanelCap`, `DayGrid`,
+  `MonthGrid`, `YearGrid`, `PanelHeader` and `DatePanelStyle` are the pieces
+  a second picker builds on. None are exported: they are the kit's own
+  scaffolding, like `TimeColumns`.
+
 - **`FormItem.dependsOn`, `FormRule.matches` and `FormRule.against`** — fields
   that lean on one another. A rule comparing two fields goes stale the moment
   either moves, and the message sits on the field nobody is touching: change a

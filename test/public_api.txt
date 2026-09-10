@@ -66,6 +66,10 @@ DatePickerDefaults
 DatePickerToken
 DatePickerVariant
 DatePreset
+DateRange
+DateRangePicker
+DateRangePickerDefaults
+DateRangePreset
 DisabledTime
 Drawer
 DrawerApi

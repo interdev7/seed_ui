@@ -692,3 +692,38 @@ class RetryPainter extends CustomPainter {
   @override
   bool shouldRepaint(RetryPainter old) => old.color != color;
 }
+
+/// The mark between the two halves of a date range: an arrow from the day
+/// it opens on to the day it closes on.
+class RangeArrowPainter extends CustomPainter {
+  /// Creates the mark.
+  const RangeArrowPainter(this.color);
+
+  /// What it is drawn in.
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final y = size.height / 2;
+    canvas.drawLine(
+        Offset(size.width * 0.1, y), Offset(size.width * 0.9, y), paint);
+    canvas.drawLine(
+      Offset(size.width * 0.6, y - size.height * 0.2),
+      Offset(size.width * 0.9, y),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.6, y + size.height * 0.2),
+      Offset(size.width * 0.9, y),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(RangeArrowPainter old) => old.color != color;
+}

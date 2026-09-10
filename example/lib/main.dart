@@ -16,6 +16,7 @@ import 'components/general/float_button_demo.dart';
 import 'components/data_display/card_demo.dart';
 import 'components/data_entry/slider_demo.dart';
 import 'components/data_entry/date_picker_demo.dart';
+import 'components/data_entry/date_range_picker_demo.dart';
 import 'components/data_entry/time_picker_demo.dart';
 import 'components/data_display/collapse_demo.dart';
 import 'components/data_display/countdown_demo.dart';
@@ -406,10 +407,16 @@ final List<Demo> demos = [
   Demo('badge', 'Badge', (_) => const BadgeDemo()),
   Demo('slider', 'Slider', (_) => const SliderDemo()),
   Demo('date-picker', 'DatePicker', (_) => const DatePickerDemo()),
+  Demo(
+    'date-range-picker',
+    'DateRangePicker',
+    (_) => const DateRangePickerDemo(),
+    isNew: true,
+  ),
   Demo('time-picker', 'TimePicker', (_) => const TimePickerDemo()),
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),
-  Demo('compact', 'Compact', (_) => const CompactDemo(), isNew: true),
+  Demo('compact', 'Compact', (_) => const CompactDemo()),
   Demo('float-button', 'FloatButton', (_) => const FloatButtonDemo()),
   Demo('message', 'message', (_) => const MessageDemo()),
   Demo('notification', 'notification', (_) => const NotificationDemo()),

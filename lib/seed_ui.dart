@@ -193,6 +193,8 @@ export 'src/components/data_entry/date_picker.dart'
         DatePickerToken,
         DatePickerVariant,
         DatePreset;
+export 'src/components/data_entry/date_range_picker.dart'
+    show DateRange, DateRangePicker, DateRangePickerDefaults, DateRangePreset;
 export 'src/components/data_entry/form.dart'
     show
         Form,

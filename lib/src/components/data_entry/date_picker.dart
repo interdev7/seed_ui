@@ -137,7 +137,8 @@ class DatePickerToken {
   /// How wide one column of the time panel stands.
   final double? timeColumnWidth;
 
-  _ResolvedDatePickerToken _resolve(Token t) => _ResolvedDatePickerToken(
+  /// Settles every number against the theme.
+  DatePanelStyle resolve(Token t) => DatePanelStyle(
         borderRadius: borderRadius ?? t.borderRadius,
         cellWidth: cellWidth ?? t.controlHeightSM * 1.5,
         cellHeight: cellHeight ?? t.controlHeightSM,
@@ -147,9 +148,12 @@ class DatePickerToken {
       );
 }
 
+/// A [DatePickerToken] with every number settled against the theme: what
+/// the panel is actually drawn with.
 @immutable
-class _ResolvedDatePickerToken {
-  const _ResolvedDatePickerToken({
+class DatePanelStyle {
+  /// Creates a settled token.
+  const DatePanelStyle({
     required this.borderRadius,
     required this.cellWidth,
     required this.cellHeight,
@@ -158,12 +162,96 @@ class _ResolvedDatePickerToken {
     required this.timeColumnWidth,
   });
 
+  /// Corner radius of the field and the panel.
   final double borderRadius;
+
+  /// Width of one day cell.
   final double cellWidth;
+
+  /// Height of one day cell.
   final double cellHeight;
+
+  /// Height of the panel's header row.
   final double headerHeight;
+
+  /// How wide the rail of presets stands.
   final double presetsWidth;
+
+  /// How wide one column of the time panel stands.
   final double timeColumnWidth;
+}
+
+/// What the panel needs of whatever is driving it.
+///
+/// Two pickers drive the same panel: one collecting a date, one collecting a
+/// range. Everything the grids and the header ask about — which month is on
+/// show, which days are marked, what a tap means — is asked through this, so
+/// the panel is written once and the difference between the two lives where
+/// it belongs, in the pickers.
+abstract class PanelHost {
+  /// The month the panel is looking at.
+  DateTime get panelCursor;
+
+  /// How deep it is looking: days, months or years.
+  DatePanelMode get panelMode;
+
+  /// Whether the keyboard has been used, which is when a resting mark shows.
+  bool get panelKeyed;
+
+  /// The day the keyboard rests on, where there is one.
+  DateTime? get panelResting;
+
+  /// Whether this day cannot be chosen.
+  bool panelBlocks(DateTime day);
+
+  /// Whether this day is one the picker holds — an end of a range counts.
+  bool panelChose(DateTime day);
+
+  /// The date the month and year grids mark, where there is one. A range
+  /// marks the end it is waiting on.
+  DateTime? get panelMarked;
+
+  /// Whether this day lies between the two ends of a range, ends excluded.
+  bool panelWithin(DateTime day) => false;
+
+  /// Which end of a range this day is, where it is one.
+  PanelCap panelCap(DateTime day) => PanelCap.none;
+
+  /// A day the pointer is over, so a range being drawn can follow it.
+  void panelHover(DateTime? day) {}
+
+  /// Takes this day.
+  void panelPick(DateTime day);
+
+  /// Takes this month, which walks the panel back down to its days.
+  void panelPickMonth(int month);
+
+  /// Takes this year, which walks the panel down to its months.
+  void panelPickYear(int year);
+
+  /// Moves on by [pages] of whatever is on screen.
+  void panelStep(int pages);
+
+  /// Moves on by whole years.
+  void panelStepYears(int years);
+
+  /// Goes up a depth, or back down.
+  void panelSetMode(DatePanelMode mode);
+}
+
+/// Which end of a range a day is.
+enum PanelCap {
+  /// Neither end.
+  none,
+
+  /// Where the range begins.
+  start,
+
+  /// Where it finishes.
+  end,
+
+  /// Both, for a range of one day.
+  both,
 }
 
 /// A field that collects a calendar date.
@@ -318,7 +406,59 @@ class DatePicker extends StatefulWidget {
   State<DatePicker> createState() => _DatePickerState();
 }
 
-class _DatePickerState extends State<DatePicker> {
+class _DatePickerState extends State<DatePicker> implements PanelHost {
+  @override
+  DateTime get panelCursor => _cursor;
+
+  @override
+  DatePanelMode get panelMode => _mode;
+
+  @override
+  bool get panelKeyed => _keyed;
+
+  @override
+  DateTime? get panelResting => _cursor;
+
+  @override
+  bool panelBlocks(DateTime day) => _isBlocked(day);
+
+  @override
+  bool panelChose(DateTime day) {
+    final at = _shown;
+    return at != null && isSameDay(day, at);
+  }
+
+  @override
+  void panelPick(DateTime day) => _pick(day);
+
+  @override
+  void panelPickMonth(int month) => _pickMonth(month);
+
+  @override
+  void panelPickYear(int year) => _pickYear(year);
+
+  @override
+  void panelStep(int pages) => _step(pages);
+
+  @override
+  void panelStepYears(int years) => _stepYears(years);
+
+  @override
+  void panelSetMode(DatePanelMode mode) => _setMode(mode);
+
+  @override
+  DateTime? get panelMarked => _shown;
+
+  // A single date has no band to draw and no end to follow the pointer.
+  @override
+  bool panelWithin(DateTime day) => false;
+
+  @override
+  PanelCap panelCap(DateTime day) => PanelCap.none;
+
+  @override
+  void panelHover(DateTime? day) {}
+
   final PopoverController _popover = PopoverController();
   final TextEditingController _text = TextEditingController();
   final FocusNode _focus = FocusNode();
@@ -849,7 +989,7 @@ class _DatePickerState extends State<DatePicker> {
     final r = (widget.token ??
             ConfigProvider.componentOf<DatePickerToken>(context) ??
             const DatePickerToken())
-        ._resolve(t);
+        .resolve(t);
     _syncAnchor();
 
     final fontSize = _fontSize(t);
@@ -1025,7 +1165,7 @@ class _DatePickerState extends State<DatePicker> {
                               : widget.suffixIcon ??
                                   CustomPaint(
                                     size: Size.square(fontSize),
-                                    painter: _CalendarIconPainter(
+                                    painter: CalendarIconPainter(
                                       statusColor ?? t.colorTextQuaternary,
                                     ),
                                   ),
@@ -1036,7 +1176,7 @@ class _DatePickerState extends State<DatePicker> {
                     widget.suffixIcon ??
                         CustomPaint(
                           size: Size.square(fontSize),
-                          painter: _CalendarIconPainter(
+                          painter: CalendarIconPainter(
                             statusColor ?? t.colorTextQuaternary,
                           ),
                         ),
@@ -1082,7 +1222,7 @@ class _DatePanel extends StatelessWidget {
     final r = (state.widget.token ??
             ConfigProvider.componentOf<DatePickerToken>(context) ??
             const DatePickerToken())
-        ._resolve(t);
+        .resolve(t);
 
     final presets = state.widget.presets;
     // The columns stand beside the days and nowhere else: the months of a
@@ -1096,9 +1236,9 @@ class _DatePanel extends StatelessWidget {
         vertical: t.sizeXS,
       ),
       child: switch (state._mode) {
-        DatePanelMode.day => _DayGrid(state: state, token: r),
-        DatePanelMode.month => _MonthGrid(state: state, token: r),
-        DatePanelMode.year => _YearGrid(state: state, token: r),
+        DatePanelMode.day => DayGrid(state: state, token: r),
+        DatePanelMode.month => MonthGrid(state: state, token: r),
+        DatePanelMode.year => YearGrid(state: state, token: r),
       },
     );
 
@@ -1120,7 +1260,7 @@ class _DatePanel extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Header(state: state, token: r),
+          PanelHeader(state: state, token: r),
           Container(height: t.lineWidth, color: t.colorSplit),
           if (withTime)
             IntrinsicHeight(
@@ -1216,7 +1356,9 @@ class _PresetRail extends StatelessWidget {
   const _PresetRail({required this.state, required this.token});
 
   final _DatePickerState state;
-  final _ResolvedDatePickerToken token;
+
+  /// The settled numbers the panel is drawn with.
+  final DatePanelStyle token;
 
   @override
   Widget build(BuildContext context) {
@@ -1299,18 +1441,38 @@ class _PresetTileState extends State<_PresetTile> {
 }
 
 /// The panel's header: chevrons either side, and the way up in the middle.
-class _Header extends StatelessWidget {
-  const _Header({required this.state, required this.token});
+/// The panel's header: chevrons either side, and the way up in the middle.
+class PanelHeader extends StatelessWidget {
+  /// Creates the header.
+  const PanelHeader({
+    required this.state,
+    required this.token,
+    this.back = true,
+    this.forward = true,
+    super.key,
+  });
 
-  final _DatePickerState state;
-  final _ResolvedDatePickerToken token;
+  /// Which chevrons this header carries. A range panel puts the backward one
+  /// on its left month and the forward one on its right, since the two move
+  /// together and a chevron between them would say nothing.
+  /// Whether the backward chevron is drawn.
+  final bool back;
+
+  /// Whether the forward one is.
+  final bool forward;
+
+  /// Whatever is driving the panel.
+  final PanelHost state;
+
+  /// The settled numbers the panel is drawn with.
+  final DatePanelStyle token;
 
   @override
   Widget build(BuildContext context) {
     final words = context.seedLocale;
-    final cursor = state._cursor;
+    final cursor = state.panelCursor;
 
-    final label = switch (state._mode) {
+    final label = switch (state.panelMode) {
       DatePanelMode.day =>
         '${words.shortMonths[cursor.month - 1]} ${words.figures('${cursor.year}')}',
       DatePanelMode.month => words.figures('${cursor.year}'),
@@ -1321,20 +1483,20 @@ class _Header extends StatelessWidget {
 
     // A day panel steps by month; the deeper panels step by year and decade,
     // so one chevron always moves one page of what is on screen.
-    final back = switch (state._mode) {
-      DatePanelMode.day => () => state._step(-1),
-      DatePanelMode.month => () => state._stepYears(-1),
-      DatePanelMode.year => () => state._stepYears(-10),
+    final backward = switch (state.panelMode) {
+      DatePanelMode.day => () => state.panelStep(-1),
+      DatePanelMode.month => () => state.panelStepYears(-1),
+      DatePanelMode.year => () => state.panelStepYears(-10),
     };
-    final forward = switch (state._mode) {
-      DatePanelMode.day => () => state._step(1),
-      DatePanelMode.month => () => state._stepYears(1),
-      DatePanelMode.year => () => state._stepYears(10),
+    final onward = switch (state.panelMode) {
+      DatePanelMode.day => () => state.panelStep(1),
+      DatePanelMode.month => () => state.panelStepYears(1),
+      DatePanelMode.year => () => state.panelStepYears(10),
     };
 
-    final up = switch (state._mode) {
-      DatePanelMode.day => () => state._setMode(DatePanelMode.month),
-      DatePanelMode.month => () => state._setMode(DatePanelMode.year),
+    final up = switch (state.panelMode) {
+      DatePanelMode.day => () => state.panelSetMode(DatePanelMode.month),
+      DatePanelMode.month => () => state.panelSetMode(DatePanelMode.year),
       DatePanelMode.year => null,
     };
 
@@ -1344,11 +1506,17 @@ class _Header extends StatelessWidget {
         children: [
           // Named, because a painted chevron says nothing to a screen
           // reader. The kit already has both words, for Tour's own buttons.
-          _Chevron(back: true, onTap: back, label: words.previous),
+          if (back)
+            _Chevron(back: true, onTap: backward, label: words.previous)
+          else
+            SizedBox(width: token.headerHeight),
           Expanded(
             child: _Action(label: label, onTap: up, centred: true),
           ),
-          _Chevron(back: false, onTap: forward, label: words.next),
+          if (forward)
+            _Chevron(back: false, onTap: onward, label: words.next)
+          else
+            SizedBox(width: token.headerHeight),
         ],
       ),
     );
@@ -1356,19 +1524,27 @@ class _Header extends StatelessWidget {
 }
 
 /// The six weeks of one month.
-class _DayGrid extends StatelessWidget {
-  const _DayGrid({required this.state, required this.token});
+/// The six weeks of one month.
+///
+/// Built against a [PanelHost], so the picker collecting a date and the one
+/// collecting a range draw the same grid and differ only in what they say
+/// about each day.
+class DayGrid extends StatelessWidget {
+  /// Creates the grid.
+  const DayGrid({required this.state, required this.token, super.key});
 
-  final _DatePickerState state;
-  final _ResolvedDatePickerToken token;
+  /// Whatever is driving the panel.
+  final PanelHost state;
+
+  /// The settled numbers the panel is drawn with.
+  final DatePanelStyle token;
 
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
     final words = context.seedLocale;
-    final cursor = state._cursor;
+    final cursor = state.panelCursor;
     final today = dateOnly(DateTime.now());
-    final chosen = state._shown;
 
     final order = weekdayOrder(firstDayOfWeek: words.firstDayOfWeek);
     final days = monthGrid(
@@ -1418,10 +1594,15 @@ class _DayGrid extends StatelessWidget {
                       // they are reachable, but they are not this month.
                       outside: !isSameMonth(day, cursor),
                       today: isSameDay(day, today),
-                      chosen: chosen != null && isSameDay(day, chosen),
-                      resting: state._keyed && isSameDay(day, cursor),
-                      disabled: state._isBlocked(day),
-                      onTap: () => state._pick(day),
+                      chosen: state.panelChose(day),
+                      within: state.panelWithin(day),
+                      cap: state.panelCap(day),
+                      onHover: (over) => state.panelHover(over ? day : null),
+                      resting: state.panelKeyed &&
+                          state.panelResting != null &&
+                          isSameDay(day, state.panelResting!),
+                      disabled: state.panelBlocks(day),
+                      onTap: () => state.panelPick(day),
                     );
                   },
                 ),
@@ -1433,17 +1614,22 @@ class _DayGrid extends StatelessWidget {
 }
 
 /// The twelve months of one year.
-class _MonthGrid extends StatelessWidget {
-  const _MonthGrid({required this.state, required this.token});
+/// The twelve months of one year.
+class MonthGrid extends StatelessWidget {
+  /// Creates the grid.
+  const MonthGrid({required this.state, required this.token, super.key});
 
-  final _DatePickerState state;
-  final _ResolvedDatePickerToken token;
+  /// Whatever is driving the panel.
+  final PanelHost state;
+
+  /// The settled numbers the panel is drawn with.
+  final DatePanelStyle token;
 
   @override
   Widget build(BuildContext context) {
     final words = context.seedLocale;
-    final cursor = state._cursor;
-    final chosen = state._shown;
+    final cursor = state.panelCursor;
+    final chosen = state.panelMarked;
     final width = token.cellWidth * 7 / 3;
 
     return Column(
@@ -1466,7 +1652,7 @@ class _MonthGrid extends StatelessWidget {
                           chosen.year == cursor.year &&
                           chosen.month == month,
                       disabled: false,
-                      onTap: () => state._pickMonth(month),
+                      onTap: () => state.panelPickMonth(month),
                     );
                   },
                 ),
@@ -1478,17 +1664,22 @@ class _MonthGrid extends StatelessWidget {
 }
 
 /// The ten years of one decade, with the one either side.
-class _YearGrid extends StatelessWidget {
-  const _YearGrid({required this.state, required this.token});
+/// The ten years of one decade, with the one either side.
+class YearGrid extends StatelessWidget {
+  /// Creates the grid.
+  const YearGrid({required this.state, required this.token, super.key});
 
-  final _DatePickerState state;
-  final _ResolvedDatePickerToken token;
+  /// Whatever is driving the panel.
+  final PanelHost state;
+
+  /// The settled numbers the panel is drawn with.
+  final DatePanelStyle token;
 
   @override
   Widget build(BuildContext context) {
     final words = context.seedLocale;
-    final cursor = state._cursor;
-    final chosen = state._shown;
+    final cursor = state.panelCursor;
+    final chosen = state.panelMarked;
     final start = cursor.year - cursor.year % 10;
     final width = token.cellWidth * 7 / 3;
 
@@ -1512,7 +1703,7 @@ class _YearGrid extends StatelessWidget {
                       today: false,
                       chosen: chosen != null && chosen.year == year,
                       disabled: false,
-                      onTap: () => state._pickYear(year),
+                      onTap: () => state.panelPickYear(year),
                     );
                   },
                 ),
@@ -1535,6 +1726,9 @@ class _Cell extends StatefulWidget {
     required this.disabled,
     required this.onTap,
     this.resting = false,
+    this.within = false,
+    this.cap = PanelCap.none,
+    this.onHover,
   });
 
   final String label;
@@ -1550,6 +1744,16 @@ class _Cell extends StatefulWidget {
   final bool disabled;
   final VoidCallback onTap;
 
+  /// Whether this day lies inside a range, between its two ends.
+  final bool within;
+
+  /// Which end of a range this day is, where it is one.
+  final PanelCap cap;
+
+  /// Told when the pointer comes and goes, so a range being drawn can
+  /// follow it.
+  final ValueChanged<bool>? onHover;
+
   @override
   State<_Cell> createState() => _CellState();
 }
@@ -1560,6 +1764,20 @@ class _CellState extends State<_Cell> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
+
+    // The band under a range: its ends are rounded, its middle is not, so a
+    // run of days reads as one stretch rather than a row of separate marks.
+    final capped = widget.cap != PanelCap.none;
+    final banded = widget.within || capped;
+    final band =
+        banded && !widget.disabled ? t.primary.bg : const Color(0x00000000);
+    final round = Radius.circular(t.borderRadiusSM);
+    final capStart = widget.cap == PanelCap.start || widget.cap == PanelCap.both
+        ? round
+        : Radius.zero;
+    final capEnd = widget.cap == PanelCap.end || widget.cap == PanelCap.both
+        ? round
+        : Radius.zero;
 
     final Color background;
     if (widget.chosen && !widget.disabled) {
@@ -1585,45 +1803,64 @@ class _CellState extends State<_Cell> {
       cursor: widget.disabled
           ? SystemMouseCursors.forbidden
           : SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
+      onEnter: (_) {
+        setState(() => _hovered = true);
+        widget.onHover?.call(true);
+      },
+      onExit: (_) {
+        setState(() => _hovered = false);
+        widget.onHover?.call(false);
+      },
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.disabled ? null : widget.onTap,
         child: SizedBox(
           width: widget.width,
           height: widget.height,
-          child: Center(
-            child: AnimatedContainer(
-              // A pick lands at once; only the hover tint eases in. Easing
-              // from the hover grey to the chosen fill shows the grey on the
-              // way, which reads as a flash under the finger.
-              duration: widget.chosen ? Duration.zero : t.motionDurationMid,
-              curve: t.motionEaseInOut,
-              width: widget.width - t.sizeXXS,
-              height: t.controlHeightSM,
-              decoration: BoxDecoration(
-                color: background,
-                borderRadius: BorderRadius.circular(t.borderRadiusSM),
-                // Today is an outline, not a fill: otherwise the day that is
-                // both today and the chosen one could not be told apart.
-                border: widget.today && !widget.chosen
-                    ? Border.all(color: t.primary.base, width: t.lineWidth)
-                    : null,
+          // The band runs the whole width of the cell so the days inside a
+          // range join up, with the gap the pills leave closed. Behind the
+          // pill rather than instead of it: an end of the range wears both,
+          // the band on one side and the fill on top.
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: band,
+              borderRadius: BorderRadiusDirectional.horizontal(
+                start: capStart,
+                end: capEnd,
               ),
-              alignment: Alignment.center,
-              child: Text(
-                widget.label,
-                maxLines: 1,
-                style: TextStyle(
-                  color: text,
-                  fontSize: t.fontSize,
-                  fontFamily: t.fontFamily,
-                  fontFamilyFallback: t.fontFamilyFallback,
-                  fontWeight: t.fontWeight,
-                  height: 1.0,
-                  leadingDistribution: TextLeadingDistribution.even,
-                  decoration: TextDecoration.none,
+            ),
+            child: Center(
+              child: AnimatedContainer(
+                // A pick lands at once; only the hover tint eases in. Easing
+                // from the hover grey to the chosen fill shows the grey on the
+                // way, which reads as a flash under the finger.
+                duration: widget.chosen ? Duration.zero : t.motionDurationMid,
+                curve: t.motionEaseInOut,
+                width: widget.width - t.sizeXXS,
+                height: t.controlHeightSM,
+                decoration: BoxDecoration(
+                  color: background,
+                  borderRadius: BorderRadius.circular(t.borderRadiusSM),
+                  // Today is an outline, not a fill: otherwise the day that is
+                  // both today and the chosen one could not be told apart.
+                  border: widget.today && !widget.chosen
+                      ? Border.all(color: t.primary.base, width: t.lineWidth)
+                      : null,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  widget.label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: text,
+                    fontSize: t.fontSize,
+                    fontFamily: t.fontFamily,
+                    fontFamilyFallback: t.fontFamilyFallback,
+                    fontWeight: t.fontWeight,
+                    height: 1.0,
+                    leadingDistribution: TextLeadingDistribution.even,
+                    decoration: TextDecoration.none,
+                  ),
                 ),
               ),
             ),
@@ -1755,9 +1992,12 @@ class _ChevronPainter extends CustomPainter {
 }
 
 /// The calendar mark on the trailing edge of the field.
-class _CalendarIconPainter extends CustomPainter {
-  const _CalendarIconPainter(this.color);
+/// The calendar mark a picker wears while it holds nothing to clear.
+class CalendarIconPainter extends CustomPainter {
+  /// Creates the mark.
+  const CalendarIconPainter(this.color);
 
+  /// What it is drawn in.
   final Color color;
 
   @override
@@ -1797,5 +2037,5 @@ class _CalendarIconPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CalendarIconPainter old) => old.color != color;
+  bool shouldRepaint(CalendarIconPainter old) => old.color != color;
 }

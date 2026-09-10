@@ -90,6 +90,8 @@ class SeedLocalizations {
     this.perPage = '/ page',
     this.selectTime = 'Select time',
     this.selectDate = 'Select date',
+    this.startDate = 'Start date',
+    this.endDate = 'End date',
     this.today = 'Today',
     this.shortMonths = englishMonths,
     this.shortWeekdays = englishWeekdays,
@@ -206,6 +208,12 @@ class SeedLocalizations {
 
   /// Placeholder of an empty `DatePicker`.
   final String selectDate;
+
+  /// Placeholder for the leading half of a date range.
+  final String startDate;
+
+  /// Placeholder for the trailing half of a date range.
+  final String endDate;
 
   /// Jumps a `DatePicker` to the current day.
   final String today;
@@ -342,6 +350,8 @@ class SeedLocalizations {
     String? perPage,
     String? selectTime,
     String? selectDate,
+    String? startDate,
+    String? endDate,
     String? today,
     List<String>? shortMonths,
     List<String>? shortWeekdays,
@@ -367,6 +377,8 @@ class SeedLocalizations {
         perPage: perPage ?? this.perPage,
         selectTime: selectTime ?? this.selectTime,
         selectDate: selectDate ?? this.selectDate,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate ?? this.endDate,
         today: today ?? this.today,
         shortMonths: shortMonths ?? this.shortMonths,
         shortWeekdays: shortWeekdays ?? this.shortWeekdays,
@@ -395,6 +407,8 @@ class SeedLocalizations {
       other.perPage == perPage &&
       other.selectTime == selectTime &&
       other.selectDate == selectDate &&
+      other.startDate == startDate &&
+      other.endDate == endDate &&
       other.today == today &&
       other.firstDayOfWeek == firstDayOfWeek &&
       other.now == now &&
@@ -435,6 +449,8 @@ class SeedLocalizations {
   static const SeedLocalizations ru = SeedLocalizations(
     localeName: 'ru',
     selectDate: 'Выберите дату',
+    startDate: 'Дата начала',
+    endDate: 'Дата окончания',
     today: 'Сегодня',
     firstDayOfWeek: DateTime.monday,
     shortMonths: [
@@ -501,6 +517,8 @@ class SeedLocalizations {
   static const SeedLocalizations tk = SeedLocalizations(
     localeName: 'tk',
     selectDate: 'Senäni saýlaň',
+    startDate: 'Başlangyç senesi',
+    endDate: 'Ahyrky senesi',
     today: 'Şu gün',
     firstDayOfWeek: DateTime.monday,
     shortMonths: [
@@ -568,6 +586,8 @@ class SeedLocalizations {
   static const SeedLocalizations de = SeedLocalizations(
     localeName: 'de',
     selectDate: 'Datum wählen',
+    startDate: 'Startdatum',
+    endDate: 'Enddatum',
     today: 'Heute',
     firstDayOfWeek: DateTime.monday,
     shortMonths: [
@@ -634,6 +654,8 @@ class SeedLocalizations {
   static const SeedLocalizations fr = SeedLocalizations(
     localeName: 'fr',
     selectDate: 'Sélectionner une date',
+    startDate: 'Date de début',
+    endDate: 'Date de fin',
     today: 'Aujourd\'hui',
     firstDayOfWeek: DateTime.monday,
     shortMonths: [
@@ -700,6 +722,8 @@ class SeedLocalizations {
   static const SeedLocalizations es = SeedLocalizations(
     localeName: 'es',
     selectDate: 'Seleccionar fecha',
+    startDate: 'Fecha de inicio',
+    endDate: 'Fecha de fin',
     today: 'Hoy',
     firstDayOfWeek: DateTime.monday,
     shortMonths: [
@@ -767,6 +791,8 @@ class SeedLocalizations {
   static const SeedLocalizations zh = SeedLocalizations(
     localeName: 'zh',
     selectDate: '请选择日期',
+    startDate: '开始日期',
+    endDate: '结束日期',
     today: '今天',
     firstDayOfWeek: DateTime.monday,
     shortMonths: [
@@ -834,6 +860,8 @@ class SeedLocalizations {
   static const SeedLocalizations ja = SeedLocalizations(
     localeName: 'ja',
     selectDate: '日付を選択',
+    startDate: '開始日',
+    endDate: '終了日',
     today: '今日',
     firstDayOfWeek: DateTime.sunday,
     shortMonths: [
@@ -900,6 +928,8 @@ class SeedLocalizations {
   static const SeedLocalizations tr = SeedLocalizations(
     localeName: 'tr',
     selectDate: 'Tarih seçin',
+    startDate: 'Başlangıç tarihi',
+    endDate: 'Bitiş tarihi',
     today: 'Bugün',
     firstDayOfWeek: DateTime.monday,
     shortMonths: [
@@ -967,6 +997,8 @@ class SeedLocalizations {
   static const SeedLocalizations pt = SeedLocalizations(
     localeName: 'pt',
     selectDate: 'Selecionar data',
+    startDate: 'Data de início',
+    endDate: 'Data de fim',
     today: 'Hoje',
     firstDayOfWeek: DateTime.sunday,
     shortMonths: [
@@ -1033,6 +1065,8 @@ class SeedLocalizations {
   static const SeedLocalizations ar = SeedLocalizations(
     localeName: 'ar',
     selectDate: 'اختر التاريخ',
+    startDate: 'تاريخ البدء',
+    endDate: 'تاريخ الانتهاء',
     today: 'اليوم',
     firstDayOfWeek: DateTime.saturday,
     shortMonths: [
@@ -1101,6 +1135,8 @@ class SeedLocalizations {
   static const SeedLocalizations he = SeedLocalizations(
     localeName: 'he',
     selectDate: 'בחר תאריך',
+    startDate: 'תאריך התחלה',
+    endDate: 'תאריך סיום',
     today: 'היום',
     firstDayOfWeek: DateTime.sunday,
     shortMonths: [

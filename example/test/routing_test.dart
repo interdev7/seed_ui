@@ -20,6 +20,10 @@ void main() {
     await tester.pumpWidget(const DemoApp());
     await _settle(tester);
 
+    // Brought into view first: the list of demos is longer than the test
+    // window, and it grows every time the kit does.
+    await tester.ensureVisible(find.text('Button').first);
+    await _settle(tester);
     await tester.tap(find.text('Button').first);
     await _settle(tester);
     expect(find.text('Button'), findsWidgets, reason: 'the demo opened');
@@ -33,6 +37,13 @@ void main() {
 
     Navigator.of(context).pop();
     await _settle(tester);
+    // Home comes back where it was left, which is partway down a list longer
+    // than the window, so the marker at the top has to be scrolled back to.
+    await tester.scrollUntilVisible(
+      find.text('New Year Theme 🎄'),
+      -300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('New Year Theme 🎄'), findsOneWidget, reason: 'home');
   });
 

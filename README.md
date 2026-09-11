@@ -91,7 +91,9 @@ key is how they find it. Without it they assert in debug mode.
 | [FloatButton](doc/general/float_button.md)        | A button that floats above the page, alone or opening into a fan, column or grid |
 | [Slider](doc/data_entry/slider.md)                | A groove with one handle or two, with marks, steps and a range          |
 | [TimePicker](doc/data_entry/time_picker.md)       | A time of day, typed or picked, with the format deciding the columns    |
-| [DatePicker](doc/data_entry/date_picker.md)       | A calendar date, typed or picked, with day, month and year panels       |
+| [DatePicker](doc/data_entry/date_picker.md)       | A calendar date, typed or picked; day, week, month, quarter or year            |
+| [DateRangePicker](doc/data_entry/date_range_picker.md) | A stretch of days across two months, drawn as a band                      |
+| [MultiDatePicker](doc/data_entry/multi_date_picker.md) | Any number of days, each a tag in the field                               |
 | [Spinner](doc/feedback/spinner.md)                | Indeterminate circular progress indicator                                      |
 | [Spin](doc/feedback/spin.md)                      | Loading state for a region, with tip, delay, percent and fullscreen mask       |
 | [message](doc/feedback/message.md)                | Brief centred status toasts                                                    |

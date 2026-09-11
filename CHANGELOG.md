@@ -356,6 +356,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The package ships what it is used with.** `test/` and `tool/` no longer
+  go into the archive — they are the largest thing in the repository, one file
+  of tests being three hundred kilobytes, and nobody who depends on the kit
+  runs them. The documents and the example stay: the README links into the
+  documents forty-eight times, and a link that only works on GitHub is half a
+  document.
+
+- **`DateRangePicker` and `MultiDatePicker` are in the README's table**, and
+  the doc gate now fails when a component is missing from it. The table is
+  what somebody sees on pub.dev before they see anything else, and two
+  components had already gone missing from it the quiet way.
+
+- **The package's own description said "30+ components".** It is 45+.
+
 - **Breaking: `SliderMark`'s label is a `String?` rather than a `Widget`.**
   `SliderMark(20, Text('20%'))` becomes `SliderMark(20, '20%')`; anything that
   was not words is `markBuilder`'s job now. Nearly every mark was a `Text`

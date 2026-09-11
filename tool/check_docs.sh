@@ -119,7 +119,23 @@ for widget, doc, missing in gaps:
     if os.environ.get('GITHUB_ACTIONS'):
         print(f'::error::{line}')
 
-if gaps or shape:
+# The shop window drifts the same quiet way the documents do: a component is
+# added, its document is written, and the table in the README — which is what
+# somebody sees on pub.dev before they see anything else — keeps the length it
+# had. Two components went missing that way before this existed.
+readme = open('README.md').read()
+unlisted = [
+    doc for doc in sorted(glob.glob('doc/*/*.md'))
+    if f'({doc})' not in readme
+]
+
+for doc in unlisted:
+    line = f'{doc} is not in the README table'
+    print(f'✗ {line}')
+    if os.environ.get('GITHUB_ACTIONS'):
+        print(f'::error::{line}')
+
+if gaps or shape or unlisted:
     print()
     print('Document these before merging, or the reader learns them from the '
           'source.')
@@ -128,4 +144,6 @@ if gaps or shape:
 print(f'✓ every property of {checked} exported widgets is named in its '
       f'document')
 print('✓ every document opens the same way and names its tokens the same way')
+print(f'✓ every one of {len(glob.glob("doc/*/*.md"))} components is in the '
+      f'README table')
 PY

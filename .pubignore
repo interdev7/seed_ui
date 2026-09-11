@@ -1,0 +1,45 @@
+# Everything this package ships, and nothing else.
+#
+# A `.pubignore` does not add to `.gitignore` — it replaces it. Everything the
+# repository keeps out of git has to be named again here, or it lands in the
+# archive: written without the lines below, this one went from one megabyte to
+# forty-seven, all of it build output.
+#
+# The documents stay: the README links into them forty-eight times, and a link
+# that only works on GitHub is half a document. The example stays: it is what
+# pub.dev shows on its own tab, and the fastest way to see the kit work.
+#
+# The tests do not. They are the largest thing here — one file of them is three
+# hundred kilobytes — and nobody who depends on the kit runs them. Nor do the
+# scripts that guard the repository against itself.
+test/
+tool/
+
+# What git already keeps out, said again.
+build/
+coverage/
+.dart_tool/
+.pub-cache/
+.pub/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+**/doc/api/
+**/ios/Flutter/.last_build_id
+migrate_working_dir/
+.idea/
+.vscode/
+.claude/
+.atom/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+*.iml
+*.ipr
+*.iws
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store

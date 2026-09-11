@@ -166,7 +166,7 @@ class Badge extends StatelessWidget {
     this.color,
     this.offset = Offset.zero,
     this.size,
-    this.title,
+    this.semanticsLabel,
     this.token,
   });
 
@@ -215,7 +215,7 @@ class Badge extends StatelessWidget {
   ///
   /// Without one the digits are announced as they are drawn, which says `99+`
   /// where `over ninety-nine unread` was meant.
-  final String? title;
+  final String? semanticsLabel;
 
   /// Per-instance token overrides.
   final BadgeToken? token;
@@ -337,8 +337,8 @@ class Badge extends StatelessWidget {
 
     if (dot && content == null) {
       return Semantics(
-        label: title,
-        container: title != null,
+        label: semanticsLabel,
+        container: semanticsLabel != null,
         child: Container(
           width: r.dotSize + t.lineWidth * 2,
           height: r.dotSize + t.lineWidth * 2,
@@ -374,10 +374,10 @@ class Badge extends StatelessWidget {
             : Text(l.figures(text ?? ''), style: style));
 
     return Semantics(
-      label: title,
-      container: title != null,
+      label: semanticsLabel,
+      container: semanticsLabel != null,
       // The digits are already spoken by the label when one is given.
-      excludeSemantics: title != null,
+      excludeSemantics: semanticsLabel != null,
       // The padding eases rather than appearing whole the moment a second
       // character does — that step is what made the badge hop as the count
       // passed nine. Animating the pill's own box instead would clip it: a box

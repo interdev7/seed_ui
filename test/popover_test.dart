@@ -168,7 +168,7 @@ void main() {
           builder: (context, setState) => Popover(
             open: open,
             trigger: PopoverTrigger.tap,
-            onOpenChange: (v) {
+            onOpenChanged: (v) {
               changes.add(v);
               setState(() => open = v);
             },

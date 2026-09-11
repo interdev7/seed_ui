@@ -163,7 +163,7 @@ class Pagination extends StatefulWidget {
     this.onChanged,
     this.showSizeChanger,
     this.pageSizeOptions = const [10, 20, 50, 100],
-    this.onShowSizeChange,
+    this.onShowSizeChanged,
     this.showQuickJumper,
     this.showTotal,
     this.simple,
@@ -211,7 +211,7 @@ class Pagination extends StatefulWidget {
   final List<int> pageSizeOptions;
 
   /// Called with the new `(page, pageSize)` when the size changes.
-  final void Function(int page, int pageSize)? onShowSizeChange;
+  final void Function(int page, int pageSize)? onShowSizeChanged;
 
   /// Shows an input to jump straight to a page.
   final bool? showQuickJumper;
@@ -325,7 +325,7 @@ class _PaginationState extends State<Pagination> {
     final nextPage = (firstItem ~/ size) + 1;
     if (widget.pageSize == null) setState(() => _pageSize = size);
     if (widget.current == null) setState(() => _current = nextPage);
-    widget.onShowSizeChange?.call(nextPage, size);
+    widget.onShowSizeChanged?.call(nextPage, size);
     widget.onChanged?.call(nextPage, size);
   }
 

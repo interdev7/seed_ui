@@ -319,7 +319,7 @@ void main() {
 
     testWidgets('a title is what assistive technology hears', (tester) async {
       await tester.pumpWidget(
-        _host(const Badge(count: 120, title: '120 unread messages')),
+        _host(const Badge(count: 120, semanticsLabel: '120 unread messages')),
       );
       expect(
         find.bySemanticsLabel('120 unread messages'),

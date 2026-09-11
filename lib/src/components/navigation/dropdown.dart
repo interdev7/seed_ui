@@ -289,7 +289,7 @@ class Dropdown<T> extends StatefulWidget {
     this.placement,
     this.disabled,
     this.open,
-    this.onOpenChange,
+    this.onOpenChanged,
     this.arrow,
     this.onItemTap,
     this.closeOnSelect,
@@ -331,7 +331,7 @@ class Dropdown<T> extends StatefulWidget {
   final bool? open;
 
   /// Notified when the menu wants to open or close.
-  final ValueChanged<bool>? onOpenChange;
+  final ValueChanged<bool>? onOpenChanged;
 
   /// Draws a caret pointing at the trigger.
   final bool? arrow;
@@ -460,7 +460,7 @@ class _DropdownState<T> extends State<Dropdown<T>> {
 
   void _requestOpen(bool next) {
     if (_disabled) return;
-    if (widget.onOpenChange != null) widget.onOpenChange!(next);
+    if (widget.onOpenChanged != null) widget.onOpenChanged!(next);
     if (widget.open == null) {
       next ? _show() : _hide();
     }

@@ -33,7 +33,7 @@ FloatButtonGroup<String> _group({
   bool? dismissible,
   bool? closeOnSelect,
   bool? open,
-  ValueChanged<bool>? onOpenChange,
+  ValueChanged<bool>? onOpenChanged,
   FloatButtonController? controller,
   FloatButtonToken? token,
 }) =>
@@ -43,7 +43,7 @@ FloatButtonGroup<String> _group({
       dismissible: dismissible,
       closeOnSelect: closeOnSelect,
       open: open,
-      onOpenChange: onOpenChange,
+      onOpenChanged: onOpenChanged,
       controller: controller,
       token: token,
       items: [
@@ -638,7 +638,7 @@ void main() {
     testWidgets('a controlled group waits to be told', (tester) async {
       final asked = <bool>[];
       await tester.pumpWidget(
-        _host(_group(open: true, onOpenChange: asked.add)),
+        _host(_group(open: true, onOpenChanged: asked.add)),
       );
       await tester.pumpAndSettle();
       expect(find.byType(UserIcon), findsOneWidget);

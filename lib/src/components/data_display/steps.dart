@@ -142,7 +142,7 @@ class StepItem {
   /// Creates a [StepItem].
   const StepItem({
     this.title,
-    this.subTitle,
+    this.subtitle,
     this.content,
     this.icon,
     this.status,
@@ -153,7 +153,7 @@ class StepItem {
   final Widget? title;
 
   /// A short aside next to the title — a duration, a count.
-  final Widget? subTitle;
+  final Widget? subtitle;
 
   /// Supporting text under the title.
   final Widget? content;
@@ -1405,7 +1405,7 @@ class _StepText extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (part != _StepTextPart.content &&
-            (item.title != null || item.subTitle != null))
+            (item.title != null || item.subtitle != null))
           Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -1430,7 +1430,7 @@ class _StepText extends StatelessWidget {
                     child: item.title!,
                   ),
                 ),
-              if (item.subTitle != null) ...[
+              if (item.subtitle != null) ...[
                 SizedBox(width: t.sizeXS),
                 AnimatedDefaultTextStyle(
                   duration: t.motionDurationSlow,
@@ -1444,7 +1444,7 @@ class _StepText extends StatelessWidget {
                     leadingDistribution: TextLeadingDistribution.even,
                     decoration: TextDecoration.none,
                   ),
-                  child: item.subTitle!,
+                  child: item.subtitle!,
                 ),
               ],
             ],
@@ -1538,7 +1538,7 @@ class _TappableState extends State<_Tappable> {
 /// it push the title clean out of the row.
 double _headerFloor(Token t, List<StepItem> items) {
   final characters = t.fontSize * 5;
-  final subtitled = items.any((i) => i.subTitle != null);
+  final subtitled = items.any((i) => i.subtitle != null);
   return characters + (subtitled ? characters + t.sizeXS : 0);
 }
 

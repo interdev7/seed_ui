@@ -137,7 +137,7 @@ class PopoverDefaults {
 /// ```
 ///
 /// The card is opened by hovering, tapping or long-pressing — [trigger] — or
-/// driven from outside with [open] and [onOpenChange].
+/// driven from outside with [open] and [onOpenChanged].
 class Popover extends StatefulWidget {
   /// Creates a [Popover].
   const Popover({
@@ -149,7 +149,7 @@ class Popover extends StatefulWidget {
     this.trigger,
     this.open,
     this.defaultOpen = false,
-    this.onOpenChange,
+    this.onOpenChanged,
     this.arrow,
     this.animation,
     this.duration,
@@ -184,7 +184,7 @@ class Popover extends StatefulWidget {
   final bool defaultOpen;
 
   /// Called with the state the popover wants to be in.
-  final ValueChanged<bool>? onOpenChange;
+  final ValueChanged<bool>? onOpenChanged;
 
   /// Whether a caret points at the trigger.
   final bool? arrow;
@@ -274,7 +274,7 @@ class _PopoverState extends State<Popover> {
     _pending?.cancel();
     if (open == _isOpen) return;
     if (widget.open == null) setState(() => _uncontrolled = open);
-    widget.onOpenChange?.call(open);
+    widget.onOpenChanged?.call(open);
   }
 
   /// Hover asks after a pause: a pointer crossing the trigger on its way

@@ -125,7 +125,7 @@ class Popconfirm extends StatefulWidget {
     this.arrow,
     this.icon,
     this.showCancel,
-    this.disabled = false,
+    this.skipConfirmation = false,
     this.barrierColor,
     this.token,
   });
@@ -174,8 +174,13 @@ class Popconfirm extends StatefulWidget {
   /// Whether to show the cancel button.
   final bool? showCancel;
 
-  /// When true, the trigger behaves normally and never opens the bubble.
-  final bool disabled;
+  /// Lets the trigger act without asking: it behaves exactly as it would
+  /// with no [Popconfirm] around it, and the bubble never opens.
+  ///
+  /// Not `disabled`, which everywhere else in the kit bars the control. This
+  /// does the opposite — it takes the guard off — and a page-wide
+  /// `componentDisabled` must never reach it for that reason.
+  final bool skipConfirmation;
 
   /// Background color of the dismiss barrier.
   final Color? barrierColor;
@@ -250,7 +255,7 @@ class _SoftPopconfirmState extends State<Popconfirm> {
       // Listener regardless, so we open the bubble on release without stealing
       // the trigger's own tap.
       child: Listener(
-        onPointerUp: widget.disabled
+        onPointerUp: widget.skipConfirmation
             ? null
             : (_) {
                 if (!_open) _setOpen(true);

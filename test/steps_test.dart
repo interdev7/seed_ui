@@ -1340,8 +1340,8 @@ void main() {
                   current: 1,
                   onChanged: (_) {},
                   items: const [
-                    StepItem(title: Text('Details'), subTitle: Text('00:02')),
-                    StepItem(title: Text('Review'), subTitle: Text('00:05')),
+                    StepItem(title: Text('Details'), subtitle: Text('00:02')),
+                    StepItem(title: Text('Review'), subtitle: Text('00:05')),
                     StepItem(title: Text('Publish')),
                   ],
                 ),
@@ -1788,8 +1788,8 @@ void main() {
               current: 1,
               token: StepsToken(itemWidth: width, itemHeight: height),
               items: const [
-                StepItem(title: Text('Details'), subTitle: Text('00:02')),
-                StepItem(title: Text('Review'), subTitle: Text('00:05')),
+                StepItem(title: Text('Details'), subtitle: Text('00:02')),
+                StepItem(title: Text('Review'), subtitle: Text('00:05')),
                 StepItem(title: Text('Publish')),
               ],
             ),

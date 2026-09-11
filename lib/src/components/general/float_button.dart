@@ -611,7 +611,7 @@ class FloatButton extends StatelessWidget {
     this.size,
     this.disabled,
     this.labelPlacement,
-    this.semanticLabel,
+    this.semanticsLabel,
     this.token,
   });
 
@@ -650,7 +650,7 @@ class FloatButton extends StatelessWidget {
 
   /// What a screen reader announces. Falls back to nothing, so give one to
   /// any button whose mark is an icon alone.
-  final String? semanticLabel;
+  final String? semanticsLabel;
 
   /// Per-instance token overrides.
   final FloatButtonToken? token;
@@ -723,7 +723,7 @@ class FloatButton extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: semanticLabel,
+      label: semanticsLabel,
       child: button,
     );
   }
@@ -969,13 +969,13 @@ class FloatButtonGroup<T> extends StatefulWidget {
     this.trigger,
     this.controller,
     this.open,
-    this.onOpenChange,
+    this.onOpenChanged,
     this.onItemTap,
     this.itemBuilder,
     this.dismissible,
     this.closeOnSelect,
     this.labelPlacement,
-    this.semanticLabel,
+    this.semanticsLabel,
     this.token,
   }) : assert(
           controller == null || open == null,
@@ -1021,7 +1021,7 @@ class FloatButtonGroup<T> extends StatefulWidget {
   final bool? open;
 
   /// Called whenever the group wants to open or close.
-  final ValueChanged<bool>? onOpenChange;
+  final ValueChanged<bool>? onOpenChanged;
 
   /// Called with the tapped item's [FloatButtonItem.value].
   final ValueChanged<T?>? onItemTap;
@@ -1042,7 +1042,7 @@ class FloatButtonGroup<T> extends StatefulWidget {
   final FloatButtonLabelPlacement? labelPlacement;
 
   /// What a screen reader announces for the trigger.
-  final String? semanticLabel;
+  final String? semanticsLabel;
 
   /// Per-instance token overrides.
   final FloatButtonToken? token;
@@ -1162,7 +1162,7 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
 
   void _ask(bool next) {
     if (next == _isOpen) return;
-    widget.onOpenChange?.call(next);
+    widget.onOpenChanged?.call(next);
     if (widget.controller != null) {
       next ? widget.controller!.open() : widget.controller!.close();
       return;
@@ -1392,7 +1392,7 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
       color: item.color ?? widget.color,
       shape: widget.shape,
       disabled: item.disabled,
-      semanticLabel: item.label,
+      semanticsLabel: item.label,
       token: widget.token,
       onPressed: () => _tapped(item),
       child: item.child,
@@ -1486,7 +1486,7 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
       shape: widget.shape,
       size: widget.size,
       token: widget.token,
-      semanticLabel: widget.semanticLabel,
+      semanticsLabel: widget.semanticsLabel,
       onPressed: () => _ask(!_isOpen),
       icon: widget.icon ??
           Builder(

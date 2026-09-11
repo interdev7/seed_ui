@@ -402,7 +402,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
                 children: [
                   DatePicker(
                     open: _driven,
-                    onOpenChange: (v) => setState(() => _driven = v),
+                    onOpenChanged: (v) => setState(() => _driven = v),
                   ),
                   const SizedBox(width: 12),
                   Button(
@@ -414,7 +414,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
               const SizedBox(height: 8),
               const Text(
                 'With open supplied the picker stops deciding for itself and '
-                'reports what it would have done through onOpenChange.',
+                'reports what it would have done through onOpenChanged.',
               ),
             ],
           ),

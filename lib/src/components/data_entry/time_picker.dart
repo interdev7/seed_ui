@@ -158,7 +158,7 @@ class TimePicker extends StatefulWidget {
     this.semanticsLabel,
     this.placement = PopoverPlacement.bottomLeft,
     this.open,
-    this.onOpenChange,
+    this.onOpenChanged,
     this.inputReadOnly = false,
     this.status,
     this.prefix,
@@ -243,7 +243,7 @@ class TimePicker extends StatefulWidget {
   final bool? open;
 
   /// Called when the panel opens or closes.
-  final ValueChanged<bool>? onOpenChange;
+  final ValueChanged<bool>? onOpenChanged;
 
   /// Whether the field refuses typing, leaving the panel the only way in.
   final bool inputReadOnly;
@@ -349,7 +349,7 @@ class _TimePickerState extends State<TimePicker> {
       if (!mounted || !_open) return;
       setState(() => _open = false);
       _syncText();
-      widget.onOpenChange?.call(false);
+      widget.onOpenChanged?.call(false);
     };
   }
 
@@ -492,7 +492,7 @@ class _TimePickerState extends State<TimePicker> {
 
   void _requestOpen(bool next) {
     if (next == _open) return;
-    widget.onOpenChange?.call(next);
+    widget.onOpenChanged?.call(next);
     if (widget.open == null) next ? _openPanel() : _closePanel();
   }
 

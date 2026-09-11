@@ -295,7 +295,7 @@ supply one of the four and leave the rest guessing.
 | `variant` | `DatePickerVariant?` | `null` | `outlined`, `filled`, `borderless` |
 | `placeholder` | `String?` | `null` | Falls back to the locale |
 | `placement` | `PopoverPlacement` | `bottomLeft` | Where the panel opens |
-| `open` / `onOpenChange` | `bool?` / `ValueChanged<bool>?` | — | Controlled panel |
+| `open` / `onOpenChanged` | `bool?` / `ValueChanged<bool>?` | — | Controlled panel |
 | `inputReadOnly` | `bool` | `false` | Panel only |
 | `status` | `InputStatus?` | `null` | `warning` or `error` |
 | `prefix` | `Widget?` | — | Sits before the value |

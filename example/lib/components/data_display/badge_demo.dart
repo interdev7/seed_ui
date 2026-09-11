@@ -159,7 +159,11 @@ class _BadgeDemoState extends State<BadgeDemo> {
             runSpacing: 16,
             children: [
               Badge(count: 9, color: const Color(0xFF722ED1), child: _block),
-              Badge(count: 120, title: '120 unread messages', child: _block),
+              Badge(
+                count: 120,
+                semanticsLabel: '120 unread messages',
+                child: _block,
+              ),
             ],
           ),
         ),

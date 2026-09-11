@@ -378,7 +378,7 @@ class _PopoverDemoState extends State<PopoverDemo> {
               ),
               Popover(
                 open: _controlled,
-                onOpenChange: (v) => setState(() => _controlled = v),
+                onOpenChanged: (v) => setState(() => _controlled = v),
                 placement: PopoverPlacement.right,
                 content: const Text('Open while the switch is on.'),
                 child: Container(

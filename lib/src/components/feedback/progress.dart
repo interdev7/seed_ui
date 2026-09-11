@@ -69,7 +69,7 @@ class ProgressSteps {
     this.gap = 2.0,
     this.fill = ProgressStepFill.gradually,
     this.stepRadius,
-    this.onStepChange,
+    this.onStepChanged,
   }) : assert(count > 0, 'count must be positive');
 
   /// Convenience constructor for count with default settings.
@@ -97,7 +97,7 @@ class ProgressSteps {
   /// Parameters:
   /// - `currentStep`: number of completed/active steps reached (0 to [count]).
   /// - `totalSteps`: total step count ([count]).
-  final void Function(int currentStep, int totalSteps)? onStepChange;
+  final void Function(int currentStep, int totalSteps)? onStepChanged;
 
   @override
   bool operator ==(Object other) =>
@@ -108,10 +108,10 @@ class ProgressSteps {
           gap == other.gap &&
           fill == other.fill &&
           stepRadius == other.stepRadius &&
-          onStepChange == other.onStepChange;
+          onStepChanged == other.onStepChanged;
 
   @override
-  int get hashCode => Object.hash(count, gap, fill, stepRadius, onStepChange);
+  int get hashCode => Object.hash(count, gap, fill, stepRadius, onStepChanged);
 }
 
 /// Corner radius configuration for line [Progress] bars.
@@ -411,7 +411,7 @@ class Progress extends StatefulWidget {
     this.format,
     this.direction,
     this.onDone,
-    this.onProgressChange,
+    this.onProgressChanged,
     this.child,
     this.token,
   }) : assert(percent >= 0 && percent <= 1, 'percent must be between 0 and 1');
@@ -513,7 +513,7 @@ class Progress extends StatefulWidget {
   ///
   /// Parameter:
   /// - `percent`: updated completion fraction (0.0 to 1.0).
-  final void Function(double percent)? onProgressChange;
+  final void Function(double percent)? onProgressChanged;
 
   /// Content shown in place of the percentage label: in the middle of a ring
   /// for [ProgressType.circle] and [ProgressType.dashboard], where the label
@@ -553,7 +553,7 @@ class Progress extends StatefulWidget {
     Widget Function(double percent)? format,
     TextDirection? direction,
     VoidCallback? onDone,
-    void Function(double percent)? onProgressChange,
+    void Function(double percent)? onProgressChanged,
     Widget? child,
     ProgressToken? token,
   }) =>
@@ -579,7 +579,7 @@ class Progress extends StatefulWidget {
         format: format ?? this.format,
         direction: direction ?? this.direction,
         onDone: onDone ?? this.onDone,
-        onProgressChange: onProgressChange ?? this.onProgressChange,
+        onProgressChanged: onProgressChanged ?? this.onProgressChanged,
         token: token ?? this.token,
         child: child ?? this.child,
       );
@@ -639,14 +639,14 @@ class _ProgressState extends State<Progress> {
       final p = widget.percent;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          widget.onProgressChange?.call(p);
+          widget.onProgressChanged?.call(p);
         }
       });
     }
   }
 
   void _checkStepChange({bool initial = false}) {
-    if (widget.steps?.onStepChange != null) {
+    if (widget.steps?.onStepChanged != null) {
       final count = widget.steps!.count;
       final currentStep = (widget.percent * count).floor().clamp(0, count);
       if (initial) {
@@ -655,7 +655,7 @@ class _ProgressState extends State<Progress> {
         _lastStep = currentStep;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            widget.steps!.onStepChange!(currentStep, count);
+            widget.steps!.onStepChanged!(currentStep, count);
           }
         });
       }

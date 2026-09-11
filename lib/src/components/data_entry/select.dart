@@ -268,7 +268,7 @@ class Select<T> extends StatefulWidget {
     this.status,
     this.variant,
     this.open,
-    this.onOpenChange,
+    this.onOpenChanged,
     this.maxTagCount,
     this.maxTagCountResponsive = false,
     this.listHeight = 256,
@@ -347,7 +347,7 @@ class Select<T> extends StatefulWidget {
   final bool? open;
 
   /// Notified when the dropdown wants to open or close.
-  final ValueChanged<bool>? onOpenChange;
+  final ValueChanged<bool>? onOpenChanged;
 
   /// Collapses tags past this count into a "+N" chip (multiple/tags modes).
   /// Ignored when [maxTagCountResponsive] is set.
@@ -538,8 +538,8 @@ class _SelectState<T> extends State<Select<T>> {
   // --- open / close ---
 
   void _requestOpen(bool next) {
-    if (widget.onOpenChange != null) {
-      widget.onOpenChange!(next);
+    if (widget.onOpenChanged != null) {
+      widget.onOpenChanged!(next);
       if (widget.open == null) next ? _openDropdown() : _closeDropdown();
     } else {
       next ? _openDropdown() : _closeDropdown();

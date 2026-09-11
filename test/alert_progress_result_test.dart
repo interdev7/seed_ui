@@ -191,14 +191,14 @@ void main() {
       expect(doneCount, equals(1));
     });
 
-    testWidgets('triggers onProgressChange when percent updates',
+    testWidgets('triggers onProgressChanged when percent updates',
         (tester) async {
       double? changedPercent;
       await tester.pumpWidget(
         _host(
           Progress(
             percent: 0.2,
-            onProgressChange: (p) => changedPercent = p,
+            onProgressChanged: (p) => changedPercent = p,
           ),
         ),
       );
@@ -208,7 +208,7 @@ void main() {
         _host(
           Progress(
             percent: 0.7,
-            onProgressChange: (p) => changedPercent = p,
+            onProgressChanged: (p) => changedPercent = p,
           ),
         ),
       );
@@ -216,7 +216,7 @@ void main() {
       expect(changedPercent, equals(0.7));
     });
 
-    testWidgets('triggers onStepChange when active step updates',
+    testWidgets('triggers onStepChanged when active step updates',
         (tester) async {
       int? currentStep;
       int? totalSteps;
@@ -226,7 +226,7 @@ void main() {
             percent: 0.2,
             steps: ProgressSteps(
               5,
-              onStepChange: (step, total) {
+              onStepChanged: (step, total) {
                 currentStep = step;
                 totalSteps = total;
               },
@@ -242,7 +242,7 @@ void main() {
             percent: 0.8,
             steps: ProgressSteps(
               5,
-              onStepChange: (step, total) {
+              onStepChanged: (step, total) {
                 currentStep = step;
                 totalSteps = total;
               },
@@ -322,7 +322,7 @@ void main() {
           Result(
             status: StatusType.success,
             title: const Text('Payment received'),
-            subTitle: const Text('Order is being processed.'),
+            subtitle: const Text('Order is being processed.'),
             extra: [
               Button(
                 variant: ButtonVariant.solid,

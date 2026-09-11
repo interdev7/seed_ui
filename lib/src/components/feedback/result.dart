@@ -73,7 +73,7 @@ class _ResolvedResultToken {
 /// Result(
 ///   status: StatusType.success,
 ///   title: const Text('Payment received'),
-///   subTitle: const Text('Order 2017182818828182881 is being processed.'),
+///   subtitle: const Text('Order 2017182818828182881 is being processed.'),
 ///   extra: [Button(color: ButtonColor.primary, onPressed: home, child: const Text('Home'))],
 /// )
 /// ```
@@ -84,7 +84,7 @@ class Result extends StatelessWidget {
   const Result({
     super.key,
     required this.title,
-    this.subTitle,
+    this.subtitle,
     this.status = StatusType.info,
     this.icon,
     this.extra,
@@ -99,7 +99,7 @@ class Result extends StatelessWidget {
   final Widget title;
 
   /// Optional supporting line below the title, in its own dimmer style.
-  final Widget? subTitle;
+  final Widget? subtitle;
 
   /// Which status icon and colour to use.
   final StatusType status;
@@ -147,7 +147,7 @@ class Result extends StatelessWidget {
             ),
             child: title,
           ),
-          if (subTitle != null) ...[
+          if (subtitle != null) ...[
             SizedBox(height: token.sizeXS),
             DefaultTextStyle(
               textAlign: TextAlign.center,
@@ -159,7 +159,7 @@ class Result extends StatelessWidget {
                 height: token.lineHeight,
                 decoration: TextDecoration.none,
               ),
-              child: subTitle!,
+              child: subtitle!,
             ),
           ],
           if (child != null) ...[

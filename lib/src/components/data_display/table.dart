@@ -5204,7 +5204,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
       // is not something to open by passing over it.
       trigger: const [DropdownTrigger.click],
       open: _filterOpen == index,
-      onOpenChange: (open) => setState(() => _filterOpen = open ? index : null),
+      onOpenChanged: (open) =>
+          setState(() => _filterOpen = open ? index : null),
       // Hung by the trailing edge, not the leading one: the mark stands at
       // the far end of the heading, so aligning the near edges would throw
       // the panel out past its own column. A mirrored layout swaps which edge
@@ -6187,7 +6188,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
         current: _page,
         pageSize: _pageSize,
         onChanged: _goToPage,
-        onShowSizeChange: _goToPage,
+        onShowSizeChanged: _goToPage,
         align: at.alignment,
         size: paging.size,
         simple: paging.simple,

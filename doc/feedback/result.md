@@ -7,7 +7,7 @@ purchase, a 404, a permission error.
 Result(
   status: StatusType.success,
   title: Text('Payment received'),
-  subTitle: Text('Order 2017182818828182881 is being processed.'),
+  subtitle: Text('Order 2017182818828182881 is being processed.'),
   extra: [
     Button(
       color: ButtonColor.primary,
@@ -25,7 +25,7 @@ For a compact inline notice use a [Alert](../feedback/alert.md) instead.
 | Property | Type | Default | Description |
 | --- | --- | --- | --- |
 | `title` | `Widget` | required | Headline stating the outcome |
-| `subTitle` | `Widget?` | `null` | Supporting line below the title |
+| `subtitle` | `Widget?` | `null` | Supporting line below the title |
 | `status` | `StatusType` | `info` | Icon and colour |
 | `icon` | `Widget?` | `null` | Replaces the status icon |
 | `extra` | `List<Widget>?` | `null` | Action buttons, centred below the text |
@@ -45,7 +45,7 @@ group:
 Result(
   status: StatusType.error,
   title: Text('Submission failed'),
-  subTitle: Text('Please check and try again.'),
+  subtitle: Text('Please check and try again.'),
   extra: [
     Button(color: ButtonColor.primary, onPressed: retry, child: const Text('Retry')),
     Button(onPressed: back, child: const Text('Go back')),

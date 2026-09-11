@@ -111,7 +111,7 @@ Input(placeholder: 'Password', password: PasswordConfig())
 | --- | --- | --- | --- |
 | `visibilityToggle` | `bool` | `true` | Whether the reveal toggle is shown |
 | `iconRender` | `Widget Function(bool visible)?` | `null` | Custom toggle glyph; `visible` is whether the text is revealed |
-| `onVisibleChange` | `ValueChanged<bool>?` | `null` | Called when visibility toggles; receives the new `visible` state |
+| `onVisibleChanged` | `ValueChanged<bool>?` | `null` | Called when visibility toggles; receives the new `visible` state |
 
 ## Character count
 

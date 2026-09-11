@@ -86,7 +86,7 @@ current marker.
 | `direction`       | `TextDirection?`             | `null`               | Text direction (`ltr`, `rtl`)                                                                |
 | `format`          | `String Function(double)?`   | `null`               | Custom percentage label formatter                                                            |
 | `onDone`          | `VoidCallback?`              | `null`               | Callback fired when progress reaches 100% completion                                         |
-| `onProgressChange`| `void Function(double)?`     | `null`               | Callback fired when progress percentage changes (0.0 to 1.0)                                |
+| `onProgressChanged`| `void Function(double)?`     | `null`               | Callback fired when progress percentage changes (0.0 to 1.0)                                |
 | `child`           | `Widget?`                    | `null`               | Content in place of the label: the middle of a ring, the label's spot on a bar               |
 
 ## Percent Position (Info Position)
@@ -141,7 +141,7 @@ Progress(
 - `gap`: spacing between step segments in pixels (default `2.0`)
 - `fill`: filling mode (`ProgressStepFill.gradually` or `ProgressStepFill.immediately`)
 - `stepRadius`: custom per-step radius builder `(isFirst, percent) => ProgressBorderRadius`
-- `onStepChange`: callback when active step changes `(currentStep, totalSteps) => void`
+- `onStepChanged`: callback when active step changes `(currentStep, totalSteps) => void`
 
 ```dart
 // Basic line steps with immediate fill & step callback
@@ -150,11 +150,11 @@ Progress(
   steps: ProgressSteps(
     5,
     fill: ProgressStepFill.immediately,
-    onStepChange: (step, total) {
+    onStepChanged: (step, total) {
       print('Step $step of $total reached');
     },
   ),
-  onProgressChange: (percent) {
+  onProgressChanged: (percent) {
     print('Progress updated to ${percent * 100}%');
   },
 )

@@ -185,12 +185,12 @@ this instance.
 
 ## Controlled visibility
 
-Drive it with `open` + `onOpenChange`:
+Drive it with `open` + `onOpenChanged`:
 
 ```dart
 Dropdown(
   open: _open,
-  onOpenChange: (v) => setState(() => _open = v),
+  onOpenChanged: (v) => setState(() => _open = v),
   trigger: const [DropdownTrigger.click],
   menu: items,
   child: trigger,

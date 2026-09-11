@@ -58,7 +58,7 @@ test app that opens it must install `UiKit.navigatorKey`. See
 
 ## Page size changes
 
-`onShowSizeChange` fires with the new `(page, pageSize)` pair whenever the size
+`onShowSizeChanged` fires with the new `(page, pageSize)` pair whenever the size
 selector changes, alongside `pageSizeOptions` which lists the offered sizes.
 
 ## From the keyboard

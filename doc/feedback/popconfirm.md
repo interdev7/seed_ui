@@ -109,7 +109,8 @@ Popconfirm(
 
 ## Disabling
 
-`disabled: true` lets the trigger behave normally and never opens the bubble —
+`skipConfirmation: true` lets the trigger act without asking: it behaves exactly
+as it would with no `Popconfirm` around it, and the bubble never opens —
 useful when the action is conditionally unavailable but the control should
 still be interactive for another reason.
 
@@ -129,7 +130,7 @@ still be interactive for another reason.
 | `arrow`       | `bool`                       | `true`     | Draw a caret pointing at the trigger       |
 | `icon`        | `Widget?`                    | warning    | Leading icon; `SizedBox.shrink()` hides it |
 | `showCancel`  | `bool`                       | `true`     | Whether to show the cancel button          |
-| `disabled`    | `bool`                       | `false`    | Trigger acts normally, bubble never opens  |
+| `skipConfirmation` | `bool`                  | `false`    | Trigger acts without asking; no bubble     |
 | `barrierColor`| `Color?`                     | `null`     | Background color of the dismiss barrier    |
 
 ## Building your own popover

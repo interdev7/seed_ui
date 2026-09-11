@@ -20,6 +20,29 @@ component's own defaults for a subtree.
   the same idea two ways makes the caller guess. `Tabs.onTabClick` keeps its
   name — it reports a press, whether or not anything changed, and is not the
   same event.
+- **BREAKING — the rest of the `onChange` family.** `onOpenChange` (on
+  `DatePicker`, `DateRangePicker`, `Dropdown`, `FloatButtonGroup`,
+  `MultiDatePicker`, `Popover`, `Select` and `TimePicker`),
+  `Progress.onProgressChange`, `ProgressSteps.onStepChange`,
+  `Pagination.onShowSizeChange` and `PasswordConfig.onVisibleChange` are now
+  `onOpenChanged`, `onProgressChanged`, `onStepChanged`, `onShowSizeChanged`
+  and `onVisibleChanged`. The first pass renamed the callbacks named exactly
+  `onChange` and left twelve spelled `onSomethingChange`, which is the same
+  defect with a longer name. `PopoverLayer` already said `onOpenChanged`, so
+  it and `Popover` now agree.
+- **BREAKING — one spelling for the accessibility label.** `Badge.title` is
+  `Badge.semanticsLabel`: it was never a heading, it was what a screen reader
+  announces, and `title` reads like something drawn. `FloatButton` and
+  `FloatButtonItem` said `semanticLabel`; nine other components said
+  `semanticsLabel`, which is now the only spelling.
+- **BREAKING — `Result.subTitle` and `StepItem.subTitle` are `subtitle`.**
+  One word, as Flutter spells it — and as this package's own
+  `subtitleFontSize` token already spelled it two fields away.
+- **BREAKING — `Popconfirm.disabled` is `Popconfirm.skipConfirmation`.**
+  Everywhere else in the kit `disabled` bars the control; here it did the
+  opposite — it took the guard off and let the trigger act unasked. A name
+  that means one thing in twenty-five components and its reverse in the
+  twenty-sixth is a trap, whichever way round it is read.
 - **BREAKING — defaults can now be set for `Badge`, `Checkbox`, `Form`,
   `Listy`, `Radio`, `Spin` and `Switch`.** Reaching them meant the props they
   cover had to become nullable, so `Badge.showZero`, `Badge.overflowCount`,

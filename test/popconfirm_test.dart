@@ -157,13 +157,13 @@ void main() {
     expect(find.text('Saving?'), findsNothing);
   });
 
-  testWidgets('disabled never opens the bubble', (tester) async {
+  testWidgets('skipConfirmation never opens the bubble', (tester) async {
     var confirmed = false;
     await tester.pumpWidget(
       _host(
         Popconfirm(
           title: const Text('Sure?'),
-          disabled: true,
+          skipConfirmation: true,
           onOk: () => confirmed = true,
           child: const Text('trigger'),
         ),

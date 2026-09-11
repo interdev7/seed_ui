@@ -639,13 +639,13 @@ class _ProgressDemoState extends State<ProgressDemo> {
                   steps: ProgressSteps(
                     5,
                     gap: 6,
-                    onStepChange: (step, total) {
+                    onStepChanged: (step, total) {
                       message.info('Step $step of $total reached');
                     },
                   ),
                   strokeWidth: 14,
                   borderRadius: const ProgressBorderRadius.all(4),
-                  onProgressChange: (percent) {
+                  onProgressChanged: (percent) {
                     debugPrint("Progress changed $percent");
                   },
                   onDone: () {

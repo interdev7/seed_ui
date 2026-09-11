@@ -132,7 +132,7 @@ class MultiDatePicker extends StatefulWidget {
     this.semanticsLabel,
     this.placement = PopoverPlacement.bottomLeft,
     this.open,
-    this.onOpenChange,
+    this.onOpenChanged,
     this.status,
     this.prefix,
     this.suffixIcon,
@@ -217,7 +217,7 @@ class MultiDatePicker extends StatefulWidget {
   final bool? open;
 
   /// Reports what the picker would have done with its panel.
-  final ValueChanged<bool>? onOpenChange;
+  final ValueChanged<bool>? onOpenChanged;
 
   /// Marks the field as questionable or wrong.
   final InputStatus? status;
@@ -318,7 +318,7 @@ class _MultiDatePickerState extends State<MultiDatePicker>
         _open = false;
         _walk = null;
       });
-      widget.onOpenChange?.call(false);
+      widget.onOpenChanged?.call(false);
     };
   }
 
@@ -489,7 +489,7 @@ class _MultiDatePickerState extends State<MultiDatePicker>
 
   void _requestOpen(bool next) {
     if (next == _open) return;
-    widget.onOpenChange?.call(next);
+    widget.onOpenChanged?.call(next);
     if (widget.open == null) next ? _openPanel() : _closePanel();
   }
 

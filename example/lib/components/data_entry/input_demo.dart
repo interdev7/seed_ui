@@ -55,7 +55,7 @@ class InputDemo extends StatelessWidget {
         Input(
           placeholder: 'Password',
           password: PasswordConfig(
-            onVisibleChange: (value) => debugPrint("is visible: $value"),
+            onVisibleChanged: (value) => debugPrint("is visible: $value"),
           ),
         ),
         const SizedBox(height: 12),

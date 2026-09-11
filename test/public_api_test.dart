@@ -72,4 +72,33 @@ void main() {
           'as a breaking change.',
     );
   });
+
+  test('a callback that reports a change is named onChanged', () {
+    // The snapshot above lists names, so a parameter renamed or added passes
+    // it silently — which is how twelve callbacks kept saying `onChange`
+    // through a review that renamed the seven saying exactly `onChange`.
+    //
+    // Flutter's own `onFocusChange` is the exception the rule has to make
+    // room for: it is their name, on their widget, reaching us through
+    // `Focus`.
+    final offenders = <String>[];
+    for (final entity in Directory('lib/src').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final lines = entity.readAsStringSync().split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        final match =
+            RegExp(r'^  final .*\b(on[A-Z]\w*Change)\b;').firstMatch(lines[i]);
+        if (match == null) continue;
+        final name = match.group(1)!;
+        if (name == 'onFocusChange' || name.startsWith('_')) continue;
+        offenders.add('${entity.path}:${i + 1} $name');
+      }
+    }
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'a callback reporting a change ends in `onChanged`, not '
+          '`onChange` — see CONTRIBUTING.md',
+    );
+  });
 }

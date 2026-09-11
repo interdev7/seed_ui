@@ -90,7 +90,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
           Dropdown(
             trigger: const [],
             open: _barrierOpen,
-            onOpenChange: (v) => setState(() => _barrierOpen = v),
+            onOpenChanged: (v) => setState(() => _barrierOpen = v),
             barrierColor: const Color.fromARGB(126, 105, 197, 102), // 50% black
             menu: _menu,
             arrow: true,
@@ -108,7 +108,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
           Dropdown(
             trigger: const [],
             open: _clickOpen,
-            onOpenChange: (v) => setState(() => _clickOpen = v),
+            onOpenChanged: (v) => setState(() => _clickOpen = v),
             menu: _menu,
             arrow: true,
             onItemTap: (action) => message.info('Tapped: ${action?.name}'),

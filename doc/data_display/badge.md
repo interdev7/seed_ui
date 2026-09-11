@@ -60,12 +60,12 @@ rolling on the way out.
 A single-character count keeps the pill round; the padding that makes it a
 lozenge is added only once there is a second character needing the room.
 
-Give a `title` whenever the count is not self-explanatory. Without one a
+Give a `semanticsLabel` whenever the count is not self-explanatory. Without one a
 screen reader announces the digits exactly as drawn, which says "ninety-nine
 plus" where "over ninety-nine unread messages" was meant.
 
 ```dart
-Badge(count: 120, title: '120 unread messages', child: _bell)
+Badge(count: 120, semanticsLabel: '120 unread messages', child: _bell)
 ```
 
 ## Dots
@@ -163,7 +163,7 @@ reads as shadow on every hue rather than going muddy on the darker ones.
 | `color` | `Color?` | `null` | Overrides the fill, status included |
 | `offset` | `Offset` | `Offset.zero` | Nudge from the corner; ignored standalone |
 | `size` | `SoftSize?` | `null` | Follows the provider's `componentSize`, else `middle`; `small` gives a shorter pill |
-| `title` | `String?` | `null` | What assistive technology hears |
+| `semanticsLabel` | `String?` | `null` | What assistive technology hears |
 | `token` | `BadgeToken?` | `null` | Per-instance token overrides |
 
 ### Ribbon

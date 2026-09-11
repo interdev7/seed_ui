@@ -225,7 +225,7 @@ The kit dresses the text — colour, size, the theme's face — and stops there.
 asks the group, which works it out from the way the group travels; a button
 standing alone falls back to the leading side.
 
-`semanticLabel` is what a screen reader announces. There is no fallback, so
+`semanticsLabel` is what a screen reader announces. There is no fallback, so
 give one to any button whose mark is an icon alone — the icon says nothing to
 somebody who cannot see it.
 There is no plate behind it, because a caption that needs one is a caption you
@@ -283,7 +283,7 @@ removes the barrier altogether and leaves Escape as the way out.
 | `trigger` | `FloatButtonTrigger.click` (the default) or `.hover` |
 | `open` | Drives the group from the widget tree; null lets it manage itself |
 | `controller` | Drives it from outside the build. Excludes `open` |
-| `onOpenChange` | Called whenever the group wants to open or close |
+| `onOpenChanged` | Called whenever the group wants to open or close |
 | `dismissible` | Whether a tap on open ground closes it. Default yes |
 | `closeOnSelect` | Whether tapping an item closes it. Default yes |
 

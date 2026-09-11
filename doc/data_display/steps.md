@@ -48,7 +48,7 @@ measures a journey that is still going. The two share only their rail — the sa
 | Property | Type | Description |
 | --- | --- | --- |
 | `title` | `Widget?` | The step's name |
-| `subTitle` | `Widget?` | A short aside beside the title |
+| `subtitle` | `Widget?` | A short aside beside the title |
 | `content` | `Widget?` | Supporting text under it |
 | `icon` | `Widget?` | Replaces the marker's number |
 | `status` | `StepStatus?` | Forces this step's status |
@@ -406,7 +406,7 @@ there is less.
 ### The floor
 
 The floor is derived, not fixed: the marker, the gap, room for five characters
-of title — and as much again where any step carries a `subTitle`, since a
+of title — and as much again where any step carries a `subtitle`, since a
 subtitle cannot shrink and would otherwise push the title out of its row — plus
 the least rail that still reads as a line. `itemMinWidth` on the token replaces
 it outright:

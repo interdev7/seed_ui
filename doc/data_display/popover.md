@@ -24,7 +24,7 @@ Popover(
 | `trigger` | `PopoverTrigger` | `hover` | `hover`, `tap` or `longPress` |
 | `open` | `bool?` | `null` | Whether it is open (controlled) |
 | `defaultOpen` | `bool` | `false` | Whether it starts open when uncontrolled |
-| `onOpenChange` | `ValueChanged<bool>?` | `null` | Fires with the state it wants to be in |
+| `onOpenChanged` | `ValueChanged<bool>?` | `null` | Fires with the state it wants to be in |
 | `arrow` | `bool` | `true` | Whether a caret points at the trigger |
 | `animation` | `PopoverAnimation` | `simple` | How the card arrives — `simple` or `genie` |
 | `duration` | `Duration?` | `null` | How long the arrival takes |
@@ -56,7 +56,7 @@ Popover(defaultOpen: true, content: const Text('…'), child: …);
 // Controlled — the caller owns it, as everywhere else in the kit.
 Popover(
   open: _open,
-  onOpenChange: (v) => setState(() => _open = v),
+  onOpenChanged: (v) => setState(() => _open = v),
   content: const Text('…'),
   child: …,
 );

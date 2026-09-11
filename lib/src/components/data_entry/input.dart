@@ -118,7 +118,7 @@ class PasswordConfig {
   const PasswordConfig({
     this.visibilityToggle = true,
     this.iconRender,
-    this.onVisibleChange,
+    this.onVisibleChanged,
   });
 
   /// Whether the reveal toggle is shown.
@@ -128,7 +128,7 @@ class PasswordConfig {
   final Widget Function(bool visible)? iconRender;
 
   /// Called when the password's visibility toggles. `visible` is the new state.
-  final ValueChanged<bool>? onVisibleChange;
+  final ValueChanged<bool>? onVisibleChanged;
 }
 
 /// Per-component design tokens for [Input].
@@ -813,7 +813,7 @@ class _SoftInputState extends State<Input> {
             iconRender: password.iconRender,
             onTap: () {
               setState(() => _obscured = !_obscured);
-              password.onVisibleChange?.call(!_obscured);
+              password.onVisibleChanged?.call(!_obscured);
             },
           ),
         ],

@@ -336,7 +336,7 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
                 child: TimePicker(
                   format: 'HH:mm',
                   open: _driven,
-                  onOpenChange: (v) => setState(() => _driven = v),
+                  onOpenChanged: (v) => setState(() => _driven = v),
                 ),
               ),
               const SizedBox(width: 12),

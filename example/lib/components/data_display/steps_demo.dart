@@ -265,8 +265,8 @@ class _StepsDemoState extends State<StepsDemo> {
                 current: _clickable,
                 onChanged: (i) => setState(() => _clickable = i),
                 items: const [
-                  StepItem(title: Text('Details'), subTitle: Text('00:02')),
-                  StepItem(title: Text('Review'), subTitle: Text('00:05')),
+                  StepItem(title: Text('Details'), subtitle: Text('00:02')),
+                  StepItem(title: Text('Review'), subtitle: Text('00:05')),
                   StepItem(title: Text('Publish')),
                 ],
               ),
@@ -309,8 +309,8 @@ class _StepsDemoState extends State<StepsDemo> {
                 onChanged: (i) => setState(() => _clickable = i),
                 token: StepsToken(itemWidth: _navWidth == 0 ? null : _navWidth),
                 items: const [
-                  StepItem(title: Text('Details'), subTitle: Text('00:02')),
-                  StepItem(title: Text('Review'), subTitle: Text('00:05')),
+                  StepItem(title: Text('Details'), subtitle: Text('00:02')),
+                  StepItem(title: Text('Review'), subtitle: Text('00:05')),
                   StepItem(title: Text('Publish')),
                 ],
               ),
@@ -331,8 +331,8 @@ class _StepsDemoState extends State<StepsDemo> {
                     current: _clickable,
                     onChanged: (i) => setState(() => _clickable = i),
                     items: const [
-                      StepItem(title: Text('Details'), subTitle: Text('00:02')),
-                      StepItem(title: Text('Review'), subTitle: Text('00:05')),
+                      StepItem(title: Text('Details'), subtitle: Text('00:02')),
+                      StepItem(title: Text('Review'), subtitle: Text('00:05')),
                       StepItem(title: Text('Publish')),
                     ],
                   ),
@@ -380,7 +380,7 @@ class _StepsDemoState extends State<StepsDemo> {
                 items: const [
                   StepItem(
                     title: Text('Step 1'),
-                    subTitle: Text('00:00'),
+                    subtitle: Text('00:00'),
                     content: Text('This is a content.'),
                   ),
                   StepItem(

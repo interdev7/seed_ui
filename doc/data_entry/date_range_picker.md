@@ -158,7 +158,7 @@ pixels of the glyph.
 | `startPlaceholder` / `endPlaceholder` | `String?` | `null` | Falls back to the locale |
 | `semanticsLabel` | `String?` | — | Names a field labelled from outside |
 | `placement` | `PopoverPlacement` | `bottomLeft` | Where the panel opens |
-| `open` / `onOpenChange` | `bool?` / `ValueChanged<bool>?` | — | Controlled panel |
+| `open` / `onOpenChanged` | `bool?` / `ValueChanged<bool>?` | — | Controlled panel |
 | `status` | `InputStatus?` | `null` | `warning` or `error` |
 | `prefix` | `Widget?` | — | Sits before the value |
 | `suffixIcon` | `Widget?` | — | Replaces the calendar mark |

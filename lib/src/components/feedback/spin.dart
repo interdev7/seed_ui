@@ -9,6 +9,28 @@ import '../../utils/overlay_host.dart';
 import '../../utils/size_resolver.dart';
 import 'progress.dart';
 
+/// Defaults for every [Spin] under a `ConfigProvider`.
+///
+/// The widget's own props, not its numbers — those are [SpinToken].
+@immutable
+class SpinDefaults {
+  /// Creates a [SpinDefaults].
+  const SpinDefaults({
+    this.size,
+    this.delay,
+    this.position,
+  });
+
+  /// How big the spinner is.
+  final ControlSize? size;
+
+  /// How long a load may take before anything is shown — a page-wide answer to the flicker of a fast one.
+  final Duration? delay;
+
+  /// Where the spinner sits over what it covers.
+  final SpinPosition? position;
+}
+
 /// Design tokens for [Spin].
 @immutable
 class SpinToken {
@@ -192,7 +214,21 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
   ControlSize get _size =>
-      widget.size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle;
+      widget.size ??
+      _defaults?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
+
+  /// The defaults set for the subtree, read once per dependency change: the
+  /// delay is wanted where an inherited lookup is not allowed — from
+  /// [initState], and from the timer's own callback.
+  SpinDefaults? _defaults;
+
+  /// How long a load may run before the spinner is shown.
+  Duration? get _delay => widget.delay ?? _defaults?.delay;
+
+  /// Where the spinner sits over what it covers.
+  SpinPosition? get _position => widget.position ?? _defaults?.position;
 
   late AnimationController _controller;
   bool _delaySpinning = true;
@@ -213,6 +249,9 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final before = _delay;
+    _defaults = ConfigProvider.defaultsOf<SpinDefaults>(context);
+    if (_delay != before) _updateSpinningState();
     _syncFullscreenOverlay();
   }
 
@@ -293,7 +332,7 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
       r: r,
       spinContent: _buildSpinContent(token, r),
       textDirection: dir,
-      position: widget.position,
+      position: _position,
       overlayEntry: _overlayEntry!,
     );
   }
@@ -308,11 +347,12 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
       return;
     }
 
-    if (widget.delay != null && widget.delay! > Duration.zero) {
+    final delay = _delay;
+    if (delay != null && delay > Duration.zero) {
       _delaySpinning = false;
       if (!initial && mounted) setState(() {});
 
-      _delayTimer = Timer(widget.delay!, () {
+      _delayTimer = Timer(delay, () {
         if (mounted && widget.spinning) {
           setState(() {
             _delaySpinning = true;
@@ -482,7 +522,7 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
       return _buildFullscreenOverlayWidget();
     }
 
-    final align = widget.position?.alignment ?? Alignment.center;
+    final align = _position?.alignment ?? Alignment.center;
 
     if (widget.child == null) {
       return AnimatedOpacity(

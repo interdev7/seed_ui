@@ -33,7 +33,7 @@ Flutter's rule, not the tour's, and it costs a real target its taps.
 | `controller` | `TourController?` | `null` | Drives it from outside |
 | `open` | `bool?` | `null` | Whether it is on screen (controlled) |
 | `current` | `int?` | `null` | The step being shown (controlled) |
-| `onChange` | `ValueChanged<int>?` | `null` | Fires with the step moved to |
+| `onChanged` | `ValueChanged<int>?` | `null` | Fires with the step moved to |
 | `onClose` | `VoidCallback?` | `null` | Fires on dismissal, however it happened |
 | `onFinish` | `VoidCallback?` | `null` | Fires on the last step's button, before `onClose` |
 | `type` | `TourType` | `normal` | `primary` paints the panel in the accent |
@@ -281,7 +281,7 @@ tour.previous();
 tour.close();
 
 // Or controlled, like the rest of the kit.
-Tour(open: _open, current: _step, onChange: (i) => setState(() => _step = i));
+Tour(open: _open, current: _step, onChanged: (i) => setState(() => _step = i));
 ```
 
 `open()` starts the tour, it does not resume it: pressing "Begin tour" a second

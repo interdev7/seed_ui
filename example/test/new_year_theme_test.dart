@@ -42,7 +42,7 @@ void main() {
                         itemRender: (r, i) => Text(r),
                       ),
                     ),
-                    Pagination(total: 50, onChange: (_, __) {}),
+                    Pagination(total: 50, onChanged: (_, __) {}),
                     const Empty(),
                   ],
                 ),

@@ -110,7 +110,7 @@ class _StepsDemoState extends State<StepsDemo> {
           'Clickable',
           Steps(
             current: _clickable,
-            onChange: (i) => setState(() => _clickable = i),
+            onChanged: (i) => setState(() => _clickable = i),
             items: const [
               StepItem(title: Text('One'), content: Text('Tap me')),
               StepItem(title: Text('Two'), content: Text('Or me')),
@@ -263,7 +263,7 @@ class _StepsDemoState extends State<StepsDemo> {
               Steps(
                 type: StepsType.navigation,
                 current: _clickable,
-                onChange: (i) => setState(() => _clickable = i),
+                onChanged: (i) => setState(() => _clickable = i),
                 items: const [
                   StepItem(title: Text('Details'), subTitle: Text('00:02')),
                   StepItem(title: Text('Review'), subTitle: Text('00:05')),
@@ -306,7 +306,7 @@ class _StepsDemoState extends State<StepsDemo> {
                 type: StepsType.navigation,
                 size: _navSize,
                 current: _clickable,
-                onChange: (i) => setState(() => _clickable = i),
+                onChanged: (i) => setState(() => _clickable = i),
                 token: StepsToken(itemWidth: _navWidth == 0 ? null : _navWidth),
                 items: const [
                   StepItem(title: Text('Details'), subTitle: Text('00:02')),
@@ -329,7 +329,7 @@ class _StepsDemoState extends State<StepsDemo> {
                   child: Steps(
                     type: StepsType.navigation,
                     current: _clickable,
-                    onChange: (i) => setState(() => _clickable = i),
+                    onChanged: (i) => setState(() => _clickable = i),
                     items: const [
                       StepItem(title: Text('Details'), subTitle: Text('00:02')),
                       StepItem(title: Text('Review'), subTitle: Text('00:05')),
@@ -368,7 +368,7 @@ class _StepsDemoState extends State<StepsDemo> {
                 type: StepsType.panel,
                 variant: _variant,
                 current: _clickable,
-                onChange: (i) => setState(() => _clickable = i),
+                onChanged: (i) => setState(() => _clickable = i),
                 items: _checkout,
               ),
               const SizedBox(height: 12),
@@ -430,7 +430,7 @@ class _StepsDemoState extends State<StepsDemo> {
                     type: StepsType.panel,
                     variant: _variant,
                     current: _clickable,
-                    onChange: (i) => setState(() => _clickable = i),
+                    onChanged: (i) => setState(() => _clickable = i),
                     items: const [
                       StepItem(title: Text('One')),
                       StepItem(title: Text('Two')),
@@ -452,7 +452,7 @@ class _StepsDemoState extends State<StepsDemo> {
                 type: StepsType.panel,
                 variant: _variant,
                 current: _clickable,
-                onChange: (i) => setState(() => _clickable = i),
+                onChanged: (i) => setState(() => _clickable = i),
                 items: _checkout,
                 token: StepsToken(panelMinWidth: _panelMinWidth),
               ),
@@ -493,7 +493,7 @@ class _StepsDemoState extends State<StepsDemo> {
                 type: StepsType.panel,
                 variant: _variant,
                 current: _clickable,
-                onChange: (i) => setState(() => _clickable = i),
+                onChanged: (i) => setState(() => _clickable = i),
                 items: _checkout,
                 token: StepsToken(
                   panelWidth: _panelWidth == 0 ? null : _panelWidth,
@@ -509,7 +509,7 @@ class _StepsDemoState extends State<StepsDemo> {
                 variant: _variant,
                 size: SoftSize.small,
                 current: _clickable,
-                onChange: (i) => setState(() => _clickable = i),
+                onChanged: (i) => setState(() => _clickable = i),
                 items: _checkout,
               ),
               const SizedBox(height: 16),
@@ -520,7 +520,7 @@ class _StepsDemoState extends State<StepsDemo> {
                 variant: _variant,
                 orientation: StepsOrientation.vertical,
                 current: _clickable,
-                onChange: (i) => setState(() => _clickable = i),
+                onChanged: (i) => setState(() => _clickable = i),
                 items: _checkout,
               ),
             ],
@@ -555,7 +555,7 @@ class _StepsDemoState extends State<StepsDemo> {
                     : StepsOverflow.scroll,
                 current: _long,
                 responsive: false,
-                onChange: (i) => setState(() => _long = i),
+                onChanged: (i) => setState(() => _long = i),
                 items: [
                   for (var i = 1; i <= 9; i++)
                     StepItem(
@@ -583,7 +583,7 @@ class _StepsDemoState extends State<StepsDemo> {
                     : StepsOverflow.scroll,
                 current: _long,
                 responsive: false,
-                onChange: (i) => setState(() => _long = i),
+                onChanged: (i) => setState(() => _long = i),
                 items: [
                   for (var i = 1; i <= 9; i++) StepItem(title: Text('$i')),
                 ],

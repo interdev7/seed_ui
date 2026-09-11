@@ -93,6 +93,27 @@ While the package is on `0.x` the API is not stable. A breaking change bumps
 the minor version (`0.1.0` → `0.2.0`) and needs a CHANGELOG entry that says
 what moved and why.
 
+### Naming an API
+
+**A callback is `onChanged` when it reports a new value**, whatever the
+component. Seven controls said `onChange` before `0.24.0` and thirty-nine said
+`onChanged`; a kit that names one idea two ways makes every caller guess.
+
+A callback that reports something other than a change keeps its own name, and
+the two can live side by side: `Tabs.onChanged` fires when the shown tab
+becomes another one, `Tabs.onTabClick` fires on the press whether or not
+anything changed — pressing the tab already open reports the second and not
+the first. Neither can stand in for the other, so neither is a duplicate.
+
+**A small value type takes its parts positionally when the order is the only
+thing that could be meant** — `DateRange(start, end)`, `SliderZone(from, to)`.
+Two `DateTime`s in the other order are not a different range, they are the
+same range written backwards, and the type says so: `DateRange` orders its
+two ends in the constructor, `SliderZone` answers `low` and `high` whichever
+way round it was written. Where two arguments of the same type *would* mean
+different things if swapped, they are named, because there is nothing in the
+call to catch the mistake.
+
 ### What the version number promises
 
 From `1.0.0` on, semantic versioning applies to a specific thing, and it is

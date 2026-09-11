@@ -178,7 +178,7 @@ class StepItem {
 /// ```
 ///
 /// Dispose it with the widget that owns it. A [Steps] driven by `current` and
-/// `onChange`, or left to itself, needs no controller at all.
+/// `onChanged`, or left to itself, needs no controller at all.
 class StepsController extends ChangeNotifier {
   /// Creates a [StepsController].
   StepsController({int current = 0}) : _current = current;
@@ -644,7 +644,7 @@ class StepsDefaults {
 /// ```dart
 /// Steps(
 ///   current: _step,
-///   onChange: (index) => setState(() => _step = index),
+///   onChanged: (index) => setState(() => _step = index),
 ///   items: const [
 ///     StepItem(title: Text('Cart'), content: Text('3 items')),
 ///     StepItem(title: Text('Payment')),
@@ -668,7 +668,7 @@ class Steps extends StatefulWidget {
     this.current,
     this.defaultCurrent = 0,
     this.controller,
-    this.onChange,
+    this.onChanged,
     this.initial = 0,
     this.orientation,
     this.type,
@@ -703,7 +703,7 @@ class Steps extends StatefulWidget {
   final StepsController? controller;
 
   /// Called with the step a tap landed on. Null makes the steps inert.
-  final ValueChanged<int>? onChange;
+  final ValueChanged<int>? onChanged;
 
   /// Number the first step from here.
   final int initial;
@@ -765,7 +765,7 @@ class Steps extends StatefulWidget {
   /// ellipsis marker. Below three it is ignored, since first,
   /// current and last already take three slots.
   ///
-  /// The steps you are given back never change: [onChange] and the controller
+  /// The steps you are given back never change: [onChanged] and the controller
   /// speak in the indexes of [items], not of what is on screen.
   final int? maxCount;
 
@@ -881,7 +881,8 @@ class _StepsState extends State<Steps> {
   /// Where the current step sits in that list.
   int get _shownCurrent => _shown.current;
 
-  bool get _interactive => widget.onChange != null || widget.controller != null;
+  bool get _interactive =>
+      widget.onChanged != null || widget.controller != null;
 
   /// Whether the focus should be seen: only where it arrived by keyboard.
   bool _focusVisible = false;
@@ -913,7 +914,7 @@ class _StepsState extends State<Steps> {
     if (widget.current == null && widget.controller == null) {
       setState(() => _uncontrolled = origin);
     }
-    widget.onChange?.call(origin);
+    widget.onChanged?.call(origin);
   }
 
   /// A step's status: its own if it named one, otherwise where it sits

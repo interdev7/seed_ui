@@ -296,6 +296,28 @@ class ListyStyles {
 
 /// Per-component design tokens for [Listy] — its own token table.
 ///
+/// Defaults for every [Listy] under a `ConfigProvider`.
+///
+/// The widget's own props, not its numbers — those are [ListyToken].
+@immutable
+class ListyDefaults {
+  /// Creates a [ListyDefaults].
+  const ListyDefaults({
+    this.sticky,
+    this.padding,
+    this.physics,
+  });
+
+  /// Whether a group header stays while its group scrolls.
+  final bool? sticky;
+
+  /// The inset around the run of items.
+  final EdgeInsets? padding;
+
+  /// How the list behaves under a finger.
+  final ScrollPhysics? physics;
+}
+
 /// Every field is an override; a null one falls back to the value derived from
 /// the global theme. Supply one globally through `ThemeData(components:
 /// ComponentsConfig(listy: ListyToken(...)))`,
@@ -366,7 +388,7 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
     this.groupKey,
     this.groupTitle,
     this.header,
-    this.sticky = false,
+    this.sticky,
     this.height,
     this.controller,
     this.scrollController,
@@ -441,7 +463,9 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
   final ListyHeader? header;
 
   /// Whether a group header stays pinned while its section scrolls past.
-  final bool sticky;
+  ///
+  /// Defaults to false, or to what [ListyDefaults.sticky] says.
+  final bool? sticky;
 
   /// Height of the scroll container. Null lets the list take the height its
   /// parent gives it — set one, or [shrinkWrap], inside an unbounded parent.
@@ -979,9 +1003,21 @@ class _ListyState<T, K extends Object, R extends Object>
   /// answer to.
   ScrollPhysics? get _physics =>
       widget.physics ??
+      _defaults?.physics ??
       (widget.header?.onRefresh == null
           ? null
           : const AlwaysScrollableScrollPhysics());
+
+  /// The defaults set for the subtree.
+  ListyDefaults? get _defaults => ConfigProvider.defaultsOf<ListyDefaults>(
+        context,
+      );
+
+  /// Whether a group header stays while its group scrolls.
+  bool get _sticky => widget.sticky ?? _defaults?.sticky ?? false;
+
+  /// The inset around the run of items.
+  EdgeInsets? get _padding => widget.padding ?? _defaults?.padding;
 
   /// The header, rebuilt on its own as the pull changes.
   Widget _headerWidget() => ValueListenableBuilder<ListyPull>(
@@ -1006,13 +1042,13 @@ class _ListyState<T, K extends Object, R extends Object>
 
     // Sticky headers need one sliver group per section; everything else is a
     // single lazy list over the flattened order.
-    if (widget.header == null && (widget.groupKey == null || !widget.sticky)) {
+    if (widget.header == null && (widget.groupKey == null || !_sticky)) {
       final footer = _footer(t, r);
       return ListView.builder(
         controller: _scroll,
         physics: _physics,
         shrinkWrap: widget.shrinkWrap,
-        padding: widget.padding ?? EdgeInsets.zero,
+        padding: _padding ?? EdgeInsets.zero,
         itemCount: _slots.length + (footer == null ? 0 : 1),
         itemBuilder: (context, index) =>
             index == _slots.length ? footer! : _buildSlot(t, r, index),
@@ -1023,7 +1059,7 @@ class _ListyState<T, K extends Object, R extends Object>
 
     // Without sticky sections the body is one lazy list; with them, a sliver
     // group per section so each header can pin itself.
-    if (widget.groupKey == null || !widget.sticky) {
+    if (widget.groupKey == null || !_sticky) {
       sections.add(
         SliverList.builder(
           itemCount: _slots.length,
@@ -1097,9 +1133,9 @@ class _ListyState<T, K extends Object, R extends Object>
       physics: _physics,
       shrinkWrap: widget.shrinkWrap,
       slivers: [
-        if (widget.padding != null)
+        if (_padding != null)
           SliverPadding(
-            padding: widget.padding!,
+            padding: _padding!,
             sliver: SliverMainAxisGroup(slivers: slivers),
           )
         else

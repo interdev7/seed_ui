@@ -122,7 +122,7 @@ Countdown(
 )
 ```
 
-`onChange` reports the same value as a `Duration`, whenever the text moves.
+`onChanged` reports the same value as a `Duration`, whenever the text moves.
 
 ## Properties
 
@@ -133,7 +133,7 @@ Countdown(
 | `type` | `CountdownType` | `down` | Towards the target, or away from it |
 | `format` | `String` | `'HH:mm:ss'` | How the time is written out |
 | `onFinish` | `VoidCallback?` | `null` | Once, when a downward count reaches zero |
-| `onChange` | `ValueChanged<Duration>?` | `null` | Whenever the drawn time moves |
+| `onChanged` | `ValueChanged<Duration>?` | `null` | Whenever the drawn time moves |
 | `builder` | `Widget Function(BuildContext, String)?` | `null` | Wraps the formatted time |
 | `token` | `CountdownToken?` | `null` | Per-instance token overrides |
 

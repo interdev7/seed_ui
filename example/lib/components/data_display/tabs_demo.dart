@@ -261,7 +261,7 @@ class _TabsDemoState extends State<TabsDemo> {
             items: _editItems,
             size: size,
             activeKey: _editActive,
-            onChange: (k) => setState(() => _editActive = k),
+            onChanged: (k) => setState(() => _editActive = k),
             onEdit: (key, action) => setState(() {
               if (action == TabEditAction.add) {
                 final k = '${_newTab++}';

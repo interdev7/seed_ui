@@ -54,14 +54,14 @@ void main() {
     expect(find.text('Three'), findsOneWidget);
   });
 
-  testWidgets('tabList switches content via onTabChange', (tester) async {
+  testWidgets('tabList switches content via onTabChanged', (tester) async {
     String active = 'a';
     await tester.pumpWidget(
       _wrap(
         StatefulBuilder(
           builder: (context, setState) => Card(
             activeTabKey: active,
-            onTabChange: (k) => setState(() => active = k),
+            onTabChanged: (k) => setState(() => active = k),
             tabList: const [
               CardTab(key: 'a', label: Text('A')),
               CardTab(key: 'b', label: Text('B')),

@@ -26,7 +26,7 @@ class _PaginationDemoState extends State<PaginationDemo> {
             current: _page,
             pageSize: _size,
             total: 235,
-            onChange: (page, size) => setState(() {
+            onChanged: (page, size) => setState(() {
               _page = page;
               _size = size;
             }),

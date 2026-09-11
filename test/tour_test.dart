@@ -37,7 +37,7 @@ class _Host extends StatefulWidget {
     this.onTargetTap,
     this.onClose,
     this.onFinish,
-    this.onChange,
+    this.onChanged,
   });
 
   final List<TourStep> Function(GlobalKey a, GlobalKey b) steps;
@@ -55,7 +55,7 @@ class _Host extends StatefulWidget {
   final VoidCallback? onTargetTap;
   final VoidCallback? onClose;
   final VoidCallback? onFinish;
-  final ValueChanged<int>? onChange;
+  final ValueChanged<int>? onChanged;
 
   @override
   State<_Host> createState() => _HostState();
@@ -115,7 +115,7 @@ class _HostState extends State<_Host> {
                   disabledInteraction: widget.disabledInteraction,
                   onClose: widget.onClose,
                   onFinish: widget.onFinish,
-                  onChange: widget.onChange,
+                  onChanged: widget.onChanged,
                   steps: widget.steps(_a, _b),
                 ),
               ),
@@ -230,7 +230,7 @@ void main() {
         steps: _twoSteps,
         onFinish: () => finished++,
         onClose: () => closed++,
-        onChange: changes.add,
+        onChanged: changes.add,
       ),
     );
 
@@ -565,7 +565,7 @@ void main() {
       await open(
         tester,
         _Host(
-          onChange: changes.add,
+          onChanged: changes.add,
           steps: (a, b) => [
             TourStep(
               target: a,
@@ -600,7 +600,7 @@ void main() {
       await open(
         tester,
         _Host(
-          onChange: changes.add,
+          onChanged: changes.add,
           steps: (a, b) => [
             TourStep(
               target: a,
@@ -649,7 +649,7 @@ void main() {
       await open(
         tester,
         _Host(
-          onChange: changes.add,
+          onChanged: changes.add,
           steps: (a, b) => [
             TourStep(
               target: a,

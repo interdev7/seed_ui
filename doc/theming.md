@@ -668,12 +668,7 @@ widget.size                                   // 1. this widget said so
 only way to say it. The same ladder governs `disabled`.
 
 Every component whose `size` or `disabled` is nullable carries the matching
-field in its defaults: `Avatar`, `Button`, `Card`, `Collapse`, `Input`,
-`InputNumber`, `Pagination`, `Progress`, `RadioGroup`, `Segmented`, `Select`,
-`Steps`, `Tabs`, `TimePicker` for `size`; `Button`, `CheckableTagGroup`,
-`CheckboxGroup`, `Dropdown`, `Input`, `InputNumber`, `Pagination`,
-`RadioGroup`, `Segmented`, `Select`, `Slider`, `TimePicker`, `Tree`, `Upload`
-for `disabled`.
+field in its defaults — the table below says which.
 
 What can be set so far — the list grew to cover every prop that is a
 house-style decision rather than the state of one instance:
@@ -681,35 +676,49 @@ house-style decision rather than the state of one instance:
 | Component | Defaults |
 | --- | --- |
 | `Alert` | `showIcon`, `closable` |
-| `Avatar` | `shape` |
-| `Button` | `variant`, `color`, `shape` |
-| `Card` | `hoverable`, `variant`, `type` |
-| `CheckableTagGroup` | `multiple` |
-| `CheckboxGroup` | `direction` |
-| `Collapse` | `accordion`, `bordered`, `ghost`, `expandIconPosition`, `collapsible` |
+| `Avatar` | `shape`, `size` |
+| `Badge` | `size`, `overflowCount`, `showZero` |
+| `Button` | `variant`, `color`, `shape`, `size`, `disabled` |
+| `Card` | `hoverable`, `variant`, `type`, `size` |
+| `CheckableTagGroup` | `multiple`, `disabled` |
+| `Checkbox` | `disabled` |
+| `CheckboxGroup` | `direction`, `disabled` |
+| `Collapse` | `accordion`, `bordered`, `ghost`, `expandIconPosition`, `collapsible`, `size` |
 | `Countdown` | `type` |
-| `Dropdown` | `placement`, `arrow`, `closeOnSelect`, `trigger` |
+| `DatePicker` | `variant`, `allowClear`, `showToday`, `size`, `disabled` |
+| `DateRangePicker` | `variant`, `allowClear`, `size`, `disabled` |
+| `Dropdown` | `placement`, `arrow`, `closeOnSelect`, `trigger`, `disabled` |
 | `Empty` | `image` |
-| `Input` | `allowClear` |
-| `InputNumber` | `controls`, `keyboard`, `mode` |
-| `Pagination` | `showSizeChanger`, `showQuickJumper`, `hideOnSinglePage`, `showLessItems`, `align` |
+| `FloatButton` | `shape`, `color`, `size`, `layout`, `direction`, `trigger`, `labelPlacement`, `disabled`, `dismissible`, `closeOnSelect` |
+| `Form` | `layout`, `maxWidth`, `labelWidth`, `labelAlign`, `colon`, `requiredMark`, `trigger`, `disabled` |
+| `Input` | `allowClear`, `size`, `disabled` |
+| `InputNumber` | `controls`, `keyboard`, `mode`, `size`, `disabled` |
+| `Listy` | `sticky`, `padding`, `physics` |
+| `MultiDatePicker` | `variant`, `allowClear`, `size`, `disabled`, `maxTagCount`, `maxTagCountResponsive` |
+| `MultiRangeSlider` | `draggableTrack`, `disabled` |
+| `Pagination` | `showSizeChanger`, `showQuickJumper`, `hideOnSinglePage`, `showLessItems`, `align`, `size`, `disabled` |
 | `Popconfirm` | `placement`, `arrow`, `showCancel` |
 | `Popover` | `placement`, `trigger`, `arrow`, `animation`, `dismissOnOutsideTap` |
-| `Progress` | `showInfo`, `gapPlacement` |
-| `RadioGroup` | `direction`, `optionType`, `buttonStyle` |
+| `Progress` | `showInfo`, `gapPlacement`, `size` |
+| `Radio` | `disabled` |
+| `RadioGroup` | `direction`, `optionType`, `buttonStyle`, `size`, `disabled` |
 | `Ribbon` | `placement` |
-| `Segmented` | `direction` |
-| `Select` | `variant`, `allowClear`, `showSearch` |
-| `Slider` | `dots`, `included` |
+| `Segmented` | `direction`, `scrollButtons`, `size`, `disabled` |
+| `Select` | `variant`, `allowClear`, `showSearch`, `size`, `disabled` |
+| `Slider` | `dots`, `included`, `disabled` |
 | `SortableList` | `direction`, `showHandle` |
-| `Steps` | `orientation`, `type`, `variant`, `responsive`, `overflow` |
-| `Tabs` | `type`, `tabPosition`, `hideAdd`, `animated`, `scrollAlign`, `snap`, `contentPosition` |
+| `Spin` | `size`, `delay`, `position` |
+| `Steps` | `orientation`, `type`, `variant`, `responsive`, `overflow`, `size` |
+| `Switch` | `size`, `disabled` |
+| `Table` | `size`, `bordered`, `showHeader`, `rowHoverable` |
+| `Tabs` | `type`, `tabPosition`, `hideAdd`, `animated`, `scrollAlign`, `snap`, `contentPosition`, `size` |
 | `Tag` | `variant`, `closable` |
+| `TimePicker` | `variant`, `allowClear`, `showNow`, `needConfirm`, `size`, `disabled` |
 | `Timeline` | `mode`, `orientation`, `variant` |
 | `Tooltip` | `placement`, `arrow` |
 | `Tour` | `placement`, `arrow`, `closable` |
-| `Tree` | `showLine`, `showLeafIcon`, `showIcon`, `blockNode` |
-| `Upload` | `variant`, `showRemove`, `showRetry`, `showSize` |
+| `Tree` | `showLine`, `showLeafIcon`, `showIcon`, `blockNode`, `disabled` |
+| `Upload` | `variant`, `showRemove`, `showRetry`, `showSize`, `disabled` |
 
 A prop belongs here when it is a decision about the house rather than the
 occupant. `Alert.showIcon` is house style; `Alert.type` — success or error — is

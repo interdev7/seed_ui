@@ -2,7 +2,16 @@ import 'dart:typed_data';
 import 'dart:ui' show ImageByteFormat;
 
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+    hide
+        ThemeData,
+        Badge,
+        Checkbox,
+        Form,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer;
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -480,6 +489,159 @@ void main() {
       );
       expect(button?.shape, ButtonShape.round, reason: 'the outer one stands');
       expect(tag?.closable, isTrue);
+    });
+
+    group('the seven that had none', () {
+      // A defaults class nobody reads is a promise with no way to keep it, so
+      // each of these is proven through what the widget does, never through
+      // the provider that carries it.
+
+      testWidgets('Badge takes its count ceiling and its zero', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          host(
+            const ComponentDefaults(
+              badge: BadgeDefaults(overflowCount: 5, showZero: true),
+            ),
+            const Column(
+              children: [
+                Badge(count: 9),
+                Badge(count: 0),
+              ],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('5+'), findsOneWidget);
+        expect(find.text('0'), findsOneWidget);
+      });
+
+      testWidgets('Checkbox, Radio and Switch are barred by theirs', (
+        tester,
+      ) async {
+        var checked = false;
+        var switched = false;
+        String? picked;
+        await tester.pumpWidget(
+          host(
+            const ComponentDefaults(
+              checkbox: CheckboxDefaults(disabled: true),
+              radio: RadioDefaults(disabled: true),
+              switchControl: SwitchDefaults(disabled: true),
+            ),
+            Column(
+              children: [
+                Checkbox(
+                  checked: false,
+                  onChanged: (v) => checked = v,
+                  label: const Text('terms'),
+                ),
+                Radio<String>(
+                  value: 'b',
+                  groupValue: 'a',
+                  onChanged: (v) => picked = v,
+                  child: const Text('post'),
+                ),
+                Switch(value: false, onChanged: (v) => switched = v),
+              ],
+            ),
+          ),
+        );
+        await tester.tap(find.text('terms'), warnIfMissed: false);
+        await tester.tap(find.text('post'), warnIfMissed: false);
+        await tester.tap(find.byType(Switch), warnIfMissed: false);
+        await tester.pumpAndSettle();
+        expect(checked, isFalse, reason: 'a barred checkbox reports nothing');
+        expect(picked, isNull, reason: 'a barred radio reports nothing');
+        expect(switched, isFalse, reason: 'a barred switch reports nothing');
+      });
+
+      testWidgets('Form takes its layout from its defaults', (tester) async {
+        Future<Rect> labelRect(ComponentDefaults? defaults) async {
+          await tester.pumpWidget(
+            host(
+              defaults,
+              SizedBox(
+                width: 400,
+                child: Form(
+                  child: FormItem.text(name: 'city', label: const Text('City')),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          return tester.getRect(find.text('City'));
+        }
+
+        final stacked = await labelRect(null);
+        final beside = await labelRect(
+          const ComponentDefaults(
+            form: FormDefaults(layout: FormLayout.horizontal),
+          ),
+        );
+        // Laid out horizontally the label shares the line with its field
+        // instead of standing above it.
+        final field = tester.getRect(find.byType(Input));
+        expect(beside.center.dy, closeTo(field.center.dy, 8));
+        expect(stacked.center.dy, isNot(closeTo(field.center.dy, 8)));
+      });
+
+      testWidgets('Listy takes its padding from its defaults', (tester) async {
+        Future<double> firstRowTop(ComponentDefaults? defaults) async {
+          await tester.pumpWidget(
+            host(
+              defaults,
+              SizedBox(
+                height: 200,
+                width: 300,
+                child: Listy<String, String, String>(
+                  items: const ['one', 'two'],
+                  itemRender: (item, index) => Text(item),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          return tester.getRect(find.text('one')).top;
+        }
+
+        final plain = await firstRowTop(null);
+        final inset = await firstRowTop(
+          const ComponentDefaults(
+            listy: ListyDefaults(padding: EdgeInsets.only(top: 40)),
+          ),
+        );
+        expect(inset - plain, closeTo(40, 0.5));
+      });
+
+      testWidgets('Spin holds back for the delay its defaults name', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          host(
+            const ComponentDefaults(
+              spin: SpinDefaults(delay: Duration(milliseconds: 300)),
+            ),
+            const SizedBox(
+              height: 100,
+              width: 100,
+              child: Spin(child: Text('page')),
+            ),
+          ),
+        );
+        await tester.pump();
+        final before = tester.widget<AnimatedOpacity>(
+          find.byType(AnimatedOpacity).first,
+        );
+        expect(before.opacity, 0.0, reason: 'nothing is shown inside the wait');
+        await tester.pump(const Duration(milliseconds: 350));
+        final after = tester.widget<AnimatedOpacity>(
+          find.byType(AnimatedOpacity).first,
+        );
+        expect(after.opacity, 1.0);
+        // No settling: a spinner that has started turning never stops.
+      });
     });
 
     testWidgets('the nearer provider wins where both name a component',

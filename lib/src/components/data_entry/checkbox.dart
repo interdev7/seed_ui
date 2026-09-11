@@ -6,6 +6,20 @@ import '../../theme/design_token.dart';
 
 /// Per-component design tokens for [Checkbox].
 ///
+/// Defaults for every [Checkbox] under a `ConfigProvider`.
+///
+/// The widget's own props, not its numbers — those are [CheckboxToken].
+@immutable
+class CheckboxDefaults {
+  /// Creates a [CheckboxDefaults].
+  const CheckboxDefaults({
+    this.disabled,
+  });
+
+  /// Whether boxes are barred, unless one says otherwise.
+  final bool? disabled;
+}
+
 /// Every field is an override; a null one falls back to the value derived from
 /// the global theme. Supply one globally through `ThemeData(components:
 /// ComponentsConfig(checkbox: CheckboxToken(...)))`,
@@ -134,7 +148,10 @@ class _SoftCheckboxState extends State<Checkbox> {
   /// Whether this control is disabled: its own word, else the one set for the
   /// subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      ConfigProvider.defaultsOf<CheckboxDefaults>(context)?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   bool get _enabled => !_disabled && widget.onChanged != null;
 

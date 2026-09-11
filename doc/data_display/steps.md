@@ -7,7 +7,7 @@ and each marker takes its look from its status.
 ```dart
 Steps(
   current: _step,
-  onChange: (index) => setState(() => _step = index),
+  onChanged: (index) => setState(() => _step = index),
   items: const [
     StepItem(title: Text('Cart'), content: Text('3 items')),
     StepItem(title: Text('Payment')),
@@ -28,7 +28,7 @@ measures a journey that is still going. The two share only their rail — the sa
 | `current` | `int?` | `null` | The step in play (controlled) |
 | `defaultCurrent` | `int` | `0` | Starting step when uncontrolled |
 | `controller` | `StepsController?` | `null` | Drives the run from outside |
-| `onChange` | `ValueChanged<int>?` | `null` | Fires with the step a tap landed on |
+| `onChanged` | `ValueChanged<int>?` | `null` | Fires with the step a tap landed on |
 | `initial` | `int` | `0` | Number the first step from here |
 | `orientation` | `StepsOrientation` | `horizontal` | Which way the run goes |
 | `type` | `StepsType` | `standard` | How it is drawn |
@@ -117,10 +117,10 @@ Three ways, matching the rest of the kit:
 
 ```dart
 // Controlled.
-Steps(current: _step, onChange: (i) => setState(() => _step = i), items: items);
+Steps(current: _step, onChanged: (i) => setState(() => _step = i), items: items);
 
 // Uncontrolled — the run remembers where it is.
-Steps(defaultCurrent: 0, onChange: (_) {}, items: items);
+Steps(defaultCurrent: 0, onChanged: (_) {}, items: items);
 
 // Imperative, for a wizard whose buttons live elsewhere.
 final steps = StepsController();
@@ -133,7 +133,7 @@ and is a `ChangeNotifier` — listen to it to keep a "Next" button in step. It
 clamps to the steps that exist, so `next()` on the last one does nothing.
 Dispose it with the widget that owns it.
 
-Taps only do anything when `onChange` or a `controller` is present; a plain
+Taps only do anything when `onChanged` or a `controller` is present; a plain
 `Steps(current: …)` is a read-only indicator. Individual steps opt out with
 `disabled`.
 
@@ -345,7 +345,7 @@ many of its neighbours as the cap allows; each stretch of hidden steps collapses
 into a single ellipsis marker.
 
 ```dart
-Steps(maxCount: 5, current: _step, onChange: ..., items: nineSteps)
+Steps(maxCount: 5, current: _step, onChanged: ..., items: nineSteps)
 ```
 
 The slots fill in order — the current step's neighbours first, then
@@ -354,7 +354,7 @@ and `maxCount: 5`, standing on step 4: `1 … 3 4 5 … 9`.
 
 Three things follow from the fold:
 
-- **The indexes never change.** `onChange` and the controller speak in the
+- **The indexes never change.** `onChanged` and the controller speak in the
   indexes of `items`, not of what is drawn, so a tap on the last step reports
   the last step.
 - **A marker keeps its own number.** The circle above "Step 9" says 9, not its
@@ -435,7 +435,7 @@ A run that answers a tap is **one** stop in the tab order, and the arrows walk
 it: sideways along a row, up and down a column, `Home` and `End` to the ends. A
 step that is barred, or an ellipsis standing in for steps, is stepped over.
 
-A run that only reports progress — no `onChange`, no controller — is no stop at
+A run that only reports progress — no `onChanged`, no controller — is no stop at
 all. It is a picture, and a picture is not somewhere to stand.
 
 `focusNode` drives the focus yourself; `autofocus` puts it there as soon as the

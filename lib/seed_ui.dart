@@ -19,11 +19,12 @@ export 'src/components/data_display/avatar.dart'
     show AvatarDefaults, Avatar, AvatarGroup, AvatarShape, AvatarToken;
 export 'src/components/data_display/badge.dart'
     show
-        RibbonDefaults,
         Badge,
+        BadgeDefaults,
         BadgeStatus,
         BadgeToken,
         Ribbon,
+        RibbonDefaults,
         RibbonPlacement,
         RibbonToken;
 export 'src/components/data_display/card.dart'
@@ -55,13 +56,14 @@ export 'src/components/data_display/empty.dart'
 export 'src/components/data_display/listy.dart'
     show
         Listy,
-        ListyHeader,
-        ListyPull,
-        ListyLoadMore,
-        ListyStyles,
         ListyController,
-        ListyScrollTo,
+        ListyDefaults,
+        ListyHeader,
+        ListyLoadMore,
+        ListyPull,
         ListyScrollAlign,
+        ListyScrollTo,
+        ListyStyles,
         ListyToken;
 export 'src/components/data_display/popover.dart'
     show PopoverDefaults, Popover, PopoverToken, PopoverTrigger;
@@ -180,9 +182,10 @@ export 'src/components/data_display/tree.dart'
         TreeDropDetails;
 export 'src/components/data_entry/checkbox.dart'
     show
-        CheckboxGroupDefaults,
         Checkbox,
+        CheckboxDefaults,
         CheckboxGroup,
+        CheckboxGroupDefaults,
         CheckboxOption,
         CheckboxToken;
 export 'src/components/data_entry/date_picker.dart'
@@ -202,12 +205,13 @@ export 'src/components/data_entry/form.dart'
     show
         Form,
         FormController,
+        FormDefaults,
         FormFieldHandle,
         FormItem,
+        FormLayout,
         FormList,
         FormListEntry,
         FormListHandle,
-        FormLayout,
         FormRequiredMark,
         FormRule,
         FormToken,
@@ -234,10 +238,11 @@ export 'src/components/data_entry/multi_date_picker.dart'
     show DateTag, DateTagBuilder, MultiDatePicker, MultiDatePickerDefaults;
 export 'src/components/data_entry/radio.dart'
     show
-        RadioGroupDefaults,
         Radio,
         RadioButtonStyle,
+        RadioDefaults,
         RadioGroup,
+        RadioGroupDefaults,
         RadioOption,
         RadioOptionType,
         RadioToken;
@@ -264,7 +269,7 @@ export 'src/components/data_entry/slider.dart'
         SliderZone,
         SliderToken;
 export 'src/components/data_entry/switch.dart'
-    show Switch, SwitchSize, SwitchToken;
+    show Switch, SwitchDefaults, SwitchSize, SwitchToken;
 export 'src/components/data_entry/time_picker.dart'
     show TimePicker, TimePickerDefaults, TimePickerToken, TimePickerVariant;
 export 'src/components/data_entry/upload.dart'
@@ -322,7 +327,8 @@ export 'src/components/feedback/progress.dart'
         ProgressToken,
         ProgressType;
 export 'src/components/feedback/result.dart' show Result, ResultToken;
-export 'src/components/feedback/spin.dart' show Spin, SpinPosition, SpinToken;
+export 'src/components/feedback/spin.dart'
+    show Spin, SpinDefaults, SpinPosition, SpinToken;
 export 'src/components/general/button.dart'
     show
         ButtonCustomColor,

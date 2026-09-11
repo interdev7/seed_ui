@@ -15,6 +15,24 @@ enum SwitchSize {
 
 /// Per-component design tokens for [Switch].
 ///
+/// Defaults for every [Switch] under a `ConfigProvider`.
+///
+/// The widget's own props, not its numbers — those are [SwitchToken].
+@immutable
+class SwitchDefaults {
+  /// Creates a [SwitchDefaults].
+  const SwitchDefaults({
+    this.size,
+    this.disabled,
+  });
+
+  /// Which size switches take.
+  final SwitchSize? size;
+
+  /// Whether switches are barred.
+  final bool? disabled;
+}
+
 /// Every field is an override; a null one falls back to the value derived from
 /// the global theme. Supply one globally through `ThemeData(components:
 /// ComponentsConfig(switchToken: SwitchToken(...)))`,
@@ -161,7 +179,10 @@ class _SoftSwitchState extends State<Switch> {
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
   bool get _disabled =>
-      widget.disabled ?? ConfigProvider.componentDisabledOf(context) ?? false;
+      widget.disabled ??
+      ConfigProvider.defaultsOf<SwitchDefaults>(context)?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
 
   bool _pressed = false;
 

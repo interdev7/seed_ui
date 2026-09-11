@@ -150,6 +150,97 @@ void main() {
   // A component whose token never reaches ComponentsConfig cannot be themed
   // through `theme.components` at all — a gap that is silent at the call site,
   // so it is checked against the source instead.
+  test('every defaults a component asks for can be supplied', () {
+    // A defaults class a component reads but nobody can pass is a promise
+    // with no way to keep it. Three of them shipped that way: the component
+    // asked `defaultsOf<XDefaults>` and `ComponentDefaults` had no slot to
+    // put one in, so the answer was always null.
+    //
+    // Asked of what the components actually read rather than of every class
+    // whose name ends in Defaults: `TableColumnDefaults` is defaults for a
+    // table's columns, handed to the table itself, and has no business in a
+    // subtree.
+    final asked = <String>{};
+    for (final entity
+        in Directory('lib/src/components').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      for (final match in RegExp(r'defaultsOf<(\w+)>')
+          .allMatches(entity.readAsStringSync())) {
+        asked.add(match.group(1)!);
+      }
+    }
+
+    final config =
+        File('lib/src/theme/component_defaults.dart').readAsStringSync();
+    final reachable = RegExp(r'T == (\w+Defaults)')
+        .allMatches(config)
+        .map((m) => m.group(1)!)
+        .toSet();
+
+    expect(asked, isNotEmpty);
+    expect(
+      asked.difference(reachable),
+      isEmpty,
+      reason: 'these defaults cannot be supplied through ComponentDefaults',
+    );
+
+    // And a slot whose class nobody outside the package can name is the same
+    // promise from the other end: `ComponentDefaults(badge: ...)` cannot be
+    // written where `BadgeDefaults` is not exported. Seven shipped that way.
+    final barrel = File('lib/seed_ui.dart').readAsStringSync();
+    expect(
+      reachable.where((name) => !RegExp('\\b$name\\b').hasMatch(barrel)),
+      isEmpty,
+      reason: 'these defaults are not exported, so nobody can write one',
+    );
+  });
+
+  test('the theming document lists every defaults slot and its fields', () {
+    // The table in doc/theming.md is the only place a caller finds out what
+    // can be set for a subtree. It had drifted: eight components missing, and
+    // the `size`/`disabled` fields listed in prose that had stopped matching.
+    final config =
+        File('lib/src/theme/component_defaults.dart').readAsStringSync();
+    final slots = RegExp(r'T == (\w+)Defaults')
+        .allMatches(config)
+        .map((m) => m.group(1)!)
+        .toList();
+
+    final fields = <String, List<String>>{};
+    for (final entity
+        in Directory('lib/src/components').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      for (final match
+          in RegExp(r'class (\w+Defaults) \{(.*?)\n\}', dotAll: true)
+              .allMatches(entity.readAsStringSync())) {
+        fields[match.group(1)!] = RegExp(r'final [\w<>,?. ]+\??\s(\w+);')
+            .allMatches(match.group(2)!)
+            .map((m) => m.group(1)!)
+            .toList();
+      }
+    }
+
+    final doc = File('doc/theming.md').readAsStringSync();
+    final missing = <String>[];
+    for (final slot in slots) {
+      // The slot is named for the field on ComponentDefaults; the component
+      // it stands for is the same word, but `switch` is not a name in Dart.
+      final name = slot == 'SwitchControl' ? 'Switch' : slot;
+      final row = RegExp('^\\| `$name` \\| (.*) \\|\$', multiLine: true)
+          .firstMatch(doc);
+      if (row == null) {
+        missing.add('$name has no row');
+        continue;
+      }
+      for (final field in fields['${slot}Defaults'] ?? const <String>[]) {
+        if (!row.group(1)!.contains('`$field`')) {
+          missing.add('$name is missing $field');
+        }
+      }
+    }
+    expect(missing, isEmpty, reason: 'doc/theming.md is behind the code');
+  });
+
   test('ComponentsConfig knows every component token', () {
     final declared = <String>{};
     for (final entity

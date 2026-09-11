@@ -651,14 +651,14 @@ class Form extends StatefulWidget {
     super.key,
     required this.child,
     this.controller,
-    this.layout = FormLayout.vertical,
+    this.layout,
     this.maxWidth,
     this.labelWidth,
-    this.labelAlign = TextAlign.start,
-    this.colon = false,
-    this.requiredMark = FormRequiredMark.required,
-    this.disabled = false,
-    this.trigger = FormTrigger.change,
+    this.labelAlign,
+    this.colon,
+    this.requiredMark,
+    this.disabled,
+    this.trigger,
     this.unfocusOnSubmit = true,
     this.initialValues,
     this.onFinish,
@@ -675,7 +675,9 @@ class Form extends StatefulWidget {
   final FormController? controller;
 
   /// Where the labels stand.
-  final FormLayout layout;
+  ///
+  /// Defaults to [FormLayout.vertical], or to what [FormDefaults.layout] says.
+  final FormLayout? layout;
 
   /// How wide the form is allowed to run.
   ///
@@ -696,19 +698,34 @@ class Form extends StatefulWidget {
   final double? labelWidth;
 
   /// How a label sits in its column.
-  final TextAlign labelAlign;
+  ///
+  /// Defaults to [TextAlign.start, or to what
+  /// [FormDefaults.labelAlign] says.
+  final TextAlign? labelAlign;
 
   /// Whether a colon follows each label.
-  final bool colon;
+  ///
+  /// Defaults to false, or to what
+  /// [FormDefaults.colon] says.
+  final bool? colon;
 
   /// How a field that must be answered is marked.
-  final FormRequiredMark requiredMark;
+  ///
+  /// Defaults to [FormRequiredMark.required, or to what
+  /// [FormDefaults.requiredMark] says.
+  final FormRequiredMark? requiredMark;
 
   /// Bars every field in the form.
-  final bool disabled;
+  ///
+  /// Defaults to false, or to what
+  /// [FormDefaults.disabled] says.
+  final bool? disabled;
 
   /// When a field's rules are asked, unless the field says otherwise.
-  final FormTrigger trigger;
+  ///
+  /// Defaults to [FormTrigger.change, or to what
+  /// [FormDefaults.trigger] says.
+  final FormTrigger? trigger;
 
   /// Whether submitting puts the keyboard away.
   ///
@@ -807,27 +824,31 @@ class _FormState extends State<Form> {
             ConfigProvider.componentOf<FormToken>(context) ??
             const FormToken())
         ._resolve(t);
+    final d = ConfigProvider.defaultsOf<FormDefaults>(context);
     return _FormScope(
       controller: _controller,
-      layout: widget.layout,
-      labelWidth: widget.labelWidth,
-      labelAlign: widget.labelAlign,
-      colon: widget.colon,
-      requiredMark: widget.requiredMark,
-      disabled: widget.disabled,
-      trigger: widget.trigger,
+      layout: widget.layout ?? d?.layout ?? FormLayout.vertical,
+      labelWidth: widget.labelWidth ?? d?.labelWidth,
+      labelAlign: widget.labelAlign ?? d?.labelAlign ?? TextAlign.start,
+      colon: widget.colon ?? d?.colon ?? false,
+      requiredMark:
+          widget.requiredMark ?? d?.requiredMark ?? FormRequiredMark.required,
+      disabled: widget.disabled ?? d?.disabled ?? false,
+      trigger: widget.trigger ?? d?.trigger ?? FormTrigger.change,
       onValuesChanged: widget.onValuesChanged,
       style: r,
       // Against the leading edge rather than centred: a form is read down its
       // left-hand side, and one floated into the middle of a wide page leaves
       // the labels nowhere in particular. `Align` rather than `SizedBox`, so
       // a narrow window still gets the whole of what it has.
-      child: widget.maxWidth == null
+      child: (widget.maxWidth ?? d?.maxWidth) == null
           ? widget.child
           : Align(
               alignment: AlignmentDirectional.centerStart,
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: widget.maxWidth!),
+                constraints: BoxConstraints(
+                  maxWidth: (widget.maxWidth ?? d!.maxWidth)!,
+                ),
                 child: widget.child,
               ),
             ),
@@ -2042,6 +2063,48 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
 
 /// Per-component design tokens for [Form].
 ///
+/// Defaults for every [Form] under a `ConfigProvider`.
+///
+/// The widget's own props, not its numbers — those are [FormToken].
+@immutable
+class FormDefaults {
+  /// Creates a [FormDefaults].
+  const FormDefaults({
+    this.layout,
+    this.maxWidth,
+    this.labelWidth,
+    this.labelAlign,
+    this.colon,
+    this.requiredMark,
+    this.trigger,
+    this.disabled,
+  });
+
+  /// How labels stand to their fields.
+  final FormLayout? layout;
+
+  /// How wide a form is allowed to run.
+  final double? maxWidth;
+
+  /// How wide the column of labels is.
+  final double? labelWidth;
+
+  /// How a label sits in its column.
+  final TextAlign? labelAlign;
+
+  /// Whether a colon follows each label.
+  final bool? colon;
+
+  /// What is marked: the required, or the optional.
+  final FormRequiredMark? requiredMark;
+
+  /// When the rules are asked.
+  final FormTrigger? trigger;
+
+  /// Whether every field is barred.
+  final bool? disabled;
+}
+
 /// Every field is an override; a null one falls back to the value derived
 /// from the global theme.
 @immutable

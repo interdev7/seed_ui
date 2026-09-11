@@ -141,7 +141,7 @@ class _CardDemoState extends State<CardDemo> {
             title: const Text('Card with tabs'),
             extra: const Text('More'),
             activeTabKey: _tab,
-            onTabChange: (k) => setState(() => _tab = k),
+            onTabChanged: (k) => setState(() => _tab = k),
             tabList: const [
               CardTab(key: 'a', label: Text('Article')),
               CardTab(key: 'b', label: Text('App')),
@@ -155,7 +155,7 @@ class _CardDemoState extends State<CardDemo> {
           Card(
             extra: const Text('More'),
             activeTabKey: _tab,
-            onTabChange: (k) => setState(() => _tab = k),
+            onTabChanged: (k) => setState(() => _tab = k),
             tabList: const [
               CardTab(key: 'a', label: Text('Article')),
               CardTab(key: 'b', label: Text('App')),

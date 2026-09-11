@@ -6,6 +6,7 @@ import '../components/data_display/card.dart';
 import '../components/data_display/collapse.dart';
 import '../components/data_display/countdown.dart';
 import '../components/data_display/empty.dart';
+import '../components/data_display/listy.dart';
 import '../components/data_display/popover.dart';
 import '../components/data_display/segmented.dart';
 import '../components/data_display/sortable_list.dart';
@@ -19,16 +20,21 @@ import '../components/data_display/tour.dart';
 import '../components/data_display/tree.dart';
 import '../components/data_entry/checkbox.dart';
 import '../components/data_entry/date_picker.dart';
+import '../components/data_entry/date_range_picker.dart';
+import '../components/data_entry/form.dart';
 import '../components/data_entry/input.dart';
 import '../components/data_entry/input_number.dart';
+import '../components/data_entry/multi_date_picker.dart';
 import '../components/data_entry/radio.dart';
 import '../components/data_entry/select.dart';
 import '../components/data_entry/slider.dart';
+import '../components/data_entry/switch.dart';
 import '../components/data_entry/time_picker.dart';
 import '../components/data_entry/upload.dart';
 import '../components/feedback/alert.dart';
 import '../components/feedback/popconfirm.dart';
 import '../components/feedback/progress.dart';
+import '../components/feedback/spin.dart';
 import '../components/general/button.dart';
 import '../components/general/float_button.dart';
 import '../components/navigation/dropdown.dart';
@@ -96,6 +102,16 @@ class ComponentDefaults {
     this.timePicker,
     this.tooltip,
     this.tour,
+    this.dateRangePicker,
+    this.multiDatePicker,
+    this.badge,
+    this.checkbox,
+    this.form,
+    this.listy,
+    this.radio,
+    this.spin,
+    this.switchControl,
+    this.multiRangeSlider,
   });
 
   /// Applied to every [Button] under this provider.
@@ -200,6 +216,36 @@ class ComponentDefaults {
   /// Props applied to every [Table].
   final TableDefaults? table;
 
+  /// Applied to every [DateRangePicker] under this provider.
+  final DateRangePickerDefaults? dateRangePicker;
+
+  /// Applied to every [MultiDatePicker] under this provider.
+  final MultiDatePickerDefaults? multiDatePicker;
+
+  /// Applied to every [Badge] under this provider.
+  final BadgeDefaults? badge;
+
+  /// Applied to every [Checkbox] under this provider.
+  final CheckboxDefaults? checkbox;
+
+  /// Applied to every [Form] under this provider.
+  final FormDefaults? form;
+
+  /// Applied to every [Listy] under this provider.
+  final ListyDefaults? listy;
+
+  /// Applied to every [Radio] under this provider.
+  final RadioDefaults? radio;
+
+  /// Applied to every [Spin] under this provider.
+  final SpinDefaults? spin;
+
+  /// Applied to every [Switch] under this provider.
+  final SwitchDefaults? switchControl;
+
+  /// Applied to every [MultiRangeSlider] under this provider.
+  final MultiRangeSliderDefaults? multiRangeSlider;
+
   /// This set with [other] laid over it: every slot [other] names wins, the
   /// rest are kept.
   ComponentDefaults merge(ComponentDefaults other) => ComponentDefaults(
@@ -237,6 +283,16 @@ class ComponentDefaults {
         timePicker: other.timePicker ?? timePicker,
         tooltip: other.tooltip ?? tooltip,
         tour: other.tour ?? tour,
+        dateRangePicker: other.dateRangePicker ?? dateRangePicker,
+        multiDatePicker: other.multiDatePicker ?? multiDatePicker,
+        badge: other.badge ?? badge,
+        checkbox: other.checkbox ?? checkbox,
+        form: other.form ?? form,
+        listy: other.listy ?? listy,
+        radio: other.radio ?? radio,
+        spin: other.spin ?? spin,
+        switchControl: other.switchControl ?? switchControl,
+        multiRangeSlider: other.multiRangeSlider ?? multiRangeSlider,
       );
 
   /// Fast lookup for a specific defaults type [T].
@@ -291,6 +347,36 @@ class ComponentDefaults {
     if (T == StepsDefaults && steps != null) return steps as T;
     if (T == TabsDefaults && tabs != null) return tabs as T;
     if (T == TreeDefaults && tree != null) return tree as T;
+    if (T == DateRangePickerDefaults && dateRangePicker != null) {
+      return dateRangePicker as T;
+    }
+    if (T == MultiDatePickerDefaults && multiDatePicker != null) {
+      return multiDatePicker as T;
+    }
+    if (T == BadgeDefaults && badge != null) {
+      return badge as T;
+    }
+    if (T == CheckboxDefaults && checkbox != null) {
+      return checkbox as T;
+    }
+    if (T == FormDefaults && form != null) {
+      return form as T;
+    }
+    if (T == ListyDefaults && listy != null) {
+      return listy as T;
+    }
+    if (T == RadioDefaults && radio != null) {
+      return radio as T;
+    }
+    if (T == SpinDefaults && spin != null) {
+      return spin as T;
+    }
+    if (T == SwitchDefaults && switchControl != null) {
+      return switchControl as T;
+    }
+    if (T == MultiRangeSliderDefaults && multiRangeSlider != null) {
+      return multiRangeSlider as T;
+    }
     return null;
   }
 }

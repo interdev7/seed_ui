@@ -9,18 +9,18 @@ Pagination(
   current: _page,
   total: 235,
   pageSize: 10,
-  onChange: (page, size) => setState(() => _page = page),
+  onChanged: (page, size) => setState(() => _page = page),
 )
 ```
 
 ## Controlled or not
 
 - **Controlled** — pass `current` (and/or `pageSize`) and update from
-  `onChange`.
+  `onChanged`.
 - **Uncontrolled** — omit them, optionally seed with `defaultCurrent` /
-  `defaultPageSize`, and read `onChange`.
+  `defaultPageSize`, and read `onChanged`.
 
-`onChange` is called with `(page, pageSize)` whenever either changes.
+`onChanged` is called with `(page, pageSize)` whenever either changes.
 
 ## Page numbers
 

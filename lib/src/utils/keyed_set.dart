@@ -14,7 +14,7 @@
 ///   final next = {..._active};
 ///   next.contains(key) ? next.remove(key) : next.add(key);
 ///   if (_open.commit(widget.activeKeys, next)) setState(() {});
-///   widget.onChange?.call(next.toList());
+///   widget.onChanged?.call(next.toList());
 /// }
 /// ```
 ///

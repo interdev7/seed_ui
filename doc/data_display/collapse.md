@@ -15,10 +15,10 @@ Collapse(
 
 ## Controlled or not
 
-- **Controlled** — pass `activeKeys` and update from `onChange`.
+- **Controlled** — pass `activeKeys` and update from `onChanged`.
 - **Uncontrolled** — omit `activeKeys`, optionally set `defaultActiveKeys`.
 
-`onChange` reports the full set of open keys.
+`onChanged` reports the full set of open keys.
 
 ## Items
 

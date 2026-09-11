@@ -5,6 +5,41 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.24.0
+
+An API review before 1.0: one name for one idea, and a way to set every
+component's own defaults for a subtree.
+
+### Changed
+
+- **BREAKING — `onChange` is `onChanged` everywhere.** `Card.onTabChange`,
+  `Collapse.onChange`, `Countdown.onChange`, `Pagination.onChange`,
+  `Steps.onChange`, `Tabs.onChange` and `Tour.onChange` are now
+  `Card.onTabChanged`, `Collapse.onChanged`, and so on. Seven controls said
+  `onChange` where the other thirty-nine said `onChanged`; a kit that names
+  the same idea two ways makes the caller guess. `Tabs.onTabClick` keeps its
+  name — it reports a press, whether or not anything changed, and is not the
+  same event.
+- **BREAKING — defaults can now be set for `Badge`, `Checkbox`, `Form`,
+  `Listy`, `Radio`, `Spin` and `Switch`.** Reaching them meant the props they
+  cover had to become nullable, so `Badge.showZero`, `Badge.overflowCount`,
+  `Listy.sticky` and `Form.layout`, `labelAlign`, `colon`, `requiredMark`,
+  `disabled` and `trigger` are now `null` where they used to carry a literal.
+  What they resolve to has not changed: the widget's own word, then
+  `ComponentDefaults`, then what it always was. Only code that *read* one of
+  those fields back off a widget instance is affected.
+
+### Fixed
+
+- **`ComponentDefaults` reaches `DateRangePicker`, `MultiDatePicker` and
+  `MultiRangeSlider`.** All three asked for defaults nobody could supply: the
+  lookup had no slot to answer from, so it always came back null.
+- **Seven defaults classes are exported.** `BadgeDefaults` and its six
+  companions were registered but unnameable outside the package, which is the
+  same empty promise from the other end. Two tests now stand guard: every
+  defaults a component reads must be reachable through `ComponentDefaults`,
+  and every one registered there must be exported.
+
 ## 0.23.0
 
 ### Added

@@ -199,7 +199,7 @@ class CardDefaults {
 /// bottom, and [hoverable] lifts the card on pointer hover. [variant] toggles
 /// the border and [type] switches to a nested inner style. Supply [tabList] to
 /// render navigation tabs in the header, driven by [activeTabKey] /
-/// [onTabChange].
+/// [onTabChanged].
 class Card extends StatefulWidget {
   /// Creates a [Card].
   const Card({
@@ -217,7 +217,7 @@ class Card extends StatefulWidget {
     this.tabList,
     this.activeTabKey,
     this.defaultActiveTabKey,
-    this.onTabChange,
+    this.onTabChanged,
     this.tabBarExtraContent,
     this.gradient,
     this.token,
@@ -267,7 +267,7 @@ class Card extends StatefulWidget {
   final String? defaultActiveTabKey;
 
   /// Called with the new key when the active [tabList] tab changes.
-  final ValueChanged<String>? onTabChange;
+  final ValueChanged<String>? onTabChanged;
 
   /// Extra content pinned to the ends of the [tabList] bar.
   final TabBarExtra? tabBarExtraContent;
@@ -442,7 +442,7 @@ class _CardState extends State<Card> {
           ],
           activeKey: widget.activeTabKey,
           defaultActiveKey: widget.defaultActiveTabKey,
-          onChange: widget.onTabChange,
+          onChanged: widget.onTabChanged,
           size: _small ? SoftSize.small : SoftSize.middle,
           tabBarExtraContent: barExtra,
         ),

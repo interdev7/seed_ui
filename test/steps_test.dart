@@ -196,7 +196,7 @@ void main() {
         _host(
           Steps(
             current: 0,
-            onChange: taps.add,
+            onChanged: taps.add,
             items: const [
               StepItem(title: Text('One')),
               StepItem(title: Text('Two')),
@@ -219,7 +219,7 @@ void main() {
         _host(
           SizedBox(
             width: 700,
-            child: Steps(current: 0, onChange: (_) {}, items: _items),
+            child: Steps(current: 0, onChanged: (_) {}, items: _items),
           ),
         ),
       );
@@ -263,7 +263,7 @@ void main() {
         _host(
           SizedBox(
             width: 700,
-            child: Steps(current: 0, onChange: (_) {}, items: _items),
+            child: Steps(current: 0, onChanged: (_) {}, items: _items),
           ),
         ),
       );
@@ -321,7 +321,7 @@ void main() {
         _host(
           SizedBox(
             width: 700,
-            child: Steps(current: 1, onChange: (_) {}, items: _items),
+            child: Steps(current: 1, onChanged: (_) {}, items: _items),
           ),
         ),
       );
@@ -360,7 +360,7 @@ void main() {
             child: Steps(
               orientation: StepsOrientation.vertical,
               current: 0,
-              onChange: taps.add,
+              onChanged: taps.add,
               items: _items,
             ),
           ),
@@ -386,7 +386,7 @@ void main() {
         _host(
           Steps(
             defaultCurrent: 0,
-            onChange: (_) {},
+            onChanged: (_) {},
             items: _items,
           ),
         ),
@@ -1338,7 +1338,7 @@ void main() {
                 child: Steps(
                   type: StepsType.navigation,
                   current: 1,
-                  onChange: (_) {},
+                  onChanged: (_) {},
                   items: const [
                     StepItem(title: Text('Details'), subTitle: Text('00:02')),
                     StepItem(title: Text('Review'), subTitle: Text('00:05')),
@@ -1878,7 +1878,7 @@ void main() {
       required int total,
       required int current,
       int? maxCount,
-      ValueChanged<int>? onChange,
+      ValueChanged<int>? onChanged,
       List<StepItem>? items,
     }) async {
       tester.view.physicalSize = const Size(1400, 800);
@@ -1893,7 +1893,7 @@ void main() {
               maxCount: maxCount,
               current: current,
               responsive: false,
-              onChange: onChange,
+              onChanged: onChanged,
               items: items ??
                   [
                     for (var i = 1; i <= total; i++)
@@ -1949,7 +1949,7 @@ void main() {
         total: 7,
         current: 3,
         maxCount: 5,
-        onChange: (i) => tapped = i,
+        onChanged: (i) => tapped = i,
       );
 
       await tester.tap(find.text('Step 7'));
@@ -1967,7 +1967,7 @@ void main() {
         total: 7,
         current: 3,
         maxCount: 5,
-        onChange: (i) => tapped = i,
+        onChanged: (i) => tapped = i,
       );
 
       final dots = find.byWidgetPredicate(

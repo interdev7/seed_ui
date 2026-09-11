@@ -389,7 +389,7 @@ void main() {
                 content: Text('third'),
               ),
             ],
-            onChange: chosen.add,
+            onChanged: chosen.add,
           ),
         ),
       );
@@ -421,7 +421,7 @@ void main() {
                 content: Text('third'),
               ),
             ],
-            onChange: chosen.add,
+            onChanged: chosen.add,
           ),
         ),
       );
@@ -441,7 +441,7 @@ void main() {
               TabItem(key: 'one', label: Text('One'), content: Text('first')),
               TabItem(key: 'two', label: Text('Two'), content: Text('second')),
             ],
-            onChange: chosen.add,
+            onChanged: chosen.add,
           ),
         ),
       );
@@ -463,7 +463,7 @@ void main() {
           Pagination(
             total: 100,
             current: current,
-            onChange: (page, _) => pages.add(page),
+            onChanged: (page, _) => pages.add(page),
           ),
         ),
       );
@@ -642,7 +642,7 @@ void main() {
               CollapseItem(
                   key: 'b', label: Text('Second'), content: Text('two')),
             ],
-            onChange: open.add,
+            onChanged: open.add,
           ),
         ),
       );
@@ -1094,7 +1094,7 @@ void main() {
         _host(
           Steps(
             current: 0,
-            onChange: chosen.add,
+            onChanged: chosen.add,
             items: const [
               StepItem(title: Text('One')),
               StepItem(title: Text('Two')),
@@ -1117,7 +1117,7 @@ void main() {
         _host(
           Steps(
             current: 0,
-            onChange: chosen.add,
+            onChanged: chosen.add,
             items: const [
               StepItem(title: Text('One')),
               StepItem(title: Text('Two'), disabled: true),

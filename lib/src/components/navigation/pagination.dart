@@ -144,11 +144,11 @@ class PaginationDefaults {
 ///   current: _page,
 ///   total: 235,
 ///   pageSize: 10,
-///   onChange: (page, size) => setState(() => _page = page),
+///   onChanged: (page, size) => setState(() => _page = page),
 /// )
 /// ```
 ///
-/// Drive it controlled with [current] + [onChange], or uncontrolled with
+/// Drive it controlled with [current] + [onChanged], or uncontrolled with
 /// [defaultCurrent]. Turn on [showSizeChanger] for a page-size selector,
 /// [showQuickJumper] to jump to a page, and [showTotal] for a summary.
 class Pagination extends StatefulWidget {
@@ -160,7 +160,7 @@ class Pagination extends StatefulWidget {
     this.defaultCurrent = 1,
     this.pageSize,
     this.defaultPageSize = 10,
-    this.onChange,
+    this.onChanged,
     this.showSizeChanger,
     this.pageSizeOptions = const [10, 20, 50, 100],
     this.onShowSizeChange,
@@ -202,7 +202,7 @@ class Pagination extends StatefulWidget {
   final int defaultPageSize;
 
   /// Called with the new `(page, pageSize)` when either changes.
-  final void Function(int page, int pageSize)? onChange;
+  final void Function(int page, int pageSize)? onChanged;
 
   /// Shows a selector for the page size.
   final bool? showSizeChanger;
@@ -316,7 +316,7 @@ class _PaginationState extends State<Pagination> {
     final next = page.clamp(1, _pageCount);
     if (next == _page) return;
     if (widget.current == null) setState(() => _current = next);
-    widget.onChange?.call(next, _size);
+    widget.onChanged?.call(next, _size);
   }
 
   void _changeSize(int size) {
@@ -326,7 +326,7 @@ class _PaginationState extends State<Pagination> {
     if (widget.pageSize == null) setState(() => _pageSize = size);
     if (widget.current == null) setState(() => _current = nextPage);
     widget.onShowSizeChange?.call(nextPage, size);
-    widget.onChange?.call(nextPage, size);
+    widget.onChanged?.call(nextPage, size);
   }
 
   double _controlHeight(Token t) => switch (_controlSize) {

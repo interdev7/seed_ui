@@ -34,11 +34,11 @@ void main() {
     expect(find.text('Panel B'), findsOneWidget);
   });
 
-  testWidgets('reports onChange with the new key', (tester) async {
+  testWidgets('reports onChanged with the new key', (tester) async {
     String? changed;
     await tester.pumpWidget(
       _host(
-        Tabs(items: _items, onChange: (k) => changed = k),
+        Tabs(items: _items, onChanged: (k) => changed = k),
       ),
     );
     await tester.tap(find.text('Beta'));
@@ -61,7 +61,7 @@ void main() {
       ),
     );
     expect(find.text('Panel B'), findsOneWidget);
-    // Without onChange the controlled key does not move.
+    // Without onChanged the controlled key does not move.
     await tester.tap(find.text('Alpha'));
     await tester.pumpAndSettle();
     expect(find.text('Panel B'), findsOneWidget);

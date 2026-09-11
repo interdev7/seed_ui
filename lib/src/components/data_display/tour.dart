@@ -481,7 +481,7 @@ class Tour extends StatefulWidget {
     this.controller,
     this.open,
     this.current,
-    this.onChange,
+    this.onChanged,
     this.onClose,
     this.onFinish,
     this.type = TourType.normal,
@@ -515,7 +515,7 @@ class Tour extends StatefulWidget {
   final int? current;
 
   /// Called with the step the tour moved to.
-  final ValueChanged<int>? onChange;
+  final ValueChanged<int>? onChanged;
 
   /// Called when the tour is dismissed — by the close button, the mask or the
   /// last step's finish.
@@ -828,7 +828,7 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
     if (to == _current) return;
     _startSpotJourney();
     _controller.goTo(to);
-    widget.onChange?.call(to);
+    widget.onChanged?.call(to);
     _scheduleSync();
   }
 

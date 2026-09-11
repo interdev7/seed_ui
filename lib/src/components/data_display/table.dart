@@ -6147,7 +6147,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
         total: paging.total ?? _narrowed.length,
         current: _page,
         pageSize: _pageSize,
-        onChange: _goToPage,
+        onChanged: _goToPage,
         onShowSizeChange: _goToPage,
         align: at.alignment,
         size: paging.size,

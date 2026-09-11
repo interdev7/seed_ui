@@ -53,7 +53,7 @@ void main() {
         Pagination(
           total: 50, // 5 pages
           defaultCurrent: 1,
-          onChange: (p, s) => page = p,
+          onChanged: (p, s) => page = p,
         ),
       ),
     );
@@ -105,7 +105,7 @@ void main() {
         Pagination(
           total: 50,
           defaultCurrent: 1,
-          onChange: (p, s) => page = p,
+          onChanged: (p, s) => page = p,
         ),
       ),
     );
@@ -122,7 +122,7 @@ void main() {
           total: 500,
           defaultCurrent: 1,
           showSizeChanger: true,
-          onChange: (p, s) => size = s,
+          onChanged: (p, s) => size = s,
         ),
       ),
     );
@@ -143,7 +143,7 @@ void main() {
           total: 50, // 5 pages
           defaultCurrent: 1,
           showQuickJumper: true,
-          onChange: (p, s) => page = p,
+          onChanged: (p, s) => page = p,
         ),
       ),
     );

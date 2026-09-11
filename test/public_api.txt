@@ -7,6 +7,7 @@ AvatarGroup
 AvatarShape
 AvatarToken
 Badge
+BadgeDefaults
 BadgeStatus
 BadgeToken
 Button
@@ -30,6 +31,7 @@ CheckableTagGroup
 CheckableTagGroupDefaults
 CheckableTagOption
 Checkbox
+CheckboxDefaults
 CheckboxGroup
 CheckboxGroupDefaults
 CheckboxOption
@@ -120,6 +122,7 @@ FloatButtonToken
 FloatButtonTrigger
 Form
 FormController
+FormDefaults
 FormFieldHandle
 FormItem
 FormLayout
@@ -143,6 +146,7 @@ InputStatus
 InputToken
 Listy
 ListyController
+ListyDefaults
 ListyHeader
 ListyLoadMore
 ListyPull
@@ -200,6 +204,7 @@ ProgressToken
 ProgressType
 Radio
 RadioButtonStyle
+RadioDefaults
 RadioGroup
 RadioGroupDefaults
 RadioOption
@@ -247,6 +252,7 @@ SortableList
 SortableListDefaults
 SortableListToken
 Spin
+SpinDefaults
 SpinDirection
 SpinPosition
 SpinToken
@@ -265,6 +271,7 @@ StepsToken
 StepsType
 StepsVariant
 Switch
+SwitchDefaults
 SwitchSize
 SwitchToken
 TabBarExtra

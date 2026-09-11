@@ -36,6 +36,28 @@ enum RibbonPlacement {
 
 /// Per-component design tokens for [Badge].
 ///
+/// Defaults for every [Badge] under a `ConfigProvider`.
+///
+/// The widget's own props, not its numbers — those are [BadgeToken].
+@immutable
+class BadgeDefaults {
+  /// Creates a [BadgeDefaults].
+  const BadgeDefaults({
+    this.size,
+    this.overflowCount,
+    this.showZero,
+  });
+
+  /// Which size badges take, unless one names its own.
+  final SoftSize? size;
+
+  /// The count a badge stops at before writing `99+`.
+  final int? overflowCount;
+
+  /// Whether a count of nothing is still drawn.
+  final bool? showZero;
+}
+
 /// Every field is an override; a null one falls back to the value derived from
 /// the global theme. Supply one globally through `ThemeData(components:
 /// ComponentsConfig(badge: BadgeToken(...)))`,
@@ -139,8 +161,8 @@ class Badge extends StatelessWidget {
     this.dot = false,
     this.status,
     this.text,
-    this.showZero = false,
-    this.overflowCount = 99,
+    this.showZero,
+    this.overflowCount,
     this.color,
     this.offset = Offset.zero,
     this.size,
@@ -170,10 +192,14 @@ class Badge extends StatelessWidget {
   final Widget? text;
 
   /// Whether a [count] of zero is drawn rather than hidden.
-  final bool showZero;
+  ///
+  /// Defaults to false, or to what [BadgeDefaults.showZero] says.
+  final bool? showZero;
 
   /// The largest number drawn in full; past it the badge reads `99+`.
-  final int overflowCount;
+  ///
+  /// Defaults to 99, or to what [BadgeDefaults.overflowCount] says.
+  final int? overflowCount;
 
   /// Overrides the fill — for [status] as much as for a count.
   final Color? color;
@@ -195,7 +221,7 @@ class Badge extends StatelessWidget {
   final BadgeToken? token;
 
   /// Whether there is anything at all to draw in the corner.
-  bool get _hasIndicator {
+  bool _hasIndicator(bool showZero) {
     if (status != null) return true;
     if (dot) return true;
     if (content != null) return true;
@@ -210,14 +236,18 @@ class Badge extends StatelessWidget {
             ConfigProvider.componentOf<BadgeToken>(context) ??
             const BadgeToken())
         ._resolve(t);
+    final d = ConfigProvider.defaultsOf<BadgeDefaults>(context);
+    final showZero = this.showZero ?? d?.showZero ?? false;
+    final overflowCount = this.overflowCount ?? d?.overflowCount ?? 99;
+    final size = this.size ?? d?.size;
 
     if (status != null) return _buildStatus(t, r);
 
     // Standalone there is nothing to hang a vanishing badge off, and an empty
     // one must take no room at all, so it simply is not built.
     if (child == null) {
-      return _hasIndicator
-          ? _buildIndicator(t, r, context.seedLocale)
+      return _hasIndicator(showZero)
+          ? _buildIndicator(t, r, context.seedLocale, overflowCount, size)
           : const SizedBox.shrink();
     }
 
@@ -226,13 +256,14 @@ class Badge extends StatelessWidget {
     // blink out. Nothing is built for a badge that never had anything to say.
     final indicator = count != null || dot || content != null
         ? _Vanishing(
-            visible: _hasIndicator,
+            visible: _hasIndicator(showZero),
             duration: t.motionDurationSlow,
             // An overshoot on the way in, so the badge arrives with a small
             // pop rather than easing politely into place.
             curve: const Cubic(0.12, 0.4, 0.29, 1.46),
             reverseCurve: t.motionEaseInOut,
-            child: _buildIndicator(t, r, context.seedLocale),
+            child:
+                _buildIndicator(t, r, context.seedLocale, overflowCount, size),
           )
         : null;
 
@@ -294,6 +325,8 @@ class Badge extends StatelessWidget {
     Token t,
     _ResolvedBadgeToken r,
     SeedLocalizations l,
+    int overflowCount,
+    SoftSize? size,
   ) {
     final fill = color ?? r.bg;
     final ring = BoxDecoration(

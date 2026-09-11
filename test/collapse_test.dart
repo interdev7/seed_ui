@@ -41,11 +41,11 @@ void main() {
     expect(find.text('Body 2'), findsOneWidget);
   });
 
-  testWidgets('onChange reports the open keys', (tester) async {
+  testWidgets('onChanged reports the open keys', (tester) async {
     List<String>? changed;
     await tester.pumpWidget(
       _wrap(
-        Collapse(items: _items, onChange: (k) => changed = k),
+        Collapse(items: _items, onChanged: (k) => changed = k),
       ),
     );
     await tester.tap(find.text('Header 2'));
@@ -91,7 +91,7 @@ void main() {
     expect(find.text('Body 1'), findsNothing);
   });
 
-  testWidgets('controlled activeKeys ignores taps without onChange',
+  testWidgets('controlled activeKeys ignores taps without onChanged',
       (tester) async {
     await tester
         .pumpWidget(_wrap(const Collapse(items: _items, activeKeys: ['1'])));

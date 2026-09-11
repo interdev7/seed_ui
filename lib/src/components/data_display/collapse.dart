@@ -189,7 +189,7 @@ class CollapseDefaults {
 /// )
 /// ```
 ///
-/// Drive it controlled with [activeKeys] + [onChange], or uncontrolled with
+/// Drive it controlled with [activeKeys] + [onChanged], or uncontrolled with
 /// [defaultActiveKeys]. [accordion] keeps at most one panel open; [ghost] drops
 /// the borders and background; [bordered] toggles the outer frame.
 class Collapse extends StatefulWidget {
@@ -199,7 +199,7 @@ class Collapse extends StatefulWidget {
     required this.items,
     this.activeKeys,
     this.defaultActiveKeys,
-    this.onChange,
+    this.onChanged,
     this.accordion,
     this.bordered,
     this.ghost,
@@ -221,7 +221,7 @@ class Collapse extends StatefulWidget {
   final List<String>? defaultActiveKeys;
 
   /// Called with the full set of open keys whenever it changes.
-  final ValueChanged<List<String>>? onChange;
+  final ValueChanged<List<String>>? onChanged;
 
   /// Allows at most one open panel at a time.
   final bool? accordion;
@@ -302,7 +302,7 @@ class _CollapseState extends State<Collapse> {
       open ? next.remove(key) : next.add(key);
     }
     if (_open.commit(widget.activeKeys, next)) setState(() {});
-    widget.onChange?.call(next.toList());
+    widget.onChanged?.call(next.toList());
   }
 
   @override

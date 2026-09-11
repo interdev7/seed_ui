@@ -9,17 +9,17 @@ Tabs(
     TabItem(key: '1', label: const Text('Tab 1'), content: const Text('Content 1')),
     TabItem(key: '2', label: const Text('Tab 2'), content: const Text('Content 2')),
   ],
-  onChange: (key) => setState(() => _active = key),
+  onChanged: (key) => setState(() => _active = key),
 )
 ```
 
 ## Controlled or not
 
-- **Controlled** — pass `activeKey` and update from `onChange`.
+- **Controlled** — pass `activeKey` and update from `onChanged`.
 - **Uncontrolled** — omit `activeKey`, optionally set `defaultActiveKey`
   (defaults to the first item).
 
-`onTabClick` fires on every tab tap (even the active one); `onChange` only when
+`onTabClick` fires on every tab tap (even the active one); `onChanged` only when
 the active tab changes.
 
 ## Items

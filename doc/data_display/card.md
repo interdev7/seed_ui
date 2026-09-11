@@ -57,7 +57,7 @@ Card(
 ## Tab list
 
 `tabList` renders navigation tabs in the header. Drive it controlled with
-`activeTabKey` + `onTabChange`, or uncontrolled with `defaultActiveTabKey`.
+`activeTabKey` + `onTabChanged`, or uncontrolled with `defaultActiveTabKey`.
 `tabBarExtraContent` pins extra content to the ends of the tab bar.
 
 ```dart
@@ -67,7 +67,7 @@ Card(
     CardTab(key: 'b', label: Text('App')),
   ],
   activeTabKey: _tab,
-  onTabChange: (k) => setState(() => _tab = k),
+  onTabChanged: (k) => setState(() => _tab = k),
   child: Text('Content of tab "$_tab"'),
 )
 ```

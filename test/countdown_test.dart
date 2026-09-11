@@ -150,14 +150,14 @@ void main() {
       expect(find.text('00:03'), findsOneWidget);
     });
 
-    testWidgets('onChange reports the time behind the text', (tester) async {
+    testWidgets('onChanged reports the time behind the text', (tester) async {
       final seen = <Duration>[];
       await tester.pumpWidget(
         _host(
           Countdown(
             target: clock.now.add(const Duration(seconds: 5)),
             format: 'mm:ss',
-            onChange: seen.add,
+            onChanged: seen.add,
           ),
         ),
       );
@@ -248,7 +248,7 @@ void main() {
           Countdown(
             target: clock.now.add(const Duration(seconds: 2)),
             format: 'ss.SSS',
-            onChange: (_) => ticks++,
+            onChanged: (_) => ticks++,
           ),
         ),
       );

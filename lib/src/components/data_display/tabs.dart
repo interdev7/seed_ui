@@ -533,11 +533,11 @@ class TabsDefaults {
 ///     TabItem(key: '1', label: const Text('Tab 1'), content: const Text('Content 1')),
 ///     TabItem(key: '2', label: const Text('Tab 2'), content: const Text('Content 2')),
 ///   ],
-///   onChange: (key) => setState(() => _active = key),
+///   onChanged: (key) => setState(() => _active = key),
 /// )
 /// ```
 ///
-/// Drive it controlled with [activeKey] + [onChange], or uncontrolled with
+/// Drive it controlled with [activeKey] + [onChanged], or uncontrolled with
 /// [defaultActiveKey]. [type] switches between underline, card and
 /// closable/addable card styles; [tabPosition] moves the bar to any edge.
 class Tabs extends StatefulWidget {
@@ -548,7 +548,7 @@ class Tabs extends StatefulWidget {
     this.controller,
     this.activeKey,
     this.defaultActiveKey,
-    this.onChange,
+    this.onChanged,
     this.onTabClick,
     this.onCreateTab,
     this.type,
@@ -591,7 +591,7 @@ class Tabs extends StatefulWidget {
   final String? defaultActiveKey;
 
   /// Called with the new key when the active tab changes.
-  final ValueChanged<String>? onChange;
+  final ValueChanged<String>? onChanged;
 
   /// Called with a tab's key when it is clicked (even if already active).
   final ValueChanged<String>? onTabClick;
@@ -786,7 +786,7 @@ class _TabsState extends State<Tabs> {
     } else if (widget.activeKey == null) {
       setState(() => _internal = key);
     }
-    widget.onChange?.call(key);
+    widget.onChanged?.call(key);
     _scrollActiveIntoView();
   }
 
@@ -804,7 +804,7 @@ class _TabsState extends State<Tabs> {
     final label = data?.label ?? Text('Tab ${index + 1}');
     controller.add(TabItem(key: key, label: label, content: data?.content));
     widget.onEdit?.call(key, TabEditAction.add);
-    widget.onChange?.call(key);
+    widget.onChanged?.call(key);
   }
 
   /// Handles a tab's close button.

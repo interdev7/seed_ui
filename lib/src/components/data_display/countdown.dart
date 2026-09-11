@@ -180,7 +180,7 @@ class Countdown extends StatefulWidget {
     this.type,
     this.format = 'HH:mm:ss',
     this.onFinish,
-    this.onChange,
+    this.onChanged,
     this.builder,
     this.token,
   }) : assert(
@@ -226,7 +226,7 @@ class Countdown extends StatefulWidget {
   final VoidCallback? onFinish;
 
   /// Called with the time left, or elapsed, whenever the count is redrawn.
-  final ValueChanged<Duration>? onChange;
+  final ValueChanged<Duration>? onChanged;
 
   /// Wraps the formatted time — a place for a label, a prefix, an icon.
   ///
@@ -423,7 +423,7 @@ class _CountdownState extends State<Countdown>
     _controller?._report(value);
     if (text != _shown) {
       setState(() => _shown = text);
-      widget.onChange?.call(value);
+      widget.onChanged?.call(value);
     }
 
     if (_type == CountdownType.down && _raw() == Duration.zero) {

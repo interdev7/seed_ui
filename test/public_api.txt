@@ -238,6 +238,8 @@ SelectVariant
 Slider
 SliderDefaults
 SliderMark
+SliderMarkBuilder
+SliderMarkSide
 SliderToken
 SoftSize
 SortableList

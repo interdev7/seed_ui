@@ -259,6 +259,8 @@ export 'src/components/data_entry/slider.dart'
         Slider,
         SliderDefaults,
         SliderMark,
+        SliderMarkBuilder,
+        SliderMarkSide,
         SliderToken;
 export 'src/components/data_entry/switch.dart'
     show Switch, SwitchSize, SwitchToken;

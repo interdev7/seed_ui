@@ -34,8 +34,63 @@ Slider(
 
 ## Marks and dots
 
-`marks` writes labels under the points they name, each centred on its own
-value. `dots` marks every step rather than only the labelled ones.
+`marks` writes labels by the points they name, each centred on its own value.
+`dots` marks every step rather than only the labelled ones.
+
+```dart
+Slider(
+  marks: const [
+    SliderMark(0, 'cold'),
+    SliderMark(37, 'body', side: SliderMarkSide.before),
+    SliderMark(60, 'hot', disabled: true),
+    SliderMark.dot(80),
+  ],
+)
+```
+
+**The label is a string**, because nearly every mark is one. For the rest,
+`labelBuilder` is handed the label the slider would have drawn — wrap it and
+the mark keeps its colour, its size and its state for nothing:
+
+```dart
+SliderMark(
+  80,
+  '80%',
+  labelBuilder: (context, mark, active, child) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [child, if (active) const Icon(Icons.check, size: 12)],
+  ),
+)
+```
+
+`active` is whether the handle has reached that mark.
+
+**`side` names the flow, not the screen.** `before` is above the rail across a
+row and the leading side down a column; `after` is the other, and is where a
+mark goes unless it says otherwise. Top, bottom, left and right would leave
+two of the four meaning nothing on any given slider, and an API that can say
+something impossible will eventually be asked to.
+
+**`hidden` leaves a mark undrawn without taking it out of the list** — a
+hidden column keeps its place among a table's columns for the same reason: a
+mark shown and hidden again is the same mark.
+
+**`disabled` means the handle may not rest there.** It bites where the marks
+are the only places to rest — a slider with no `step` — and there the handle
+passes the stop by. Given a step, the handle stops at steps rather than at
+marks, and a disabled mark is only greyed.
+
+`SliderMark.dot` is a stop with nothing to say: not every step, so `dots` will
+not do, and possibly `disabled`.
+
+Marks are value types with `copyWith`, so changing one is a list you rebuild
+rather than a controller you hold:
+
+```dart
+setState(() => marks = [
+  for (final m in marks) m.value == 60 ? m.copyWith(disabled: false) : m,
+]);
+```
 
 `included` decides whether the groove is filled up to the handle. False leaves
 it plain — for a slider that names a point rather than an amount.
@@ -94,7 +149,10 @@ its caller has to check.
 
 **A tap on the rail puts a handle in. Dragging a handle onto its neighbour
 takes it out** — the two meet, one goes, and the handle is drawn faint on the
-way so letting go is never a surprise. Nothing is decided until the finger
+way so letting go is never a surprise. They count as met once the discs cover
+one another, not once their values are equal: half a step on a scale of a
+hundred is two pixels of rail, and a catch nobody can hit is a gesture nobody
+finds. Nothing is decided until the finger
 lifts, so bringing it back off the neighbour simply keeps it.
 
 A tap on a handle does nothing: it is already where it is being asked to go.
@@ -108,6 +166,11 @@ of anybody who pauses before moving it. Pulling a handle away from the rail is
 not available at all: a one-axis drag recogniser reports nothing about the
 other axis, and a pan would lose the arena to any page the slider is scrolled
 inside.
+
+The slider is not the only way out. The whole list comes back through
+`onChanged`, so an app with room for it can put its own control beside the
+scale — a chip per handle, a menu, a button — and hand back a list one
+shorter. The gesture is there for the app that has no room for that.
 
 What it costs is two handles left standing on the same value. For a control
 whose handles are the edges between bands, two edges in one place is a band of
@@ -184,7 +247,11 @@ rebuilt for each one. An ancestor that clips will clip it too.
 `SliderToken`: `railSize`, `handleSize`, `handleSizeHover`, `dotSize`,
 `handleLineWidth`, `handleLineWidthHover`, `railBg`, `railHoverBg`, `trackBg`,
 `trackHoverBg`, `handleColor`, `handleActiveColor`, `handleColorDisabled`,
-`trackBgDisabled`, `dotBorderColor`, `dotActiveBorderColor`.
+`trackBgDisabled`, `dotBorderColor`, `dotActiveBorderColor`, `markColor`,
+`markDisabledColor`, `markFontSize`.
+
+A mark's colour and size live here rather than on the mark, where only the odd
+one that has to stand out from the rest keeps a `style` of its own.
 
 The handle is a quarter of the large control height, so it grows with the
 theme's own scale rather than carrying a number of its own. Its ring is drawn

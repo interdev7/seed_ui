@@ -7,20 +7,142 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../data_display/tooltip.dart';
 
+/// Which side of the rail a mark's label is written on.
+///
+/// Named by the flow rather than by the screen: across a row `before` is
+/// above the rail and `after` below it; down a column they are the leading
+/// and trailing sides, which swap over when the page reads the other way.
+/// Four sides — top, bottom, left, right — would leave two of them meaning
+/// nothing on any given slider, and an API that can say something impossible
+/// will eventually be asked to.
+enum SliderMarkSide {
+  /// Before the rail in the flow: above it across a row.
+  before,
+
+  /// After it, which is where a mark goes unless it says otherwise.
+  after,
+}
+
+/// Draws a mark's label.
+///
+/// [child] is the label the slider would have drawn, styled and all, so a
+/// caller adding something beside it keeps every state for nothing. [active]
+/// is whether the handle has reached this mark.
+typedef SliderMarkBuilder = Widget Function(
+  BuildContext context,
+  SliderMark mark,
+  bool active,
+  Widget child,
+);
+
 /// A labelled point on a [Slider]'s scale.
 @immutable
 class SliderMark {
-  /// Creates a [SliderMark] at [value].
-  const SliderMark(this.value, this.label, {this.style});
+  /// Creates a [SliderMark] at [value], written with [label].
+  const SliderMark(
+    this.value,
+    this.label, {
+    this.style,
+    this.labelBuilder,
+    this.side = SliderMarkSide.after,
+    this.hidden = false,
+    this.disabled = false,
+  });
+
+  /// A mark with no words: a stop on the scale, drawn as a dot.
+  ///
+  /// Worth having apart from [Slider.dots], which dots every step: a stop
+  /// that is not every step, and may be [disabled], has nothing to say but
+  /// still has to be there.
+  const SliderMark.dot(
+    this.value, {
+    this.hidden = false,
+    this.disabled = false,
+  })  : label = null,
+        style = null,
+        labelBuilder = null,
+        side = SliderMarkSide.after;
 
   /// Where on the scale it sits. Must lie within the slider's own range.
   final double value;
 
-  /// What is written under it.
-  final Widget label;
+  /// What is written by it, or null for a mark with no words.
+  ///
+  /// A plain string rather than a widget: nearly every mark is one, and a
+  /// widget for the rest is what [labelBuilder] is for. That is the shape the
+  /// kit uses wherever a caller may want either.
+  final String? label;
 
   /// Overrides the label's style for this mark alone.
+  ///
+  /// The defaults live in [SliderToken]; this is for the odd mark that has to
+  /// stand out from the rest.
   final TextStyle? style;
+
+  /// Draws this mark's label instead, given the one the slider would have
+  /// drawn.
+  final SliderMarkBuilder? labelBuilder;
+
+  /// Which side of the rail the label is written on.
+  final SliderMarkSide side;
+
+  /// Whether the mark is left undrawn.
+  ///
+  /// It keeps its place in the list, as a hidden column keeps its place among
+  /// a table's columns: a mark shown and hidden again is the same mark, and a
+  /// list that had to be rebuilt to hide one would lose whatever else it was
+  /// keyed by.
+  final bool hidden;
+
+  /// Whether the handle may not rest here.
+  ///
+  /// This bites where the marks are the only places to rest — a slider with
+  /// no [Slider.step] — and there it means exactly what it says: the handle
+  /// passes this stop by. Given a step, the handle stops at steps rather than
+  /// at marks, and a disabled mark is only greyed.
+  final bool disabled;
+
+  /// This mark with some of it changed.
+  SliderMark copyWith({
+    double? value,
+    String? label,
+    TextStyle? style,
+    SliderMarkBuilder? labelBuilder,
+    SliderMarkSide? side,
+    bool? hidden,
+    bool? disabled,
+  }) =>
+      SliderMark(
+        value ?? this.value,
+        label ?? this.label,
+        style: style ?? this.style,
+        labelBuilder: labelBuilder ?? this.labelBuilder,
+        side: side ?? this.side,
+        hidden: hidden ?? this.hidden,
+        disabled: disabled ?? this.disabled,
+      );
+
+  @override
+  bool operator ==(Object other) =>
+      other is SliderMark &&
+      other.value == value &&
+      other.label == label &&
+      other.style == style &&
+      other.labelBuilder == labelBuilder &&
+      other.side == side &&
+      other.hidden == hidden &&
+      other.disabled == disabled;
+
+  @override
+  int get hashCode => Object.hash(
+        value,
+        label,
+        style,
+        labelBuilder,
+        side,
+        hidden,
+        disabled,
+      );
 }
 
 /// Per-component design tokens for [Slider] and [RangeSlider].
@@ -48,6 +170,9 @@ class SliderToken {
     this.trackBgDisabled,
     this.dotBorderColor,
     this.dotActiveBorderColor,
+    this.markColor,
+    this.markDisabledColor,
+    this.markFontSize,
   });
 
   /// Thickness of the groove (`railSize`).
@@ -95,6 +220,15 @@ class SliderToken {
   /// A mark's dot before the handle reaches it (`dotBorderColor`).
   final Color? dotBorderColor;
 
+  /// What a mark's words are written in (`markColor`).
+  final Color? markColor;
+
+  /// And a mark the handle may not rest on (`markDisabledColor`).
+  final Color? markDisabledColor;
+
+  /// How big a mark's words are (`markFontSize`).
+  final double? markFontSize;
+
   /// A mark's dot once it has (`dotActiveBorderColor`).
   final Color? dotActiveBorderColor;
 
@@ -119,6 +253,9 @@ class SliderToken {
       trackBgDisabled: trackBgDisabled ?? t.colorFill,
       dotBorderColor: dotBorderColor ?? t.colorBorderSecondary,
       dotActiveBorderColor: dotActiveBorderColor ?? t.primary.border,
+      markColor: markColor ?? t.colorText,
+      markDisabledColor: markDisabledColor ?? t.colorTextQuaternary,
+      markFontSize: markFontSize ?? t.fontSize,
     );
   }
 }
@@ -142,6 +279,9 @@ class _ResolvedSliderToken {
     required this.trackBgDisabled,
     required this.dotBorderColor,
     required this.dotActiveBorderColor,
+    required this.markColor,
+    required this.markDisabledColor,
+    required this.markFontSize,
   });
 
   final double railSize;
@@ -160,6 +300,15 @@ class _ResolvedSliderToken {
   final Color trackBgDisabled;
   final Color dotBorderColor;
   final Color dotActiveBorderColor;
+
+  /// What a mark's words are written in.
+  final Color markColor;
+
+  /// And a mark the handle may not rest on.
+  final Color markDisabledColor;
+
+  /// How big a mark's words are.
+  final double markFontSize;
 }
 
 /// Defaults for every [Slider] under a `ConfigProvider`.
@@ -745,10 +894,13 @@ class _SliderCoreState extends State<_SliderCore> {
 
     // A null step means the marks are the only places to rest, with the ends
     // of the scale always among them.
+    // A mark the handle may not rest on is no stop at all — which is what
+    // `disabled` means where the marks are the only stops there are.
     final stops = <double>[
       widget.min,
       widget.max,
-      for (final mark in widget.marks) mark.value,
+      for (final mark in widget.marks)
+        if (!mark.disabled) mark.value,
     ]..sort();
     var best = stops.first;
     for (final stop in stops) {
@@ -965,7 +1117,7 @@ class _SliderCoreState extends State<_SliderCore> {
     //
     // Nothing is decided until the finger lifts, so a handle brought onto a
     // neighbour and taken off it again simply stays.
-    final meets = _meetsNeighbour(index, _valueAt(fraction));
+    final meets = _meetsNeighbour(index, _valueAt(fraction), size);
     if (meets != _dropping) setState(() => _dropping = meets);
   }
 
@@ -1057,13 +1209,22 @@ class _SliderCoreState extends State<_SliderCore> {
   /// place is a band of nothing — so the trade is the right way round.
   bool _dropping = false;
 
-  /// Whether the handle at [index], put at [me], now stands on another.
-  bool _meetsNeighbour(int index, double me) {
+  /// Whether the handle at [index], put at [me], now covers another.
+  bool _meetsNeighbour(int index, double me, Size size) {
     final values = widget.values;
     if (values.length <= (widget.minCount ?? 2)) return false;
-    // Half a step, so two handles that cannot land on the same value still
-    // count as having met once there is nothing between them.
-    final reach = (widget.step ?? 0.0001) / 2;
+    // When the two discs actually cover one another, not when their values
+    // are equal. Half a step on a scale of a hundred is two pixels of rail:
+    // a catch nobody can hit is a gesture nobody finds, and the whole way out
+    // of an added handle was through it.
+    //
+    // Half a step is kept as the floor, so a coarse scale whose steps are
+    // wider than a handle still merges when there is nothing between them.
+    final length = widget.vertical ? size.height : size.width;
+    final span = widget.max - widget.min;
+    final overlap = length <= 0 ? 0.0 : _handleReach * 2 / length * span;
+    final reach =
+        [overlap, (widget.step ?? 0.0001) / 2].reduce((a, b) => a > b ? a : b);
     for (var i = 0; i < values.length; i++) {
       if (i == index) continue;
       if ((values[i] - me).abs() <= reach) return true;
@@ -1170,7 +1331,10 @@ class _SliderCoreState extends State<_SliderCore> {
       }
       return out;
     }
-    return widget.marks.map((m) => _fractionOf(m.value)).toList();
+    return [
+      for (final m in widget.marks)
+        if (!m.hidden) _fractionOf(m.value),
+    ];
   }
 
   /// Which of those dots the handle has reached.
@@ -1179,12 +1343,43 @@ class _SliderCoreState extends State<_SliderCore> {
         ? [
             for (var v = widget.min; v <= widget.max; v += widget.step!) v,
           ]
-        : widget.marks.map((m) => m.value).toList();
+        : [
+            for (final m in widget.marks)
+              if (!m.hidden) m.value
+          ];
     final low = widget.fillFromStart
         ? widget.min
         : widget.values.reduce((a, b) => a < b ? a : b);
     final high = widget.values.reduce((a, b) => a > b ? a : b);
     return [for (final v in values) v >= low && v <= high];
+  }
+
+  /// Whether the handle has reached [value].
+  bool _reached(double value) {
+    final low = widget.fillFromStart
+        ? widget.min
+        : widget.values.reduce((a, b) => a < b ? a : b);
+    final high = widget.values.reduce((a, b) => a > b ? a : b);
+    return value >= low && value <= high;
+  }
+
+  /// One mark's label, styled and then handed to whoever draws it.
+  Widget _markLabel(
+      BuildContext context, Token t, _ResolvedSliderToken r, SliderMark mark) {
+    final base = TextStyle(
+      color: mark.disabled ? r.markDisabledColor : r.markColor,
+      fontSize: r.markFontSize,
+      fontFamily: t.fontFamily,
+      fontFamilyFallback: t.fontFamilyFallback,
+      decoration: TextDecoration.none,
+    ).merge(mark.style);
+    final drawn = DefaultTextStyle.merge(
+      style: base,
+      child: Text(mark.label ?? ''),
+    );
+    final build = mark.labelBuilder;
+    if (build == null) return drawn;
+    return build(context, mark, _reached(mark.value), drawn);
   }
 
   Widget _withMarks(
@@ -1193,98 +1388,110 @@ class _SliderCoreState extends State<_SliderCore> {
     Widget groove,
     double thickness,
   ) {
-    // Laid out by fraction rather than stacked by hand, so a label sits under
-    // the point it names whatever the scale's range happens to be.
-    final marked = LayoutBuilder(
-      builder: (context, constraints) {
-        final extent =
-            widget.vertical ? constraints.maxHeight : constraints.maxWidth;
-        return Stack(
-          clipBehavior: Clip.none,
+    final shown = [
+      for (final m in widget.marks)
+        if (!m.hidden) m
+    ];
+    final before = [
+      for (final m in shown)
+        if (m.side == SliderMarkSide.before) m,
+    ];
+    final after = [
+      for (final m in shown)
+        if (m.side == SliderMarkSide.after) m,
+    ];
+
+    /// The labels of one side, each placed at its own value.
+    ///
+    /// Laid out by fraction rather than stacked by hand, so a label sits by
+    /// the point it names whatever the scale's range happens to be.
+    Widget band(List<SliderMark> marks) => LayoutBuilder(
+          builder: (context, constraints) {
+            final extent =
+                widget.vertical ? constraints.maxHeight : constraints.maxWidth;
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                for (final mark in marks)
+                  Positioned(
+                    left: widget.vertical
+                        ? 0
+                        : _alongFor(_fractionOf(mark.value), extent),
+                    top: widget.vertical
+                        ? _alongFor(_fractionOf(mark.value), extent)
+                        : 0,
+                    child: FractionalTranslation(
+                      translation: widget.vertical
+                          ? const Offset(0, -0.5)
+                          : const Offset(-0.5, 0),
+                      child: _markLabel(context, t, r, mark),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+
+    /// A band down a column, given a width by a copy of its own labels.
+    ///
+    /// The labels themselves are positioned, and a stack of nothing but
+    /// positioned children has no width of its own; this is what gives it
+    /// one, measured from the labels rather than guessed at.
+    Widget measured(List<SliderMark> marks) => Stack(
           children: [
-            for (final mark in widget.marks)
-              Positioned(
-                left: widget.vertical
-                    ? 0
-                    : _alongFor(_fractionOf(mark.value), extent),
-                top: widget.vertical
-                    ? _alongFor(_fractionOf(mark.value), extent)
-                    : 0,
-                child: FractionalTranslation(
-                  translation: widget.vertical
-                      ? const Offset(0, -0.5)
-                      : const Offset(-0.5, 0),
-                  child: DefaultTextStyle.merge(
-                    style: TextStyle(
-                      color: t.colorText,
-                      fontSize: t.fontSize,
-                      fontFamily: t.fontFamily,
-                      fontFamilyFallback: t.fontFamilyFallback,
-                      decoration: TextDecoration.none,
-                    ).merge(mark.style),
-                    child: mark.label,
+            // Kept out of the semantics tree and out of hit testing: it is a
+            // duplicate of every label, and a screen reader would read the
+            // marks twice over.
+            ExcludeSemantics(
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: 0,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final mark in marks)
+                        Builder(
+                          builder: (context) => _markLabel(context, t, r, mark),
+                        ),
+                    ],
                   ),
                 ),
               ),
+            ),
+            Positioned.fill(child: band(marks)),
           ],
         );
-      },
-    );
 
     if (widget.vertical) {
-      // As wide as the groove, the gap and the widest label together — not as
-      // wide as the groove alone, which left the labels with nowhere to go and
-      // overflowed by exactly the gap between them.
       return Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (before.isNotEmpty) ...[
+            measured(before),
+            SizedBox(width: t.sizeXS),
+          ],
           SizedBox(width: thickness, child: groove),
-          SizedBox(width: t.sizeXS),
-          Stack(
-            children: [
-              // A silent copy, laid out but never seen. The labels themselves
-              // are positioned, and a stack of nothing but positioned children
-              // has no width of its own; this is what gives it one, measured
-              // from the labels rather than guessed at.
-              // Kept out of the semantics tree and out of hit testing: it is
-              // a duplicate of every label, and a screen reader would read the
-              // marks twice over.
-              ExcludeSemantics(
-                child: IgnorePointer(
-                  child: Opacity(
-                    opacity: 0,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (final mark in widget.marks)
-                          DefaultTextStyle.merge(
-                            style: TextStyle(
-                              fontSize: t.fontSize,
-                              fontFamily: t.fontFamily,
-                              fontFamilyFallback: t.fontFamilyFallback,
-                              decoration: TextDecoration.none,
-                            ).merge(mark.style),
-                            child: mark.label,
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned.fill(child: marked),
-            ],
-          ),
+          if (after.isNotEmpty) ...[
+            SizedBox(width: t.sizeXS),
+            measured(after),
+          ],
         ],
       );
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (before.isNotEmpty) ...[
+          SizedBox(height: t.controlHeightSM, child: band(before)),
+          SizedBox(height: t.sizeXXS),
+        ],
         SizedBox(height: thickness, child: groove),
-        SizedBox(height: t.sizeXXS),
-        SizedBox(height: t.controlHeightSM, child: marked),
+        if (after.isNotEmpty) ...[
+          SizedBox(height: t.sizeXXS),
+          SizedBox(height: t.controlHeightSM, child: band(after)),
+        ],
       ],
     );
   }

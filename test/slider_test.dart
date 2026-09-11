@@ -20,6 +20,7 @@ Rect _groove(WidgetTester tester) =>
     tester.getRect(find.byType(CustomPaint).last);
 
 void main() {
+  _markTests();
   _trackTests();
   _editableTests();
   group('Slider', () {
@@ -71,8 +72,8 @@ void main() {
             value: 0,
             step: null,
             marks: const [
-              SliderMark(20, Text('twenty')),
-              SliderMark(80, Text('eighty')),
+              SliderMark(20, 'twenty'),
+              SliderMark(80, 'eighty'),
             ],
             onChanged: (v) => changed = v,
           ),
@@ -116,8 +117,8 @@ void main() {
           const Slider(
             value: 0,
             marks: [
-              SliderMark(0, Text('none')),
-              SliderMark(100, Text('all')),
+              SliderMark(0, 'none'),
+              SliderMark(100, 'all'),
             ],
           ),
         ),
@@ -405,8 +406,8 @@ void main() {
                     value: 60,
                     vertical: true,
                     marks: const [
-                      SliderMark(0, Text('cold')),
-                      SliderMark(100, Text('hot')),
+                      SliderMark(0, 'cold'),
+                      SliderMark(100, 'hot'),
                     ],
                     onChanged: (_) {},
                   ),
@@ -447,8 +448,8 @@ void main() {
                     value: 50,
                     vertical: true,
                     marks: const [
-                      SliderMark(0, Text('bottom')),
-                      SliderMark(100, Text('top')),
+                      SliderMark(0, 'bottom'),
+                      SliderMark(100, 'top'),
                     ],
                     onChanged: (_) {},
                   ),
@@ -487,7 +488,7 @@ void main() {
                   Slider(
                     value: 50,
                     vertical: true,
-                    marks: const [SliderMark(50, Text('half'))],
+                    marks: const [SliderMark(50, 'half')],
                     onChanged: (_) {},
                   ),
                 ],
@@ -765,6 +766,35 @@ void _editableTests() {
       expect(values, [20.0, 80.0]);
     });
 
+    testWidgets('near enough counts as met, not only exactly on it',
+        (tester) async {
+      var values = [20.0, 50.0, 80.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      final on = Offset(rail.left + rail.width * 0.5, rail.center.dy);
+      final gesture = await tester.startGesture(on);
+      // Short of 80 by two units — the discs cover one another well before
+      // their values are equal, and a catch half a step wide is two pixels of
+      // rail that nobody can hit.
+      await gesture.moveBy(Offset(rail.width * 0.28, 0));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(values, hasLength(2));
+    });
+
     testWidgets('brought onto a neighbour and off again, it stays',
         (tester) async {
       var values = [20.0, 50.0, 80.0];
@@ -915,6 +945,140 @@ void _editableTests() {
 
       // Nothing added: only an editable slider adds and removes.
       expect(pair.$2, greaterThan(60));
+    });
+  });
+}
+
+void _markTests() {
+  group('what a mark may say', () {
+    testWidgets('a hidden mark keeps its place and is not drawn',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Slider(
+            value: 50,
+            marks: [
+              SliderMark(0, 'none'),
+              SliderMark(50, 'half', hidden: true),
+              SliderMark(100, 'all'),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('none'), findsOneWidget);
+      expect(find.text('all'), findsOneWidget);
+      expect(find.text('half'), findsNothing);
+    });
+
+    testWidgets('a disabled mark is no stop where the marks are the stops',
+        (tester) async {
+      double? settled;
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 0,
+            // No step: the marks are the only places to rest.
+            step: null,
+            marks: const [
+              SliderMark(0, 'none'),
+              SliderMark(50, 'half', disabled: true),
+              SliderMark(100, 'all'),
+            ],
+            onChanged: (v) => settled = v,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(Slider));
+      // Pressed right on the disabled mark: the handle passes it by.
+      await tester.tapAt(Offset(rail.left + rail.width * 0.5, rail.top + 8));
+      await tester.pumpAndSettle();
+
+      expect(settled, isNotNull);
+      expect(settled, isNot(50));
+    });
+
+    testWidgets('a mark before the rail is written above it', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Slider(
+            value: 50,
+            marks: [
+              SliderMark(0, 'under'),
+              SliderMark(100, 'over', side: SliderMarkSide.before),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final over = tester.getRect(find.text('over'));
+      final under = tester.getRect(find.text('under'));
+      // Named by the flow, not by the screen: before the rail is above it
+      // across a row.
+      expect(over.bottom, lessThanOrEqualTo(under.top));
+    });
+
+    testWidgets('a builder is handed the label the slider would have drawn',
+        (tester) async {
+      final seen = <(double, bool)>[];
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 60,
+            marks: [
+              for (final at in [20.0, 80.0])
+                SliderMark(
+                  at,
+                  '$at',
+                  labelBuilder: (context, mark, active, child) {
+                    seen.add((mark.value, active));
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [child, if (active) const Text('✓')],
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The handle stands at 60, so it has reached 20 and not 80.
+      expect(seen, contains((20.0, true)));
+      expect(seen, contains((80.0, false)));
+      // Wrapped, not replaced: the words the slider drew are still there.
+      expect(find.text('20.0'), findsOneWidget);
+      expect(find.text('✓'), findsOneWidget);
+    });
+
+    testWidgets('a mark with no words is a stop and nothing else',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Slider(
+            value: 50,
+            marks: [SliderMark.dot(25), SliderMark(75, 'three quarters')],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('three quarters'), findsOneWidget);
+    });
+
+    test('a mark can be copied with one thing changed', () {
+      const mark = SliderMark(50, 'half');
+      expect(mark.copyWith(label: 'middle').value, 50);
+      expect(mark.copyWith(label: 'middle').label, 'middle');
+      expect(mark.copyWith(disabled: true).label, 'half');
+      // Value types, so a list of marks can be compared rather than rebuilt
+      // on the off-chance.
+      expect(mark.copyWith(), mark);
+      expect(mark.copyWith(value: 51), isNot(mark));
     });
   });
 }

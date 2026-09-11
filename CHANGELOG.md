@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`SliderMark` says more about itself.** `hidden` leaves a mark undrawn
+  without taking it out of the list, as `TableColumn.hidden` does for a
+  column. `disabled` means the handle may not rest there — which bites where
+  the marks are the only stops there are, a slider with no `step`, and is only
+  a colour where there is one. `side` puts the label before or after the rail,
+  named by the flow rather than by the screen so there is no way to ask for a
+  side that means nothing. `SliderMark.dot` is a stop with nothing to say.
+  Marks are value types now, with `copyWith`, `==` and `hashCode`.
+
+- **`SliderMark.labelBuilder`**, handed the label the slider would have drawn
+  and whether the handle has reached that mark — the shape `cellBuilder` and
+  `tagBuilder` already use, so wrapping keeps colour, size and state for
+  nothing.
+
+- **`SliderToken.markColor`, `markDisabledColor` and `markFontSize`.** What a
+  mark is drawn in belongs with the rest of the numbers; `SliderMark.style`
+  stays for the odd mark that has to stand out.
+
 - **`RangeSlider.draggableTrack`** — the filled span moves as one, keeping its
   length. Only strictly between the handles, so they keep their own drag;
   pushed against an end the shift is cut back as one rather than the leading
@@ -185,6 +203,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A handle could hardly be dropped onto its neighbour.** They counted as
+  met once their values were equal — half a step, which on a scale of a
+  hundred is two pixels of rail. The only way out of an added handle went
+  through a catch nobody could hit. They meet once the discs cover one
+  another now, with half a step kept as the floor for a scale whose steps are
+  wider than a handle.
+
 - **A draggable track swallowed the handles inside it.** Which the press had
   taken hold of was decided by the value under it — strictly between the ends
   meant the track. That reads right for two handles, whose ends are the span's
@@ -301,6 +326,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   usually taller than what is in it; the content is centred down the panel now.
 
 ### Changed
+
+- **Breaking: `SliderMark`'s label is a `String?` rather than a `Widget`.**
+  `SliderMark(20, Text('20%'))` becomes `SliderMark(20, '20%')`; anything that
+  was not words is `labelBuilder`'s job now. Nearly every mark was a `Text`
+  wrapping a string, and the kit spells that the same way everywhere else.
 
 - **The table's document no longer claims two things that stopped being true.**
   A width dragged in a stretched table is the width drawn — measured at 300 to

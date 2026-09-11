@@ -21,6 +21,7 @@ class SliderDemo extends StatefulWidget {
 }
 
 class _SliderDemoState extends State<SliderDemo> {
+  double _temp = 0;
   List<double> _bands = [20, 50, 80];
   (double, double) _span = (30, 70);
   double _basic = 30;
@@ -35,10 +36,10 @@ class _SliderDemoState extends State<SliderDemo> {
   double _last = 30;
 
   static const _marks = [
-    SliderMark(0, Text('0°C')),
-    SliderMark(26, Text('26°C')),
-    SliderMark(37, Text('37°C')),
-    SliderMark(100, Text('100°C')),
+    SliderMark(0, '0°C'),
+    SliderMark(26, '26°C'),
+    SliderMark(37, '37°C'),
+    SliderMark(100, '100°C'),
   ];
 
   @override
@@ -210,6 +211,44 @@ class _SliderDemoState extends State<SliderDemo> {
         ),
 
         const SizedBox(height: 20),
+        Group(
+          'What a mark may say',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Slider(
+                value: _temp,
+                step: null,
+                onChanged: (v) => setState(() => _temp = v),
+                marks: [
+                  const SliderMark(0, 'cold'),
+                  // Above the rail rather than below it, named by the flow so
+                  // a page that reads the other way needs nothing.
+                  const SliderMark(37, 'body', side: SliderMarkSide.before),
+                  // The handle passes this one by: with no step, the marks
+                  // are the only places to rest.
+                  const SliderMark(60, 'booked', disabled: true),
+                  SliderMark(
+                    100,
+                    'boiling',
+                    labelBuilder: (context, mark, active, child) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [child, if (active) const Text(' ✓')],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'No step, so the marks are the only stops — and "booked" is '
+                'disabled, so the handle passes it by. "body" is written '
+                'above the rail; "boiling" draws its own label, wrapping the '
+                'one the slider would have drawn rather than replacing it.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
+          ),
+        ),
         Group(
           'A span you can take hold of',
           Column(

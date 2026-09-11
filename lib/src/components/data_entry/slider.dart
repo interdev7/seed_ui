@@ -7,6 +7,44 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../data_display/tooltip.dart';
 
+/// A stretch of a slider's scale, coloured.
+///
+/// For the part of a scale that means something in itself — a safe heart
+/// rate, a budget already spent, the hours a shop is open. A mark names a
+/// point; a zone names a run.
+@immutable
+class SliderZone {
+  /// Creates a zone between [from] and [to], whichever way round they come.
+  const SliderZone(this.from, this.to, {this.color});
+
+  /// Where the stretch begins. Put in order with [to], so a zone written
+  /// backwards means the same stretch.
+  final double from;
+
+  /// And where it ends.
+  final double to;
+
+  /// What it is coloured. Null takes the theme's own fill, which is quiet
+  /// enough to sit under a track without fighting it.
+  final Color? color;
+
+  /// The lower end.
+  double get low => from < to ? from : to;
+
+  /// The upper end.
+  double get high => from < to ? to : from;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SliderZone &&
+      other.from == from &&
+      other.to == to &&
+      other.color == color;
+
+  @override
+  int get hashCode => Object.hash(from, to, color);
+}
+
 /// Which side of the rail a mark's label is written on.
 ///
 /// Named by the flow rather than by the screen: across a row `before` is
@@ -367,6 +405,9 @@ class Slider extends StatefulWidget {
     this.disabled,
     this.vertical = false,
     this.reverse = false,
+    this.zones = const [],
+    this.bounds,
+    this.snapToMarks = false,
     this.tooltip,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
@@ -421,6 +462,29 @@ class Slider extends StatefulWidget {
   /// Returning null shows nothing. Left null the value is shown as it stands.
   final String? Function(double value)? tooltip;
 
+  /// Stretches of the scale that mean something in themselves — a safe heart
+  /// rate, a budget already spent, the hours a shop is open.
+  ///
+  /// Drawn on the rail and under the track: a zone colours the scale, and the
+  /// track is the answer. A slider that is mostly zones is one to turn
+  /// [included] off for.
+  final List<SliderZone> zones;
+
+  /// How far the handle may go, where that is less than the whole scale.
+  ///
+  /// The scale still shows what it showed — a day is still twenty-four hours
+  /// long — and the handle simply cannot be put outside the part of it on
+  /// offer. Narrowing [min] and [max] would hide the rest of the day, which
+  /// is not the same thing to say.
+  final (double, double)? bounds;
+
+  /// Whether the handle rests on the marks as well as on the steps.
+  ///
+  /// With no [step] the marks are already the only stops there are; with one,
+  /// they were nothing but writing. Asked for, whichever of the two is nearer
+  /// to the finger wins.
+  final bool snapToMarks;
+
   /// Per-instance token overrides.
   final SliderToken? token;
 
@@ -468,6 +532,9 @@ class _SliderState extends State<Slider> {
       reverse: widget.reverse,
       tooltip: widget.tooltip,
       token: widget.token,
+      zones: widget.zones,
+      bounds: widget.bounds,
+      snapToMarks: widget.snapToMarks,
       // A single handle fills from the bottom of the scale; a pair fills
       // between the two.
       fillFromStart: true,
@@ -504,6 +571,9 @@ class RangeSlider extends StatefulWidget {
     this.vertical = false,
     this.reverse = false,
     this.draggableTrack = false,
+    this.zones = const [],
+    this.bounds,
+    this.snapToMarks = false,
     this.tooltip,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
@@ -556,6 +626,29 @@ class RangeSlider extends StatefulWidget {
   /// What to show above a handle while it is being moved.
   final String? Function(double value)? tooltip;
 
+  /// Stretches of the scale that mean something in themselves — a safe heart
+  /// rate, a budget already spent, the hours a shop is open.
+  ///
+  /// Drawn on the rail and under the track: a zone colours the scale, and the
+  /// track is the answer. A slider that is mostly zones is one to turn
+  /// [included] off for.
+  final List<SliderZone> zones;
+
+  /// How far the handle may go, where that is less than the whole scale.
+  ///
+  /// The scale still shows what it showed — a day is still twenty-four hours
+  /// long — and the handle simply cannot be put outside the part of it on
+  /// offer. Narrowing [min] and [max] would hide the rest of the day, which
+  /// is not the same thing to say.
+  final (double, double)? bounds;
+
+  /// Whether the handle rests on the marks as well as on the steps.
+  ///
+  /// With no [step] the marks are already the only stops there are; with one,
+  /// they were nothing but writing. Asked for, whichever of the two is nearer
+  /// to the finger wins.
+  final bool snapToMarks;
+
   /// Per-instance token overrides.
   final SliderToken? token;
 
@@ -603,6 +696,9 @@ class _RangeSliderState extends State<RangeSlider> {
       reverse: widget.reverse,
       tooltip: widget.tooltip,
       token: widget.token,
+      zones: widget.zones,
+      bounds: widget.bounds,
+      snapToMarks: widget.snapToMarks,
       fillFromStart: false,
       draggableTrack: widget.draggableTrack,
     );
@@ -667,6 +763,9 @@ class MultiRangeSlider extends StatefulWidget {
     this.draggableTrack = false,
     this.minCount = 2,
     this.maxCount,
+    this.zones = const [],
+    this.bounds,
+    this.snapToMarks = false,
     this.tooltip,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
@@ -727,6 +826,29 @@ class MultiRangeSlider extends StatefulWidget {
   /// What to show above a handle while it is being moved.
   final String? Function(double value)? tooltip;
 
+  /// Stretches of the scale that mean something in themselves — a safe heart
+  /// rate, a budget already spent, the hours a shop is open.
+  ///
+  /// Drawn on the rail and under the track: a zone colours the scale, and the
+  /// track is the answer. A slider that is mostly zones is one to turn
+  /// [included] off for.
+  final List<SliderZone> zones;
+
+  /// How far the handle may go, where that is less than the whole scale.
+  ///
+  /// The scale still shows what it showed — a day is still twenty-four hours
+  /// long — and the handle simply cannot be put outside the part of it on
+  /// offer. Narrowing [min] and [max] would hide the rest of the day, which
+  /// is not the same thing to say.
+  final (double, double)? bounds;
+
+  /// Whether the handle rests on the marks as well as on the steps.
+  ///
+  /// With no [step] the marks are already the only stops there are; with one,
+  /// they were nothing but writing. Asked for, whichever of the two is nearer
+  /// to the finger wins.
+  final bool snapToMarks;
+
   /// Per-instance token overrides.
   final SliderToken? token;
 
@@ -783,6 +905,9 @@ class _MultiRangeSliderState extends State<MultiRangeSlider> {
       reverse: widget.reverse,
       tooltip: widget.tooltip,
       token: widget.token,
+      zones: widget.zones,
+      bounds: widget.bounds,
+      snapToMarks: widget.snapToMarks,
       fillFromStart: false,
       draggableTrack: _draggableTrack,
       editable: true,
@@ -810,6 +935,9 @@ class _SliderCore extends StatefulWidget {
     required this.tooltip,
     required this.token,
     required this.fillFromStart,
+    this.zones = const [],
+    this.bounds,
+    this.snapToMarks = false,
     this.draggableTrack = false,
     this.editable = false,
     this.minCount,
@@ -831,6 +959,15 @@ class _SliderCore extends StatefulWidget {
   final String? Function(double value)? tooltip;
   final SliderToken? token;
   final bool fillFromStart;
+
+  /// Stretches of the scale that mean something in themselves.
+  final List<SliderZone> zones;
+
+  /// How far the handle may go, where that is less than the whole scale.
+  final (double, double)? bounds;
+
+  /// Whether the handle rests on the marks as well as on the steps.
+  final bool snapToMarks;
 
   /// Whether the filled span may be taken hold of and moved as one.
   final bool draggableTrack;
@@ -894,7 +1031,20 @@ class _SliderCoreState extends State<_SliderCore> {
     final step = widget.step;
     if (step != null) {
       final steps = ((raw - widget.min) / step).round();
-      return (widget.min + steps * step).clamp(widget.min, widget.max);
+      var stopped = (widget.min + steps * step).clamp(widget.min, widget.max);
+      // The marks as well as the steps, where they were asked for: whichever
+      // is nearer to where the finger actually is. Without a step the marks
+      // are the only stops there are and this is already how it works; with
+      // one they were nothing but writing.
+      if (widget.snapToMarks) {
+        for (final mark in widget.marks) {
+          if (mark.hidden || mark.disabled) continue;
+          if ((mark.value - raw).abs() < (stopped - raw).abs()) {
+            stopped = mark.value;
+          }
+        }
+      }
+      return _held(stopped);
     }
 
     // A null step means the marks are the only places to rest, with the ends
@@ -911,7 +1061,21 @@ class _SliderCoreState extends State<_SliderCore> {
     for (final stop in stops) {
       if ((stop - raw).abs() < (best - raw).abs()) best = stop;
     }
-    return best;
+    return _held(best);
+  }
+
+  /// [value] kept inside [_SliderCore.bounds], where there are any.
+  ///
+  /// The scale still shows what it showed — a day is still twenty-four hours
+  /// long — and the handle simply cannot be put outside the part of it that
+  /// is on offer. Narrowing `min` and `max` instead would hide the rest of
+  /// the day, which is not the same thing to say.
+  double _held(double value) {
+    final bounds = widget.bounds;
+    if (bounds == null) return value;
+    final low = bounds.$1 < bounds.$2 ? bounds.$1 : bounds.$2;
+    final high = bounds.$1 < bounds.$2 ? bounds.$2 : bounds.$1;
+    return value.clamp(low, high);
   }
 
   void _moveNearest(double fraction, {required bool complete}) {
@@ -967,6 +1131,14 @@ class _SliderCoreState extends State<_SliderCore> {
           size: size,
           painter: _SliderPainter(
             fractions: widget.values.map(_fractionOf).toList(),
+            zones: [
+              for (final zone in widget.zones)
+                (
+                  from: _fractionOf(zone.low),
+                  to: _fractionOf(zone.high),
+                  color: zone.color ?? t.colorFillSecondary,
+                ),
+            ],
             dotFractions: _dotFractions(),
             activeDots: _activeDots(),
             token: r,
@@ -1167,8 +1339,10 @@ class _SliderCoreState extends State<_SliderCore> {
     var shift = to - _trackAt!;
     final low = from.reduce((a, b) => a < b ? a : b);
     final high = from.reduce((a, b) => a > b ? a : b);
-    if (low + shift < widget.min) shift = widget.min - low;
-    if (high + shift > widget.max) shift = widget.max - high;
+    final floor = _held(widget.min);
+    final ceiling = _held(widget.max);
+    if (low + shift < floor) shift = floor - low;
+    if (high + shift > ceiling) shift = ceiling - high;
     if (shift == 0) return;
     final next = [for (final v in from) v + shift];
     widget.onChanged?.call(next);
@@ -1523,6 +1697,7 @@ class _SliderCoreState extends State<_SliderCore> {
 class _SliderPainter extends CustomPainter {
   const _SliderPainter({
     required this.fractions,
+    required this.zones,
     required this.dotFractions,
     required this.activeDots,
     required this.token,
@@ -1536,6 +1711,11 @@ class _SliderPainter extends CustomPainter {
   });
 
   final List<double> fractions;
+
+  /// Where each zone runs, as fractions along the groove, and what it is
+  /// coloured.
+  final List<({double from, double to, Color color})> zones;
+
   final List<double> dotFractions;
   final List<bool> activeDots;
   final _ResolvedSliderToken token;
@@ -1566,6 +1746,21 @@ class _SliderPainter extends CustomPainter {
     final start = _at(0, size);
     final end = _at(1, size);
     canvas.drawLine(start, end, rail);
+
+    // Under the track, over the rail. A zone colours the scale; the track is
+    // the answer, and an answer drawn under what it is measured against would
+    // be the wrong way round. A slider that is all zones is one to turn
+    // `included` off for.
+    for (final zone in zones) {
+      canvas.drawLine(
+        _at(zone.from, size),
+        _at(zone.to, size),
+        Paint()
+          ..color = zone.color
+          ..strokeCap = StrokeCap.butt
+          ..strokeWidth = token.railSize,
+      );
+    }
 
     if (included) {
       final low =
@@ -1638,12 +1833,24 @@ class _SliderPainter extends CustomPainter {
   bool shouldRepaint(_SliderPainter old) =>
       !_sameNumbers(old.fractions, fractions) ||
       !_sameNumbers(old.dotFractions, dotFractions) ||
+      old.zones.length != zones.length ||
+      !_sameZones(old.zones, zones) ||
       old.enabled != enabled ||
       old.hovered != hovered ||
       old.dragging != dragging ||
       old.dropping != dropping ||
       old.included != included ||
       old.vertical != vertical;
+
+  static bool _sameZones(
+    List<({double from, double to, Color color})> a,
+    List<({double from, double to, Color color})> b,
+  ) {
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 
   static bool _sameNumbers(List<double> a, List<double> b) {
     if (a.length != b.length) return false;

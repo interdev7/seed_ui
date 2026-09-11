@@ -218,6 +218,56 @@ The values come back **in order**, however they were dragged or added — a
 handle pushed past its neighbour would otherwise change what "the third band"
 means halfway through a drag.
 
+## A stretch that means something
+
+```dart
+Slider(
+  min: 40,
+  max: 200,
+  included: false,
+  zones: const [
+    SliderZone(120, 160, color: Color(0x3300B42B)),
+    SliderZone(160, 200, color: Color(0x33FF4D4F)),
+  ],
+)
+```
+
+A mark names a point; a zone names a run — a safe heart rate, a budget
+already spent, the hours a shop is open. A zone written backwards means the
+same stretch.
+
+Zones are drawn **on the rail and under the track**: the zone colours the
+scale, and the track is the answer. A slider that is mostly zones is one to
+turn `included` off for, or the answer covers what it is measured against.
+
+## How far the handle may go
+
+```dart
+Slider(min: 0, max: 24, bounds: (9, 17))
+```
+
+The scale still shows what it showed — a day is still twenty-four hours long,
+and its marks are all still written — and the handle simply cannot be put
+outside the part on offer. Narrowing `min` and `max` would hide the rest of
+the day, which is not the same thing to say.
+
+A draggable span obeys it too: the whole span stops at the bound rather than
+one end of it going on.
+
+## Resting on the marks as well as the steps
+
+```dart
+Slider(step: 1, snapToMarks: true, marks: [SliderMark(33.4, 'a third')])
+```
+
+Without a `step` the marks are already the only stops there are. With one they
+were nothing but writing — a mark at 33.4 on a scale of whole numbers could
+be read and never reached. Asked for, whichever of the two is nearer to the
+finger wins.
+
+A mark the handle may not rest on is no magnet either: `disabled` means what
+it says here too.
+
 ## Which way it runs
 
 `vertical` runs the scale down the page, from the bottom as a measure does.
@@ -269,6 +319,9 @@ rebuilt for each one. An ancestor that clips will clip it too.
 | `step` | `double?` | `1` | How far one move takes it; null means the marks |
 | `marks` | `List<SliderMark>` | `[]` | Points written along the scale |
 | `dots` | `bool` | `false` | Dot every step, not only the marked ones |
+| `zones` | `List<SliderZone>` | `const []` | Stretches of the scale, coloured |
+| `bounds` | `(double, double)?` | `null` | How far the handle may go, within the scale |
+| `snapToMarks` | `bool` | `false` | Rest on the marks as well as on the steps |
 | `included` | `bool` | `true` | Whether the groove is filled |
 | `disabled` | `bool` | `false` | Greys it out and blocks dragging |
 | `vertical` | `bool` | `false` | Runs the scale down the page |

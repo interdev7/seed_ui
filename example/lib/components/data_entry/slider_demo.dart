@@ -21,6 +21,8 @@ class SliderDemo extends StatefulWidget {
 }
 
 class _SliderDemoState extends State<SliderDemo> {
+  double _pulse = 140;
+  double _delivery = 12;
   double _temp = 0;
   List<double> _bands = [20, 50, 80];
   (double, double) _span = (30, 70);
@@ -211,6 +213,68 @@ class _SliderDemoState extends State<SliderDemo> {
         ),
 
         const SizedBox(height: 20),
+        Group(
+          'A stretch of the scale that means something',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Slider(
+                value: _pulse,
+                min: 40,
+                max: 200,
+                // The answer would cover what it is measured against.
+                included: false,
+                snapToMarks: true,
+                zones: const [
+                  SliderZone(120, 160, color: Color(0x3352C41A)),
+                  SliderZone(160, 200, color: Color(0x33FF4D4F)),
+                ],
+                marks: const [
+                  SliderMark(120, 'fat burn'),
+                  SliderMark(160, 'cardio'),
+                ],
+                onChanged: (v) => setState(() => _pulse = v),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${_pulse.round()} beats. The zones colour the scale and the '
+                'track is the answer, so a slider that is mostly zones turns '
+                'included off. snapToMarks lets the handle rest on 120 and '
+                '160 as well as on every whole beat.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'How far the handle may go',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Slider(
+                value: _delivery,
+                max: 24,
+                bounds: const (9, 17),
+                zones: const [SliderZone(9, 17)],
+                marks: const [
+                  SliderMark(0, '00:00'),
+                  SliderMark(9, 'opens'),
+                  SliderMark(17, 'closes'),
+                  SliderMark(24, '24:00'),
+                ],
+                onChanged: (v) => setState(() => _delivery = v),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Delivery at ${_delivery.round()}:00. The whole day is still '
+                'on the scale — narrowing min and max would hide it, which is '
+                'not the same thing to say — and the handle simply cannot be '
+                'put outside the hours the shop is open.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
+          ),
+        ),
         Group(
           'What a mark may say',
           Column(

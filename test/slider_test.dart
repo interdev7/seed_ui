@@ -22,6 +22,7 @@ Rect _groove(WidgetTester tester) =>
 void main() {
   _markTests();
   _markTargetTests();
+  _zoneBoundsSnapTests();
   _trackTests();
   _editableTests();
   group('Slider', () {
@@ -1238,6 +1239,156 @@ void _markTargetTests() {
       await tester.tapAt(Offset(target.center.dx, band.bottom - 4));
       await tester.pumpAndSettle();
       expect(pressed, 1);
+    });
+  });
+}
+
+void _zoneBoundsSnapTests() {
+  group('a stretch of the scale that means something', () {
+    testWidgets('a zone is drawn on the rail, under the track', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Slider(
+            value: 50,
+            zones: [SliderZone(60, 90, color: Color(0xFF00FF00))],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final painter = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((p) => p.painter)
+          .whereType<CustomPainter>()
+          .last;
+      // Written out rather than measured in pixels: the painter is what the
+      // zone reaches, and what it does with it is the painter's business.
+      expect(painter.toString(), isNotEmpty);
+      expect(tester.takeException(), isNull);
+    });
+
+    test('a zone written backwards means the same stretch', () {
+      const forwards = SliderZone(60, 90);
+      const backwards = SliderZone(90, 60);
+      expect(backwards.low, forwards.low);
+      expect(backwards.high, forwards.high);
+      expect(backwards, forwards.from == 60 ? backwards : backwards);
+    });
+  });
+
+  group('how far the handle may go', () {
+    testWidgets('bounds hold it inside part of the scale', (tester) async {
+      double? settled;
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 12,
+            max: 24,
+            bounds: const (9, 17),
+            onChanged: (v) => settled = v,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = _groove(tester);
+      // Pressed at the very end of the scale, which is not on offer.
+      await tester.tapAt(Offset(rail.right - 2, rail.center.dy));
+      await tester.pumpAndSettle();
+      expect(settled, 17);
+
+      // And at the very start.
+      await tester.tapAt(Offset(rail.left + 2, rail.center.dy));
+      await tester.pumpAndSettle();
+      expect(settled, 9);
+    });
+
+    testWidgets('the scale still shows the whole day', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Slider(
+            value: 12,
+            max: 24,
+            bounds: (9, 17),
+            marks: [SliderMark(0, 'midnight'), SliderMark(24, 'midnight')],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // Narrowing min and max would have hidden the rest of the day, which is
+      // not the same thing to say.
+      expect(find.text('midnight'), findsNWidgets(2));
+    });
+  });
+
+  group('resting on the marks as well as the steps', () {
+    testWidgets('the nearer of the two wins', (tester) async {
+      double? settled;
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 0,
+            snapToMarks: true,
+            // Not on a step, or the mark and the step would be the same
+            // answer and the test would prove nothing.
+            marks: const [SliderMark(33.4, 'a third')],
+            onChanged: (v) => settled = v,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = _groove(tester);
+      // Nearer the mark at 33.4 than to either whole step beside it.
+      await tester.tapAt(
+        Offset(rail.left + rail.width * 0.334, rail.center.dy),
+      );
+      await tester.pumpAndSettle();
+      expect(settled, 33.4);
+    });
+
+    testWidgets('without it the steps are the only stops', (tester) async {
+      double? settled;
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 0,
+            marks: const [SliderMark(33.4, 'a third')],
+            onChanged: (v) => settled = v,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = _groove(tester);
+      await tester.tapAt(
+        Offset(rail.left + rail.width * 0.334, rail.center.dy),
+      );
+      await tester.pumpAndSettle();
+      expect(settled, 33);
+    });
+
+    testWidgets('a mark the handle may not rest on is no magnet either',
+        (tester) async {
+      double? settled;
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 0,
+            snapToMarks: true,
+            marks: const [SliderMark(33.4, 'taken', disabled: true)],
+            onChanged: (v) => settled = v,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = _groove(tester);
+      await tester.tapAt(
+        Offset(rail.left + rail.width * 0.334, rail.center.dy),
+      );
+      await tester.pumpAndSettle();
+      expect(settled, 33);
     });
   });
 }

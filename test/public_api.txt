@@ -241,6 +241,7 @@ SliderMark
 SliderMarkBuilder
 SliderMarkSide
 SliderToken
+SliderZone
 SoftSize
 SortableList
 SortableListDefaults

@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`zones`, `bounds` and `snapToMarks`** on all three sliders.
+
+  A `SliderZone` colours a stretch of the scale — a safe heart rate, a budget
+  already spent — drawn on the rail and under the track, because the zone
+  colours the scale and the track is the answer.
+
+  `bounds` says how far the handle may go when that is less than the whole
+  scale. The scale still shows what it showed: narrowing `min` and `max` would
+  hide the rest of the day, which is not the same thing to say. A draggable
+  span obeys it as one.
+
+  `snapToMarks` lets the handle rest on the marks as well as on the steps —
+  without a step the marks are already the only stops, and with one a mark at
+  33.4 on a scale of whole numbers could be read and never reached. A disabled
+  mark is no magnet either.
+
 - **`SliderMark` says more about itself.** `hidden` leaves a mark undrawn
   without taking it out of the list, as `TableColumn.hidden` does for a
   column. `disabled` means the handle may not rest there — which bites where

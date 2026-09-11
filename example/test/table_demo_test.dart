@@ -31,4 +31,28 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('What a column keeps to itself'), findsOneWidget);
   });
+
+  testWidgets('and builds on a phone without overflowing', (tester) async {
+    // The page used to throw a dozen RenderFlex overflows at this width —
+    // every table wider than the screen drew its rows past the edge instead
+    // of scrolling. A kit tested only at desktop width does not find that.
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ConfigProvider(
+        child: m.MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          home: const m.Scaffold(
+            body: SingleChildScrollView(child: TableDemo()),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -3077,7 +3077,25 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     /// The columns that scroll, laid out at the width left for them.
     Widget scrolling(_Band which) {
       final middle = band(loose, which: which);
-      if (middleWidth == null) return middle;
+      if (middleWidth == null) {
+        // No width was named, so the pane takes what the row leaves it. Where
+        // that is less than the loose columns can be read at, it takes what
+        // they need and scrolls — a pane laid out narrower than its own
+        // columns overflowed instead, which on a phone is most tables.
+        return LayoutBuilder(
+          builder: (context, room) {
+            final least = _leastWidth(loose, r);
+            if (!room.hasBoundedWidth || room.maxWidth >= least - 0.5) {
+              return middle;
+            }
+            return _across1D(
+              SizedBox(width: least, child: middle),
+              t,
+              which == _Band.heading ? _headingX : _rowsX,
+            );
+          },
+        );
+      }
       // The width asked for, or what the columns need, whichever is more. A
       // table laid out narrower than its own columns overflows its box, and
       // the scroll then only runs as far as the box: fifteen columns wanting
@@ -3358,8 +3376,29 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: children,
           );
-          if (head == null || !_isSticky) return laidOut;
-          return _Sticky(
+
+          /// A table whose columns are already at their floors and still do
+          /// not fit takes the width it needs and scrolls sideways inside its
+          /// box — the same thing `scroll: TableScroll(x: ...)` asks for, but
+          /// nobody has to know the number in advance.
+          ///
+          /// Without it the rows drawn by hand — merged cells, a summary, a
+          /// heading of more than one row — were laid out against widths
+          /// wider than the box and overflowed it, which on a phone is most
+          /// tables. Safe to wrap whole here, unlike the pinned panes below:
+          /// this path draws every column itself, so there is nothing beside
+          /// it that a sideways scroll could carry off.
+          Widget fitted(Widget child) =>
+              _across != null || measured.total <= available + 0.5
+                  ? child
+                  : _across1D(
+                      SizedBox(width: measured.total, child: child),
+                      t,
+                      _rowsX,
+                    );
+
+          if (head == null || !_isSticky) return fitted(laidOut);
+          return fitted(_Sticky(
             // A ground under it: the heading's own fill is a two per cent
             // wash, and held over the rows it let them be read straight
             // through — the same as a column held at an edge.
@@ -3367,7 +3406,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
             headingHeight: _headingHeight(r, t),
             body: laidOut,
             offset: widget.sticky!.offsetHeader,
-          );
+          ));
         },
       );
     }
@@ -6571,6 +6610,34 @@ class _TableWidths {
       final share = slack / auto.length;
       for (final i in auto) {
         natural[i] += share;
+      }
+    }
+
+    // And the other way round: more wanted than there is room for. The
+    // columns that sized themselves give the excess back in proportion to
+    // what each asked above its floor, and none of them goes below that
+    // floor. A column told an exact width keeps it — a width is a width.
+    //
+    // Without this the widths came back wider than the box, and everything
+    // laid out by hand against them — a row of merged cells, a summary —
+    // drew a Row it could not fit and overflowed. The grid path never showed
+    // it, because Flutter's own Table squeezes the columns instead.
+    var over = available.isFinite
+        ? natural.fold<double>(0, (a, b) => a + b) - available
+        : 0.0;
+    if (over > 0.01) {
+      final give = <int, double>{};
+      for (final i in [...auto, ...flexed]) {
+        final floor = columns[i].minWidth ?? minWidth;
+        if (natural[i] > floor) give[i] = natural[i] - floor;
+      }
+      final total = give.values.fold<double>(0, (a, b) => a + b);
+      if (total > 0) {
+        final taken = math.min(over, total);
+        for (final entry in give.entries) {
+          natural[entry.key] -= taken * entry.value / total;
+        }
+        over -= taken;
       }
     }
 

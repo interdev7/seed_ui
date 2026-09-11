@@ -31,6 +31,16 @@ component's own defaults for a subtree.
 
 ### Fixed
 
+- **A table narrower than its columns no longer overflows its box.** The
+  widths were worked out from what the cells wanted and handed on unsqueezed,
+  so everything laid out by hand against them — a summary row, a run of merged
+  cells, a heading of more than one row — drew wider than the table and threw
+  a `RenderFlex` overflow. On a phone that was most of them: the demo page
+  threw a dozen at 390 wide. Columns that sized themselves now give back what
+  they asked above their floor, and a table whose floors alone will not fit
+  takes the width it needs and scrolls sideways — which is what `scroll.x`
+  asks for, without having to know the number in advance. The same goes for
+  the columns beside a pinned one.
 - **`ComponentDefaults` reaches `DateRangePicker`, `MultiDatePicker` and
   `MultiRangeSlider`.** All three asked for defaults nobody could supply: the
   lookup had no slot to answer from, so it always came back null.

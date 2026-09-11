@@ -9028,4 +9028,139 @@ void main() {
       expect(tester.getRect(find.text('Age')).left - box.left, lessThan(40));
     });
   });
+
+  group('a table narrower than its columns', () {
+    // A phone is 390 wide, and most tables are wider than that. Every one of
+    // them threw a RenderFlex overflow on the demo page: the widths were
+    // worked out from what the cells wanted and handed, unsqueezed, to rows
+    // laid out by hand — a summary, a run of merged cells, a heading of more
+    // than one row.
+
+    Widget wide({
+      int columns = 3,
+      double width = 340,
+      bool summary = false,
+      TableColumnFixed? pin,
+    }) =>
+        _host(
+          Table<int>(
+            data: const [1, 2],
+            columns: [
+              for (var i = 0; i < columns; i++)
+                TableColumn(
+                  fixed: i == 0 ? pin : null,
+                  // A pinned column is laid out apart from the rest, so it
+                  // has to say how wide it is.
+                  width: i == 0 && pin != null ? 120 : null,
+                  title: Text('A heading of some length $i'),
+                  value: (r) => 'a value of some length $r$i',
+                  summary: summary ? (context, rows) => Text('sum $i') : null,
+                ),
+            ],
+          ),
+          width: width,
+        );
+
+    testWidgets('columns give back what they asked above their floor', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wide(summary: true));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+
+      // Squeezed, not scrolled: three columns still fit above their floors,
+      // so the table fills its box exactly and needs no scroll view. Inside
+      // one the table would measure 340 either way — the viewport is 340 —
+      // so the width alone proves nothing.
+      expect(
+        find.descendant(
+          of: find.byType(Table<int>),
+          matching: find.byType(Scrollable),
+        ),
+        findsNothing,
+      );
+      expect(
+        tester.getSize(find.byType(Table<int>)).width,
+        moreOrLessEquals(340, epsilon: 0.5),
+      );
+    });
+
+    testWidgets('a table past its floors scrolls instead of overflowing', (
+      tester,
+    ) async {
+      // Six columns cannot be read at 340 between them — their floors alone
+      // come to more than that — so the table takes the width it needs.
+      await tester.pumpWidget(wide(columns: 6, summary: true));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+
+      final before = tester.getRect(find.text('A heading of some length 0'));
+      await tester.drag(
+        find.byType(Table<int>),
+        const Offset(-120, 0),
+        warnIfMissed: false,
+      );
+      await tester.pump();
+      final after = tester.getRect(find.text('A heading of some length 0'));
+      expect(
+        after.left,
+        lessThan(before.left - 100),
+        reason: 'the columns move under the hand, so it really scrolls',
+      );
+    });
+
+    testWidgets('a pinned column does not bring the overflow back', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wide(columns: 6, summary: true, pin: TableColumnFixed.start),
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a pinned pane scrolls what is left beside it', (
+      tester,
+    ) async {
+      // No summary here, so this is the other layout entirely: the pinned
+      // column is a pane of its own and the rest scroll beside it. That pane
+      // was laid out at whatever the row left it, however little that was.
+      await tester.pumpWidget(wide(columns: 6, pin: TableColumnFixed.start));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+
+      final pinned = tester.getRect(find.text('A heading of some length 0'));
+      final loose = tester.getRect(find.text('A heading of some length 1'));
+      await tester.drag(
+        find.text('a value of some length 12'),
+        const Offset(-120, 0),
+        warnIfMissed: false,
+      );
+      await tester.pump();
+      expect(
+        tester.getRect(find.text('A heading of some length 1')).left,
+        lessThan(loose.left - 100),
+        reason: 'the columns beside the pinned one move',
+      );
+      expect(
+        tester.getRect(find.text('A heading of some length 0')).left,
+        moreOrLessEquals(pinned.left, epsilon: 0.5),
+        reason: 'and the pinned one stays where it is',
+      );
+    });
+
+    testWidgets('a table that fits is left alone', (tester) async {
+      await tester.pumpWidget(wide(columns: 2, width: 900, summary: true));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byType(Table<int>),
+          matching: find.byType(Scrollable),
+        ),
+        findsNothing,
+        reason: 'nothing to scroll, so no scroll view',
+      );
+    });
+  });
 }

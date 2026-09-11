@@ -153,6 +153,22 @@ does not fit scrolls across. It is a **floor**: a table is never laid out
 narrower than its own columns need, so adding columns past the width you named
 widens the table rather than cutting it off.
 
+### A box too narrow to hold the columns
+
+You do not have to name `x` for this. A table given less room than its columns
+want squeezes them first — every column that sized itself gives back what it
+asked above its floor, in proportion, and a column told an exact width keeps
+it. Only when the floors alone come to more than the box does the table take
+the width it needs and scroll sideways, exactly as a named `x` would.
+
+The floor is the `columnMinWidth` token, or a column's own `minWidth` where it
+names one. So on a phone a six-column table scrolls and a three-column one
+fits, without either being told anything about the screen.
+
+Where a column is worth dropping rather than scrolling to, say so with
+[`showFrom`](#a-column-that-comes-and-goes-with-the-room): the column stands down below that
+width and the ones that are left share the room.
+
 It is still a number you have to mean. Name a width your window is wider than
 and there is nothing to scroll — which is not a fault, but does look like one. The heading goes with the rows — both sit
 in the same viewport rather than in one each kept in step by hand, so there is

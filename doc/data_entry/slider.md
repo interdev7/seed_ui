@@ -49,14 +49,14 @@ Slider(
 ```
 
 **The label is a string**, because nearly every mark is one. For the rest,
-`labelBuilder` is handed the label the slider would have drawn — wrap it and
-the mark keeps its colour, its size and its state for nothing:
+`markBuilder` is handed what the slider would have drawn — wrap it and the
+mark keeps its colour, its size and its state for nothing:
 
 ```dart
 SliderMark(
   80,
   '80%',
-  labelBuilder: (context, mark, active, child) => Row(
+  markBuilder: (context, mark, active, child) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [child, if (active) const Icon(Icons.check, size: 12)],
   ),
@@ -64,6 +64,40 @@ SliderMark(
 ```
 
 `active` is whether the handle has reached that mark.
+
+**A mark is a widget, so anything can be wrapped around it** — a menu, a
+popover, a tooltip of your own:
+
+```dart
+SliderMark(
+  60,
+  'booked',
+  markBuilder: (context, mark, active, child) => Dropdown<String>(
+    trigger: const [DropdownTrigger.click],
+    menu: const [DropdownItem(value: 'free', label: 'Free it up')],
+    onItemTap: (value) => ...,
+    child: child,
+  ),
+)
+```
+
+It is `markBuilder` and not `labelBuilder` because a mark with no words has no
+label to build — and that is exactly the mark somebody wants to hang a menu
+on. For one of those the builder is handed a box the size of a dot, **standing
+on the rail where the dot is**, because the dot is the thing anybody would
+press. Put in the band with the labels, it would sit under an invisible patch
+of nothing while the thing you can see stayed dead.
+
+**A mark takes a pointer only where it has been given something to do.** A
+plain mark takes none: its label sits in the band beside the rail, never over
+it, so pressing the scale still moves the handle wherever the marks are. A
+mark with a `markBuilder` and no words takes the pointer at its own dot —
+which is the point of hanging a menu on it.
+
+The band is as tall as the tallest thing in it. Told a height instead, as it
+used to be, anything taller hung out of it — drawn, since the band does not
+clip, and dead to the pointer, since a hit outside a box is no hit. A popover
+on a mark worked in its top half and nowhere else.
 
 **`side` names the flow, not the screen.** `before` is above the rail across a
 row and the leading side down a column; `after` is the other, and is where a

@@ -23,11 +23,13 @@ enum SliderMarkSide {
   after,
 }
 
-/// Draws a mark's label.
+/// Draws a mark.
 ///
-/// [child] is the label the slider would have drawn, styled and all, so a
-/// caller adding something beside it keeps every state for nothing. [active]
-/// is whether the handle has reached this mark.
+/// [child] is what the slider would have drawn — the label, styled and all,
+/// or for a mark with no words a box the size of the band, standing where its
+/// dot is. Wrap it and the mark keeps every state for nothing; wrap it in a
+/// menu or a popover and the mark becomes something to press. [active] is
+/// whether the handle has reached this mark.
 typedef SliderMarkBuilder = Widget Function(
   BuildContext context,
   SliderMark mark,
@@ -43,7 +45,7 @@ class SliderMark {
     this.value,
     this.label, {
     this.style,
-    this.labelBuilder,
+    this.markBuilder,
     this.side = SliderMarkSide.after,
     this.hidden = false,
     this.disabled = false,
@@ -60,7 +62,7 @@ class SliderMark {
     this.disabled = false,
   })  : label = null,
         style = null,
-        labelBuilder = null,
+        markBuilder = null,
         side = SliderMarkSide.after;
 
   /// Where on the scale it sits. Must lie within the slider's own range.
@@ -79,9 +81,12 @@ class SliderMark {
   /// stand out from the rest.
   final TextStyle? style;
 
-  /// Draws this mark's label instead, given the one the slider would have
-  /// drawn.
-  final SliderMarkBuilder? labelBuilder;
+  /// Draws this mark instead, given what the slider would have drawn.
+  ///
+  /// Called `markBuilder` rather than `labelBuilder` because a mark with no
+  /// words has no label to build — and is exactly the mark somebody wants to
+  /// hang a menu or a popover on.
+  final SliderMarkBuilder? markBuilder;
 
   /// Which side of the rail the label is written on.
   final SliderMarkSide side;
@@ -107,7 +112,7 @@ class SliderMark {
     double? value,
     String? label,
     TextStyle? style,
-    SliderMarkBuilder? labelBuilder,
+    SliderMarkBuilder? markBuilder,
     SliderMarkSide? side,
     bool? hidden,
     bool? disabled,
@@ -116,7 +121,7 @@ class SliderMark {
         value ?? this.value,
         label ?? this.label,
         style: style ?? this.style,
-        labelBuilder: labelBuilder ?? this.labelBuilder,
+        markBuilder: markBuilder ?? this.markBuilder,
         side: side ?? this.side,
         hidden: hidden ?? this.hidden,
         disabled: disabled ?? this.disabled,
@@ -128,7 +133,7 @@ class SliderMark {
       other.value == value &&
       other.label == label &&
       other.style == style &&
-      other.labelBuilder == labelBuilder &&
+      other.markBuilder == markBuilder &&
       other.side == side &&
       other.hidden == hidden &&
       other.disabled == disabled;
@@ -138,7 +143,7 @@ class SliderMark {
         value,
         label,
         style,
-        labelBuilder,
+        markBuilder,
         side,
         hidden,
         disabled,
@@ -979,25 +984,57 @@ class _SliderCoreState extends State<_SliderCore> {
         // overlay: it has to follow a handle that moves every frame, and an
         // overlay entry would have to be torn down and rebuilt for each one.
         // The cost is that an ancestor which clips will clip it too.
+        // A mark with no words is a dot on the rail, and the dot is what
+        // somebody presses. Its target belongs there and nowhere else: put in
+        // the band beside the rail, as a label's is, it sat under an invisible
+        // patch of nothing while the thing you could see stayed dead.
+        //
+        // Only where the caller has given the mark something to do. A plain
+        // mark still takes no pointer from the rail, which is what keeps a
+        // tap on the scale moving the handle.
+        final onRail = [
+          for (final mark in widget.marks)
+            if (!mark.hidden && mark.label == null && mark.markBuilder != null)
+              mark,
+        ];
+
         final label = _bubbleLabel();
-        final body = label == null
+        final body = label == null && onRail.isEmpty
             ? painted
             : Stack(
                 clipBehavior: Clip.none,
                 children: [
                   painted,
-                  Positioned(
-                    left: widget.vertical ? null : _bubbleAlong(size),
-                    right: widget.vertical ? size.width : null,
-                    top: widget.vertical ? _bubbleAlong(size) : null,
-                    bottom: widget.vertical ? null : size.height,
-                    child: FractionalTranslation(
-                      translation: widget.vertical
-                          ? const Offset(0, -0.5)
-                          : const Offset(-0.5, 0),
-                      child: _Bubble(label: label, token: t),
+                  for (final mark in onRail)
+                    Positioned(
+                      left: widget.vertical
+                          ? 0
+                          : _alongFor(_fractionOf(mark.value), size.width),
+                      top: widget.vertical
+                          ? _alongFor(_fractionOf(mark.value), size.height)
+                          : 0,
+                      child: FractionalTranslation(
+                        translation: widget.vertical
+                            ? const Offset(0, -0.5)
+                            : const Offset(-0.5, 0),
+                        child: Builder(
+                          builder: (context) => _markLabel(context, t, r, mark),
+                        ),
+                      ),
                     ),
-                  ),
+                  if (label != null)
+                    Positioned(
+                      left: widget.vertical ? null : _bubbleAlong(size),
+                      right: widget.vertical ? size.width : null,
+                      top: widget.vertical ? _bubbleAlong(size) : null,
+                      bottom: widget.vertical ? null : size.height,
+                      child: FractionalTranslation(
+                        translation: widget.vertical
+                            ? const Offset(0, -0.5)
+                            : const Offset(-0.5, 0),
+                        child: _Bubble(label: label, token: t),
+                      ),
+                    ),
                 ],
               );
 
@@ -1373,11 +1410,14 @@ class _SliderCoreState extends State<_SliderCore> {
       fontFamilyFallback: t.fontFamilyFallback,
       decoration: TextDecoration.none,
     ).merge(mark.style);
-    final drawn = DefaultTextStyle.merge(
-      style: base,
-      child: Text(mark.label ?? ''),
-    );
-    final build = mark.labelBuilder;
+    // A mark with no words still needs something to be: a box the size of
+    // the band, where its dot is. Wrapped in a menu or a popover it is what
+    // the pointer finds; left alone it is nothing at all. Without it a
+    // wordless mark could be drawn on and never touched.
+    final drawn = mark.label == null
+        ? SizedBox(width: r.dotSize * 3, height: r.markFontSize * t.lineHeight)
+        : DefaultTextStyle.merge(style: base, child: Text(mark.label!));
+    final build = mark.markBuilder;
     if (build == null) return drawn;
     return build(context, mark, _reached(mark.value), drawn);
   }
@@ -1401,10 +1441,23 @@ class _SliderCoreState extends State<_SliderCore> {
         if (m.side == SliderMarkSide.after) m,
     ];
 
-    /// The labels of one side, each placed at its own value.
+    /// One side's labels, each shifted to the point it names.
     ///
-    /// Laid out by fraction rather than stacked by hand, so a label sits by
-    /// the point it names whatever the scale's range happens to be.
+    /// Shifted rather than positioned. A stack of positioned children has no
+    /// size of its own, so the band had to be told a height — and anything
+    /// taller than the number it was told hung out of it: drawn, since the
+    /// stack does not clip, and dead to the pointer, since a hit outside a box
+    /// is no hit. A popover on a mark worked in its top half and nowhere else.
+    ///
+    /// Left unpositioned, the children size the stack to the biggest of them,
+    /// which is the band's height across a row and its width down a column.
+    /// A `Transform` moves them afterwards without touching that, and carries
+    /// hit testing with it.
+    ///
+    /// It also does away with the silent copy that used to be laid out beside
+    /// them to give the band a size: a duplicate of every label, kept out of
+    /// the semantics tree by hand so a screen reader would not read the marks
+    /// twice over.
     Widget band(List<SliderMark> marks) => LayoutBuilder(
           builder: (context, constraints) {
             final extent =
@@ -1413,14 +1466,13 @@ class _SliderCoreState extends State<_SliderCore> {
               clipBehavior: Clip.none,
               children: [
                 for (final mark in marks)
-                  Positioned(
-                    left: widget.vertical
-                        ? 0
-                        : _alongFor(_fractionOf(mark.value), extent),
-                    top: widget.vertical
-                        ? _alongFor(_fractionOf(mark.value), extent)
-                        : 0,
+                  Transform.translate(
+                    offset: widget.vertical
+                        ? Offset(0, _alongFor(_fractionOf(mark.value), extent))
+                        : Offset(_alongFor(_fractionOf(mark.value), extent), 0),
                     child: FractionalTranslation(
+                      // Half its own size back, so a label is centred on the
+                      // point it names rather than starting there.
                       translation: widget.vertical
                           ? const Offset(0, -0.5)
                           : const Offset(-0.5, 0),
@@ -1432,50 +1484,19 @@ class _SliderCoreState extends State<_SliderCore> {
           },
         );
 
-    /// A band down a column, given a width by a copy of its own labels.
-    ///
-    /// The labels themselves are positioned, and a stack of nothing but
-    /// positioned children has no width of its own; this is what gives it
-    /// one, measured from the labels rather than guessed at.
-    Widget measured(List<SliderMark> marks) => Stack(
-          children: [
-            // Kept out of the semantics tree and out of hit testing: it is a
-            // duplicate of every label, and a screen reader would read the
-            // marks twice over.
-            ExcludeSemantics(
-              child: IgnorePointer(
-                child: Opacity(
-                  opacity: 0,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (final mark in marks)
-                        Builder(
-                          builder: (context) => _markLabel(context, t, r, mark),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned.fill(child: band(marks)),
-          ],
-        );
-
     if (widget.vertical) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (before.isNotEmpty) ...[
-            measured(before),
+            band(before),
             SizedBox(width: t.sizeXS),
           ],
           SizedBox(width: thickness, child: groove),
           if (after.isNotEmpty) ...[
             SizedBox(width: t.sizeXS),
-            measured(after),
+            band(after),
           ],
         ],
       );
@@ -1484,13 +1505,15 @@ class _SliderCoreState extends State<_SliderCore> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (before.isNotEmpty) ...[
-          SizedBox(height: t.controlHeightSM, child: band(before)),
+          // The rail's width, not the widest label's: the marks are laid out
+          // by fraction along it.
+          SizedBox(width: double.infinity, child: band(before)),
           SizedBox(height: t.sizeXXS),
         ],
         SizedBox(height: thickness, child: groove),
         if (after.isNotEmpty) ...[
           SizedBox(height: t.sizeXXS),
-          SizedBox(height: t.controlHeightSM, child: band(after)),
+          SizedBox(width: double.infinity, child: band(after)),
         ],
       ],
     );

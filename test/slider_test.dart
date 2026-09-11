@@ -21,6 +21,7 @@ Rect _groove(WidgetTester tester) =>
 
 void main() {
   _markTests();
+  _markTargetTests();
   _trackTests();
   _editableTests();
   group('Slider', () {
@@ -474,9 +475,7 @@ void main() {
       expect(high, moreOrLessEquals(slider.top, epsilon: 2));
     });
 
-    testWidgets('the copy it measures with is neither read nor tapped', (
-      tester,
-    ) async {
+    testWidgets('each mark is in the tree once', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -499,8 +498,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // The width comes from a silent duplicate of the labels. It is in the
-      // tree, so a finder sees two, but a screen reader must not.
+      // The band used to take its width from a silent duplicate of every
+      // label, laid out and never seen — which had to be kept out of the
+      // semantics tree by hand, or a screen reader read the marks twice.
+      // The labels size the band themselves now, so there is no copy to hide.
+      expect(find.text('half'), findsOneWidget);
       final semantics = tester.getSemantics(find.byType(Slider));
       expect(
         semantics.toString().split('half').length - 1,
@@ -1033,7 +1035,7 @@ void _markTests() {
                 SliderMark(
                   at,
                   '$at',
-                  labelBuilder: (context, mark, active, child) {
+                  markBuilder: (context, mark, active, child) {
                     seen.add((mark.value, active));
                     return Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1079,6 +1081,163 @@ void _markTests() {
       // on the off-chance.
       expect(mark.copyWith(), mark);
       expect(mark.copyWith(value: 51), isNot(mark));
+    });
+  });
+}
+
+void _markTargetTests() {
+  // A menu and a popover need somewhere to render, which is the kit's own
+  // overlay.
+  Widget hosted(Widget child) => ConfigProvider(
+        child: MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          home: Scaffold(
+            body: Center(child: SizedBox(width: 400, child: child)),
+          ),
+        ),
+      );
+
+  group('a mark you can press', () {
+    testWidgets('a menu hangs on a mark and opens where it stands',
+        (tester) async {
+      var picked = '';
+      await tester.pumpWidget(
+        hosted(
+          Slider(
+            value: 50,
+            marks: [
+              SliderMark(
+                60,
+                'booked',
+                markBuilder: (context, mark, active, child) => Dropdown<String>(
+                  trigger: const [DropdownTrigger.click],
+                  menu: const [
+                    DropdownItem(value: 'free', label: 'Free it up'),
+                  ],
+                  onItemTap: (v) => picked = v ?? '',
+                  child: child,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('booked'));
+      await tester.pumpAndSettle();
+      expect(find.text('Free it up'), findsOneWidget);
+      await tester.tap(find.text('Free it up'));
+      await tester.pumpAndSettle();
+      expect(picked, 'free');
+    });
+
+    testWidgets('a mark with no words is pressed where its dot is',
+        (tester) async {
+      var pressed = 0;
+      double? moved;
+      await tester.pumpWidget(
+        hosted(
+          Slider(
+            value: 10,
+            onChanged: (v) => moved = v,
+            marks: [
+              // Words beside it, so there is a band and the dot is plainly
+              // not in it.
+              const SliderMark(20, 'twenty'),
+              const SliderMark.dot(80).copyWith(
+                markBuilder: (context, mark, active, child) => GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => pressed++,
+                  child: child,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = _groove(tester);
+      // On the dot itself. Put in the band, as a label's target is, it sat
+      // under an invisible patch of nothing while the thing you could see
+      // stayed dead.
+      await tester.tapAt(Offset(rail.left + rail.width * 0.8, rail.center.dy));
+      await tester.pumpAndSettle();
+      expect(pressed, 1);
+      expect(moved, isNull, reason: 'the mark had something to do');
+    });
+
+    testWidgets('a mark takes no pointer away from the rail', (tester) async {
+      double? moved;
+      await tester.pumpWidget(
+        hosted(
+          Slider(
+            value: 10,
+            onChanged: (v) => moved = v,
+            marks: [
+              SliderMark(
+                60,
+                'booked',
+                markBuilder: (context, mark, active, child) => GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {},
+                  child: child,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // A mark's own target lives in the band beside the rail, never over it,
+      // so pressing the rail still moves the handle wherever the marks are.
+      final slider = tester.getRect(find.byType(Slider));
+      await tester
+          .tapAt(Offset(slider.left + slider.width * 0.6, slider.top + 8));
+      await tester.pumpAndSettle();
+      expect(moved, isNotNull);
+
+      // And pressing the mark does not.
+      moved = null;
+      await tester.tap(find.text('booked'));
+      await tester.pumpAndSettle();
+      expect(moved, isNull);
+    });
+
+    testWidgets('a label taller than a small control is pressable all over',
+        (tester) async {
+      var pressed = 0;
+      await tester.pumpWidget(
+        hosted(
+          Slider(
+            value: 50,
+            marks: [
+              SliderMark(
+                50,
+                'tall',
+                markBuilder: (context, mark, active, child) => GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => pressed++,
+                  child: SizedBox(height: 60, child: Center(child: child)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final target = tester.getRect(find.text('tall'));
+      final band = tester.getRect(find.byType(Slider));
+      // The band was told a height, so anything taller hung out of it: drawn,
+      // because the stack does not clip, and dead to the pointer, because a
+      // hit outside a box is no hit.
+      expect(band.bottom, greaterThanOrEqualTo(target.bottom));
+      await tester.tapAt(Offset(target.center.dx, band.bottom - 4));
+      await tester.pumpAndSettle();
+      expect(pressed, 1);
     });
   });
 }

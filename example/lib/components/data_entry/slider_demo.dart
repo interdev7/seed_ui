@@ -231,10 +231,26 @@ class _SliderDemoState extends State<SliderDemo> {
                   SliderMark(
                     100,
                     'boiling',
-                    labelBuilder: (context, mark, active, child) => Row(
+                    markBuilder: (context, mark, active, child) => Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [child, if (active) const Text(' ✓')],
                     ),
+                  ),
+                  // Nothing written there, and still something to press:
+                  // the builder is handed a box where the dot is.
+                  const SliderMark.dot(80).copyWith(
+                    markBuilder: (context, mark, active, child) =>
+                        Dropdown<String>(
+                          arrow: true,
+                          placement: PopoverPlacement.top,
+                          trigger: const [DropdownTrigger.click],
+                          menu: const [
+                            DropdownItem(value: 'who', label: 'Who booked it'),
+                            DropdownItem(value: 'free', label: 'Free it up'),
+                          ],
+                          onItemTap: (v) => message.info('$v at 80'),
+                          child: child,
+                        ),
                   ),
                 ],
               ),
@@ -243,7 +259,9 @@ class _SliderDemoState extends State<SliderDemo> {
                 'No step, so the marks are the only stops — and "booked" is '
                 'disabled, so the handle passes it by. "body" is written '
                 'above the rail; "boiling" draws its own label, wrapping the '
-                'one the slider would have drawn rather than replacing it.',
+                'one the slider would have drawn rather than replacing it. '
+                'And the dot at 80 has no words at all — press it: a mark is '
+                'a widget, so a menu hangs on one.',
                 style: TextStyle(color: t.colorTextSecondary),
               ),
             ],

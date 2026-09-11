@@ -18,10 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   side that means nothing. `SliderMark.dot` is a stop with nothing to say.
   Marks are value types now, with `copyWith`, `==` and `hashCode`.
 
-- **`SliderMark.labelBuilder`**, handed the label the slider would have drawn
-  and whether the handle has reached that mark — the shape `cellBuilder` and
+- **`SliderMark.markBuilder`**, handed what the slider would have drawn and
+  whether the handle has reached that mark — the shape `cellBuilder` and
   `tagBuilder` already use, so wrapping keeps colour, size and state for
-  nothing.
+  nothing. A mark with no words is handed a box standing on the rail where its
+  dot is — the dot being the thing anybody would press — so a menu or a
+  popover can be hung on one. A mark takes a pointer only where it has been
+  given something to do: a plain mark's label sits in the band beside the
+  rail, and pressing the scale still moves the handle wherever the marks
+  are.
 
 - **`SliderToken.markColor`, `markDisabledColor` and `markFontSize`.** What a
   mark is drawn in belongs with the rest of the numbers; `SliderMark.style`
@@ -203,6 +208,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A mark taller than a small control was half dead to the pointer.** The
+  band was told a height rather than measured, so anything taller hung out of
+  it: drawn, since the band does not clip, and unhittable, since a hit outside
+  a box is no hit. The labels size the band themselves now — which also does
+  away with the silent duplicate of every label that used to be laid out to
+  give the band a width, and with the hand-written `ExcludeSemantics` that
+  stopped a screen reader reading the marks twice.
+
 - **A handle could hardly be dropped onto its neighbour.** They counted as
   met once their values were equal — half a step, which on a scale of a
   hundred is two pixels of rail. The only way out of an added handle went
@@ -329,7 +342,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking: `SliderMark`'s label is a `String?` rather than a `Widget`.**
   `SliderMark(20, Text('20%'))` becomes `SliderMark(20, '20%')`; anything that
-  was not words is `labelBuilder`'s job now. Nearly every mark was a `Text`
+  was not words is `markBuilder`'s job now. Nearly every mark was a `Text`
   wrapping a string, and the kit spells that the same way everywhere else.
 
 - **The table's document no longer claims two things that stopped being true.**

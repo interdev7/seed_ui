@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`RangeSlider.draggableTrack`** — the filled span moves as one, keeping its
+  length. Only strictly between the handles, so they keep their own drag;
+  pushed against an end the shift is cut back as one rather than the leading
+  handle stopping while the trailing one goes on.
+
+- **`MultiRangeSlider`** — handles you can put in and take out, with
+  `minCount`, `maxCount` and `MultiRangeSliderDefaults`. Its own component
+  rather than a flag: a pair of handles is a `(double, double)` and this is a
+  `List<double>`, and a list of two is not the same promise as a pair. A tap
+  on the rail puts a handle in and a tap on a handle takes it out — a tap on a
+  handle has nothing else to mean. Taking one out is dragging it onto its
+  neighbour — the two meet, one goes, and it is drawn faint on the way; a
+  second tap would make a handle a switch and hold the first tap back behind
+  the double-tap window, and a press held would carry a handle off under the
+  finger of anybody who paused before moving it. The values come back in order
+  however they were dragged or added. `Slider`'s "Not here yet" is empty with
+  it.
+
 - **`MultiDatePicker.maxTagCountResponsive`** — the tags keep to one line, as
   many named as fit and the rest counted, worked out from the room the field
   has rather than from a number decided in advance. The line is `Select`'s
@@ -166,6 +184,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`DatePickerToken.presetsWidth`** and **`timeColumnWidth`**.
 
 ### Fixed
+
+- **A draggable track swallowed the handles inside it.** Which the press had
+  taken hold of was decided by the value under it — strictly between the ends
+  meant the track. That reads right for two handles, whose ends are the span's
+  ends, and is wrong the moment a third stands inside: every drag meant for it
+  moved the whole span. It is asked of the handles themselves now, and a
+  handle always wins.
+
+- **A slider moved a handle on the press rather than on the tap.** A press is
+  not yet a tap: pressed and then dragged, the nearest handle had already been
+  moved under the finger — which is what left a draggable span no longer under
+  the press by the time the drag began, so it behaved like an ordinary range
+  slider. It acts on the way up now.
 
 - **A control's own addon did not join the run.** An `Input` carries its
   search button attached, and that button worked its corners out for itself —

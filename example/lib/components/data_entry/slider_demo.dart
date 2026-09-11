@@ -21,6 +21,8 @@ class SliderDemo extends StatefulWidget {
 }
 
 class _SliderDemoState extends State<SliderDemo> {
+  List<double> _bands = [20, 50, 80];
+  (double, double) _span = (30, 70);
   double _basic = 30;
   double _stepped = 40;
   double _marked = 37;
@@ -208,6 +210,51 @@ class _SliderDemoState extends State<SliderDemo> {
         ),
 
         const SizedBox(height: 20),
+        Group(
+          'A span you can take hold of',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              RangeSlider(
+                values: _span,
+                draggableTrack: true,
+                onChanged: (v) => setState(() => _span = v),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Drag between the handles and the whole span moves, keeping '
+                'its length: ${_span.$1.round()} to ${_span.$2.round()}. The '
+                'handles keep their own drag, or the span would have two dead '
+                'spots at its ends.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Handles you can put in and take out',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MultiRangeSlider(
+                values: _bands,
+                minCount: 2,
+                maxCount: 5,
+                draggableTrack: true,
+                onChanged: (v) => setState(() => _bands = v),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tap the rail to put one in; drag a handle onto its '
+                'neighbour to take it out — it fades as they meet, and '
+                'nothing is decided until you let go. Between two and five of '
+                'them. Now: '
+                '${_bands.map((v) => v.round()).join(', ')}.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

@@ -20,6 +20,8 @@ Rect _groove(WidgetTester tester) =>
     tester.getRect(find.byType(CustomPaint).last);
 
 void main() {
+  _trackTests();
+  _editableTests();
   group('Slider', () {
     testWidgets('a tap moves the handle to where it landed', (tester) async {
       double? changed;
@@ -504,6 +506,415 @@ void main() {
         lessThanOrEqualTo(1),
         reason: 'the marks must not be announced twice',
       );
+    });
+  });
+}
+
+void _trackTests() {
+  group('a span you can take hold of', () {
+    testWidgets('dragging between the handles moves them together',
+        (tester) async {
+      var pair = (20.0, 60.0);
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => RangeSlider(
+              values: pair,
+              draggableTrack: true,
+              onChanged: (v) => setState(() => pair = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(RangeSlider));
+      // Start strictly between the handles — at 40 on a 0..100 scale.
+      final from = Offset(rail.left + rail.width * 0.4, rail.center.dy);
+      await tester.dragFrom(from, Offset(rail.width * 0.2, 0));
+      await tester.pumpAndSettle();
+
+      // Both ends moved by the same amount: the span kept its length.
+      expect(pair.$2 - pair.$1, 40);
+      expect(pair.$1, greaterThan(20));
+    });
+
+    testWidgets('pushed against an end it stops without shrinking',
+        (tester) async {
+      var pair = (20.0, 60.0);
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => RangeSlider(
+              values: pair,
+              draggableTrack: true,
+              onChanged: (v) => setState(() => pair = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(RangeSlider));
+      final from = Offset(rail.left + rail.width * 0.4, rail.center.dy);
+      // Far further than there is room for.
+      await tester.dragFrom(from, Offset(rail.width, 0));
+      await tester.pumpAndSettle();
+
+      // The shift is cut back as one, so the leading handle does not stop
+      // while the trailing one goes on.
+      expect(pair, (60.0, 100.0));
+    });
+
+    testWidgets('a press that pauses before moving takes nothing with it',
+        (tester) async {
+      var pair = (30.0, 70.0);
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => RangeSlider(
+              values: pair,
+              draggableTrack: true,
+              onChanged: (v) => setState(() => pair = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(RangeSlider));
+      final from = Offset(rail.left + rail.width * 0.5, rail.center.dy);
+      final gesture = await tester.startGesture(from);
+      // Held long enough for a slider that acted on the press to have moved
+      // the nearest handle under the finger — which is what left the span no
+      // longer under the press when the drag began, so the track was never
+      // taken and this behaved like an ordinary range slider.
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(pair, (30.0, 70.0), reason: 'a press is not yet a tap');
+
+      for (var i = 0; i < 4; i++) {
+        await gesture.moveBy(const Offset(10, 0));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // Both ends moved together: the span was taken hold of after all.
+      expect(pair.$2 - pair.$1, 40);
+      expect(pair.$1, greaterThan(30));
+    });
+
+    testWidgets('a handle still has its own drag', (tester) async {
+      var pair = (20.0, 60.0);
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => RangeSlider(
+              values: pair,
+              draggableTrack: true,
+              onChanged: (v) => setState(() => pair = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(RangeSlider));
+      // On the low handle, not between them.
+      final from = Offset(rail.left + rail.width * 0.2, rail.center.dy);
+      await tester.dragFrom(from, Offset(rail.width * 0.1, 0));
+      await tester.pumpAndSettle();
+
+      // A span you cannot take hold of at its ends is a span with two dead
+      // spots, so the handles keep their own drag.
+      expect(pair.$2, 60);
+      expect(pair.$1, greaterThan(20));
+    });
+
+    testWidgets('a handle inside the span keeps its own drag', (tester) async {
+      var values = [20.0, 50.0, 80.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              draggableTrack: true,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      // The middle handle stands strictly inside the span, so a track asked
+      // by value rather than by handle took every drag meant for it.
+      final on = Offset(rail.left + rail.width * 0.5, rail.center.dy);
+      await tester.dragFrom(on, Offset(rail.width * 0.1, 0));
+      await tester.pumpAndSettle();
+
+      expect(values.first, 20, reason: 'the ends stayed put');
+      expect(values.last, 80);
+      expect(values[1], greaterThan(50));
+    });
+
+    testWidgets('and the span still moves when nothing is under the press',
+        (tester) async {
+      var values = [20.0, 80.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              draggableTrack: true,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      await tester.dragFrom(
+        Offset(rail.left + rail.width * 0.5, rail.center.dy),
+        Offset(rail.width * 0.1, 0),
+      );
+      await tester.pumpAndSettle();
+
+      expect(values.last - values.first, 60);
+      expect(values.first, greaterThan(20));
+    });
+
+    testWidgets('without the flag the span is not draggable', (tester) async {
+      var pair = (20.0, 60.0);
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => RangeSlider(
+              values: pair,
+              onChanged: (v) => setState(() => pair = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(RangeSlider));
+      // Nearer the high handle, so which one moves is not a toss-up.
+      final from = Offset(rail.left + rail.width * 0.55, rail.center.dy);
+      await tester.dragFrom(from, Offset(rail.width * 0.2, 0));
+      await tester.pumpAndSettle();
+
+      // Only the nearer handle came along, as it always did.
+      expect(pair.$1, 20);
+      expect(pair.$2, greaterThan(60));
+    });
+  });
+}
+
+void _editableTests() {
+  group('handles you can put in and take out', () {
+    testWidgets('a tap on the rail puts one in', (tester) async {
+      var values = [20.0, 60.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      await tester.tapAt(Offset(rail.left + rail.width * 0.8, rail.center.dy));
+      await tester.pumpAndSettle();
+
+      expect(values, hasLength(3));
+      // In order, so "the third band" means the same thing throughout.
+      expect(values, orderedEquals([...values]..sort()));
+      expect(values.last, closeTo(80, 2));
+    });
+
+    testWidgets('a handle dragged onto its neighbour is let go of',
+        (tester) async {
+      var values = [20.0, 50.0, 80.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      final on = Offset(rail.left + rail.width * 0.5, rail.center.dy);
+      final gesture = await tester.startGesture(on);
+      // The middle handle, carried onto the one at 80.
+      await gesture.moveBy(Offset(rail.width * 0.3, 0));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(values, [20.0, 80.0]);
+    });
+
+    testWidgets('brought onto a neighbour and off again, it stays',
+        (tester) async {
+      var values = [20.0, 50.0, 80.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      final on = Offset(rail.left + rail.width * 0.5, rail.center.dy);
+      final gesture = await tester.startGesture(on);
+      await gesture.moveBy(Offset(rail.width * 0.3, 0));
+      await tester.pump();
+      // Nothing is decided until the finger lifts.
+      await gesture.moveBy(Offset(-rail.width * 0.2, 0));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(values, hasLength(3));
+    });
+
+    testWidgets('a drag that meets nobody keeps every handle', (tester) async {
+      var values = [20.0, 50.0, 80.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      final on = Offset(rail.left + rail.width * 0.5, rail.center.dy);
+      final gesture = await tester.startGesture(on);
+      // Paused, then moved a little. No timer decides anything here, so a
+      // slow hand cannot lose a handle.
+      await tester.pump(const Duration(milliseconds: 700));
+      await gesture.moveBy(const Offset(20, 0));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(values, hasLength(3));
+    });
+
+    testWidgets('a tap on a handle leaves it where it is', (tester) async {
+      var values = [20.0, 50.0, 80.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      await tester.tapAt(Offset(rail.left + rail.width * 0.5, rail.center.dy));
+      await tester.pumpAndSettle();
+
+      // Neither removed nor doubled: a handle is already where a tap is
+      // asking it to go.
+      expect(values, [20.0, 50.0, 80.0]);
+    });
+
+    testWidgets('minCount keeps the last ones in', (tester) async {
+      var values = [20.0, 80.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      final on = Offset(rail.left + rail.width * 0.2, rail.center.dy);
+      final gesture = await tester.startGesture(on);
+      // Carried right onto the other handle, which with only two left is
+      // exactly what must not remove one.
+      await gesture.moveBy(Offset(rail.width * 0.6, 0));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // A range with one end is not a range.
+      expect(values, hasLength(2));
+    });
+
+    testWidgets('maxCount refuses the next one', (tester) async {
+      var values = [20.0, 50.0, 80.0];
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => MultiRangeSlider(
+              values: values,
+              maxCount: 3,
+              onChanged: (v) => setState(() => values = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(MultiRangeSlider));
+      await tester.tapAt(Offset(rail.left + rail.width * 0.9, rail.center.dy));
+      await tester.pumpAndSettle();
+
+      expect(values, hasLength(3));
+    });
+
+    testWidgets('a plain range slider still moves on a tap', (tester) async {
+      var pair = (20.0, 60.0);
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) => RangeSlider(
+              values: pair,
+              onChanged: (v) => setState(() => pair = v),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rail = tester.getRect(find.byType(RangeSlider));
+      await tester.tapAt(Offset(rail.left + rail.width * 0.9, rail.center.dy));
+      await tester.pumpAndSettle();
+
+      // Nothing added: only an editable slider adds and removes.
+      expect(pair.$2, greaterThan(60));
     });
   });
 }

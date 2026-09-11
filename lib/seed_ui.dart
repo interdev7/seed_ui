@@ -252,7 +252,14 @@ export 'src/components/data_entry/select.dart'
         SelectToken,
         SelectVariant;
 export 'src/components/data_entry/slider.dart'
-    show SliderDefaults, Slider, RangeSlider, SliderMark, SliderToken;
+    show
+        MultiRangeSlider,
+        MultiRangeSliderDefaults,
+        RangeSlider,
+        Slider,
+        SliderDefaults,
+        SliderMark,
+        SliderToken;
 export 'src/components/data_entry/switch.dart'
     show Switch, SwitchSize, SwitchToken;
 export 'src/components/data_entry/time_picker.dart'

@@ -56,6 +56,71 @@ A drag takes hold of the handle it began nearest and keeps it for the whole
 gesture, so one pushed past its neighbour follows the finger rather than being
 handed over halfway. The pair is always reported low first.
 
+## A span you can take hold of
+
+```dart
+RangeSlider(values: (20, 60), draggableTrack: true, onChanged: ...)
+```
+
+The filled span moves as one, keeping its length. **A handle always wins**:
+the span is taken only where the press lands on no handle at all, so every
+handle keeps its own drag — including one standing in the middle of the span,
+which a track asked by value rather than by handle would swallow.
+
+Pushed against an end of the scale the shift is cut back as one, so the span
+stops whole rather than the leading handle stopping while the trailing one
+goes on.
+
+A tap moves the nearest handle **on the way up**, not on the way down: a press
+is not yet a tap, and a slider that acted at once had already moved a handle
+under the finger by the time a drag began — leaving the span no longer under
+the press, and nothing to take hold of.
+
+## Handles you can put in and take out
+
+```dart
+MultiRangeSlider(
+  values: _bands,
+  minCount: 2,
+  maxCount: 5,
+  onChanged: (v) => setState(() => _bands = v),
+)
+```
+
+Its own component rather than a flag on `RangeSlider`: a pair of handles is a
+`(double, double)` and this is a `List<double>`, and a list of two is not the
+same promise as a pair. A control that had to be both would hand back a type
+its caller has to check.
+
+**A tap on the rail puts a handle in. Dragging a handle onto its neighbour
+takes it out** — the two meet, one goes, and the handle is drawn faint on the
+way so letting go is never a surprise. Nothing is decided until the finger
+lifts, so bringing it back off the neighbour simply keeps it.
+
+A tap on a handle does nothing: it is already where it is being asked to go.
+
+Why that gesture and not another. A second tap would make a handle a switch —
+press it twice and you are back where you started — and registering a double
+tap holds the first one back behind its window, so putting a handle in would
+wait for a tap that is usually not coming. A press held fires on a timer,
+takes the drag out of the running, and carries a handle off under the finger
+of anybody who pauses before moving it. Pulling a handle away from the rail is
+not available at all: a one-axis drag recogniser reports nothing about the
+other axis, and a pan would lose the arena to any page the slider is scrolled
+inside.
+
+What it costs is two handles left standing on the same value. For a control
+whose handles are the edges between bands, two edges in one place is a band of
+nothing — so the trade is the right way round.
+
+`minCount` is two at the least: one handle is a `Slider`, and a range with one
+end is not a range. `maxCount` refuses the next one; left null there is no
+ceiling.
+
+The values come back **in order**, however they were dragged or added — a
+handle pushed past its neighbour would otherwise change what "the third band"
+means halfway through a drag.
+
 ## Which way it runs
 
 `vertical` runs the scale down the page, from the bottom as a measure does.
@@ -143,5 +208,6 @@ ConfigProvider(
 
 ## Not here yet
 
-Editable range nodes — `minCount`, `maxCount` and a draggable track — are not
-here.
+Nothing. A tooltip that stays put, and marks that can be dragged, are
+`Slider`'s job and are already here; handles that come and go are
+`MultiRangeSlider`'s.

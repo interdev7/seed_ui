@@ -164,6 +164,8 @@ ModalHandle
 ModalToken
 MultiDatePicker
 MultiDatePickerDefaults
+MultiRangeSlider
+MultiRangeSliderDefaults
 NotificationApi
 NotificationConfig
 NotificationHandle

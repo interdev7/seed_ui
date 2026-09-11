@@ -349,10 +349,19 @@ class RangeSlider extends StatefulWidget {
     this.disabled,
     this.vertical = false,
     this.reverse = false,
+    this.draggableTrack = false,
     this.tooltip,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
         assert(step == null || step > 0, 'step must be positive');
+
+  /// Whether the span between the handles may be taken hold of and moved as
+  /// one.
+  ///
+  /// Only strictly between them: the handles keep their own drag, or a span
+  /// would have two dead spots at its ends. Pushed against an end of the
+  /// scale the span keeps its length and simply stops.
+  final bool draggableTrack;
 
   /// Where the two handles stand, low then high.
   final (double, double) values;
@@ -441,6 +450,7 @@ class _RangeSliderState extends State<RangeSlider> {
       tooltip: widget.tooltip,
       token: widget.token,
       fillFromStart: false,
+      draggableTrack: widget.draggableTrack,
     );
   }
 
@@ -449,6 +459,182 @@ class _RangeSliderState extends State<RangeSlider> {
   (double, double) _pair(List<double> values) {
     final sorted = [...values]..sort();
     return (sorted.first, sorted.last);
+  }
+}
+
+/// Defaults for every [MultiRangeSlider] under a `ConfigProvider`.
+@immutable
+class MultiRangeSliderDefaults {
+  /// Creates a [MultiRangeSliderDefaults].
+  const MultiRangeSliderDefaults({this.draggableTrack, this.disabled});
+
+  /// Whether the span may be moved as one.
+  final bool? draggableTrack;
+
+  /// Whether the slider is barred.
+  final bool? disabled;
+}
+
+/// A slider whose handles may be put in and taken out.
+///
+/// ```dart
+/// MultiRangeSlider(
+///   values: _bands,
+///   minCount: 2,
+///   maxCount: 5,
+///   onChanged: (v) => setState(() => _bands = v),
+/// )
+/// ```
+///
+/// Its own component rather than a flag on [RangeSlider]: a pair of handles
+/// is a `(double, double)` and this is a list, and a list of two is not the
+/// same promise as a pair. A control that had to be both would hand back a
+/// type its caller has to check.
+///
+/// **A tap puts a handle in; a tap on a handle takes it out.** A tap on a
+/// handle has nothing else to mean — it is already where it is being asked to
+/// go — and it is the one gesture a slider does not otherwise use.
+class MultiRangeSlider extends StatefulWidget {
+  /// Creates a [MultiRangeSlider].
+  const MultiRangeSlider({
+    super.key,
+    required this.values,
+    this.onChanged,
+    this.onChangeComplete,
+    this.min = 0,
+    this.max = 100,
+    this.step = 1,
+    this.marks = const [],
+    this.dots,
+    this.included,
+    this.disabled,
+    this.vertical = false,
+    this.reverse = false,
+    this.draggableTrack = false,
+    this.minCount = 2,
+    this.maxCount,
+    this.tooltip,
+    this.token,
+  })  : assert(min < max, 'min must be less than max'),
+        assert(step == null || step > 0, 'step must be positive'),
+        assert(minCount >= 2, 'a range needs two handles at the least'),
+        assert(
+          maxCount == null || maxCount >= minCount,
+          'maxCount must leave room for minCount',
+        );
+
+  /// Where the handles stand, in order.
+  final List<double> values;
+
+  /// Called as a handle moves, goes in, or comes out — always with the whole
+  /// list, in order.
+  final ValueChanged<List<double>>? onChanged;
+
+  /// Called once a drag ends, or a handle goes in or comes out.
+  final ValueChanged<List<double>>? onChangeComplete;
+
+  /// The bottom of the scale.
+  final double min;
+
+  /// The top of the scale.
+  final double max;
+
+  /// How far one move takes a handle. See [Slider.step].
+  final double? step;
+
+  /// Points written along the scale.
+  final List<SliderMark> marks;
+
+  /// Whether every step is dotted.
+  final bool? dots;
+
+  /// Whether the spans between the handles are filled.
+  final bool? included;
+
+  /// Greys the slider out and blocks dragging.
+  final bool? disabled;
+
+  /// Runs the scale down the page.
+  final bool vertical;
+
+  /// Starts the scale at the far end. See [Slider.reverse].
+  final bool reverse;
+
+  /// Whether the span may be taken hold of and moved as one.
+  final bool draggableTrack;
+
+  /// How few handles there may be. Two at the least: one handle is a
+  /// [Slider], and a range with one end is not a range.
+  final int minCount;
+
+  /// How many there may be, or null for no ceiling.
+  final int? maxCount;
+
+  /// What to show above a handle while it is being moved.
+  final String? Function(double value)? tooltip;
+
+  /// Per-instance token overrides.
+  final SliderToken? token;
+
+  @override
+  State<MultiRangeSlider> createState() => _MultiRangeSliderState();
+}
+
+class _MultiRangeSliderState extends State<MultiRangeSlider> {
+  MultiRangeSliderDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<MultiRangeSliderDefaults>(context);
+
+  SliderDefaults? get _sliderDefaults =>
+      ConfigProvider.defaultsOf<SliderDefaults>(context);
+
+  bool get _dots => widget.dots ?? _sliderDefaults?.dots ?? false;
+
+  bool get _included => widget.included ?? _sliderDefaults?.included ?? true;
+
+  bool get _draggableTrack =>
+      widget.draggableTrack || (_defaults?.draggableTrack ?? false);
+
+  bool get _disabled =>
+      widget.disabled ??
+      _defaults?.disabled ??
+      _sliderDefaults?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
+
+  /// The handles in order, however they were dragged or added.
+  ///
+  /// Sorted on the way out rather than left as they fell: a handle pushed
+  /// past its neighbour would otherwise change what "the third band" means
+  /// halfway through a drag.
+  List<double> _sorted(List<double> values) => [...values]..sort();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SliderCore(
+      values: _sorted(widget.values),
+      onChanged: widget.onChanged == null
+          ? null
+          : (v) => widget.onChanged!(_sorted(v)),
+      onChangeComplete: widget.onChangeComplete == null
+          ? null
+          : (v) => widget.onChangeComplete!(_sorted(v)),
+      min: widget.min,
+      max: widget.max,
+      step: widget.step,
+      marks: widget.marks,
+      dots: _dots,
+      included: _included,
+      disabled: _disabled,
+      vertical: widget.vertical,
+      reverse: widget.reverse,
+      tooltip: widget.tooltip,
+      token: widget.token,
+      fillFromStart: false,
+      draggableTrack: _draggableTrack,
+      editable: true,
+      minCount: widget.minCount,
+      maxCount: widget.maxCount,
+    );
   }
 }
 
@@ -470,6 +656,10 @@ class _SliderCore extends StatefulWidget {
     required this.tooltip,
     required this.token,
     required this.fillFromStart,
+    this.draggableTrack = false,
+    this.editable = false,
+    this.minCount,
+    this.maxCount,
   });
 
   final List<double> values;
@@ -488,6 +678,16 @@ class _SliderCore extends StatefulWidget {
   final SliderToken? token;
   final bool fillFromStart;
 
+  /// Whether the filled span may be taken hold of and moved as one.
+  final bool draggableTrack;
+
+  /// Whether handles may be put in and taken out.
+  final bool editable;
+
+  /// How few and how many handles there may be, where they are editable.
+  final int? minCount;
+  final int? maxCount;
+
   @override
   State<_SliderCore> createState() => _SliderCoreState();
 }
@@ -496,6 +696,16 @@ class _SliderCoreState extends State<_SliderCore> {
   bool _hovered = false;
   int? _dragging;
   int? _focused;
+
+  /// The whole span, taken hold of between the handles.
+  ///
+  /// Where a drag begins matters: on a handle it moves that one, and on the
+  /// filled span between them it moves every handle together. Kept as the
+  /// values the drag began with, so the span keeps its length however far it
+  /// is pushed against an end — reckoning from the last frame would shrink it
+  /// a step at a time.
+  List<double>? _trackFrom;
+  double? _trackAt;
 
   /// The groove's own size, kept from the last layout so a drag that begins
   /// can work out which handle it began nearest to.
@@ -609,6 +819,7 @@ class _SliderCoreState extends State<_SliderCore> {
             enabled: _enabled,
             hovered: _hovered || _dragging != null,
             dragging: _dragging,
+            dropping: _dropping,
           ),
         );
 
@@ -649,10 +860,12 @@ class _SliderCoreState extends State<_SliderCore> {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               dragStartBehavior: DragStartBehavior.down,
-              onTapDown: (details) => _moveNearest(
-                _fractionFor(details.localPosition, size),
-                complete: true,
-              ),
+              // On the way up, not on the way down. A press is not yet a
+              // tap: pressed and then dragged, a slider that acted at once
+              // had already moved the nearest handle under the finger — and a
+              // span about to be taken hold of was no longer under the press
+              // by the time the drag began.
+              onTapUp: (details) => _tap(details.localPosition, size),
               onHorizontalDragStart: widget.vertical ? null : _dragStart,
               onHorizontalDragUpdate: widget.vertical
                   ? null
@@ -711,16 +924,182 @@ class _SliderCoreState extends State<_SliderCore> {
 
   void _dragStart(DragStartDetails details) {
     if (!_enabled) return;
+    // Between the handles rather than on one: the whole span moves. A handle
+    // always wins, though — asked of the handles themselves and not of the
+    // value under the press.
+    //
+    // Asking by value looked right for two handles, whose ends are the span's
+    // ends, and was wrong the moment a third stood inside it: an added handle
+    // is strictly within the span, so the track took every drag meant for it.
+    if (widget.draggableTrack &&
+        widget.values.length > 1 &&
+        _handleAt(details.localPosition, _size) == null) {
+      final at = _valueAt(_fractionFor(details.localPosition, _size));
+      final sorted = [...widget.values]..sort();
+      if (at > sorted.first && at < sorted.last) {
+        setState(() {
+          _trackFrom = [...widget.values];
+          _trackAt = at;
+          _dragging = null;
+        });
+        return;
+      }
+    }
     setState(() => _dragging = _nearestTo(details.localPosition));
   }
 
-  void _dragUpdate(Offset local, Size size) =>
-      _moveNearest(_fractionFor(local, size), complete: false);
+  void _dragUpdate(Offset local, Size size) {
+    final from = _trackFrom;
+    if (from != null) {
+      _moveTrack(_valueAt(_fractionFor(local, size)), from);
+      return;
+    }
+    final fraction = _fractionFor(local, size);
+    _moveNearest(fraction, complete: false);
+    if (!widget.editable) return;
+    final index = _dragging;
+    if (index == null) return;
+    // Asked of where the handle has just been put, not of `widget.values`:
+    // the owner has been handed the new list but has not rebuilt with it
+    // yet, so reading the widget here answers about the move before this one.
+    //
+    // Nothing is decided until the finger lifts, so a handle brought onto a
+    // neighbour and taken off it again simply stays.
+    final meets = _meetsNeighbour(index, _valueAt(fraction));
+    if (meets != _dropping) setState(() => _dropping = meets);
+  }
+
+  /// Slides every handle by however far the span has been pushed.
+  ///
+  /// Clamped as one: the shift is cut back until no handle would leave the
+  /// scale, so the span keeps its length instead of the leading handle
+  /// stopping while the trailing one goes on.
+  void _moveTrack(double to, List<double> from) {
+    var shift = to - _trackAt!;
+    final low = from.reduce((a, b) => a < b ? a : b);
+    final high = from.reduce((a, b) => a > b ? a : b);
+    if (low + shift < widget.min) shift = widget.min - low;
+    if (high + shift > widget.max) shift = widget.max - high;
+    if (shift == 0) return;
+    final next = [for (final v in from) v + shift];
+    widget.onChanged?.call(next);
+  }
 
   void _dragEnd() {
+    if (_dropping) {
+      final index = _dragging;
+      setState(() {
+        _dropping = false;
+        _dragging = null;
+      });
+      if (index != null && widget.values.length > (widget.minCount ?? 2)) {
+        final next = [...widget.values]..removeAt(index);
+        widget.onChanged?.call(next);
+        widget.onChangeComplete?.call(next);
+      }
+      return;
+    }
+    if (_trackFrom != null) {
+      widget.onChangeComplete?.call([...widget.values]);
+      setState(() {
+        _trackFrom = null;
+        _trackAt = null;
+      });
+      return;
+    }
     if (_dragging == null) return;
     widget.onChangeComplete?.call([...widget.values]);
     setState(() => _dragging = null);
+  }
+
+  /// What a tap does: put a handle in, take one out, or move the nearest.
+  ///
+  /// Only where the nodes are editable does a tap add or remove; everywhere
+  /// else it does what it always did, which is move the handle already
+  /// nearest to where it landed.
+  void _tap(Offset local, Size size) {
+    if (!_enabled) return;
+    final fraction = _fractionFor(local, size);
+    if (!widget.editable) {
+      _moveNearest(fraction, complete: true);
+      return;
+    }
+    final value = _valueAt(fraction);
+    final values = widget.values;
+
+    // A tap on a handle does nothing: it is already where it is being asked
+    // to go. Taking one out is a drag — see [_dropping].
+    if (_handleAt(local, size) != null) return;
+    if (values.length >= (widget.maxCount ?? values.length + 1)) return;
+    final next = [...values, value]..sort();
+    widget.onChanged?.call(next);
+    widget.onChangeComplete?.call(next);
+  }
+
+  /// Whether the handle being dragged has been brought onto a neighbour, and
+  /// goes when the finger lifts.
+  ///
+  /// Dragging one handle onto another is the only way out of this that
+  /// nothing else wants.
+  ///
+  /// A second tap would make a handle a switch — press it twice and you are
+  /// back where you started — and registering a double tap holds the first
+  /// one back behind its window, so putting a handle in would wait 300ms for
+  /// a tap that is usually not coming. A press held fires on a timer, takes
+  /// the drag out of the running, and carries a handle off under the finger
+  /// of anybody who paused before moving it. Pulling a handle away from the
+  /// rail is not available at all: a one-axis drag recogniser reports nothing
+  /// about the other axis, and a pan would lose the arena to any page the
+  /// slider is scrolled inside.
+  ///
+  /// Two handles left standing on the same value is what this costs. For a
+  /// control whose handles are the edges between bands, two edges in one
+  /// place is a band of nothing — so the trade is the right way round.
+  bool _dropping = false;
+
+  /// Whether the handle at [index], put at [me], now stands on another.
+  bool _meetsNeighbour(int index, double me) {
+    final values = widget.values;
+    if (values.length <= (widget.minCount ?? 2)) return false;
+    // Half a step, so two handles that cannot land on the same value still
+    // count as having met once there is nothing between them.
+    final reach = (widget.step ?? 0.0001) / 2;
+    for (var i = 0; i < values.length; i++) {
+      if (i == index) continue;
+      if ((values[i] - me).abs() <= reach) return true;
+    }
+    return false;
+  }
+
+  /// Which handle is under [local], where one is.
+  ///
+  /// Reckoned in the groove's own length rather than in pixels of the screen,
+  /// so the target is the same size whatever the slider was given room for.
+  int? _handleAt(Offset local, Size size) {
+    final along = _fractionFor(local, size);
+    final length = widget.vertical ? size.height : size.width;
+    if (length <= 0) return null;
+    // Half a handle either side, which is the handle.
+    final reach = (_handleReach / length).clamp(0.0, 1.0);
+    int? best;
+    var away = double.infinity;
+    for (var i = 0; i < widget.values.length; i++) {
+      final gap = (_fractionOf(widget.values[i]) - along).abs();
+      if (gap <= reach && gap < away) {
+        away = gap;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  /// How far from a handle's middle still counts as the handle.
+  double get _handleReach {
+    final r = (widget.token ??
+            ConfigProvider.componentOf<SliderToken>(context) ??
+            const SliderToken())
+        ._resolve(context.softToken);
+    return r.handleSizeHover / 2 + r.handleLineWidthHover;
   }
 
   /// Which handle a drag beginning at [local] takes hold of.
@@ -923,6 +1302,7 @@ class _SliderPainter extends CustomPainter {
     required this.enabled,
     required this.hovered,
     required this.dragging,
+    required this.dropping,
   });
 
   final List<double> fractions;
@@ -935,6 +1315,10 @@ class _SliderPainter extends CustomPainter {
   final bool enabled;
   final bool hovered;
   final int? dragging;
+
+  /// Whether the handle being dragged has been pulled clear and will go when
+  /// the finger lifts. Drawn faint, so letting go is never a surprise.
+  final bool dropping;
 
   /// The point a fraction of the way along the groove.
   Offset _at(double fraction, Size size) => vertical
@@ -992,11 +1376,15 @@ class _SliderPainter extends CustomPainter {
       final active = hovered || dragging == i;
       final diameter = active ? token.handleSizeHover : token.handleSize;
       final ring = active ? token.handleLineWidthHover : token.handleLineWidth;
-      final colour = !enabled
+      var colour = !enabled
           ? token.handleColorDisabled
           : (dragging == i || hovered
               ? token.handleActiveColor
               : token.handleColor);
+      // On its way out: drawn faint, so a handle about to be let go of says
+      // so before the finger lifts rather than after.
+      final leaving = dropping && dragging == i;
+      if (leaving) colour = colour.withValues(alpha: 0.3);
       canvas
         // The ring is drawn outside the disc, the way a focus shadow sits,
         // so the handle keeps the diameter its token names.
@@ -1008,7 +1396,10 @@ class _SliderPainter extends CustomPainter {
         ..drawCircle(
           centre,
           diameter / 2,
-          Paint()..color = const Color(0xFFFFFFFF),
+          Paint()
+            ..color = leaving
+                ? const Color(0xFFFFFFFF).withValues(alpha: 0.3)
+                : const Color(0xFFFFFFFF),
         );
     }
   }
@@ -1020,6 +1411,7 @@ class _SliderPainter extends CustomPainter {
       old.enabled != enabled ||
       old.hovered != hovered ||
       old.dragging != dragging ||
+      old.dropping != dropping ||
       old.included != included ||
       old.vertical != vertical;
 

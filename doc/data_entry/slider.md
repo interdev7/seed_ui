@@ -362,6 +362,12 @@ ConfigProvider(
 
 ## Not here yet
 
-Nothing. A tooltip that stays put, and marks that can be dragged, are
-`Slider`'s job and are already here; handles that come and go are
-`MultiRangeSlider`'s.
+**A bubble that stays put.** The one over a handle shows only while the
+handle is being moved, so that a bubble left standing does not sit over
+whatever the slider is labelled with. A slider that wants its value on show
+at all times writes it beside itself.
+
+**Marks the reader can drag.** They are data the caller owns, which is why
+there is no controller for them; the moment a reader could move one, the
+slider would own something of its own and would need one. That is the piece
+of work, not the controller.

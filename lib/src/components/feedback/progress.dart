@@ -681,7 +681,7 @@ class _ProgressState extends State<Progress> {
     return p >= 0.9999 && (s == StatusType.success || s == StatusType.error);
   }
 
-  Color _fill(Token token, double p) {
+  Color _fill(Token token, _ResolvedProgressToken r, double p) {
     if (widget.color != null) return widget.color!;
     if (widget.rangeColors != null && widget.rangeColors!.isNotEmpty) {
       return _resolveRangeColor(p);
@@ -690,7 +690,9 @@ class _ProgressState extends State<Progress> {
       StatusType.success => token.success.base,
       StatusType.error => token.error.base,
       StatusType.warning => token.warning.base,
-      _ => token.primary.base,
+      // The component's own, not the theme's primary: `defaultColor` could be
+      // named and never took.
+      _ => r.defaultColor,
     };
   }
 
@@ -789,7 +791,7 @@ class _ProgressState extends State<Progress> {
         (isInner
             ? (resSize.height < 18 ? 18.0 : resSize.height)
             : resSize.height);
-    final fill = _fill(token, currentPercent);
+    final fill = _fill(token, r, currentPercent);
     final cap = _effectiveCap;
 
     final customRadius = widget.borderRadius?.toBorderRadius(dir);
@@ -1250,7 +1252,7 @@ class _ProgressState extends State<Progress> {
         (effectiveSize is ExplicitHeight
             ? effectiveSize.height * 0.1
             : defaultStroke);
-    final fill = _fill(token, currentPercent);
+    final fill = _fill(token, r, currentPercent);
     final sz = resSize.width;
     final cap = _effectiveCap;
 

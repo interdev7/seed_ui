@@ -98,6 +98,23 @@ component's own defaults for a subtree.
 
 ### Fixed
 
+- **Twenty-one more token fields that were named and never drawn with.** The
+  same defect as the `Input` one below, found by a check written for it and
+  now standing guard: a field declared, documented, resolved — and never read.
+  Thirteen of them now draw what they say: `TagToken.defaultBg` and
+  `defaultColor`, `SegmentedToken.itemHoverColor` (an unselected segment
+  darkens its words under the pointer, not only its fill), `RadioToken.dotColor`,
+  `buttonBg`, `buttonCheckedBg` and `buttonColor`, `ProgressToken.defaultColor`,
+  `InputNumberToken.handleWidth` and `handleBg`, `SelectToken.selectorBg`,
+  `optionFontSize` and `borderRadiusLG`.
+
+  **BREAKING — eight are gone**, having named something the kit does not
+  draw: `AvatarToken.groupSpace` (`groupOverlapping` above zero is the gap),
+  `DrawerToken.footerPadding` (a drawer has no footer), `PaginationToken.itemBg`
+  and `itemActiveBg` (a page is a `Button`, and its fill is the button's),
+  `SelectToken.clearBg` (the clear mark has no disc behind it),
+  `TabsToken.itemActiveColor`, `cardHeight` and `verticalItemMargin`. The
+  example's own theme was setting two of them, which is how little they did.
 - **An `Input`'s border can actually be given a colour.** `colorBorder`,
   `hoverBorderColor`, `activeBorderColor`, `colorText` and
   `colorTextPlaceholder` were declared on `InputToken`, documented, resolved —

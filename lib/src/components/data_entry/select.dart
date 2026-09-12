@@ -118,7 +118,6 @@ class SelectToken {
     this.optionPadding,
     this.optionFontSize,
     this.selectorBg,
-    this.clearBg,
     this.borderRadius,
     this.borderRadiusSM,
     this.borderRadiusLG,
@@ -139,9 +138,6 @@ class SelectToken {
   /// Trigger selector background (`selectorBg`).
   final Color? selectorBg;
 
-  /// Clear button background (`clearBg`).
-  final Color? clearBg;
-
   /// Corner radius for standard select (`borderRadius`).
   final double? borderRadius;
 
@@ -158,7 +154,6 @@ class SelectToken {
             EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: 5),
         optionFontSize: optionFontSize ?? t.fontSize,
         selectorBg: selectorBg ?? t.colorBgContainer,
-        clearBg: clearBg ?? t.colorBgContainer,
         borderRadius: borderRadius ?? t.borderRadius,
         borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
         borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
@@ -173,7 +168,6 @@ class _ResolvedSelectToken {
     required this.optionPadding,
     required this.optionFontSize,
     required this.selectorBg,
-    required this.clearBg,
     required this.borderRadius,
     required this.borderRadiusSM,
     required this.borderRadiusLG,
@@ -184,7 +178,6 @@ class _ResolvedSelectToken {
   final EdgeInsets optionPadding;
   final double optionFontSize;
   final Color selectorBg;
-  final Color clearBg;
   final double borderRadius;
   final double borderRadiusSM;
   final double borderRadiusLG;
@@ -772,6 +765,13 @@ class _SelectState<T> extends State<Select<T>> {
   double _fontSize(Token t) =>
       _size == SoftSize.large ? t.fontSizeLG : t.fontSize;
 
+  /// The corners, per preset — all three of them, where only two were read.
+  double _radius(_ResolvedSelectToken r) => switch (_size) {
+        SoftSize.small => r.borderRadiusSM,
+        SoftSize.large => r.borderRadiusLG,
+        _ => r.borderRadius,
+      };
+
   Color _borderColor(Token t) {
     if (!_enabled) return t.colorBorder;
     if (widget.status == SelectStatus.error) {
@@ -830,6 +830,10 @@ class _SelectState<T> extends State<Select<T>> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
+    final r = (widget.token ??
+            ConfigProvider.componentOf<SelectToken>(context) ??
+            const SelectToken())
+        ._resolve(token);
     final fontSize = _fontSize(token);
     final values = _current;
     final hasValue = values.isNotEmpty;
@@ -849,7 +853,9 @@ class _SelectState<T> extends State<Select<T>> {
     } else if (_variant == SelectVariant.borderless) {
       fill = const Color(0x00000000);
     } else {
-      fill = token.colorBgContainer;
+      // The component's own fill, not the theme's container colour:
+      // `selectorBg` could be named and never took.
+      fill = r.selectorBg;
     }
 
     final textStyle = TextStyle(
@@ -969,7 +975,7 @@ class _SelectState<T> extends State<Select<T>> {
       ),
       decoration: BoxDecoration(
         color: fill,
-        borderRadius: CompactSlot.radiusOf(context, token.borderRadius),
+        borderRadius: CompactSlot.radiusOf(context, _radius(r)),
         border: bordered
             ? Border.all(color: _borderColor(token), width: token.lineWidth)
             : null,
@@ -1366,7 +1372,9 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
                 child: DefaultTextStyle.merge(
                   style: TextStyle(
                     color: color,
-                    fontSize: widget.fontSize,
+                    // The menu's own type, not the field's: `optionFontSize`
+                    // is a token of this component and took nowhere.
+                    fontSize: r.optionFontSize,
                     fontWeight:
                         widget.selected ? t.fontWeightStrong : t.fontWeight,
                     fontFamily: t.fontFamily,

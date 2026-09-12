@@ -105,14 +105,12 @@ class TabsToken {
     this.inkBarColor,
     this.itemColor,
     this.itemHoverColor,
-    this.itemActiveColor,
     this.itemSelectedColor,
     this.titleFontSize,
     this.titleFontSizeSM,
     this.titleFontSizeLG,
     this.cardBg,
     this.cardGutter,
-    this.cardHeight,
     this.cardPadding,
     this.cardPaddingSM,
     this.cardPaddingLG,
@@ -121,7 +119,6 @@ class TabsToken {
     this.horizontalItemPaddingSM,
     this.horizontalItemPaddingLG,
     this.verticalItemPadding,
-    this.verticalItemMargin,
   });
 
   /// Colour of the sliding indicator (`inkBarColor`).
@@ -132,9 +129,6 @@ class TabsToken {
 
   /// Hover label colour (`itemHoverColor`).
   final Color? itemHoverColor;
-
-  /// Pressed label colour (`itemActiveColor`).
-  final Color? itemActiveColor;
 
   /// Active tab label colour (`itemSelectedColor`).
   final Color? itemSelectedColor;
@@ -153,9 +147,6 @@ class TabsToken {
 
   /// Gap between card tabs (`cardGutter`).
   final double? cardGutter;
-
-  /// Card-tab height (`cardHeight`).
-  final double? cardHeight;
 
   /// Card-tab padding — middle (`cardPadding`), small and large.
   final EdgeInsets? cardPadding;
@@ -181,9 +172,6 @@ class TabsToken {
   /// Vertical tab padding (`verticalItemPadding`).
   final EdgeInsets? verticalItemPadding;
 
-  /// Gap between vertical tabs (`verticalItemMargin`).
-  final EdgeInsets? verticalItemMargin;
-
   /// Fills in every unset field from the global [t], producing the effective
   /// tokens the widget draws with.
   /// Weight of the active tab. Inactive tabs take the theme's `fontWeight`.
@@ -194,7 +182,6 @@ class TabsToken {
         inkBarColor: inkBarColor ?? t.primary.base,
         itemColor: itemColor ?? t.colorText,
         itemHoverColor: itemHoverColor ?? t.primary.hover,
-        itemActiveColor: itemActiveColor ?? t.primary.active,
         itemSelectedColor: itemSelectedColor ?? t.primary.base,
         disabledColor: t.colorTextQuaternary,
         titleFontSize: titleFontSize ?? t.fontSize,
@@ -202,7 +189,6 @@ class TabsToken {
         titleFontSizeLG: titleFontSizeLG ?? t.fontSizeLG,
         cardBg: cardBg ?? t.colorFillQuaternary,
         cardGutter: cardGutter ?? 2,
-        cardHeight: cardHeight ?? t.controlHeightLG,
         // 8px 16px / 4px 8px / 11px 16px.
         cardPadding: cardPadding ??
             EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeXS),
@@ -219,8 +205,6 @@ class TabsToken {
             EdgeInsets.symmetric(vertical: t.sizeSM + 2),
         verticalItemPadding: verticalItemPadding ??
             EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeXS),
-        verticalItemMargin:
-            verticalItemMargin ?? EdgeInsets.only(top: t.sizeSM),
       );
 }
 
@@ -232,7 +216,6 @@ class _ResolvedTabsToken {
     required this.inkBarColor,
     required this.itemColor,
     required this.itemHoverColor,
-    required this.itemActiveColor,
     required this.itemSelectedColor,
     required this.disabledColor,
     required this.titleFontSize,
@@ -240,7 +223,6 @@ class _ResolvedTabsToken {
     required this.titleFontSizeLG,
     required this.cardBg,
     required this.cardGutter,
-    required this.cardHeight,
     required this.cardPadding,
     required this.cardPaddingSM,
     required this.cardPaddingLG,
@@ -249,7 +231,6 @@ class _ResolvedTabsToken {
     required this.horizontalItemPaddingSM,
     required this.horizontalItemPaddingLG,
     required this.verticalItemPadding,
-    required this.verticalItemMargin,
   });
 
   final FontWeight fontWeightActive;
@@ -257,7 +238,6 @@ class _ResolvedTabsToken {
   final Color inkBarColor;
   final Color itemColor;
   final Color itemHoverColor;
-  final Color itemActiveColor;
   final Color itemSelectedColor;
   final Color disabledColor;
   final double titleFontSize;
@@ -265,7 +245,6 @@ class _ResolvedTabsToken {
   final double titleFontSizeLG;
   final Color cardBg;
   final double cardGutter;
-  final double cardHeight;
   final EdgeInsets cardPadding;
   final EdgeInsets cardPaddingSM;
   final EdgeInsets cardPaddingLG;
@@ -274,7 +253,6 @@ class _ResolvedTabsToken {
   final EdgeInsets horizontalItemPaddingSM;
   final EdgeInsets horizontalItemPaddingLG;
   final EdgeInsets verticalItemPadding;
-  final EdgeInsets verticalItemMargin;
 
   double fontSize(SoftSize s) => switch (s) {
         SoftSize.small => titleFontSizeSM,

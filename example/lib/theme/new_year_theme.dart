@@ -172,8 +172,6 @@ ThemeData newYearTheme({
         borderRadius: 12,
       ),
       pagination: PaginationToken(
-        itemBg: c.surface,
-        itemActiveBg: c.goldWash,
         itemActiveColorPrimary: c.goldInk,
         borderRadius: 10,
       ),

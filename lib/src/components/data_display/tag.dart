@@ -234,7 +234,7 @@ class Tag extends StatelessWidget {
       ConfigProvider.defaultsOf<TagDefaults>(context)?.closable ??
       false;
 
-  _TagStyle _style(BuildContext context, Token t) {
+  _TagStyle _style(BuildContext context, Token t, _ResolvedTagToken r) {
     final variant = _variantIn(context);
     if (gradient != null && color == null) {
       return const _TagStyle(
@@ -274,12 +274,12 @@ class Tag extends StatelessWidget {
           TagVariant.outlined => _TagStyle(
               bg: transparent,
               border: t.colorBorder,
-              text: t.colorText,
+              text: r.defaultColor,
             ),
           TagVariant.filled => _TagStyle(
-              bg: t.colorFillTertiary,
+              bg: r.defaultBg,
               border: transparent,
-              text: t.colorText,
+              text: r.defaultColor,
             ),
           TagVariant.solid => _TagStyle(
               bg: t.colorTextSecondary,
@@ -310,7 +310,7 @@ class Tag extends StatelessWidget {
             ConfigProvider.componentOf<TagToken>(context) ??
             const TagToken())
         ._resolve(token);
-    final style = _style(context, token);
+    final style = _style(context, token, r);
     final fontSize = r.fontSize;
 
     return Container(

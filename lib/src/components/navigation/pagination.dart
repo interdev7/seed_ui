@@ -46,18 +46,10 @@ class _PagerEntry {
 class PaginationToken {
   /// Creates a [PaginationToken].
   const PaginationToken({
-    this.itemBg,
-    this.itemActiveBg,
     this.itemActiveColorPrimary,
     this.fontSize,
     this.borderRadius,
   });
-
-  /// Page item background color.
-  final Color? itemBg;
-
-  /// Active page item background color.
-  final Color? itemActiveBg;
 
   /// Active page item primary / border color.
   final Color? itemActiveColorPrimary;
@@ -69,8 +61,6 @@ class PaginationToken {
   final double? borderRadius;
 
   _ResolvedPaginationToken _resolve(Token t) => _ResolvedPaginationToken(
-        itemBg: itemBg ?? t.colorBgContainer,
-        itemActiveBg: itemActiveBg ?? t.colorBgContainer,
         itemActiveColorPrimary: itemActiveColorPrimary ?? t.primary.base,
         fontSize: fontSize ?? t.fontSize,
         borderRadius: borderRadius ?? t.borderRadius,
@@ -80,15 +70,11 @@ class PaginationToken {
 @immutable
 class _ResolvedPaginationToken {
   const _ResolvedPaginationToken({
-    required this.itemBg,
-    required this.itemActiveBg,
     required this.itemActiveColorPrimary,
     required this.fontSize,
     required this.borderRadius,
   });
 
-  final Color itemBg;
-  final Color itemActiveBg;
   final Color itemActiveColorPrimary;
   final double fontSize;
   final double borderRadius;

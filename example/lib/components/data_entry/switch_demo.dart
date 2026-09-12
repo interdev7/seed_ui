@@ -28,6 +28,11 @@ class _SwitchDemoState extends State<SwitchDemo> {
           onChanged: (v) => setState(() => _b = v),
         ),
         Switch(
+          value: _b,
+          size: const ControlSize.height(54),
+          onChanged: (v) => setState(() => _b = v),
+        ),
+        Switch(
           value: _c,
           onChanged: (v) => setState(() => _c = v),
           checkedChild: const Text('ON'),

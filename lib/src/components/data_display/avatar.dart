@@ -29,7 +29,6 @@ class AvatarToken {
     this.colorTextPlaceholder,
     this.groupBorderColor,
     this.groupOverlapping,
-    this.groupSpace,
     this.borderRadius,
   });
 
@@ -60,9 +59,6 @@ class AvatarToken {
   /// Overlap distance in a group.
   final double? groupOverlapping;
 
-  /// Spacing in a group (when overlapping is disabled/negative).
-  final double? groupSpace;
-
   /// Border radius for square avatars.
   final double? borderRadius;
 
@@ -83,10 +79,7 @@ class AvatarToken {
         colorTextPlaceholder: colorTextPlaceholder ?? const Color(0xFFFFFFFF),
         groupBorderColor: groupBorderColor ?? t.colorBgContainer,
         groupOverlapping: groupOverlapping ?? -8,
-        groupSpace: groupSpace ?? 3,
         borderRadius: borderRadius ?? t.borderRadius,
-        colorFillTertiary:
-            t.colorFillTertiary, // as background color placeholder
         fontFamily: t.fontFamily,
         fontFamilyFallback: t.fontFamilyFallback,
       );
@@ -105,9 +98,7 @@ class _ResolvedAvatarToken {
     required this.colorTextPlaceholder,
     required this.groupBorderColor,
     required this.groupOverlapping,
-    required this.groupSpace,
     required this.borderRadius,
-    required this.colorFillTertiary,
     required this.fontFamily,
     required this.fontFamilyFallback,
   });
@@ -122,9 +113,7 @@ class _ResolvedAvatarToken {
   final Color colorTextPlaceholder;
   final Color groupBorderColor;
   final double groupOverlapping;
-  final double groupSpace;
   final double borderRadius;
-  final Color colorFillTertiary;
   final String? fontFamily;
   final List<String>? fontFamilyFallback;
 }

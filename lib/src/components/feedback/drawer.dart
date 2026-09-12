@@ -39,7 +39,6 @@ class DrawerToken {
     this.colorBgMask,
     this.colorBgElevated,
     this.padding,
-    this.footerPadding,
   });
 
   /// Mask backdrop color (`colorBgMask`).
@@ -51,15 +50,10 @@ class DrawerToken {
   /// Body padding (`padding`).
   final EdgeInsets? padding;
 
-  /// Footer padding (`footerPadding`).
-  final EdgeInsets? footerPadding;
-
   _ResolvedDrawerToken _resolve(Token t) => _ResolvedDrawerToken(
         colorBgMask: colorBgMask ?? t.colorBgMask,
         colorBgElevated: colorBgElevated ?? t.colorBgElevated,
         padding: padding ?? EdgeInsets.all(t.sizeLG),
-        footerPadding: footerPadding ??
-            EdgeInsets.symmetric(horizontal: t.sizeLG, vertical: t.sizeSM),
       );
 }
 
@@ -69,13 +63,11 @@ class _ResolvedDrawerToken {
     required this.colorBgMask,
     required this.colorBgElevated,
     required this.padding,
-    required this.footerPadding,
   });
 
   final Color colorBgMask;
   final Color colorBgElevated;
   final EdgeInsets padding;
-  final EdgeInsets footerPadding;
 }
 
 /// Everything a single drawer can be configured with.

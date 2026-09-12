@@ -53,7 +53,7 @@ class _NotificationDemoState extends State<NotificationDemo> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
                   children: [
                     Text(
                       'Enable Stack Deck (Grouping):',

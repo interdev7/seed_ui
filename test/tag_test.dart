@@ -128,4 +128,40 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(tester.getSize(find.byType(Tag)).width, lessThanOrEqualTo(60));
   });
+
+  testWidgets('a neutral tag takes its own fill and ink from the token', (
+    tester,
+  ) async {
+    // `defaultBg` and `defaultColor` were declared, documented, resolved —
+    // and never read, the tag asking the theme instead.
+    const fill = Color(0xFF123456);
+    const ink = Color(0xFF654321);
+    await tester.pumpWidget(
+      _host(
+        const Tag(
+          variant: TagVariant.filled,
+          token: TagToken(defaultBg: fill, defaultColor: ink),
+          child: Text('beta'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final box = tester
+        .widgetList<DecoratedBox>(
+          find.descendant(
+            of: find.byType(Tag),
+            matching: find.byType(DecoratedBox),
+          ),
+        )
+        .map((b) => b.decoration as BoxDecoration)
+        .firstWhere((d) => d.color != null);
+    expect(box.color, fill);
+    expect(
+      DefaultTextStyle.of(
+        tester.element(find.text('beta')),
+      ).style.color,
+      ink,
+    );
+  });
 }

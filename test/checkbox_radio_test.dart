@@ -392,6 +392,90 @@ void main() {
       );
     });
   });
+
+  testWidgets('a radio dot is drawn in the colour the token names', (
+    tester,
+  ) async {
+    // `dotColor`, `buttonBg`, `buttonCheckedBg` and `buttonColor` were all
+    // declared, resolved and never read.
+    const dot = Color(0xFF123456);
+    await tester.pumpWidget(
+      _host(
+        ConfigProvider(
+          theme: ThemeData(
+            components: const ComponentsConfig(
+              radio: RadioToken(dotColor: dot),
+            ),
+          ),
+          child: Radio<String>(
+            value: 'a',
+            groupValue: 'a',
+            onChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final ring = tester
+        .widgetList<AnimatedContainer>(
+          find.descendant(
+            of: find.byType(Radio<String>),
+            matching: find.byType(AnimatedContainer),
+          ),
+        )
+        .map((b) => b.decoration! as BoxDecoration)
+        .first;
+    expect((ring.border! as Border).top.color, dot);
+  });
+
+  testWidgets('a button-style run takes its own fills and ink', (
+    tester,
+  ) async {
+    const resting = Color(0xFF102030);
+    const taken = Color(0xFF405060);
+    const ink = Color(0xFF708090);
+    await tester.pumpWidget(
+      _host(
+        ConfigProvider(
+          theme: ThemeData(
+            components: const ComponentsConfig(
+              radio: RadioToken(
+                buttonBg: resting,
+                buttonCheckedBg: taken,
+                buttonColor: ink,
+              ),
+            ),
+          ),
+          child: RadioGroup<String>(
+            value: 'a',
+            optionType: RadioOptionType.button,
+            buttonStyle: RadioButtonStyle.solid,
+            options: const [
+              RadioOption(value: 'a', label: Text('Taken')),
+              RadioOption(value: 'b', label: Text('Not')),
+            ],
+            onChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final fills = tester
+        .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+        .map((b) => (b.decoration! as BoxDecoration).color)
+        .whereType<Color>()
+        .toSet();
+    expect(fills, contains(taken), reason: 'the one that was taken');
+    expect(fills, contains(resting), reason: 'and the one that was not');
+    // The run draws a second, invisible layer of the same words to keep the
+    // two rows aligned, so the label is in the tree twice.
+    expect(
+      DefaultTextStyle.of(tester.element(find.text('Not').first)).style.color,
+      ink,
+    );
+  });
 }
 
 /// Whether the one box on screen reads as ticked.

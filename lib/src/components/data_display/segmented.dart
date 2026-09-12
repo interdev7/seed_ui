@@ -965,12 +965,17 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
     bool selected,
   ) {
     final enabled = _enabled && !option.disabled;
+    final hovered = _hoveredIndex == index && enabled && !selected;
+    // An unselected segment darkens under the pointer as well as taking a
+    // fill: `itemHoverColor` is a token of its own, and the text stayed the
+    // resting colour while only the fill answered.
     final color = !enabled
         ? token.colorTextQuaternary
         : selected
             ? r.itemSelectedColor
-            : r.itemColor;
-    final hovered = _hoveredIndex == index && enabled && !selected;
+            : hovered
+                ? r.itemHoverColor
+                : r.itemColor;
 
     final label = option.label == null
         ? null

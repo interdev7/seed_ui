@@ -286,6 +286,60 @@ void main() {
     );
   });
 
+  test('every token a component resolves is one it draws with', () {
+    // A token field that is declared, documented, resolved and never read is
+    // a promise with no way to keep it — worse than a missing one, because
+    // the reader tries it and nothing happens. `InputToken.colorBorder` was
+    // one: naming a border colour did nothing at all, the field asking the
+    // theme instead. Twenty-one fields across ten components were dead.
+    //
+    // Reads are counted outside the public `XToken` class, whose `_resolve`
+    // mentions every name once by definition; a read inside the resolved
+    // class's own helper methods counts, which is how several components
+    // reach their per-preset values.
+    final offenders = <String>[];
+    for (final entity in Directory('lib/src').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final code = _withoutCommentsAndStrings(entity.readAsStringSync());
+      for (final match
+          in RegExp(r'\bclass (_Resolved\w+)\b').allMatches(code)) {
+        final resolved = match.group(1)!;
+        final body = _classBody(code, resolved);
+        if (body == null) continue;
+        final fields = RegExp(r'^  final [\w<>,?\. ]+? (\w+);', multiLine: true)
+            .allMatches(body)
+            .map((m) => m.group(1)!);
+
+        // Everything but the public token that builds this one.
+        final public = _classSpan(code, resolved.replaceFirst('_Resolved', ''));
+        final rest = public == null
+            ? code
+            : code.substring(0, public.$1) + code.substring(public.$2);
+
+        for (final field in fields) {
+          final mentions = RegExp('\\b$field\\b').allMatches(rest).length;
+          final declared =
+              RegExp('^  final [\\w<>,?. ]+? $field;', multiLine: true)
+                  .allMatches(rest)
+                  .length;
+          final taken =
+              RegExp('required this\\.$field,').allMatches(rest).length;
+          final built =
+              RegExp('^\\s*$field:', multiLine: true).allMatches(rest).length;
+          if (mentions - declared - taken - built <= 0) {
+            offenders.add('${entity.path}: $resolved.$field');
+          }
+        }
+      }
+    }
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'these token fields are resolved and never drawn with — draw '
+          'with them, or take them out',
+    );
+  });
+
   test('ComponentsConfig knows every component token', () {
     final declared = <String>{};
     for (final entity
@@ -844,4 +898,68 @@ void _refinementTests() {
     );
     expect(seen.fontFamily, 'SeedTestFace');
   });
+}
+
+/// The source with comments and string literals blanked out, so a brace
+/// inside either cannot be mistaken for the end of a class.
+String _withoutCommentsAndStrings(String source) {
+  final out = StringBuffer();
+  var i = 0;
+  void keep(int from, int to) {
+    for (var k = from; k < to; k++) {
+      out.write(source[k] == '\n' ? '\n' : ' ');
+    }
+  }
+
+  while (i < source.length) {
+    final rest = source.substring(i);
+    if (rest.startsWith('//')) {
+      final end = source.indexOf('\n', i);
+      final stop = end < 0 ? source.length : end;
+      keep(i, stop);
+      i = stop;
+    } else if (rest.startsWith('/*')) {
+      final end = source.indexOf('*/', i + 2);
+      final stop = end < 0 ? source.length : end + 2;
+      keep(i, stop);
+      i = stop;
+    } else if (source[i] == "'" || source[i] == '"') {
+      final quote = source[i];
+      var j = i + 1;
+      while (j < source.length && source[j] != quote) {
+        if (source[j] == r'\') j++;
+        j++;
+      }
+      final stop = j >= source.length ? source.length : j + 1;
+      keep(i, stop);
+      i = stop;
+    } else {
+      out.write(source[i]);
+      i++;
+    }
+  }
+  return out.toString();
+}
+
+/// Where `class [name]` begins and ends, by balancing its braces.
+(int, int)? _classSpan(String code, String name) {
+  final head = RegExp('\\bclass $name\\b').firstMatch(code);
+  if (head == null) return null;
+  final open = code.indexOf('{', head.end);
+  if (open < 0) return null;
+  var depth = 0;
+  for (var i = open; i < code.length; i++) {
+    if (code[i] == '{') depth++;
+    if (code[i] == '}') {
+      depth--;
+      if (depth == 0) return (head.start, i + 1);
+    }
+  }
+  return null;
+}
+
+/// That class's source, or null where it has none.
+String? _classBody(String code, String name) {
+  final span = _classSpan(code, name);
+  return span == null ? null : code.substring(span.$1, span.$2);
 }

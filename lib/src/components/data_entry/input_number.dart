@@ -708,11 +708,17 @@ class _StepButtonState extends State<_StepButton> {
         child: AnimatedContainer(
           duration: t.motionDurationMid,
           curve: t.motionEaseInOut,
-          width: r.controlWidth + t.size,
+          // `handleWidth` is the handle's own; `controlWidth` is the field's
+          // stepper column. Both were named and only one took.
+          width: r.handleWidth + t.size,
           height: widget.height - t.lineWidth * 2,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: _pressed && active ? r.handleActiveBg : null,
+            color: _pressed && active
+                ? r.handleActiveBg
+                : _hovered && active
+                    ? r.handleHoverBg
+                    : r.handleBg,
             // The rule goes between the handle and the field, whichever side
             // the handle was put on.
             border: BorderDirectional(

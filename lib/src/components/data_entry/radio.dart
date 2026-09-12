@@ -206,10 +206,9 @@ class _SoftRadioState<T> extends State<Radio<T>> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<RadioToken>(context) ??
-            const RadioToken())
-        ._resolve(token);
+    final r =
+        (ConfigProvider.componentOf<RadioToken>(context) ?? const RadioToken())
+            ._resolve(token);
     return FocusableActionDetector(
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
@@ -337,7 +336,11 @@ class RadioDot extends StatelessWidget {
         color: enabled ? token.colorBgContainer : token.colorFillTertiary,
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected && enabled ? r.colorPrimary : border,
+          // The dot *is* this border thickened inwards, so the colour it is
+          // drawn in is `dotColor` — a token that could be named and never
+          // took, the ring falling back to the primary colour whatever it
+          // said.
+          color: selected && enabled ? r.dotColor : border,
           width: borderWidth,
         ),
         // Around the dot rather than the label: the words beside it are not
@@ -591,6 +594,10 @@ class _RadioGroupState<T> extends State<RadioGroup<T>> {
       );
     }
 
+    final r =
+        (ConfigProvider.componentOf<RadioToken>(context) ?? const RadioToken())
+            ._resolve(token);
+
     _RadioButton<T> button(int i, _ButtonRole role) => _RadioButton<T>(
           option: widget.options[i],
           role: role,
@@ -604,6 +611,7 @@ class _RadioGroupState<T> extends State<RadioGroup<T>> {
           size: resolvedSize,
           block: widget.block,
           token: token,
+          resolved: r,
           onTap: () => _select(widget.options[i].value),
         );
 
@@ -677,6 +685,7 @@ class _RadioButton<T> extends StatefulWidget {
     required this.size,
     required this.block,
     required this.token,
+    required this.resolved,
     required this.onTap,
   });
 
@@ -696,6 +705,7 @@ class _RadioButton<T> extends StatefulWidget {
   final ControlSize size;
   final bool block;
   final Token token;
+  final _ResolvedRadioToken resolved;
   final VoidCallback onTap;
 
   @override
@@ -725,9 +735,14 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
   @override
   Widget build(BuildContext context) {
     final token = widget.token;
+    final r = widget.resolved;
     final solid = widget.style == RadioButtonStyle.solid;
+    // The fill a taken solid button wears, and the colour its outline and
+    // words take — both tokens of this component, not the theme's primary.
     final accent =
-        widget.enabled ? token.primary.base : token.colorTextQuaternary;
+        widget.enabled ? r.buttonCheckedBg : token.colorTextQuaternary;
+    // What an untaken button stands on, taken or not.
+    final resting = widget.enabled ? r.buttonBg : token.colorFillTertiary;
     final overlay = widget.role == _ButtonRole.overlay;
 
     final Color bg;
@@ -740,15 +755,15 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
       bg = _hovered ? token.primary.hover : accent;
       fg = const Color(0xFFFFFFFF);
     } else if (widget.selected) {
-      bg = widget.enabled ? token.colorBgContainer : token.colorFillTertiary;
+      bg = resting;
       fg = _hovered ? token.primary.hover : accent;
     } else if (_hovered) {
       // Unselected + hovered: only text color changes to primary.hover
-      bg = widget.enabled ? token.colorBgContainer : token.colorFillTertiary;
+      bg = resting;
       fg = token.primary.hover;
     } else {
-      bg = widget.enabled ? token.colorBgContainer : token.colorFillTertiary;
-      fg = widget.enabled ? token.colorText : token.colorTextQuaternary;
+      bg = resting;
+      fg = widget.enabled ? r.buttonColor : token.colorTextQuaternary;
     }
 
     // Uniform border so the rounded end corners are legal: grey in the base

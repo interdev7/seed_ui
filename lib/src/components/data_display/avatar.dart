@@ -25,6 +25,7 @@ class AvatarToken {
     this.textFontSize,
     this.textFontSizeSM,
     this.textFontSizeLG,
+    this.bg,
     this.colorTextPlaceholder,
     this.groupBorderColor,
     this.groupOverlapping,
@@ -65,6 +66,12 @@ class AvatarToken {
   /// Border radius for square avatars.
   final double? borderRadius;
 
+  /// The fill behind an avatar with no image of its own (`bg`).
+  ///
+  /// It was a colour written into the widget, which is the one thing in the
+  /// kit a theme could not move.
+  final Color? bg;
+
   _ResolvedAvatarToken _resolve(Token t) => _ResolvedAvatarToken(
         containerSize: containerSize ?? 32,
         containerSizeSM: containerSizeSM ?? 24,
@@ -72,6 +79,7 @@ class AvatarToken {
         textFontSize: textFontSize ?? 14,
         textFontSizeSM: textFontSizeSM ?? 14,
         textFontSizeLG: textFontSizeLG ?? 24,
+        bg: bg ?? const Color(0xFFCCCCCC),
         colorTextPlaceholder: colorTextPlaceholder ?? const Color(0xFFFFFFFF),
         groupBorderColor: groupBorderColor ?? t.colorBgContainer,
         groupOverlapping: groupOverlapping ?? -8,
@@ -93,6 +101,7 @@ class _ResolvedAvatarToken {
     required this.textFontSize,
     required this.textFontSizeSM,
     required this.textFontSizeLG,
+    required this.bg,
     required this.colorTextPlaceholder,
     required this.groupBorderColor,
     required this.groupOverlapping,
@@ -109,6 +118,7 @@ class _ResolvedAvatarToken {
   final double textFontSize;
   final double textFontSizeSM;
   final double textFontSizeLG;
+  final Color bg;
   final Color colorTextPlaceholder;
   final Color groupBorderColor;
   final double groupOverlapping;
@@ -272,8 +282,8 @@ class Avatar extends StatelessWidget {
           }
         : (dimension / 2).roundToDouble();
 
-    final bg = backgroundColor ??
-        (image == null ? const Color(0xFFCCCCCC) : const Color(0x00000000));
+    final bg =
+        backgroundColor ?? (image == null ? rt.bg : const Color(0x00000000));
     final fg = foregroundColor ?? rt.colorTextPlaceholder;
 
     final boxShape = resolvedShape == AvatarShape.circle
@@ -295,7 +305,7 @@ class Avatar extends StatelessWidget {
             return errorBuilder!(context, t, error, stackTrace);
           }
           return Container(
-            color: backgroundColor ?? const Color(0xFFCCCCCC),
+            color: backgroundColor ?? rt.bg,
             alignment: Alignment.center,
             child: _buildFallback(rt, fg, fontSize),
           );

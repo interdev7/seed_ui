@@ -97,3 +97,7 @@ ConfigProvider(
 ```
 
 A per-instance `token` wins over the `ConfigProvider` one.
+
+`bg` is the fill behind an avatar carrying initials or an icon rather than a
+picture — and behind one whose picture failed to load. An avatar's own
+`backgroundColor` still wins over it.

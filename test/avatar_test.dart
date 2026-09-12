@@ -146,4 +146,50 @@ void _sizeSlot() {
       expect(style.fontSize, 40, reason: 'half of 80');
     });
   });
+
+  group('the fill behind an avatar with no picture', () {
+    Color fill(WidgetTester tester) => tester
+        .widgetList<DecoratedBox>(
+          find.descendant(
+            of: find.byType(Avatar),
+            matching: find.byType(DecoratedBox),
+          ),
+        )
+        .map((b) => b.decoration as BoxDecoration)
+        .firstWhere((d) => d.color != null)
+        .color!;
+
+    testWidgets('is a token, not a colour written into the widget', (
+      tester,
+    ) async {
+      // It was `0xFFCCCCCC`, spelled twice — the one thing in a token-driven
+      // kit a theme could not move.
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(
+            components: const ComponentsConfig(
+              avatar: AvatarToken(bg: Color(0xFF123456)),
+            ),
+          ),
+          child: const Directionality(
+            textDirection: TextDirection.ltr,
+            child: Center(child: Avatar(child: Text('MY'))),
+          ),
+        ),
+      );
+      expect(fill(tester), const Color(0xFF123456));
+    });
+
+    testWidgets("and a colour of the avatar's own still wins", (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const Avatar(
+            backgroundColor: Color(0xFF654321),
+            child: Text('MY'),
+          ),
+        ),
+      );
+      expect(fill(tester), const Color(0xFF654321));
+    });
+  });
 }

@@ -98,6 +98,14 @@ component's own defaults for a subtree.
 
 ### Fixed
 
+- **An `Avatar` with no picture takes its fill from a token.** It was
+  `0xFFCCCCCC`, written into the widget twice — the one thing in a
+  token-driven kit a theme could not move. `AvatarToken.bg` now names it, and
+  an avatar's own `backgroundColor` still wins.
+- **The published screenshots show real shadows.** `flutter_test` turns blur
+  off so goldens stay stable across platforms, which draws every shadow as a
+  hard-edged slab — the date picker's panel came out sitting on three grey
+  rectangles. The harness turns it back on while it paints.
 - **The theme's font reaches every word.** `SeedToken.fontFamily` was honoured
   by the fifty-odd text styles components build from nothing and lost by
   everything that merges into what is already in force — a form label, a card

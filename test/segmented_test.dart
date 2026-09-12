@@ -933,4 +933,66 @@ void _scrollButtonTests() {
       expect(_arrows('Previous'), 1);
     });
   });
+
+  group('what the selected segment casts', () {
+    // It borrowed `boxShadowSecondary` — the three-layer shadow a popover
+    // floats on — and around a thumb sitting *inside* a track that spilled
+    // out below the control as a grey band.
+
+    List<BoxShadow> thumbShadow(WidgetTester tester) {
+      final boxes = tester.widgetList<DecoratedBox>(
+        find.descendant(
+          of: find.byType(Segmented<String>),
+          matching: find.byType(DecoratedBox),
+        ),
+      );
+      final thumb = boxes.firstWhere(
+        (b) => (b.decoration as BoxDecoration).boxShadow != null,
+      );
+      return (thumb.decoration as BoxDecoration).boxShadow!;
+    }
+
+    testWidgets('stays under the thumb rather than under the page', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          Segmented<String>(
+            value: 'day',
+            options: const [
+              SegmentedOption(value: 'day', label: 'Day'),
+              SegmentedOption(value: 'week', label: 'Week'),
+            ],
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final shadow = thumbShadow(tester);
+      // The popover shadow spreads eight pixels and blurs twenty-eight; a
+      // thumb's own lift does neither.
+      expect(shadow.every((s) => s.spreadRadius <= 0), isTrue);
+      expect(shadow.every((s) => s.blurRadius <= 8), isTrue);
+    });
+
+    testWidgets('a token of your own still wins', (tester) async {
+      const mine = BoxShadow(color: Color(0xFF00FF00), blurRadius: 40);
+      await tester.pumpWidget(
+        _host(
+          Segmented<String>(
+            value: 'day',
+            token: const SegmentedToken(thumbShadow: [mine]),
+            options: const [
+              SegmentedOption(value: 'day', label: 'Day'),
+              SegmentedOption(value: 'week', label: 'Week'),
+            ],
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(thumbShadow(tester), [mine]);
+    });
+  });
 }

@@ -242,6 +242,7 @@ puts it there as soon as the run is built.
 | `arrowBg` | Fill behind a scroll button — translucent, so the segment under it stays legible |
 | `arrowHoverBg` | Its fill under the pointer |
 | `arrowColor` | The caret's colour |
+| `thumbShadow` | What the selected segment casts on the track. The track is the page's own colour, so this shadow is the only thing separating the two — tight enough to stay under the thumb |
 
 `SegmentedToken` overrides this component's own tokens. Every field is an override; an
 unset one falls back to the value derived from the global theme.

@@ -1254,6 +1254,44 @@ void main() {
       expect(find.byType(UserIcon), findsOneWidget);
     });
   });
+
+  testWidgets('a float button is lifted, not smudged', (tester) async {
+    // It borrowed `boxShadowSecondary` — the three-layer shadow a popover
+    // floats on — whose eight pixels of spread and twenty-eight of blur
+    // around a forty-eight-pixel button read as a grey smudge beside it.
+    await tester.pumpWidget(_host(FloatButton(onPressed: () {})));
+    await tester.pumpAndSettle();
+
+    final lifted = _lift(tester);
+    expect(lifted.every((s) => s.spreadRadius <= 0), isTrue);
+    expect(lifted.every((s) => s.blurRadius <= 16), isTrue);
+  });
+
+  testWidgets('and a shadow of your own still wins', (tester) async {
+    const mine = BoxShadow(color: Color(0xFF00FF00), blurRadius: 40);
+    await tester.pumpWidget(
+      _host(
+        FloatButton(
+          onPressed: () {},
+          token: const FloatButtonToken(shadow: [mine]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(_lift(tester), [mine]);
+  });
 }
+
+/// What the one float button on screen casts.
+List<BoxShadow> _lift(WidgetTester tester) => tester
+    .widgetList<DecoratedBox>(
+      find.descendant(
+        of: find.byType(FloatButton),
+        matching: find.byType(DecoratedBox),
+      ),
+    )
+    .map((b) => (b.decoration as BoxDecoration).boxShadow)
+    .whereType<List<BoxShadow>>()
+    .first;
 
 Offset _ladder(int index, int count) => Offset(index * 10, index * 20);

@@ -319,7 +319,7 @@ fab.open();   // and close(), and toggle()
 | `labelGap` | `sizeXXS` — between a button and its label |
 | `labelTextColor`, `labelFontSize` | the label's text |
 | `borderRadius` | `borderRadiusLG`, for a square button |
-| `shadow` | `boxShadowSecondary` |
+| `shadow` | The button's own lift — a tight two-layer shadow, not the one a popover floats on |
 | `motionDuration` | `motionDurationSlow` |
 | `curve` | `motionEaseOut` — the shape of the opening |
 

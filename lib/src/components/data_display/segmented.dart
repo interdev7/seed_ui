@@ -173,6 +173,7 @@ class SegmentedToken {
     this.arrowBg,
     this.arrowHoverBg,
     this.arrowColor,
+    this.thumbShadow,
   });
 
   /// Track background color (`trackBg`).
@@ -216,6 +217,15 @@ class SegmentedToken {
   /// Colour of a scroll button's caret.
   final Color? arrowColor;
 
+  /// What the selected segment casts on the track (`thumbShadow`).
+  ///
+  /// Null takes a shadow sized to the thumb. The kit's `boxShadowSecondary` —
+  /// which this used to borrow — is the three-layer shadow a popover floats
+  /// on, and around a thumb sitting *inside* a track it spilled out below the
+  /// control as a grey band. The thumb is lifted off the groove, not floating
+  /// over the page.
+  final List<BoxShadow>? thumbShadow;
+
   _ResolvedSegmentedToken _resolve(Token t) => _ResolvedSegmentedToken(
         // The layout background, not a translucent fill. A fill lightens the
         // track in a dark theme, which leaves the elevated thumb *darker* than
@@ -237,6 +247,23 @@ class SegmentedToken {
         arrowBg: arrowBg ?? t.colorBgElevated.withValues(alpha: 0.9),
         arrowHoverBg: arrowHoverBg ?? t.colorBgElevated,
         arrowColor: arrowColor ?? t.colorText,
+        thumbShadow: thumbShadow ??
+            [
+              // Enough to read as lifted, tight enough to stay under the
+              // thumb: the track is the page's own colour, so this shadow is
+              // the only thing that separates the two.
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.5 : 0.11),
+                offset: const Offset(0, 2),
+                blurRadius: 5,
+                spreadRadius: -1,
+              ),
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.35 : 0.08),
+                offset: const Offset(0, 1),
+                blurRadius: 2,
+              ),
+            ],
       );
 }
 
@@ -256,6 +283,7 @@ class _ResolvedSegmentedToken {
     required this.arrowBg,
     required this.arrowHoverBg,
     required this.arrowColor,
+    required this.thumbShadow,
   });
 
   final Color trackBg;
@@ -271,6 +299,7 @@ class _ResolvedSegmentedToken {
   final Color arrowBg;
   final Color arrowHoverBg;
   final Color arrowColor;
+  final List<BoxShadow> thumbShadow;
 }
 
 /// Defaults for every [Segmented] under a `ConfigProvider`.
@@ -743,7 +772,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
                           : (widget.thumbColor ?? r.itemSelectedBg)
                               .withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(_radius(r, token)),
-                      boxShadow: _enabled ? token.boxShadowSecondary : null,
+                      boxShadow: _enabled ? r.thumbShadow : null,
                     ),
                   ),
                 ),

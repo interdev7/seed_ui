@@ -491,7 +491,25 @@ class FloatButtonToken {
         labelTextColor: labelTextColor ?? t.colorText,
         labelFontSize: labelFontSize ?? t.fontSizeSM,
         borderRadius: borderRadius ?? t.borderRadiusLG,
-        shadow: shadow ?? t.boxShadowSecondary,
+        // A button's own lift, not `boxShadowSecondary` — the three-layer
+        // shadow a popover floats on, whose eight pixels of spread and
+        // twenty-eight of blur around a forty-eight-pixel button read as a
+        // grey smudge the size of the button beside it.
+        shadow: shadow ??
+            [
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.5 : 0.12),
+                offset: const Offset(0, 4),
+                blurRadius: 12,
+                spreadRadius: -2,
+              ),
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.4 : 0.1),
+                offset: const Offset(0, 2),
+                blurRadius: 4,
+                spreadRadius: -1,
+              ),
+            ],
         motionDuration: motionDuration ?? t.motionDurationSlow,
         curve: curve ?? t.easeOutBack,
       );

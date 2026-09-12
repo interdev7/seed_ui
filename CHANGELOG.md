@@ -114,12 +114,15 @@ component's own defaults for a subtree.
   a table cell or a `Wrap` that has run out of line it painted a striped
   overflow banner across the row; it now ellipsises, and keeps its natural
   width wherever there is room for it.
-- **A `Switch` handle casts its own shadow.** It borrowed
-  `boxShadowSecondary` — the three-layer shadow a popover floats on, with
-  twenty-eight pixels of blur and eight of spread around an eighteen-pixel
-  handle — which on screen read as a grey disc sitting beside the switch. The
-  new `SwitchToken.handleShadow` overrides it; left unset it is worked out
-  from the handle's own size.
+- **Three small controls stop wearing a popover's shadow.** `boxShadowSecondary`
+  is the three-layer shadow a panel floats on — twenty-eight pixels of blur and
+  eight of spread. Around a `Switch` handle it read as a grey disc beside the
+  switch; under the `Segmented` thumb it spilled below the control as a grey
+  band; behind a `FloatButton` it was a smudge the size of the button. Each now
+  has a lift of its own, with a token to override it — `SwitchToken.handleShadow`,
+  `SegmentedToken.thumbShadow` and the `FloatButtonToken.shadow` that was
+  already there with the wrong default. The twenty-odd other uses are panels,
+  drawers, modals and drag feedback, where the shadow belongs.
 - **`DatePicker` preset labels take the theme's font.**
 - **A table narrower than its columns no longer overflows its box.** The
   widths were worked out from what the cells wanted and handed on unsqueezed,

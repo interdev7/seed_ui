@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'
     hide Slider, RangeSlider, ThemeData, Checkbox, Radio, Switch, Tooltip;
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -1493,6 +1494,147 @@ void _zoneBoundsSnapTests() {
       await tester.tapAt(groove.center);
       await tester.pumpAndSettle();
       expect(seen.single, [0, 40, 50, 70]);
+    });
+  });
+
+  group('what a slider says out loud', () {
+    // The handles are painted, so before this a slider reached a screen
+    // reader as a box with nothing in it: no value, no actions, no name.
+
+    /// The semantics nodes the handles stand in, in the order they were
+    /// given.
+    ///
+    /// Found by what only a slider handle has — a value it could be moved to
+    /// — rather than by walking the tree by hand.
+    SemanticsFinder handles() =>
+        find.semantics.byPredicate((n) => n.increasedValue.isNotEmpty);
+
+    SemanticsNode handle(WidgetTester tester, [int index = 0]) =>
+        handles().evaluate().elementAt(index);
+
+    testWidgets('a handle carries its name, its value and its actions', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 40,
+            step: 10,
+            semanticsLabel: 'Volume',
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        handles(),
+        matchesSemantics(
+          isSlider: true,
+          isEnabled: true,
+          hasEnabledState: true,
+          label: 'Volume',
+          value: '40',
+          increasedValue: '50',
+          decreasedValue: '30',
+          hasIncreaseAction: true,
+          hasDecreaseAction: true,
+        ),
+      );
+      semantics.dispose();
+    });
+
+    testWidgets('the increase action moves the handle', (tester) async {
+      final semantics = tester.ensureSemantics();
+      double? changed;
+      await tester.pumpWidget(
+        _host(Slider(value: 40, step: 10, onChanged: (v) => changed = v)),
+      );
+      await tester.pumpAndSettle();
+
+      tester.semantics.performAction(handles(), SemanticsAction.increase);
+      await tester.pumpAndSettle();
+      expect(changed, 50);
+      semantics.dispose();
+    });
+
+    testWidgets('a reversed scale announces the way it actually runs', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          Slider(value: 40, step: 10, reverse: true, onChanged: (_) {}),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Increasing runs towards the end of the groove, which on a reversed
+      // scale is the smaller number.
+      expect(handle(tester).increasedValue, '30');
+      expect(handle(tester).decreasedValue, '50');
+      semantics.dispose();
+    });
+
+    testWidgets('two handles are two nodes, told apart by their values', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          RangeSlider(
+            values: const (20, 80),
+            semanticsLabel: 'Price',
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(handles(), findsExactly(2));
+      final nodes = [handle(tester, 0), handle(tester, 1)];
+      expect(nodes.map((n) => n.value).toSet(), {'20', '80'});
+      expect(nodes.map((n) => n.label).toSet(), {'Price'});
+      semantics.dispose();
+    });
+
+    testWidgets('what is read is what is shown', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 40,
+            step: 10,
+            tooltip: (v) => '\$${v.round()}',
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(handle(tester).value, r'$40');
+      semantics.dispose();
+    });
+
+    testWidgets('a barred slider offers no actions', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(Slider(value: 40, disabled: true, onChanged: (_) {})),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        handles(),
+        matchesSemantics(
+          isSlider: true,
+          hasEnabledState: true,
+          isEnabled: false,
+          value: '40',
+          increasedValue: '41',
+          decreasedValue: '39',
+        ),
+      );
+      semantics.dispose();
     });
   });
 }

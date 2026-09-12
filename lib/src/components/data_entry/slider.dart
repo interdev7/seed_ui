@@ -410,6 +410,7 @@ class Slider extends StatefulWidget {
     this.bounds,
     this.snapToMarks = false,
     this.tooltip,
+    this.semanticsLabel,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
         assert(step == null || step > 0, 'step must be positive');
@@ -496,6 +497,13 @@ class Slider extends StatefulWidget {
   /// Per-instance token overrides.
   final SliderToken? token;
 
+  /// What assistive technology calls this slider.
+  ///
+  /// Without one a screen reader announces a bare number and nothing about
+  /// what it measures. Every handle carries it, and is told apart by its own
+  /// value, which is how Flutter's own range slider reads.
+  final String? semanticsLabel;
+
   @override
   State<Slider> createState() => _SliderState();
 }
@@ -556,6 +564,7 @@ class _SliderState extends State<Slider> {
       vertical: widget.vertical,
       reverse: widget.reverse,
       tooltip: widget.tooltip,
+      semanticsLabel: widget.semanticsLabel,
       token: widget.token,
       zones: widget.zones,
       bounds: widget.bounds,
@@ -601,6 +610,7 @@ class RangeSlider extends StatefulWidget {
     this.bounds,
     this.snapToMarks = false,
     this.tooltip,
+    this.semanticsLabel,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
         assert(step == null || step > 0, 'step must be positive');
@@ -687,6 +697,13 @@ class RangeSlider extends StatefulWidget {
   /// Per-instance token overrides.
   final SliderToken? token;
 
+  /// What assistive technology calls this slider.
+  ///
+  /// Without one a screen reader announces a bare number and nothing about
+  /// what it measures. Every handle carries it, and is told apart by its own
+  /// value, which is how Flutter's own range slider reads.
+  final String? semanticsLabel;
+
   @override
   State<RangeSlider> createState() => _RangeSliderState();
 }
@@ -751,6 +768,7 @@ class _RangeSliderState extends State<RangeSlider> {
       vertical: widget.vertical,
       reverse: widget.reverse,
       tooltip: widget.tooltip,
+      semanticsLabel: widget.semanticsLabel,
       token: widget.token,
       zones: widget.zones,
       bounds: widget.bounds,
@@ -824,6 +842,7 @@ class MultiRangeSlider extends StatefulWidget {
     this.bounds,
     this.snapToMarks = false,
     this.tooltip,
+    this.semanticsLabel,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
         assert(step == null || step > 0, 'step must be positive'),
@@ -918,6 +937,13 @@ class MultiRangeSlider extends StatefulWidget {
   /// Per-instance token overrides.
   final SliderToken? token;
 
+  /// What assistive technology calls this slider.
+  ///
+  /// Without one a screen reader announces a bare number and nothing about
+  /// what it measures. Every handle carries it, and is told apart by its own
+  /// value, which is how Flutter's own range slider reads.
+  final String? semanticsLabel;
+
   @override
   State<MultiRangeSlider> createState() => _MultiRangeSliderState();
 }
@@ -990,6 +1016,7 @@ class _MultiRangeSliderState extends State<MultiRangeSlider> {
       vertical: widget.vertical,
       reverse: widget.reverse,
       tooltip: widget.tooltip,
+      semanticsLabel: widget.semanticsLabel,
       token: widget.token,
       zones: widget.zones,
       bounds: widget.bounds,
@@ -1021,6 +1048,7 @@ class _SliderCore extends StatefulWidget {
     required this.tooltip,
     required this.token,
     required this.fillFromStart,
+    this.semanticsLabel,
     this.zones = const [],
     this.bounds,
     this.snapToMarks = false,
@@ -1045,6 +1073,9 @@ class _SliderCore extends StatefulWidget {
   final String? Function(double value)? tooltip;
   final SliderToken? token;
   final bool fillFromStart;
+
+  /// What assistive technology calls the whole scale.
+  final String? semanticsLabel;
 
   /// Stretches of the scale that mean something in themselves.
   final List<SliderZone> zones;
@@ -1257,44 +1288,48 @@ class _SliderCoreState extends State<_SliderCore> {
         ];
 
         final label = _bubbleLabel();
-        final body = label == null && onRail.isEmpty
-            ? painted
-            : Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  painted,
-                  for (final mark in onRail)
-                    Positioned(
-                      left: widget.vertical
-                          ? 0
-                          : _alongFor(_fractionOf(mark.value), size.width),
-                      top: widget.vertical
-                          ? _alongFor(_fractionOf(mark.value), size.height)
-                          : 0,
-                      child: FractionalTranslation(
-                        translation: widget.vertical
-                            ? const Offset(0, -0.5)
-                            : const Offset(-0.5, 0),
-                        child: Builder(
-                          builder: (context) => _markLabel(context, t, r, mark),
-                        ),
-                      ),
-                    ),
-                  if (label != null)
-                    Positioned(
-                      left: widget.vertical ? null : _bubbleAlong(size),
-                      right: widget.vertical ? size.width : null,
-                      top: widget.vertical ? _bubbleAlong(size) : null,
-                      bottom: widget.vertical ? null : size.height,
-                      child: FractionalTranslation(
-                        translation: widget.vertical
-                            ? const Offset(0, -0.5)
-                            : const Offset(-0.5, 0),
-                        child: _Bubble(label: label, token: t),
-                      ),
-                    ),
-                ],
-              );
+        // Always a stack now: every handle carries a semantics node standing
+        // where it stands, and a painted handle has none of its own. A screen
+        // reader finds nothing in a CustomPaint, and touch exploration needs
+        // something at the handle's place to land on.
+        final body = Stack(
+          clipBehavior: Clip.none,
+          children: [
+            painted,
+            for (var i = 0; i < widget.values.length; i++)
+              _semanticHandle(i, size, r),
+            for (final mark in onRail)
+              Positioned(
+                left: widget.vertical
+                    ? 0
+                    : _alongFor(_fractionOf(mark.value), size.width),
+                top: widget.vertical
+                    ? _alongFor(_fractionOf(mark.value), size.height)
+                    : 0,
+                child: FractionalTranslation(
+                  translation: widget.vertical
+                      ? const Offset(0, -0.5)
+                      : const Offset(-0.5, 0),
+                  child: Builder(
+                    builder: (context) => _markLabel(context, t, r, mark),
+                  ),
+                ),
+              ),
+            if (label != null)
+              Positioned(
+                left: widget.vertical ? null : _bubbleAlong(size),
+                right: widget.vertical ? size.width : null,
+                top: widget.vertical ? _bubbleAlong(size) : null,
+                bottom: widget.vertical ? null : size.height,
+                child: FractionalTranslation(
+                  translation: widget.vertical
+                      ? const Offset(0, -0.5)
+                      : const Offset(-0.5, 0),
+                  child: _Bubble(label: label, token: t),
+                ),
+              ),
+          ],
+        );
 
         return Focus(
           canRequestFocus: _enabled,
@@ -1337,6 +1372,69 @@ class _SliderCoreState extends State<_SliderCore> {
     }
     return _withMarks(t, r, groove, thickness);
   }
+
+  /// A handle's place in the semantics tree.
+  ///
+  /// The handles are painted, so without this a slider reaches assistive
+  /// technology as an unlabelled box with a number nowhere in it. Each node
+  /// stands exactly where its handle does, is the size of the handle's own
+  /// target, and carries the value, the two it would move to, and the actions
+  /// that take it there — the same [_nudge] the arrow keys use.
+  ///
+  /// Every handle takes the same [_SliderCore.semanticsLabel] and is told
+  /// apart by its value, which is how Flutter's own range slider reads.
+  Widget _semanticHandle(int index, Size size, _ResolvedSliderToken r) {
+    final value = widget.values[index];
+    final step = widget.step ?? (widget.max - widget.min) / 100;
+    final target = r.handleSizeHover + r.handleLineWidthHover * 2;
+    final along = _alongFor(
+        _fractionOf(value), widget.vertical ? size.height : size.width);
+
+    // The keys run with the scale, so a reversed one swaps which way "more"
+    // is — and the announcement has to swap with it, or the reader is told
+    // the handle will go up when it will go down.
+    final forward = _reversed ? value - step : value + step;
+    final back = _reversed ? value + step : value - step;
+
+    return Positioned(
+      left: widget.vertical ? 0 : along,
+      top: widget.vertical ? along : 0,
+      child: FractionalTranslation(
+        translation:
+            widget.vertical ? const Offset(0, -0.5) : const Offset(-0.5, 0),
+        child: Semantics(
+          // Its own node, not an annotation folded into the groove's: an
+          // annotation merges with the gesture handler wrapped round the
+          // whole slider, and two handles would then be one node carrying
+          // one value.
+          container: true,
+          slider: true,
+          enabled: _enabled,
+          label: widget.semanticsLabel,
+          value: _announce(value),
+          increasedValue: _announce(forward.clamp(widget.min, widget.max)),
+          decreasedValue: _announce(back.clamp(widget.min, widget.max)),
+          onIncrease: _enabled ? () => _nudge(index, forward: true) : null,
+          onDecrease: _enabled ? () => _nudge(index, forward: false) : null,
+          // Nothing is drawn here and nothing is taken from the pointer: the
+          // groove's own gestures still get every touch.
+          child: IgnorePointer(
+            child: SizedBox(
+              width: widget.vertical ? size.width : target,
+              height: widget.vertical ? target : size.height,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// What a value is called out loud.
+  ///
+  /// The same words the bubble shows, so what is read matches what is seen —
+  /// a slider labelled in currency should not announce a bare number.
+  String _announce(double value) =>
+      widget.tooltip?.call(value) ?? _plain(value);
 
   /// What the bubble says, or null when there is nothing to show.
   ///

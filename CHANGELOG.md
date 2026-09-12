@@ -78,6 +78,14 @@ component's own defaults for a subtree.
   A null `onChanged` still makes a **controlled** one inert — nothing can
   change a value somebody else is holding, which is Flutter's own reading —
   but an uncontrolled one now changes whether or not anybody is listening.
+- **Sliders reach assistive technology.** `Slider`, `RangeSlider` and
+  `MultiRangeSlider` had no semantics at all: the handles are painted rather
+  than built, so a screen reader found a box with no value in it, nothing to
+  act on, and no name. Every handle is now a node of its own, standing where
+  the handle stands, carrying the value, the two values it would move to, and
+  increase/decrease actions that make the same one-step move as the arrow
+  keys. A new `semanticsLabel` names the scale; where `tooltip` formats the
+  value the same words are read out.
 - **`Pagination`, `Segmented`, `RadioGroup`, `AvatarGroup` and `AvatarDefaults`
   take a `ControlSize`.** They already worked out a height from the preset;
   now a height of your own works there too. `Badge`, `Card`, `Collapse` and

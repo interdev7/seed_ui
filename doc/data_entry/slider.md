@@ -314,6 +314,26 @@ answers the same key the other way.
 The arrows move whichever handle the pointer last touched, which is the first
 one until something else is picked up.
 
+## What a screen reader is told
+
+Every handle is a node of its own, standing where the handle stands and the
+size of its own target. It carries the value, the two values it would move to,
+and the actions that take it there — the same one-step move the arrow keys
+make, so what a screen reader can do and what the keyboard can do are the same
+thing.
+
+`semanticsLabel` is what the scale is called. Without one the reader hears a
+bare number and nothing about what it measures:
+
+```dart
+Slider(value: _volume, semanticsLabel: 'Volume', onChanged: _set)
+```
+
+Every handle takes the same label and is told apart by its value, which is how
+Flutter's own range slider reads. Where `tooltip` formats the value, the same
+words are read out — a scale labelled in currency should not announce a bare
+number. A barred slider keeps its value and offers no actions.
+
 ## The bubble
 
 While a handle is being moved its value is shown above it. `tooltip` decides

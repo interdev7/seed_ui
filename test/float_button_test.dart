@@ -1280,6 +1280,84 @@ void main() {
     await tester.pumpAndSettle();
     expect(_lift(tester), [mine]);
   });
+
+  group('what a float button looks like unasked', () {
+    // A black disc is a strong thing to be the default for a button most
+    // callers write with no arguments at all: `solid` + `defaultColor` is the
+    // kit's inverted button, and it read as a hole in the page.
+
+    /// The fill behind the one float button on screen.
+    Color fill(WidgetTester tester) => tester
+        .widgetList<DecoratedBox>(
+          find.descendant(
+            of: find.byType(FloatButton),
+            matching: find.byType(DecoratedBox),
+          ),
+        )
+        .map((b) => b.decoration as BoxDecoration)
+        .firstWhere((d) => d.color != null)
+        .color!;
+
+    testWidgets('named no colour, it is the page surface lifted', (
+      tester,
+    ) async {
+      late Token token;
+      await tester.pumpWidget(
+        _host(
+          Builder(
+            builder: (context) {
+              token = context.softToken;
+              return FloatButton(onPressed: () {});
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(fill(tester), token.colorBgContainer);
+    });
+
+    testWidgets('named one, it is solid in it', (tester) async {
+      late Token token;
+      await tester.pumpWidget(
+        _host(
+          Builder(
+            builder: (context) {
+              token = context.softToken;
+              return FloatButton(
+                color: ButtonColor.primary,
+                onPressed: () {},
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(fill(tester), token.primary.base);
+    });
+
+    testWidgets('a colour set for the subtree counts as naming one', (
+      tester,
+    ) async {
+      late Token token;
+      await tester.pumpWidget(
+        ConfigProvider(
+          defaults: const ComponentDefaults(
+            floatButton: FloatButtonDefaults(color: ButtonColor.primary),
+          ),
+          child: _host(
+            Builder(
+              builder: (context) {
+                token = context.softToken;
+                return FloatButton(onPressed: () {});
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(fill(tester), token.primary.base);
+    });
+  });
 }
 
 /// What the one float button on screen casts.

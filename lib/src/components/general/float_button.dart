@@ -689,6 +689,7 @@ class FloatButton extends StatelessWidget {
             r.size;
     final radius =
         buttonShape == ButtonShape.circle ? diameter / 2 : r.borderRadius;
+    final named = color ?? defaults?.color;
 
     // Pinned to one number so the shadow behind the button and the button's
     // own corners cannot disagree.
@@ -706,8 +707,13 @@ class FloatButton extends StatelessWidget {
       height: diameter,
       child: Button(
         shape: buttonShape,
-        variant: ButtonVariant.solid,
-        color: color ?? defaults?.color ?? ButtonColor.defaultColor,
+        // Named a colour, a float button is solid in it — a primary button
+        // that happens to float. Named none, it is the page's own surface
+        // lifted off the page: a black disc is a strong thing to be the
+        // default for a button most callers write with no arguments at all,
+        // and the shadow is what says it is floating, not the fill.
+        variant: named == null ? ButtonVariant.outlined : ButtonVariant.solid,
+        color: named ?? ButtonColor.defaultColor,
         disabled: disabled ?? defaults?.disabled,
         icon: icon,
         onPressed: onPressed,

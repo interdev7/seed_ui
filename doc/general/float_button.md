@@ -18,9 +18,14 @@ Give no icon at all and a group's trigger draws a plus that turns into a cross
 as it opens.
 
 It is a [Button](button.md) underneath, with its control height pinned and a
-shadow behind it, so variants, colours, hover and press states behave exactly
-as they do everywhere else. `ButtonColor` and `ButtonShape` are the same types,
-not look-alikes.
+shadow behind it, so colours, hover and press states behave exactly as they do
+everywhere else. `ButtonColor` and `ButtonShape` are the same types, not
+look-alikes.
+
+Name a `color` and the button is solid in it — a primary button that happens
+to float. Name none and it is the page's own surface lifted off the page, with
+a hairline edge and the icon in the text colour: what says it is floating is
+the shadow, not the fill.
 
 ## Where it goes
 

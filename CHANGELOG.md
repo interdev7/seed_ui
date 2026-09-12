@@ -114,6 +114,12 @@ component's own defaults for a subtree.
   a table cell or a `Wrap` that has run out of line it painted a striped
   overflow banner across the row; it now ellipsises, and keeps its natural
   width wherever there is room for it.
+- **A `FloatButton` given no colour is the page's surface lifted off the
+  page**, rather than a solid black disc. It was `solid` + `defaultColor` —
+  the kit's inverted button — which is a strong thing to be the default for a
+  button most callers write with no arguments at all. Name a `color` and it is
+  solid in that colour exactly as before, and a colour set through
+  `FloatButtonDefaults` counts as naming one.
 - **Three small controls stop wearing a popover's shadow.** `boxShadowSecondary`
   is the three-layer shadow a panel floats on — twenty-eight pixels of blur and
   eight of spread. Around a `Switch` handle it read as a grey disc beside the

@@ -98,6 +98,15 @@ component's own defaults for a subtree.
 
 ### Fixed
 
+- **An `Input`'s border can actually be given a colour.** `colorBorder`,
+  `hoverBorderColor`, `activeBorderColor`, `colorText` and
+  `colorTextPlaceholder` were declared on `InputToken`, documented, resolved —
+  and never read: the field asked the theme for all five, so naming them did
+  nothing. That is why a transparent border had no answer.
+- **A new `InputToken.focusRing`.** Unset it echoes the field's focused border
+  at twelve per cent, as before; name a transparent colour for a field with no
+  chrome at all — a border made transparent still glowed without it. The
+  example's Input page now shows the whole of `InputToken` at work.
 - **An `Avatar` with no picture takes its fill from a token.** It was
   `0xFFCCCCCC`, written into the widget twice — the one thing in a
   token-driven kit a theme could not move. `AvatarToken.bg` now names it, and

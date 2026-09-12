@@ -411,7 +411,6 @@ final List<Demo> demos = [
     'date-range-picker',
     'DateRangePicker',
     (_) => const DateRangePickerDemo(),
-    isNew: true,
   ),
   Demo('time-picker', 'TimePicker', (_) => const TimePickerDemo()),
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),

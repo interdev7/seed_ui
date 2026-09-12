@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart'
     show cupertinoTextSelectionHandleControls;
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
+import 'package:flutter/gestures.dart' show TapDragUpDetails;
 import 'package:flutter/material.dart' show materialTextSelectionHandleControls;
 import 'package:flutter/semantics.dart' show SemanticsValidationResult;
 import 'package:flutter/services.dart';
@@ -147,6 +148,7 @@ class InputToken {
     this.colorBgContainer,
     this.colorText,
     this.colorTextPlaceholder,
+    this.focusRing,
     this.paddingInline,
     this.paddingInlineSM,
     this.paddingInlineLG,
@@ -178,6 +180,13 @@ class InputToken {
 
   /// Placeholder text color (`colorTextPlaceholder`).
   final Color? colorTextPlaceholder;
+
+  /// The halo around a focused field (`focusRing`).
+  ///
+  /// Null takes a wash of whatever colour the border has turned — primary,
+  /// or the status colour. Name a transparent colour for a field with no
+  /// chrome at all: a border made transparent still glowed without this.
+  final Color? focusRing;
 
   /// Horizontal padding for middle size (`paddingInline`).
   final double? paddingInline;
@@ -222,6 +231,7 @@ class InputToken {
         colorBgContainer: colorBgContainer ?? t.colorBgContainer,
         colorText: colorText ?? t.colorText,
         colorTextPlaceholder: colorTextPlaceholder ?? t.colorTextTertiary,
+        focusRing: focusRing,
         paddingInline: paddingInline ?? t.sizeSM,
         paddingInlineSM: paddingInlineSM ?? t.sizeXS,
         paddingInlineLG: paddingInlineLG ?? t.size,
@@ -246,6 +256,7 @@ class _ResolvedInputToken {
     required this.colorBgContainer,
     required this.colorText,
     required this.colorTextPlaceholder,
+    required this.focusRing,
     required this.paddingInline,
     required this.paddingInlineSM,
     required this.paddingInlineLG,
@@ -266,6 +277,7 @@ class _ResolvedInputToken {
   final Color colorBgContainer;
   final Color colorText;
   final Color colorTextPlaceholder;
+  final Color? focusRing;
   final double paddingInline;
   final double paddingInlineSM;
   final double paddingInlineLG;
@@ -497,6 +509,28 @@ class _SelectionDelegate
   bool get selectionEnabled => _state._enabled;
 }
 
+/// The selection gestures, plus the one thing they leave to the caller.
+///
+/// A tap on a field that is *already* focused has to ask for the keyboard
+/// again. The framework's own builder asks only where selection is turned
+/// off; with selection on it sets the caret and stops, and Flutter's Material
+/// field has always added this call for itself. Without it, putting the
+/// keyboard away with the back button and tapping the field again did
+/// nothing: the field never lost focus, so there was no focus change to open
+/// an editing session, and nobody asked for one.
+///
+/// Harmless where the framework has since started asking too — it reduces to
+/// showing an editing session that is already open.
+class _SelectionGestures extends TextSelectionGestureDetectorBuilder {
+  _SelectionGestures({required super.delegate});
+
+  @override
+  void onSingleTapUp(TapDragUpDetails details) {
+    super.onSingleTapUp(details);
+    editableText.requestKeyboard();
+  }
+}
+
 class _SoftInputState extends State<Input> {
   /// The editable underneath, so the gestures above it can reach its render
   /// object.
@@ -504,7 +538,7 @@ class _SoftInputState extends State<Input> {
       GlobalKey<EditableTextState>();
 
   late final TextSelectionGestureDetectorBuilder _selection =
-      TextSelectionGestureDetectorBuilder(delegate: _SelectionDelegate(this));
+      _SelectionGestures(delegate: _SelectionDelegate(this));
 
   /// The defaults set for this component in the subtree, if any.
   InputDefaults? get _defaults =>
@@ -627,28 +661,42 @@ class _SoftInputState extends State<Input> {
     return c!.count(_controller.text) > c.max!;
   }
 
-  Color _borderColor(Token token) {
-    if (!_enabled) return token.colorBorder;
+  /// The line round the box, in whichever of its four states it is in.
+  ///
+  /// The component's own tokens, not the theme's: `colorBorder`,
+  /// `hoverBorderColor` and `activeBorderColor` are fields of [InputToken],
+  /// and asking the theme for them instead is what left them unusable — a
+  /// border colour that could be named and never took.
+  ///
+  /// A status is the exception: an error is not the field's own colour, it is
+  /// the news, and it overrules whatever the field was dressed in.
+  Color _borderColor(Token token, _ResolvedInputToken r) {
+    if (!_enabled) return r.colorBorder;
     if (widget.status == InputStatus.error) {
       return _focused ? token.error.hover : token.error.base;
     }
     if (widget.status == InputStatus.warning || _countExceeded) {
       return _focused ? token.warning.hover : token.warning.base;
     }
-    if (_focused) return token.primary.hover;
-    if (_hovered) return token.primary.base;
-    return token.colorBorder;
+    if (_focused) return r.activeBorderColor;
+    if (_hovered) return r.hoverBorderColor;
+    return r.colorBorder;
   }
 
-  Color? _focusRing(Token token) {
+  Color? _focusRing(Token token, _ResolvedInputToken r) {
     if (!_focused || !_enabled) return null;
-    final group = switch (widget.status) {
-      InputStatus.error => token.error,
-      InputStatus.warning => token.warning,
-      _ => _countExceeded ? token.warning : token.primary,
+    // A colour of its own where one was named — including a transparent one,
+    // which is how a field is asked for no halo at all.
+    if (r.focusRing != null) return r.focusRing;
+    // A soft halo echoing the border colour. A status says what colour that
+    // is; otherwise it is the field's own focused border, so a field dressed
+    // in a colour of its own glows in that colour rather than in the theme's.
+    final base = switch (widget.status) {
+      InputStatus.error => token.error.base,
+      InputStatus.warning => token.warning.base,
+      _ => _countExceeded ? token.warning.base : r.activeBorderColor,
     };
-    // A soft halo echoing the border colour, like the focus glow.
-    return group.base.withValues(alpha: 0.12);
+    return base.withValues(alpha: 0.12);
   }
 
   bool get _multiline => widget.maxLines == null || widget.maxLines! > 1;
@@ -669,7 +717,7 @@ class _SoftInputState extends State<Input> {
     final showReveal = password != null && password.visibilityToggle;
 
     final textStyle = TextStyle(
-      color: _enabled ? token.colorText : token.colorTextQuaternary,
+      color: _enabled ? r.colorText : token.colorTextQuaternary,
       fontSize: fontSize,
       fontFamily: token.fontFamily,
       fontFamilyFallback: token.fontFamilyFallback,
@@ -759,7 +807,7 @@ class _SoftInputState extends State<Input> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: widget.textAlign,
-                    style: textStyle.copyWith(color: token.colorTextTertiary),
+                    style: textStyle.copyWith(color: r.colorTextPlaceholder),
                   ),
                 ),
               ),
@@ -917,7 +965,7 @@ class _SoftInputState extends State<Input> {
   }) {
     // Square where a neighbour in a [Compact] meets this field.
     final corners = CompactSlot.radiusOf(context, _radiusVal(r));
-    final ring = _focusRing(token);
+    final ring = _focusRing(token, r);
     final inlinePad = _paddingInline(r);
     final blockPad = _paddingBlock(r);
     return MouseRegion(
@@ -938,7 +986,10 @@ class _SoftInputState extends State<Input> {
       // rather than as a caption standing beside an unnamed box.
       child: Semantics(
           container: true,
-          onTap: _enabled ? () => _focusNode.requestFocus() : null,
+          // The keyboard, not only the focus: a field somebody has already
+          // been typing into keeps its focus when the keyboard is put away,
+          // and asking again for focus it already has changes nothing.
+          onTap: _enabled ? _takeTheKeyboard : null,
           child: _selection.buildGestureDetector(
             behavior: HitTestBehavior.opaque,
             child: AnimatedContainer(
@@ -967,7 +1018,7 @@ class _SoftInputState extends State<Input> {
                   bottomEnd: flatRight ? Radius.zero : corners.bottomEnd,
                 ),
                 border: Border.all(
-                  color: _borderColor(token),
+                  color: _borderColor(token, r),
                   width: token.lineWidth,
                 ),
                 boxShadow: ring == null
@@ -1013,6 +1064,17 @@ class _SoftInputState extends State<Input> {
         child: child,
       ),
     );
+  }
+
+  /// Focuses the field and asks for the keyboard, whichever of the two it
+  /// still needs.
+  void _takeTheKeyboard() {
+    final editable = _editableKey.currentState;
+    if (editable == null) {
+      _focusNode.requestFocus();
+      return;
+    }
+    editable.requestKeyboard();
   }
 
   void _clear() {

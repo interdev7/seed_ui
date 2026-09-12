@@ -276,3 +276,40 @@ ConfigProvider(
 ```
 
 A per-instance `token` wins over the `ConfigProvider` one.
+
+| Field | What it draws |
+| --- | --- |
+| `colorBorder` | The line round the box at rest |
+| `hoverBorderColor` | …under the pointer |
+| `activeBorderColor` | …while the field has focus |
+| `focusRing` | The halo that appears with focus. Unset it echoes `activeBorderColor` at twelve per cent; name a transparent colour and there is no halo |
+| `colorBgContainer` | The fill |
+| `colorText` | The words typed into it |
+| `colorTextPlaceholder` | The placeholder's grey |
+| `paddingInline`, `paddingInlineSM`, `paddingInlineLG` | The inset either side of the words, per preset |
+| `paddingBlock`, `paddingBlockSM`, `paddingBlockLG` | Above and below — a text area only |
+| `borderRadius`, `borderRadiusSM`, `borderRadiusLG` | The corners, per preset |
+| `fontSize`, `fontSizeSM`, `fontSizeLG` | The type, per preset |
+
+A status colour is not the field's own: `InputStatus.error` and a count past
+its soft maximum recolour the border whatever it was dressed in, because that
+is the news rather than the design.
+
+### A field with no chrome
+
+Four fields, not one: a transparent border still leaves the halo that appears
+on focus.
+
+```dart
+const clear = Color(0x00000000);
+
+Input(
+  placeholder: 'Search',
+  token: const InputToken(
+    colorBorder: clear,
+    hoverBorderColor: clear,
+    activeBorderColor: clear,
+    focusRing: clear,
+  ),
+)
+```

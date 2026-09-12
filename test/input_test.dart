@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+import 'package:flutter/semantics.dart' show SemanticsAction;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
@@ -321,6 +322,187 @@ void _selectionTests() {
         find.byType(EditableText),
       );
       expect(editable.widget.focusNode.hasFocus, isTrue);
+    });
+  });
+
+  group('asking for the keyboard again', () {
+    // Putting the keyboard away with the phone's back button hides it without
+    // taking the field's focus: the framework still believes there is an
+    // editing session, so tapping the field again raises no focus change and
+    // nothing opens one. Somebody has to ask, and on a field that allows
+    // selection the framework's own gestures ask only in some versions.
+
+    testWidgets('a tap on a field that already has focus asks again', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_host(const Input(placeholder: 'Name')));
+
+      await tester.tap(find.byType(Input));
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isTrue, reason: 'the first tap');
+
+      // The keyboard goes away without the connection closing, which is what
+      // the back button does.
+      tester.testTextInput.hide();
+      expect(tester.testTextInput.isVisible, isFalse);
+
+      await tester.tap(find.byType(Input));
+      await tester.pumpAndSettle();
+      expect(
+        tester.testTextInput.isVisible,
+        isTrue,
+        reason: 'the second tap has to ask for the keyboard again',
+      );
+    });
+
+    testWidgets('and so does a tap from assistive technology', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(_host(const Input(placeholder: 'Name')));
+
+      await tester.tap(find.byType(Input));
+      await tester.pumpAndSettle();
+      tester.testTextInput.hide();
+
+      tester.semantics.performAction(
+        find.semantics.byLabel('Name'),
+        SemanticsAction.tap,
+      );
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isTrue);
+      semantics.dispose();
+    });
+
+    testWidgets('a barred field is not asked to open one', (tester) async {
+      await tester.pumpWidget(
+        _host(const Input(placeholder: 'Name', disabled: true)),
+      );
+      await tester.tap(find.byType(Input), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isFalse);
+    });
+  });
+
+  group('the colours it is dressed in', () {
+    // Five of InputToken's fields were declared, documented, resolved — and
+    // never read: the border at rest, under the pointer and focused, the ink,
+    // and the placeholder's grey. A border colour that could be named and
+    // never took is why "how do I make the border transparent" had no answer.
+
+    BoxDecoration boxOf(WidgetTester tester) => tester
+        .widgetList<AnimatedContainer>(
+          find.descendant(
+            of: find.byType(Input),
+            matching: find.byType(AnimatedContainer),
+          ),
+        )
+        .map((b) => b.decoration! as BoxDecoration)
+        .first;
+
+    Color borderOf(WidgetTester tester) =>
+        (boxOf(tester).border! as Border).top.color;
+
+    testWidgets('the border takes the colour it was given, in each state', (
+      tester,
+    ) async {
+      const rest = Color(0xFF8B5CF6);
+      const hover = Color(0xFFA78BFA);
+      const active = Color(0xFF6D28D9);
+      await tester.pumpWidget(
+        _host(
+          const Input(
+            placeholder: 'Name',
+            token: InputToken(
+              colorBorder: rest,
+              hoverBorderColor: hover,
+              activeBorderColor: active,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(borderOf(tester), rest);
+
+      final pointer = TestPointer(1, PointerDeviceKind.mouse);
+      await tester.sendEventToBinding(
+        pointer.hover(tester.getCenter(find.byType(Input))),
+      );
+      await tester.pumpAndSettle();
+      expect(borderOf(tester), hover);
+
+      await tester.tap(find.byType(Input));
+      await tester.pumpAndSettle();
+      expect(borderOf(tester), active);
+    });
+
+    testWidgets('a transparent border and ring leave no chrome at all', (
+      tester,
+    ) async {
+      const clear = Color(0x00000000);
+      await tester.pumpWidget(
+        _host(
+          const Input(
+            placeholder: 'Name',
+            token: InputToken(
+              colorBorder: clear,
+              hoverBorderColor: clear,
+              activeBorderColor: clear,
+              focusRing: clear,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(Input));
+      await tester.pumpAndSettle();
+
+      expect(borderOf(tester), clear);
+      expect(
+        boxOf(tester).boxShadow?.single.color,
+        clear,
+        reason: 'a transparent border still glowed without focusRing',
+      );
+    });
+
+    testWidgets('the halo follows the border it was given', (tester) async {
+      const active = Color(0xFF6D28D9);
+      await tester.pumpWidget(
+        _host(
+          const Input(
+            placeholder: 'Name',
+            token: InputToken(activeBorderColor: active),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(Input));
+      await tester.pumpAndSettle();
+      expect(
+        boxOf(tester).boxShadow?.single.color,
+        active.withValues(alpha: 0.12),
+      );
+    });
+
+    testWidgets('the ink and the placeholder take theirs', (tester) async {
+      const ink = Color(0xFFF9FAFB);
+      const grey = Color(0xFF9CA3AF);
+      await tester.pumpWidget(
+        _host(
+          const Input(
+            placeholder: 'Name',
+            token: InputToken(colorText: ink, colorTextPlaceholder: grey),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<Text>(find.text('Name')).style?.color,
+        grey,
+        reason: 'the placeholder',
+      );
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).style.color,
+        ink,
+        reason: 'the words typed into it',
+      );
     });
   });
 }

@@ -381,6 +381,8 @@ class _CardState extends State<Card> {
         ? null
         : DefaultTextStyle(
             style: TextStyle(
+              fontFamily: t.fontFamily,
+              fontFamilyFallback: t.fontFamilyFallback,
               color: t.colorText,
               fontSize: fontSize,
               fontWeight: t.fontWeightStrong,
@@ -394,7 +396,11 @@ class _CardState extends State<Card> {
     final extra = widget.extra == null
         ? null
         : DefaultTextStyle(
-            style: TextStyle(color: r.extraColor, fontSize: t.fontSize),
+            style: TextStyle(
+                fontFamily: t.fontFamily,
+                fontFamilyFallback: t.fontFamilyFallback,
+                color: r.extraColor,
+                fontSize: t.fontSize),
             child: widget.extra!,
           );
 
@@ -488,6 +494,8 @@ class _CardState extends State<Card> {
       padding: padding,
       child: DefaultTextStyle(
         style: TextStyle(
+          fontFamily: t.fontFamily,
+          fontFamilyFallback: t.fontFamilyFallback,
           color: t.colorText,
           fontSize: t.fontSize,
           height: t.lineHeight,
@@ -521,7 +529,10 @@ class _CardState extends State<Card> {
             child: Center(
               child: DefaultTextStyle(
                 style: TextStyle(
-                    color: t.colorTextSecondary, fontSize: t.fontSize),
+                    fontFamily: t.fontFamily,
+                    fontFamilyFallback: t.fontFamilyFallback,
+                    color: t.colorTextSecondary,
+                    fontSize: t.fontSize),
                 child: IconTheme.merge(
                   data: IconThemeData(color: t.colorTextSecondary),
                   child: items[i],
@@ -577,6 +588,8 @@ class CardMeta extends StatelessWidget {
       text.add(
         DefaultTextStyle(
           style: TextStyle(
+            fontFamily: t.fontFamily,
+            fontFamilyFallback: t.fontFamilyFallback,
             color: t.colorText,
             fontSize: t.fontSizeLG,
             fontWeight: t.fontWeightStrong,
@@ -598,6 +611,8 @@ class CardMeta extends StatelessWidget {
           padding: EdgeInsets.only(top: title != null ? t.sizeXS : 0),
           child: DefaultTextStyle(
             style: TextStyle(
+              fontFamily: t.fontFamily,
+              fontFamilyFallback: t.fontFamilyFallback,
               color: t.colorTextSecondary,
               fontSize: t.fontSize,
               height: t.lineHeight,

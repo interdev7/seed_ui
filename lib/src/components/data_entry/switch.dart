@@ -40,6 +40,7 @@ class SwitchToken {
     this.trackMinWidthSM,
     this.handleSize,
     this.handleSizeSM,
+    this.handleShadow,
     this.colorPrimary,
     this.colorBg,
   });
@@ -65,6 +66,15 @@ class SwitchToken {
   /// Size of small switch handle (`handleSizeSM`).
   final double? handleSizeSM;
 
+  /// What the handle casts on the track (`handleShadow`).
+  ///
+  /// Null takes a shadow worked out from the handle's own size. The kit's
+  /// `boxShadowSecondary` — which this used to borrow — is the three-layer
+  /// shadow a popover floats on, twenty-eight pixels of blur and eight of
+  /// spread around an eighteen-pixel handle: on screen it read as a grey
+  /// disc sitting beside the switch rather than as a handle lifted off it.
+  final List<BoxShadow>? handleShadow;
+
   /// Primary active track color (`colorPrimary`).
   final Color? colorPrimary;
 
@@ -82,6 +92,7 @@ class SwitchToken {
         trackMinWidthSM: trackMinWidthSM,
         handleSize: handleSize,
         handleSizeSM: handleSizeSM,
+        handleShadow: handleShadow,
         colorPrimary: colorPrimary ?? t.primary.base,
         colorBg: colorBg ?? t.colorTextQuaternary,
       );
@@ -97,6 +108,7 @@ class _ResolvedSwitchToken {
     required this.trackMinWidthSM,
     required this.handleSize,
     required this.handleSizeSM,
+    required this.handleShadow,
     required this.colorPrimary,
     required this.colorBg,
   });
@@ -108,6 +120,7 @@ class _ResolvedSwitchToken {
   final double? trackMinWidthSM;
   final double? handleSize;
   final double? handleSizeSM;
+  final List<BoxShadow>? handleShadow;
   final Color colorPrimary;
   final Color colorBg;
 }
@@ -365,7 +378,17 @@ class _SoftSwitchState extends State<Switch> {
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFFFFF),
                         borderRadius: BorderRadius.circular(thumbSize),
-                        boxShadow: token.boxShadowSecondary,
+                        boxShadow: r.handleShadow ??
+                            [
+                              // Sized to the handle, so a switch at any
+                              // height is lifted by the same amount rather
+                              // than sitting in a fixed puddle.
+                              BoxShadow(
+                                color: const Color.fromRGBO(0, 0, 0, 0.16),
+                                offset: Offset(0, thumbSize * 0.11),
+                                blurRadius: thumbSize * 0.22,
+                              ),
+                            ],
                       ),
                       child: widget.loading
                           ? Center(

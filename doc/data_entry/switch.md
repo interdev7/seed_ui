@@ -116,3 +116,7 @@ A per-instance `token` wins over the `ConfigProvider` one.
 everything else is worked out from whichever is in force. `trackMinWidthSM`,
 `trackMinWidth`, `handleSizeSM` and `handleSize` override that working-out for
 the preset they name — leave them unset and the proportions hold.
+
+`handleShadow` is what the handle casts on the track. Unset, it is worked out
+from the handle's own size, so a switch at any height is lifted by the same
+amount rather than sitting in a fixed puddle.

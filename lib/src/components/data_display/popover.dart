@@ -375,6 +375,8 @@ class _PopoverState extends State<Popover> {
           if (widget.title != null)
             DefaultTextStyle(
               style: TextStyle(
+                fontFamily: t.fontFamily,
+                fontFamilyFallback: t.fontFamilyFallback,
                 color: r.titleColor,
                 fontSize: t.fontSize,
                 fontWeight: t.fontWeightStrong,
@@ -389,6 +391,8 @@ class _PopoverState extends State<Popover> {
           if (widget.content != null)
             DefaultTextStyle(
               style: TextStyle(
+                fontFamily: t.fontFamily,
+                fontFamilyFallback: t.fontFamilyFallback,
                 color: r.contentColor,
                 fontSize: t.fontSize,
                 height: t.lineHeight,

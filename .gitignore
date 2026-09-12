@@ -63,3 +63,4 @@ example/android/local.properties
 example/android/app/debug/
 example/android/app/profile/
 example/android/app/release/
+tool/screenshots/out/

@@ -1604,6 +1604,8 @@ class _TourPanel extends StatelessWidget {
                         ),
                         child: DefaultTextStyle(
                           style: TextStyle(
+                            fontFamily: t.fontFamily,
+                            fontFamilyFallback: t.fontFamilyFallback,
                             color: _ink,
                             fontSize: t.fontSize,
                             fontWeight: t.fontWeightStrong,
@@ -1619,6 +1621,8 @@ class _TourPanel extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: t.size),
                         child: DefaultTextStyle(
                           style: TextStyle(
+                            fontFamily: t.fontFamily,
+                            fontFamilyFallback: t.fontFamilyFallback,
                             color: _inkSecondary,
                             fontSize: t.fontSize,
                             height: t.lineHeight,

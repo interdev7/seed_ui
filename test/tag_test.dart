@@ -103,4 +103,29 @@ void main() {
     await tester.pump();
     expect(value, ['b']);
   });
+
+  testWidgets('a tag narrower than its words is cut, not overflowed', (
+    tester,
+  ) async {
+    // A tag in a table cell or a Wrap that has run out of line is handed less
+    // room than its words want. It used to paint a striped overflow banner
+    // across the row.
+    await tester.pumpWidget(
+      const ConfigProvider(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 60,
+                child: Tag(child: Text('Refunded twice over')),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.byType(Tag)).width, lessThanOrEqualTo(60));
+  });
 }

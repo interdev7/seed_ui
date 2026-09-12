@@ -241,6 +241,51 @@ void main() {
     expect(missing, isEmpty, reason: 'doc/theming.md is behind the code');
   });
 
+  test('every text style a component builds carries the theme font', () {
+    // `SeedToken.fontFamily` is a knob the theming document sells, and a
+    // `TextStyle` built from scratch without it drops back to the platform
+    // font. Fifty-one did: a Card title, a Popover title, every Form label —
+    // rendered in the wrong face under any theme that names one, which a
+    // screenshot of the form is what finally showed.
+    //
+    // Only styles built from nothing. `DefaultTextStyle.merge` and `copyWith`
+    // inherit what is already in force, which is the whole point of them.
+    final offenders = <String>[];
+    for (final entity in Directory('lib/src').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final source = entity.readAsStringSync();
+      for (final match in RegExp(r'(?<![\w])TextStyle\(').allMatches(source)) {
+        final before = source.substring(
+          match.start < 120 ? 0 : match.start - 120,
+          match.start,
+        );
+        if (before.contains('.merge(') || before.endsWith('copyWith(')) {
+          continue;
+        }
+        // The body of this constructor call, by balancing its brackets.
+        var i = match.end;
+        var depth = 1;
+        while (i < source.length && depth > 0) {
+          if (source[i] == '(') depth++;
+          if (source[i] == ')') depth--;
+          i++;
+        }
+        final body = source.substring(match.end, i - 1);
+        // A style that says nothing about size is a tweak of colour or
+        // weight, not a face being set.
+        if (!body.contains('fontSize') || body.contains('fontFamily')) continue;
+        final line = '\n'.allMatches(source.substring(0, match.start)).length;
+        offenders.add('${entity.path}:${line + 1}');
+      }
+    }
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'these text styles ignore the theme font — add fontFamily and '
+          'fontFamilyFallback from the token',
+    );
+  });
+
   test('ComponentsConfig knows every component token', () {
     final declared = <String>{};
     for (final entity
@@ -769,5 +814,34 @@ void _refinementTests() {
       ).style;
       expect(style.color, ink);
     });
+  });
+
+  testWidgets('the Material theme carries the font the token names', (
+    tester,
+  ) async {
+    // `ConfigProvider` goes outside `MaterialApp`, which then puts its own
+    // DefaultTextStyle over the whole app — below the provider. Everything in
+    // the kit that merges into what is already in force inherited the
+    // platform font from there while everything that built a style from
+    // nothing used the theme's, so one app was drawn in two faces.
+    late TextStyle seen;
+    final theme = ThemeData(token: const SeedToken(fontFamily: 'SeedTestFace'));
+    await tester.pumpWidget(
+      ConfigProvider(
+        theme: theme,
+        child: MaterialApp(
+          theme: theme.token.materialTheme,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                seen = DefaultTextStyle.of(context).style;
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(seen.fontFamily, 'SeedTestFace');
   });
 }

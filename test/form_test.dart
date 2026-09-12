@@ -1413,4 +1413,34 @@ void _dependsOnTests() {
       expect(tester.takeException(), isFlutterError);
     });
   });
+
+  testWidgets('every control down a form is the same width', (tester) async {
+    // Left to itself a Select takes the width of its widest label where a
+    // text field takes the whole column, and a form of both came out ragged.
+    await tester.pumpWidget(
+      _host(
+        Form(
+          child: Column(
+            children: [
+              FormItem.text(name: 'name', label: const Text('Name')),
+              FormItem.select<String>(
+                name: 'plan',
+                label: const Text('Plan'),
+                initialValue: 'team',
+                options: const [
+                  SelectOption(value: 'team', label: Text('Team')),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getSize(find.byType(Select<String>)).width,
+      moreOrLessEquals(tester.getSize(find.byType(Input)).width, epsilon: 0.5),
+    );
+  });
 }

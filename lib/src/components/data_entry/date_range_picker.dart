@@ -1310,6 +1310,8 @@ class _RangeTileState extends State<_RangeTile> {
             child: Text(
               widget.preset.label,
               style: TextStyle(
+                fontFamily: t.fontFamily,
+                fontFamilyFallback: t.fontFamilyFallback,
                 fontSize: t.fontSize,
                 height: t.lineHeight,
                 color: blocked ? t.colorTextQuaternary : t.colorText,

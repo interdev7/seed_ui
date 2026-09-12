@@ -455,6 +455,25 @@ class _ConfigProviderState extends State<ConfigProvider> {
   @override
   Widget build(BuildContext context) {
     var child = widget.child;
+    // The face the theme names, put where everything below can inherit it.
+    //
+    // A component that builds a style from nothing carries the family itself,
+    // but one that merges into what is already in force — a form label, a
+    // card's body, the words a caller passes in — inherits whatever the app
+    // above it set, which is the platform font and not the theme's. Merged
+    // rather than set, so only the family travels: size, colour and weight
+    // stay whatever they were.
+    //
+    // Nothing at all where no family was named, which is the usual case, so
+    // an unthemed tree is left exactly as it was.
+    final family = _config.theme.token.fontFamily;
+    final fallback = _config.theme.token.fontFamilyFallback;
+    if (family != null || fallback != null) {
+      child = DefaultTextStyle.merge(
+        style: TextStyle(fontFamily: family, fontFamilyFallback: fallback),
+        child: child,
+      );
+    }
     if (widget.systemOverlayStyle) {
       // Declared rather than pushed through `SystemChrome`, so the style
       // belongs to this subtree instead of mutating global state that

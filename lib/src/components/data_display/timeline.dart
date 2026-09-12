@@ -652,6 +652,8 @@ class Timeline extends StatelessWidget {
             // silently resets it to reading from the start.
             textAlign: lines,
             style: TextStyle(
+              fontFamily: t.fontFamily,
+              fontFamilyFallback: t.fontFamilyFallback,
               color: t.colorText,
               fontSize: t.fontSize,
               fontWeight: t.fontWeightStrong,
@@ -666,6 +668,8 @@ class Timeline extends StatelessWidget {
             child: DefaultTextStyle(
               textAlign: lines,
               style: TextStyle(
+                fontFamily: t.fontFamily,
+                fontFamilyFallback: t.fontFamilyFallback,
                 color: t.colorTextSecondary,
                 fontSize: t.fontSizeSM,
                 height: t.lineHeight,
@@ -689,6 +693,8 @@ class Timeline extends StatelessWidget {
         // wraps reads the same way as one that does not.
         textAlign: lines,
         style: TextStyle(
+          fontFamily: t.fontFamily,
+          fontFamilyFallback: t.fontFamilyFallback,
           color: t.colorText,
           fontSize: t.fontSize,
           height: t.lineHeight,
@@ -774,6 +780,8 @@ class Timeline extends StatelessWidget {
         : DefaultTextStyle(
             textAlign: contentOnLeft ? TextAlign.start : TextAlign.end,
             style: TextStyle(
+              fontFamily: t.fontFamily,
+              fontFamilyFallback: t.fontFamilyFallback,
               color: t.colorTextSecondary,
               fontSize: t.fontSize,
               height: t.lineHeight,
@@ -901,6 +909,8 @@ class Timeline extends StatelessWidget {
         ? null
         : DefaultTextStyle(
             style: TextStyle(
+              fontFamily: t.fontFamily,
+              fontFamilyFallback: t.fontFamilyFallback,
               color: t.colorTextSecondary,
               fontSize: t.fontSize,
               height: t.lineHeight,

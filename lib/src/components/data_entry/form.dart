@@ -1146,6 +1146,7 @@ class _FormListState extends State<FormList> implements _Field {
   Widget build(BuildContext context) {
     final scope = _scope!;
     final r = scope.style;
+    final t = context.softToken;
 
     return AnimatedBuilder(
       animation: scope.controller,
@@ -1191,6 +1192,8 @@ class _FormListState extends State<FormList> implements _Field {
                       Text(
                         message,
                         style: TextStyle(
+                          fontFamily: t.fontFamily,
+                          fontFamilyFallback: t.fontFamilyFallback,
                           color: widget.help != null
                               ? r.extraColor
                               : (_error != null
@@ -1922,6 +1925,8 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
                       Text(
                         message,
                         style: TextStyle(
+                          fontFamily: t.fontFamily,
+                          fontFamilyFallback: t.fontFamilyFallback,
                           color: widget.help != null
                               ? r.extraColor
                               : (_error != null
@@ -1945,10 +1950,18 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
         final label = _label(scope, r, t);
         final beside = scope.layout != FormLayout.vertical && label != null;
 
+        // Stretched, so every control down a form is the same width. Left to
+        // itself a `Select` takes the width of its widest label where a text
+        // field takes the whole column, and a form of both came out ragged —
+        // which is the one thing a column of fields must not be.
         final field = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
-          children: [control, if (under != null) under],
+          children: [
+            control,
+            if (under != null)
+              Align(alignment: AlignmentDirectional.centerStart, child: under),
+          ],
         );
 
         final inline = scope.layout == FormLayout.inline;
@@ -1999,13 +2012,16 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
                 ],
               )
             : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (label != null)
-                    Padding(
-                      padding: EdgeInsets.only(bottom: r.labelGap),
-                      child: label,
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: r.labelGap),
+                        child: label,
+                      ),
                     ),
                   field,
                 ],
@@ -2033,7 +2049,12 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
           if (_demanded && mark == FormRequiredMark.required) ...[
             Text(
               '*',
-              style: TextStyle(color: r.errorColor, fontSize: r.labelFontSize),
+              style: TextStyle(
+                fontFamily: t.fontFamily,
+                fontFamilyFallback: t.fontFamilyFallback,
+                color: r.errorColor,
+                fontSize: r.labelFontSize,
+              ),
             ),
             SizedBox(width: t.sizeXXS),
           ],
@@ -2049,6 +2070,8 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
               child: Text(
                 words.formOptional,
                 style: TextStyle(
+                  fontFamily: t.fontFamily,
+                  fontFamilyFallback: t.fontFamilyFallback,
                   color: r.extraColor,
                   fontSize: r.messageFontSize,
                 ),

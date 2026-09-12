@@ -337,17 +337,24 @@ class Tag extends StatelessWidget {
             ),
             SizedBox(width: token.sizeXXS),
           ],
-          DefaultTextStyle.merge(
-            style: TextStyle(
-              color: style.text,
-              fontSize: fontSize,
-              height: r.lineHeight,
-              leadingDistribution: TextLeadingDistribution.even,
-              fontFamily: token.fontFamily,
-              fontFamilyFallback: token.fontFamilyFallback,
-              decoration: TextDecoration.none,
+          // Flexible, not fixed: the row keeps its natural width wherever
+          // there is room for it, and gives the words an ellipsis rather than
+          // a striped overflow banner where there is not — a tag in a narrow
+          // table cell, or in a Wrap that has run out of line.
+          Flexible(
+            child: DefaultTextStyle.merge(
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: style.text,
+                fontSize: fontSize,
+                height: r.lineHeight,
+                leadingDistribution: TextLeadingDistribution.even,
+                fontFamily: token.fontFamily,
+                fontFamilyFallback: token.fontFamilyFallback,
+                decoration: TextDecoration.none,
+              ),
+              child: child ?? const SizedBox.shrink(),
             ),
-            child: child ?? const SizedBox.shrink(),
           ),
           if (_closableIn(context)) ...[
             SizedBox(width: token.sizeXXS),

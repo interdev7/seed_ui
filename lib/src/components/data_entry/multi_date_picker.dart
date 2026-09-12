@@ -914,6 +914,8 @@ class _MultiPanel extends StatelessWidget {
                   Text(
                     words.figures('${state._value.length}'),
                     style: TextStyle(
+                      fontFamily: t.fontFamily,
+                      fontFamilyFallback: t.fontFamilyFallback,
                       color: t.colorTextTertiary,
                       fontSize: t.fontSize,
                       decoration: TextDecoration.none,
@@ -926,6 +928,8 @@ class _MultiPanel extends StatelessWidget {
                       child: Text(
                         words.ok,
                         style: TextStyle(
+                          fontFamily: t.fontFamily,
+                          fontFamilyFallback: t.fontFamilyFallback,
                           color: t.primary.base,
                           fontSize: t.fontSize,
                           decoration: TextDecoration.none,

@@ -612,6 +612,8 @@ class _PaginationState extends State<Pagination> {
         ? Text(
             context.seedLocale.figures('$_page'),
             style: TextStyle(
+              fontFamily: token.fontFamily,
+              fontFamilyFallback: token.fontFamilyFallback,
               color: token.colorText,
               fontSize: fontSize,
               decoration: TextDecoration.none,
@@ -633,6 +635,8 @@ class _PaginationState extends State<Pagination> {
           child: Text(
             '/',
             style: TextStyle(
+              fontFamily: token.fontFamily,
+              fontFamilyFallback: token.fontFamilyFallback,
               color: token.colorText,
               fontSize: fontSize,
               decoration: TextDecoration.none,
@@ -642,6 +646,8 @@ class _PaginationState extends State<Pagination> {
         Text(
           context.seedLocale.figures('$_pageCount'),
           style: TextStyle(
+            fontFamily: token.fontFamily,
+            fontFamilyFallback: token.fontFamilyFallback,
             color: token.colorText,
             fontSize: fontSize,
             decoration: TextDecoration.none,
@@ -680,6 +686,8 @@ class _PaginationState extends State<Pagination> {
         Text(
           'Go to',
           style: TextStyle(
+            fontFamily: token.fontFamily,
+            fontFamilyFallback: token.fontFamilyFallback,
             color: token.colorText,
             fontSize: fontSize,
             decoration: TextDecoration.none,

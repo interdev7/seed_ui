@@ -1659,6 +1659,8 @@ class _PresetTileState extends State<_PresetTile> {
               style: TextStyle(
                 fontSize: t.fontSize,
                 height: t.lineHeight,
+                fontFamily: t.fontFamily,
+                fontFamilyFallback: t.fontFamilyFallback,
                 color: blocked ? t.colorTextQuaternary : t.colorText,
               ),
             ),

@@ -438,6 +438,8 @@ class _Panel extends StatelessWidget {
 
     final label = DefaultTextStyle(
       style: TextStyle(
+        fontFamily: token.fontFamily,
+        fontFamilyFallback: token.fontFamilyFallback,
         color: headerColor,
         fontSize: token.fontSize,
         height: 1.0,
@@ -503,6 +505,8 @@ class _Panel extends StatelessWidget {
       padding: style.contentPad(size),
       child: DefaultTextStyle(
         style: TextStyle(
+          fontFamily: token.fontFamily,
+          fontFamilyFallback: token.fontFamilyFallback,
           color: token.colorText,
           fontSize: token.fontSize,
           height: token.lineHeight,

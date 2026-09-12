@@ -1099,7 +1099,12 @@ class _NodeRowState extends State<_NodeRow> {
 
     final titleColor = widget.disabled ? t.colorTextQuaternary : t.colorText;
     final title = DefaultTextStyle(
-      style: TextStyle(color: titleColor, fontSize: t.fontSize, height: 1.0),
+      style: TextStyle(
+          fontFamily: t.fontFamily,
+          fontFamilyFallback: t.fontFamilyFallback,
+          color: titleColor,
+          fontSize: t.fontSize,
+          height: 1.0),
       overflow: TextOverflow.ellipsis,
       child: widget.node.title,
     );
@@ -1244,6 +1249,8 @@ class _NodeRowState extends State<_NodeRow> {
           ),
           child: DefaultTextStyle(
             style: TextStyle(
+              fontFamily: t.fontFamily,
+              fontFamilyFallback: t.fontFamilyFallback,
               color: t.colorText,
               fontSize: t.fontSize,
               height: 1.0,

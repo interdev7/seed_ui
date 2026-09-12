@@ -458,6 +458,8 @@ class _CountdownState extends State<Countdown>
         Text(
           shown,
           style: TextStyle(
+            fontFamily: t.fontFamily,
+            fontFamilyFallback: t.fontFamilyFallback,
             fontSize: r.fontSize,
             color: r.color,
             fontWeight: r.fontWeight,

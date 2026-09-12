@@ -78,6 +78,10 @@ component's own defaults for a subtree.
   A null `onChanged` still makes a **controlled** one inert — nothing can
   change a value somebody else is holding, which is Flutter's own reading —
   but an uncontrolled one now changes whether or not anybody is listening.
+- **Four more screenshots on pub.dev** — `Table`, `DatePicker`, `Form` and the
+  sliders — filling the gallery's ten slots. They are rendered by
+  `./tool/shoot.sh` rather than captured by hand, so they can be made again
+  after any change; the scenes live in `tool/screenshots/shoot_test.dart`.
 - **Sliders reach assistive technology.** `Slider`, `RangeSlider` and
   `MultiRangeSlider` had no semantics at all: the handles are painted rather
   than built, so a screen reader found a box with no value in it, nothing to
@@ -94,6 +98,29 @@ component's own defaults for a subtree.
 
 ### Fixed
 
+- **The theme's font reaches every word.** `SeedToken.fontFamily` was honoured
+  by the fifty-odd text styles components build from nothing and lost by
+  everything that merges into what is already in force — a form label, a card
+  title, the words a caller passes in. `ConfigProvider` goes outside
+  `MaterialApp`, whose own `DefaultTextStyle` then sat below it carrying the
+  platform font, so one app was drawn in two faces. `materialTheme` now names
+  the family, the styles that were missing it carry it, and a test refuses any
+  new style built without it. Rendering the screenshots is what showed it: the
+  form's labels came out in the wrong font beside its fields.
+- **Every control down a form is the same width.** A `Select` took the width
+  of its widest label where a text field took the whole column, so a form of
+  both came out ragged.
+- **A `Tag` narrower than its words is cut short rather than overflowed.** In
+  a table cell or a `Wrap` that has run out of line it painted a striped
+  overflow banner across the row; it now ellipsises, and keeps its natural
+  width wherever there is room for it.
+- **A `Switch` handle casts its own shadow.** It borrowed
+  `boxShadowSecondary` — the three-layer shadow a popover floats on, with
+  twenty-eight pixels of blur and eight of spread around an eighteen-pixel
+  handle — which on screen read as a grey disc sitting beside the switch. The
+  new `SwitchToken.handleShadow` overrides it; left unset it is worked out
+  from the handle's own size.
+- **`DatePicker` preset labels take the theme's font.**
 - **A table narrower than its columns no longer overflows its box.** The
   widths were worked out from what the cells wanted and handed on unsqueezed,
   so everything laid out by hand against them — a summary row, a run of merged

@@ -47,6 +47,14 @@ extension MaterialThemeFromToken on Token {
       // surface above, so naming them again here would be two statements of
       // one fact. The divider it does not derive.
       dividerColor: colorSplit,
+      // And the face. `MaterialApp` puts its own `DefaultTextStyle` over the
+      // whole app, below the `ConfigProvider` that names the theme, so
+      // without this every piece of the kit that merges into what is already
+      // in force — a form label, a card's body, the words a caller passes in
+      // — came out in the platform font while the pieces that build a style
+      // from nothing came out in the theme's. One app, two faces.
+      fontFamily: fontFamily,
+      fontFamilyFallback: fontFamilyFallback,
     );
   }
 }

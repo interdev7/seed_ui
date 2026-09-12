@@ -37,6 +37,22 @@ screenshots:
       Tour walking through a screen: a spotlight mask over the page with an
       anchored panel, in light and dark.
     path: doc/screenshots/tour.webp
+  - description: >-
+      Table with pinned and sortable columns, a filtered heading, picked rows,
+      a summary line and a pager, in light and dark.
+    path: doc/screenshots/table.webp
+  - description: >-
+      DatePicker with its panel open beside a rail of named dates, in light
+      and dark.
+    path: doc/screenshots/date_picker.webp
+  - description: >-
+      Form with labels, a required mark and fields of four kinds lined up down
+      the page, in light and dark.
+    path: doc/screenshots/form.webp
+  - description: >-
+      Sliders: marks along the scale, a coloured zone, a span with two handles
+      and a run with four, in light and dark.
+    path: doc/screenshots/slider.webp
 
 topics:
   - ui

@@ -350,6 +350,8 @@ class Badge extends StatelessWidget {
     final height =
         size == SoftSize.small ? r.indicatorHeightSM : r.indicatorHeight;
     final style = TextStyle(
+      fontFamily: t.fontFamily,
+      fontFamilyFallback: t.fontFamilyFallback,
       color: r.textColor,
       fontSize: r.fontSize,
       fontWeight: t.fontWeight,

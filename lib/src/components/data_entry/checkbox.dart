@@ -100,7 +100,8 @@ class Checkbox extends StatefulWidget {
   /// Creates a [Checkbox].
   const Checkbox({
     super.key,
-    required this.checked,
+    this.checked,
+    this.defaultChecked,
     this.onChanged,
     this.label,
     this.disabled,
@@ -111,9 +112,16 @@ class Checkbox extends StatefulWidget {
   });
 
   /// Whether the box is ticked.
-  final bool checked;
+  final bool? checked;
 
-  /// Called with the new state when toggled. Null disables the checkbox.
+  /// Whether an uncontrolled box starts ticked. Defaults to false.
+  final bool? defaultChecked;
+
+  /// Called with the new state when toggled.
+  ///
+  /// Null on a controlled box — one given a [checked] — makes it inert:
+  /// nothing can change the state, so nothing does. An uncontrolled box keeps
+  /// its own and ticks whether or not anybody is listening.
   final ValueChanged<bool>? onChanged;
 
   /// The label widget beside the box.
@@ -153,13 +161,29 @@ class _SoftCheckboxState extends State<Checkbox> {
       ConfigProvider.componentDisabledOf(context) ??
       false;
 
-  bool get _enabled => !_disabled && widget.onChanged != null;
+  bool? _internal;
+
+  /// What the box shows: the state it was handed, else the one it has been
+  /// keeping since it was last ticked, else where it started.
+  bool get _checked =>
+      widget.checked ?? _internal ?? widget.defaultChecked ?? false;
+
+  /// A box nobody is listening to is inert only while somebody else is
+  /// driving it. An uncontrolled one has its own state to change.
+  bool get _enabled =>
+      !_disabled && (widget.onChanged != null || widget.checked == null);
 
   /// Whether the focus should be seen: only where it arrived by keyboard.
   bool _focusVisible = false;
 
   void _toggle() {
-    if (_enabled) widget.onChanged!(!widget.checked);
+    if (!_enabled) return;
+    final next = !_checked;
+    // Kept in step whether or not somebody else is driving this: it is only
+    // the fallback for `checked`, and a stale one would show through the
+    // moment `checked` went null again.
+    setState(() => _internal = next);
+    widget.onChanged?.call(next);
   }
 
   @override
@@ -188,7 +212,7 @@ class _SoftCheckboxState extends State<Checkbox> {
       child: Semantics(
         // What it is, what state it is in, and that it can be tapped — the
         // label comes from the words beside it, which are already in the tree.
-        checked: widget.checked,
+        checked: _checked,
         mixed: widget.indeterminate,
         enabled: _enabled,
         onTap: _enabled ? _toggle : null,
@@ -206,7 +230,7 @@ class _SoftCheckboxState extends State<Checkbox> {
               children: [
                 CheckboxBox(
                   focused: _focusVisible,
-                  value: widget.checked,
+                  value: _checked,
                   indeterminate: widget.indeterminate,
                   enabled: _enabled,
                   hovered: _hovered && _enabled,
@@ -385,11 +409,12 @@ class CheckboxGroupDefaults {
 ///   onChanged: (v) => setState(() => _picked = v),
 /// )
 /// ```
-class CheckboxGroup<T> extends StatelessWidget {
+class CheckboxGroup<T> extends StatefulWidget {
   /// Creates a [CheckboxGroup].
   const CheckboxGroup({
     super.key,
-    required this.value,
+    this.value,
+    this.defaultValue,
     required this.options,
     this.onChanged,
     this.disabled,
@@ -398,25 +423,25 @@ class CheckboxGroup<T> extends StatelessWidget {
     this.runSpacing = 8,
   });
 
-  /// The currently selected values.
-  final List<T> value;
+  /// The currently selected values. Null leaves the group to keep its own
+  /// (see [defaultValue]).
+  final List<T>? value;
+
+  /// What an uncontrolled group starts with. Defaults to nothing ticked.
+  final List<T>? defaultValue;
 
   /// The options, in order.
   final List<CheckboxOption<T>> options;
 
   /// Called with the full new selection whenever an option toggles.
+  ///
+  /// Null on a controlled one — given a value of its own — makes it inert:
+  /// nothing can change what it shows, so nothing does. An uncontrolled one
+  /// keeps its own state and changes whether or not anybody is listening.
   final ValueChanged<List<T>>? onChanged;
 
   /// Greys the whole group out.
   final bool? disabled;
-
-  /// Whether this control is disabled: its own word, else the one set for
-  /// the subtree, else no.
-  bool _disabledIn(BuildContext context) =>
-      disabled ??
-      ConfigProvider.defaultsOf<CheckboxGroupDefaults>(context)?.disabled ??
-      ConfigProvider.componentDisabledOf(context) ??
-      false;
 
   /// Whether the options run in a row (wrapping) or a column.
   final Axis? direction;
@@ -427,46 +452,86 @@ class CheckboxGroup<T> extends StatelessWidget {
   /// Gap between wrapped rows of options, in logical pixels.
   final double runSpacing;
 
+  @override
+  State<CheckboxGroup<T>> createState() => _CheckboxGroupState<T>();
+}
+
+class _CheckboxGroupState<T> extends State<CheckboxGroup<T>> {
+  List<T>? _internal;
+
+  @override
+  void initState() {
+    super.initState();
+    _internal =
+        widget.defaultValue == null ? null : List<T>.of(widget.defaultValue!);
+  }
+
+  /// What is ticked: the selection handed in, else the one the group has been
+  /// keeping, else where it started.
+  List<T> get _current =>
+      widget.value ?? _internal ?? widget.defaultValue ?? const [];
+
+  /// Whether this control is disabled: its own word, else the one set for
+  /// the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ??
+      ConfigProvider.defaultsOf<CheckboxGroupDefaults>(context)?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
+
+  /// A group nobody is listening to is inert only while somebody else is
+  /// driving it. An uncontrolled one has its own selection to change.
+  bool get _enabled =>
+      !_disabled && (widget.onChanged != null || widget.value == null);
+
   void _toggle(T optionValue, bool checked) {
-    final next = List<T>.of(value);
+    final next = List<T>.of(_current);
     if (checked) {
       if (!next.contains(optionValue)) next.add(optionValue);
     } else {
       next.remove(optionValue);
     }
-    onChanged?.call(next);
+    // Kept in step whether or not somebody else is driving this: it is only
+    // the fallback for `value`, and a stale one would show through the moment
+    // `value` went null again.
+    setState(() => _internal = next);
+    widget.onChanged?.call(next);
   }
 
   @override
   Widget build(BuildContext context) {
+    final current = _current;
     final boxes = [
-      for (final option in options)
+      for (final option in widget.options)
         Checkbox(
-          checked: value.contains(option.value),
-          disabled:
-              _disabledIn(context) || option.disabled || onChanged == null,
+          checked: current.contains(option.value),
+          disabled: !_enabled || option.disabled,
           onChanged: (checked) => _toggle(option.value, checked),
           label: option.label,
         ),
     ];
 
-    if (_directionIn(context) == Axis.vertical) {
+    if (_direction == Axis.vertical) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (var i = 0; i < boxes.length; i++) ...[
-            if (i > 0) SizedBox(height: runSpacing),
+            if (i > 0) SizedBox(height: widget.runSpacing),
             boxes[i],
           ],
         ],
       );
     }
-    return Wrap(spacing: spacing, runSpacing: runSpacing, children: boxes);
+    return Wrap(
+      spacing: widget.spacing,
+      runSpacing: widget.runSpacing,
+      children: boxes,
+    );
   }
 
   /// This widget's word, then the subtree's, then the kit's.
-  Axis _directionIn(BuildContext context) =>
-      direction ??
+  Axis get _direction =>
+      widget.direction ??
       ConfigProvider.defaultsOf<CheckboxGroupDefaults>(context)?.direction ??
       Axis.horizontal;
 }

@@ -24,7 +24,7 @@ class _SwitchDemoState extends State<SwitchDemo> {
         Switch(value: _a, onChanged: (v) => setState(() => _a = v)),
         Switch(
           value: _b,
-          size: SwitchSize.small,
+          size: SoftSize.small,
           onChanged: (v) => setState(() => _b = v),
         ),
         Switch(

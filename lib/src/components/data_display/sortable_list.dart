@@ -98,7 +98,7 @@ class SortableList extends StatelessWidget {
     this.handle,
     this.gap = 0,
     this.padding = EdgeInsets.zero,
-    this.shrinkWrap = true,
+    this.sizeToContent = true,
     this.physics,
     this.controller,
     this.liftBuilder,
@@ -130,11 +130,14 @@ class SortableList extends StatelessWidget {
   /// Padding around the whole list.
   final EdgeInsets padding;
 
-  /// Shrink-wraps the list to its content (the default, for embedding in a
-  /// column/row). Set false for a full, independently scrolling list.
-  final bool shrinkWrap;
+  /// Sizes the list to its content rather than filling its parent — the
+  /// default here, since a sortable list is normally embedded in a column or
+  /// a row. Set it false for a full, independently scrolling list.
+  ///
+  /// A [Listy] has this off by default, being normally the page itself.
+  final bool sizeToContent;
 
-  /// Scroll physics. Defaults to non-scrolling when [shrinkWrap] is true.
+  /// Scroll physics. Defaults to non-scrolling when [sizeToContent] is on.
   final ScrollPhysics? physics;
 
   /// Optional external scroll controller.
@@ -168,10 +171,10 @@ class SortableList extends StatelessWidget {
 
     return CustomScrollView(
       scrollDirection: _directionIn(context),
-      shrinkWrap: shrinkWrap,
+      shrinkWrap: sizeToContent,
       controller: controller,
-      physics:
-          physics ?? (shrinkWrap ? const NeverScrollableScrollPhysics() : null),
+      physics: physics ??
+          (sizeToContent ? const NeverScrollableScrollPhysics() : null),
       slivers: [
         SliverPadding(
           padding: padding,

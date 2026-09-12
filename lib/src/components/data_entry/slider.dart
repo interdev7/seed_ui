@@ -393,7 +393,8 @@ class Slider extends StatefulWidget {
   /// Creates a [Slider].
   const Slider({
     super.key,
-    required this.value,
+    this.value,
+    this.defaultValue,
     this.onChanged,
     this.onChangeComplete,
     this.min = 0,
@@ -413,11 +414,18 @@ class Slider extends StatefulWidget {
   })  : assert(min < max, 'min must be less than max'),
         assert(step == null || step > 0, 'step must be positive');
 
-  /// Where the handle stands.
-  final double value;
+  /// Where the handle stands. Null leaves the slider to keep its own place
+  /// (see [defaultValue]).
+  final double? value;
 
-  /// Called as the handle moves. Null, with no [onChangeComplete], makes the
-  /// slider read-only.
+  /// Where an uncontrolled handle starts. Defaults to [min].
+  final double? defaultValue;
+
+  /// Called as the handle moves.
+  ///
+  /// Null on a controlled slider — one given a [value] — makes it read-only:
+  /// nothing can move the handle, so nothing does. An uncontrolled slider
+  /// keeps its own place and moves whether or not anybody is listening.
   final ValueChanged<double>? onChanged;
 
   /// Called once the drag ends, with the value it came to rest at.
@@ -493,6 +501,21 @@ class Slider extends StatefulWidget {
 }
 
 class _SliderState extends State<Slider> {
+  double? _internal;
+
+  /// Where the handle is: where it was put, else where it has moved itself
+  /// to, else where it started.
+  double get _current =>
+      widget.value ?? _internal ?? widget.defaultValue ?? widget.min;
+
+  /// Kept in step whether or not somebody else is driving this: it is only
+  /// the fallback for `value`, and a stale one would show through the moment
+  /// `value` went null again.
+  void _emit(double next) {
+    setState(() => _internal = next);
+    widget.onChanged?.call(next);
+  }
+
   /// The defaults set for this component in the subtree, if any.
   SliderDefaults? get _defaults =>
       ConfigProvider.defaultsOf<SliderDefaults>(context);
@@ -514,10 +537,12 @@ class _SliderState extends State<Slider> {
   @override
   Widget build(BuildContext context) {
     return _SliderCore(
-      values: [widget.value],
-      onChanged: widget.onChanged == null
+      values: [_current],
+      // A slider nobody is listening to still moves while it keeps its own
+      // place; one somebody else is driving has nothing to move for.
+      onChanged: widget.onChanged == null && widget.value != null
           ? null
-          : (values) => widget.onChanged!(values.first),
+          : (values) => _emit(values.first),
       onChangeComplete: widget.onChangeComplete == null
           ? null
           : (values) => widget.onChangeComplete!(values.first),
@@ -558,7 +583,8 @@ class RangeSlider extends StatefulWidget {
   /// Creates a [RangeSlider].
   const RangeSlider({
     super.key,
-    required this.values,
+    this.values,
+    this.defaultValues,
     this.onChanged,
     this.onChangeComplete,
     this.min = 0,
@@ -587,10 +613,19 @@ class RangeSlider extends StatefulWidget {
   /// scale the span keeps its length and simply stops.
   final bool draggableTrack;
 
-  /// Where the two handles stand, low then high.
-  final (double, double) values;
+  /// Where the two handles stand, low then high. Null leaves the slider to
+  /// keep its own span (see [defaultValues]).
+  final (double, double)? values;
+
+  /// Where an uncontrolled pair of handles starts. Defaults to the whole
+  /// scale, [min] to [max].
+  final (double, double)? defaultValues;
 
   /// Called as either handle moves.
+  ///
+  /// Null on a controlled one — given a value of its own — makes it inert:
+  /// nothing can change what it shows, so nothing does. An uncontrolled one
+  /// keeps its own state and changes whether or not anybody is listening.
   final ValueChanged<(double, double)>? onChanged;
 
   /// Called once the drag ends.
@@ -657,6 +692,24 @@ class RangeSlider extends StatefulWidget {
 }
 
 class _RangeSliderState extends State<RangeSlider> {
+  (double, double)? _internal;
+
+  /// Where the handles are: where they were put, else where they have moved
+  /// themselves to, else where they started.
+  (double, double) get _current =>
+      widget.values ??
+      _internal ??
+      widget.defaultValues ??
+      (widget.min, widget.max);
+
+  /// Kept in step whether or not somebody else is driving this: it is only
+  /// the fallback for `values`, and a stale one would show through the moment
+  /// `values` went null again.
+  void _emit((double, double) next) {
+    setState(() => _internal = next);
+    widget.onChanged?.call(next);
+  }
+
   /// The defaults set for this component in the subtree, if any.
   SliderDefaults? get _defaults =>
       ConfigProvider.defaultsOf<SliderDefaults>(context);
@@ -677,11 +730,14 @@ class _RangeSliderState extends State<RangeSlider> {
 
   @override
   Widget build(BuildContext context) {
-    final (low, high) = widget.values;
+    final (low, high) = _current;
     return _SliderCore(
       values: [low, high],
-      onChanged:
-          widget.onChanged == null ? null : (v) => widget.onChanged!(_pair(v)),
+      // A slider nobody is listening to still moves while it keeps its own
+      // span; one somebody else is driving has nothing to move for.
+      onChanged: widget.onChanged == null && widget.values != null
+          ? null
+          : (v) => _emit(_pair(v)),
       onChangeComplete: widget.onChangeComplete == null
           ? null
           : (v) => widget.onChangeComplete!(_pair(v)),
@@ -748,7 +804,8 @@ class MultiRangeSlider extends StatefulWidget {
   /// Creates a [MultiRangeSlider].
   const MultiRangeSlider({
     super.key,
-    required this.values,
+    this.values,
+    this.defaultValues,
     this.onChanged,
     this.onChangeComplete,
     this.min = 0,
@@ -776,11 +833,20 @@ class MultiRangeSlider extends StatefulWidget {
           'maxCount must leave room for minCount',
         );
 
-  /// Where the handles stand, in order.
-  final List<double> values;
+  /// Where the handles stand, in order. Null leaves the slider to keep its
+  /// own (see [defaultValues]).
+  final List<double>? values;
+
+  /// Where an uncontrolled run of handles starts. Defaults to one at each end
+  /// of the scale, which is the fewest a range may have.
+  final List<double>? defaultValues;
 
   /// Called as a handle moves, goes in, or comes out — always with the whole
   /// list, in order.
+  ///
+  /// Null on a controlled one — given a value of its own — makes it inert:
+  /// nothing can change what it shows, so nothing does. An uncontrolled one
+  /// keeps its own state and changes whether or not anybody is listening.
   final ValueChanged<List<double>>? onChanged;
 
   /// Called once a drag ends, or a handle goes in or comes out.
@@ -884,13 +950,33 @@ class _MultiRangeSliderState extends State<MultiRangeSlider> {
   /// halfway through a drag.
   List<double> _sorted(List<double> values) => [...values]..sort();
 
+  List<double>? _internal;
+
+  /// Where the handles are: where they were put, else where they have moved
+  /// themselves to, else where they started.
+  List<double> get _current =>
+      widget.values ??
+      _internal ??
+      widget.defaultValues ??
+      [widget.min, widget.max];
+
+  /// Kept in step whether or not somebody else is driving this: it is only
+  /// the fallback for `values`, and a stale one would show through the moment
+  /// `values` went null again.
+  void _emit(List<double> next) {
+    setState(() => _internal = next);
+    widget.onChanged?.call(next);
+  }
+
   @override
   Widget build(BuildContext context) {
     return _SliderCore(
-      values: _sorted(widget.values),
-      onChanged: widget.onChanged == null
+      values: _sorted(_current),
+      // A slider nobody is listening to still moves while it keeps its own
+      // handles; one somebody else is driving has nothing to move for.
+      onChanged: widget.onChanged == null && widget.values != null
           ? null
-          : (v) => widget.onChanged!(_sorted(v)),
+          : (v) => _emit(_sorted(v)),
       onChangeComplete: widget.onChangeComplete == null
           ? null
           : (v) => widget.onChangeComplete!(_sorted(v)),

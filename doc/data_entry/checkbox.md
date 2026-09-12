@@ -15,12 +15,21 @@ For a setting that takes effect immediately, prefer a [Switch](../data_entry/swi
 
 ## Value
 
-Controlled: pass `checked` and update it in `onChanged`. A null `onChanged` (or
-`disabled`) makes it inert. The optional `label` sits beside the box, and the
-whole row is tappable.
+Drive it yourself with `checked` + `onChanged`, or leave it to keep its own
+state with `defaultChecked`:
+
+```dart
+Checkbox(checked: _agree, onChanged: (v) => setState(() => _agree = v))
+Checkbox(defaultChecked: true, label: const Text('Remember me'))
+```
+
+A null `onChanged` on a **controlled** box makes it inert: nothing can change
+the state, so nothing does. An uncontrolled one ticks whether or not anybody
+is listening. `disabled` bars it either way. The optional `label` sits beside
+the box, and the whole row is tappable.
 
 `CheckboxGroup` is the one that takes `value` — a list of the selected
-options' values.
+options' values — and `defaultValue` for a group that keeps its own.
 
 ## Indeterminate
 

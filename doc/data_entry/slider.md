@@ -32,6 +32,26 @@ Slider(
 )
 ```
 
+## Driving it, or letting it drive itself
+
+Every slider takes both forms. Pass `value` (or `values`) and keep it in
+`onChanged`, or pass `defaultValue` / `defaultValues` and let the slider keep
+its own place:
+
+```dart
+Slider(value: _v, onChanged: (v) => setState(() => _v = v))
+Slider(defaultValue: 30)                       // moves on its own
+RangeSlider(defaultValues: (20, 80))
+MultiRangeSlider(defaultValues: const [0, 40, 70])
+```
+
+A null `onChanged` on a **controlled** slider makes it read-only: nothing can
+move the handle, so nothing does. An uncontrolled one moves whether or not
+anybody is listening. `disabled` bars it either way.
+
+Left unsaid, an uncontrolled `Slider` starts at `min`, and both range sliders
+start with a handle at each end of the scale.
+
 ## Marks and dots
 
 `marks` writes labels by the points they name, each centred on its own value.

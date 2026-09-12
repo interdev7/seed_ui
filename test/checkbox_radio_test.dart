@@ -276,4 +276,138 @@ void main() {
       moreOrLessEquals(second.right, epsilon: 0.01),
     );
   });
+
+  group('controls that keep their own state', () {
+    // Every other data-entry control in the kit offers an uncontrolled form;
+    // these four were controlled-only, with no rule saying why.
+
+    testWidgets('a Checkbox starts where defaultChecked says and ticks', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(const Checkbox(defaultChecked: true, label: Text('Remember'))),
+      );
+      expect(tester.widget<Checkbox>(find.byType(Checkbox)).checked, isNull);
+      expect(_ticked(tester), isTrue, reason: 'it started ticked');
+
+      await tester.tap(find.text('Remember'));
+      await tester.pumpAndSettle();
+      expect(_ticked(tester), isFalse, reason: 'and unticked itself');
+    });
+
+    testWidgets('a Checkbox still reports every tick', (tester) async {
+      final seen = <bool>[];
+      await tester.pumpWidget(
+        _host(Checkbox(label: const Text('x'), onChanged: seen.add)),
+      );
+      await tester.tap(find.text('x'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('x'));
+      await tester.pumpAndSettle();
+      expect(seen, [true, false]);
+    });
+
+    testWidgets('a controlled Checkbox that refuses is shown refusing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(Checkbox(
+            checked: false, label: const Text('x'), onChanged: (_) {})),
+      );
+      await tester.tap(find.text('x'));
+      await tester.pumpAndSettle();
+      expect(_ticked(tester), isFalse);
+    });
+
+    testWidgets('a CheckboxGroup starts where defaultValue says', (
+      tester,
+    ) async {
+      final seen = <List<String>>[];
+      await tester.pumpWidget(
+        _host(
+          CheckboxGroup<String>(
+            defaultValue: const ['a'],
+            onChanged: seen.add,
+            options: const [
+              CheckboxOption(value: 'a', label: Text('Apples')),
+              CheckboxOption(value: 'b', label: Text('Bananas')),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.text('Bananas'));
+      await tester.pumpAndSettle();
+      expect(seen.single, ['a', 'b'], reason: 'it kept what it started with');
+    });
+
+    testWidgets('a RadioGroup starts where defaultValue says and moves', (
+      tester,
+    ) async {
+      final seen = <String>[];
+      await tester.pumpWidget(
+        _host(
+          RadioGroup<String>(
+            defaultValue: 'monthly',
+            onChanged: seen.add,
+            options: const [
+              RadioOption(value: 'monthly', label: Text('Monthly')),
+              RadioOption(value: 'yearly', label: Text('Yearly')),
+            ],
+          ),
+        ),
+      );
+      // Re-choosing what is already chosen reports nothing, which proves it
+      // really did start on `monthly`.
+      await tester.tap(find.text('Monthly'));
+      await tester.pumpAndSettle();
+      expect(seen, isEmpty);
+
+      await tester.tap(find.text('Yearly'));
+      await tester.pumpAndSettle();
+      expect(seen, ['yearly']);
+    });
+
+    testWidgets('a RadioGroup nobody drives still moves with no listener', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          const RadioGroup<String>(
+            defaultValue: 'monthly',
+            options: [
+              RadioOption(value: 'monthly', label: Text('Monthly')),
+              RadioOption(value: 'yearly', label: Text('Yearly')),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.text('Yearly'));
+      await tester.pumpAndSettle();
+      final radios =
+          tester.widgetList<Radio<String>>(find.byType(Radio<String>));
+      expect(
+        radios.map((r) => r.groupValue).toSet(),
+        {'yearly'},
+        reason: 'the group moved itself',
+      );
+    });
+  });
 }
+
+/// Whether the one box on screen reads as ticked.
+///
+/// Read from the semantics rather than from the widget: an uncontrolled box
+/// keeps its state inside, so `Checkbox.checked` says nothing about it — and
+/// this is the same thing a screen reader is told.
+bool _ticked(WidgetTester tester) =>
+    tester
+        .widgetList<Semantics>(
+          find.descendant(
+            of: find.byType(Checkbox),
+            matching: find.byType(Semantics),
+          ),
+        )
+        .firstWhere((s) => s.properties.checked != null)
+        .properties
+        .checked ??
+    false;

@@ -36,15 +36,15 @@ By default a grip handle at the start of each item begins the drag. Set
 | --- | --- |
 | `gap` | Space between items |
 | `padding` | Padding around the whole list |
-| `shrinkWrap` (default true) | Sizes to content, for embedding in a column/row |
+| `sizeToContent` (default true) | Sizes to content, for embedding in a column/row |
 
-For a long, independently scrolling list, set `shrinkWrap: false` and give it a
+For a long, independently scrolling list, set `sizeToContent: false` and give it a
 bounded height (or width, when horizontal).
 
 ## Other properties
 
 - `controller` — an external `ScrollController` for the list.
-- `physics` — scroll physics; defaults to non-scrolling when `shrinkWrap` is on.
+- `physics` — scroll physics; defaults to non-scrolling when `sizeToContent` is on.
 - `handle` — a custom drag handle replacing the default grip, used when
   `showHandle` is true.
 - `liftBuilder` — full control over the lifted item while dragging. Null uses

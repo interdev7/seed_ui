@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/size_resolver.dart';
 import '../general/compact.dart';
 
 /// How a [RadioGroup] renders its options.
@@ -402,7 +403,7 @@ class RadioGroupDefaults {
   ///
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Whether a [RadioGroup] is disabled, unless it says otherwise.
   ///
@@ -426,11 +427,12 @@ class RadioGroupDefaults {
 ///
 /// Set [optionType] to [RadioOptionType.button] to render the options as
 /// connected buttons instead of dots.
-class RadioGroup<T> extends StatelessWidget {
+class RadioGroup<T> extends StatefulWidget {
   /// Creates a [RadioGroup].
   const RadioGroup({
     super.key,
-    required this.value,
+    this.value,
+    this.defaultValue,
     required this.options,
     this.onChanged,
     this.disabled,
@@ -443,25 +445,25 @@ class RadioGroup<T> extends StatelessWidget {
     this.block = false,
   });
 
-  /// The selected value.
+  /// The selected value. Null leaves the group to keep its own (see
+  /// [defaultValue]).
   final T? value;
+
+  /// What an uncontrolled group starts on. Defaults to nothing chosen.
+  final T? defaultValue;
 
   /// The options, in order.
   final List<RadioOption<T>> options;
 
   /// Called with the newly chosen value.
+  ///
+  /// Null on a controlled one — given a value of its own — makes it inert:
+  /// nothing can change what it shows, so nothing does. An uncontrolled one
+  /// keeps its own state and changes whether or not anybody is listening.
   final ValueChanged<T>? onChanged;
 
   /// Greys the whole group out.
   final bool? disabled;
-
-  /// Whether this control is disabled: its own word, else the one set for
-  /// the subtree, else no.
-  bool _disabledIn(BuildContext context) =>
-      disabled ??
-      ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.disabled ??
-      ConfigProvider.componentDisabledOf(context) ??
-      false;
 
   /// Whether dot-style options run in a row (wrapping) or a column. Ignored
   /// for [RadioOptionType.button], which is always a row.
@@ -481,57 +483,93 @@ class RadioGroup<T> extends StatelessWidget {
   final RadioButtonStyle? buttonStyle;
 
   /// Height preset for button-style options.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Stretch button-style options to fill the width equally.
   final bool block;
 
+  @override
+  State<RadioGroup<T>> createState() => _RadioGroupState<T>();
+}
+
+class _RadioGroupState<T> extends State<RadioGroup<T>> {
+  T? _internal;
+
+  @override
+  void initState() {
+    super.initState();
+    _internal = widget.defaultValue;
+  }
+
+  /// What is chosen: the value handed in, else the one the group has been
+  /// keeping, else where it started.
+  T? get _current => widget.value ?? _internal ?? widget.defaultValue;
+
+  /// Whether this control is disabled: its own word, else the one set for
+  /// the subtree, else no.
+  bool get _disabled =>
+      widget.disabled ??
+      ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.disabled ??
+      ConfigProvider.componentDisabledOf(context) ??
+      false;
+
+  /// A group nobody is listening to is inert only while somebody else is
+  /// driving it. An uncontrolled one has its own choice to change.
+  bool get _enabled =>
+      !_disabled && (widget.onChanged != null || widget.value == null);
+
   void _select(T v) {
-    if (v != value) onChanged?.call(v);
+    if (v == _current) return;
+    // Kept in step whether or not somebody else is driving this: it is only
+    // the fallback for `value`, and a stale one would show through the moment
+    // `value` went null again.
+    setState(() => _internal = v);
+    widget.onChanged?.call(v);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_optionTypeIn(context) == RadioOptionType.button) {
+    if (_optionType == RadioOptionType.button) {
       return _buildButtons(context);
     }
     return _buildDots(context);
   }
 
   Widget _buildDots(BuildContext context) {
+    final current = _current;
     final dots = [
-      for (final option in options)
+      for (final option in widget.options)
         Radio<T>(
           value: option.value,
-          groupValue: value,
-          disabled:
-              _disabledIn(context) || option.disabled || onChanged == null,
-          onChanged: onChanged,
+          groupValue: current,
+          disabled: !_enabled || option.disabled,
+          onChanged: _select,
           child: option.label ?? const SizedBox.shrink(),
         ),
     ];
 
-    if (_directionIn(context) == Axis.vertical) {
+    if (_direction == Axis.vertical) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (var i = 0; i < dots.length; i++) ...[
-            if (i > 0) SizedBox(height: runSpacing),
+            if (i > 0) SizedBox(height: widget.runSpacing),
             dots[i],
           ],
         ],
       );
     }
-    return Wrap(spacing: spacing, runSpacing: runSpacing, children: dots);
+    return Wrap(
+        spacing: widget.spacing, runSpacing: widget.runSpacing, children: dots);
   }
 
   Widget _buildButtons(BuildContext context) {
     final token = context.softToken;
-    final resolvedSize = size ??
+    final resolvedSize = widget.size ??
         ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
-    final selectedIndex = options.indexWhere((o) => o.value == value);
+    final selectedIndex = widget.options.indexWhere((o) => o.value == _current);
 
     // The whole run's corners, asked of [CompactSlot]: all four where the
     // group stands on its own, and only the outer ones where it has been
@@ -544,7 +582,7 @@ class RadioGroup<T> extends StatelessWidget {
       // its first button on the right, and the round corners must follow it
       // there. Square where two buttons meet, whichever way that is.
       final keepsStart = i == 0;
-      final keepsEnd = i == options.length - 1;
+      final keepsEnd = i == widget.options.length - 1;
       return BorderRadiusDirectional.only(
         topStart: keepsStart ? corners.topStart : Radius.zero,
         bottomStart: keepsStart ? corners.bottomStart : Radius.zero,
@@ -554,25 +592,23 @@ class RadioGroup<T> extends StatelessWidget {
     }
 
     _RadioButton<T> button(int i, _ButtonRole role) => _RadioButton<T>(
-          option: options[i],
+          option: widget.options[i],
           role: role,
           selected: i == selectedIndex,
           radius: radiusAt(i),
           // Every button after the first is laid a line back onto the one
           // before it, so the two borders that meet draw a single divider.
           overlap: i == 0 ? 0 : token.lineWidth,
-          enabled: !_disabledIn(context) &&
-              !options[i].disabled &&
-              onChanged != null,
-          style: _buttonStyleIn(context),
+          enabled: _enabled && !widget.options[i].disabled,
+          style: _buttonStyle,
           size: resolvedSize,
-          block: block,
+          block: widget.block,
           token: token,
-          onTap: () => _select(options[i].value),
+          onTap: () => _select(widget.options[i].value),
         );
 
     Row row(List<Widget> children) => Row(
-          mainAxisSize: block ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisSize: widget.block ? MainAxisSize.max : MainAxisSize.min,
           children: children,
         );
 
@@ -584,7 +620,8 @@ class RadioGroup<T> extends StatelessWidget {
     return Stack(
       children: [
         row([
-          for (var i = 0; i < options.length; i++) button(i, _ButtonRole.base),
+          for (var i = 0; i < widget.options.length; i++)
+            button(i, _ButtonRole.base),
         ]),
         if (selectedIndex >= 0)
           // Decorative top layer: its invisible spacers duplicate the labels,
@@ -592,7 +629,7 @@ class RadioGroup<T> extends StatelessWidget {
           ExcludeSemantics(
             child: IgnorePointer(
               child: row([
-                for (var i = 0; i < options.length; i++)
+                for (var i = 0; i < widget.options.length; i++)
                   button(
                     i,
                     i == selectedIndex
@@ -607,20 +644,20 @@ class RadioGroup<T> extends StatelessWidget {
   }
 
   /// This widget's word, then the subtree's, then the kit's.
-  Axis _directionIn(BuildContext context) =>
-      direction ??
+  Axis get _direction =>
+      widget.direction ??
       ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.direction ??
       Axis.horizontal;
 
   /// This widget's word, then the subtree's, then the kit's.
-  RadioOptionType _optionTypeIn(BuildContext context) =>
-      optionType ??
+  RadioOptionType get _optionType =>
+      widget.optionType ??
       ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.optionType ??
       RadioOptionType.radio;
 
   /// This widget's word, then the subtree's, then the kit's.
-  RadioButtonStyle _buttonStyleIn(BuildContext context) =>
-      buttonStyle ??
+  RadioButtonStyle get _buttonStyle =>
+      widget.buttonStyle ??
       ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.buttonStyle ??
       RadioButtonStyle.outline;
 }
@@ -656,7 +693,7 @@ class _RadioButton<T> extends StatefulWidget {
   final double overlap;
   final bool enabled;
   final RadioButtonStyle style;
-  final SoftSize size;
+  final ControlSize size;
   final bool block;
   final Token token;
   final VoidCallback onTap;
@@ -668,13 +705,19 @@ class _RadioButton<T> extends StatefulWidget {
 class _RadioButtonState<T> extends State<_RadioButton<T>> {
   bool _hovered = false;
 
-  double get _height => switch (widget.size) {
-        SoftSize.small => widget.token.controlHeightSM,
-        SoftSize.middle => widget.token.controlHeight,
-        SoftSize.large => widget.token.controlHeightLG,
-      };
+  double get _height => widget.size.resolveHeight(
+        small: widget.token.controlHeightSM,
+        middle: widget.token.controlHeight,
+        large: widget.token.controlHeightLG,
+      );
 
-  double get _fontSize => switch (widget.size) {
+  /// Type has no height to take, so it follows the preset the button's own
+  /// height is nearest to.
+  double get _fontSize => switch (widget.size.nearestPreset(
+        small: widget.token.controlHeightSM,
+        middle: widget.token.controlHeight,
+        large: widget.token.controlHeightLG,
+      )) {
         SoftSize.large => widget.token.fontSizeLG,
         _ => widget.token.fontSize,
       };

@@ -40,6 +40,29 @@ extension ControlSizeResolver on ControlSize {
         _ => resolve1D(small: small, middle: middle, large: large),
       };
 
+  /// The preset this size is nearest to.
+  ///
+  /// A measurement names a height and nothing else, but the type, the corners
+  /// and the padding all have to come from somewhere. They come from the
+  /// preset whose height is closest, measured against the theme's own scale
+  /// rather than fixed numbers, so a theme that moves its control heights
+  /// carries this with it.
+  SoftSize nearestPreset({
+    required double small,
+    required double middle,
+    required double large,
+  }) {
+    final self = this;
+    if (self is SoftSize) return self;
+    final height = resolveHeight(small: small, middle: middle, large: large);
+    final byDistance = <(SoftSize, double)>[
+      (SoftSize.small, (height - small).abs()),
+      (SoftSize.middle, (height - middle).abs()),
+      (SoftSize.large, (height - large).abs()),
+    ]..sort((a, b) => a.$2.compareTo(b.$2));
+    return byDistance.first.$1;
+  }
+
   /// The width this size names, or null when it names none.
   ///
   /// A preset and a bare height say nothing about width, so a control that

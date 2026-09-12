@@ -3526,14 +3526,14 @@ void main() {
       await tester.tap(boxes().first);
       await tester.pumpAndSettle();
       expect(
-        tester.widgetList<Checkbox>(boxes()).every((b) => b.checked),
+        tester.widgetList<Checkbox>(boxes()).every((b) => b.checked ?? false),
         isTrue,
       );
 
       await tester.tap(boxes().first);
       await tester.pumpAndSettle();
       expect(
-        tester.widgetList<Checkbox>(boxes()).any((b) => b.checked),
+        tester.widgetList<Checkbox>(boxes()).any((b) => b.checked ?? false),
         isFalse,
       );
     });

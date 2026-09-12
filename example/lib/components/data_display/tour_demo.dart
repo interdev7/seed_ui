@@ -249,7 +249,7 @@ class _TourDemoState extends State<TourDemo> {
   Widget _toggle(String label, bool value, ValueChanged<bool> onChanged) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Switch(size: SwitchSize.small, value: value, onChanged: onChanged),
+      Switch(size: SoftSize.small, value: value, onChanged: onChanged),
       const SizedBox(width: 8),
       Text(label),
     ],

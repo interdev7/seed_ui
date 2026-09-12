@@ -44,7 +44,7 @@ when it needs grouped sections. For a short list of drag-to-reorder rows use
 | `controller`        | `ListyController?`                       | `null`   | Imperative scroll control                          |
 | `scrollController`  | `ScrollController?`                      | `null`   | An external scroll controller                      |
 | `physics`           | `ScrollPhysics?`                         | `null`   | Scroll physics                                     |
-| `shrinkWrap`        | `bool`                                   | `false`  | Size to content instead of filling the parent      |
+| `sizeToContent`     | `bool`                                   | `false`  | Size to content instead of filling the parent      |
 | `padding`           | `EdgeInsets?`                            | `null`   | Padding around the whole list                      |
 | `groupHeaderExtent` | `double?`                                | `null`   | Fixed height of a sticky header                    |
 | `loadMore`          | `ListyLoadMore?`                         | `null`   | Fetches more rows as the end approaches            |
@@ -61,7 +61,7 @@ the viewport and disposed as they leave it, at any row height. There is nothing
 to turn on — and no fixed row height to declare.
 
 Give the list a bounded height for that to pay off: either `height`, or a parent
-that constrains it. `shrinkWrap: true` sizes the list to its content and builds
+that constrains it. `sizeToContent: true` sizes the list to its content and builds
 every row, so keep it for short lists.
 
 ## Grouping

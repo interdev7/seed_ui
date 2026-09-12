@@ -269,7 +269,7 @@ export 'src/components/data_entry/slider.dart'
         SliderZone,
         SliderToken;
 export 'src/components/data_entry/switch.dart'
-    show Switch, SwitchDefaults, SwitchSize, SwitchToken;
+    show Switch, SwitchDefaults, SwitchToken;
 export 'src/components/data_entry/time_picker.dart'
     show TimePicker, TimePickerDefaults, TimePickerToken, TimePickerVariant;
 export 'src/components/data_entry/upload.dart'

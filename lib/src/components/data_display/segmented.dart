@@ -7,6 +7,7 @@ import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/roving_focus.dart';
+import '../../utils/size_resolver.dart';
 
 /// Layout axis for a [Segmented].
 enum SegmentedDirection {
@@ -295,7 +296,7 @@ class SegmentedDefaults {
   ///
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Whether a [Segmented] is disabled, unless it says otherwise.
   ///
@@ -355,7 +356,7 @@ class Segmented<T> extends StatefulWidget {
   final ValueChanged<T>? onChanged;
 
   /// Which height preset to use.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Whether the segments run in a row or a column.
   final Axis? direction;
@@ -426,11 +427,19 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
 
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset.
-  SoftSize get _size =>
+  ControlSize get _size =>
       widget.size ??
       _defaults?.size ??
       ConfigProvider.componentSizeOf(context) ??
       SoftSize.middle;
+
+  /// The preset a height of your own is nearest to: the corners and the type
+  /// come from it, since a bare number says nothing about either.
+  SoftSize _preset(Token token) => _size.nearestPreset(
+        small: token.controlHeightSM,
+        middle: token.controlHeight,
+        large: token.controlHeightLG,
+      );
 
   final GlobalKey _stackKey = GlobalKey();
   final Map<int, GlobalKey> _segmentKeys = {};
@@ -656,19 +665,20 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
 
   GlobalKey _keyFor(int i) => _segmentKeys.putIfAbsent(i, GlobalKey.new);
 
-  double _height(Token token) => switch (_size) {
-        SoftSize.small => token.controlHeightSM,
-        SoftSize.middle => token.controlHeight,
-        SoftSize.large => token.controlHeightLG,
-      };
+  double _height(Token token) => _size.resolveHeight(
+        small: token.controlHeightSM,
+        middle: token.controlHeight,
+        large: token.controlHeightLG,
+      );
 
-  double _radius(_ResolvedSegmentedToken r) => switch (_size) {
+  double _radius(_ResolvedSegmentedToken r, Token token) =>
+      switch (_preset(token)) {
         SoftSize.small => r.borderRadiusSM,
         SoftSize.middle => r.borderRadius,
         SoftSize.large => r.borderRadiusLG,
       };
 
-  double _fontSize(Token token) => switch (_size) {
+  double _fontSize(Token token) => switch (_preset(token)) {
         SoftSize.small => token.fontSizeSM,
         SoftSize.middle => token.fontSize,
         SoftSize.large => token.fontSizeLG,
@@ -695,7 +705,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
       padding: EdgeInsets.all(r.trackPadding),
       decoration: BoxDecoration(
         color: widget.trackColor ?? r.trackBg,
-        borderRadius: BorderRadius.circular(_radius(r)),
+        borderRadius: BorderRadius.circular(_radius(r, token)),
         // The halo goes round the track, which is the control: a run is one
         // thing to the keyboard, however many options it holds.
         boxShadow: _focusVisible && _enabled
@@ -732,7 +742,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
                           ? (widget.thumbColor ?? r.itemSelectedBg)
                           : (widget.thumbColor ?? r.itemSelectedBg)
                               .withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(_radius(r)),
+                      borderRadius: BorderRadius.circular(_radius(r, token)),
                       boxShadow: _enabled ? token.boxShadowSecondary : null,
                     ),
                   ),
@@ -822,7 +832,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
         vertical: _vertical,
         token: token,
         resolved: r,
-        radius: _radius(r),
+        radius: _radius(r, token),
         extent: _arrowExtent(token),
         label: forward ? words.next : words.previous,
         onPressed: step,
@@ -1002,7 +1012,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
             decoration: BoxDecoration(
               // A faint highlight while hovering an unselected segment.
               color: hovered ? r.itemHoverBg : null,
-              borderRadius: BorderRadius.circular(_radius(r)),
+              borderRadius: BorderRadius.circular(_radius(r, token)),
             ),
             child: content,
           ),

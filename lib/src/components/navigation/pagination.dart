@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../utils/roving_focus.dart';
+import '../../utils/size_resolver.dart';
 import '../data_entry/input.dart';
 import '../data_entry/input_number.dart';
 import '../data_entry/select.dart';
@@ -128,7 +129,7 @@ class PaginationDefaults {
   ///
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Whether a [Pagination] is disabled, unless it says otherwise.
   ///
@@ -225,7 +226,7 @@ class Pagination extends StatefulWidget {
   final PaginationSimple? simple;
 
   /// Which height preset to use.
-  final SoftSize? size;
+  final ControlSize? size;
 
   /// Greys the whole pager out and blocks interaction.
   final bool? disabled;
@@ -282,7 +283,7 @@ class _PaginationState extends State<Pagination> {
   /// The size in force: this widget's own, else the one set for the
   /// subtree, else the standard preset. Named apart from `_size`, which is
   /// this component's page size.
-  SoftSize get _controlSize =>
+  ControlSize get _controlSize =>
       widget.size ??
       _defaults?.size ??
       ConfigProvider.componentSizeOf(context) ??
@@ -329,13 +330,21 @@ class _PaginationState extends State<Pagination> {
     widget.onChanged?.call(nextPage, size);
   }
 
-  double _controlHeight(Token t) => switch (_controlSize) {
-        SoftSize.small => t.controlHeightSM,
-        SoftSize.middle => t.controlHeight,
-        SoftSize.large => t.controlHeightLG,
-      };
+  double _controlHeight(Token t) => _controlSize.resolveHeight(
+        small: t.controlHeightSM,
+        middle: t.controlHeight,
+        large: t.controlHeightLG,
+      );
 
-  double _fontSize(Token t) => switch (_controlSize) {
+  /// The preset a height of your own is nearest to: the type comes from it,
+  /// since a bare number says nothing about type.
+  SoftSize _preset(Token t) => _controlSize.nearestPreset(
+        small: t.controlHeightSM,
+        middle: t.controlHeight,
+        large: t.controlHeightLG,
+      );
+
+  double _fontSize(Token t) => switch (_preset(t)) {
         SoftSize.small => t.fontSizeSM,
         SoftSize.middle => t.fontSize,
         SoftSize.large => t.fontSizeLG,
@@ -731,7 +740,7 @@ class _Arrow extends StatefulWidget {
   });
 
   final Token token;
-  final SoftSize size;
+  final ControlSize size;
   final _ArrowDir direction;
   final bool enabled;
   final VoidCallback onTap;
@@ -744,7 +753,13 @@ class _ArrowState extends State<_Arrow> {
   @override
   Widget build(BuildContext context) {
     final t = widget.token;
-    final size = switch (widget.size) {
+    // A glyph has no height of its own to take, so it follows the preset the
+    // button's height is nearest to.
+    final size = switch (widget.size.nearestPreset(
+      small: t.controlHeightSM,
+      middle: t.controlHeight,
+      large: t.controlHeightLG,
+    )) {
       SoftSize.small => t.sizeSM,
       SoftSize.middle => t.sizeMD,
       SoftSize.large => t.sizeLG,
@@ -789,7 +804,7 @@ class _PageItem extends StatefulWidget {
   final String label;
   final bool active;
   final bool enabled;
-  final SoftSize size;
+  final ControlSize size;
   final VoidCallback onTap;
 
   @override

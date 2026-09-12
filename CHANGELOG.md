@@ -38,6 +38,21 @@ component's own defaults for a subtree.
 - **BREAKING — `Result.subTitle` and `StepItem.subTitle` are `subtitle`.**
   One word, as Flutter spells it — and as this package's own
   `subtitleFontSize` token already spelled it two fields away.
+- **BREAKING — `SwitchSize` is gone; `Switch.size` takes a `ControlSize`.**
+  `SwitchSize.small` and `.defaultSize` become `SoftSize.small` and
+  `.middle`, there is now a `.large`, and a height of your own works as it
+  does on a `Button`. The two presets were six unrelated numbers that were
+  not in proportion — the small track was 1.75 of its own heights long where
+  the standard one was 2 — so they were not one switch at two sizes. A switch
+  is now drawn from its track height alone: twice as long as it is tall, with
+  a gap of an eleventh of that height at each end. At 22 that gives back
+  exactly the numbers the design started with; the small one is 4px longer
+  than before.
+- **BREAKING — `Listy.shrinkWrap` and `SortableList.shrinkWrap` are
+  `sizeToContent`.** One name with opposite defaults in two components, and
+  the name was Flutter plumbing rather than anything a reader could weigh.
+  The defaults are unchanged — a list is normally the page, a sortable list is
+  normally embedded in one — and each now says so in its own doc.
 - **BREAKING — `Popconfirm.disabled` is `Popconfirm.skipConfirmation`.**
   Everywhere else in the kit `disabled` bars the control; here it did the
   opposite — it took the guard off and let the trigger act unasked. A name
@@ -51,6 +66,23 @@ component's own defaults for a subtree.
   What they resolve to has not changed: the widget's own word, then
   `ComponentDefaults`, then what it always was. Only code that *read* one of
   those fields back off a widget instance is affected.
+
+### Added
+
+- **Seven controls can now be left to keep their own state.** `Switch`,
+  `Checkbox`, `CheckboxGroup`, `RadioGroup`, `Slider`, `RangeSlider` and
+  `MultiRangeSlider` take `defaultValue` / `defaultValues` /
+  `defaultChecked`, as the other eight data-entry controls already did.
+  Their `value` (and `Checkbox.checked`) is nullable to make room for it.
+
+  A null `onChanged` still makes a **controlled** one inert — nothing can
+  change a value somebody else is holding, which is Flutter's own reading —
+  but an uncontrolled one now changes whether or not anybody is listening.
+- **`Pagination`, `Segmented`, `RadioGroup`, `AvatarGroup` and `AvatarDefaults`
+  take a `ControlSize`.** They already worked out a height from the preset;
+  now a height of your own works there too. `Badge`, `Card`, `Collapse` and
+  `Tabs` keep `SoftSize`, having no single height to set — their size chooses
+  padding and type, and a bare number would name nothing.
 
 ### Fixed
 

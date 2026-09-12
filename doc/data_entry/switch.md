@@ -14,16 +14,36 @@ For a choice confirmed later by a form submit, prefer a checkbox.
 
 ## Value
 
-`Switch` is controlled: pass the current `value` and update it in
-`onChanged`. A null `onChanged` (or `disabled`) makes it inert.
+Drive it yourself with `value` + `onChanged`, or leave it to keep its own
+state with `defaultValue`:
+
+```dart
+Switch(value: _wifi, onChanged: (v) => setState(() => _wifi = v))
+Switch(defaultValue: true)                       // drives itself
+Switch(defaultValue: true, onChanged: _report)   // drives itself, and tells you
+```
+
+A null `onChanged` on a **controlled** switch makes it inert: nothing can
+change the value, so nothing does. An uncontrolled one flips whether or not
+anybody is listening. `disabled` bars it either way.
 
 ## Sizes
 
-`SwitchSize.defaultSize` (22px tall) and `.small` (16px), for dense rows:
+Three presets — `SoftSize.small` (16px tall), `.middle` (22px) and `.large`
+(28px) — or a height of your own:
 
 ```dart
-Switch(value: v, size: SwitchSize.small, onChanged: onToggle)
+Switch(value: v, size: SoftSize.small, onChanged: onToggle)
+Switch(value: v, size: const ControlSize.height(40), onChanged: onToggle)
 ```
+
+The track height is the only number a switch needs: it is twice as long as it
+is tall, and the handle sits inside it with a gap of an eleventh of that
+height at each end. The label, its icon and the stretch of a pressed handle
+follow the same scale, so a switch at any height is the same switch.
+
+Left unsaid, the size comes from `SwitchDefaults.size`, then from the
+`componentSize` set for the subtree, then `SoftSize.middle`.
 
 ## States
 
@@ -91,3 +111,8 @@ ConfigProvider(
 ```
 
 A per-instance `token` wins over the `ConfigProvider` one.
+
+`trackHeightSM`, `trackHeight` and `trackHeightLG` are the three presets, and
+everything else is worked out from whichever is in force. `trackMinWidthSM`,
+`trackMinWidth`, `handleSizeSM` and `handleSize` override that working-out for
+the preset they name — leave them unset and the proportions hold.

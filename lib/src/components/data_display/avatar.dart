@@ -128,7 +128,7 @@ class _GroupContext extends InheritedWidget {
     required super.child,
   });
 
-  final SoftSize? size;
+  final ControlSize? size;
   final AvatarShape? shape;
   final _ResolvedAvatarToken token;
   final Border? border;
@@ -164,7 +164,7 @@ class AvatarDefaults {
   ///
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
-  final SoftSize? size;
+  final ControlSize? size;
 }
 
 /// A component for representing users or objects.
@@ -404,8 +404,9 @@ class AvatarGroup extends StatelessWidget {
   /// this, an extra avatar showing `+N` is added.
   final int? maxCount;
 
-  /// The size of the avatars in the group.
-  final SoftSize? size;
+  /// The size of the avatars in the group. Passed straight to each [Avatar],
+  /// so a measurement of your own works here as it does there.
+  final ControlSize? size;
 
   /// The shape of the avatars in the group.
   final AvatarShape? shape;
@@ -512,11 +513,13 @@ class AvatarGroup extends StatelessWidget {
         ConfigProvider.defaultsOf<AvatarDefaults>(context)?.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
-    final dimension = switch (resolvedSize) {
-      SoftSize.small => rt.containerSizeSM,
-      SoftSize.middle => rt.containerSize,
-      SoftSize.large => rt.containerSizeLG,
-    };
+    // An avatar is a circle, so either bare number names its diameter — the
+    // same reading [Avatar] gives its own size.
+    final dimension = resolvedSize.resolve1D(
+      small: rt.containerSizeSM,
+      middle: rt.containerSize,
+      large: rt.containerSizeLG,
+    );
 
     return _GroupContext(
       size: size,

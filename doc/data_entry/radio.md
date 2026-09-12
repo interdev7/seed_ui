@@ -21,12 +21,25 @@ carry any value.
 
 | Property | Description |
 | --- | --- |
-| `value` | The selected value (nullable) |
+| `value` | The selected value; null leaves the group to keep its own |
+| `defaultValue` | Where an uncontrolled group starts |
 | `options` | `RadioOption`s, each with a value, label and optional `disabled` |
 | `onChanged` | Called with the newly chosen value |
 | `direction` | `Axis.horizontal` (default, wrapping) or `Axis.vertical` |
 | `disabled` | Greys the whole group out |
 | `spacing` / `runSpacing` | Gaps between options |
+
+Drive it yourself with `value` + `onChanged`, or leave it to keep its own
+choice with `defaultValue`:
+
+```dart
+RadioGroup<String>(value: _plan, options: _plans, onChanged: _pick)
+RadioGroup<String>(defaultValue: 'monthly', options: _plans)
+```
+
+A null `onChanged` on a **controlled** group makes it inert: nothing can
+change the choice, so nothing does. An uncontrolled one moves whether or not
+anybody is listening. `disabled` bars it either way.
 
 Re-selecting the current value does nothing (no `onChanged` fires).
 

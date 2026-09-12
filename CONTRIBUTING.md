@@ -105,6 +105,23 @@ becomes another one, `Tabs.onTabClick` fires on the press whether or not
 anything changed — pressing the tab already open reports the second and not
 the first. Neither can stand in for the other, so neither is a duplicate.
 
+**A control that holds a value takes both forms.** `value` (or `values`, or
+`checked`) drives it from outside; `defaultValue` lets it keep its own. Both
+are nullable, and what it shows is `value ?? its own ?? defaultValue ?? the
+fallback` — the internal one kept in step on every change, or a stale one
+shows through the moment `value` goes null again.
+
+A null `onChanged` makes a **controlled** control inert: nothing can change a
+value somebody else is holding, which is how Flutter reads it. It does not
+bar an uncontrolled one, which has its own state to change. Only `disabled`
+bars a control.
+
+**A component whose size resolves to a height takes a `ControlSize`**, so a
+caller can name one. Where the size only chooses padding and type — `Card`,
+`Collapse`, `Tabs` — it takes a `SoftSize`, because a bare number would name
+nothing. Everything a measurement cannot say comes from
+`ControlSize.nearestPreset`.
+
 **A small value type takes its parts positionally when the order is the only
 thing that could be meant** — `DateRange(start, end)`, `SliderZone(from, to)`.
 Two `DateTime`s in the other order are not a different range, they are the

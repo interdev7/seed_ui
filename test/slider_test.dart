@@ -1391,4 +1391,108 @@ void _zoneBoundsSnapTests() {
       expect(settled, 33);
     });
   });
+
+  group('a slider that keeps its own place', () {
+    /// Focuses the slider and presses [key] once.
+    Future<void> press(WidgetTester tester, LogicalKeyboardKey key) async {
+      await tester.tap(find.byType(Focus).last, warnIfMissed: false);
+      await tester.pumpAndSettle();
+      Focus.of(tester.element(find.byType(CustomPaint).last)).requestFocus();
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(key);
+      await tester.pumpAndSettle();
+    }
+
+    // The handle is painted, not a widget, so where it stands can only be
+    // asked of the slider itself. An arrow key moves one step from wherever
+    // it is now — which is exactly the question: did the tap stay?
+
+    testWidgets('a tap stays put, so the next key steps on from it', (
+      tester,
+    ) async {
+      final seen = <double>[];
+      await tester.pumpWidget(
+        _host(Slider(defaultValue: 0, step: 10, onChanged: seen.add)),
+      );
+      final groove = _groove(tester);
+      await tester.tapAt(groove.center);
+      await tester.pumpAndSettle();
+      expect(seen.single, 50, reason: 'tapped the middle');
+
+      await press(tester, LogicalKeyboardKey.arrowRight);
+      expect(
+        seen.last,
+        60,
+        reason: 'one step on from 50 — had the tap been forgotten it would '
+            'have stepped from where it started and said 10',
+      );
+    });
+
+    testWidgets('an owner that refuses is shown refusing', (tester) async {
+      final seen = <double>[];
+      await tester.pumpWidget(
+        _host(Slider(value: 0, step: 10, onChanged: seen.add)),
+      );
+      final groove = _groove(tester);
+      await tester.tapAt(groove.center);
+      await tester.pumpAndSettle();
+      await press(tester, LogicalKeyboardKey.arrowRight);
+      expect(seen.last, 10,
+          reason: 'still stepping from the value it is held at');
+    });
+
+    testWidgets('with nobody listening it still moves', (tester) async {
+      // Nothing to assert but the absence of a refusal: with no listener the
+      // only witness is that a later key press is accepted at all.
+      await tester.pumpWidget(_host(const Slider(defaultValue: 20, step: 10)));
+      final groove = _groove(tester);
+      await tester.tapAt(groove.center);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a range slider starts where defaultValues says', (
+      tester,
+    ) async {
+      final seen = <(double, double)>[];
+      await tester.pumpWidget(
+        _host(
+          RangeSlider(
+            defaultValues: const (20, 80),
+            step: 10,
+            onChanged: seen.add,
+          ),
+        ),
+      );
+      final groove = _groove(tester);
+      // A quarter along is nearer the low handle at 20 than the high at 80.
+      await tester
+          .tapAt(Offset(groove.left + groove.width * 0.25, groove.center.dy));
+      await tester.pumpAndSettle();
+      expect(seen.single.$2, 80, reason: 'the high handle stayed where it was');
+      expect(seen.single.$1, 30, reason: 'and the low one came to the tap');
+    });
+
+    testWidgets('a multi-range slider starts where defaultValues says', (
+      tester,
+    ) async {
+      final seen = <List<double>>[];
+      await tester.pumpWidget(
+        _host(
+          MultiRangeSlider(
+            defaultValues: const [0, 40, 70],
+            step: 10,
+            onChanged: seen.add,
+          ),
+        ),
+      );
+      final groove = _groove(tester);
+      // A tap on this slider puts a handle in rather than moving one, so what
+      // comes back is the three it started with plus the new one — which is
+      // the proof that `defaultValues` was what it was working from.
+      await tester.tapAt(groove.center);
+      await tester.pumpAndSettle();
+      expect(seen.single, [0, 40, 50, 70]);
+    });
+  });
 }

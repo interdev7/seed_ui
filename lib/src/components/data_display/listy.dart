@@ -393,7 +393,7 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
     this.controller,
     this.scrollController,
     this.physics,
-    this.shrinkWrap = false,
+    this.sizeToContent = false,
     this.padding,
     this.groupHeaderExtent,
     this.loadMore,
@@ -468,7 +468,8 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
   final bool? sticky;
 
   /// Height of the scroll container. Null lets the list take the height its
-  /// parent gives it — set one, or [shrinkWrap], inside an unbounded parent.
+  /// parent gives it — set one, or [sizeToContent], inside an unbounded
+  /// parent.
   final double? height;
 
   /// Imperative scroll control.
@@ -482,7 +483,10 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
 
   /// Sizes the list to its content instead of filling its parent. Loses the
   /// benefit of lazy building, so keep it for short lists.
-  final bool shrinkWrap;
+  ///
+  /// A list is normally the thing a page is made of, so this is off here and
+  /// on for a [SortableList], which is normally embedded in something else.
+  final bool sizeToContent;
 
   /// Padding around the whole list.
   final EdgeInsets? padding;
@@ -1047,7 +1051,7 @@ class _ListyState<T, K extends Object, R extends Object>
       return ListView.builder(
         controller: _scroll,
         physics: _physics,
-        shrinkWrap: widget.shrinkWrap,
+        shrinkWrap: widget.sizeToContent,
         padding: _padding ?? EdgeInsets.zero,
         itemCount: _slots.length + (footer == null ? 0 : 1),
         itemBuilder: (context, index) =>
@@ -1131,7 +1135,7 @@ class _ListyState<T, K extends Object, R extends Object>
     return CustomScrollView(
       controller: _scroll,
       physics: _physics,
-      shrinkWrap: widget.shrinkWrap,
+      shrinkWrap: widget.sizeToContent,
       slivers: [
         if (_padding != null)
           SliverPadding(

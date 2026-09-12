@@ -481,17 +481,11 @@ class _SoftButtonState extends State<Button> {
   /// preset the height is nearest to, measured against the theme's own scale
   /// rather than fixed numbers, so a theme that moves its control heights
   /// carries this with it. `Steps` sizes its type the same way.
-  SoftSize _preset(_ResolvedButtonToken r) {
-    final size = _size;
-    if (size is SoftSize) return size;
-    final height = _height(r);
-    final byDistance = <(SoftSize, double)>[
-      (SoftSize.small, (height - r.controlHeightSM).abs()),
-      (SoftSize.middle, (height - r.controlHeight).abs()),
-      (SoftSize.large, (height - r.controlHeightLG).abs()),
-    ]..sort((a, b) => a.$2.compareTo(b.$2));
-    return byDistance.first.$1;
-  }
+  SoftSize _preset(_ResolvedButtonToken r) => _size.nearestPreset(
+        small: r.controlHeightSM,
+        middle: r.controlHeight,
+        large: r.controlHeightLG,
+      );
 
   double _fontSize(_ResolvedButtonToken r) => switch (_preset(r)) {
         SoftSize.small => r.fontSizeSM,

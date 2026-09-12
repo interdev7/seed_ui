@@ -3,15 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart' show Spinner;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
-
-/// Size preset for a [Switch].
-enum SwitchSize {
-  /// The compact track, for dense rows.
-  small,
-
-  /// The standard track.
-  defaultSize
-}
+import '../../utils/size_resolver.dart';
 
 /// Per-component design tokens for [Switch].
 ///
@@ -27,7 +19,7 @@ class SwitchDefaults {
   });
 
   /// Which size switches take.
-  final SwitchSize? size;
+  final ControlSize? size;
 
   /// Whether switches are barred.
   final bool? disabled;
@@ -43,6 +35,7 @@ class SwitchToken {
   const SwitchToken({
     this.trackHeight,
     this.trackHeightSM,
+    this.trackHeightLG,
     this.trackMinWidth,
     this.trackMinWidthSM,
     this.handleSize,
@@ -56,6 +49,9 @@ class SwitchToken {
 
   /// Height of small switch track (`trackHeightSM`).
   final double? trackHeightSM;
+
+  /// Height of large switch track (`trackHeightLG`).
+  final double? trackHeightLG;
 
   /// Min width of default switch track (`trackMinWidth`).
   final double? trackMinWidth;
@@ -78,10 +74,14 @@ class SwitchToken {
   _ResolvedSwitchToken _resolve(Token t) => _ResolvedSwitchToken(
         trackHeight: trackHeight ?? 22,
         trackHeightSM: trackHeightSM ?? 16,
-        trackMinWidth: trackMinWidth ?? 44,
-        trackMinWidthSM: trackMinWidthSM ?? 28,
-        handleSize: handleSize ?? 18,
-        handleSizeSM: handleSizeSM ?? 12,
+        trackHeightLG: trackHeightLG ?? 28,
+        // Null here means "work it out from the height", which is what keeps
+        // a switch of any height in proportion. A number overrides that for
+        // the preset it belongs to.
+        trackMinWidth: trackMinWidth,
+        trackMinWidthSM: trackMinWidthSM,
+        handleSize: handleSize,
+        handleSizeSM: handleSizeSM,
         colorPrimary: colorPrimary ?? t.primary.base,
         colorBg: colorBg ?? t.colorTextQuaternary,
       );
@@ -92,6 +92,7 @@ class _ResolvedSwitchToken {
   const _ResolvedSwitchToken({
     required this.trackHeight,
     required this.trackHeightSM,
+    required this.trackHeightLG,
     required this.trackMinWidth,
     required this.trackMinWidthSM,
     required this.handleSize,
@@ -102,10 +103,11 @@ class _ResolvedSwitchToken {
 
   final double trackHeight;
   final double trackHeightSM;
-  final double trackMinWidth;
-  final double trackMinWidthSM;
-  final double handleSize;
-  final double handleSizeSM;
+  final double trackHeightLG;
+  final double? trackMinWidth;
+  final double? trackMinWidthSM;
+  final double? handleSize;
+  final double? handleSizeSM;
   final Color colorPrimary;
   final Color colorBg;
 }
@@ -125,9 +127,10 @@ class Switch extends StatefulWidget {
   /// Creates a [Switch].
   const Switch({
     super.key,
-    required this.value,
+    this.value,
+    this.defaultValue,
     this.onChanged,
-    this.size = SwitchSize.defaultSize,
+    this.size,
     this.disabled,
     this.loading = false,
     this.checkedChild,
@@ -137,14 +140,29 @@ class Switch extends StatefulWidget {
     this.autofocus = false,
   });
 
-  /// Whether the switch is on.
-  final bool value;
+  /// Whether the switch is on. Null leaves the switch to drive itself (see
+  /// [defaultValue]).
+  final bool? value;
 
-  /// Called with the new state when toggled. Null disables the switch.
+  /// Which way an uncontrolled switch starts. Defaults to off.
+  final bool? defaultValue;
+
+  /// Called with the new state when toggled.
+  ///
+  /// Null on a controlled switch — one given a [value] — makes it inert:
+  /// nothing can change the value, so nothing does. An uncontrolled switch
+  /// keeps its own state and flips whether or not anybody is listening.
   final ValueChanged<bool>? onChanged;
 
-  /// Which size preset to use.
-  final SwitchSize size;
+  /// How tall the track is: a preset, or a height of your own.
+  ///
+  /// Everything else is worked out from it — the track is twice as long as it
+  /// is tall, and the handle sits inside with a gap of a eleventh of that
+  /// height at each end — so a switch at any height is the same switch.
+  ///
+  /// Null takes what [SwitchDefaults.size] says, then what was set for the
+  /// subtree, then [SoftSize.middle].
+  final ControlSize? size;
 
   /// Greys the switch out and blocks toggling.
   final bool? disabled;
@@ -189,20 +207,78 @@ class _SoftSwitchState extends State<Switch> {
   /// Whether the focus should be seen: only where it arrived by keyboard.
   bool _focusVisible = false;
 
+  bool? _internal;
+
+  /// What the switch shows: the value it was handed, else the one it has been
+  /// keeping since it was last flipped, else where it started.
+  bool get _on => widget.value ?? _internal ?? widget.defaultValue ?? false;
+
+  /// A switch nobody is listening to is inert only while somebody else is
+  /// driving it: `onChanged: null` on a controlled switch means the value can
+  /// never change, which is Flutter's own reading. An uncontrolled one keeps
+  /// its own state and has something to change whether or not it is heard.
   bool get _enabled =>
-      !_disabled && !widget.loading && widget.onChanged != null;
+      !_disabled &&
+      !widget.loading &&
+      (widget.onChanged != null || widget.value == null);
 
-  bool get _small => widget.size == SwitchSize.small;
+  /// The size in force: this switch's own, else the one set for switches,
+  /// else the one set for the subtree, else the standard preset.
+  ControlSize get _size =>
+      widget.size ??
+      ConfigProvider.defaultsOf<SwitchDefaults>(context)?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
 
-  double _height(_ResolvedSwitchToken r) =>
-      _small ? r.trackHeightSM : r.trackHeight;
-  double _width(_ResolvedSwitchToken r) =>
-      _small ? r.trackMinWidthSM : r.trackMinWidth;
-  double _thumb(_ResolvedSwitchToken r) =>
-      _small ? r.handleSizeSM : r.handleSize;
+  /// The gap between the handle and the track, as a share of the height.
+  ///
+  /// A switch is drawn from its track height and nothing else: at the
+  /// standard 22 these give back exactly the numbers the design started with
+  /// — a 2px gap, an 18px handle, a 44px track — and at any other height the
+  /// same switch, only bigger or smaller. The presets used to be drawn from
+  /// six separate numbers that were not in proportion to one another: the
+  /// small one was 1.75 track-heights long where the standard was 2, so the
+  /// two were not the same switch at two sizes.
+  static const double _padShare = 1 / 11;
+
+  /// How long the track is, as a share of its height.
+  static const double _lengthShare = 2;
+
+  double _height(_ResolvedSwitchToken r) => _size.resolveHeight(
+        small: r.trackHeightSM,
+        middle: r.trackHeight,
+        large: r.trackHeightLG,
+      );
+
+  double _pad(_ResolvedSwitchToken r) => _height(r) * _padShare;
+
+  double _width(_ResolvedSwitchToken r) {
+    final named = switch (_size) {
+      SoftSize.small => r.trackMinWidthSM,
+      SoftSize.middle => r.trackMinWidth,
+      _ => null,
+    };
+    // A width of your own is a width, whatever the height says.
+    return _size.explicitWidth ?? named ?? _height(r) * _lengthShare;
+  }
+
+  double _thumb(_ResolvedSwitchToken r) {
+    final named = switch (_size) {
+      SoftSize.small => r.handleSizeSM,
+      SoftSize.middle => r.handleSize,
+      _ => null,
+    };
+    return named ?? _height(r) - _pad(r) * 2;
+  }
 
   void _toggle() {
-    if (_enabled) widget.onChanged!(!widget.value);
+    if (!_enabled) return;
+    final next = !_on;
+    // Kept in step whether or not somebody else is driving this: it is only
+    // the fallback for `value`, and a stale one would show through the moment
+    // `value` went null again.
+    setState(() => _internal = next);
+    widget.onChanged?.call(next);
   }
 
   @override
@@ -212,7 +288,7 @@ class _SoftSwitchState extends State<Switch> {
             ConfigProvider.componentOf<SwitchToken>(context) ??
             const SwitchToken())
         ._resolve(token);
-    final on = widget.value;
+    final on = _on;
 
     final base = on ? r.colorPrimary : r.colorBg;
     final trackColor = _enabled ? base : base.withValues(alpha: base.a * 0.4);
@@ -234,7 +310,7 @@ class _SoftSwitchState extends State<Switch> {
         ),
       },
       child: Semantics(
-        toggled: widget.value,
+        toggled: _on,
         enabled: _enabled,
         onTap: _enabled ? _toggle : null,
         child: MouseRegion(
@@ -252,7 +328,7 @@ class _SoftSwitchState extends State<Switch> {
               curve: token.motionEaseInOut,
               width: _width(r),
               height: _height(r),
-              padding: const EdgeInsets.all(2),
+              padding: EdgeInsets.all(_pad(r)),
               decoration: BoxDecoration(
                 color: trackColor,
                 borderRadius: BorderRadius.circular(_height(r)),
@@ -270,7 +346,7 @@ class _SoftSwitchState extends State<Switch> {
                 children: [
                   if (widget.checkedChild != null ||
                       widget.uncheckedChild != null)
-                    _buildLabel(token, on, thumbSize),
+                    _buildLabel(token, on, thumbSize, _height(r), _pad(r)),
                   AnimatedAlign(
                     duration: token.motionDurationMid,
                     curve: token.motionEaseInOut,
@@ -284,7 +360,7 @@ class _SoftSwitchState extends State<Switch> {
                       duration: token.motionDurationFast,
                       curve: token.motionEaseInOut,
                       // A pressed thumb stretches slightly.
-                      width: _pressed ? thumbSize + 4 : thumbSize,
+                      width: _pressed ? thumbSize + _pad(r) * 2 : thumbSize,
                       height: thumbSize,
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFFFFF),
@@ -314,14 +390,24 @@ class _SoftSwitchState extends State<Switch> {
   Color _offColor(Token token) =>
       _pressed ? token.colorTextTertiary : token.colorTextQuaternary;
 
-  Widget _buildLabel(Token token, bool on, double thumbSize) {
+  Widget _buildLabel(
+    Token token,
+    bool on,
+    double thumbSize,
+    double height,
+    double pad,
+  ) {
+    // The label is drawn from the same height as everything else, so it keeps
+    // its place in a switch of any size rather than sitting against the edge
+    // of a big one and overflowing a small one.
+    final scale = height / 22;
     // The active label hugs the side away from the thumb, so it stays visible.
     return Positioned.fill(
       child: Padding(
         // Clear of wherever the thumb is resting.
         padding: EdgeInsetsDirectional.only(
-          start: on ? 6 : thumbSize + 4,
-          end: on ? thumbSize + 4 : 6,
+          start: on ? pad * 3 : thumbSize + pad * 2,
+          end: on ? thumbSize + pad * 2 : pad * 3,
         ),
         child: Align(
           alignment: on
@@ -330,13 +416,16 @@ class _SoftSwitchState extends State<Switch> {
           child: DefaultTextStyle.merge(
             style: TextStyle(
               color: const Color(0xFFFFFFFF),
-              fontSize: token.fontSizeSM,
+              fontSize: token.fontSizeSM * scale,
               fontFamily: token.fontFamily,
               fontFamilyFallback: token.fontFamilyFallback,
               decoration: TextDecoration.none,
             ),
             child: IconTheme.merge(
-              data: const IconThemeData(color: Color(0xFFFFFFFF), size: 12),
+              data: IconThemeData(
+                color: const Color(0xFFFFFFFF),
+                size: 12 * scale,
+              ),
               child: (on ? widget.checkedChild : widget.uncheckedChild) ??
                   const SizedBox.shrink(),
             ),

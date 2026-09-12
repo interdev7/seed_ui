@@ -2194,17 +2194,11 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
 
   /// The preset a size belongs to, so a height of your own still picks the
   /// padding of the preset it is nearest — as a `Button` does.
-  SoftSize _preset(_ResolvedTableToken r, Token t) {
-    final size = _size;
-    if (size is SoftSize) return size;
-    final height = _rowHeight(t);
-    final byDistance = <(SoftSize, double)>[
-      (SoftSize.small, (height - t.controlHeightSM).abs()),
-      (SoftSize.middle, (height - t.controlHeight).abs()),
-      (SoftSize.large, (height - t.controlHeightLG).abs()),
-    ]..sort((a, b) => a.$2.compareTo(b.$2));
-    return byDistance.first.$1;
-  }
+  SoftSize _preset(_ResolvedTableToken r, Token t) => _size.nearestPreset(
+        small: t.controlHeightSM,
+        middle: t.controlHeight,
+        large: t.controlHeightLG,
+      );
 
   double _rowHeight(Token t) => _size.resolveHeight(
         small: t.controlHeightSM,

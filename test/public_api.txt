@@ -272,7 +272,6 @@ StepsType
 StepsVariant
 Switch
 SwitchDefaults
-SwitchSize
 SwitchToken
 TabBarExtra
 TabContentPosition

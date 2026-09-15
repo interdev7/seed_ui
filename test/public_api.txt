@@ -223,6 +223,7 @@ RibbonToken
 SearchConfig
 SearchIcon
 SeedLocalizations
+SeedRefinement
 SeedToken
 Segmented
 SegmentedArrow

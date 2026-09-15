@@ -526,15 +526,46 @@ What a nested theme inherits depends on what it states:
 | The nested theme states | What it takes from above |
 | --- | --- |
 | only `components` | the whole token set |
+| only `refineSeed:` | the seed, changed by what it names, and the brightness |
 | only a seed (`token:`) | the brightness |
 | only `dark:` | the palette the brightness is flipped on |
 | both | nothing — it is fully specified |
 | `ThemeData.raw(...)` | nothing; the token is taken as final |
 
-Component tokens merge slot by slot, the nearer provider winning where the two
-name the same component. `emptyBuilder` and `locale` are inherited the same way:
-the nearest provider that states one wins, and a provider silent about it
+Component tokens merge field by field, the nearer provider winning where the
+two name the same field. `emptyBuilder` and `locale` are inherited the same
+way: the nearest provider that states one wins, and a provider silent about it
 passes down whatever it inherited.
+
+#### Changing one thing about the seed
+
+`token:` replaces the seed **outright** — every field of it, including the ones
+a nested theme never meant to touch. A `SeedToken` is one object, and a fresh
+one is all defaults, so this drops the font, the radii and the sizes the app
+had set:
+
+```dart
+// One screen, a different brand colour — and no font, no radii.
+ThemeData(token: const SeedToken(colorPrimary: brand))
+```
+
+`refineSeed` says the same thing without the loss. It is handed whatever seed
+is in force, so nothing has to reach for a `BuildContext`:
+
+```dart
+ConfigProvider(
+  theme: ThemeData(
+    refineSeed: (seed) => seed.copyWith(colorPrimary: brand),
+  ),
+  child: ...,   // this brand, and everything else as the app had it
+)
+```
+
+It is [`refine`](#naming-one-outright)'s counterpart on the other side of the
+deriving: `refineSeed` changes what the palette is generated *from*, `refine`
+changes what came out. Both survive inheritance — a subtree asked to be yellow
+stays yellow through the providers inside it, and the nearer one wins where
+both speak.
 
 This is why `ThemeData.dark` nested inside a themed provider turns the lights
 out without discarding your colours:

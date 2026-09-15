@@ -30,6 +30,12 @@ enum EmptySlot {
 /// The last word on a derived token set — see [ThemeData.refine].
 typedef TokenRefinement = Token Function(Token derived);
 
+/// Changes the seed a theme is about to be derived from.
+///
+/// Handed whatever seed is in force — the one from the theme above, or the
+/// kit's own where there is none.
+typedef SeedRefinement = SeedToken Function(SeedToken inherited);
+
 /// Builds the "no data" placeholder for [slot].
 typedef EmptyBuilder = Widget Function(BuildContext context, EmptySlot slot);
 
@@ -62,11 +68,15 @@ class ThemeData {
     bool? dark,
     this.components = const ComponentsConfig(),
     this.refine,
+    this.refineSeed,
   })  : _seed = token,
         _dark = dark,
         _readyMade = false,
         token = _refined(
-          Token.derive(token ?? const SeedToken(), dark: dark ?? false),
+          Token.derive(
+            _seeded(token ?? const SeedToken(), refineSeed),
+            dark: dark ?? false,
+          ),
           refine,
         );
 
@@ -78,7 +88,8 @@ class ThemeData {
       : _seed = null,
         _dark = null,
         _readyMade = true,
-        refine = null;
+        refine = null,
+        refineSeed = null;
 
   const ThemeData._merged({
     required this.token,
@@ -87,6 +98,7 @@ class ThemeData {
     required bool? dark,
     required bool readyMade,
     required this.refine,
+    required this.refineSeed,
   })  : _seed = seed,
         _dark = dark,
         _readyMade = readyMade;
@@ -94,6 +106,10 @@ class ThemeData {
   /// Applies [refine] to a freshly derived token set.
   static Token _refined(Token derived, TokenRefinement? refine) =>
       refine == null ? derived : refine(derived);
+
+  /// Applies [refineSeed] to the seed about to be derived from.
+  static SeedToken _seeded(SeedToken seed, SeedRefinement? refineSeed) =>
+      refineSeed == null ? seed : refineSeed(seed);
 
   /// The resolved values components read.
   final Token token;
@@ -122,6 +138,32 @@ class ThemeData {
   /// flips the brightness re-derives from the seed above it and this is
   /// applied again, to the new tokens.
   final TokenRefinement? refine;
+
+  /// The seed this theme is derived from, changed before the deriving.
+  ///
+  /// [token] replaces the seed outright — every field of it, including the
+  /// ones a nested theme never meant to touch. Naming a brand colour that way
+  /// quietly drops the font, the radii and the sizes the app had set, because
+  /// a `SeedToken` is one object and a fresh one is all defaults. This says
+  /// the same thing without the loss:
+  ///
+  /// ```dart
+  /// ConfigProvider(
+  ///   theme: ThemeData(
+  ///     refineSeed: (seed) => seed.copyWith(colorPrimary: brand),
+  ///   ),
+  ///   child: ...,   // yellow, and everything else as the app had it
+  /// )
+  /// ```
+  ///
+  /// It runs on whatever seed is in force, so no [BuildContext] is needed to
+  /// reach the one above. [refine] is its counterpart on the other side of
+  /// the deriving: this changes what the palette is generated *from*, that
+  /// changes what came out.
+  ///
+  /// Like [refine] it survives inheritance — a subtree asked to be yellow
+  /// stays yellow through the providers inside it.
+  final SeedRefinement? refineSeed;
 
   /// The seed this theme was derived from, or null when it was left to inherit
   /// (or handed over ready-made).
@@ -154,19 +196,23 @@ class ThemeData {
     // re-derivation: the nested theme's own if it made one, else the one it
     // inherits, applied afresh to whatever was derived.
     final refinement = refine ?? parent.refine;
+    // A seed refinement is a statement about the seed, and outlives a
+    // re-derivation the same way.
+    final seeding = refineSeed ?? parent.refineSeed;
     final Token merged;
     if (_readyMade) {
       merged = token;
-    } else if (_seed == null && _dark == null) {
+    } else if (seeding == null && _seed == null && _dark == null) {
+      // Nothing said on either count: the parent's tokens stand.
       merged = parent.token;
-    } else if (_seed == null && parent._seed != null) {
-      // Only the brightness was flipped: keep the palette it was flipped on.
-      merged = Token.derive(parent._seed, dark: _dark!);
-    } else if (_dark == null) {
-      // Only a palette was named: keep the brightness it lands in.
-      merged = Token.derive(_seed!, dark: parent.token.isDark);
     } else {
-      merged = token;
+      // Whichever seed is in force, changed where something asks to change
+      // it, derived at whichever brightness is in force.
+      final base = _seed ?? parent._seed ?? const SeedToken();
+      merged = Token.derive(
+        _seeded(base, seeding),
+        dark: _dark ?? parent.token.isDark,
+      );
     }
     return ThemeData._merged(
       // Already refined where this theme derived its own; refined here where
@@ -179,6 +225,7 @@ class ThemeData {
       dark: _dark ?? parent._dark,
       readyMade: _readyMade,
       refine: refinement,
+      refineSeed: seeding,
     );
   }
 }

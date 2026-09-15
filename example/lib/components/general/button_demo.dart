@@ -215,11 +215,11 @@ class _Ink extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ConfigProvider(
-              // Built from the seed already in force rather than a fresh one:
-              // a bare `SeedToken(colorPrimary: …)` changes the colour and
-              // drops the font, the radii and everything else the app set.
+              // `refineSeed` rather than `token:`: it is handed the seed
+              // already in force, so naming a colour changes the colour and
+              // keeps the font, the radii and everything else the app set.
               theme: ThemeData(
-                token: t.seed.copyWith(colorPrimary: brand),
+                refineSeed: (seed) => seed.copyWith(colorPrimary: brand),
                 refine: refine,
               ),
               child: Wrap(
@@ -285,7 +285,9 @@ class _Ink extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         ConfigProvider(
-          theme: ThemeData(token: t.seed.copyWith(colorPrimary: _yellow)),
+          theme: ThemeData(
+            refineSeed: (seed) => seed.copyWith(colorPrimary: _yellow),
+          ),
           child: Button(
             variant: ButtonVariant.solid,
             color: ButtonColor.primary,

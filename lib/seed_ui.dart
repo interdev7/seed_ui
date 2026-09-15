@@ -393,6 +393,7 @@ export 'src/theme/config_provider.dart'
         ComponentsConfig,
         EmptyBuilder,
         EmptySlot,
+        SeedRefinement,
         ThemeContext,
         ThemeData,
         TokenRefinement;

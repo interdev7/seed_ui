@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`ThemeData.refineSeed` changes one thing about the seed and keeps the
+  rest.** `token:` replaces the seed outright — a `SeedToken` is one object,
+  and a fresh one is all defaults — so a nested theme naming a brand colour
+  quietly dropped the font, the radii and the sizes the app had set. The new
+  hook is handed whatever seed is in force, so nothing has to reach for a
+  `BuildContext`:
+
+  ```dart
+  ThemeData(refineSeed: (seed) => seed.copyWith(colorPrimary: brand))
+  ```
+
+  It is `refine`'s counterpart on the other side of the deriving — that one
+  changes what came out of the palette, this one changes what went in — and it
+  is inherited the same way, the nearer provider winning.
 - **A brand colour now brings its own ink.** `ColorGroup.onBase` is what a
   solid button's label, a solid tag's words, a ticked box's tick, a chosen
   day, a switch's inside label and a solid radio button are written in —

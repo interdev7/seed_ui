@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.25.0
+
+### Fixed
+
+- **A nested `ConfigProvider` no longer throws away what the app said.**
+  Both `ComponentDefaults` and `ComponentsConfig` folded slot by slot, so a
+  provider that named `button:` at all replaced the whole `ButtonDefaults` or
+  `ButtonToken` above it. Asking one screen for round buttons lost the size,
+  the variant and the colour set at the root — and the buttons came back tiny,
+  outlined and white on a white page, which reads as "the buttons have gone".
+  Both now fold **field by field**: a provider changes what it names and keeps
+  everything it is silent about. Every `*Defaults` and every component
+  `*Token` carries a `merge` of its own, and a test refuses one that drops a
+  field.
+- **Six slots were missing from those folds entirely.** `datePicker` and
+  `timePicker` on `ComponentsConfig`, and `checkableTagGroup`,
+  `dateRangePicker`, `multiDatePicker` and `multiRangeSlider` on
+  `ComponentDefaults`: a nested provider dropped them outright, whatever they
+  said. A test now checks both folds carry every slot they declare.
+
 ## 0.24.0
 
 An API review before 1.0: one name for one idea, and a way to set every

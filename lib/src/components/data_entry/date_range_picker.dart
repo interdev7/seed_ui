@@ -100,6 +100,15 @@ class DateRangePickerDefaults {
 
   /// Whether a picker is disabled, unless it says otherwise.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  DateRangePickerDefaults merge(DateRangePickerDefaults other) =>
+      DateRangePickerDefaults(
+        variant: other.variant ?? variant,
+        allowClear: other.allowClear ?? allowClear,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A field that collects a stretch of days.

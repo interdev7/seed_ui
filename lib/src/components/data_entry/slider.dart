@@ -301,6 +301,31 @@ class SliderToken {
       markFontSize: markFontSize ?? t.fontSize,
     );
   }
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SliderToken merge(SliderToken other) => SliderToken(
+        railSize: other.railSize ?? railSize,
+        handleSize: other.handleSize ?? handleSize,
+        handleSizeHover: other.handleSizeHover ?? handleSizeHover,
+        dotSize: other.dotSize ?? dotSize,
+        handleLineWidth: other.handleLineWidth ?? handleLineWidth,
+        handleLineWidthHover:
+            other.handleLineWidthHover ?? handleLineWidthHover,
+        railBg: other.railBg ?? railBg,
+        railHoverBg: other.railHoverBg ?? railHoverBg,
+        trackBg: other.trackBg ?? trackBg,
+        trackHoverBg: other.trackHoverBg ?? trackHoverBg,
+        handleColor: other.handleColor ?? handleColor,
+        handleActiveColor: other.handleActiveColor ?? handleActiveColor,
+        handleColorDisabled: other.handleColorDisabled ?? handleColorDisabled,
+        trackBgDisabled: other.trackBgDisabled ?? trackBgDisabled,
+        dotBorderColor: other.dotBorderColor ?? dotBorderColor,
+        markColor: other.markColor ?? markColor,
+        markDisabledColor: other.markDisabledColor ?? markDisabledColor,
+        markFontSize: other.markFontSize ?? markFontSize,
+        dotActiveBorderColor:
+            other.dotActiveBorderColor ?? dotActiveBorderColor,
+      );
 }
 
 @immutable
@@ -377,6 +402,13 @@ class SliderDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SliderDefaults merge(SliderDefaults other) => SliderDefaults(
+        dots: other.dots ?? dots,
+        included: other.included ?? included,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A groove with a handle, for choosing a number by dragging.
@@ -797,6 +829,13 @@ class MultiRangeSliderDefaults {
 
   /// Whether the slider is barred.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  MultiRangeSliderDefaults merge(MultiRangeSliderDefaults other) =>
+      MultiRangeSliderDefaults(
+        draggableTrack: other.draggableTrack ?? draggableTrack,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A slider whose handles may be put in and taken out.

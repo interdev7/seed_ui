@@ -56,6 +56,13 @@ class BadgeDefaults {
 
   /// Whether a count of nothing is still drawn.
   final bool? showZero;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  BadgeDefaults merge(BadgeDefaults other) => BadgeDefaults(
+        size: other.size ?? size,
+        overflowCount: other.overflowCount ?? overflowCount,
+        showZero: other.showZero ?? showZero,
+      );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -109,6 +116,18 @@ class BadgeToken {
         bg: bg ?? t.error.base,
         textColor: textColor ?? const Color(0xFFFFFFFF),
         ringColor: ringColor ?? t.colorBgContainer,
+      );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  BadgeToken merge(BadgeToken other) => BadgeToken(
+        indicatorHeight: other.indicatorHeight ?? indicatorHeight,
+        indicatorHeightSM: other.indicatorHeightSM ?? indicatorHeightSM,
+        dotSize: other.dotSize ?? dotSize,
+        statusSize: other.statusSize ?? statusSize,
+        fontSize: other.fontSize ?? fontSize,
+        bg: other.bg ?? bg,
+        textColor: other.textColor ?? textColor,
+        ringColor: other.ringColor ?? ringColor,
       );
 }
 
@@ -512,6 +531,14 @@ class RibbonToken {
         bg: bg ?? t.primary.base,
         textColor: textColor ?? const Color(0xFFFFFFFF),
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  RibbonToken merge(RibbonToken other) => RibbonToken(
+        height: other.height ?? height,
+        fontSize: other.fontSize ?? fontSize,
+        bg: other.bg ?? bg,
+        textColor: other.textColor ?? textColor,
+      );
 }
 
 @immutable
@@ -539,6 +566,11 @@ class RibbonDefaults {
 
   /// Which end the ribbon sits at.
   final RibbonPlacement? placement;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  RibbonDefaults merge(RibbonDefaults other) => RibbonDefaults(
+        placement: other.placement ?? placement,
+      );
 }
 
 /// A label banded across the top corner of what it describes.

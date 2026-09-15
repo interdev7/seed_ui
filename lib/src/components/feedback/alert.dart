@@ -47,6 +47,17 @@ class AlertToken {
         borderRadius: borderRadius ?? t.borderRadiusLG,
         fontSize: fontSize ?? t.fontSize,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  AlertToken merge(AlertToken other) => AlertToken(
+        withDescriptionIconSize:
+            other.withDescriptionIconSize ?? withDescriptionIconSize,
+        withDescriptionPadding:
+            other.withDescriptionPadding ?? withDescriptionPadding,
+        padding: other.padding ?? padding,
+        borderRadius: other.borderRadius ?? borderRadius,
+        fontSize: other.fontSize ?? fontSize,
+      );
 }
 
 @immutable
@@ -79,6 +90,12 @@ class AlertDefaults {
 
   /// Whether alerts can be dismissed.
   final bool? closable;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  AlertDefaults merge(AlertDefaults other) => AlertDefaults(
+        showIcon: other.showIcon ?? showIcon,
+        closable: other.closable ?? closable,
+      );
 }
 
 /// An inline banner conveying a status message, shown in the page flow rather

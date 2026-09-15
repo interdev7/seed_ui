@@ -286,6 +286,81 @@ void main() {
     );
   });
 
+  test('every defaults class can be merged field by field', () {
+    // `ComponentDefaults.merge` folds one slot into another by calling the
+    // slot's own `merge`. A defaults class without one would go back to being
+    // replaced wholesale, and a nested provider would silently throw away
+    // what the app said.
+    final missing = <String>[];
+    for (final entity in Directory('lib/src').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final source = entity.readAsStringSync();
+      for (final match
+          in RegExp(r'\nclass (\w+Defaults) \{(.*?)\n\}\n', dotAll: true)
+              .allMatches(source)) {
+        final name = match.group(1)!;
+        if (name == 'ComponentDefaults') continue;
+        final body = match.group(2)!;
+        final fields = RegExp(r'final [\w<>,?\. ]+\? (\w+);')
+            .allMatches(body)
+            .map((m) => m.group(1)!)
+            .toList();
+        if (fields.isEmpty) continue;
+        if (!body.contains('$name merge($name other)')) {
+          missing.add('$name has no merge');
+          continue;
+        }
+        for (final field in fields) {
+          // The formatter wraps a long line wherever it likes, so the pair is
+          // matched with whitespace between rather than as one string.
+          final folded =
+              RegExp('$field:\\s*other\\.$field\\s*\\?\\?\\s*$field');
+          if (!folded.hasMatch(body)) {
+            missing.add('$name.merge drops $field');
+          }
+        }
+      }
+    }
+    expect(
+      missing,
+      isEmpty,
+      reason: 'a nested ConfigProvider would throw these away',
+    );
+  });
+
+  test('both configs fold every slot they carry', () {
+    // A slot left out of `merge` is dropped the moment a provider is nested:
+    // `datePicker` and `timePicker` were missing from ComponentsConfig, so a
+    // nested provider silently threw away the date picker's theming.
+    for (final (path, kind) in [
+      ('lib/src/theme/component_defaults.dart', 'Defaults'),
+      ('lib/src/theme/components_config.dart', 'Token'),
+    ]) {
+      final source = File(path).readAsStringSync();
+      final fold =
+          RegExp(r'merge\(\w+ other\) => \w+\(\n(.*?)\n      \);', dotAll: true)
+              .firstMatch(source)!
+              .group(1)!;
+      final folded =
+          RegExp(r'(\w+):\s').allMatches(fold).map((m) => m.group(1)!).toSet();
+      final slots = RegExp('final \\w+$kind\\? (\\w+);')
+          .allMatches(source)
+          .map((m) => m.group(1)!)
+          .toSet();
+      expect(
+        slots.difference(folded),
+        isEmpty,
+        reason: 'these slots of $path are dropped by a nested provider',
+      );
+      // And folded field by field, not swapped whole.
+      expect(
+        RegExp(r'\.merge\(other\.').allMatches(fold).length,
+        slots.length,
+        reason: 'every slot of $path folds through its own merge',
+      );
+    }
+  });
+
   test('every token a component resolves is one it draws with', () {
     // A token field that is declared, documented, resolved and never read is
     // a promise with no way to keep it — worse than a missing one, because

@@ -648,9 +648,32 @@ ConfigProvider(
 )
 ```
 
-A widget's own prop always wins, and defaults are inherited and merged slot by
-slot like everything else on the provider: a nested provider that names one
-component leaves the others as the provider above had them.
+A widget's own prop always wins, and defaults are inherited and merged **field
+by field**: a nested provider changes what it names and keeps everything it is
+silent about — the other components, and the other fields of the component it
+did name.
+
+```dart
+// At the root of the app.
+ConfigProvider(
+  defaults: const ComponentDefaults(
+    button: ButtonDefaults(
+      size: ControlSize.height(52),
+      variant: ButtonVariant.solid,
+      color: ButtonColor.primary,
+    ),
+  ),
+  child: const MyApp(),
+)
+
+// On one screen inside it, where the buttons are round.
+ConfigProvider(
+  defaults: const ComponentDefaults(
+    button: ButtonDefaults(shape: ButtonShape.circle),
+  ),
+  child: ...,   // round, and still 52 tall, solid and primary
+)
+```
 
 #### Which of the three wins
 

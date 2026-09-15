@@ -102,6 +102,15 @@ class DatePickerDefaults {
 
   /// Whether a [DatePicker] is disabled, unless it says otherwise.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  DatePickerDefaults merge(DatePickerDefaults other) => DatePickerDefaults(
+        variant: other.variant ?? variant,
+        allowClear: other.allowClear ?? allowClear,
+        showToday: other.showToday ?? showToday,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// Per-component design tokens for [DatePicker].
@@ -174,6 +183,18 @@ class DatePickerToken {
         timeColumnWidth: timeColumnWidth ?? t.controlHeightSM * 2,
         mainAxisSpacing: mainAxisSpacing ?? t.sizeXXS,
         crossAxisSpacing: crossAxisSpacing ?? t.sizeXXS,
+      );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  DatePickerToken merge(DatePickerToken other) => DatePickerToken(
+        borderRadius: other.borderRadius ?? borderRadius,
+        cellWidth: other.cellWidth ?? cellWidth,
+        cellHeight: other.cellHeight ?? cellHeight,
+        headerHeight: other.headerHeight ?? headerHeight,
+        presetsWidth: other.presetsWidth ?? presetsWidth,
+        timeColumnWidth: other.timeColumnWidth ?? timeColumnWidth,
+        mainAxisSpacing: other.mainAxisSpacing ?? mainAxisSpacing,
+        crossAxisSpacing: other.crossAxisSpacing ?? crossAxisSpacing,
       );
 }
 

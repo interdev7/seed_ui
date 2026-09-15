@@ -39,6 +39,11 @@ class RadioDefaults {
 
   /// Whether radios are barred, unless one says otherwise.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  RadioDefaults merge(RadioDefaults other) => RadioDefaults(
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -97,6 +102,19 @@ class RadioToken {
         buttonCheckedBg: buttonCheckedBg ?? t.primary.base,
         buttonColor: buttonColor ?? t.colorText,
         fontSize: fontSize ?? t.fontSize,
+      );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  RadioToken merge(RadioToken other) => RadioToken(
+        radioSize: other.radioSize ?? radioSize,
+        dotSize: other.dotSize ?? dotSize,
+        dotColor: other.dotColor ?? dotColor,
+        colorBorder: other.colorBorder ?? colorBorder,
+        colorPrimary: other.colorPrimary ?? colorPrimary,
+        buttonBg: other.buttonBg ?? buttonBg,
+        buttonCheckedBg: other.buttonCheckedBg ?? buttonCheckedBg,
+        buttonColor: other.buttonColor ?? buttonColor,
+        fontSize: other.fontSize ?? fontSize,
       );
 }
 
@@ -413,6 +431,15 @@ class RadioGroupDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  RadioGroupDefaults merge(RadioGroupDefaults other) => RadioGroupDefaults(
+        direction: other.direction ?? direction,
+        optionType: other.optionType ?? optionType,
+        buttonStyle: other.buttonStyle ?? buttonStyle,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A set of radio buttons selecting one value from a list.

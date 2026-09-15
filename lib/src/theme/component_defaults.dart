@@ -246,53 +246,150 @@ class ComponentDefaults {
   /// Applied to every [MultiRangeSlider] under this provider.
   final MultiRangeSliderDefaults? multiRangeSlider;
 
-  /// This set with [other] laid over it: every slot [other] names wins, the
-  /// rest are kept.
+  /// This set with [other] laid over it, one *field* at a time.
+  ///
+  /// Not slot by slot: a nested provider that names `button:` at all used to
+  /// replace the whole `ButtonDefaults` above it, so asking next door for a
+  /// round button threw away the size and the variant named for the app —
+  /// and the buttons came back white-on-white and tiny. A provider says what
+  /// it means to change, and keeps everything it is silent about.
   ComponentDefaults merge(ComponentDefaults other) => ComponentDefaults(
-        button: other.button ?? button,
-        avatar: other.avatar ?? avatar,
-        checkboxGroup: other.checkboxGroup ?? checkboxGroup,
-        radioGroup: other.radioGroup ?? radioGroup,
-        ribbon: other.ribbon ?? ribbon,
-        sortableList: other.sortableList ?? sortableList,
-        timeline: other.timeline ?? timeline,
-        upload: other.upload ?? upload,
-        alert: other.alert ?? alert,
-        card: other.card ?? card,
-        checkableTagGroup: other.checkableTagGroup ?? checkableTagGroup,
-        collapse: other.collapse ?? collapse,
-        countdown: other.countdown ?? countdown,
-        inputNumber: other.inputNumber ?? inputNumber,
-        pagination: other.pagination ?? pagination,
-        progress: other.progress ?? progress,
-        segmented: other.segmented ?? segmented,
-        slider: other.slider ?? slider,
-        steps: other.steps ?? steps,
-        table: other.table ?? table,
-        tabs: other.tabs ?? tabs,
-        tree: other.tree ?? tree,
-        datePicker: other.datePicker ?? datePicker,
-        dropdown: other.dropdown ?? dropdown,
-        empty: other.empty ?? empty,
-        floatButton: other.floatButton ?? floatButton,
-        input: other.input ?? input,
-        select: other.select ?? select,
-        popconfirm: other.popconfirm ?? popconfirm,
-        popover: other.popover ?? popover,
-        tag: other.tag ?? tag,
-        timePicker: other.timePicker ?? timePicker,
-        tooltip: other.tooltip ?? tooltip,
-        tour: other.tour ?? tour,
-        dateRangePicker: other.dateRangePicker ?? dateRangePicker,
-        multiDatePicker: other.multiDatePicker ?? multiDatePicker,
-        badge: other.badge ?? badge,
-        checkbox: other.checkbox ?? checkbox,
-        form: other.form ?? form,
-        listy: other.listy ?? listy,
-        radio: other.radio ?? radio,
-        spin: other.spin ?? spin,
-        switchControl: other.switchControl ?? switchControl,
-        multiRangeSlider: other.multiRangeSlider ?? multiRangeSlider,
+        button: button == null || other.button == null
+            ? (other.button ?? button)
+            : button!.merge(other.button!),
+        avatar: avatar == null || other.avatar == null
+            ? (other.avatar ?? avatar)
+            : avatar!.merge(other.avatar!),
+        checkboxGroup: checkboxGroup == null || other.checkboxGroup == null
+            ? (other.checkboxGroup ?? checkboxGroup)
+            : checkboxGroup!.merge(other.checkboxGroup!),
+        radioGroup: radioGroup == null || other.radioGroup == null
+            ? (other.radioGroup ?? radioGroup)
+            : radioGroup!.merge(other.radioGroup!),
+        ribbon: ribbon == null || other.ribbon == null
+            ? (other.ribbon ?? ribbon)
+            : ribbon!.merge(other.ribbon!),
+        sortableList: sortableList == null || other.sortableList == null
+            ? (other.sortableList ?? sortableList)
+            : sortableList!.merge(other.sortableList!),
+        timeline: timeline == null || other.timeline == null
+            ? (other.timeline ?? timeline)
+            : timeline!.merge(other.timeline!),
+        upload: upload == null || other.upload == null
+            ? (other.upload ?? upload)
+            : upload!.merge(other.upload!),
+        alert: alert == null || other.alert == null
+            ? (other.alert ?? alert)
+            : alert!.merge(other.alert!),
+        card: card == null || other.card == null
+            ? (other.card ?? card)
+            : card!.merge(other.card!),
+        checkableTagGroup:
+            checkableTagGroup == null || other.checkableTagGroup == null
+                ? (other.checkableTagGroup ?? checkableTagGroup)
+                : checkableTagGroup!.merge(other.checkableTagGroup!),
+        collapse: collapse == null || other.collapse == null
+            ? (other.collapse ?? collapse)
+            : collapse!.merge(other.collapse!),
+        countdown: countdown == null || other.countdown == null
+            ? (other.countdown ?? countdown)
+            : countdown!.merge(other.countdown!),
+        inputNumber: inputNumber == null || other.inputNumber == null
+            ? (other.inputNumber ?? inputNumber)
+            : inputNumber!.merge(other.inputNumber!),
+        pagination: pagination == null || other.pagination == null
+            ? (other.pagination ?? pagination)
+            : pagination!.merge(other.pagination!),
+        progress: progress == null || other.progress == null
+            ? (other.progress ?? progress)
+            : progress!.merge(other.progress!),
+        segmented: segmented == null || other.segmented == null
+            ? (other.segmented ?? segmented)
+            : segmented!.merge(other.segmented!),
+        slider: slider == null || other.slider == null
+            ? (other.slider ?? slider)
+            : slider!.merge(other.slider!),
+        steps: steps == null || other.steps == null
+            ? (other.steps ?? steps)
+            : steps!.merge(other.steps!),
+        table: table == null || other.table == null
+            ? (other.table ?? table)
+            : table!.merge(other.table!),
+        tabs: tabs == null || other.tabs == null
+            ? (other.tabs ?? tabs)
+            : tabs!.merge(other.tabs!),
+        tree: tree == null || other.tree == null
+            ? (other.tree ?? tree)
+            : tree!.merge(other.tree!),
+        datePicker: datePicker == null || other.datePicker == null
+            ? (other.datePicker ?? datePicker)
+            : datePicker!.merge(other.datePicker!),
+        dropdown: dropdown == null || other.dropdown == null
+            ? (other.dropdown ?? dropdown)
+            : dropdown!.merge(other.dropdown!),
+        empty: empty == null || other.empty == null
+            ? (other.empty ?? empty)
+            : empty!.merge(other.empty!),
+        floatButton: floatButton == null || other.floatButton == null
+            ? (other.floatButton ?? floatButton)
+            : floatButton!.merge(other.floatButton!),
+        input: input == null || other.input == null
+            ? (other.input ?? input)
+            : input!.merge(other.input!),
+        select: select == null || other.select == null
+            ? (other.select ?? select)
+            : select!.merge(other.select!),
+        popconfirm: popconfirm == null || other.popconfirm == null
+            ? (other.popconfirm ?? popconfirm)
+            : popconfirm!.merge(other.popconfirm!),
+        popover: popover == null || other.popover == null
+            ? (other.popover ?? popover)
+            : popover!.merge(other.popover!),
+        tag: tag == null || other.tag == null
+            ? (other.tag ?? tag)
+            : tag!.merge(other.tag!),
+        timePicker: timePicker == null || other.timePicker == null
+            ? (other.timePicker ?? timePicker)
+            : timePicker!.merge(other.timePicker!),
+        tooltip: tooltip == null || other.tooltip == null
+            ? (other.tooltip ?? tooltip)
+            : tooltip!.merge(other.tooltip!),
+        tour: tour == null || other.tour == null
+            ? (other.tour ?? tour)
+            : tour!.merge(other.tour!),
+        dateRangePicker:
+            dateRangePicker == null || other.dateRangePicker == null
+                ? (other.dateRangePicker ?? dateRangePicker)
+                : dateRangePicker!.merge(other.dateRangePicker!),
+        multiDatePicker:
+            multiDatePicker == null || other.multiDatePicker == null
+                ? (other.multiDatePicker ?? multiDatePicker)
+                : multiDatePicker!.merge(other.multiDatePicker!),
+        badge: badge == null || other.badge == null
+            ? (other.badge ?? badge)
+            : badge!.merge(other.badge!),
+        checkbox: checkbox == null || other.checkbox == null
+            ? (other.checkbox ?? checkbox)
+            : checkbox!.merge(other.checkbox!),
+        form: form == null || other.form == null
+            ? (other.form ?? form)
+            : form!.merge(other.form!),
+        listy: listy == null || other.listy == null
+            ? (other.listy ?? listy)
+            : listy!.merge(other.listy!),
+        radio: radio == null || other.radio == null
+            ? (other.radio ?? radio)
+            : radio!.merge(other.radio!),
+        spin: spin == null || other.spin == null
+            ? (other.spin ?? spin)
+            : spin!.merge(other.spin!),
+        switchControl: switchControl == null || other.switchControl == null
+            ? (other.switchControl ?? switchControl)
+            : switchControl!.merge(other.switchControl!),
+        multiRangeSlider:
+            multiRangeSlider == null || other.multiRangeSlider == null
+                ? (other.multiRangeSlider ?? multiRangeSlider)
+                : multiRangeSlider!.merge(other.multiRangeSlider!),
       );
 
   /// Fast lookup for a specific defaults type [T].

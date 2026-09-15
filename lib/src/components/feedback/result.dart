@@ -46,6 +46,15 @@ class ResultToken {
         padding: padding ??
             EdgeInsets.symmetric(horizontal: t.sizeLG, vertical: t.sizeXL),
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  ResultToken merge(ResultToken other) => ResultToken(
+        titleFontSize: other.titleFontSize ?? titleFontSize,
+        subtitleFontSize: other.subtitleFontSize ?? subtitleFontSize,
+        iconSize: other.iconSize ?? iconSize,
+        padding: other.padding ?? padding,
+        fontWeight: other.fontWeight ?? fontWeight,
+      );
 }
 
 @immutable

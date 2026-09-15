@@ -90,6 +90,18 @@ class MultiDatePickerDefaults {
 
   /// Whether the tags keep to one line.
   final bool? maxTagCountResponsive;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  MultiDatePickerDefaults merge(MultiDatePickerDefaults other) =>
+      MultiDatePickerDefaults(
+        variant: other.variant ?? variant,
+        allowClear: other.allowClear ?? allowClear,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+        maxTagCount: other.maxTagCount ?? maxTagCount,
+        maxTagCountResponsive:
+            other.maxTagCountResponsive ?? maxTagCountResponsive,
+      );
 }
 
 /// A field that collects any number of days.

@@ -265,6 +265,24 @@ class SegmentedToken {
               ),
             ],
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SegmentedToken merge(SegmentedToken other) => SegmentedToken(
+        trackBg: other.trackBg ?? trackBg,
+        trackPadding: other.trackPadding ?? trackPadding,
+        itemColor: other.itemColor ?? itemColor,
+        itemHoverColor: other.itemHoverColor ?? itemHoverColor,
+        itemHoverBg: other.itemHoverBg ?? itemHoverBg,
+        itemSelectedBg: other.itemSelectedBg ?? itemSelectedBg,
+        itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
+        borderRadius: other.borderRadius ?? borderRadius,
+        borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
+        borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
+        arrowBg: other.arrowBg ?? arrowBg,
+        arrowHoverBg: other.arrowHoverBg ?? arrowHoverBg,
+        arrowColor: other.arrowColor ?? arrowColor,
+        thumbShadow: other.thumbShadow ?? thumbShadow,
+      );
 }
 
 @immutable
@@ -332,6 +350,14 @@ class SegmentedDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SegmentedDefaults merge(SegmentedDefaults other) => SegmentedDefaults(
+        direction: other.direction ?? direction,
+        scrollButtons: other.scrollButtons ?? scrollButtons,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A single-select control laid out as a strip of segments, with a thumb that

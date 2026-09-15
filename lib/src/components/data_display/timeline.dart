@@ -120,6 +120,18 @@ class TimelineToken {
         railInset: railInset ?? RailInsets.zero,
         defaultColor: t.primary.base,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TimelineToken merge(TimelineToken other) => TimelineToken(
+        tailColor: other.tailColor ?? tailColor,
+        tailWidth: other.tailWidth ?? tailWidth,
+        dotBg: other.dotBg ?? dotBg,
+        dotBorderWidth: other.dotBorderWidth ?? dotBorderWidth,
+        dotSize: other.dotSize ?? dotSize,
+        railInset: other.railInset ?? railInset,
+        itemPaddingBottom: other.itemPaddingBottom ?? itemPaddingBottom,
+        itemPaddingEnd: other.itemPaddingEnd ?? itemPaddingEnd,
+      );
 }
 
 @immutable
@@ -323,6 +335,13 @@ class TimelineDefaults {
 
   /// How the beads are filled.
   final TimelineVariant? variant;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TimelineDefaults merge(TimelineDefaults other) => TimelineDefaults(
+        mode: other.mode ?? mode,
+        orientation: other.orientation ?? orientation,
+        variant: other.variant ?? variant,
+      );
 }
 
 /// A vertical list of events.

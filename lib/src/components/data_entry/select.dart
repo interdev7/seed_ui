@@ -158,6 +158,18 @@ class SelectToken {
         borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
         borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SelectToken merge(SelectToken other) => SelectToken(
+        optionSelectedBg: other.optionSelectedBg ?? optionSelectedBg,
+        optionActiveBg: other.optionActiveBg ?? optionActiveBg,
+        optionPadding: other.optionPadding ?? optionPadding,
+        optionFontSize: other.optionFontSize ?? optionFontSize,
+        selectorBg: other.selectorBg ?? selectorBg,
+        borderRadius: other.borderRadius ?? borderRadius,
+        borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
+        borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
+      );
 }
 
 @immutable
@@ -217,6 +229,15 @@ class SelectDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SelectDefaults merge(SelectDefaults other) => SelectDefaults(
+        variant: other.variant ?? variant,
+        allowClear: other.allowClear ?? allowClear,
+        showSearch: other.showSearch ?? showSearch,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A dropdown for choosing one or more values from a list.

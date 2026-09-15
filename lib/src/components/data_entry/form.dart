@@ -2126,6 +2126,18 @@ class FormDefaults {
 
   /// Whether every field is barred.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  FormDefaults merge(FormDefaults other) => FormDefaults(
+        layout: other.layout ?? layout,
+        maxWidth: other.maxWidth ?? maxWidth,
+        labelWidth: other.labelWidth ?? labelWidth,
+        labelAlign: other.labelAlign ?? labelAlign,
+        colon: other.colon ?? colon,
+        requiredMark: other.requiredMark ?? requiredMark,
+        trigger: other.trigger ?? trigger,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// Every field is an override; a null one falls back to the value derived
@@ -2182,6 +2194,19 @@ class FormToken {
         labelGap: labelGap ?? t.sizeXS,
         messageGap: messageGap ?? t.sizeXXS,
         itemGap: itemGap ?? t.size,
+      );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  FormToken merge(FormToken other) => FormToken(
+        labelColor: other.labelColor ?? labelColor,
+        labelFontSize: other.labelFontSize ?? labelFontSize,
+        errorColor: other.errorColor ?? errorColor,
+        warningColor: other.warningColor ?? warningColor,
+        extraColor: other.extraColor ?? extraColor,
+        messageFontSize: other.messageFontSize ?? messageFontSize,
+        labelGap: other.labelGap ?? labelGap,
+        messageGap: other.messageGap ?? messageGap,
+        itemGap: other.itemGap ?? itemGap,
       );
 }
 

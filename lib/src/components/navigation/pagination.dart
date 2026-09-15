@@ -65,6 +65,14 @@ class PaginationToken {
         fontSize: fontSize ?? t.fontSize,
         borderRadius: borderRadius ?? t.borderRadius,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  PaginationToken merge(PaginationToken other) => PaginationToken(
+        itemActiveColorPrimary:
+            other.itemActiveColorPrimary ?? itemActiveColorPrimary,
+        fontSize: other.fontSize ?? fontSize,
+        borderRadius: other.borderRadius ?? borderRadius,
+      );
 }
 
 @immutable
@@ -122,6 +130,17 @@ class PaginationDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  PaginationDefaults merge(PaginationDefaults other) => PaginationDefaults(
+        showSizeChanger: other.showSizeChanger ?? showSizeChanger,
+        showQuickJumper: other.showQuickJumper ?? showQuickJumper,
+        hideOnSinglePage: other.hideOnSinglePage ?? hideOnSinglePage,
+        showLessItems: other.showLessItems ?? showLessItems,
+        align: other.align ?? align,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A pager for splitting a long list across pages.

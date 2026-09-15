@@ -70,6 +70,17 @@ class PopoverToken {
         minWidth: minWidth ?? 177,
         maxWidth: maxWidth ?? 360,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  PopoverToken merge(PopoverToken other) => PopoverToken(
+        colorBg: other.colorBg ?? colorBg,
+        titleColor: other.titleColor ?? titleColor,
+        contentColor: other.contentColor ?? contentColor,
+        borderRadius: other.borderRadius ?? borderRadius,
+        padding: other.padding ?? padding,
+        minWidth: other.minWidth ?? minWidth,
+        maxWidth: other.maxWidth ?? maxWidth,
+      );
 }
 
 @immutable
@@ -120,6 +131,15 @@ class PopoverDefaults {
 
   /// Whether a tap outside closes them.
   final bool? dismissOnOutsideTap;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  PopoverDefaults merge(PopoverDefaults other) => PopoverDefaults(
+        placement: other.placement ?? placement,
+        trigger: other.trigger ?? trigger,
+        arrow: other.arrow ?? arrow,
+        animation: other.animation ?? animation,
+        dismissOnOutsideTap: other.dismissOnOutsideTap ?? dismissOnOutsideTap,
+      );
 }
 
 /// A floating card with a title and a body.

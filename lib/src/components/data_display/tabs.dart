@@ -206,6 +206,32 @@ class TabsToken {
         verticalItemPadding: verticalItemPadding ??
             EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeXS),
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TabsToken merge(TabsToken other) => TabsToken(
+        inkBarColor: other.inkBarColor ?? inkBarColor,
+        itemColor: other.itemColor ?? itemColor,
+        itemHoverColor: other.itemHoverColor ?? itemHoverColor,
+        itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
+        titleFontSize: other.titleFontSize ?? titleFontSize,
+        titleFontSizeSM: other.titleFontSizeSM ?? titleFontSizeSM,
+        titleFontSizeLG: other.titleFontSizeLG ?? titleFontSizeLG,
+        cardBg: other.cardBg ?? cardBg,
+        cardGutter: other.cardGutter ?? cardGutter,
+        cardPadding: other.cardPadding ?? cardPadding,
+        cardPaddingSM: other.cardPaddingSM ?? cardPaddingSM,
+        cardPaddingLG: other.cardPaddingLG ?? cardPaddingLG,
+        horizontalItemGutter:
+            other.horizontalItemGutter ?? horizontalItemGutter,
+        horizontalItemPadding:
+            other.horizontalItemPadding ?? horizontalItemPadding,
+        horizontalItemPaddingSM:
+            other.horizontalItemPaddingSM ?? horizontalItemPaddingSM,
+        horizontalItemPaddingLG:
+            other.horizontalItemPaddingLG ?? horizontalItemPaddingLG,
+        verticalItemPadding: other.verticalItemPadding ?? verticalItemPadding,
+        fontWeightActive: other.fontWeightActive ?? fontWeightActive,
+      );
 }
 
 /// Fully resolved [TabsToken] — every value non-null.
@@ -501,6 +527,18 @@ class TabsDefaults {
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
   final SoftSize? size;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TabsDefaults merge(TabsDefaults other) => TabsDefaults(
+        type: other.type ?? type,
+        tabPosition: other.tabPosition ?? tabPosition,
+        hideAdd: other.hideAdd ?? hideAdd,
+        animated: other.animated ?? animated,
+        scrollAlign: other.scrollAlign ?? scrollAlign,
+        snap: other.snap ?? snap,
+        contentPosition: other.contentPosition ?? contentPosition,
+        size: other.size ?? size,
+      );
 }
 
 /// A tabbed panel.

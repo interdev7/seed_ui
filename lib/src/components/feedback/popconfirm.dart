@@ -53,6 +53,16 @@ class PopconfirmToken {
         descriptionFontSize: descriptionFontSize ?? t.fontSize,
         barrierColor: barrierColor,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  PopconfirmToken merge(PopconfirmToken other) => PopconfirmToken(
+        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+        padding: other.padding ?? padding,
+        borderRadius: other.borderRadius ?? borderRadius,
+        titleFontSize: other.titleFontSize ?? titleFontSize,
+        descriptionFontSize: other.descriptionFontSize ?? descriptionFontSize,
+        barrierColor: other.barrierColor ?? barrierColor,
+      );
 }
 
 @immutable
@@ -90,6 +100,13 @@ class PopconfirmDefaults {
 
   /// Whether a cancel button is offered.
   final bool? showCancel;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  PopconfirmDefaults merge(PopconfirmDefaults other) => PopconfirmDefaults(
+        placement: other.placement ?? placement,
+        arrow: other.arrow ?? arrow,
+        showCancel: other.showCancel ?? showCancel,
+      );
 }
 
 /// A lightweight confirmation bubble anchored to its trigger.

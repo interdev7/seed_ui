@@ -197,6 +197,21 @@ class DropdownToken {
         itemPadding: itemPadding ?? EdgeInsets.symmetric(horizontal: t.sizeSM),
         barrierColor: barrierColor,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  DropdownToken merge(DropdownToken other) => DropdownToken(
+        menuBg: other.menuBg ?? menuBg,
+        gradient: other.gradient ?? gradient,
+        padding: other.padding ?? padding,
+        borderRadius: other.borderRadius ?? borderRadius,
+        border: other.border ?? border,
+        shadow: other.shadow ?? shadow,
+        gap: other.gap ?? gap,
+        itemHoverBg: other.itemHoverBg ?? itemHoverBg,
+        itemHeight: other.itemHeight ?? itemHeight,
+        itemPadding: other.itemPadding ?? itemPadding,
+        barrierColor: other.barrierColor ?? barrierColor,
+      );
 }
 
 @immutable
@@ -259,6 +274,15 @@ class DropdownDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  DropdownDefaults merge(DropdownDefaults other) => DropdownDefaults(
+        placement: other.placement ?? placement,
+        arrow: other.arrow ?? arrow,
+        closeOnSelect: other.closeOnSelect ?? closeOnSelect,
+        trigger: other.trigger ?? trigger,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A menu that floats from a trigger.

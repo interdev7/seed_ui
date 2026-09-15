@@ -58,6 +58,16 @@ class ModalToken {
         titleFontSize: titleFontSize ?? t.fontSizeLG,
         contentFontSize: contentFontSize ?? t.fontSize,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  ModalToken merge(ModalToken other) => ModalToken(
+        colorBgMask: other.colorBgMask ?? colorBgMask,
+        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+        padding: other.padding ?? padding,
+        borderRadius: other.borderRadius ?? borderRadius,
+        titleFontSize: other.titleFontSize ?? titleFontSize,
+        contentFontSize: other.contentFontSize ?? contentFontSize,
+      );
 }
 
 @immutable

@@ -100,6 +100,23 @@ class CardToken {
         extraColor: extraColor ?? t.colorText,
         borderRadius: borderRadius ?? t.borderRadiusLG,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CardToken merge(CardToken other) => CardToken(
+        headerBg: other.headerBg ?? headerBg,
+        headerFontSize: other.headerFontSize ?? headerFontSize,
+        headerFontSizeSM: other.headerFontSizeSM ?? headerFontSizeSM,
+        headerHeight: other.headerHeight ?? headerHeight,
+        headerHeightSM: other.headerHeightSM ?? headerHeightSM,
+        headerPadding: other.headerPadding ?? headerPadding,
+        headerPaddingSM: other.headerPaddingSM ?? headerPaddingSM,
+        bodyPadding: other.bodyPadding ?? bodyPadding,
+        bodyPaddingSM: other.bodyPaddingSM ?? bodyPaddingSM,
+        actionsBg: other.actionsBg ?? actionsBg,
+        actionsLiMargin: other.actionsLiMargin ?? actionsLiMargin,
+        extraColor: other.extraColor ?? extraColor,
+        borderRadius: other.borderRadius ?? borderRadius,
+      );
 }
 
 /// Fully resolved [CardToken] — every value non-null.
@@ -183,6 +200,14 @@ class CardDefaults {
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
   final SoftSize? size;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CardDefaults merge(CardDefaults other) => CardDefaults(
+        hoverable: other.hoverable ?? hoverable,
+        variant: other.variant ?? variant,
+        type: other.type ?? type,
+        size: other.size ?? size,
+      );
 }
 
 /// A content container.

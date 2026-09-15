@@ -47,6 +47,15 @@ class TreeToken {
         nodeSelectedBg: nodeSelectedBg ?? t.primary.bg,
         borderRadius: borderRadius ?? t.borderRadiusSM,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TreeToken merge(TreeToken other) => TreeToken(
+        titleHeight: other.titleHeight ?? titleHeight,
+        indentSize: other.indentSize ?? indentSize,
+        nodeHoverBg: other.nodeHoverBg ?? nodeHoverBg,
+        nodeSelectedBg: other.nodeSelectedBg ?? nodeSelectedBg,
+        borderRadius: other.borderRadius ?? borderRadius,
+      );
 }
 
 @immutable
@@ -242,6 +251,15 @@ class TreeDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TreeDefaults merge(TreeDefaults other) => TreeDefaults(
+        showLine: other.showLine ?? showLine,
+        showLeafIcon: other.showLeafIcon ?? showLeafIcon,
+        showIcon: other.showIcon ?? showIcon,
+        blockNode: other.blockNode ?? blockNode,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A hierarchical list.

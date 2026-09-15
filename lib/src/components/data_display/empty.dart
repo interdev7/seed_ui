@@ -41,6 +41,14 @@ class EmptyToken {
         colorTextDescription: colorTextDescription ?? t.colorTextTertiary,
         fontSize: fontSize ?? t.fontSize,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  EmptyToken merge(EmptyToken other) => EmptyToken(
+        imageHeight: other.imageHeight ?? imageHeight,
+        colorTextDescription:
+            other.colorTextDescription ?? colorTextDescription,
+        fontSize: other.fontSize ?? fontSize,
+      );
 }
 
 @immutable
@@ -67,6 +75,11 @@ class EmptyDefaults {
 
   /// Which built-in illustration empty states draw.
   final EmptyImage? image;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  EmptyDefaults merge(EmptyDefaults other) => EmptyDefaults(
+        image: other.image ?? image,
+      );
 }
 
 /// An empty-state placeholder. Shows an illustration,

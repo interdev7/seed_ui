@@ -34,6 +34,13 @@ class SortableListToken {
         liftRadius: liftRadius ?? t.borderRadius,
         backgroundColor: backgroundColor,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SortableListToken merge(SortableListToken other) => SortableListToken(
+        liftShadow: other.liftShadow ?? liftShadow,
+        liftRadius: other.liftRadius ?? liftRadius,
+        backgroundColor: other.backgroundColor ?? backgroundColor,
+      );
 }
 
 @immutable
@@ -62,6 +69,13 @@ class SortableListDefaults {
 
   /// Whether rows carry a drag handle.
   final bool? showHandle;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SortableListDefaults merge(SortableListDefaults other) =>
+      SortableListDefaults(
+        direction: other.direction ?? direction,
+        showHandle: other.showHandle ?? showHandle,
+      );
 }
 
 /// A list whose items can be dragged to reorder, with the others sliding

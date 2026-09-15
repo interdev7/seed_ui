@@ -412,6 +412,17 @@ class TourToken {
         travelDuration: travelDuration ?? t.motionDurationSlow,
         travelCurve: travelCurve ?? t.motionEaseInOut,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TourToken merge(TourToken other) => TourToken(
+        width: other.width ?? width,
+        closeBtnSize: other.closeBtnSize ?? closeBtnSize,
+        indicatorSize: other.indicatorSize ?? indicatorSize,
+        maskColor: other.maskColor ?? maskColor,
+        primaryPrevBtnBg: other.primaryPrevBtnBg ?? primaryPrevBtnBg,
+        travelDuration: other.travelDuration ?? travelDuration,
+        travelCurve: other.travelCurve ?? travelCurve,
+      );
 }
 
 @immutable
@@ -451,6 +462,13 @@ class TourDefaults {
 
   /// Whether a step can be dismissed.
   final bool? closable;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TourDefaults merge(TourDefaults other) => TourDefaults(
+        placement: other.placement ?? placement,
+        arrow: other.arrow ?? arrow,
+        closable: other.closable ?? closable,
+      );
 }
 
 /// A guided walk through a screen.

@@ -71,6 +71,18 @@ class InputNumberToken {
         handleHoverColor: handleHoverColor ?? t.primary.base,
         handleBorderColor: handleBorderColor ?? t.colorBorderSecondary,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  InputNumberToken merge(InputNumberToken other) => InputNumberToken(
+        controlWidth: other.controlWidth ?? controlWidth,
+        spinnerWidth: other.spinnerWidth ?? spinnerWidth,
+        handleWidth: other.handleWidth ?? handleWidth,
+        handleBg: other.handleBg ?? handleBg,
+        handleActiveBg: other.handleActiveBg ?? handleActiveBg,
+        handleHoverBg: other.handleHoverBg ?? handleHoverBg,
+        handleHoverColor: other.handleHoverColor ?? handleHoverColor,
+        handleBorderColor: other.handleBorderColor ?? handleBorderColor,
+      );
 }
 
 @immutable
@@ -130,6 +142,15 @@ class InputNumberDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  InputNumberDefaults merge(InputNumberDefaults other) => InputNumberDefaults(
+        controls: other.controls ?? controls,
+        keyboard: other.keyboard ?? keyboard,
+        mode: other.mode ?? mode,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A numeric input with stepper buttons.

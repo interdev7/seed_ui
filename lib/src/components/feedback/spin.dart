@@ -29,6 +29,13 @@ class SpinDefaults {
 
   /// Where the spinner sits over what it covers.
   final SpinPosition? position;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SpinDefaults merge(SpinDefaults other) => SpinDefaults(
+        size: other.size ?? size,
+        delay: other.delay ?? delay,
+        position: other.position ?? position,
+      );
 }
 
 /// Design tokens for [Spin].
@@ -64,6 +71,15 @@ class SpinToken {
         dotSize: dotSize ?? 20.0,
         dotSizeSM: dotSizeSM ?? 14.0,
         dotSizeLG: dotSizeLG ?? 32.0,
+      );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SpinToken merge(SpinToken other) => SpinToken(
+        colorPrimary: other.colorPrimary ?? colorPrimary,
+        colorBgContainer: other.colorBgContainer ?? colorBgContainer,
+        dotSize: other.dotSize ?? dotSize,
+        dotSizeSM: other.dotSizeSM ?? dotSizeSM,
+        dotSizeLG: other.dotSizeLG ?? dotSizeLG,
       );
 }
 

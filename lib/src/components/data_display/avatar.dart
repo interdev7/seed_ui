@@ -83,6 +83,22 @@ class AvatarToken {
         fontFamily: t.fontFamily,
         fontFamilyFallback: t.fontFamilyFallback,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  AvatarToken merge(AvatarToken other) => AvatarToken(
+        containerSize: other.containerSize ?? containerSize,
+        containerSizeSM: other.containerSizeSM ?? containerSizeSM,
+        containerSizeLG: other.containerSizeLG ?? containerSizeLG,
+        textFontSize: other.textFontSize ?? textFontSize,
+        textFontSizeSM: other.textFontSizeSM ?? textFontSizeSM,
+        textFontSizeLG: other.textFontSizeLG ?? textFontSizeLG,
+        colorTextPlaceholder:
+            other.colorTextPlaceholder ?? colorTextPlaceholder,
+        groupBorderColor: other.groupBorderColor ?? groupBorderColor,
+        groupOverlapping: other.groupOverlapping ?? groupOverlapping,
+        borderRadius: other.borderRadius ?? borderRadius,
+        bg: other.bg ?? bg,
+      );
 }
 
 @immutable
@@ -164,6 +180,15 @@ class AvatarDefaults {
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
   final ControlSize? size;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  ///
+  /// A nested `ConfigProvider` says only what it means to change: naming a
+  /// shape next door must not throw away the size named for the whole app.
+  AvatarDefaults merge(AvatarDefaults other) => AvatarDefaults(
+        shape: other.shape ?? shape,
+        size: other.size ?? size,
+      );
 }
 
 /// A component for representing users or objects.

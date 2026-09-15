@@ -368,6 +368,31 @@ class StepsToken {
       scale: scale,
     );
   }
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  StepsToken merge(StepsToken other) => StepsToken(
+        iconSize: other.iconSize ?? iconSize,
+        iconSizeSM: other.iconSizeSM ?? iconSizeSM,
+        iconSizeLG: other.iconSizeLG ?? iconSizeLG,
+        dotSize: other.dotSize ?? dotSize,
+        dotCurrentSize: other.dotCurrentSize ?? dotCurrentSize,
+        railThickness: other.railThickness ?? railThickness,
+        itemGap: other.itemGap ?? itemGap,
+        railInset: other.railInset ?? railInset,
+        contentMaxWidth: other.contentMaxWidth ?? contentMaxWidth,
+        panelPadding: other.panelPadding ?? panelPadding,
+        panelRadius: other.panelRadius ?? panelRadius,
+        panelArrowWidth: other.panelArrowWidth ?? panelArrowWidth,
+        panelMinWidth: other.panelMinWidth ?? panelMinWidth,
+        itemWidth: other.itemWidth ?? itemWidth,
+        itemHeight: other.itemHeight ?? itemHeight,
+        panelWidth: other.panelWidth ?? panelWidth,
+        panelHeight: other.panelHeight ?? panelHeight,
+        railLength: other.railLength ?? railLength,
+        railMinLength: other.railMinLength ?? railMinLength,
+        itemMinWidth: other.itemMinWidth ?? itemMinWidth,
+        arrowColor: other.arrowColor ?? arrowColor,
+      );
 }
 
 @immutable
@@ -637,6 +662,16 @@ class StepsDefaults {
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
   final ControlSize? size;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  StepsDefaults merge(StepsDefaults other) => StepsDefaults(
+        orientation: other.orientation ?? orientation,
+        type: other.type ?? type,
+        variant: other.variant ?? variant,
+        responsive: other.responsive ?? responsive,
+        overflow: other.overflow ?? overflow,
+        size: other.size ?? size,
+      );
 }
 
 /// A progress indicator for a task with stages.

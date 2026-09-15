@@ -40,6 +40,13 @@ class CountdownToken {
         color: color ?? t.colorText,
         fontWeight: fontWeight ?? t.fontWeight,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CountdownToken merge(CountdownToken other) => CountdownToken(
+        fontSize: other.fontSize ?? fontSize,
+        color: other.color ?? color,
+        fontWeight: other.fontWeight ?? fontWeight,
+      );
 }
 
 @immutable
@@ -153,6 +160,11 @@ class CountdownDefaults {
 
   /// Whether time runs down or up.
   final CountdownType? type;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CountdownDefaults merge(CountdownDefaults other) => CountdownDefaults(
+        type: other.type ?? type,
+      );
 }
 
 /// A running count of the time to a moment, or since one.

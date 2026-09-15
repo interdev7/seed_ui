@@ -23,6 +23,12 @@ class SwitchDefaults {
 
   /// Whether switches are barred.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SwitchDefaults merge(SwitchDefaults other) => SwitchDefaults(
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -95,6 +101,20 @@ class SwitchToken {
         handleShadow: handleShadow,
         colorPrimary: colorPrimary ?? t.primary.base,
         colorBg: colorBg ?? t.colorTextQuaternary,
+      );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  SwitchToken merge(SwitchToken other) => SwitchToken(
+        trackHeight: other.trackHeight ?? trackHeight,
+        trackHeightSM: other.trackHeightSM ?? trackHeightSM,
+        trackHeightLG: other.trackHeightLG ?? trackHeightLG,
+        trackMinWidth: other.trackMinWidth ?? trackMinWidth,
+        trackMinWidthSM: other.trackMinWidthSM ?? trackMinWidthSM,
+        handleSize: other.handleSize ?? handleSize,
+        handleSizeSM: other.handleSizeSM ?? handleSizeSM,
+        handleShadow: other.handleShadow ?? handleShadow,
+        colorPrimary: other.colorPrimary ?? colorPrimary,
+        colorBg: other.colorBg ?? colorBg,
       );
 }
 

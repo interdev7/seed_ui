@@ -18,6 +18,11 @@ class CheckboxDefaults {
 
   /// Whether boxes are barred, unless one says otherwise.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CheckboxDefaults merge(CheckboxDefaults other) => CheckboxDefaults(
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -61,6 +66,16 @@ class CheckboxToken {
         colorBorder: colorBorder ?? t.colorBorder,
         colorBgContainer: colorBgContainer ?? t.colorBgContainer,
         fontSize: fontSize ?? t.fontSize,
+      );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CheckboxToken merge(CheckboxToken other) => CheckboxToken(
+        boxSize: other.boxSize ?? boxSize,
+        borderRadius: other.borderRadius ?? borderRadius,
+        colorPrimary: other.colorPrimary ?? colorPrimary,
+        colorBorder: other.colorBorder ?? colorBorder,
+        colorBgContainer: other.colorBgContainer ?? colorBgContainer,
+        fontSize: other.fontSize ?? fontSize,
       );
 }
 
@@ -395,6 +410,13 @@ class CheckboxGroupDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CheckboxGroupDefaults merge(CheckboxGroupDefaults other) =>
+      CheckboxGroupDefaults(
+        direction: other.direction ?? direction,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A set of checkboxes selecting several values from a list.

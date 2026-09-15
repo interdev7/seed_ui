@@ -334,6 +334,14 @@ class ProgressToken {
         lineHeight: lineHeight ?? 8,
         circleSize: circleSize ?? 120,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  ProgressToken merge(ProgressToken other) => ProgressToken(
+        defaultColor: other.defaultColor ?? defaultColor,
+        remainingColor: other.remainingColor ?? remainingColor,
+        lineHeight: other.lineHeight ?? lineHeight,
+        circleSize: other.circleSize ?? circleSize,
+      );
 }
 
 @immutable
@@ -374,6 +382,13 @@ class ProgressDefaults {
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
   final ControlSize? size;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  ProgressDefaults merge(ProgressDefaults other) => ProgressDefaults(
+        showInfo: other.showInfo ?? showInfo,
+        gapPlacement: other.gapPlacement ?? gapPlacement,
+        size: other.size ?? size,
+      );
 }
 
 /// A progress indicator for a task whose completion is known, as a bar or a

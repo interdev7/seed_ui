@@ -644,6 +644,133 @@ void main() {
       });
     });
 
+    testWidgets('a nearer provider keeps what it is silent about', (
+      tester,
+    ) async {
+      // An app names its buttons at the root; a screen inside it wants them
+      // round. Naming `button:` next door used to replace the whole
+      // ButtonDefaults, so the size and the variant from the root were
+      // thrown away — and the buttons came back tiny, outlined and white on
+      // a white page, which reads as "the buttons have gone".
+      late ButtonDefaults? seen;
+      await tester.pumpWidget(
+        ConfigProvider(
+          defaults: const ComponentDefaults(
+            button: ButtonDefaults(
+              size: ControlSize.height(52),
+              variant: ButtonVariant.solid,
+              color: ButtonColor.primary,
+            ),
+          ),
+          child: MaterialApp(
+            home: ConfigProvider(
+              defaults: const ComponentDefaults(
+                button: ButtonDefaults(shape: ButtonShape.circle),
+              ),
+              child: Builder(
+                builder: (context) {
+                  seen = ConfigProvider.defaultsOf<ButtonDefaults>(context);
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(seen?.shape, ButtonShape.circle, reason: 'what it asked for');
+      expect(seen?.variant, ButtonVariant.solid, reason: 'kept from the root');
+      expect(seen?.color, ButtonColor.primary, reason: 'kept from the root');
+      expect(
+        (seen?.size as ExplicitHeight?)?.height,
+        52,
+        reason: 'kept from the root',
+      );
+    });
+
+    testWidgets('and a field it does name is the one that wins', (
+      tester,
+    ) async {
+      late ButtonDefaults? seen;
+      await tester.pumpWidget(
+        ConfigProvider(
+          defaults: const ComponentDefaults(
+            button: ButtonDefaults(variant: ButtonVariant.solid),
+          ),
+          child: MaterialApp(
+            home: ConfigProvider(
+              defaults: const ComponentDefaults(
+                button: ButtonDefaults(variant: ButtonVariant.dashed),
+              ),
+              child: Builder(
+                builder: (context) {
+                  seen = ConfigProvider.defaultsOf<ButtonDefaults>(context);
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(seen?.variant, ButtonVariant.dashed);
+    });
+
+    testWidgets('a provider that names nothing changes nothing', (
+      tester,
+    ) async {
+      late ButtonDefaults? seen;
+      await tester.pumpWidget(
+        ConfigProvider(
+          defaults: const ComponentDefaults(
+            button: ButtonDefaults(variant: ButtonVariant.solid),
+          ),
+          child: MaterialApp(
+            home: ConfigProvider(
+              child: Builder(
+                builder: (context) {
+                  seen = ConfigProvider.defaultsOf<ButtonDefaults>(context);
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(seen?.variant, ButtonVariant.solid);
+    });
+
+    testWidgets('three deep, each adding its own field', (tester) async {
+      late ButtonDefaults? seen;
+      await tester.pumpWidget(
+        ConfigProvider(
+          defaults: const ComponentDefaults(
+            button: ButtonDefaults(variant: ButtonVariant.solid),
+          ),
+          child: ConfigProvider(
+            defaults: const ComponentDefaults(
+              button: ButtonDefaults(color: ButtonColor.primary),
+            ),
+            child: MaterialApp(
+              home: ConfigProvider(
+                defaults: const ComponentDefaults(
+                  button: ButtonDefaults(shape: ButtonShape.round),
+                ),
+                child: Builder(
+                  builder: (context) {
+                    seen = ConfigProvider.defaultsOf<ButtonDefaults>(context);
+                    return const SizedBox();
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(seen?.variant, ButtonVariant.solid);
+      expect(seen?.color, ButtonColor.primary);
+      expect(seen?.shape, ButtonShape.round);
+    });
+
     testWidgets('the nearer provider wins where both name a component',
         (tester) async {
       late ButtonDefaults? seen;

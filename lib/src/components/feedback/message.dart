@@ -76,6 +76,14 @@ class MessageToken {
             EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: t.sizeXS + 1),
         borderRadius: borderRadius ?? t.borderRadiusLG,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  MessageToken merge(MessageToken other) => MessageToken(
+        contentColor: other.contentColor ?? contentColor,
+        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+        padding: other.padding ?? padding,
+        borderRadius: other.borderRadius ?? borderRadius,
+      );
 }
 
 @immutable

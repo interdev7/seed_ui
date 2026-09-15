@@ -81,6 +81,15 @@ class TooltipToken {
             ),
         fontSize: fontSize ?? t.fontSize,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TooltipToken merge(TooltipToken other) => TooltipToken(
+        colorBg: other.colorBg ?? colorBg,
+        colorText: other.colorText ?? colorText,
+        borderRadius: other.borderRadius ?? borderRadius,
+        padding: other.padding ?? padding,
+        fontSize: other.fontSize ?? fontSize,
+      );
 }
 
 @immutable
@@ -113,6 +122,12 @@ class TooltipDefaults {
 
   /// Whether tooltips draw a pointer.
   final bool? arrow;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TooltipDefaults merge(TooltipDefaults other) => TooltipDefaults(
+        placement: other.placement ?? placement,
+        arrow: other.arrow ?? arrow,
+      );
 }
 
 /// A short text hint that surfaces on hover, tap or long-press.

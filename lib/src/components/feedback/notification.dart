@@ -75,6 +75,16 @@ class NotificationToken {
         descriptionFontSize: descriptionFontSize ?? t.fontSize,
         width: width ?? 384,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  NotificationToken merge(NotificationToken other) => NotificationToken(
+        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+        padding: other.padding ?? padding,
+        borderRadius: other.borderRadius ?? borderRadius,
+        titleFontSize: other.titleFontSize ?? titleFontSize,
+        descriptionFontSize: other.descriptionFontSize ?? descriptionFontSize,
+        width: other.width ?? width,
+      );
 }
 
 @immutable

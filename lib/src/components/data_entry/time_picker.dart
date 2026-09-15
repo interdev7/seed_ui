@@ -64,6 +64,16 @@ class TimePickerDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TimePickerDefaults merge(TimePickerDefaults other) => TimePickerDefaults(
+        variant: other.variant ?? variant,
+        allowClear: other.allowClear ?? allowClear,
+        showNow: other.showNow ?? showNow,
+        needConfirm: other.needConfirm ?? needConfirm,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// Per-component design tokens for [TimePicker].
@@ -99,6 +109,14 @@ class TimePickerToken {
         cellHeight: cellHeight ?? t.controlHeight - t.sizeXXS,
         columnWidth: columnWidth ?? t.controlHeightLG * 1.4,
         visibleRows: visibleRows ?? 8,
+      );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TimePickerToken merge(TimePickerToken other) => TimePickerToken(
+        borderRadius: other.borderRadius ?? borderRadius,
+        cellHeight: other.cellHeight ?? cellHeight,
+        columnWidth: other.columnWidth ?? columnWidth,
+        visibleRows: other.visibleRows ?? visibleRows,
       );
 }
 

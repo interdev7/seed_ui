@@ -135,6 +135,15 @@ class TagToken {
         lineHeight: lineHeight ?? 1.5,
         borderRadius: borderRadius ?? t.borderRadiusSM,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TagToken merge(TagToken other) => TagToken(
+        defaultBg: other.defaultBg ?? defaultBg,
+        defaultColor: other.defaultColor ?? defaultColor,
+        fontSize: other.fontSize ?? fontSize,
+        lineHeight: other.lineHeight ?? lineHeight,
+        borderRadius: other.borderRadius ?? borderRadius,
+      );
 }
 
 @immutable
@@ -167,6 +176,12 @@ class TagDefaults {
 
   /// Whether tags carry a close button.
   final bool? closable;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TagDefaults merge(TagDefaults other) => TagDefaults(
+        variant: other.variant ?? variant,
+        closable: other.closable ?? closable,
+      );
 }
 
 /// A small label for categorising or marking content.
@@ -512,6 +527,13 @@ class CheckableTagGroupDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CheckableTagGroupDefaults merge(CheckableTagGroupDefaults other) =>
+      CheckableTagGroupDefaults(
+        multiple: other.multiple ?? multiple,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A set of [CheckableTag]s selecting one or several values.

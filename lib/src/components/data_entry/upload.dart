@@ -193,6 +193,22 @@ class UploadToken {
         cardSize: cardSize ?? 104,
         gap: gap ?? t.sizeXS,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  UploadToken merge(UploadToken other) => UploadToken(
+        dropzoneBorderColor: other.dropzoneBorderColor ?? dropzoneBorderColor,
+        dropzoneActiveBorderColor:
+            other.dropzoneActiveBorderColor ?? dropzoneActiveBorderColor,
+        dropzoneBg: other.dropzoneBg ?? dropzoneBg,
+        dropzoneActiveBg: other.dropzoneActiveBg ?? dropzoneActiveBg,
+        dropzoneRadius: other.dropzoneRadius ?? dropzoneRadius,
+        dropzonePadding: other.dropzonePadding ?? dropzonePadding,
+        itemRadius: other.itemRadius ?? itemRadius,
+        itemHoverBg: other.itemHoverBg ?? itemHoverBg,
+        thumbnailSize: other.thumbnailSize ?? thumbnailSize,
+        cardSize: other.cardSize ?? cardSize,
+        gap: other.gap ?? gap,
+      );
 }
 
 @immutable
@@ -278,6 +294,15 @@ class UploadDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  UploadDefaults merge(UploadDefaults other) => UploadDefaults(
+        variant: other.variant ?? variant,
+        showRemove: other.showRemove ?? showRemove,
+        showRetry: other.showRetry ?? showRetry,
+        showSize: other.showSize ?? showSize,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A file list with a picker trigger, progress per file, and retry and remove

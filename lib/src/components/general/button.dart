@@ -217,6 +217,24 @@ class ButtonToken {
         paddingInlineLG: paddingInlineLG ?? t.size,
         shadow: shadow,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  ButtonToken merge(ButtonToken other) => ButtonToken(
+        borderRadius: other.borderRadius ?? borderRadius,
+        borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
+        borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
+        controlHeight: other.controlHeight ?? controlHeight,
+        controlHeightSM: other.controlHeightSM ?? controlHeightSM,
+        controlHeightLG: other.controlHeightLG ?? controlHeightLG,
+        fontSize: other.fontSize ?? fontSize,
+        fontSizeSM: other.fontSizeSM ?? fontSizeSM,
+        fontSizeLG: other.fontSizeLG ?? fontSizeLG,
+        paddingInline: other.paddingInline ?? paddingInline,
+        paddingInlineSM: other.paddingInlineSM ?? paddingInlineSM,
+        paddingInlineLG: other.paddingInlineLG ?? paddingInlineLG,
+        shadow: other.shadow ?? shadow,
+        fontWeight: other.fontWeight ?? fontWeight,
+      );
 }
 
 @immutable
@@ -300,6 +318,15 @@ class ButtonDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten by the
   /// widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  ButtonDefaults merge(ButtonDefaults other) => ButtonDefaults(
+        variant: other.variant ?? variant,
+        color: other.color ?? color,
+        shape: other.shape ?? shape,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A pressable button with hover, press, loading and disabled states.

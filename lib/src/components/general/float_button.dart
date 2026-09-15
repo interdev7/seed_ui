@@ -513,6 +513,21 @@ class FloatButtonToken {
         motionDuration: motionDuration ?? t.motionDurationSlow,
         curve: curve ?? t.easeOutBack,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  FloatButtonToken merge(FloatButtonToken other) => FloatButtonToken(
+        size: other.size ?? size,
+        sizeSM: other.sizeSM ?? sizeSM,
+        sizeLG: other.sizeLG ?? sizeLG,
+        gap: other.gap ?? gap,
+        labelGap: other.labelGap ?? labelGap,
+        labelTextColor: other.labelTextColor ?? labelTextColor,
+        labelFontSize: other.labelFontSize ?? labelFontSize,
+        borderRadius: other.borderRadius ?? borderRadius,
+        shadow: other.shadow ?? shadow,
+        motionDuration: other.motionDuration ?? motionDuration,
+        curve: other.curve ?? curve,
+      );
 }
 
 @immutable
@@ -595,6 +610,20 @@ class FloatButtonDefaults {
 
   /// Whether tapping an item closes its group.
   final bool? closeOnSelect;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  FloatButtonDefaults merge(FloatButtonDefaults other) => FloatButtonDefaults(
+        shape: other.shape ?? shape,
+        color: other.color ?? color,
+        size: other.size ?? size,
+        layout: other.layout ?? layout,
+        direction: other.direction ?? direction,
+        trigger: other.trigger ?? trigger,
+        labelPlacement: other.labelPlacement ?? labelPlacement,
+        disabled: other.disabled ?? disabled,
+        dismissible: other.dismissible ?? dismissible,
+        closeOnSelect: other.closeOnSelect ?? closeOnSelect,
+      );
 }
 
 /// A button that floats above the page — the round action button that sits in

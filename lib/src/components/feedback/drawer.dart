@@ -55,6 +55,13 @@ class DrawerToken {
         colorBgElevated: colorBgElevated ?? t.colorBgElevated,
         padding: padding ?? EdgeInsets.all(t.sizeLG),
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  DrawerToken merge(DrawerToken other) => DrawerToken(
+        colorBgMask: other.colorBgMask ?? colorBgMask,
+        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+        padding: other.padding ?? padding,
+      );
 }
 
 @immutable

@@ -806,6 +806,17 @@ class TableColumnDefaults {
 
   /// What [TableColumn.ellipsis] falls back to.
   final bool? ellipsis;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TableColumnDefaults merge(TableColumnDefaults other) => TableColumnDefaults(
+        width: other.width ?? width,
+        minWidth: other.minWidth ?? minWidth,
+        flex: other.flex ?? flex,
+        align: other.align ?? align,
+        headerAlign: other.headerAlign ?? headerAlign,
+        fixed: other.fixed ?? fixed,
+        ellipsis: other.ellipsis ?? ellipsis,
+      );
 }
 
 /// One column of a [Table].
@@ -1534,6 +1545,50 @@ class TableToken {
         summaryBg: summaryBg ?? t.colorBgContainer,
         pinnedBg: pinnedBg ?? t.colorBgContainer,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TableToken merge(TableToken other) => TableToken(
+        headerBg: other.headerBg ?? headerBg,
+        headerColor: other.headerColor ?? headerColor,
+        rowHoverBg: other.rowHoverBg ?? rowHoverBg,
+        rowSortedBg: other.rowSortedBg ?? rowSortedBg,
+        rowSelectedBg: other.rowSelectedBg ?? rowSelectedBg,
+        rowSelectedHoverBg: other.rowSelectedHoverBg ?? rowSelectedHoverBg,
+        borderColor: other.borderColor ?? borderColor,
+        cellPaddingBlock: other.cellPaddingBlock ?? cellPaddingBlock,
+        cellPaddingBlockSM: other.cellPaddingBlockSM ?? cellPaddingBlockSM,
+        cellPaddingBlockLG: other.cellPaddingBlockLG ?? cellPaddingBlockLG,
+        cellPaddingInline: other.cellPaddingInline ?? cellPaddingInline,
+        cellPaddingInlineSM: other.cellPaddingInlineSM ?? cellPaddingInlineSM,
+        cellPaddingInlineLG: other.cellPaddingInlineLG ?? cellPaddingInlineLG,
+        footerBg: other.footerBg ?? footerBg,
+        borderRadius: other.borderRadius ?? borderRadius,
+        fontSize: other.fontSize ?? fontSize,
+        columnMinWidth: other.columnMinWidth ?? columnMinWidth,
+        dragShadow: other.dragShadow ?? dragShadow,
+        indentSize: other.indentSize ?? indentSize,
+        pinnedShadowColor: other.pinnedShadowColor ?? pinnedShadowColor,
+        pinnedShadowExtent: other.pinnedShadowExtent ?? pinnedShadowExtent,
+        headerHoverBg: other.headerHoverBg ?? headerHoverBg,
+        headerMarkActiveColor:
+            other.headerMarkActiveColor ?? headerMarkActiveColor,
+        headerMarkColor: other.headerMarkColor ?? headerMarkColor,
+        headerMarkHoverColor:
+            other.headerMarkHoverColor ?? headerMarkHoverColor,
+        sortCaretSize: other.sortCaretSize ?? sortCaretSize,
+        filterIconSize: other.filterIconSize ?? filterIconSize,
+        filterMenuMaxHeight: other.filterMenuMaxHeight ?? filterMenuMaxHeight,
+        filterSearchWidth: other.filterSearchWidth ?? filterSearchWidth,
+        expandIconSize: other.expandIconSize ?? expandIconSize,
+        expandedBg: other.expandedBg ?? expandedBg,
+        pinnedBg: other.pinnedBg ?? pinnedBg,
+        summaryBg: other.summaryBg ?? summaryBg,
+        selectionColumnWidth:
+            other.selectionColumnWidth ?? selectionColumnWidth,
+        resizeHandleWidth: other.resizeHandleWidth ?? resizeHandleWidth,
+        resizeLineColor: other.resizeLineColor ?? resizeLineColor,
+        filterHoverBg: other.filterHoverBg ?? filterHoverBg,
+      );
 }
 
 @immutable
@@ -1642,6 +1697,14 @@ class TableDefaults {
 
   /// Whether a row lights up under the pointer.
   final bool? rowHoverable;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  TableDefaults merge(TableDefaults other) => TableDefaults(
+        size: other.size ?? size,
+        bordered: other.bordered ?? bordered,
+        showHeader: other.showHeader ?? showHeader,
+        rowHoverable: other.rowHoverable ?? rowHoverable,
+      );
 }
 
 /// Rows and columns, with a heading.

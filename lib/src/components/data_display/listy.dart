@@ -316,6 +316,13 @@ class ListyDefaults {
 
   /// How the list behaves under a finger.
   final ScrollPhysics? physics;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  ListyDefaults merge(ListyDefaults other) => ListyDefaults(
+        sticky: other.sticky ?? sticky,
+        padding: other.padding ?? padding,
+        physics: other.physics ?? physics,
+      );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -339,6 +346,12 @@ class ListyToken {
   _ResolvedListyToken _resolve(Token t) => _ResolvedListyToken(
         itemPaddingBlock: itemPaddingBlock ?? t.sizeSM,
         itemPaddingInline: itemPaddingInline ?? t.size,
+      );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  ListyToken merge(ListyToken other) => ListyToken(
+        itemPaddingBlock: other.itemPaddingBlock ?? itemPaddingBlock,
+        itemPaddingInline: other.itemPaddingInline ?? itemPaddingInline,
       );
 }
 

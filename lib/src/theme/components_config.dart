@@ -223,54 +223,144 @@ class ComponentsConfig {
   /// Overrides applied to every [Upload] under this provider.
   final UploadToken? upload;
 
-  /// This config with [other] laid over it: every slot [other] names wins, the
-  /// rest are kept.
+  /// This config with [other] laid over it, one *field* at a time.
   ///
-  /// How a nested [ConfigProvider] inherits — one that speaks about a single
-  /// component leaves every other component as the provider above it had it,
-  /// rather than resetting the lot to the defaults.
+  /// How a nested [ConfigProvider] inherits. Not slot by slot: naming
+  /// `button:` at all used to replace the whole `ButtonToken` above it, so
+  /// asking next door for a different radius threw away the height the app
+  /// had set. A provider says what it means to change, and keeps everything
+  /// it is silent about — the other components, and the other fields of the
+  /// one it did name.
   ComponentsConfig merge(ComponentsConfig other) => ComponentsConfig(
-        alert: other.alert ?? alert,
-        avatar: other.avatar ?? avatar,
-        badge: other.badge ?? badge,
-        button: other.button ?? button,
-        card: other.card ?? card,
-        checkbox: other.checkbox ?? checkbox,
-        collapse: other.collapse ?? collapse,
-        countdown: other.countdown ?? countdown,
-        drawer: other.drawer ?? drawer,
-        dropdown: other.dropdown ?? dropdown,
-        empty: other.empty ?? empty,
-        floatButton: other.floatButton ?? floatButton,
-        form: other.form ?? form,
-        input: other.input ?? input,
-        inputNumber: other.inputNumber ?? inputNumber,
-        listy: other.listy ?? listy,
-        message: other.message ?? message,
-        modal: other.modal ?? modal,
-        notification: other.notification ?? notification,
-        pagination: other.pagination ?? pagination,
-        popconfirm: other.popconfirm ?? popconfirm,
-        popover: other.popover ?? popover,
-        progress: other.progress ?? progress,
-        radio: other.radio ?? radio,
-        ribbon: other.ribbon ?? ribbon,
-        result: other.result ?? result,
-        segmented: other.segmented ?? segmented,
-        select: other.select ?? select,
-        slider: other.slider ?? slider,
-        sortableList: other.sortableList ?? sortableList,
-        spin: other.spin ?? spin,
-        steps: other.steps ?? steps,
-        switchToken: other.switchToken ?? switchToken,
-        table: other.table ?? table,
-        tabs: other.tabs ?? tabs,
-        tag: other.tag ?? tag,
-        timeline: other.timeline ?? timeline,
-        tour: other.tour ?? tour,
-        tooltip: other.tooltip ?? tooltip,
-        tree: other.tree ?? tree,
-        upload: other.upload ?? upload,
+        alert: alert == null || other.alert == null
+            ? (other.alert ?? alert)
+            : alert!.merge(other.alert!),
+        avatar: avatar == null || other.avatar == null
+            ? (other.avatar ?? avatar)
+            : avatar!.merge(other.avatar!),
+        badge: badge == null || other.badge == null
+            ? (other.badge ?? badge)
+            : badge!.merge(other.badge!),
+        button: button == null || other.button == null
+            ? (other.button ?? button)
+            : button!.merge(other.button!),
+        card: card == null || other.card == null
+            ? (other.card ?? card)
+            : card!.merge(other.card!),
+        checkbox: checkbox == null || other.checkbox == null
+            ? (other.checkbox ?? checkbox)
+            : checkbox!.merge(other.checkbox!),
+        collapse: collapse == null || other.collapse == null
+            ? (other.collapse ?? collapse)
+            : collapse!.merge(other.collapse!),
+        countdown: countdown == null || other.countdown == null
+            ? (other.countdown ?? countdown)
+            : countdown!.merge(other.countdown!),
+        drawer: drawer == null || other.drawer == null
+            ? (other.drawer ?? drawer)
+            : drawer!.merge(other.drawer!),
+        datePicker: datePicker == null || other.datePicker == null
+            ? (other.datePicker ?? datePicker)
+            : datePicker!.merge(other.datePicker!),
+        timePicker: timePicker == null || other.timePicker == null
+            ? (other.timePicker ?? timePicker)
+            : timePicker!.merge(other.timePicker!),
+        dropdown: dropdown == null || other.dropdown == null
+            ? (other.dropdown ?? dropdown)
+            : dropdown!.merge(other.dropdown!),
+        empty: empty == null || other.empty == null
+            ? (other.empty ?? empty)
+            : empty!.merge(other.empty!),
+        floatButton: floatButton == null || other.floatButton == null
+            ? (other.floatButton ?? floatButton)
+            : floatButton!.merge(other.floatButton!),
+        form: form == null || other.form == null
+            ? (other.form ?? form)
+            : form!.merge(other.form!),
+        input: input == null || other.input == null
+            ? (other.input ?? input)
+            : input!.merge(other.input!),
+        inputNumber: inputNumber == null || other.inputNumber == null
+            ? (other.inputNumber ?? inputNumber)
+            : inputNumber!.merge(other.inputNumber!),
+        listy: listy == null || other.listy == null
+            ? (other.listy ?? listy)
+            : listy!.merge(other.listy!),
+        message: message == null || other.message == null
+            ? (other.message ?? message)
+            : message!.merge(other.message!),
+        modal: modal == null || other.modal == null
+            ? (other.modal ?? modal)
+            : modal!.merge(other.modal!),
+        notification: notification == null || other.notification == null
+            ? (other.notification ?? notification)
+            : notification!.merge(other.notification!),
+        pagination: pagination == null || other.pagination == null
+            ? (other.pagination ?? pagination)
+            : pagination!.merge(other.pagination!),
+        popconfirm: popconfirm == null || other.popconfirm == null
+            ? (other.popconfirm ?? popconfirm)
+            : popconfirm!.merge(other.popconfirm!),
+        popover: popover == null || other.popover == null
+            ? (other.popover ?? popover)
+            : popover!.merge(other.popover!),
+        progress: progress == null || other.progress == null
+            ? (other.progress ?? progress)
+            : progress!.merge(other.progress!),
+        radio: radio == null || other.radio == null
+            ? (other.radio ?? radio)
+            : radio!.merge(other.radio!),
+        ribbon: ribbon == null || other.ribbon == null
+            ? (other.ribbon ?? ribbon)
+            : ribbon!.merge(other.ribbon!),
+        result: result == null || other.result == null
+            ? (other.result ?? result)
+            : result!.merge(other.result!),
+        segmented: segmented == null || other.segmented == null
+            ? (other.segmented ?? segmented)
+            : segmented!.merge(other.segmented!),
+        select: select == null || other.select == null
+            ? (other.select ?? select)
+            : select!.merge(other.select!),
+        slider: slider == null || other.slider == null
+            ? (other.slider ?? slider)
+            : slider!.merge(other.slider!),
+        sortableList: sortableList == null || other.sortableList == null
+            ? (other.sortableList ?? sortableList)
+            : sortableList!.merge(other.sortableList!),
+        spin: spin == null || other.spin == null
+            ? (other.spin ?? spin)
+            : spin!.merge(other.spin!),
+        steps: steps == null || other.steps == null
+            ? (other.steps ?? steps)
+            : steps!.merge(other.steps!),
+        switchToken: switchToken == null || other.switchToken == null
+            ? (other.switchToken ?? switchToken)
+            : switchToken!.merge(other.switchToken!),
+        table: table == null || other.table == null
+            ? (other.table ?? table)
+            : table!.merge(other.table!),
+        tabs: tabs == null || other.tabs == null
+            ? (other.tabs ?? tabs)
+            : tabs!.merge(other.tabs!),
+        tag: tag == null || other.tag == null
+            ? (other.tag ?? tag)
+            : tag!.merge(other.tag!),
+        timeline: timeline == null || other.timeline == null
+            ? (other.timeline ?? timeline)
+            : timeline!.merge(other.timeline!),
+        tour: tour == null || other.tour == null
+            ? (other.tour ?? tour)
+            : tour!.merge(other.tour!),
+        tooltip: tooltip == null || other.tooltip == null
+            ? (other.tooltip ?? tooltip)
+            : tooltip!.merge(other.tooltip!),
+        tree: tree == null || other.tree == null
+            ? (other.tree ?? tree)
+            : tree!.merge(other.tree!),
+        upload: upload == null || other.upload == null
+            ? (other.upload ?? upload)
+            : upload!.merge(other.upload!),
       );
 
   /// Fast lookup for a specific component token type [T].

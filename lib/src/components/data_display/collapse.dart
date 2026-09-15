@@ -69,6 +69,15 @@ class CollapseToken {
         contentPadding: contentPadding ?? EdgeInsets.all(t.size),
         borderRadius: borderRadius ?? t.borderRadiusLG,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CollapseToken merge(CollapseToken other) => CollapseToken(
+        headerBg: other.headerBg ?? headerBg,
+        headerPadding: other.headerPadding ?? headerPadding,
+        contentBg: other.contentBg ?? contentBg,
+        contentPadding: other.contentPadding ?? contentPadding,
+        borderRadius: other.borderRadius ?? borderRadius,
+      );
 }
 
 /// Fully resolved [CollapseToken] — every value non-null.
@@ -175,6 +184,16 @@ class CollapseDefaults {
   /// Nearer than `ConfigProvider.componentSize`, so this wins where both
   /// are set: small buttons on an otherwise normal screen.
   final SoftSize? size;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  CollapseDefaults merge(CollapseDefaults other) => CollapseDefaults(
+        accordion: other.accordion ?? accordion,
+        bordered: other.bordered ?? bordered,
+        ghost: other.ghost ?? ghost,
+        expandIconPosition: other.expandIconPosition ?? expandIconPosition,
+        collapsible: other.collapsible ?? collapsible,
+        size: other.size ?? size,
+      );
 }
 
 /// A set of collapsible panels.

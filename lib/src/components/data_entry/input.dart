@@ -245,6 +245,30 @@ class InputToken {
         fontSizeSM: fontSizeSM ?? t.fontSizeSM,
         fontSizeLG: fontSizeLG ?? t.fontSizeLG,
       );
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  InputToken merge(InputToken other) => InputToken(
+        colorBorder: other.colorBorder ?? colorBorder,
+        activeBorderColor: other.activeBorderColor ?? activeBorderColor,
+        hoverBorderColor: other.hoverBorderColor ?? hoverBorderColor,
+        colorBgContainer: other.colorBgContainer ?? colorBgContainer,
+        colorText: other.colorText ?? colorText,
+        colorTextPlaceholder:
+            other.colorTextPlaceholder ?? colorTextPlaceholder,
+        focusRing: other.focusRing ?? focusRing,
+        paddingInline: other.paddingInline ?? paddingInline,
+        paddingInlineSM: other.paddingInlineSM ?? paddingInlineSM,
+        paddingInlineLG: other.paddingInlineLG ?? paddingInlineLG,
+        paddingBlock: other.paddingBlock ?? paddingBlock,
+        paddingBlockSM: other.paddingBlockSM ?? paddingBlockSM,
+        paddingBlockLG: other.paddingBlockLG ?? paddingBlockLG,
+        borderRadius: other.borderRadius ?? borderRadius,
+        borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
+        borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
+        fontSize: other.fontSize ?? fontSize,
+        fontSizeSM: other.fontSizeSM ?? fontSizeSM,
+        fontSizeLG: other.fontSizeLG ?? fontSizeLG,
+      );
 }
 
 @immutable
@@ -318,6 +342,13 @@ class InputDefaults {
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten in turn by
   /// the widget's own word.
   final bool? disabled;
+
+  /// This one with [other]'s fields laid over it, one field at a time.
+  InputDefaults merge(InputDefaults other) => InputDefaults(
+        allowClear: other.allowClear ?? allowClear,
+        size: other.size ?? size,
+        disabled: other.disabled ?? disabled,
+      );
 }
 
 /// A single- or multi-line text field with the kit's styling: a bordered box

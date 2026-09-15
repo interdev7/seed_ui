@@ -27,7 +27,7 @@ enum EmptySlot {
   table,
 }
 
-/// The last word on a derived token set — see [ThemeData.refine].
+/// The last word on a derived token set — see [ThemeData.refineTokens].
 typedef TokenRefinement = Token Function(Token derived);
 
 /// Changes the seed a theme is about to be derived from.
@@ -67,7 +67,7 @@ class ThemeData {
     SeedToken? token,
     bool? dark,
     this.components = const ComponentsConfig(),
-    this.refine,
+    this.refineTokens,
     this.refineSeed,
   })  : _seed = token,
         _dark = dark,
@@ -77,7 +77,7 @@ class ThemeData {
             _seeded(token ?? const SeedToken(), refineSeed),
             dark: dark ?? false,
           ),
-          refine,
+          refineTokens,
         );
 
   /// Wraps an already-derived token set.
@@ -88,7 +88,7 @@ class ThemeData {
       : _seed = null,
         _dark = null,
         _readyMade = true,
-        refine = null,
+        refineTokens = null,
         refineSeed = null;
 
   const ThemeData._merged({
@@ -97,15 +97,15 @@ class ThemeData {
     required SeedToken? seed,
     required bool? dark,
     required bool readyMade,
-    required this.refine,
+    required this.refineTokens,
     required this.refineSeed,
   })  : _seed = seed,
         _dark = dark,
         _readyMade = readyMade;
 
-  /// Applies [refine] to a freshly derived token set.
-  static Token _refined(Token derived, TokenRefinement? refine) =>
-      refine == null ? derived : refine(derived);
+  /// Applies [refineTokens] to a freshly derived token set.
+  static Token _refined(Token derived, TokenRefinement? refineTokens) =>
+      refineTokens == null ? derived : refineTokens(derived);
 
   /// Applies [refineSeed] to the seed about to be derived from.
   static SeedToken _seeded(SeedToken seed, SeedRefinement? refineSeed) =>
@@ -120,10 +120,14 @@ class ThemeData {
   /// The last word on the derived tokens: values a design names outright
   /// rather than deriving.
   ///
+  /// The second half of a pair. [refineSeed] runs *before* the palette is
+  /// generated and changes what it is generated from; this runs *after* and
+  /// changes what came out.
+  ///
   /// ```dart
   /// ThemeData(
   ///   token: const SeedToken(colorPrimary: brand),
-  ///   refine: (t) => t.copyWith(colorTextQuaternary: disabledInk),
+  ///   refineTokens: (t) => t.copyWith(colorTextQuaternary: disabledInk),
   /// )
   /// ```
   ///
@@ -137,7 +141,7 @@ class ThemeData {
   /// Unlike [ThemeData.raw] this survives inheritance: a nested provider that
   /// flips the brightness re-derives from the seed above it and this is
   /// applied again, to the new tokens.
-  final TokenRefinement? refine;
+  final TokenRefinement? refineTokens;
 
   /// The seed this theme is derived from, changed before the deriving.
   ///
@@ -157,11 +161,13 @@ class ThemeData {
   /// ```
   ///
   /// It runs on whatever seed is in force, so no [BuildContext] is needed to
-  /// reach the one above. [refine] is its counterpart on the other side of
-  /// the deriving: this changes what the palette is generated *from*, that
+  /// reach the one above.
+  ///
+  /// The first half of a pair. This runs *before* the palette is generated
+  /// and changes what it is generated from; [refineTokens] runs *after* and
   /// changes what came out.
   ///
-  /// Like [refine] it survives inheritance — a subtree asked to be yellow
+  /// Like [refineTokens] it survives inheritance — a subtree asked to be yellow
   /// stays yellow through the providers inside it.
   final SeedRefinement? refineSeed;
 
@@ -195,7 +201,7 @@ class ThemeData {
     // A refinement is a statement about the tokens, so it outlives a
     // re-derivation: the nested theme's own if it made one, else the one it
     // inherits, applied afresh to whatever was derived.
-    final refinement = refine ?? parent.refine;
+    final refinement = refineTokens ?? parent.refineTokens;
     // A seed refinement is a statement about the seed, and outlives a
     // re-derivation the same way.
     final seeding = refineSeed ?? parent.refineSeed;
@@ -224,7 +230,7 @@ class ThemeData {
       seed: _seed ?? parent._seed,
       dark: _dark ?? parent._dark,
       readyMade: _readyMade,
-      refine: refinement,
+      refineTokens: refinement,
       refineSeed: seeding,
     );
   }

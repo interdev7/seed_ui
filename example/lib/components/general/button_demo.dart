@@ -206,56 +206,57 @@ class _Ink extends StatelessWidget {
   const _Ink();
 
   /// A pair of buttons under one brand colour, so the ink can be compared.
-  Widget _brand(String says, Color brand, {TokenRefinement? refine}) => Builder(
-    builder: (context) {
-      final t = context.softToken;
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ConfigProvider(
-              // `refineSeed` rather than `token:`: it is handed the seed
-              // already in force, so naming a colour changes the colour and
-              // keeps the font, the radii and everything else the app set.
-              theme: ThemeData(
-                refineSeed: (seed) => seed.copyWith(colorPrimary: brand),
-                refine: refine,
-              ),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Button(
-                    variant: ButtonVariant.solid,
-                    color: ButtonColor.primary,
-                    icon: const Icon(Icons.bolt),
-                    onPressed: () {},
-                    child: const Text('Pay now'),
+  Widget _brand(String says, Color brand, {TokenRefinement? refineTokens}) =>
+      Builder(
+        builder: (context) {
+          final t = context.softToken;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ConfigProvider(
+                  // `refineSeed` rather than `token:`: it is handed the seed
+                  // already in force, so naming a colour changes the colour and
+                  // keeps the font, the radii and everything else the app set.
+                  theme: ThemeData(
+                    refineSeed: (seed) => seed.copyWith(colorPrimary: brand),
+                    refineTokens: refineTokens,
                   ),
-                  Button(
-                    variant: ButtonVariant.outlined,
-                    color: ButtonColor.primary,
-                    onPressed: () {},
-                    child: const Text('Later'),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Button(
+                        variant: ButtonVariant.solid,
+                        color: ButtonColor.primary,
+                        icon: const Icon(Icons.bolt),
+                        onPressed: () {},
+                        child: const Text('Pay now'),
+                      ),
+                      Button(
+                        variant: ButtonVariant.outlined,
+                        color: ButtonColor.primary,
+                        onPressed: () {},
+                        child: const Text('Later'),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  says,
+                  style: TextStyle(
+                    fontSize: t.fontSizeSM,
+                    color: t.colorTextSecondary,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              says,
-              style: TextStyle(
-                fontSize: t.fontSizeSM,
-                color: t.colorTextSecondary,
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       );
-    },
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -273,10 +274,10 @@ class _Ink extends StatelessWidget {
         _brand('colorPrimary: #1677FF — dark fill, white words', _blue),
         _brand('colorPrimary: #FFD500 — light fill, black words', _yellow),
         _brand(
-          'refine: (t) => t.copyWith(primary: t.primary.withInk(white)) — '
+          'refineTokens: (t) => t.copyWith(primary: t.primary.withInk(white)) — '
           'the arithmetic overruled, for everything drawn on primary',
           _yellow,
-          refine: (t) => t.copyWith(primary: t.primary.withInk(_white)),
+          refineTokens: (t) => t.copyWith(primary: t.primary.withInk(_white)),
         ),
         Text(
           'And for one label alone, say it on the label: a style on the Text '

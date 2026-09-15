@@ -836,10 +836,10 @@ void _refinementTests() {
   group('a value the design names outright', () {
     const ink = Color(0xFF9CA3AF);
 
-    test('refine has the last word on a derived token', () {
+    test('refineTokens has the last word on a derived token', () {
       final theme = ThemeData(
         token: const SeedToken(colorPrimary: Color(0xFFEB2F96)),
-        refine: (t) => t.copyWith(colorTextQuaternary: ink),
+        refineTokens: (t) => t.copyWith(colorTextQuaternary: ink),
       );
       expect(theme.token.colorTextQuaternary, ink);
       // And nothing else moved with it.
@@ -851,16 +851,18 @@ void _refinementTests() {
     });
 
     test('it is told which way the lights are, so one line names both', () {
-      Token refine(Token t) => t.copyWith(
+      Token refineTokens(Token t) => t.copyWith(
             colorTextQuaternary:
                 t.isDark ? const Color(0xFF4F4F4F) : const Color(0xFFBFBFBF),
           );
       expect(
-        ThemeData(refine: refine).token.colorTextQuaternary,
+        ThemeData(refineTokens: refineTokens).token.colorTextQuaternary,
         const Color(0xFFBFBFBF),
       );
       expect(
-        ThemeData(dark: true, refine: refine).token.colorTextQuaternary,
+        ThemeData(dark: true, refineTokens: refineTokens)
+            .token
+            .colorTextQuaternary,
         const Color(0xFF4F4F4F),
       );
     });
@@ -872,7 +874,7 @@ void _refinementTests() {
         ConfigProvider(
           theme: ThemeData(
             token: const SeedToken(colorPrimary: Color(0xFFEB2F96)),
-            refine: (t) => t.copyWith(colorTextQuaternary: ink),
+            refineTokens: (t) => t.copyWith(colorTextQuaternary: ink),
           ),
           child: ConfigProvider(
             theme: ThemeData(dark: true),
@@ -903,12 +905,12 @@ void _refinementTests() {
           // refinement it is actually decides something.
           theme: ThemeData(
             token: const SeedToken(colorPrimary: Color(0xFFEB2F96)),
-            refine: (t) => t.copyWith(colorTextQuaternary: ink),
+            refineTokens: (t) => t.copyWith(colorTextQuaternary: ink),
           ),
           child: ConfigProvider(
             theme: ThemeData(
               dark: true,
-              refine: (t) => t.copyWith(
+              refineTokens: (t) => t.copyWith(
                 colorTextQuaternary: const Color(0xFF112233),
               ),
             ),
@@ -929,7 +931,7 @@ void _refinementTests() {
       await tester.pumpWidget(
         ConfigProvider(
           theme: ThemeData(
-            refine: (t) => t.copyWith(colorTextQuaternary: ink),
+            refineTokens: (t) => t.copyWith(colorTextQuaternary: ink),
           ),
           child: const MaterialApp(
             home: Scaffold(

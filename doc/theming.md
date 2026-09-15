@@ -83,13 +83,20 @@ and never constructed by hand.
 
 ### Naming one outright
 
+Two hooks sit either side of the deriving, and they are a pair:
+
+| Hook | When | What it is handed |
+| --- | --- | --- |
+| `refineSeed` | before | the seed the palette is about to be generated from |
+| `refineTokens` | after | the tokens that came out of it |
+
 Some values a design states rather than derives — the ink a disabled label is
-written in, most often. `refine` has the last word, after the deriving:
+written in, most often. `refineTokens` has the last word, after the deriving:
 
 ```dart
 ThemeData(
   token: const SeedToken(colorPrimary: brand),
-  refine: (t) => t.copyWith(colorTextQuaternary: disabledInk),
+  refineTokens: (t) => t.copyWith(colorTextQuaternary: disabledInk),
 )
 ```
 
@@ -101,11 +108,11 @@ be both, so a theme that named it in the seeds would look right in the light
 and, in the dark, print its disabled labels at the same weight as its live
 ones.
 
-Which is why `refine` is handed the derived tokens rather than a bare list of
+Which is why `refineTokens` is handed the derived tokens rather than a bare list of
 values: it can read `t.isDark` and name both in one line.
 
 ```dart
-refine: (t) => t.copyWith(
+refineTokens: (t) => t.copyWith(
   colorTextQuaternary: t.isDark ? const Color(0xFF4F4F4F) : const Color(0xFFBFBFBF),
 ),
 ```
@@ -174,7 +181,7 @@ aside:
 ```dart
 ThemeData(
   token: const SeedToken(colorPrimary: Color(0xFFFFD500)),
-  refine: (t) => t.copyWith(primary: t.primary.withInk(const Color(0xFFFFFFFF))),
+  refineTokens: (t) => t.copyWith(primary: t.primary.withInk(const Color(0xFFFFFFFF))),
 )
 ```
 
@@ -561,8 +568,8 @@ ConfigProvider(
 )
 ```
 
-It is [`refine`](#naming-one-outright)'s counterpart on the other side of the
-deriving: `refineSeed` changes what the palette is generated *from*, `refine`
+It is [`refineTokens`](#naming-one-outright)'s counterpart on the other side of the
+deriving: `refineSeed` changes what the palette is generated *from*, `refineTokens`
 changes what came out. Both survive inheritance — a subtree asked to be yellow
 stays yellow through the providers inside it, and the nearer one wins where
 both speak.

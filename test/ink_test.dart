@@ -84,7 +84,7 @@ void main() {
         ConfigProvider(
           theme: ThemeData(
             token: const SeedToken(colorPrimary: Color(0xFFFFD500)),
-            refine: (t) => t.copyWith(primary: t.primary.withInk(_white)),
+            refineTokens: (t) => t.copyWith(primary: t.primary.withInk(_white)),
           ),
           child: MaterialApp(
             home: Scaffold(

@@ -96,7 +96,7 @@ void main() {
     });
 
     testWidgets('survives a provider nested inside it', (tester) async {
-      // Like `refine`: a subtree asked to be yellow stays yellow.
+      // Like `refineTokens`: a subtree asked to be yellow stays yellow.
       final token = await _tokenUnder(
         tester,
         ConfigProvider(
@@ -167,14 +167,15 @@ void main() {
       expect(token.primary.base, green);
     });
 
-    testWidgets('runs before the palette, refine after it', (tester) async {
+    testWidgets('runs before the palette, refineTokens after it',
+        (tester) async {
       const ink = Color(0xFF123456);
       final token = await _tokenUnder(
         tester,
         ConfigProvider(
           theme: ThemeData(
             refineSeed: (seed) => seed.copyWith(colorPrimary: _brand),
-            refine: (t) => t.copyWith(colorTextQuaternary: ink),
+            refineTokens: (t) => t.copyWith(colorTextQuaternary: ink),
           ),
           child: const TestReader(),
         ),

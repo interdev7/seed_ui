@@ -508,7 +508,7 @@ class Token {
   /// with the lights. Where a design names it outright rather than deriving
   /// it, name it here, where it sits beside the surface it is read on.
   ///
-  /// Handed to `ThemeData(refine: …)` this survives inheritance; handed to
+  /// Handed to `ThemeData(refineTokens: …)` this survives inheritance; handed to
   /// `ThemeData.raw` it is final.
   Token copyWith({
     SeedToken? seed,

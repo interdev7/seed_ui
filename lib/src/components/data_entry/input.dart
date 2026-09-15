@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
 import '../general/compact.dart';
 
@@ -1327,7 +1328,8 @@ class _SearchButtonState extends State<_SearchButton> {
         : _hovered
             ? token.primary.hover
             : token.primary.base;
-    final fg = enabled ? const Color(0xFFFFFFFF) : token.colorTextQuaternary;
+    // The ink the fill asks for, the button being solid in the brand colour.
+    final fg = enabled ? inkOn(fill) : token.colorTextQuaternary;
 
     final glyph = widget.loading
         ? SizedBox(

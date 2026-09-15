@@ -408,7 +408,7 @@ export 'src/theme/design_token.dart'
         Token;
 export 'src/theme/material_theme.dart'
     show MaterialThemeFromThemeData, MaterialThemeFromToken;
-export 'src/theme/palette.dart' show generate;
+export 'src/theme/palette.dart' show generate, inkOn;
 export 'src/utils/date_format.dart'
     show
         DateFields,

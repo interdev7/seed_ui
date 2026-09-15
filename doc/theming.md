@@ -129,11 +129,57 @@ color stays recognisable whether it is a fill, an outline or a label:
 | `border`, `borderHover`           | Outlines                                  |
 | `hover`, `base`, `active`         | Interactive fills, keyed to pointer state |
 | `text`, `textHover`, `textActive` | Colored labels                            |
+| `onBase`                          | Ink for words drawn **on** `base`         |
 
 ```dart
 final token = context.softToken;
 Container(color: token.error.bg, child: Text('!', style: TextStyle(color: token.error.text)));
 ```
+
+#### The ink on a solid fill
+
+`onBase` is what a solid button's label, a solid tag's words and the tick in a
+ticked box are written in. It is worked out from `base` — black or white,
+whichever reads on it — so a yellow or a lime brand gets legible words without
+being asked:
+
+```dart
+ConfigProvider(
+  theme: ThemeData(token: const SeedToken(colorPrimary: Color(0xFFFFD500))),
+  child: ...,   // solid buttons write themselves in black
+)
+```
+
+The rule is Flutter's own, the threshold behind
+`ThemeData.estimateBrightnessForColor`, rather than a bare contrast ratio:
+contrast alone puts black on the default blue, which is legible arithmetic and
+not what anyone draws.
+
+A colour named on the spot gets the same treatment, which is why the rule sits
+on the colour group rather than beside `colorPrimary` — there is no theme slot
+a `ButtonColor(Color(0xFFFFD500))` could look an ink up in:
+
+```dart
+Button(
+  color: const ButtonColor(Color(0xFFFFD500)),
+  variant: ButtonVariant.solid,
+  onPressed: _pay,
+  child: const Text('Pay'),   // black, unasked
+)
+```
+
+Where a brand guide says otherwise, name the ink and the arithmetic stands
+aside:
+
+```dart
+ThemeData(
+  token: const SeedToken(colorPrimary: Color(0xFFFFD500)),
+  refine: (t) => t.copyWith(primary: t.primary.withInk(const Color(0xFFFFFFFF))),
+)
+```
+
+`inkOn(fill)` is exported for a widget of your own that paints on a brand
+colour.
 
 ### Neutrals
 

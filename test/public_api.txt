@@ -369,6 +369,7 @@ daysInMonth
 formatDate
 formatTime
 generate
+inkOn
 isSameDay
 isSameMonth
 message

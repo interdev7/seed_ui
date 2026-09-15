@@ -7,6 +7,7 @@ import '../../icons/icons.dart';
 import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 import '../../utils/date_format.dart';
 import '../../utils/popover.dart';
 import '../../utils/size_resolver.dart';
@@ -2145,7 +2146,8 @@ class _CellState extends State<_Cell> {
     if (widget.disabled) {
       text = t.colorTextQuaternary;
     } else if (widget.chosen) {
-      text = const Color(0xFFFFFFFF);
+      // Written on the primary fill, so it takes the ink that fill asks for.
+      text = inkOn(t.primary.base);
     } else if (widget.outside) {
       text = t.colorTextQuaternary;
     } else {

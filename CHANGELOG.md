@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.25.0
 
+### Added
+
+- **A brand colour now brings its own ink.** `ColorGroup.onBase` is what a
+  solid button's label, a solid tag's words, a ticked box's tick, a chosen
+  day, a switch's inside label and a solid radio button are written in —
+  black or white, whichever reads on that fill, worked out from the fill
+  itself. A yellow or a lime brand gets legible words without being asked;
+  before this the white was written into each widget and there was no token
+  to move it. `inkOn(fill)` is exported for a widget of your own.
+
+  The rule is Flutter's own — the threshold behind
+  `ThemeData.estimateBrightnessForColor` — not a bare contrast ratio, which
+  would put black on the default blue. A colour named on the spot gets the
+  same treatment, which is why this sits on the colour group rather than
+  beside `colorPrimary`: there is no theme slot a `ButtonColor(...)` could
+  look an ink up in. Name `ColorGroup.withInk` through `ThemeData.refine`
+  where a brand guide says otherwise.
+
+  **Visible change** for anyone whose brand colour is light: those labels were
+  white and unreadable, and are now black.
+
 ### Fixed
 
 - **A nested `ConfigProvider` no longer throws away what the app said.**

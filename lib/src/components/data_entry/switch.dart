@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart' show Spinner;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
 
 /// Per-component design tokens for [Switch].
@@ -379,7 +380,8 @@ class _SoftSwitchState extends State<Switch> {
                 children: [
                   if (widget.checkedChild != null ||
                       widget.uncheckedChild != null)
-                    _buildLabel(token, on, thumbSize, _height(r), _pad(r)),
+                    _buildLabel(
+                        token, on, thumbSize, _height(r), _pad(r), trackColor),
                   AnimatedAlign(
                     duration: token.motionDurationMid,
                     curve: token.motionEaseInOut,
@@ -439,11 +441,15 @@ class _SoftSwitchState extends State<Switch> {
     double thumbSize,
     double height,
     double pad,
+    Color trackColor,
   ) {
     // The label is drawn from the same height as everything else, so it keeps
     // its place in a switch of any size rather than sitting against the edge
     // of a big one and overflowing a small one.
     final scale = height / 22;
+    // Written inside the track, so the words take whichever ink reads on it —
+    // black on a yellow brand, white on a blue one.
+    final ink = inkOn(trackColor);
     // The active label hugs the side away from the thumb, so it stays visible.
     return Positioned.fill(
       child: Padding(
@@ -458,17 +464,16 @@ class _SoftSwitchState extends State<Switch> {
               : AlignmentDirectional.centerEnd,
           child: DefaultTextStyle.merge(
             style: TextStyle(
-              color: const Color(0xFFFFFFFF),
+              // Written inside the track, so it takes the ink that track
+              // asks for: black on a yellow brand, white on a blue one.
+              color: ink,
               fontSize: token.fontSizeSM * scale,
               fontFamily: token.fontFamily,
               fontFamilyFallback: token.fontFamilyFallback,
               decoration: TextDecoration.none,
             ),
             child: IconTheme.merge(
-              data: IconThemeData(
-                color: const Color(0xFFFFFFFF),
-                size: 12 * scale,
-              ),
+              data: IconThemeData(color: ink, size: 12 * scale),
               child: (on ? widget.checkedChild : widget.uncheckedChild) ??
                   const SizedBox.shrink(),
             ),

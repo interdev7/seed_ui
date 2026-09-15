@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
 import '../general/compact.dart';
 
@@ -780,7 +781,8 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
       fg = accent;
     } else if (widget.selected && solid) {
       bg = _hovered ? token.primary.hover : accent;
-      fg = const Color(0xFFFFFFFF);
+      // The ink the fill asks for: a yellow brand takes black here.
+      fg = inkOn(bg);
     } else if (widget.selected) {
       bg = resting;
       fg = _hovered ? token.primary.hover : accent;

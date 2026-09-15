@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 
 /// Per-component design tokens for [Checkbox].
 ///
@@ -361,9 +362,10 @@ class CheckboxBox extends StatelessWidget {
         painter: CheckPainter(
           checked: value && !indeterminate,
           indeterminate: indeterminate,
-          color: value && !indeterminate
-              ? const Color(0xFFFFFFFF)
-              : r.colorPrimary,
+          // The tick is drawn on the primary fill, so it takes the ink that
+          // fill asks for — black on a yellow brand, white on a blue one.
+          color:
+              value && !indeterminate ? inkOn(r.colorPrimary) : r.colorPrimary,
           strokeWidth: 1.8,
         ),
       ),

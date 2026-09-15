@@ -614,8 +614,9 @@ class _SoftButtonState extends State<Button> {
         return _ButtonStyle(
           background: bg,
           border: null,
-          foreground:
-              _isDefault ? token.colorBgContainer : const Color(0xFFFFFFFF),
+          // The ink the fill asks for, not a white written in here: a yellow
+          // or a lime brand takes black, and had no way to say so.
+          foreground: _isDefault ? token.colorBgContainer : g.onBase,
           shadow: true,
         );
       case ButtonVariant.outlined:

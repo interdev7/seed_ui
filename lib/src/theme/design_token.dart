@@ -240,7 +240,8 @@ class ColorGroup {
     required this.textHover,
     required this.text,
     required this.textActive,
-  });
+    Color? onBase,
+  }) : _onBase = onBase;
 
   /// Creates a [ColorGroup] via [ColorGroup.fromPalette].
   factory ColorGroup.fromPalette(List<Color> p) => ColorGroup(
@@ -310,6 +311,38 @@ class ColorGroup {
 
   /// Label color while being pressed.
   final Color textActive;
+
+  /// What a theme said the ink should be, where it said anything.
+  final Color? _onBase;
+
+  /// The ink for words and glyphs drawn *on* [base] — a solid button's label,
+  /// a solid tag's words, the tick in a ticked box.
+  ///
+  /// Worked out from [base] unless the theme names one: black or white,
+  /// whichever reads on that fill. This is what a yellow or a lime brand
+  /// needs and what a white written into the widget could never give it.
+  ///
+  /// Name one to overrule the arithmetic where a brand guide says otherwise:
+  ///
+  /// ```dart
+  /// ColorGroup.fromPalette(generate(brand)).withInk(const Color(0xFFFFFFFF))
+  /// ```
+  Color get onBase => _onBase ?? inkOn(base);
+
+  /// This group with [ink] as its [onBase].
+  ColorGroup withInk(Color ink) => ColorGroup(
+        bg: bg,
+        bgHover: bgHover,
+        border: border,
+        borderHover: borderHover,
+        hover: hover,
+        base: base,
+        active: active,
+        textHover: textHover,
+        text: text,
+        textActive: textActive,
+        onBase: ink,
+      );
 }
 
 /// The resolved theme values components actually read.

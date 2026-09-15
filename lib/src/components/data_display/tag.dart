@@ -258,7 +258,6 @@ class Tag extends StatelessWidget {
         text: Color(0xFFFFFFFF),
       );
     }
-    const white = Color(0xFFFFFFFF);
     const transparent = Color(0x00000000);
 
     // Resolve the three shades a coloured tag draws from: a light tint, an
@@ -299,7 +298,7 @@ class Tag extends StatelessWidget {
           TagVariant.solid => _TagStyle(
               bg: t.colorTextSecondary,
               border: transparent,
-              text: white,
+              text: inkOn(t.colorTextSecondary),
             ),
         };
       }
@@ -313,8 +312,9 @@ class Tag extends StatelessWidget {
         _TagStyle(bg: transparent, border: outline, text: strong),
       TagVariant.filled =>
         _TagStyle(bg: tint, border: transparent, text: strong),
+      // The ink the fill asks for: a tag in a yellow brand takes black.
       TagVariant.solid =>
-        _TagStyle(bg: strong, border: transparent, text: white),
+        _TagStyle(bg: strong, border: transparent, text: inkOn(strong)),
     };
   }
 

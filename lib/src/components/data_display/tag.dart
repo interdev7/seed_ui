@@ -454,33 +454,43 @@ class _CheckableTagState extends State<CheckableTag> {
             ? token.colorFillTertiary
             : const Color(0x00000000));
     final fg = widget.checked
-        ? const Color(0xFFFFFFFF)
+        ? inkOn(bg)
         : (_enabled ? token.colorText : token.colorTextQuaternary);
 
     return MouseRegion(
       cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
+      // One to pick from a set, which is what a screen reader has to be told:
+      // it arrived as its own words and a tap, saying nothing about being a
+      // choice or about being the one taken.
+      child: Semantics(
+        container: true,
+        button: true,
+        selected: widget.checked,
+        enabled: _enabled,
         onTap: _enabled ? () => widget.onChanged!(!widget.checked) : null,
-        child: AnimatedContainer(
-          duration: token.motionDurationFast,
-          padding: EdgeInsets.symmetric(horizontal: token.sizeXS - 1),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(token.borderRadiusSM),
-          ),
-          child: DefaultTextStyle.merge(
-            style: TextStyle(
-              color: fg,
-              fontSize: token.fontSizeSM,
-              height: 20 / 12,
-              leadingDistribution: TextLeadingDistribution.even,
-              fontFamily: token.fontFamily,
-              fontFamilyFallback: token.fontFamilyFallback,
-              decoration: TextDecoration.none,
+        child: GestureDetector(
+          onTap: _enabled ? () => widget.onChanged!(!widget.checked) : null,
+          child: AnimatedContainer(
+            duration: token.motionDurationFast,
+            padding: EdgeInsets.symmetric(horizontal: token.sizeXS - 1),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(token.borderRadiusSM),
             ),
-            child: widget.child ?? const SizedBox.shrink(),
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                color: fg,
+                fontSize: token.fontSizeSM,
+                height: 20 / 12,
+                leadingDistribution: TextLeadingDistribution.even,
+                fontFamily: token.fontFamily,
+                fontFamilyFallback: token.fontFamilyFallback,
+                decoration: TextDecoration.none,
+              ),
+              child: widget.child ?? const SizedBox.shrink(),
+            ),
           ),
         ),
       ),

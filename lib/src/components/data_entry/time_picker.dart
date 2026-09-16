@@ -895,40 +895,45 @@ class _TimePickerState extends State<TimePicker> {
                     SizedBox(width: valueWidth, child: valueArea),
                   SizedBox(width: t.sizeXS),
                   if (canClear)
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        if (_hovered || _open) {
-                          _clear();
-                        } else {
-                          _requestOpen(!_open);
-                        }
-                      },
-                      // As tall as the field. The mark is drawn at the type
-                      // size, so the target used to be fourteen pixels tall
-                      // in the middle of a box more than twice that — aim a
-                      // little high or a little low and the click went to the
-                      // field instead, which opened the panel and looked
-                      // exactly like a clear that had not worked. The glyph
-                      // is the size it always was, and so is the slot: only
-                      // what takes the pointer grew, and it grew where there
-                      // was already room.
-                      child: SizedBox(
-                        height: _height(t),
-                        width: fontSize,
-                        child: Center(
-                          child: showClear
-                              ? CustomPaint(
-                                  size: Size.square(fontSize),
-                                  painter:
-                                      ClearIconPainter(t.colorTextTertiary),
-                                )
-                              : widget.suffixIcon ??
-                                  CustomPaint(
+                    // A cross and nothing else, so it has no words to be named by.
+                    Semantics(
+                      button: true,
+                      label: context.seedLocale.clear,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          if (_hovered || _open) {
+                            _clear();
+                          } else {
+                            _requestOpen(!_open);
+                          }
+                        },
+                        // As tall as the field. The mark is drawn at the type
+                        // size, so the target used to be fourteen pixels tall
+                        // in the middle of a box more than twice that — aim a
+                        // little high or a little low and the click went to the
+                        // field instead, which opened the panel and looked
+                        // exactly like a clear that had not worked. The glyph
+                        // is the size it always was, and so is the slot: only
+                        // what takes the pointer grew, and it grew where there
+                        // was already room.
+                        child: SizedBox(
+                          height: _height(t),
+                          width: fontSize,
+                          child: Center(
+                            child: showClear
+                                ? CustomPaint(
                                     size: Size.square(fontSize),
-                                    painter: _ClockIconPainter(
-                                        statusColor ?? t.colorTextQuaternary),
-                                  ),
+                                    painter:
+                                        ClearIconPainter(t.colorTextTertiary),
+                                  )
+                                : widget.suffixIcon ??
+                                    CustomPaint(
+                                      size: Size.square(fontSize),
+                                      painter: _ClockIconPainter(
+                                          statusColor ?? t.colorTextQuaternary),
+                                    ),
+                          ),
                         ),
                       ),
                     )

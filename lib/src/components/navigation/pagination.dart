@@ -777,10 +777,14 @@ class _ArrowState extends State<_Arrow> {
       SoftSize.middle => t.sizeMD,
       SoftSize.large => t.sizeLG,
     };
+    final words = context.seedLocale;
     return Button(
       disabled: !widget.enabled,
       size: widget.size,
       variant: ButtonVariant.text,
+      // Nothing but a chevron on it, so it has no words to be named by.
+      semanticsLabel:
+          widget.direction == _ArrowDir.next ? words.next : words.previous,
       icon: CustomPaint(
         size: Size(size * 0.65, size * 0.65),
         painter: _ChevronPainter(
@@ -841,23 +845,28 @@ class _PageItemState extends State<_PageItem> {
     } else {
       color = t.colorText;
     }
-    return Button(
-      disabled: !widget.enabled,
-      size: widget.size,
-      variant: widget.active ? ButtonVariant.outlined : ButtonVariant.text,
-      onPressed: widget.enabled ? widget.onTap : null,
-      icon: Text(
-        widget.label,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: color,
-          fontSize: widget.fontSize,
-          fontWeight: widget.active ? t.fontWeightStrong : t.fontWeight,
-          fontFamily: t.fontFamily,
-          fontFamilyFallback: t.fontFamilyFallback,
-          height: 1.0,
-          leadingDistribution: TextLeadingDistribution.even,
-          decoration: TextDecoration.none,
+    return Semantics(
+      // Which one you are on is the whole point of the row, and a digit on
+      // its own does not say it.
+      selected: widget.active,
+      child: Button(
+        disabled: !widget.enabled,
+        size: widget.size,
+        variant: widget.active ? ButtonVariant.outlined : ButtonVariant.text,
+        onPressed: widget.enabled ? widget.onTap : null,
+        icon: Text(
+          widget.label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: color,
+            fontSize: widget.fontSize,
+            fontWeight: widget.active ? t.fontWeightStrong : t.fontWeight,
+            fontFamily: t.fontFamily,
+            fontFamilyFallback: t.fontFamilyFallback,
+            height: 1.0,
+            leadingDistribution: TextLeadingDistribution.even,
+            decoration: TextDecoration.none,
+          ),
         ),
       ),
     );

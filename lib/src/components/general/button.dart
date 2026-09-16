@@ -355,6 +355,7 @@ class Button extends StatefulWidget {
     this.size,
     this.shape,
     this.icon,
+    this.semanticsLabel,
     this.loading = false,
     this.block = false,
     this.disabled,
@@ -403,6 +404,13 @@ class Button extends StatefulWidget {
 
   /// Leading icon, tinted and sized to match the label.
   final Widget? icon;
+
+  /// What a screen reader calls this button.
+  ///
+  /// The words on it name it where there are any. A button carrying nothing
+  /// but an icon has none, and arrives as "button" and no more, so name it
+  /// here.
+  final String? semanticsLabel;
 
   /// Replaces [icon] with a spinner and blocks taps.
   final bool loading;
@@ -797,6 +805,7 @@ class _SoftButtonState extends State<Button> {
       child: Semantics(
         button: true,
         enabled: _enabled,
+        label: widget.semanticsLabel,
         onTap: pressable ? widget.onPressed : null,
         child: MouseRegion(
           cursor: _enabled

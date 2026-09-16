@@ -44,10 +44,12 @@ class _CompactDemoState extends State<CompactDemo> {
                 children: [
                   Button(
                     icon: const Icon(Icons.chevron_left),
+                    semanticsLabel: 'Previous',
                     onPressed: () {},
                   ),
                   Button(
                     icon: const Icon(Icons.chevron_right),
+                    semanticsLabel: 'Next',
                     onPressed: () {},
                   ),
                 ],
@@ -76,6 +78,7 @@ class _CompactDemoState extends State<CompactDemo> {
                 ],
                 child: Button(
                   icon: const Icon(Icons.more_vert),
+                  semanticsLabel: 'More',
                   onPressed: () {},
                 ),
               ),
@@ -158,6 +161,7 @@ class _CompactDemoState extends State<CompactDemo> {
                   color: ButtonColor.primary,
                   variant: ButtonVariant.solid,
                   icon: const Icon(Icons.search),
+                  semanticsLabel: 'Search',
                   onPressed: () {},
                 ),
               ],

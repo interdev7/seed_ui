@@ -813,31 +813,36 @@ class _MultiDatePickerState extends State<MultiDatePicker>
               ),
               SizedBox(width: t.sizeXS),
               if (canClear)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    if (_hovered || _open) {
-                      _clear();
-                    } else {
-                      _requestOpen(!_open);
-                    }
-                  },
-                  child: SizedBox(
-                    height: _height(t),
-                    width: fontSize,
-                    child: Center(
-                      child: showClear
-                          ? CustomPaint(
-                              size: Size.square(fontSize),
-                              painter: ClearIconPainter(t.colorTextTertiary),
-                            )
-                          : widget.suffixIcon ??
-                              CustomPaint(
+                // A cross and nothing else, so it has no words to be named by.
+                Semantics(
+                  button: true,
+                  label: context.seedLocale.clear,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      if (_hovered || _open) {
+                        _clear();
+                      } else {
+                        _requestOpen(!_open);
+                      }
+                    },
+                    child: SizedBox(
+                      height: _height(t),
+                      width: fontSize,
+                      child: Center(
+                        child: showClear
+                            ? CustomPaint(
                                 size: Size.square(fontSize),
-                                painter: CalendarIconPainter(
-                                  statusColor ?? t.colorTextQuaternary,
+                                painter: ClearIconPainter(t.colorTextTertiary),
+                              )
+                            : widget.suffixIcon ??
+                                CustomPaint(
+                                  size: Size.square(fontSize),
+                                  painter: CalendarIconPainter(
+                                    statusColor ?? t.colorTextQuaternary,
+                                  ),
                                 ),
-                              ),
+                      ),
                     ),
                   ),
                 )

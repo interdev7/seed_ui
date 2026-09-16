@@ -84,6 +84,7 @@ Button(variant: ButtonVariant.outlined, onPressed: () {}, child: const Text('Def
 | `size` | `ControlSize?` | `null` | A preset — `small` (24), `middle` (32), `large` (40) — or a measurement of your own. Follows `ButtonDefaults.size`, then `componentSize`, else `middle` |
 | `shape` | `ButtonShape?` | `null` | Follows `ButtonDefaults.shape`, else `defaultShape`. `defaultShape`, `circle`, `round` |
 | `icon` | `Widget?` | `null` | Leading icon, tinted and sized to the label |
+| `semanticsLabel` | `String?` | `null` | What a screen reader calls it. A button carrying nothing but an icon has no words to be named by, and arrives as "button" and no more |
 | `loading` | `bool` | `false` | Swaps the icon for a spinner and blocks taps |
 | `gradient` | `Gradient?` | `null` | Optional background gradient (e.g. `LinearGradient`) |
 | `block` | `bool` | `false` | Stretches to the parent's full width |

@@ -1101,57 +1101,75 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
         setState(() => _hovered = false);
         if (item._hasChildren) _closeSubmenuSoon();
       },
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      // A row of its own in the semantics tree, and a container so it stays
+      // one: without this the whole menu arrived as a single node labelled
+      // with every item's words run together — "Rename\nDelete" — carrying
+      // one tap between them. Nothing could be chosen, and a barred item was
+      // not marked as barred.
+      child: Semantics(
+        container: true,
+        button: true,
+        enabled: !disabled,
+        // A row that opens a submenu is a way further in rather than a
+        // choice, and says so.
+        expanded: item._hasChildren ? _submenuOpen : null,
         onTap: disabled
             ? null
             : item._hasChildren
                 ? _toggleSubmenu
                 : () => widget.onSelect(item),
-        child: AnimatedContainer(
-          duration: token.motionDurationFast,
-          // A least, not a height. A row drawn by `itemBuilder` that asks
-          // for more gets it — squeezing it back into the kit's own height
-          // would leave the caller drawing inside a box they cannot resize,
-          // which is not drawing it themselves at all.
-          constraints: BoxConstraints(minHeight: r.itemHeight),
-          margin: const EdgeInsets.symmetric(vertical: 1),
-          padding: r.itemPadding,
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(token.borderRadiusSM),
-          ),
-          child: Row(
-            children: [
-              // The colours and the text style are set around the builder as
-              // well as around the words the menu draws itself, so a builder
-              // that returns a bare `Text` is dressed like every other row —
-              // greyed out when the item is barred, red when it is dangerous
-              // — and one that wants otherwise says so.
-              Expanded(
-                child: IconTheme.merge(
-                  data: IconThemeData(color: color, size: token.fontSize),
-                  child: DefaultTextStyle.merge(
-                    style: TextStyle(
-                      color: color,
-                      fontSize: token.fontSize,
-                      fontFamily: token.fontFamily,
-                      fontFamilyFallback: token.fontFamilyFallback,
-                      decoration: TextDecoration.none,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: disabled
+              ? null
+              : item._hasChildren
+                  ? _toggleSubmenu
+                  : () => widget.onSelect(item),
+          child: AnimatedContainer(
+            duration: token.motionDurationFast,
+            // A least, not a height. A row drawn by `itemBuilder` that asks
+            // for more gets it — squeezing it back into the kit's own height
+            // would leave the caller drawing inside a box they cannot resize,
+            // which is not drawing it themselves at all.
+            constraints: BoxConstraints(minHeight: r.itemHeight),
+            margin: const EdgeInsets.symmetric(vertical: 1),
+            padding: r.itemPadding,
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(token.borderRadiusSM),
+            ),
+            child: Row(
+              children: [
+                // The colours and the text style are set around the builder as
+                // well as around the words the menu draws itself, so a builder
+                // that returns a bare `Text` is dressed like every other row —
+                // greyed out when the item is barred, red when it is dangerous
+                // — and one that wants otherwise says so.
+                Expanded(
+                  child: IconTheme.merge(
+                    data: IconThemeData(color: color, size: token.fontSize),
+                    child: DefaultTextStyle.merge(
+                      style: TextStyle(
+                        color: color,
+                        fontSize: token.fontSize,
+                        fontFamily: token.fontFamily,
+                        fontFamilyFallback: token.fontFamilyFallback,
+                        decoration: TextDecoration.none,
+                      ),
+                      child: widget.itemBuilder?.call(context, item, lit) ??
+                          _content(token, item),
                     ),
-                    child: widget.itemBuilder?.call(context, item, lit) ??
-                        _content(token, item),
                   ),
                 ),
-              ),
-              if (item._hasChildren) ...[
-                SizedBox(width: token.sizeXS),
-                CustomPaint(
-                  size: const Size(8, 12),
-                  painter: _CaretPainter(token.colorTextTertiary),
-                ),
+                if (item._hasChildren) ...[
+                  SizedBox(width: token.sizeXS),
+                  CustomPaint(
+                    size: const Size(8, 12),
+                    painter: _CaretPainter(token.colorTextTertiary),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

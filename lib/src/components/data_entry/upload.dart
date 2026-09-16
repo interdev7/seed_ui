@@ -893,6 +893,7 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
     final t = widget.token;
     final r = widget.style;
     final item = widget.item;
+    final words = context.seedLocale;
     final failed = item.status == UploadStatus.error;
 
     return MouseRegion(
@@ -979,6 +980,7 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
                 SizedBox(width: t.sizeXS),
                 _IconButton(
                   token: t,
+                  semanticsLabel: words.download,
                   onTap: widget.actions.download!,
                   painter: DownloadPainter(t.colorTextTertiary),
                 ),
@@ -987,6 +989,7 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
                 SizedBox(width: t.sizeXS),
                 _IconButton(
                   token: t,
+                  semanticsLabel: words.retry,
                   onTap: widget.actions.retry!,
                   painter: RetryPainter(t.colorTextTertiary),
                 ),
@@ -995,6 +998,7 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
                 SizedBox(width: t.sizeXXS),
                 _IconButton(
                   token: t,
+                  semanticsLabel: words.remove,
                   onTap: widget.actions.remove!,
                   painter: CrossPainter(t.colorTextTertiary, inset: 5),
                 ),
@@ -1045,6 +1049,7 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
     final t = widget.token;
     final r = widget.style;
     final item = widget.item;
+    final words = context.seedLocale;
     final radius = BorderRadius.circular(
       widget.round ? r.cardSize : r.dropzoneRadius,
     );
@@ -1097,6 +1102,7 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
                         if (widget.actions.retry != null)
                           _IconButton(
                             token: t,
+                            semanticsLabel: words.retry,
                             onTap: widget.actions.retry!,
                             painter: RetryPainter(_onMask),
                             background: t.colorBgMask,
@@ -1105,6 +1111,7 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
                           SizedBox(width: t.sizeXXS),
                           _IconButton(
                             token: t,
+                            semanticsLabel: words.remove,
                             onTap: widget.actions.remove!,
                             painter: CrossPainter(_onMask, inset: 5),
                             background: t.colorBgMask,
@@ -1131,6 +1138,7 @@ const Color _onMask = Color(0xFFFFFFFF);
 /// A small square tap target wrapping a painter.
 class _IconButton extends StatefulWidget {
   const _IconButton({
+    required this.semanticsLabel,
     required this.token,
     required this.onTap,
     required this.painter,
@@ -1138,6 +1146,9 @@ class _IconButton extends StatefulWidget {
   });
 
   final Token token;
+
+  /// What a screen reader calls it: these carry a glyph and no words.
+  final String semanticsLabel;
   final VoidCallback onTap;
   final CustomPainter painter;
   final Color? background;
@@ -1169,6 +1180,7 @@ class _IconButtonState extends State<_IconButton> {
       },
       child: Semantics(
         button: true,
+        label: widget.semanticsLabel,
         onTap: widget.onTap,
         child: MouseRegion(
           cursor: SystemMouseCursors.click,

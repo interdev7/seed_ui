@@ -5,6 +5,34 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.26.0
+
+### Added
+
+- **`Button.semanticsLabel`.** A button carrying nothing but an icon had no
+  words to be named by, so a screen reader announced "button" and no more,
+  and there was no way to say otherwise.
+- **Five words for the glyphs**, in all eleven languages: `clear`, `remove`,
+  `retry`, `preview`, `download`. The crosses and arrows that carry them had
+  been silent.
+
+### Fixed
+
+- **A `Dropdown`'s menu reached a screen reader as one node.** Every item's
+  words ran together into a single label — "Rename\nDelete" — carrying one
+  tap between them: nothing could be chosen, and a barred item was not marked
+  as barred. Each row is its own node now, a button, enabled or not, and one
+  that opens a submenu says it is expandable.
+- **A `CheckableTag` said nothing about being a choice.** It arrived as its
+  own words and a tap — no role, and no sign of being the one taken. It is a
+  button with a selected state now.
+- **A `Pagination`'s arrows had no name**, and nothing said which page you
+  were on. The arrows take the words the kit already had for them, and the
+  page you are on is marked selected.
+- **The cross that empties a picker had no name** — on `DatePicker`,
+  `DateRangePicker`, `MultiDatePicker` and `TimePicker` alike — and neither
+  did an `Upload` row's remove, retry, preview and download.
+
 ## 0.25.0
 
 ### Added

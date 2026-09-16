@@ -68,6 +68,11 @@ class SeedLocalizations {
     this.noData = 'No data',
     this.reset = 'Reset',
     this.close = 'Close',
+    this.clear = 'Clear',
+    this.remove = 'Remove',
+    this.retry = 'Try again',
+    this.preview = 'Preview',
+    this.download = 'Download',
     this.search = 'Search',
     this.selectAll = 'Select all items',
     this.sortedAscending = 'sorted ascending',
@@ -119,6 +124,23 @@ class SeedLocalizations {
   /// What a screen reader calls a close cross — an alert's, a tag's, a
   /// notification's. A glyph says nothing out loud.
   final String close;
+
+  /// What a screen reader calls the cross that empties a field — a picker's,
+  /// a select's. A glyph says nothing out loud.
+  final String clear;
+
+  /// What a screen reader calls the cross that takes a file out of an
+  /// `Upload`. A glyph says nothing out loud.
+  final String remove;
+
+  /// What it calls the arrow that sends a failed upload again.
+  final String retry;
+
+  /// What it calls the eye that opens a file.
+  final String preview;
+
+  /// What it calls the arrow that saves a file.
+  final String download;
 
   /// Placeholder of the field that narrows a `Table` column's filter menu.
   final String search;
@@ -502,6 +524,11 @@ class SeedLocalizations {
     noData: 'Нет данных',
     reset: 'Сбросить',
     close: 'Закрыть',
+    clear: 'Очистить',
+    remove: 'Убрать',
+    retry: 'Повторить',
+    preview: 'Просмотр',
+    download: 'Скачать',
     selectAll: 'Выбрать всё',
     sortedAscending: 'сортировка по возрастанию',
     sortedDescending: 'сортировка по убыванию',
@@ -572,6 +599,11 @@ class SeedLocalizations {
     noData: 'Maglumat ýok',
     reset: 'Arassala',
     close: 'Ýap',
+    clear: 'Arassalamak',
+    remove: 'Aýyrmak',
+    retry: 'Gaýtadan synanyş',
+    preview: 'Öňünden görmek',
+    download: 'Ýüklemek',
     selectAll: 'Ählisini saýla',
     sortedAscending: 'ösüş tertibinde',
     sortedDescending: 'kemelme tertibinde',
@@ -641,6 +673,11 @@ class SeedLocalizations {
     noData: 'Keine Daten',
     reset: 'Zurücksetzen',
     close: 'Schließen',
+    clear: 'Leeren',
+    remove: 'Entfernen',
+    retry: 'Erneut versuchen',
+    preview: 'Vorschau',
+    download: 'Herunterladen',
     selectAll: 'Alle auswählen',
     sortedAscending: 'aufsteigend sortiert',
     sortedDescending: 'absteigend sortiert',
@@ -710,6 +747,11 @@ class SeedLocalizations {
     noData: 'Aucune donnée',
     reset: 'Réinitialiser',
     close: 'Fermer',
+    clear: 'Effacer',
+    remove: 'Retirer',
+    retry: 'Réessayer',
+    preview: 'Aperçu',
+    download: 'Télécharger',
     selectAll: 'Tout sélectionner',
     sortedAscending: 'trié par ordre croissant',
     sortedDescending: 'trié par ordre décroissant',
@@ -780,6 +822,11 @@ class SeedLocalizations {
     noData: 'Sin datos',
     reset: 'Restablecer',
     close: 'Cerrar',
+    clear: 'Borrar',
+    remove: 'Quitar',
+    retry: 'Reintentar',
+    preview: 'Vista previa',
+    download: 'Descargar',
     selectAll: 'Seleccionar todo',
     sortedAscending: 'orden ascendente',
     sortedDescending: 'orden descendente',
@@ -850,6 +897,11 @@ class SeedLocalizations {
     noData: '暂无数据',
     reset: '重置',
     close: '关闭',
+    clear: '清除',
+    remove: '移除',
+    retry: '重试',
+    preview: '预览',
+    download: '下载',
     selectAll: '全选',
     sortedAscending: '升序排序',
     sortedDescending: '降序排序',
@@ -919,6 +971,11 @@ class SeedLocalizations {
     noData: 'データなし',
     reset: 'リセット',
     close: '閉じる',
+    clear: 'クリア',
+    remove: '削除',
+    retry: '再試行',
+    preview: 'プレビュー',
+    download: 'ダウンロード',
     selectAll: 'すべて選択',
     sortedAscending: '昇順で並べ替え',
     sortedDescending: '降順で並べ替え',
@@ -989,6 +1046,11 @@ class SeedLocalizations {
     noData: 'Veri yok',
     reset: 'Sıfırla',
     close: 'Kapat',
+    clear: 'Temizle',
+    remove: 'Kaldır',
+    retry: 'Yeniden dene',
+    preview: 'Önizleme',
+    download: 'İndir',
     selectAll: 'Tümünü seç',
     sortedAscending: 'artan sırada',
     sortedDescending: 'azalan sırada',
@@ -1058,6 +1120,11 @@ class SeedLocalizations {
     noData: 'Sem conteúdo',
     reset: 'Redefinir',
     close: 'Fechar',
+    clear: 'Limpar',
+    remove: 'Remover',
+    retry: 'Tentar novamente',
+    preview: 'Pré-visualizar',
+    download: 'Baixar',
     selectAll: 'Selecionar tudo',
     sortedAscending: 'ordenado crescente',
     sortedDescending: 'ordenado decrescente',
@@ -1128,6 +1195,11 @@ class SeedLocalizations {
     noData: 'لا توجد بيانات',
     reset: 'إعادة تعيين',
     close: 'إغلاق',
+    clear: 'مسح',
+    remove: 'إزالة',
+    retry: 'إعادة المحاولة',
+    preview: 'معاينة',
+    download: 'تنزيل',
     selectAll: 'تحديد الكل',
     sortedAscending: 'مرتب تصاعديًا',
     sortedDescending: 'مرتب تنازليًا',
@@ -1199,6 +1271,11 @@ class SeedLocalizations {
     noData: 'אין נתונים',
     reset: 'איפוס',
     close: 'סגור',
+    clear: 'ניקוי',
+    remove: 'הסרה',
+    retry: 'ניסיון חוזר',
+    preview: 'תצוגה מקדימה',
+    download: 'הורדה',
     selectAll: 'בחר הכול',
     sortedAscending: 'ממוין בסדר עולה',
     sortedDescending: 'ממוין בסדר יורד',

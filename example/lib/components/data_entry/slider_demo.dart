@@ -21,6 +21,8 @@ class SliderDemo extends StatefulWidget {
 }
 
 class _SliderDemoState extends State<SliderDemo> {
+  final _steered = SliderController();
+  double _volume = 40;
   double _pulse = 140;
   double _delivery = 12;
   double _temp = 0;
@@ -43,6 +45,12 @@ class _SliderDemoState extends State<SliderDemo> {
     SliderMark(37, '37°C'),
     SliderMark(100, '100°C'),
   ];
+
+  @override
+  void dispose() {
+    _steered.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -347,6 +355,58 @@ class _SliderDemoState extends State<SliderDemo> {
                 'its length: ${_span.$1.round()} to ${_span.$2.round()}. The '
                 'handles keep their own drag, or the span would have two dead '
                 'spots at its ends.',
+                style: TextStyle(color: t.colorTextSecondary),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Marks you can press, and a controller that asks',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Slider(
+                value: _volume,
+                controller: _steered,
+                step: 10,
+                marks: const [
+                  SliderMark(0, 'off'),
+                  SliderMark(50, 'half'),
+                  SliderMark(80, 'loud', disabled: true),
+                  SliderMark(100, 'all'),
+                ],
+                onChanged: (v) => setState(() => _volume = v),
+              ),
+              const SizedBox(height: 12),
+              ListenableBuilder(
+                listenable: _steered,
+                builder: (context, _) => Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    Button(
+                      onPressed: _steered.canStepDown
+                          ? _steered.stepDown
+                          : null,
+                      child: const Text('Down'),
+                    ),
+                    Button(
+                      onPressed: _steered.canStepUp ? _steered.stepUp : null,
+                      child: const Text('Up'),
+                    ),
+                    Button(
+                      onPressed: () => _steered.toMark(50),
+                      child: const Text('To half'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Press a mark and the handle goes there — loud is barred, so '
+                'it stays a label. The buttons drive the same slider from '
+                'outside: the controller asks through onChanged, so the value '
+                'still has one owner. Now: ${_volume.round()}.',
                 style: TextStyle(color: t.colorTextSecondary),
               ),
             ],

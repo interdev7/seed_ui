@@ -421,6 +421,81 @@ class SliderDefaults {
 /// step with [marks] lets the handle rest only on the marks themselves.
 ///
 /// For two handles and the span between them, see [RangeSlider].
+/// Drives a [Slider], [RangeSlider] or [MultiRangeSlider] from outside the
+/// build.
+///
+/// It asks; it does not own. Every method here goes out through the widget's
+/// own `onChanged`, exactly as a drag or an arrow key does, so the value has
+/// one owner still — whoever holds it and hands it back. A controller that
+/// set the value itself would make two owners of one truth, and the two
+/// disagree the first time they are asked at once.
+///
+/// ```dart
+/// final slider = SliderController();
+/// ...
+/// Slider(controller: slider, value: v, onChanged: (n) => setState(...))
+/// ...
+/// slider.stepUp();
+/// slider.toMark(50);
+/// ```
+///
+/// It is a [ChangeNotifier] and reports [canStepUp] and [canStepDown], so a
+/// button of your own elsewhere on the page knows when to grey itself out.
+class SliderController extends ChangeNotifier {
+  /// Creates a [SliderController].
+  SliderController();
+
+  void Function(int handle, bool forward)? _step;
+  void Function(int handle, double value)? _moveTo;
+  bool _canStepUp = false;
+  bool _canStepDown = false;
+
+  /// Whether the first handle has anywhere left to go up the scale.
+  bool get canStepUp => _canStepUp;
+
+  /// Whether it has anywhere left to go down.
+  bool get canStepDown => _canStepDown;
+
+  /// Moves [handle] one step up the scale — the same step an arrow key takes.
+  void stepUp({int handle = 0}) => _step?.call(handle, true);
+
+  /// Moves it one step down.
+  void stepDown({int handle = 0}) => _step?.call(handle, false);
+
+  /// Puts [handle] on [value], pulled onto the nearest step or mark the way a
+  /// drag would be, and held inside `bounds` where there are any.
+  ///
+  /// This is what a mark is for: `toMark(50)` and a tap on the mark at 50 are
+  /// the same journey.
+  void toMark(double value, {int handle = 0}) => _moveTo?.call(handle, value);
+
+  void _attach({
+    required void Function(int, bool) step,
+    required void Function(int, double) moveTo,
+  }) {
+    _step = step;
+    _moveTo = moveTo;
+  }
+
+  void _detach() {
+    _step = null;
+    _moveTo = null;
+  }
+
+  /// Told by the control after every build.
+  void _report(bool down, bool up) {
+    if (down == _canStepDown && up == _canStepUp) return;
+    _canStepDown = down;
+    _canStepUp = up;
+    notifyListeners();
+  }
+}
+
+/// A groove with one handle, for choosing a number on a scale.
+///
+/// ```dart
+/// Slider(value: _volume, onChanged: (v) => setState(() => _volume = v))
+/// ```
 class Slider extends StatefulWidget {
   /// Creates a [Slider].
   const Slider({
@@ -443,6 +518,7 @@ class Slider extends StatefulWidget {
     this.snapToMarks = false,
     this.tooltip,
     this.semanticsLabel,
+    this.controller,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
         assert(step == null || step > 0, 'step must be positive');
@@ -526,6 +602,11 @@ class Slider extends StatefulWidget {
   /// to the finger wins.
   final bool snapToMarks;
 
+  /// Drives the control from outside the build — stepping a handle, or
+  /// sending one to a mark. It asks through the widget's own `onChanged`
+  /// rather than setting the value itself.
+  final SliderController? controller;
+
   /// Per-instance token overrides.
   final SliderToken? token;
 
@@ -598,6 +679,7 @@ class _SliderState extends State<Slider> {
       tooltip: widget.tooltip,
       semanticsLabel: widget.semanticsLabel,
       token: widget.token,
+      controller: widget.controller,
       zones: widget.zones,
       bounds: widget.bounds,
       snapToMarks: widget.snapToMarks,
@@ -643,6 +725,7 @@ class RangeSlider extends StatefulWidget {
     this.snapToMarks = false,
     this.tooltip,
     this.semanticsLabel,
+    this.controller,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
         assert(step == null || step > 0, 'step must be positive');
@@ -726,6 +809,11 @@ class RangeSlider extends StatefulWidget {
   /// to the finger wins.
   final bool snapToMarks;
 
+  /// Drives the control from outside the build — stepping a handle, or
+  /// sending one to a mark. It asks through the widget's own `onChanged`
+  /// rather than setting the value itself.
+  final SliderController? controller;
+
   /// Per-instance token overrides.
   final SliderToken? token;
 
@@ -802,6 +890,7 @@ class _RangeSliderState extends State<RangeSlider> {
       tooltip: widget.tooltip,
       semanticsLabel: widget.semanticsLabel,
       token: widget.token,
+      controller: widget.controller,
       zones: widget.zones,
       bounds: widget.bounds,
       snapToMarks: widget.snapToMarks,
@@ -882,6 +971,7 @@ class MultiRangeSlider extends StatefulWidget {
     this.snapToMarks = false,
     this.tooltip,
     this.semanticsLabel,
+    this.controller,
     this.token,
   })  : assert(min < max, 'min must be less than max'),
         assert(step == null || step > 0, 'step must be positive'),
@@ -973,6 +1063,11 @@ class MultiRangeSlider extends StatefulWidget {
   /// to the finger wins.
   final bool snapToMarks;
 
+  /// Drives the control from outside the build — stepping a handle, or
+  /// sending one to a mark. It asks through the widget's own `onChanged`
+  /// rather than setting the value itself.
+  final SliderController? controller;
+
   /// Per-instance token overrides.
   final SliderToken? token;
 
@@ -1057,6 +1152,7 @@ class _MultiRangeSliderState extends State<MultiRangeSlider> {
       tooltip: widget.tooltip,
       semanticsLabel: widget.semanticsLabel,
       token: widget.token,
+      controller: widget.controller,
       zones: widget.zones,
       bounds: widget.bounds,
       snapToMarks: widget.snapToMarks,
@@ -1087,6 +1183,7 @@ class _SliderCore extends StatefulWidget {
     required this.tooltip,
     required this.token,
     required this.fillFromStart,
+    this.controller,
     this.semanticsLabel,
     this.zones = const [],
     this.bounds,
@@ -1096,6 +1193,8 @@ class _SliderCore extends StatefulWidget {
     this.minCount,
     this.maxCount,
   });
+
+  final SliderController? controller;
 
   final List<double> values;
   final ValueChanged<List<double>>? onChanged;
@@ -1157,6 +1256,68 @@ class _SliderCoreState extends State<_SliderCore> {
   /// The groove's own size, kept from the last layout so a drag that begins
   /// can work out which handle it began nearest to.
   Size _size = Size.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller?._attach(step: _stepHandle, moveTo: _sendTo);
+  }
+
+  @override
+  void didUpdateWidget(_SliderCore old) {
+    super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      old.controller?._detach();
+      widget.controller?._attach(step: _stepHandle, moveTo: _sendTo);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller?._detach();
+    super.dispose();
+  }
+
+  /// One step for the handle at [handle], which is what the controller and
+  /// the arrow keys both ask for.
+  void _stepHandle(int handle, bool forward) {
+    if (handle < 0 || handle >= widget.values.length) return;
+    _nudge(handle, forward: forward);
+  }
+
+  /// Which handle a mark belongs to: the one already nearest it, so a press
+  /// on a mark inside a span moves the end that has least distance to cover.
+  int _nearestValue(double value) {
+    var index = 0;
+    var best = double.infinity;
+    for (var i = 0; i < widget.values.length; i++) {
+      final away = (widget.values[i] - value).abs();
+      if (away < best) {
+        best = away;
+        index = i;
+      }
+    }
+    return index;
+  }
+
+  /// Sends a handle to [value] — pulled onto the nearest stop, and held
+  /// inside `bounds`, exactly as a drag that ended there would be.
+  void _sendTo(int handle, double value) {
+    if (!_enabled || handle < 0 || handle >= widget.values.length) return;
+    final next = [...widget.values];
+    next[handle] = _valueAt(_fractionOf(_held(value)));
+    widget.onChanged?.call(next);
+    widget.onChangeComplete?.call(next);
+  }
+
+  /// Tells the controller what is still possible, so a button of the
+  /// caller's own can grey itself out.
+  void _reportReach() {
+    final controller = widget.controller;
+    if (controller == null || widget.values.isEmpty) return;
+    final at = widget.values.first;
+    controller._report(at > widget.min, at < widget.max);
+  }
 
   bool get _enabled => !widget.disabled && widget.onChanged != null;
 
@@ -1273,6 +1434,7 @@ class _SliderCoreState extends State<_SliderCore> {
             ConfigProvider.componentOf<SliderToken>(context) ??
             const SliderToken())
         ._resolve(t);
+    _reportReach();
 
     final thickness = r.handleSizeHover + r.handleLineWidthHover * 2;
     final groove = LayoutBuilder(
@@ -1815,8 +1977,30 @@ class _SliderCoreState extends State<_SliderCore> {
         ? SizedBox(width: r.dotSize * 3, height: r.markFontSize * t.lineHeight)
         : DefaultTextStyle.merge(style: base, child: Text(mark.label!));
     final build = mark.markBuilder;
-    if (build == null) return drawn;
-    return build(context, mark, _reached(mark.value), drawn);
+    final content = build == null
+        ? drawn
+        : build(context, mark, _reached(mark.value), drawn);
+
+    // A mark names a place on the scale, so pressing it is a way of asking to
+    // go there — the shortest one there is, and the one a thumb reaches for.
+    // A mark the handle may not rest on stays a label and nothing more.
+    final takeable = _enabled && !mark.disabled && widget.onChanged != null;
+    if (!takeable) return content;
+    return Semantics(
+      button: true,
+      // A mark with no words is still somewhere to be sent to, and the place
+      // it names is the number itself: without this a screen reader met a
+      // button that said nothing whatever.
+      label: mark.label ?? context.seedLocale.figures(_plain(mark.value)),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _sendTo(_nearestValue(mark.value), mark.value),
+          child: content,
+        ),
+      ),
+    );
   }
 
   Widget _withMarks(

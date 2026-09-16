@@ -21,6 +21,9 @@ Rect _groove(WidgetTester tester) =>
     tester.getRect(find.byType(CustomPaint).last);
 
 void main() {
+  _markAndControllerTests();
+  _wordlessMarkTests();
+
   _markTests();
   _markTargetTests();
   _zoneBoundsSnapTests();
@@ -1636,5 +1639,222 @@ void _zoneBoundsSnapTests() {
       );
       semantics.dispose();
     });
+  });
+}
+
+void _markAndControllerTests() {
+  group('a mark is a place to be sent to', () {
+    testWidgets('pressing one moves the handle there', (tester) async {
+      double? moved;
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 10,
+            marks: const [SliderMark(0, 'nil'), SliderMark(50, 'half')],
+            onChanged: (v) => moved = v,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('half'));
+      await tester.pump();
+
+      expect(moved, 50);
+    });
+
+    testWidgets('a disabled mark is a label and nothing more', (tester) async {
+      var calls = 0;
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 10,
+            marks: const [SliderMark(50, 'half', disabled: true)],
+            onChanged: (_) => calls++,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('half'), warnIfMissed: false);
+      await tester.pump();
+
+      expect(calls, 0);
+    });
+
+    testWidgets('a disabled slider answers no mark at all', (tester) async {
+      var calls = 0;
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 10,
+            disabled: true,
+            marks: const [SliderMark(50, 'half')],
+            onChanged: (_) => calls++,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('half'), warnIfMissed: false);
+      await tester.pump();
+
+      expect(calls, 0);
+    });
+
+    testWidgets('the nearer end of a range answers', (tester) async {
+      (double, double)? moved;
+      await tester.pumpWidget(
+        _host(
+          RangeSlider(
+            values: const (10, 90),
+            marks: const [SliderMark(80, 'most')],
+            onChanged: (v) => moved = v,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('most'));
+      await tester.pump();
+
+      // 80 is nearer 90 than 10, so it is the upper handle that travels.
+      expect(moved, (10.0, 80.0));
+    });
+
+    testWidgets('a mark obeys the steps like any other journey',
+        (tester) async {
+      double? moved;
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 0,
+            step: 20,
+            marks: const [SliderMark(55, 'odd')],
+            onChanged: (v) => moved = v,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('odd'));
+      await tester.pump();
+
+      expect(moved, 60);
+    });
+  });
+
+  group('a controller asks rather than owns', () {
+    testWidgets('stepUp and stepDown go out through onChanged', (tester) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      final moved = <double>[];
+
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 50,
+            step: 10,
+            controller: controller,
+            onChanged: moved.add,
+          ),
+        ),
+      );
+
+      controller.stepUp();
+      controller.stepDown();
+
+      expect(moved, [60, 40]);
+    });
+
+    testWidgets('toMark sends a handle where a press would', (tester) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      double? moved;
+
+      await tester.pumpWidget(
+        _host(
+          Slider(
+            value: 10,
+            step: 20,
+            controller: controller,
+            onChanged: (v) => moved = v,
+          ),
+        ),
+      );
+
+      controller.toMark(55);
+
+      expect(moved, 60);
+    });
+
+    testWidgets('it reports what is still possible', (tester) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        _host(Slider(value: 0, onChanged: (_) {}, controller: controller)),
+      );
+      expect(controller.canStepDown, isFalse);
+      expect(controller.canStepUp, isTrue);
+
+      await tester.pumpWidget(
+        _host(Slider(value: 100, onChanged: (_) {}, controller: controller)),
+      );
+      expect(controller.canStepDown, isTrue);
+      expect(controller.canStepUp, isFalse);
+    });
+
+    testWidgets('it tells its listeners when that changes', (tester) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      var told = 0;
+      controller.addListener(() => told++);
+
+      await tester.pumpWidget(
+        _host(Slider(value: 0, onChanged: (_) {}, controller: controller)),
+      );
+      expect(told, 1);
+
+      await tester.pumpWidget(
+        _host(Slider(value: 50, onChanged: (_) {}, controller: controller)),
+      );
+      expect(told, 2);
+    });
+
+    testWidgets('a controller let go of drives nothing', (tester) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      var calls = 0;
+
+      await tester.pumpWidget(
+        _host(
+          Slider(value: 50, controller: controller, onChanged: (_) => calls++),
+        ),
+      );
+      await tester.pumpWidget(_host(const SizedBox.shrink()));
+
+      controller.stepUp();
+
+      expect(calls, 0);
+    });
+  });
+}
+
+void _wordlessMarkTests() {
+  testWidgets('a mark with no words is named by the number it stands on',
+      (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      _host(
+        Slider(
+          value: 10,
+          marks: const [SliderMark(50, null)],
+          onChanged: (_) {},
+        ),
+      ),
+    );
+
+    expect(
+      find.bySemanticsLabel('50'),
+      findsOneWidget,
+      reason: 'a wordless mark can be pressed, so it has to say where it goes',
+    );
+    handle.dispose();
   });
 }

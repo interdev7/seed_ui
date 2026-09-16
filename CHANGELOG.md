@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`SliderController`.** Drives a `Slider`, `RangeSlider` or
+  `MultiRangeSlider` from outside the build: `stepUp`, `stepDown` and
+  `toMark`, plus `canStepUp` and `canStepDown` so a button of your own knows
+  when to grey itself out. It asks rather than owns — every method goes out
+  through the widget's own `onChanged`, exactly as a drag or an arrow key
+  does, so the value still has one owner.
+- **A mark is somewhere to be sent to.** Pressing one puts the nearest handle
+  on it, pulled onto the steps and held inside `bounds` like any other
+  journey — the shortest way to a named place, and the one a thumb reaches
+  for. A mark the handle may not rest on stays a label; a mark with no words
+  is named by the number it stands on, so a screen reader meets a button that
+  says where it goes.
+
 - **`Button.semanticsLabel`.** A button carrying nothing but an icon had no
   words to be named by, so a screen reader announced "button" and no more,
   and there was no way to say otherwise.

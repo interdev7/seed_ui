@@ -262,6 +262,7 @@ export 'src/components/data_entry/slider.dart'
         MultiRangeSliderDefaults,
         RangeSlider,
         Slider,
+        SliderController,
         SliderDefaults,
         SliderMark,
         SliderMarkBuilder,

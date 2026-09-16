@@ -242,6 +242,7 @@ SelectStatus
 SelectToken
 SelectVariant
 Slider
+SliderController
 SliderDefaults
 SliderMark
 SliderMarkBuilder

@@ -87,13 +87,28 @@ class StackedOverlay<T extends OverlayItem> {
 
   OverlayEntry? _entry;
 
+  /// The overlay [_entry] was inserted into, to tell a live one from an entry
+  /// left over from an app root that has since been replaced.
+  OverlayState? _host;
+
   /// Inserts the backing overlay entry if it is not mounted yet.
   ///
   /// [builder] renders the container around the current [items].
   void ensureMounted(WidgetBuilder builder) {
-    if (_entry != null) return;
+    final overlay = UiKit.requireOverlay();
+    // An entry belongs to the overlay it was inserted into. Where the app's
+    // root has been rebuilt — a new `MaterialApp`, a hot restart — that
+    // overlay is gone and the entry with it, while this field still held a
+    // reference to it: nothing was inserted into the new overlay, and every
+    // toast after that went nowhere at all, silently and for good.
+    //
+    // The overlay is what is compared, not the entry's own `mounted`: an
+    // entry inserted earlier in the same frame is not mounted yet either, and
+    // taking that for a dead one inserts a second copy of the same stack.
+    if (_entry != null && identical(_host, overlay)) return;
     _entry = OverlayEntry(builder: builder);
-    UiKit.requireOverlay().insert(_entry!);
+    _host = overlay;
+    overlay.insert(_entry!);
   }
 
   /// Pushes [item] onto the stack, mounting the overlay entry if needed.
@@ -120,6 +135,7 @@ class StackedOverlay<T extends OverlayItem> {
     if (_items.isEmpty) {
       _entry?.remove();
       _entry = null;
+      _host = null;
     }
   }
 

@@ -18,8 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A test that holds every token field to the pixels.** Each one draws its
   component twice, plain and with the one field named, and the two pictures
   have to differ — which is how the `Select` panel's deaf token above was
-  found — three times now. Two hundred and sixty-six fields are covered so
-  far, across twenty-three components.
+  found — five times now, and one of those was a crash rather than a field
+  that did nothing. Three hundred and sixty-one of the kit's three hundred and
+  seventy-five token fields are covered; the fourteen left out say why in the
+  file — a hover that a still pointer cannot start, a duration, a floor
+  nothing reaches, a font a test cannot swap.
 - **A test that every widget taking a `token` reads it.** `Radio` collected
   one and resolved without it, which is invisible from outside — the field is
   there, the doc comment is there, and only the pixels disagree. This reads
@@ -34,6 +37,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A toast never appeared again once the app's root had been rebuilt.** The
+  overlay entry behind `message` and `notification` belongs to the overlay it
+  was inserted into; after a new `MaterialApp` — a theme swapped at the root,
+  a hot restart — that overlay was gone and the entry with it, while the stack
+  still held a reference to it. Nothing was inserted into the new overlay, and
+  every message after that went nowhere at all, silently and for good.
+- **`PaginationToken.fontSize` did nothing.** Every figure in the pager took
+  the theme's size whatever the token said. It is read now, and the field
+  documents what it cannot do: a page button is square, sized by the control
+  preset, so a much larger figure needs a larger `size` beside it.
 - **A `Popover` threw where its `minWidth` was wider than the standard
   `maxWidth`.** Asking one field for one thing crashed the card with
   non-normalized constraints instead of widening it; the ceiling now gives

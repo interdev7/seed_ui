@@ -25,18 +25,44 @@ import 'package:seed_ui/seed_ui.dart';
 /// never read keeps the promise on paper only — and the kit has shipped a
 /// few of those, found by hand each time.
 ///
-/// Not every field can be proved this way. A handle that only appears under
-/// the pointer is one: the button slides in because the field is hovered, and
-/// by then the pointer is already still, so the button's own `MouseRegion`
-/// never sees it arrive. `InputNumberToken.handleHoverBg` is left out for
-/// that reason, not because it does nothing.
+/// Not every field can be proved this way, and the ones that cannot say so
+/// here rather than quietly going missing.
+///
+/// * A handle that only appears under the pointer: the button slides in
+///   because the field is hovered, and by then the pointer is already still,
+///   so the button's own `MouseRegion` never sees it arrive —
+///   `InputNumberToken.handleHoverBg`, `handleHoverColor` and
+///   `handleActiveBg`.
+/// * Things that are not drawn at all: `TableToken.resizeHandleWidth` is how
+///   wide a border is to take hold of, and `PopconfirmToken`'s and
+///   `DropdownToken`'s durations and curves are how long something takes
+///   rather than what it looks like — `FloatButtonToken.motionDuration` and
+///   `curve`, `TourToken.travelDuration` and `travelCurve`.
+/// * Floors that only show where something reaches them:
+///   `TableToken.columnMinWidth` — every arrangement tried here either had
+///   slack to share or was already scrolling.
+/// * `PaginationToken.borderRadius` rounds a focus ring and nothing else.
+/// * `TableToken.dragShadow` is worn by a column while it is carried, which
+///   needs a drag the test framework starts and holds across a rebuild.
+/// * `TableToken.resizeLineColor` puts its line in the tree while a border is
+///   dragged — the widget is there, and no pixel of the shot changes. That
+///   one is worth a look on a device.
+/// * `SeedToken.fontFamily` and `fontFamilyFallback`: a test renders with one
+///   face whatever is asked for, so the letters come back the same shape.
 ///
 /// This holds the promise to the pixels. Each probe draws the component
 /// twice, once plain and once with one field named, and the two pictures
 /// have to differ. A field wired to nothing draws the same picture, and the
 /// test says which field it was.
 class _Probe {
-  const _Probe(this.field, this.build, {this.act, this.hover, this.hoverAt});
+  const _Probe(
+    this.field,
+    this.build, {
+    this.theme,
+    this.act,
+    this.hover,
+    this.hoverAt,
+  });
 
   /// What is being proved, as `TokenType.field`.
   final String field;
@@ -44,6 +70,12 @@ class _Probe {
   /// The component, drawn plain when `changed` is false and with the one
   /// field named when it is true.
   final Widget Function(bool changed) build;
+
+  /// A theme above the whole app, for the components that have no widget to
+  /// hang a token on: a modal, a drawer, a message and a notification are
+  /// raised into the navigator's overlay, which sits *above* anything the
+  /// page puts around itself — a provider inside the page never reaches them.
+  final ComponentsConfig Function(bool changed)? theme;
 
   /// What has to happen before the picture is worth taking — a panel opened,
   /// a field focused. Runs before [hover].
@@ -64,17 +96,20 @@ final _key = GlobalKey();
 /// Set by an `act` that leaves a pointer down; called once the shot is taken.
 Future<void> Function()? _letGo;
 
-Widget _host(Widget child) => RepaintBoundary(
+Widget _host(Widget child, ComponentsConfig? components) => RepaintBoundary(
       key: _key,
       // Outside the app, not around the component: a panel — a `Select`'s
       // list, a picker's — is drawn in the overlay above the whole app, and
       // a boundary tucked around the field would photograph everything
       // except the thing being proved.
-      child: MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(
-          body: Center(
-            child: Padding(padding: const EdgeInsets.all(8), child: child),
+      child: ConfigProvider(
+        theme: components == null ? null : ThemeData(components: components),
+        child: MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          home: Scaffold(
+            body: Center(
+              child: Padding(padding: const EdgeInsets.all(8), child: child),
+            ),
           ),
         ),
       ),
@@ -88,6 +123,7 @@ Widget _host(Widget child) => RepaintBoundary(
 Future<int> _shot(
   WidgetTester tester,
   Widget child,
+  ComponentsConfig? components,
   Future<void> Function(WidgetTester)? act,
   Finder Function()? hover,
   Offset Function(WidgetTester)? hoverAt,
@@ -97,7 +133,7 @@ Future<int> _shot(
   // would otherwise greet the second and send it the other way.
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pump();
-  await tester.pumpWidget(_host(child));
+  await tester.pumpWidget(_host(child, components));
   await tester.pump();
   if (act != null) await act(tester);
 
@@ -136,17 +172,20 @@ Future<int> _shot(
   // still be down when the second one starts.
   await _letGo?.call();
   _letGo = null;
-  await tester.pump();
+  // Long enough for anything that takes itself away again — a message, a
+  // notification — to have gone: a timer still pending when the tree is
+  // disposed fails the test, however good the picture was.
+  await tester.pump(const Duration(seconds: 6));
   return shot;
 }
 
 void main() {
   for (final probe in _probes) {
     testWidgets('${probe.field} changes what is drawn', (tester) async {
-      final plain = await _shot(
-          tester, probe.build(false), probe.act, probe.hover, probe.hoverAt);
-      final named = await _shot(
-          tester, probe.build(true), probe.act, probe.hover, probe.hoverAt);
+      final plain = await _shot(tester, probe.build(false),
+          probe.theme?.call(false), probe.act, probe.hover, probe.hoverAt);
+      final named = await _shot(tester, probe.build(true),
+          probe.theme?.call(true), probe.act, probe.hover, probe.hoverAt);
       expect(
         named,
         isNot(plain),
@@ -639,6 +678,266 @@ Future<void> _openPicker(WidgetTester tester) async {
   await tester.tap(find.byType(DatePicker));
   await tester.pumpAndSettle();
 }
+
+Widget _tag(TagToken? token, {TagVariant? variant}) => Tag(
+      token: token,
+      variant: variant,
+      child: const Text('A tag'),
+    );
+
+Widget _checkbox(CheckboxToken? token, {bool checked = true}) => Checkbox(
+      checked: checked,
+      onChanged: (_) {},
+      label: const Text('Ticked'),
+      token: token,
+    );
+
+Widget _empty(EmptyToken? token) => Empty(
+      description: const Text('Nothing here'),
+      token: token,
+    );
+
+Widget _countdown(CountdownToken? token) => Countdown(
+      target: DateTime(2030),
+      token: token,
+    );
+
+Widget _spin(SpinToken? token, {SoftSize? size}) => Spin(
+      size: size,
+      token: token,
+    );
+
+Widget _result(ResultToken? token) => SizedBox(
+      width: 320,
+      child: Result(
+        title: const Text('All done'),
+        subtitle: const Text('And a line under it'),
+        token: token,
+      ),
+    );
+
+Widget _pagination(PaginationToken? token) => SizedBox(
+      // Room to grow: a pager that overflows draws the same striped edge
+      // whatever the token said.
+      width: 700,
+      child: Pagination(total: 120, current: 2, token: token),
+    );
+
+Widget _listy(ListyToken? token) => SizedBox(
+      width: 300,
+      height: 200,
+      child: Listy<String, Object, Object>(
+        items: const ['One', 'Two', 'Three'],
+        itemRender: (item, i) => Text(item),
+        token: token,
+      ),
+    );
+
+Widget _collapse(CollapseToken? token) => SizedBox(
+      width: 320,
+      child: Collapse(
+        defaultActiveKeys: const ['a'],
+        token: token,
+        items: const [
+          CollapseItem(
+            key: 'a',
+            label: Text('A panel'),
+            content: Text('What is inside it'),
+          ),
+        ],
+      ),
+    );
+
+Widget _tree(TreeToken? token, {List<String> selected = const ['a']}) =>
+    SizedBox(
+      width: 300,
+      child: Tree(
+        token: token,
+        selectedKeys: selected,
+        defaultExpandedKeys: const ['a'],
+        nodes: const [
+          TreeNode(
+            key: 'a',
+            title: Text('Root'),
+            children: [TreeNode(key: 'b', title: Text('Leaf'))],
+          ),
+        ],
+      ),
+    );
+
+Widget _sortable(SortableListToken? token) => SizedBox(
+      width: 300,
+      height: 200,
+      child: SortableList(
+        onReorder: (_, __) {},
+        // The whole row answers, rather than a grip: a test drags where the
+        // text is, and the grip is somewhere else.
+        showHandle: false,
+        token: token,
+        children: const [
+          SizedBox(key: ValueKey('a'), height: 40, child: Text('One')),
+          SizedBox(key: ValueKey('b'), height: 40, child: Text('Two')),
+        ],
+      ),
+    );
+
+/// Picks a row up and keeps hold of it: what a lift is drawn with only
+/// exists while something is being carried.
+Future<void> _liftRow(WidgetTester tester) async {
+  final gesture = await tester.startGesture(tester.getCenter(find.text('One')));
+  _letGo = gesture.up;
+  // Long enough for a delayed drag to be recognised — a row is picked up by
+  // holding it, not by brushing past.
+  await tester.pump(const Duration(milliseconds: 800));
+  await gesture.moveBy(const Offset(0, 40));
+  await tester.pumpAndSettle();
+}
+
+Widget _tooltip(TooltipToken? token) => Tooltip(
+      message: const Text('A word about it'),
+      token: token,
+      child: const Text('Anchor'),
+    );
+
+/// Rests the pointer on a tooltip's anchor and waits for it to appear.
+Future<void> _showTooltip(WidgetTester tester) async {
+  final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+  await mouse.addPointer(location: Offset.zero);
+  _letGo = mouse.removePointer;
+  await tester.pump();
+  await mouse.moveTo(tester.getCenter(find.text('Anchor')));
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pumpAndSettle();
+}
+
+Widget _alert(
+  AlertToken? token, {
+  bool described = false,
+  bool icon = false,
+}) =>
+    SizedBox(
+      width: 360,
+      child: Alert(
+        message: const Text('Something happened'),
+        description: described ? const Text('And here is what') : null,
+        showIcon: icon,
+        token: token,
+      ),
+    );
+
+Widget _popconfirm(PopconfirmToken? token) => Popconfirm(
+      title: const Text('Sure?'),
+      description: const Text('This cannot be undone'),
+      token: token,
+      child: const Text('Anchor'),
+    );
+
+Widget _timePanel(TimePickerToken? token) => SizedBox(
+      width: 260,
+      child: TimePicker(
+        value: const Duration(hours: 9, minutes: 30),
+        token: token,
+      ),
+    );
+
+/// Opens a time picker's panel, which is where its token is drawn.
+Future<void> _openTime(WidgetTester tester) async {
+  await tester.tap(find.byType(TimePicker));
+  await tester.pumpAndSettle();
+}
+
+/// Presses the anchor and lets the panel settle.
+Future<void> _pressAnchor(WidgetTester tester) async {
+  await tester.tap(find.text('Anchor'));
+  await tester.pumpAndSettle();
+}
+
+/// A button that raises whatever it is handed. The token for what it raises
+/// is named in the probe's `theme`, above the app: a modal, a drawer, a
+/// message and a notification are built in the navigator's overlay, which no
+/// provider inside the page is above.
+Widget _raiseButton(void Function() raise) => Builder(
+      builder: (context) => Button(
+        onPressed: raise,
+        child: const Text('Raise'),
+      ),
+    );
+
+/// Presses the button and stops while the toast is still on screen: a
+/// message and a notification take themselves away after a few seconds, and
+/// `pumpAndSettle` runs every timer to the end — including that one.
+Future<void> _pressBriefly(WidgetTester tester) async {
+  // The stack behind a toast is static and outlives the tree, so what one
+  // shot raised is still there for the next one to be refused by. Cleared
+  // once the picture has been taken.
+  message.destroy();
+  notification.destroy();
+  await tester.pump();
+  _letGo = () async {
+    message.destroy();
+    notification.destroy();
+  };
+  await tester.tap(find.text('Raise'));
+  await tester.pump();
+  // Past the arrival animation, and well short of the few seconds it stays.
+  await tester.pump(const Duration(milliseconds: 900));
+}
+
+Future<void> _pressRaise(WidgetTester tester) async {
+  await tester.tap(find.text('Raise'));
+  await tester.pumpAndSettle();
+}
+
+/// The one step a tour needs, hung on a key the page can point at.
+final _tourTarget = GlobalKey();
+
+Widget _tour(TourToken? token, {TourType type = TourType.normal}) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+            key: _tourTarget,
+            width: 120,
+            height: 40,
+            child: const Text('Here')),
+        Tour(
+          open: true,
+          type: type,
+          token: token,
+          steps: [
+            TourStep(
+              target: _tourTarget,
+              title: const Text('First stop'),
+              description: const Text(
+                'What it is for, at enough length that the card has a width '
+                'to be held to rather than only its own content.',
+              ),
+            ),
+            // A second stop, so the run of indicators exists at all: one stop
+            // has nothing to indicate.
+            TourStep(
+              target: _tourTarget,
+              title: const Text('Second stop'),
+              description: const Text('And what that one is for'),
+            ),
+          ],
+        ),
+      ],
+    );
+
+/// A run too long for its box, which is when the scroll arrows appear.
+Widget _narrowSegmented(SegmentedToken? token) => SizedBox(
+      width: 140,
+      child: Segmented<String>(
+        value: 'a',
+        options: const [
+          SegmentedOption(value: 'a', label: 'The first one'),
+          SegmentedOption(value: 'b', label: 'The second one'),
+          SegmentedOption(value: 'c', label: 'The third one'),
+        ],
+        onChanged: (_) {},
+        token: token,
+      ),
+    );
 
 final _probes = <_Probe>[
   _Probe(
@@ -2232,5 +2531,622 @@ final _probes = <_Probe>[
       withTime: true,
     ),
     act: _openPicker,
+  ),
+  _Probe(
+    'TagToken.defaultBg',
+    // The fill belongs to the filled variant; an outlined tag stands on
+    // nothing at all.
+    (c) => _tag(
+      c ? const TagToken(defaultBg: _loud) : null,
+      variant: TagVariant.filled,
+    ),
+  ),
+  _Probe(
+    'TagToken.defaultColor',
+    (c) => _tag(c ? const TagToken(defaultColor: _loud) : null),
+  ),
+  _Probe(
+    'TagToken.fontSize',
+    (c) => _tag(c ? const TagToken(fontSize: 24) : null),
+  ),
+  _Probe(
+    'TagToken.lineHeight',
+    (c) => _tag(c ? const TagToken(lineHeight: 44) : null),
+  ),
+  _Probe(
+    'TagToken.borderRadius',
+    (c) => _tag(c ? const TagToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'CheckboxToken.boxSize',
+    (c) => _checkbox(c ? const CheckboxToken(boxSize: 32) : null),
+  ),
+  _Probe(
+    'CheckboxToken.borderRadius',
+    (c) => _checkbox(c ? const CheckboxToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'CheckboxToken.colorPrimary',
+    (c) => _checkbox(c ? const CheckboxToken(colorPrimary: _loud) : null),
+  ),
+  _Probe(
+    'CheckboxToken.colorBorder',
+    (c) => _checkbox(
+      c ? const CheckboxToken(colorBorder: _loud) : null,
+      checked: false,
+    ),
+  ),
+  _Probe(
+    'CheckboxToken.colorBgContainer',
+    (c) => _checkbox(
+      c ? const CheckboxToken(colorBgContainer: _loud) : null,
+      checked: false,
+    ),
+  ),
+  _Probe(
+    'CheckboxToken.fontSize',
+    (c) => _checkbox(c ? const CheckboxToken(fontSize: 24) : null),
+  ),
+  _Probe(
+    'EmptyToken.imageHeight',
+    (c) => _empty(c ? const EmptyToken(imageHeight: 120) : null),
+  ),
+  _Probe(
+    'EmptyToken.colorTextDescription',
+    (c) => _empty(c ? const EmptyToken(colorTextDescription: _loud) : null),
+  ),
+  _Probe(
+    'EmptyToken.fontSize',
+    (c) => _empty(c ? const EmptyToken(fontSize: 24) : null),
+  ),
+  _Probe(
+    'CountdownToken.fontSize',
+    (c) => _countdown(c ? const CountdownToken(fontSize: 40) : null),
+  ),
+  _Probe(
+    'CountdownToken.color',
+    (c) => _countdown(c ? const CountdownToken(color: _loud) : null),
+  ),
+  _Probe(
+    'CountdownToken.fontWeight',
+    (c) => _countdown(
+      c ? const CountdownToken(fontWeight: FontWeight.w900) : null,
+    ),
+  ),
+  _Probe(
+    'SpinToken.colorPrimary',
+    (c) => _spin(c ? const SpinToken(colorPrimary: _loud) : null),
+  ),
+  _Probe(
+    'SpinToken.dotSize',
+    (c) => _spin(c ? const SpinToken(dotSize: 60) : null),
+  ),
+  _Probe(
+    'SpinToken.dotSizeSM',
+    (c) => _spin(
+      c ? const SpinToken(dotSizeSM: 50) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'SpinToken.dotSizeLG',
+    (c) => _spin(
+      c ? const SpinToken(dotSizeLG: 70) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'ResultToken.titleFontSize',
+    (c) => _result(c ? const ResultToken(titleFontSize: 34) : null),
+  ),
+  _Probe(
+    'ResultToken.subtitleFontSize',
+    (c) => _result(c ? const ResultToken(subtitleFontSize: 24) : null),
+  ),
+  _Probe(
+    'ResultToken.iconSize',
+    (c) => _result(c ? const ResultToken(iconSize: 100) : null),
+  ),
+  _Probe(
+    'ResultToken.padding',
+    (c) => _result(
+      c ? const ResultToken(padding: EdgeInsets.all(48)) : null,
+    ),
+  ),
+  _Probe(
+    'ResultToken.fontWeight',
+    (c) => _result(
+      c ? const ResultToken(fontWeight: FontWeight.w900) : null,
+    ),
+  ),
+  _Probe(
+    'PaginationToken.fontSize',
+    (c) => _pagination(c ? const PaginationToken(fontSize: 10) : null),
+  ),
+  _Probe(
+    'PaginationToken.itemActiveColorPrimary',
+    (c) => _pagination(
+      c ? const PaginationToken(itemActiveColorPrimary: _loud) : null,
+    ),
+  ),
+  _Probe(
+    'ListyToken.itemPaddingBlock',
+    (c) => _listy(c ? const ListyToken(itemPaddingBlock: 36) : null),
+  ),
+  _Probe(
+    'ListyToken.itemPaddingInline',
+    (c) => _listy(c ? const ListyToken(itemPaddingInline: 60) : null),
+  ),
+  _Probe(
+    'CollapseToken.headerBg',
+    (c) => _collapse(c ? const CollapseToken(headerBg: _loud) : null),
+  ),
+  _Probe(
+    'CollapseToken.headerPadding',
+    (c) => _collapse(
+        c ? const CollapseToken(headerPadding: EdgeInsets.all(36)) : null),
+  ),
+  _Probe(
+    'CollapseToken.contentBg',
+    (c) => _collapse(c ? const CollapseToken(contentBg: _loud) : null),
+  ),
+  _Probe(
+    'CollapseToken.contentPadding',
+    (c) => _collapse(
+        c ? const CollapseToken(contentPadding: EdgeInsets.all(40)) : null),
+  ),
+  _Probe(
+    'CollapseToken.borderRadius',
+    (c) => _collapse(c ? const CollapseToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'TreeToken.titleHeight',
+    (c) => _tree(c ? const TreeToken(titleHeight: 56) : null),
+  ),
+  _Probe(
+    'TreeToken.indentSize',
+    (c) => _tree(c ? const TreeToken(indentSize: 72) : null),
+  ),
+  _Probe(
+    'TreeToken.borderRadius',
+    (c) => _tree(c ? const TreeToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'TreeToken.nodeSelectedBg',
+    (c) => _tree(c ? const TreeToken(nodeSelectedBg: _loud) : null),
+  ),
+  _Probe(
+    'TreeToken.nodeHoverBg',
+    (c) => _tree(
+      c ? const TreeToken(nodeHoverBg: _loud) : null,
+      selected: const [],
+    ),
+    hover: () => find.text('Root'),
+  ),
+  _Probe(
+    'SortableListToken.backgroundColor',
+    (c) => _sortable(
+      c ? const SortableListToken(backgroundColor: _loud) : null,
+    ),
+    act: _liftRow,
+  ),
+  _Probe(
+    'SortableListToken.liftShadow',
+    (c) => _sortable(
+      c
+          ? const SortableListToken(
+              liftShadow: [BoxShadow(color: _loud, blurRadius: 12)],
+            )
+          : null,
+    ),
+    act: _liftRow,
+  ),
+  _Probe(
+    'SortableListToken.liftRadius',
+    (c) => _sortable(c ? const SortableListToken(liftRadius: 24) : null),
+    act: _liftRow,
+  ),
+  _Probe(
+    'TooltipToken.colorBg',
+    (c) => _tooltip(c ? const TooltipToken(colorBg: _loud) : null),
+    act: _showTooltip,
+  ),
+  _Probe(
+    'TooltipToken.colorText',
+    (c) => _tooltip(c ? const TooltipToken(colorText: _loud) : null),
+    act: _showTooltip,
+  ),
+  _Probe(
+    'TooltipToken.borderRadius',
+    (c) => _tooltip(c ? const TooltipToken(borderRadius: 0) : null),
+    act: _showTooltip,
+  ),
+  _Probe(
+    'TooltipToken.padding',
+    (c) => _tooltip(
+      c ? const TooltipToken(padding: EdgeInsets.all(28)) : null,
+    ),
+    act: _showTooltip,
+  ),
+  _Probe(
+    'TooltipToken.fontSize',
+    (c) => _tooltip(c ? const TooltipToken(fontSize: 24) : null),
+    act: _showTooltip,
+  ),
+  _Probe(
+    'AlertToken.padding',
+    (c) => _alert(c ? const AlertToken(padding: EdgeInsets.all(36)) : null),
+  ),
+  _Probe(
+    'AlertToken.borderRadius',
+    (c) => _alert(c ? const AlertToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'AlertToken.fontSize',
+    (c) => _alert(c ? const AlertToken(fontSize: 24) : null),
+  ),
+  _Probe(
+    'AlertToken.withDescriptionPadding',
+    (c) => _alert(
+      c ? const AlertToken(withDescriptionPadding: EdgeInsets.all(36)) : null,
+      described: true,
+    ),
+  ),
+  _Probe(
+    'AlertToken.withDescriptionIconSize',
+    (c) => _alert(
+      c ? const AlertToken(withDescriptionIconSize: 44) : null,
+      described: true,
+      // An alert draws no icon unless asked, and this is that icon's size.
+      icon: true,
+    ),
+  ),
+  _Probe(
+    'PopconfirmToken.colorBgElevated',
+    (c) => _popconfirm(
+      c ? const PopconfirmToken(colorBgElevated: _loud) : null,
+    ),
+    act: _pressAnchor,
+  ),
+  _Probe(
+    'PopconfirmToken.padding',
+    (c) => _popconfirm(
+      c ? const PopconfirmToken(padding: EdgeInsets.all(36)) : null,
+    ),
+    act: _pressAnchor,
+  ),
+  _Probe(
+    'PopconfirmToken.borderRadius',
+    (c) => _popconfirm(c ? const PopconfirmToken(borderRadius: 0) : null),
+    act: _pressAnchor,
+  ),
+  _Probe(
+    'PopconfirmToken.titleFontSize',
+    (c) => _popconfirm(
+      c ? const PopconfirmToken(titleFontSize: 28) : null,
+    ),
+    act: _pressAnchor,
+  ),
+  _Probe(
+    'PopconfirmToken.descriptionFontSize',
+    (c) => _popconfirm(
+      c ? const PopconfirmToken(descriptionFontSize: 24) : null,
+    ),
+    act: _pressAnchor,
+  ),
+  _Probe(
+    'TimePickerToken.borderRadius',
+    (c) => _timePanel(c ? const TimePickerToken(borderRadius: 0) : null),
+    act: _openTime,
+  ),
+  _Probe(
+    'TimePickerToken.cellHeight',
+    (c) => _timePanel(c ? const TimePickerToken(cellHeight: 48) : null),
+    act: _openTime,
+  ),
+  _Probe(
+    'TimePickerToken.columnWidth',
+    (c) => _timePanel(c ? const TimePickerToken(columnWidth: 90) : null),
+    act: _openTime,
+  ),
+  _Probe(
+    'TimePickerToken.visibleRows',
+    (c) => _timePanel(c ? const TimePickerToken(visibleRows: 3) : null),
+    act: _openTime,
+  ),
+  _Probe(
+    'TourToken.width',
+    // Narrower than the card would otherwise take: a ceiling above what the
+    // content asks for changes nothing.
+    (c) => _tour(c ? const TourToken(width: 220) : null),
+  ),
+  _Probe(
+    'TourToken.maskColor',
+    (c) => _tour(c ? const TourToken(maskColor: _loud) : null),
+  ),
+  _Probe(
+    'TourToken.closeBtnSize',
+    (c) => _tour(c ? const TourToken(closeBtnSize: 40) : null),
+  ),
+  _Probe(
+    'TourToken.indicatorSize',
+    (c) => _tour(c ? const TourToken(indicatorSize: 20) : null),
+  ),
+  _Probe(
+    'ModalToken.colorBgElevated',
+    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+          title: Text('A modal'),
+          content: Text('With a line in it'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        modal: c ? const ModalToken(colorBgElevated: _loud) : null),
+    act: _pressRaise,
+  ),
+  _Probe(
+    'ModalToken.colorBgMask',
+    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+          title: Text('A modal'),
+          content: Text('With a line in it'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        modal: c ? const ModalToken(colorBgMask: _loud) : null),
+    act: _pressRaise,
+  ),
+  _Probe(
+    'ModalToken.padding',
+    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+          title: Text('A modal'),
+          content: Text('With a line in it'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        modal: c ? const ModalToken(padding: EdgeInsets.all(48)) : null),
+    act: _pressRaise,
+  ),
+  _Probe(
+    'ModalToken.borderRadius',
+    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+          title: Text('A modal'),
+          content: Text('With a line in it'),
+        ))),
+    theme: (c) =>
+        ComponentsConfig(modal: c ? const ModalToken(borderRadius: 0) : null),
+    act: _pressRaise,
+  ),
+  _Probe(
+    'ModalToken.titleFontSize',
+    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+          title: Text('A modal'),
+          content: Text('With a line in it'),
+        ))),
+    theme: (c) =>
+        ComponentsConfig(modal: c ? const ModalToken(titleFontSize: 32) : null),
+    act: _pressRaise,
+  ),
+  _Probe(
+    'ModalToken.contentFontSize',
+    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+          title: Text('A modal'),
+          content: Text('With a line in it'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        modal: c ? const ModalToken(contentFontSize: 26) : null),
+    act: _pressRaise,
+  ),
+  _Probe(
+    'DrawerToken.colorBgElevated',
+    (c) => _raiseButton(() => Drawer.open(const DrawerConfig(
+          title: Text('A drawer'),
+          child: Text('With a line in it'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        drawer: c ? const DrawerToken(colorBgElevated: _loud) : null),
+    act: _pressRaise,
+  ),
+  _Probe(
+    'DrawerToken.colorBgMask',
+    (c) => _raiseButton(() => Drawer.open(const DrawerConfig(
+          title: Text('A drawer'),
+          child: Text('With a line in it'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        drawer: c ? const DrawerToken(colorBgMask: _loud) : null),
+    act: _pressRaise,
+  ),
+  _Probe(
+    'DrawerToken.padding',
+    (c) => _raiseButton(() => Drawer.open(const DrawerConfig(
+          title: Text('A drawer'),
+          child: Text('With a line in it'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        drawer: c ? const DrawerToken(padding: EdgeInsets.all(48)) : null),
+    act: _pressRaise,
+  ),
+  _Probe(
+    'MessageToken.colorBgElevated',
+    (c) => _raiseButton(
+      () => message.open(
+        MessageConfig(
+          content: const Text('A word'),
+          token: c ? const MessageToken(colorBgElevated: _loud) : null,
+        ),
+      ),
+    ),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'MessageToken.contentColor',
+    (c) => _raiseButton(
+      () => message.open(
+        MessageConfig(
+          content: const Text('A word'),
+          token: c ? const MessageToken(contentColor: _loud) : null,
+        ),
+      ),
+    ),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'MessageToken.padding',
+    (c) => _raiseButton(
+      () => message.open(
+        MessageConfig(
+          content: const Text('A word'),
+          token: c ? const MessageToken(padding: EdgeInsets.all(36)) : null,
+        ),
+      ),
+    ),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'MessageToken.borderRadius',
+    (c) => _raiseButton(
+      () => message.open(
+        MessageConfig(
+          content: const Text('A word'),
+          token: c ? const MessageToken(borderRadius: 0) : null,
+        ),
+      ),
+    ),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'NotificationToken.colorBgElevated',
+    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+          message: Text('A notice'),
+          description: Text('And what it says'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        notification:
+            c ? const NotificationToken(colorBgElevated: _loud) : null),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'NotificationToken.padding',
+    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+          message: Text('A notice'),
+          description: Text('And what it says'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        notification:
+            c ? const NotificationToken(padding: EdgeInsets.all(40)) : null),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'NotificationToken.borderRadius',
+    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+          message: Text('A notice'),
+          description: Text('And what it says'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        notification: c ? const NotificationToken(borderRadius: 0) : null),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'NotificationToken.titleFontSize',
+    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+          message: Text('A notice'),
+          description: Text('And what it says'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        notification: c ? const NotificationToken(titleFontSize: 30) : null),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'NotificationToken.descriptionFontSize',
+    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+          message: Text('A notice'),
+          description: Text('And what it says'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        notification:
+            c ? const NotificationToken(descriptionFontSize: 24) : null),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'NotificationToken.width',
+    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+          message: Text('A notice'),
+          description: Text('And what it says'),
+        ))),
+    theme: (c) => ComponentsConfig(
+        notification: c ? const NotificationToken(width: 500) : null),
+    act: _pressBriefly,
+  ),
+  _Probe(
+    'DropdownToken.barrierColor',
+    (c) => _dropdown(c ? const DropdownToken(barrierColor: _loud) : null),
+  ),
+  _Probe(
+    'SegmentedToken.arrowBg',
+    (c) => _narrowSegmented(c ? const SegmentedToken(arrowBg: _loud) : null),
+  ),
+  _Probe(
+    'SegmentedToken.arrowColor',
+    (c) => _narrowSegmented(c ? const SegmentedToken(arrowColor: _loud) : null),
+  ),
+  _Probe(
+    'SegmentedToken.arrowHoverBg',
+    (c) =>
+        _narrowSegmented(c ? const SegmentedToken(arrowHoverBg: _loud) : null),
+    hoverAt: (tester) {
+      final box = tester.getRect(find.byType(Segmented<String>));
+      return Offset(box.right - 12, box.center.dy);
+    },
+  ),
+  _Probe(
+    'SliderToken.markFontSize',
+    (c) => _slider(c ? const SliderToken(markFontSize: 22) : null),
+  ),
+  _Probe(
+    'SliderToken.markDisabledColor',
+    (c) => SizedBox(
+      width: 260,
+      child: Slider(
+        value: 40,
+        // A mark the handle may not rest on is greyed rather than hidden,
+        // and this is the grey.
+        marks: const [SliderMark(0, 'nil', disabled: true)],
+        onChanged: (_) {},
+        token: c ? const SliderToken(markDisabledColor: _loud) : null,
+      ),
+    ),
+  ),
+  _Probe(
+    'SpinToken.colorBgContainer',
+    // The wash a spinner lays over what it is covering: without something
+    // underneath there is nothing to cover and no wash is drawn.
+    (c) => SizedBox(
+      width: 200,
+      height: 120,
+      child: Spin(
+        token: c ? const SpinToken(colorBgContainer: _loud) : null,
+        child: const Text('Underneath'),
+      ),
+    ),
+  ),
+  _Probe(
+    'TourToken.primaryPrevBtnBg',
+    (c) => _tour(
+      c ? const TourToken(primaryPrevBtnBg: _loud) : null,
+      type: TourType.primary,
+    ),
+  ),
+  _Probe(
+    'PopconfirmToken.barrierColor',
+    (c) => _popconfirm(c ? const PopconfirmToken(barrierColor: _loud) : null),
+    act: _pressAnchor,
+  ),
+  _Probe(
+    'FloatButtonToken.gap',
+    // The space between a group's buttons, which a group of one has none of.
+    (c) => FloatButtonGroup(
+      open: true,
+      token: c ? const FloatButtonToken(gap: 40) : null,
+      items: const [
+        FloatButtonItem(value: 'a', icon: Icon(Icons.edit)),
+        FloatButtonItem(value: 'b', icon: Icon(Icons.share)),
+      ],
+    ),
   ),
 ];

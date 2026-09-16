@@ -55,6 +55,11 @@ class PaginationToken {
   final Color? itemActiveColorPrimary;
 
   /// Label font size.
+  ///
+  /// A page button is square, sized by the control preset, so a figure much
+  /// larger than the preset's own does not fit inside it — raise
+  /// [Pagination.size] alongside this, or leave it null and let the preset
+  /// decide.
   final double? fontSize;
 
   /// Corner radius.
@@ -399,15 +404,18 @@ class _PaginationState extends State<Pagination> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final pt = (widget.token ??
-            ConfigProvider.componentOf<PaginationToken>(context) ??
-            const PaginationToken())
-        ._resolve(token);
+    final named = widget.token ??
+        ConfigProvider.componentOf<PaginationToken>(context) ??
+        const PaginationToken();
+    final pt = named._resolve(token);
     if (_hideOnSinglePage && _pageCount <= 1) {
       return const SizedBox.shrink();
     }
     final height = _controlHeight(token);
-    final fontSize = _fontSize(token);
+    // The token's own size wins over the preset's: named and then never
+    // asked for, `fontSize` was a field that did nothing, every figure in the
+    // pager taking the theme's size whatever the token said.
+    final fontSize = named.fontSize ?? _fontSize(token);
 
     // The pager itself — arrows and page numbers — is one atomic Row, so its
     // pieces never wrap individually. The total, size changer and jumper are

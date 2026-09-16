@@ -49,6 +49,7 @@ Left unsaid, the size comes from `SwitchDefaults.size`, then from the
 
 | Property | Effect |
 | --- | --- |
+| `semanticsLabel` | What a screen reader calls it. A switch is a track and a handle and no words: without one it arrives as "switch, on" and nothing about what is on |
 | `disabled` | Greys out and blocks toggling |
 | `loading` | Shows a spinner on the thumb and blocks toggling |
 

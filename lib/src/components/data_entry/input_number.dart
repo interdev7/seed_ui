@@ -713,49 +713,57 @@ class _StepButtonState extends State<_StepButton> {
         ? t.colorTextQuaternary
         : (_hovered ? r.handleHoverColor : t.colorTextTertiary);
 
-    return MouseRegion(
-      cursor: active ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() {
-        _hovered = false;
-        _pressed = false;
-      }),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: active ? (_) => setState(() => _pressed = true) : null,
-        onTapUp: active ? (_) => setState(() => _pressed = false) : null,
-        onTapCancel: active ? () => setState(() => _pressed = false) : null,
-        onTap: active ? widget.onPressed : null,
-        child: AnimatedContainer(
-          duration: t.motionDurationMid,
-          curve: t.motionEaseInOut,
-          // `handleWidth` is the handle's own; `controlWidth` is the field's
-          // stepper column. Both were named and only one took.
-          width: r.handleWidth + t.size,
-          height: widget.height - t.lineWidth * 2,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _pressed && active
-                ? r.handleActiveBg
-                : _hovered && active
-                    ? r.handleHoverBg
-                    : r.handleBg,
-            // The rule goes between the handle and the field, whichever side
-            // the handle was put on.
-            border: BorderDirectional(
-              start: widget.trailing
-                  ? BorderSide(color: r.handleBorderColor, width: t.lineWidth)
-                  : BorderSide.none,
-              end: widget.trailing
-                  ? BorderSide.none
-                  : BorderSide(color: r.handleBorderColor, width: t.lineWidth),
+    // Kept out of the semantics tree: the field itself already announces its
+    // value, the two it would step to, and carries the increase and decrease
+    // actions that do it. These two are the same operation drawn for a
+    // pointer, and a second way in reads as two more unnamed buttons.
+    return ExcludeSemantics(
+      child: MouseRegion(
+        cursor:
+            active ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() {
+          _hovered = false;
+          _pressed = false;
+        }),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: active ? (_) => setState(() => _pressed = true) : null,
+          onTapUp: active ? (_) => setState(() => _pressed = false) : null,
+          onTapCancel: active ? () => setState(() => _pressed = false) : null,
+          onTap: active ? widget.onPressed : null,
+          child: AnimatedContainer(
+            duration: t.motionDurationMid,
+            curve: t.motionEaseInOut,
+            // `handleWidth` is the handle's own; `controlWidth` is the field's
+            // stepper column. Both were named and only one took.
+            width: r.handleWidth + t.size,
+            height: widget.height - t.lineWidth * 2,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _pressed && active
+                  ? r.handleActiveBg
+                  : _hovered && active
+                      ? r.handleHoverBg
+                      : r.handleBg,
+              // The rule goes between the handle and the field, whichever side
+              // the handle was put on.
+              border: BorderDirectional(
+                start: widget.trailing
+                    ? BorderSide(color: r.handleBorderColor, width: t.lineWidth)
+                    : BorderSide.none,
+                end: widget.trailing
+                    ? BorderSide.none
+                    : BorderSide(
+                        color: r.handleBorderColor, width: t.lineWidth),
+              ),
             ),
-          ),
-          child: CustomPaint(
-            size: const Size(12, 12),
-            painter: _SignPainter(
-              ink,
-              plus: widget.direction == _StepDirection.up,
+            child: CustomPaint(
+              size: const Size(12, 12),
+              painter: _SignPainter(
+                ink,
+                plus: widget.direction == _StepDirection.up,
+              ),
             ),
           ),
         ),

@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Button.semanticsLabel`.** A button carrying nothing but an icon had no
   words to be named by, so a screen reader announced "button" and no more,
   and there was no way to say otherwise.
+- **`Switch.semanticsLabel`.** A switch is a track and a handle and no words,
+  so it arrived as "switch, on" and nothing about what was on — and there was
+  no way to say otherwise.
 - **Five words for the glyphs**, in all eleven languages: `clear`, `remove`,
   `retry`, `preview`, `download`. The crosses and arrows that carry them had
   been silent.
@@ -29,6 +32,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A `Pagination`'s arrows had no name**, and nothing said which page you
   were on. The arrows take the words the kit already had for them, and the
   page you are on is marked selected.
+- **A `Tree`'s chevron and its node boxes had no name.** The chevron says
+  which way it would go — open or shut — and a node's box is named the way a
+  `Table`'s row box is, so it is no longer "checkbox, checked" and nothing
+  about what was checked. Seventy-one of the kit's unnamed controls were in
+  the tree alone.
+- **A `Collapse` header's chevron had no name** where it stands on its own as
+  the only thing that opens the panel.
+- **An `InputNumber`'s step buttons are out of the semantics tree.** The field
+  already announces its value, the two it would step to, and carries the
+  increase and decrease actions that do it; the buttons are that same
+  operation drawn for a pointer, and a second way in read as two more unnamed
+  buttons.
 - **The cross that empties a picker had no name** — on `DatePicker`,
   `DateRangePicker`, `MultiDatePicker` and `TimePicker` alike — and neither
   did an `Upload` row's remove, retry, preview and download.

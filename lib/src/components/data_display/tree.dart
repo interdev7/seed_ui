@@ -1200,11 +1200,17 @@ class _NodeRowState extends State<_NodeRow> {
           ),
         ],
         if (widget.checkable) ...[
-          Checkbox(
-            checked: widget.checked,
-            indeterminate: widget.halfChecked,
-            disabled: widget.disabled || widget.node.disableCheckbox,
-            onChanged: widget.onCheck,
+          // Named the way a `Table`'s row box is: the title is announced as
+          // its own node beside this one, but a box on its own was "checkbox,
+          // checked" and nothing about what had been checked.
+          Semantics(
+            label: context.seedLocale.selectRow,
+            child: Checkbox(
+              checked: widget.checked,
+              indeterminate: widget.halfChecked,
+              disabled: widget.disabled || widget.node.disableCheckbox,
+              onChanged: widget.onCheck,
+            ),
           ),
           SizedBox(width: t.sizeXS),
         ],
@@ -1367,10 +1373,21 @@ class _NodeRowState extends State<_NodeRow> {
         );
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      // A chevron and nothing else, so it has no words to be named by. What
+      // it does depends on which way it is pointing, and the name says so
+      // rather than leaving a reader to guess from a picture.
+      child: Semantics(
+        button: true,
+        expanded: widget.expanded,
+        label: widget.expanded
+            ? context.seedLocale.collapseRow
+            : context.seedLocale.expandRow,
         onTap: widget.onExpand,
-        child: Center(child: glyph),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onExpand,
+          child: Center(child: glyph),
+        ),
       ),
     );
   }

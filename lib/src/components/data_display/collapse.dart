@@ -594,6 +594,11 @@ class _TappableState extends State<_Tappable> {
       child: Semantics(
         button: true,
         expanded: widget.expanded,
+        // A chevron and nothing else where it stands on its own, so it says
+        // what pressing it would do rather than leaving a picture to speak.
+        label: widget.expanded
+            ? context.seedLocale.collapseRow
+            : context.seedLocale.expandRow,
         onTap: widget.onTap,
         child: MouseRegion(
           cursor: SystemMouseCursors.click,

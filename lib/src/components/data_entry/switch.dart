@@ -167,6 +167,7 @@ class Switch extends StatefulWidget {
     this.size,
     this.disabled,
     this.loading = false,
+    this.semanticsLabel,
     this.checkedChild,
     this.uncheckedChild,
     this.token,
@@ -204,6 +205,13 @@ class Switch extends StatefulWidget {
   /// Shows a spinner on the thumb and blocks toggling — for a setting whose
   /// change is being persisted.
   final bool loading;
+
+  /// What a screen reader calls this switch.
+  ///
+  /// A switch is a track and a handle and no words: without one it arrives as
+  /// "switch, on" and nothing about what is on. Where the words beside it
+  /// name it — a `Form` field's label, a row's title — say that here.
+  final String? semanticsLabel;
 
   /// Small label shown inside the track when on.
   final Widget? checkedChild;
@@ -344,6 +352,7 @@ class _SoftSwitchState extends State<Switch> {
         ),
       },
       child: Semantics(
+        label: widget.semanticsLabel,
         toggled: _on,
         enabled: _enabled,
         onTap: _enabled ? _toggle : null,

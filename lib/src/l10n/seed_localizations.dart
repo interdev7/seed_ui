@@ -69,6 +69,7 @@ class SeedLocalizations {
     this.reset = 'Reset',
     this.close = 'Close',
     this.clear = 'Clear',
+    this.add = 'Add',
     this.goToPage = 'Go to',
     this.remove = 'Remove',
     this.retry = 'Try again',
@@ -129,6 +130,10 @@ class SeedLocalizations {
   /// What a screen reader calls the cross that empties a field — a picker's,
   /// a select's. A glyph says nothing out loud.
   final String clear;
+
+  /// What a screen reader calls the plus that opens one more of something —
+  /// an editable `Tabs` bar's new tab. A glyph says nothing out loud.
+  final String add;
 
   /// Beside a `Pagination`'s jump field, and what names it out loud.
   final String goToPage;
@@ -530,6 +535,7 @@ class SeedLocalizations {
     close: 'Закрыть',
     goToPage: 'Перейти к',
     clear: 'Очистить',
+    add: 'Добавить',
     remove: 'Убрать',
     retry: 'Повторить',
     preview: 'Просмотр',
@@ -606,6 +612,7 @@ class SeedLocalizations {
     close: 'Ýap',
     goToPage: 'Geçmek',
     clear: 'Arassalamak',
+    add: 'Goşmak',
     remove: 'Aýyrmak',
     retry: 'Gaýtadan synanyş',
     preview: 'Öňünden görmek',
@@ -681,6 +688,7 @@ class SeedLocalizations {
     close: 'Schließen',
     goToPage: 'Gehe zu',
     clear: 'Leeren',
+    add: 'Hinzufügen',
     remove: 'Entfernen',
     retry: 'Erneut versuchen',
     preview: 'Vorschau',
@@ -756,6 +764,7 @@ class SeedLocalizations {
     close: 'Fermer',
     goToPage: 'Aller à',
     clear: 'Effacer',
+    add: 'Ajouter',
     remove: 'Retirer',
     retry: 'Réessayer',
     preview: 'Aperçu',
@@ -832,6 +841,7 @@ class SeedLocalizations {
     close: 'Cerrar',
     goToPage: 'Ir a',
     clear: 'Borrar',
+    add: 'Añadir',
     remove: 'Quitar',
     retry: 'Reintentar',
     preview: 'Vista previa',
@@ -908,6 +918,7 @@ class SeedLocalizations {
     close: '关闭',
     goToPage: '跳至',
     clear: '清除',
+    add: '添加',
     remove: '移除',
     retry: '重试',
     preview: '预览',
@@ -983,6 +994,7 @@ class SeedLocalizations {
     close: '閉じる',
     goToPage: '移動',
     clear: 'クリア',
+    add: '追加',
     remove: '削除',
     retry: '再試行',
     preview: 'プレビュー',
@@ -1059,6 +1071,7 @@ class SeedLocalizations {
     close: 'Kapat',
     goToPage: 'Git',
     clear: 'Temizle',
+    add: 'Ekle',
     remove: 'Kaldır',
     retry: 'Yeniden dene',
     preview: 'Önizleme',
@@ -1134,6 +1147,7 @@ class SeedLocalizations {
     close: 'Fechar',
     goToPage: 'Ir para',
     clear: 'Limpar',
+    add: 'Adicionar',
     remove: 'Remover',
     retry: 'Tentar novamente',
     preview: 'Pré-visualizar',
@@ -1210,6 +1224,7 @@ class SeedLocalizations {
     close: 'إغلاق',
     goToPage: 'انتقل إلى',
     clear: 'مسح',
+    add: 'إضافة',
     remove: 'إزالة',
     retry: 'إعادة المحاولة',
     preview: 'معاينة',
@@ -1287,6 +1302,7 @@ class SeedLocalizations {
     close: 'סגור',
     goToPage: 'מעבר אל',
     clear: 'ניקוי',
+    add: 'הוספה',
     remove: 'הסרה',
     retry: 'ניסיון חוזר',
     preview: 'תצוגה מקדימה',

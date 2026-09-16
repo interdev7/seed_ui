@@ -286,6 +286,7 @@ class _TourDemoState extends State<TourDemo> {
         key: _more,
         variant: ButtonVariant.text,
         icon: const Icon(Icons.more_horiz),
+        semanticsLabel: 'More',
         onPressed: () => message.info('More…'),
       ),
       Text(

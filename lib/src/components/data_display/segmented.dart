@@ -125,6 +125,7 @@ class SegmentedOption<T> {
     this.label,
     this.icon,
     this.child,
+    this.semanticsLabel,
     this.disabled = false,
   }) : assert(
           label != null || icon != null || child != null,
@@ -145,6 +146,13 @@ class SegmentedOption<T> {
   /// It receives no automatic colouring, so style it yourself if it should
   /// dim when unselected.
   final Widget? child;
+
+  /// What a screen reader announces for this segment.
+  ///
+  /// A segment made of an [icon] or a [child] alone has no words of its own,
+  /// so it reaches a screen reader nameless unless this says what it means.
+  /// Leave it null when [label] already reads correctly.
+  final String? semanticsLabel;
 
   /// Whether this individual segment is unselectable.
   final bool disabled;
@@ -1080,9 +1088,24 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
       ),
     );
 
+    // A segment is a button that is either taken or not, and one made of an
+    // icon alone has no words to be named by — `semanticsLabel` supplies them,
+    // and replaces whatever the content would otherwise have read.
+    final named = Semantics(
+      button: true,
+      selected: selected,
+      enabled: enabled,
+      label: option.semanticsLabel,
+      child: MergeSemantics(
+        child: option.semanticsLabel == null
+            ? segment
+            : ExcludeSemantics(child: segment),
+      ),
+    );
+
     // Block mode stretches each segment to an equal share of the main axis.
-    if (!block) return segment;
-    return Expanded(child: segment);
+    if (!block) return named;
+    return Expanded(child: named);
   }
 
   void _setHovered(int? index) {

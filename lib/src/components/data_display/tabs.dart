@@ -1447,31 +1447,36 @@ class _AddButtonState extends State<_AddButton> {
     final radius = Radius.circular(t.borderRadiusLG);
     final line = BorderSide(color: t.colorBorderSecondary, width: t.lineWidth);
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        // Height is computed to match a tab, so the button stays the same size
-        // as the tabs across every size preset.
-        child: Container(
-          width: t.controlHeight,
-          height: widget.height,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: t.colorFillQuaternary,
-            borderRadius: BorderRadius.only(
-              topLeft: radius,
-              topRight: radius,
-            ),
-            border: Border(top: line, left: line, right: line),
-          ),
-          child: widget.icon ??
-              CustomPaint(
-                size: const Size.square(14),
-                painter: PlusPainter(color),
+    return Semantics(
+      button: true,
+      // A plus says nothing out loud, so the button carries the word itself.
+      label: context.seedLocale.add,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          // Height is computed to match a tab, so the button stays the same size
+          // as the tabs across every size preset.
+          child: Container(
+            width: t.controlHeight,
+            height: widget.height,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: t.colorFillQuaternary,
+              borderRadius: BorderRadius.only(
+                topLeft: radius,
+                topRight: radius,
               ),
+              border: Border(top: line, left: line, right: line),
+            ),
+            child: widget.icon ??
+                CustomPaint(
+                  size: const Size.square(14),
+                  painter: PlusPainter(color),
+                ),
+          ),
         ),
       ),
     );

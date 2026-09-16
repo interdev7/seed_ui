@@ -46,9 +46,21 @@ class _SegmentedDemoState extends State<SegmentedDemo> {
             value: _view,
             onChanged: (v) => setState(() => _view = v),
             options: const [
-              SegmentedOption(value: 'list', icon: Icon(Icons.view_list)),
-              SegmentedOption(value: 'grid', icon: Icon(Icons.grid_view)),
-              SegmentedOption(value: 'map', icon: Icon(Icons.map_outlined)),
+              SegmentedOption(
+                value: 'list',
+                icon: Icon(Icons.view_list),
+                semanticsLabel: 'List',
+              ),
+              SegmentedOption(
+                value: 'grid',
+                icon: Icon(Icons.grid_view),
+                semanticsLabel: 'Grid',
+              ),
+              SegmentedOption(
+                value: 'map',
+                icon: Icon(Icons.map_outlined),
+                semanticsLabel: 'Map',
+              ),
             ],
           ),
         ),

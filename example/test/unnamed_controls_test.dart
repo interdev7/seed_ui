@@ -127,18 +127,17 @@ void main() {
     }
 
     handle.dispose();
-    for (final u in unnamed) {
-      // ignore: avoid_print
-      print(u);
-    }
-    // ignore: avoid_print
-    print(
-      '${unnamed.length} unnamed across '
-      '${unnamed.map((u) => u.page).toSet().length} pages',
+    // What this finds is a control carrying a glyph and no words: a reader
+    // meets it and can say only "button". Give it a `semanticsLabel`, or a
+    // `Semantics(label:)` around it — in the kit where every caller would
+    // otherwise repeat the same word, in the demo where the word is the
+    // caller's to choose.
+    expect(
+      unnamed,
+      isEmpty,
+      reason:
+          'controls a person can act on but not hear named:\n'
+          '${unnamed.join("\n")}',
     );
-    // No expectation: this reports rather than gates, until the list is
-    // empty. What it finds is a control carrying a glyph and no words — give
-    // it a `semanticsLabel`, or a `Semantics(label:)` around it.
-    expect(unnamed, isNotNull);
   });
 }

@@ -1452,7 +1452,16 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
     return Semantics(
       button: true,
       enabled: _enabled,
-      label: widget.semanticsLabel ?? widget.placeholder,
+      // The placeholder is what the empty field reads, so it names the picker
+      // too — but it is gone once a date is chosen, and a caller who never set
+      // one leaves the field nameless. The word the field itself falls back to
+      // is the same word here.
+      // An empty placeholder is a deliberate one — a field sized by its format
+      // alone — and it names nothing, so it falls through too.
+      label: widget.semanticsLabel ??
+          (widget.placeholder?.trim().isNotEmpty ?? false
+              ? widget.placeholder
+              : context.seedLocale.selectDate),
       // No `value` here: the field inside is an editable, and what it holds
       // is already spoken. Naming it twice would say it twice.
       expanded: _open,

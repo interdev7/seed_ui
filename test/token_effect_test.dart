@@ -3,14 +3,16 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart'
     hide
-        ThemeData,
+        Card,
         Checkbox,
+        Drawer,
+        Form,
         Radio,
         RadioGroup,
         Slider,
         Switch,
-        Tooltip,
-        Drawer;
+        ThemeData,
+        Tooltip;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -306,6 +308,85 @@ Widget _stepsOf(
         token: token,
       ),
     );
+
+Widget _card(CardToken? token, {SoftSize? size, List<Widget>? actions}) =>
+    SizedBox(
+      width: 300,
+      child: Card(
+        title: const Text('A card'),
+        extra: const Text('more'),
+        size: size,
+        actions: actions,
+        token: token,
+        child: const Text('Something inside it.'),
+      ),
+    );
+
+Future<void> _noop() async {}
+
+const _uploads = <UploadItem<Object?>>[
+  UploadItem(name: 'one.png', size: 2048, status: UploadStatus.done),
+  UploadItem(name: 'two.png', size: 4096, status: UploadStatus.done),
+];
+
+Widget _upload(
+  UploadToken? token, {
+  UploadVariant variant = UploadVariant.text,
+  bool dragging = false,
+}) =>
+    SizedBox(
+      width: 320,
+      child: Upload(
+        items: _uploads,
+        variant: variant,
+        dragging: dragging,
+        onPick: _noop,
+        token: token,
+      ),
+    );
+
+/// A form with a field that fails, one that only warns, and a help line —
+/// the three things the message colours belong to.
+Widget _form(FormToken? token) => SizedBox(
+      width: 320,
+      child: Form(
+        token: token,
+        child: const Column(
+          children: [
+            FormItem<String>(
+              name: 'must',
+              label: Text('Must'),
+              rules: [FormRule.required(message: 'Needed')],
+              builder: _field,
+            ),
+            FormItem<String>(
+              name: 'ought',
+              label: Text('Ought'),
+              rules: [FormRule.required(message: 'Better', warningOnly: true)],
+              builder: _field,
+            ),
+            FormItem<String>(
+              name: 'helped',
+              label: Text('Helped'),
+              help: 'A word about it',
+              builder: _field,
+            ),
+          ],
+        ),
+      ),
+    );
+
+Widget _field(FormFieldHandle<String> field) => Input(
+      value: field.value ?? '',
+      onChanged: field.didChange,
+    );
+
+/// Sends the form, which is when a field that fails says so.
+Future<void> _submitForm(WidgetTester tester) async {
+  final context = tester.element(find.byType(FormItem<String>).first);
+  await Form.controllerOf(context).submit();
+  await tester.pumpAndSettle();
+}
 
 final _probes = <_Probe>[
   _Probe(
@@ -1036,5 +1117,177 @@ final _probes = <_Probe>[
       c ? const StepsToken(arrowColor: _loud) : null,
       type: StepsType.navigation,
     ),
+  ),
+  _Probe(
+    'CardToken.headerBg',
+    (c) => _card(c ? const CardToken(headerBg: _loud) : null),
+  ),
+  _Probe(
+    'CardToken.headerFontSize',
+    (c) => _card(c ? const CardToken(headerFontSize: 28) : null),
+  ),
+  _Probe(
+    'CardToken.headerFontSizeSM',
+    (c) => _card(
+      c ? const CardToken(headerFontSizeSM: 28) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'CardToken.headerHeight',
+    (c) => _card(c ? const CardToken(headerHeight: 90) : null),
+  ),
+  _Probe(
+    'CardToken.headerHeightSM',
+    (c) => _card(
+      c ? const CardToken(headerHeightSM: 90) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'CardToken.headerPadding',
+    (c) => _card(c ? const CardToken(headerPadding: 44) : null),
+  ),
+  _Probe(
+    'CardToken.headerPaddingSM',
+    (c) => _card(
+      c ? const CardToken(headerPaddingSM: 44) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'CardToken.bodyPadding',
+    (c) => _card(c ? const CardToken(bodyPadding: EdgeInsets.all(44)) : null),
+  ),
+  _Probe(
+    'CardToken.bodyPaddingSM',
+    (c) => _card(
+      c ? const CardToken(bodyPaddingSM: EdgeInsets.all(44)) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'CardToken.borderRadius',
+    (c) => _card(c ? const CardToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'CardToken.extraColor',
+    (c) => _card(c ? const CardToken(extraColor: _loud) : null),
+  ),
+  _Probe(
+    'CardToken.actionsBg',
+    (c) => _card(
+      c ? const CardToken(actionsBg: _loud) : null,
+      actions: const [Icon(Icons.edit), Icon(Icons.share)],
+    ),
+  ),
+  _Probe(
+    'CardToken.actionsLiMargin',
+    (c) => _card(
+      c ? const CardToken(actionsLiMargin: 28) : null,
+      actions: const [Icon(Icons.edit), Icon(Icons.share)],
+    ),
+  ),
+  _Probe(
+    'UploadToken.gap',
+    (c) => _upload(c ? const UploadToken(gap: 28) : null),
+  ),
+  _Probe(
+    'UploadToken.itemRadius',
+    // The corner of a row's fill, which is only drawn under the pointer, and
+    // of a preview, which is drawn always: the second is the plainer proof.
+    (c) => _upload(
+      c ? const UploadToken(itemRadius: 26) : null,
+      variant: UploadVariant.picture,
+    ),
+  ),
+  _Probe(
+    'UploadToken.itemHoverBg',
+    (c) => _upload(c ? const UploadToken(itemHoverBg: _loud) : null),
+    hover: () => find.text('one.png'),
+  ),
+  _Probe(
+    'UploadToken.thumbnailSize',
+    (c) => _upload(
+      c ? const UploadToken(thumbnailSize: 64) : null,
+      variant: UploadVariant.picture,
+    ),
+  ),
+  _Probe(
+    'UploadToken.cardSize',
+    (c) => _upload(
+      c ? const UploadToken(cardSize: 140) : null,
+      variant: UploadVariant.cards,
+    ),
+  ),
+  _Probe(
+    'UploadToken.dropzoneBg',
+    (c) => _upload(c ? const UploadToken(dropzoneBg: _loud) : null),
+  ),
+  _Probe(
+    'UploadToken.dropzoneBorderColor',
+    (c) => _upload(c ? const UploadToken(dropzoneBorderColor: _loud) : null),
+  ),
+  _Probe(
+    'UploadToken.dropzoneRadius',
+    (c) => _upload(c ? const UploadToken(dropzoneRadius: 0) : null),
+  ),
+  _Probe(
+    'UploadToken.dropzonePadding',
+    (c) => _upload(
+      c ? const UploadToken(dropzonePadding: EdgeInsets.all(48)) : null,
+    ),
+  ),
+  _Probe(
+    'UploadToken.dropzoneActiveBg',
+    (c) => _upload(
+      c ? const UploadToken(dropzoneActiveBg: _loud) : null,
+      dragging: true,
+    ),
+  ),
+  _Probe(
+    'UploadToken.dropzoneActiveBorderColor',
+    (c) => _upload(
+      c ? const UploadToken(dropzoneActiveBorderColor: _loud) : null,
+      dragging: true,
+    ),
+  ),
+  _Probe(
+    'FormToken.labelColor',
+    (c) => _form(c ? const FormToken(labelColor: _loud) : null),
+  ),
+  _Probe(
+    'FormToken.labelFontSize',
+    (c) => _form(c ? const FormToken(labelFontSize: 24) : null),
+  ),
+  _Probe(
+    'FormToken.labelGap',
+    (c) => _form(c ? const FormToken(labelGap: 28) : null),
+  ),
+  _Probe(
+    'FormToken.itemGap',
+    (c) => _form(c ? const FormToken(itemGap: 44) : null),
+  ),
+  _Probe(
+    'FormToken.extraColor',
+    (c) => _form(c ? const FormToken(extraColor: _loud) : null),
+  ),
+  _Probe(
+    'FormToken.messageFontSize',
+    (c) => _form(c ? const FormToken(messageFontSize: 22) : null),
+  ),
+  _Probe(
+    'FormToken.messageGap',
+    (c) => _form(c ? const FormToken(messageGap: 28) : null),
+  ),
+  _Probe(
+    'FormToken.errorColor',
+    (c) => _form(c ? const FormToken(errorColor: _loud) : null),
+    act: _submitForm,
+  ),
+  _Probe(
+    'FormToken.warningColor',
+    (c) => _form(c ? const FormToken(warningColor: _loud) : null),
+    act: _submitForm,
   ),
 ];

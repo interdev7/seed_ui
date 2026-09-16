@@ -1,0 +1,359 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/material.dart'
+    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:seed_ui/seed_ui.dart';
+
+/// Every field of a component's token is a promise: name it, and the
+/// component looks different. A field that is declared, documented and then
+/// never read keeps the promise on paper only — and the kit has shipped a
+/// few of those, found by hand each time.
+///
+/// Not every field can be proved this way. A handle that only appears under
+/// the pointer is one: the button slides in because the field is hovered, and
+/// by then the pointer is already still, so the button's own `MouseRegion`
+/// never sees it arrive. `InputNumberToken.handleHoverBg` is left out for
+/// that reason, not because it does nothing.
+///
+/// This holds the promise to the pixels. Each probe draws the component
+/// twice, once plain and once with one field named, and the two pictures
+/// have to differ. A field wired to nothing draws the same picture, and the
+/// test says which field it was.
+class _Probe {
+  const _Probe(this.field, this.build, {this.act, this.hover});
+
+  /// What is being proved, as `TokenType.field`.
+  final String field;
+
+  /// The component, drawn plain when `changed` is false and with the one
+  /// field named when it is true.
+  final Widget Function(bool changed) build;
+
+  /// What has to happen before the picture is worth taking — a panel opened,
+  /// a field focused. Runs before [hover].
+  final Future<void> Function(WidgetTester tester)? act;
+
+  /// What the pointer has to rest on. A hover colour is only visible while
+  /// something is hovered.
+  final Finder Function()? hover;
+}
+
+final _key = GlobalKey();
+
+Widget _host(Widget child) => RepaintBoundary(
+      key: _key,
+      // Outside the app, not around the component: a panel — a `Select`'s
+      // list, a picker's — is drawn in the overlay above the whole app, and
+      // a boundary tucked around the field would photograph everything
+      // except the thing being proved.
+      child: MaterialApp(
+        navigatorKey: UiKit.navigatorKey,
+        home: Scaffold(
+          body: Center(
+            child: Padding(padding: const EdgeInsets.all(8), child: child),
+          ),
+        ),
+      ),
+    );
+
+/// A picture, as one number.
+///
+/// The bytes themselves are two megabytes, and comparing two lists that long
+/// through a matcher takes minutes — long enough to look like a hang. What is
+/// being asked is only whether the two differ.
+Future<int> _shot(
+  WidgetTester tester,
+  Widget child,
+  Future<void> Function(WidgetTester)? act,
+  Finder Function()? hover,
+) async {
+  // A blank frame first: the two shots share a test, and what the first one
+  // left open — a panel in the overlay, a pointer's idea of what it is over —
+  // would otherwise greet the second and send it the other way.
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pump();
+  await tester.pumpWidget(_host(child));
+  await tester.pump();
+  if (act != null) await act(tester);
+
+  // A `MouseRegion` answers a real gesture; a bare pointer event never
+  // enters it, and the picture came back the resting one. The pointer is
+  // taken away again before the test ends — left in place, the next shot
+  // adds a second one and the framework's own tracker asserts.
+  TestGesture? mouse;
+  if (hover != null) {
+    mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    await tester.pump();
+    await mouse.moveTo(tester.getCenter(hover()));
+    await tester.pump();
+  }
+  // Long enough for every motion the kit has to have finished; not
+  // pumpAndSettle, which never returns where something spins forever.
+  await tester.pump(const Duration(milliseconds: 600));
+
+  final boundary =
+      _key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+  // Reading pixels back is real work in the engine, and a test's clock is a
+  // fake one: awaited against it the future never completes and the test
+  // hangs rather than fails.
+  final shot = (await tester.runAsync(() async {
+    final image = await boundary.toImage();
+    final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    image.dispose();
+    return Object.hashAll(data!.buffer.asUint32List());
+  }))!;
+  await mouse?.removePointer();
+  await tester.pump();
+  return shot;
+}
+
+void main() {
+  for (final probe in _probes) {
+    testWidgets('${probe.field} changes what is drawn', (tester) async {
+      final plain =
+          await _shot(tester, probe.build(false), probe.act, probe.hover);
+      final named =
+          await _shot(tester, probe.build(true), probe.act, probe.hover);
+      expect(
+        named,
+        isNot(plain),
+        reason: '${probe.field} is declared and documented, and naming it '
+            'draws exactly the same picture — the field is read by nothing.',
+      );
+    });
+  }
+}
+
+/// A colour nothing in the kit would arrive at on its own, so a difference
+/// is this field's doing and not a coincidence.
+const _loud = Color(0xFFFF00FF);
+
+const _options = [
+  SegmentedOption(value: 'a', label: 'Aaa'),
+  SegmentedOption(value: 'b', label: 'Bbb'),
+];
+
+Widget _progress(ProgressToken? token,
+        {ProgressType type = ProgressType.line}) =>
+    SizedBox(
+      width: 200,
+      child: Progress(percent: 0.4, type: type, token: token),
+    );
+
+Widget _segmented(SegmentedToken? token) => Segmented<String>(
+      value: 'a',
+      options: _options,
+      onChanged: (_) {},
+      token: token,
+    );
+
+Widget _number(InputNumberToken? token, {InputNumberMode? mode}) => SizedBox(
+      width: 200,
+      child: InputNumber(
+        value: 3,
+        mode: mode,
+        onChanged: (_) {},
+        token: token,
+      ),
+    );
+
+Widget _select(SelectToken? token, {SoftSize? size}) => SizedBox(
+      width: 220,
+      child: Select<String>(
+        value: const ['a'],
+        size: size,
+        options: const [
+          SelectOption(value: 'a', label: Text('Aaa')),
+          SelectOption(value: 'b', label: Text('Bbb')),
+        ],
+        onChanged: (_) {},
+        token: token,
+      ),
+    );
+
+/// Opens a `Select`'s panel the way a person does. `open: true` on its own
+/// draws no panel: the kit puts one in the overlay when the field is pressed.
+Future<void> _openPanel(WidgetTester tester) async {
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Aaa').first);
+  await tester.pumpAndSettle();
+  expect(find.text('Bbb'), findsOneWidget, reason: 'the panel did not open');
+}
+
+final _probes = <_Probe>[
+  _Probe(
+    'ProgressToken.defaultColor',
+    (c) => _progress(c ? const ProgressToken(defaultColor: _loud) : null),
+  ),
+  _Probe(
+    'ProgressToken.remainingColor',
+    (c) => _progress(c ? const ProgressToken(remainingColor: _loud) : null),
+  ),
+  _Probe(
+    'ProgressToken.lineHeight',
+    (c) => _progress(c ? const ProgressToken(lineHeight: 20) : null),
+  ),
+  _Probe(
+    'ProgressToken.circleSize',
+    // No width from above: a ring drawn inside a box of someone else's
+    // choosing takes that width, and `circleSize` only reserves the height.
+    (c) => Progress(
+      percent: 0.4,
+      type: ProgressType.circle,
+      token: c ? const ProgressToken(circleSize: 140) : null,
+    ),
+  ),
+  _Probe(
+    'SegmentedToken.trackBg',
+    (c) => _segmented(c ? const SegmentedToken(trackBg: _loud) : null),
+  ),
+  _Probe(
+    'SegmentedToken.trackPadding',
+    (c) => _segmented(c ? const SegmentedToken(trackPadding: 12) : null),
+  ),
+  _Probe(
+    'SegmentedToken.itemColor',
+    (c) => _segmented(c ? const SegmentedToken(itemColor: _loud) : null),
+  ),
+  _Probe(
+    'SegmentedToken.itemSelectedBg',
+    (c) => _segmented(c ? const SegmentedToken(itemSelectedBg: _loud) : null),
+  ),
+  _Probe(
+    'SegmentedToken.itemSelectedColor',
+    (c) =>
+        _segmented(c ? const SegmentedToken(itemSelectedColor: _loud) : null),
+  ),
+  _Probe(
+    'SegmentedToken.borderRadius',
+    (c) => _segmented(c ? const SegmentedToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'SegmentedToken.itemHoverColor',
+    (c) => _segmented(c ? const SegmentedToken(itemHoverColor: _loud) : null),
+    hover: () => find.text('Bbb'),
+  ),
+  _Probe(
+    'SegmentedToken.itemHoverBg',
+    (c) => _segmented(c ? const SegmentedToken(itemHoverBg: _loud) : null),
+    hover: () => find.text('Bbb'),
+  ),
+  _Probe(
+    'SegmentedToken.borderRadiusSM',
+    (c) => Segmented<String>(
+      value: 'a',
+      size: SoftSize.small,
+      options: _options,
+      onChanged: (_) {},
+      token: c ? const SegmentedToken(borderRadiusSM: 0) : null,
+    ),
+  ),
+  _Probe(
+    'SegmentedToken.borderRadiusLG',
+    (c) => Segmented<String>(
+      value: 'a',
+      size: SoftSize.large,
+      options: _options,
+      onChanged: (_) {},
+      token: c ? const SegmentedToken(borderRadiusLG: 0) : null,
+    ),
+  ),
+  _Probe(
+    'SegmentedToken.thumbShadow',
+    (c) => _segmented(
+      c
+          ? const SegmentedToken(
+              thumbShadow: [BoxShadow(color: _loud, blurRadius: 6)],
+            )
+          : null,
+    ),
+  ),
+  _Probe(
+    'InputNumberToken.handleBg',
+    (c) => _number(
+      c ? const InputNumberToken(handleBg: _loud) : null,
+      // A handle's own fill and width belong to the spinner's two buttons.
+      mode: InputNumberMode.spinner,
+    ),
+    hover: () => find.byType(InputNumber),
+  ),
+  _Probe(
+    'InputNumberToken.handleBorderColor',
+    (c) => _number(c ? const InputNumberToken(handleBorderColor: _loud) : null),
+    hover: () => find.byType(InputNumber),
+  ),
+  _Probe(
+    'InputNumberToken.handleWidth',
+    (c) => _number(
+      c ? const InputNumberToken(handleWidth: 44) : null,
+      // A handle's own fill and width belong to the spinner's two buttons.
+      mode: InputNumberMode.spinner,
+    ),
+    hover: () => find.byType(InputNumber),
+  ),
+  _Probe(
+    'InputNumberToken.controlWidth',
+    (c) => _number(c ? const InputNumberToken(controlWidth: 44) : null),
+    hover: () => find.byType(InputNumber),
+  ),
+  _Probe(
+    'InputNumberToken.spinnerWidth',
+    (c) => _number(
+      c ? const InputNumberToken(spinnerWidth: 260) : null,
+      mode: InputNumberMode.spinner,
+    ),
+  ),
+  _Probe(
+    'SelectToken.selectorBg',
+    (c) => _select(c ? const SelectToken(selectorBg: _loud) : null),
+    act: _openPanel,
+  ),
+  _Probe(
+    'SelectToken.optionSelectedBg',
+    (c) => _select(c ? const SelectToken(optionSelectedBg: _loud) : null),
+    act: _openPanel,
+  ),
+  _Probe(
+    'SelectToken.optionPadding',
+    (c) => _select(
+      c ? const SelectToken(optionPadding: EdgeInsets.all(20)) : null,
+    ),
+    act: _openPanel,
+  ),
+  _Probe(
+    'SelectToken.optionFontSize',
+    (c) => _select(c ? const SelectToken(optionFontSize: 22) : null),
+    act: _openPanel,
+  ),
+  _Probe(
+    'SelectToken.borderRadius',
+    (c) => _select(c ? const SelectToken(borderRadius: 0) : null),
+    act: _openPanel,
+  ),
+  _Probe(
+    'SelectToken.borderRadiusSM',
+    (c) => _select(
+      c ? const SelectToken(borderRadiusSM: 0) : null,
+      size: SoftSize.small,
+    ),
+    act: _openPanel,
+  ),
+  _Probe(
+    'SelectToken.borderRadiusLG',
+    (c) => _select(
+      c ? const SelectToken(borderRadiusLG: 0) : null,
+      size: SoftSize.large,
+    ),
+    act: _openPanel,
+  ),
+  _Probe(
+    'SelectToken.optionActiveBg',
+    (c) => _select(c ? const SelectToken(optionActiveBg: _loud) : null),
+    hover: () => find.text('Bbb'),
+    act: _openPanel,
+  ),
+];

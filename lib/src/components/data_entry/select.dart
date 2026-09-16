@@ -1282,6 +1282,7 @@ class _Dropdown<T> extends StatelessWidget {
                 selected: false,
                 highlighted: options.isEmpty,
                 token: token,
+                own: state.widget.token,
                 fontSize: state._fontSize(token),
                 onTap: () => state._createTag(query),
               );
@@ -1295,6 +1296,7 @@ class _Dropdown<T> extends StatelessWidget {
               showCheck: state._multi,
               highlighted: i == state._highlight,
               token: token,
+              own: state.widget.token,
               fontSize: state._fontSize(token),
               selectedIcon: state.widget.menuItemSelectedIcon,
               custom: state.widget.optionRender,
@@ -1322,6 +1324,7 @@ class _OptionRow<T> extends StatefulWidget {
     required this.selected,
     required this.highlighted,
     required this.token,
+    required this.own,
     required this.fontSize,
     required this.onTap,
     this.showCheck = true,
@@ -1335,6 +1338,14 @@ class _OptionRow<T> extends StatefulWidget {
   final bool showCheck;
   final bool highlighted;
   final Token token;
+
+  /// The component token the field was given, carried down by hand.
+  ///
+  /// A panel is drawn in the overlay, above the app rather than under the
+  /// field, so it inherits nothing from where the `Select` stands: read from
+  /// the tree here, a token named on the widget itself never arrived and
+  /// every option-facing field of it did nothing.
+  final SelectToken? own;
   final double fontSize;
   final VoidCallback? onTap;
   final VoidCallback? onHover;
@@ -1364,7 +1375,8 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
   @override
   Widget build(BuildContext context) {
     final t = widget.token;
-    final r = (ConfigProvider.componentOf<SelectToken>(context) ??
+    final r = (widget.own ??
+            ConfigProvider.componentOf<SelectToken>(context) ??
             const SelectToken())
         ._resolve(t);
     final disabled = widget.option.disabled;

@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Switch.semanticsLabel`.** A switch is a track and a handle and no words,
   so it arrived as "switch, on" and nothing about what was on — and there was
   no way to say otherwise.
+- **A test that holds every token field to the pixels.** Each one draws its
+  component twice, plain and with the one field named, and the two pictures
+  have to differ — which is how the `Select` panel's deaf token above was
+  found. Twenty-eight fields of `Progress`, `Segmented`, `InputNumber` and
+  `Select` are covered so far.
 - **`SegmentedOption.semanticsLabel`.** A segment made of an icon alone has no
   words to be named by, and a segment carried no role either: it is a button
   with a selected state now, whatever it is drawn from.
@@ -25,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `Select`'s panel ignored the token the field was given.** Every
+  option-facing field of `SelectToken` — `optionSelectedBg`, `optionActiveBg`,
+  `optionPadding`, `optionFontSize` — worked through `ConfigProvider` and did
+  nothing when named on the widget itself: a panel is drawn in the overlay
+  above the app, so it inherits nothing from where the field stands. The
+  token is carried down by hand now.
 - **A `Dropdown`'s menu reached a screen reader as one node.** Every item's
   words ran together into a single label — "Rename\nDelete" — carrying one
   tap between them: nothing could be chosen, and a barred item was not marked

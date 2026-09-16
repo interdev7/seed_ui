@@ -11,6 +11,7 @@ import 'package:flutter/material.dart'
         RadioGroup,
         Slider,
         Switch,
+        Table,
         ThemeData,
         Tooltip;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
@@ -57,6 +58,9 @@ class _Probe {
 }
 
 final _key = GlobalKey();
+
+/// Set by an `act` that leaves a pointer down; called once the shot is taken.
+Future<void> Function()? _letGo;
 
 Widget _host(Widget child) => RepaintBoundary(
       key: _key,
@@ -125,6 +129,11 @@ Future<int> _shot(
     return Object.hashAll(data!.buffer.asUint32List());
   }))!;
   await mouse?.removePointer();
+  // Anything an `act` is still holding — a finger on a column's border — is
+  // let go of now: the two shots share a test, and a pointer left down would
+  // still be down when the second one starts.
+  await _letGo?.call();
+  _letGo = null;
   await tester.pump();
   return shot;
 }
@@ -385,6 +394,100 @@ Widget _field(FormFieldHandle<String> field) => Input(
 Future<void> _submitForm(WidgetTester tester) async {
   final context = tester.element(find.byType(FormItem<String>).first);
   await Form.controllerOf(context).submit();
+  await tester.pumpAndSettle();
+}
+
+class _Row {
+  const _Row(this.name, this.city);
+  final String name;
+  final String city;
+}
+
+const _rows0 = _Row('Ann', 'Bristol');
+
+const _rows = [
+  _rows0,
+  _Row('Bart', 'Galway'),
+  _Row('Chen', 'Chengdu'),
+];
+
+const _longRows = [
+  _Row('Bartholomew Considine the Younger', 'Kirkcudbrightshire'),
+  _Row('Wilhelmina Ashbourne-Whitfield', 'Llanfairpwllgwyngyll'),
+];
+
+Widget _table(
+  TableToken? token, {
+  bool long = false,
+  SoftSize? size,
+  bool bordered = true,
+  List<TableSort>? sort,
+  TableSelection<_Row>? selection,
+  TableExpandable<_Row>? expandable,
+  Widget? footer,
+  bool summary = false,
+  bool resizable = false,
+  bool filterable = false,
+  bool pinned = false,
+  double width = 420,
+}) =>
+    SizedBox(
+      width: width,
+      child: Table<_Row>(
+        data: long ? _longRows : _rows,
+        bordered: bordered,
+        size: size,
+        sort: sort,
+        selection: selection,
+        expandable: expandable,
+        footer: footer == null ? null : (_, __) => footer,
+        columnsResizable: resizable,
+        // A run wider than the room is what holds a column at the edge: with
+        // nothing to scroll past, nothing is pinned and no shade is drawn.
+        scroll: pinned ? const TableScroll(x: 900, y: 200) : null,
+        token: token,
+        columns: [
+          TableColumn(
+            title: const Text('Name'),
+            sortable: true,
+            // A summary belongs to a column, not to the table.
+            summary: summary ? (_, rows) => const Text('In all') : null,
+            fixed: pinned ? TableColumnFixed.start : null,
+            width: pinned ? 260 : null,
+            filters: filterable
+                ? const [TableFilter('Ann', 'Ann'), TableFilter('Bart', 'Bart')]
+                : null,
+            // The menu grows a search box only where the column asks for one.
+            filterSearch: filterable,
+            value: (r) => r.name,
+          ),
+          TableColumn(
+            title: const Text('City'),
+            width: pinned ? 260 : null,
+            value: (r) => r.city,
+          ),
+        ],
+      ),
+    );
+
+/// The funnel in a column heading: a painter rather than a widget of its
+/// own, so it is found by what paints it.
+Finder _funnel() => find.byWidgetPredicate(
+      (w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString().contains('Funnel'),
+    );
+
+/// Drags the rows sideways, which is when a held column has something to
+/// cast a shade over: at rest against its own end there is nothing behind it.
+Future<void> _scrollAcross(WidgetTester tester) async {
+  await tester.drag(find.text('Ann'), const Offset(-160, 0));
+  await tester.pumpAndSettle();
+}
+
+/// Opens a column's filter menu, which is where the filter fields live.
+Future<void> _openFilter(WidgetTester tester) async {
+  await tester.tap(_funnel().first);
   await tester.pumpAndSettle();
 }
 
@@ -1289,5 +1392,221 @@ final _probes = <_Probe>[
     'FormToken.warningColor',
     (c) => _form(c ? const FormToken(warningColor: _loud) : null),
     act: _submitForm,
+  ),
+  _Probe(
+    'TableToken.headerBg',
+    (c) => _table(c ? const TableToken(headerBg: _loud) : null),
+  ),
+  _Probe(
+    'TableToken.headerColor',
+    (c) => _table(c ? const TableToken(headerColor: _loud) : null),
+  ),
+  _Probe(
+    'TableToken.borderColor',
+    (c) => _table(c ? const TableToken(borderColor: _loud) : null),
+  ),
+  _Probe(
+    'TableToken.borderRadius',
+    (c) => _table(c ? const TableToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'TableToken.fontSize',
+    (c) => _table(c ? const TableToken(fontSize: 22) : null),
+  ),
+  _Probe(
+    'TableToken.cellPaddingBlock',
+    (c) => _table(c ? const TableToken(cellPaddingBlock: 30) : null),
+  ),
+  _Probe(
+    'TableToken.cellPaddingInline',
+    (c) => _table(c ? const TableToken(cellPaddingInline: 40) : null),
+  ),
+  _Probe(
+    'TableToken.cellPaddingBlockSM',
+    (c) => _table(
+      c ? const TableToken(cellPaddingBlockSM: 30) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'TableToken.cellPaddingInlineSM',
+    (c) => _table(
+      c ? const TableToken(cellPaddingInlineSM: 40) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'TableToken.cellPaddingBlockLG',
+    (c) => _table(
+      c ? const TableToken(cellPaddingBlockLG: 30) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'TableToken.cellPaddingInlineLG',
+    (c) => _table(
+      c ? const TableToken(cellPaddingInlineLG: 40) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'TableToken.rowHoverBg',
+    (c) => _table(c ? const TableToken(rowHoverBg: _loud) : null),
+    hover: () => find.text('Ann'),
+  ),
+  _Probe(
+    'TableToken.rowSortedBg',
+    (c) => _table(
+      c ? const TableToken(rowSortedBg: _loud) : null,
+      sort: const [TableSort(0, TableSortOrder.ascending)],
+    ),
+  ),
+  _Probe(
+    'TableToken.rowSelectedBg',
+    (c) => _table(
+      c ? const TableToken(rowSelectedBg: _loud) : null,
+      selection: const TableSelection<_Row>(selected: [_rows0]),
+    ),
+  ),
+  _Probe(
+    'TableToken.rowSelectedHoverBg',
+    (c) => _table(
+      c ? const TableToken(rowSelectedHoverBg: _loud) : null,
+      selection: const TableSelection<_Row>(selected: [_rows0]),
+    ),
+    hover: () => find.text('Ann'),
+  ),
+  _Probe(
+    'TableToken.selectionColumnWidth',
+    (c) => _table(
+      c ? const TableToken(selectionColumnWidth: 120) : null,
+      selection: const TableSelection<_Row>(selected: [_rows0]),
+    ),
+  ),
+  _Probe(
+    'TableToken.footerBg',
+    (c) => _table(
+      c ? const TableToken(footerBg: _loud) : null,
+      footer: const Text('A footer'),
+    ),
+  ),
+  _Probe(
+    'TableToken.summaryBg',
+    (c) => _table(
+      c ? const TableToken(summaryBg: _loud) : null,
+      summary: true,
+    ),
+  ),
+  _Probe(
+    'TableToken.expandIconSize',
+    (c) => _table(
+      c ? const TableToken(expandIconSize: 30) : null,
+      expandable: TableExpandable<_Row>(
+        builder: (_, row, __) => const Text('More'),
+      ),
+    ),
+  ),
+  _Probe(
+    'TableToken.expandedBg',
+    (c) => _table(
+      c ? const TableToken(expandedBg: _loud) : null,
+      expandable: TableExpandable<_Row>(
+        defaultExpanded: const [_rows0],
+        builder: (_, row, __) => const Text('More'),
+      ),
+    ),
+  ),
+  _Probe(
+    'TableToken.indentSize',
+    (c) => _table(
+      c ? const TableToken(indentSize: 60) : null,
+      expandable: TableExpandable<_Row>(
+        defaultExpanded: const [_rows0],
+        children: (row) =>
+            row.name == 'Ann' ? const [_Row('Under', 'Elsewhere')] : const [],
+      ),
+    ),
+  ),
+  _Probe(
+    'TableToken.headerMarkColor',
+    (c) => _table(c ? const TableToken(headerMarkColor: _loud) : null),
+  ),
+  _Probe(
+    'TableToken.headerMarkActiveColor',
+    (c) => _table(
+      c ? const TableToken(headerMarkActiveColor: _loud) : null,
+      sort: const [TableSort(0, TableSortOrder.ascending)],
+    ),
+  ),
+  _Probe(
+    'TableToken.sortCaretSize',
+    (c) => _table(c ? const TableToken(sortCaretSize: 20) : null),
+  ),
+  _Probe(
+    'TableToken.headerHoverBg',
+    (c) => _table(c ? const TableToken(headerHoverBg: _loud) : null),
+    hover: () => find.text('Name'),
+  ),
+  _Probe(
+    'TableToken.headerMarkHoverColor',
+    (c) => _table(c ? const TableToken(headerMarkHoverColor: _loud) : null),
+    hover: () => find.text('Name'),
+  ),
+  _Probe(
+    'TableToken.filterIconSize',
+    (c) => _table(
+      c ? const TableToken(filterIconSize: 30) : null,
+      filterable: true,
+    ),
+  ),
+  _Probe(
+    'TableToken.filterHoverBg',
+    (c) => _table(
+      c ? const TableToken(filterHoverBg: _loud) : null,
+      filterable: true,
+    ),
+    hover: () => _funnel().first,
+  ),
+  _Probe(
+    'TableToken.filterMenuMaxHeight',
+    (c) => _table(
+      c ? const TableToken(filterMenuMaxHeight: 40) : null,
+      filterable: true,
+    ),
+    act: _openFilter,
+  ),
+  _Probe(
+    'TableToken.filterSearchWidth',
+    (c) => _table(
+      c ? const TableToken(filterSearchWidth: 320) : null,
+      filterable: true,
+    ),
+    act: _openFilter,
+  ),
+  _Probe(
+    'TableToken.pinnedBg',
+    (c) => _table(
+      c ? const TableToken(pinnedBg: _loud) : null,
+      pinned: true,
+      width: 300,
+    ),
+  ),
+  _Probe(
+    'TableToken.pinnedShadowColor',
+    (c) => _table(
+      c ? const TableToken(pinnedShadowColor: _loud) : null,
+      pinned: true,
+      width: 300,
+    ),
+    act: _scrollAcross,
+  ),
+  _Probe(
+    'TableToken.pinnedShadowExtent',
+    (c) => _table(
+      c ? const TableToken(pinnedShadowExtent: 40) : null,
+      pinned: true,
+      width: 300,
+    ),
+    act: _scrollAcross,
   ),
 ];

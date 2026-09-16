@@ -184,6 +184,31 @@ Future<void> _openPanel(WidgetTester tester) async {
   expect(find.text('Bbb'), findsOneWidget, reason: 'the panel did not open');
 }
 
+Widget _input(InputToken? token, {SoftSize? size, int maxLines = 1}) =>
+    SizedBox(
+      width: 220,
+      child: Input(
+        placeholder: 'Type here',
+        size: size,
+        maxLines: maxLines,
+        token: token,
+      ),
+    );
+
+Widget _button(ButtonToken? token, {SoftSize? size}) => Button(
+      size: size,
+      onPressed: () {},
+      token: token,
+      child: const Text('Press'),
+    );
+
+/// Puts the caret in the field, which is when a focused field shows what it
+/// shows: an accent border, and a ring around it.
+Future<void> _focusField(WidgetTester tester) async {
+  await tester.tap(find.byType(Input));
+  await tester.pumpAndSettle();
+}
+
 final _probes = <_Probe>[
   _Probe(
     'ProgressToken.defaultColor',
@@ -355,5 +380,212 @@ final _probes = <_Probe>[
     (c) => _select(c ? const SelectToken(optionActiveBg: _loud) : null),
     hover: () => find.text('Bbb'),
     act: _openPanel,
+  ),
+  _Probe(
+    'InputToken.colorBorder',
+    (c) => _input(c ? const InputToken(colorBorder: _loud) : null),
+  ),
+  _Probe(
+    'InputToken.colorBgContainer',
+    (c) => _input(c ? const InputToken(colorBgContainer: _loud) : null),
+  ),
+  _Probe(
+    'InputToken.colorTextPlaceholder',
+    (c) => _input(c ? const InputToken(colorTextPlaceholder: _loud) : null),
+  ),
+  _Probe(
+    'InputToken.paddingInline',
+    (c) => _input(c ? const InputToken(paddingInline: 40) : null),
+  ),
+  _Probe(
+    'InputToken.paddingBlock',
+    // A field of one line is exactly as tall as the control preset says, so
+    // the vertical inset is a textarea's alone.
+    (c) => _input(
+      c ? const InputToken(paddingBlock: 20) : null,
+      maxLines: 3,
+    ),
+  ),
+  _Probe(
+    'InputToken.borderRadius',
+    (c) => _input(c ? const InputToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'InputToken.fontSize',
+    (c) => _input(c ? const InputToken(fontSize: 22) : null),
+  ),
+  _Probe(
+    'InputToken.paddingInlineSM',
+    (c) => _input(
+      c ? const InputToken(paddingInlineSM: 40) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'InputToken.paddingBlockSM',
+    (c) => _input(
+      c ? const InputToken(paddingBlockSM: 20) : null,
+      size: SoftSize.small,
+      maxLines: 3,
+    ),
+  ),
+  _Probe(
+    'InputToken.borderRadiusSM',
+    (c) => _input(
+      c ? const InputToken(borderRadiusSM: 0) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'InputToken.fontSizeSM',
+    (c) => _input(
+      c ? const InputToken(fontSizeSM: 22) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'InputToken.paddingInlineLG',
+    (c) => _input(
+      c ? const InputToken(paddingInlineLG: 40) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'InputToken.paddingBlockLG',
+    (c) => _input(
+      c ? const InputToken(paddingBlockLG: 20) : null,
+      size: SoftSize.large,
+      maxLines: 3,
+    ),
+  ),
+  _Probe(
+    'InputToken.borderRadiusLG',
+    (c) => _input(
+      c ? const InputToken(borderRadiusLG: 0) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'InputToken.fontSizeLG',
+    (c) => _input(
+      c ? const InputToken(fontSizeLG: 22) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'InputToken.colorText',
+    (c) => SizedBox(
+      width: 220,
+      // Text of its own to colour: a placeholder is the other field.
+      child: Input(
+        defaultValue: 'Written',
+        token: c ? const InputToken(colorText: _loud) : null,
+      ),
+    ),
+  ),
+  _Probe(
+    'InputToken.hoverBorderColor',
+    (c) => _input(c ? const InputToken(hoverBorderColor: _loud) : null),
+    hover: () => find.byType(Input),
+  ),
+  _Probe(
+    'InputToken.activeBorderColor',
+    (c) => _input(c ? const InputToken(activeBorderColor: _loud) : null),
+    act: _focusField,
+  ),
+  _Probe(
+    'InputToken.focusRing',
+    (c) => _input(c ? const InputToken(focusRing: _loud) : null),
+    act: _focusField,
+  ),
+  _Probe(
+    'ButtonToken.borderRadius',
+    (c) => _button(c ? const ButtonToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'ButtonToken.controlHeight',
+    (c) => _button(c ? const ButtonToken(controlHeight: 60) : null),
+  ),
+  _Probe(
+    'ButtonToken.fontSize',
+    (c) => _button(c ? const ButtonToken(fontSize: 24) : null),
+  ),
+  _Probe(
+    'ButtonToken.paddingInline',
+    (c) => _button(c ? const ButtonToken(paddingInline: 48) : null),
+  ),
+  _Probe(
+    'ButtonToken.fontWeight',
+    (c) => _button(c ? const ButtonToken(fontWeight: FontWeight.w900) : null),
+  ),
+  _Probe(
+    'ButtonToken.shadow',
+    (c) => Button(
+      variant: ButtonVariant.solid,
+      color: ButtonColor.primary,
+      onPressed: () {},
+      token: c
+          ? const ButtonToken(
+              shadow: [BoxShadow(color: _loud, blurRadius: 8)],
+            )
+          : null,
+      child: const Text('Press'),
+    ),
+  ),
+  _Probe(
+    'ButtonToken.borderRadiusSM',
+    (c) => _button(
+      c ? const ButtonToken(borderRadiusSM: 0) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'ButtonToken.controlHeightSM',
+    (c) => _button(
+      c ? const ButtonToken(controlHeightSM: 12) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'ButtonToken.fontSizeSM',
+    (c) => _button(
+      c ? const ButtonToken(fontSizeSM: 22) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'ButtonToken.paddingInlineSM',
+    (c) => _button(
+      c ? const ButtonToken(paddingInlineSM: 48) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'ButtonToken.borderRadiusLG',
+    (c) => _button(
+      c ? const ButtonToken(borderRadiusLG: 0) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'ButtonToken.controlHeightLG',
+    (c) => _button(
+      c ? const ButtonToken(controlHeightLG: 70) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'ButtonToken.fontSizeLG',
+    (c) => _button(
+      c ? const ButtonToken(fontSizeLG: 28) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'ButtonToken.paddingInlineLG',
+    (c) => _button(
+      c ? const ButtonToken(paddingInlineLG: 48) : null,
+      size: SoftSize.large,
+    ),
   ),
 ];

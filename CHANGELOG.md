@@ -18,8 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A test that holds every token field to the pixels.** Each one draws its
   component twice, plain and with the one field named, and the two pictures
   have to differ — which is how the `Select` panel's deaf token above was
-  found. Twenty-eight fields of `Progress`, `Segmented`, `InputNumber` and
-  `Select` are covered so far.
+  found. Sixty-one fields of `Progress`, `Segmented`, `InputNumber`,
+  `Select`, `Input` and `Button` are covered so far.
 - **`SegmentedOption.semanticsLabel`.** A segment made of an icon alone has no
   words to be named by, and a segment carried no role either: it is a button
   with a selected state now, whatever it is drawn from.

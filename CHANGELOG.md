@@ -18,9 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A test that holds every token field to the pixels.** Each one draws its
   component twice, plain and with the one field named, and the two pictures
   have to differ — which is how the `Select` panel's deaf token above was
-  found. A hundred and eighty-three fields are covered so far, across
-  `Progress`, `Segmented`, `InputNumber`, `Select`, `Input`, `Button`, `Tabs`,
-  `Slider`, `Steps`, `Card`, `Upload`, `Form` and `Table`.
+  found — twice now. Two hundred and thirty-three fields are covered so far,
+  across `Progress`, `Segmented`, `InputNumber`, `Select`, `Input`, `Button`,
+  `Tabs`, `Slider`, `Steps`, `Card`, `Upload`, `Form`, `Table`, `FloatButton`,
+  `Avatar`, `Switch`, `Radio`, `Badge` and `Ribbon`.
 - **`SegmentedOption.semanticsLabel`.** A segment made of an icon alone has no
   words to be named by, and a segment carried no role either: it is a button
   with a selected state now, whatever it is drawn from.
@@ -31,6 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `Radio` ignored the token it was given.** `Radio.token` was collected,
+  documented and never read: a radio could only be restyled through a
+  `ConfigProvider` above it, and naming the token on the widget itself did
+  nothing at all. It is read first now, as every other component reads its
+  own.
 - **A `Select`'s panel ignored the token the field was given.** Every
   option-facing field of `SelectToken` — `optionSelectedBg`, `optionActiveBg`,
   `optionPadding`, `optionFontSize` — worked through `ConfigProvider` and did

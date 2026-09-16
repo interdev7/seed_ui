@@ -225,9 +225,13 @@ class _SoftRadioState<T> extends State<Radio<T>> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r =
-        (ConfigProvider.componentOf<RadioToken>(context) ?? const RadioToken())
-            ._resolve(token);
+    // The widget's own token first, as every other component reads it: named
+    // here it was collected, documented and then never asked for, so a radio
+    // could only be restyled through a `ConfigProvider` above it.
+    final r = (widget.token ??
+            ConfigProvider.componentOf<RadioToken>(context) ??
+            const RadioToken())
+        ._resolve(token);
     return FocusableActionDetector(
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,

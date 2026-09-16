@@ -10,6 +10,7 @@ import 'package:flutter/material.dart'
         Radio,
         RadioGroup,
         Slider,
+        Badge,
         Switch,
         Table,
         ThemeData,
@@ -490,6 +491,93 @@ Future<void> _openFilter(WidgetTester tester) async {
   await tester.tap(_funnel().first);
   await tester.pumpAndSettle();
 }
+
+Widget _float(
+  FloatButtonToken? token, {
+  SoftSize? size,
+  Widget? label,
+  ButtonShape? shape,
+}) =>
+    FloatButton(
+      icon: const Icon(Icons.add),
+      label: label,
+      size: size,
+      shape: shape,
+      onPressed: () {},
+      token: token,
+    );
+
+Widget _avatar(
+  AvatarToken? token, {
+  SoftSize? size,
+  bool letters = true,
+  AvatarShape? shape,
+}) =>
+    Avatar(
+      size: size,
+      shape: shape,
+      token: token,
+      icon: letters ? null : const Icon(Icons.person),
+      child: letters ? const Text('AB') : null,
+    );
+
+Widget _switchOf(SwitchToken? token, {SoftSize? size, bool on = true}) =>
+    Switch(
+      value: on,
+      size: size,
+      onChanged: (_) {},
+      token: token,
+    );
+
+Widget _radio(RadioToken? token, {bool checked = true}) => Radio<String>(
+      value: 'a',
+      groupValue: checked ? 'a' : 'b',
+      onChanged: (_) {},
+      token: token,
+      child: const Text('Aaa'),
+    );
+
+/// A run of connected buttons. A `RadioGroup` has no token of its own, so
+/// these fields are named where the group reads them — the theme above it —
+/// and the same provider stands in both shots so the token is the only
+/// difference between them.
+Widget _radioButtons(RadioToken? token) => ConfigProvider(
+      theme: ThemeData(
+        components: ComponentsConfig(radio: token ?? const RadioToken()),
+      ),
+      child: RadioGroup<String>(
+        value: 'a',
+        optionType: RadioOptionType.button,
+        onChanged: (_) {},
+        options: const [
+          RadioOption(value: 'a', label: Text('Aaa')),
+          RadioOption(value: 'b', label: Text('Bbb')),
+        ],
+      ),
+    );
+
+Widget _badge(
+  BadgeToken? token, {
+  SoftSize? size,
+  int? count = 5,
+  bool dot = false,
+  BadgeStatus? status,
+}) =>
+    Badge(
+      count: count,
+      dot: dot,
+      status: status,
+      text: status == null ? null : const Text('Running'),
+      size: size,
+      token: token,
+      child: status == null ? const SizedBox(width: 40, height: 40) : null,
+    );
+
+Widget _ribbon(RibbonToken? token) => Ribbon(
+      text: const Text('New'),
+      token: token,
+      child: const SizedBox(width: 120, height: 60),
+    );
 
 final _probes = <_Probe>[
   _Probe(
@@ -1608,5 +1696,299 @@ final _probes = <_Probe>[
       width: 300,
     ),
     act: _scrollAcross,
+  ),
+  _Probe(
+    'FloatButtonToken.size',
+    (c) => _float(c ? const FloatButtonToken(size: 90) : null),
+  ),
+  _Probe(
+    'FloatButtonToken.sizeSM',
+    (c) => _float(
+      c ? const FloatButtonToken(sizeSM: 70) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'FloatButtonToken.sizeLG',
+    (c) => _float(
+      c ? const FloatButtonToken(sizeLG: 90) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'FloatButtonToken.borderRadius',
+    // A round button's corners come from its diameter; only a square one
+    // asks the token.
+    (c) => _float(
+      c ? const FloatButtonToken(borderRadius: 4) : null,
+      shape: ButtonShape.defaultShape,
+    ),
+  ),
+  _Probe(
+    'FloatButtonToken.shadow',
+    (c) => _float(
+      c
+          ? const FloatButtonToken(
+              shadow: [BoxShadow(color: _loud, blurRadius: 10)],
+            )
+          : null,
+    ),
+  ),
+  _Probe(
+    'FloatButtonToken.labelTextColor',
+    (c) => _float(
+      c ? const FloatButtonToken(labelTextColor: _loud) : null,
+      label: const Text('Beside it'),
+    ),
+  ),
+  _Probe(
+    'FloatButtonToken.labelFontSize',
+    (c) => _float(
+      c ? const FloatButtonToken(labelFontSize: 24) : null,
+      label: const Text('Beside it'),
+    ),
+  ),
+  _Probe(
+    'FloatButtonToken.labelGap',
+    (c) => _float(
+      c ? const FloatButtonToken(labelGap: 40) : null,
+      label: const Text('Beside it'),
+    ),
+  ),
+  _Probe(
+    'AvatarToken.containerSize',
+    (c) => _avatar(c ? const AvatarToken(containerSize: 72) : null),
+  ),
+  _Probe(
+    'AvatarToken.containerSizeSM',
+    (c) => _avatar(
+      c ? const AvatarToken(containerSizeSM: 60) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'AvatarToken.containerSizeLG',
+    (c) => _avatar(
+      c ? const AvatarToken(containerSizeLG: 80) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'AvatarToken.textFontSize',
+    (c) => _avatar(c ? const AvatarToken(textFontSize: 28) : null),
+  ),
+  _Probe(
+    'AvatarToken.textFontSizeSM',
+    (c) => _avatar(
+      c ? const AvatarToken(textFontSizeSM: 26) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'AvatarToken.textFontSizeLG',
+    (c) => _avatar(
+      c ? const AvatarToken(textFontSizeLG: 30) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'AvatarToken.bg',
+    (c) => _avatar(c ? const AvatarToken(bg: _loud) : null),
+  ),
+  _Probe(
+    'AvatarToken.borderRadius',
+    // A circle has no corners to round: the radius belongs to the square.
+    (c) => _avatar(
+      c ? const AvatarToken(borderRadius: 0) : null,
+      shape: AvatarShape.square,
+    ),
+  ),
+  _Probe(
+    'AvatarToken.colorTextPlaceholder',
+    // The mark an avatar falls back to where it was given neither a picture
+    // nor words of its own.
+    (c) => _avatar(
+      c ? const AvatarToken(colorTextPlaceholder: _loud) : null,
+      letters: false,
+    ),
+  ),
+  _Probe(
+    'AvatarToken.groupBorderColor',
+    (c) => AvatarGroup(
+      token: c ? const AvatarToken(groupBorderColor: _loud) : null,
+      children: const [Avatar(child: Text('A')), Avatar(child: Text('B'))],
+    ),
+  ),
+  _Probe(
+    'AvatarToken.groupOverlapping',
+    (c) => AvatarGroup(
+      token: c ? const AvatarToken(groupOverlapping: 24) : null,
+      children: const [Avatar(child: Text('A')), Avatar(child: Text('B'))],
+    ),
+  ),
+  _Probe(
+    'SwitchToken.colorPrimary',
+    (c) => _switchOf(c ? const SwitchToken(colorPrimary: _loud) : null),
+  ),
+  _Probe(
+    'SwitchToken.colorBg',
+    (c) => _switchOf(
+      c ? const SwitchToken(colorBg: _loud) : null,
+      on: false,
+    ),
+  ),
+  _Probe(
+    'SwitchToken.trackHeight',
+    (c) => _switchOf(c ? const SwitchToken(trackHeight: 40) : null),
+  ),
+  _Probe(
+    'SwitchToken.trackHeightSM',
+    (c) => _switchOf(
+      c ? const SwitchToken(trackHeightSM: 32) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'SwitchToken.trackHeightLG',
+    (c) => _switchOf(
+      c ? const SwitchToken(trackHeightLG: 44) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'SwitchToken.trackMinWidth',
+    (c) => _switchOf(c ? const SwitchToken(trackMinWidth: 110) : null),
+  ),
+  _Probe(
+    'SwitchToken.trackMinWidthSM',
+    (c) => _switchOf(
+      c ? const SwitchToken(trackMinWidthSM: 90) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'SwitchToken.handleSize',
+    (c) => _switchOf(c ? const SwitchToken(handleSize: 12) : null),
+  ),
+  _Probe(
+    'SwitchToken.handleSizeSM',
+    (c) => _switchOf(
+      c ? const SwitchToken(handleSizeSM: 8) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'SwitchToken.handleShadow',
+    (c) => _switchOf(
+      c
+          ? const SwitchToken(
+              handleShadow: [BoxShadow(color: _loud, blurRadius: 8)],
+            )
+          : null,
+    ),
+  ),
+  _Probe(
+    'RadioToken.radioSize',
+    (c) => _radio(c ? const RadioToken(radioSize: 32) : null),
+  ),
+  _Probe(
+    'RadioToken.dotSize',
+    (c) => _radio(c ? const RadioToken(dotSize: 4) : null),
+  ),
+  _Probe(
+    'RadioToken.dotColor',
+    (c) => _radio(c ? const RadioToken(dotColor: _loud) : null),
+  ),
+  _Probe(
+    'RadioToken.colorPrimary',
+    // A taken radio draws its ring in `dotColor`; the primary colour is what
+    // an untaken one answers a pointer with.
+    (c) => _radio(
+      c ? const RadioToken(colorPrimary: _loud) : null,
+      checked: false,
+    ),
+    hover: () => find.text('Aaa'),
+  ),
+  _Probe(
+    'RadioToken.colorBorder',
+    (c) => _radio(
+      c ? const RadioToken(colorBorder: _loud) : null,
+      checked: false,
+    ),
+  ),
+  _Probe(
+    'RadioToken.fontSize',
+    (c) => _radio(c ? const RadioToken(fontSize: 24) : null),
+  ),
+  _Probe(
+    'RadioToken.buttonBg',
+    (c) => _radioButtons(c ? const RadioToken(buttonBg: _loud) : null),
+  ),
+  _Probe(
+    'RadioToken.buttonCheckedBg',
+    (c) => _radioButtons(c ? const RadioToken(buttonCheckedBg: _loud) : null),
+  ),
+  _Probe(
+    'RadioToken.buttonColor',
+    (c) => _radioButtons(c ? const RadioToken(buttonColor: _loud) : null),
+  ),
+  _Probe(
+    'BadgeToken.indicatorHeight',
+    (c) => _badge(c ? const BadgeToken(indicatorHeight: 32) : null),
+  ),
+  _Probe(
+    'BadgeToken.indicatorHeightSM',
+    (c) => _badge(
+      c ? const BadgeToken(indicatorHeightSM: 26) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'BadgeToken.fontSize',
+    (c) => _badge(c ? const BadgeToken(fontSize: 18) : null),
+  ),
+  _Probe(
+    'BadgeToken.bg',
+    (c) => _badge(c ? const BadgeToken(bg: _loud) : null),
+  ),
+  _Probe(
+    'BadgeToken.textColor',
+    (c) => _badge(c ? const BadgeToken(textColor: _loud) : null),
+  ),
+  _Probe(
+    'BadgeToken.ringColor',
+    (c) => _badge(c ? const BadgeToken(ringColor: _loud) : null),
+  ),
+  _Probe(
+    'BadgeToken.dotSize',
+    (c) => _badge(
+      c ? const BadgeToken(dotSize: 20) : null,
+      count: null,
+      dot: true,
+    ),
+  ),
+  _Probe(
+    'BadgeToken.statusSize',
+    (c) => _badge(
+      c ? const BadgeToken(statusSize: 20) : null,
+      count: null,
+      status: BadgeStatus.processing,
+    ),
+  ),
+  _Probe(
+    'RibbonToken.height',
+    (c) => _ribbon(c ? const RibbonToken(height: 40) : null),
+  ),
+  _Probe(
+    'RibbonToken.fontSize',
+    (c) => _ribbon(c ? const RibbonToken(fontSize: 20) : null),
+  ),
+  _Probe(
+    'RibbonToken.bg',
+    (c) => _ribbon(c ? const RibbonToken(bg: _loud) : null),
+  ),
+  _Probe(
+    'RibbonToken.textColor',
+    (c) => _ribbon(c ? const RibbonToken(textColor: _loud) : null),
   ),
 ];

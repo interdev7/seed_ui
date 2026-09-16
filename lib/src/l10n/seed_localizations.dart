@@ -69,6 +69,7 @@ class SeedLocalizations {
     this.reset = 'Reset',
     this.close = 'Close',
     this.clear = 'Clear',
+    this.goToPage = 'Go to',
     this.remove = 'Remove',
     this.retry = 'Try again',
     this.preview = 'Preview',
@@ -128,6 +129,9 @@ class SeedLocalizations {
   /// What a screen reader calls the cross that empties a field — a picker's,
   /// a select's. A glyph says nothing out loud.
   final String clear;
+
+  /// Beside a `Pagination`'s jump field, and what names it out loud.
+  final String goToPage;
 
   /// What a screen reader calls the cross that takes a file out of an
   /// `Upload`. A glyph says nothing out loud.
@@ -524,6 +528,7 @@ class SeedLocalizations {
     noData: 'Нет данных',
     reset: 'Сбросить',
     close: 'Закрыть',
+    goToPage: 'Перейти к',
     clear: 'Очистить',
     remove: 'Убрать',
     retry: 'Повторить',
@@ -599,6 +604,7 @@ class SeedLocalizations {
     noData: 'Maglumat ýok',
     reset: 'Arassala',
     close: 'Ýap',
+    goToPage: 'Geçmek',
     clear: 'Arassalamak',
     remove: 'Aýyrmak',
     retry: 'Gaýtadan synanyş',
@@ -673,6 +679,7 @@ class SeedLocalizations {
     noData: 'Keine Daten',
     reset: 'Zurücksetzen',
     close: 'Schließen',
+    goToPage: 'Gehe zu',
     clear: 'Leeren',
     remove: 'Entfernen',
     retry: 'Erneut versuchen',
@@ -747,6 +754,7 @@ class SeedLocalizations {
     noData: 'Aucune donnée',
     reset: 'Réinitialiser',
     close: 'Fermer',
+    goToPage: 'Aller à',
     clear: 'Effacer',
     remove: 'Retirer',
     retry: 'Réessayer',
@@ -822,6 +830,7 @@ class SeedLocalizations {
     noData: 'Sin datos',
     reset: 'Restablecer',
     close: 'Cerrar',
+    goToPage: 'Ir a',
     clear: 'Borrar',
     remove: 'Quitar',
     retry: 'Reintentar',
@@ -897,6 +906,7 @@ class SeedLocalizations {
     noData: '暂无数据',
     reset: '重置',
     close: '关闭',
+    goToPage: '跳至',
     clear: '清除',
     remove: '移除',
     retry: '重试',
@@ -971,6 +981,7 @@ class SeedLocalizations {
     noData: 'データなし',
     reset: 'リセット',
     close: '閉じる',
+    goToPage: '移動',
     clear: 'クリア',
     remove: '削除',
     retry: '再試行',
@@ -1046,6 +1057,7 @@ class SeedLocalizations {
     noData: 'Veri yok',
     reset: 'Sıfırla',
     close: 'Kapat',
+    goToPage: 'Git',
     clear: 'Temizle',
     remove: 'Kaldır',
     retry: 'Yeniden dene',
@@ -1120,6 +1132,7 @@ class SeedLocalizations {
     noData: 'Sem conteúdo',
     reset: 'Redefinir',
     close: 'Fechar',
+    goToPage: 'Ir para',
     clear: 'Limpar',
     remove: 'Remover',
     retry: 'Tentar novamente',
@@ -1195,6 +1208,7 @@ class SeedLocalizations {
     noData: 'لا توجد بيانات',
     reset: 'إعادة تعيين',
     close: 'إغلاق',
+    goToPage: 'انتقل إلى',
     clear: 'مسح',
     remove: 'إزالة',
     retry: 'إعادة المحاولة',
@@ -1271,6 +1285,7 @@ class SeedLocalizations {
     noData: 'אין נתונים',
     reset: 'איפוס',
     close: 'סגור',
+    goToPage: 'מעבר אל',
     clear: 'ניקוי',
     remove: 'הסרה',
     retry: 'ניסיון חוזר',

@@ -230,6 +230,7 @@ class _TabsDemoState extends State<TabsDemo> {
               Row(
                 children: [
                   Switch(
+                    semanticsLabel: 'Snap to a tab',
                     value: _snap,
                     onChanged: (v) => setState(() => _snap = v),
                   ),

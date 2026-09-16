@@ -340,6 +340,7 @@ class _ListyDemoState extends State<ListyDemo> {
                     child: const Text('Reset'),
                   ),
                   Switch(
+                    semanticsLabel: 'A footer of your own',
                     value: _customFooter,
                     onChanged: (v) => setState(() => _customFooter = v),
                   ),

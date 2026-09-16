@@ -101,6 +101,7 @@ class _BadgeDemoState extends State<BadgeDemo> {
               Row(
                 children: [
                   Switch(
+                    semanticsLabel: 'A dot rather than a count',
                     value: _dot,
                     onChanged: (v) => setState(() => _dot = v),
                   ),
@@ -108,6 +109,7 @@ class _BadgeDemoState extends State<BadgeDemo> {
                   const Text('dot'),
                   const SizedBox(width: 24),
                   Switch(
+                    semanticsLabel: 'Show a count of zero',
                     value: _showZero,
                     onChanged: (v) => setState(() => _showZero = v),
                   ),

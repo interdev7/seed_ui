@@ -216,8 +216,16 @@ class _ProgressDemoState extends State<ProgressDemo> {
           Wrap(
             spacing: 12,
             children: [
-              Button(icon: const Icon(Icons.remove), onPressed: _decrease),
-              Button(icon: const Icon(Icons.add), onPressed: _increase),
+              Button(
+                icon: const Icon(Icons.remove),
+                semanticsLabel: 'Less',
+                onPressed: _decrease,
+              ),
+              Button(
+                icon: const Icon(Icons.add),
+                semanticsLabel: 'More',
+                onPressed: _increase,
+              ),
             ],
           ),
         ),
@@ -487,8 +495,16 @@ class _ProgressDemoState extends State<ProgressDemo> {
           Wrap(
             spacing: 12,
             children: [
-              Button(icon: const Icon(Icons.remove), onPressed: _decrease),
-              Button(icon: const Icon(Icons.add), onPressed: _increase),
+              Button(
+                icon: const Icon(Icons.remove),
+                semanticsLabel: 'Less',
+                onPressed: _decrease,
+              ),
+              Button(
+                icon: const Icon(Icons.add),
+                semanticsLabel: 'More',
+                onPressed: _increase,
+              ),
             ],
           ),
         ),
@@ -663,8 +679,16 @@ class _ProgressDemoState extends State<ProgressDemo> {
           Wrap(
             spacing: 12,
             children: [
-              Button(icon: const Icon(Icons.remove), onPressed: _decrease),
-              Button(icon: const Icon(Icons.add), onPressed: _increase),
+              Button(
+                icon: const Icon(Icons.remove),
+                semanticsLabel: 'Less',
+                onPressed: _decrease,
+              ),
+              Button(
+                icon: const Icon(Icons.add),
+                semanticsLabel: 'More',
+                onPressed: _increase,
+              ),
             ],
           ),
         ),

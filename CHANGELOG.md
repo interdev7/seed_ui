@@ -15,9 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Switch.semanticsLabel`.** A switch is a track and a handle and no words,
   so it arrived as "switch, on" and nothing about what was on — and there was
   no way to say otherwise.
-- **Five words for the glyphs**, in all eleven languages: `clear`, `remove`,
-  `retry`, `preview`, `download`. The crosses and arrows that carry them had
-  been silent.
+- **Six words for the glyphs**, in all eleven languages: `clear`, `remove`,
+  `retry`, `preview`, `download`, and `goToPage` for the jump field a
+  `Pagination` can carry. The crosses and arrows that carry them had been
+  silent, and the jump field's own label was hard-coded English.
 
 ### Fixed
 
@@ -44,6 +45,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   increase and decrease actions that do it; the buttons are that same
   operation drawn for a pointer, and a second way in read as two more unnamed
   buttons.
+- **A `Pagination`'s five-page jump had no name** — three dots that turn into
+  a chevron under the pointer and said nothing at all — and its jump field
+  was named only by the words standing next to it. Those words were
+  `'Go to'`, written into the widget in English whatever the locale; they are
+  translated now.
+- **A `FloatButton` and the words beside it read as one.** The caption sits
+  outside the button, so the button announced itself as "button" while its
+  own name stood in the node next door.
+- **The attached search button on an `Input`** carried a magnifier and no
+  name, unless it had been given words of its own.
 - **The cross that empties a picker had no name** — on `DatePicker`,
   `DateRangePicker`, `MultiDatePicker` and `TimePicker` alike — and neither
   did an `Upload` row's remove, retry, preview and download.

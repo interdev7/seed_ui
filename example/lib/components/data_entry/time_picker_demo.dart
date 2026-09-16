@@ -188,7 +188,11 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
               for (final size in SoftSize.values) ...[
                 SizedBox(
                   width: 160,
-                  child: TimePicker(size: size, format: 'HH:mm'),
+                  child: TimePicker(
+                    size: size,
+                    format: 'HH:mm',
+                    semanticsLabel: 'A time, ${size.name}',
+                  ),
                 ),
                 const SizedBox(width: 12),
               ],
@@ -223,13 +227,19 @@ class _TimePickerDemoState extends State<TimePickerDemo> {
                     format: 'HH:mm',
                     size: ControlSize.height(28),
                     placeholder: '',
+                    semanticsLabel: 'A time, 28 tall',
                   ),
                   TimePicker(
                     format: 'HH:mm',
                     size: ControlSize.height(44),
                     placeholder: '',
+                    semanticsLabel: 'A time, 44 tall',
                   ),
-                  TimePicker(format: 'HH:mm', size: ControlSize.box(200, 36)),
+                  TimePicker(
+                    format: 'HH:mm',
+                    size: ControlSize.box(200, 36),
+                    semanticsLabel: 'A time, 200 by 36',
+                  ),
                 ],
               ),
               const SizedBox(height: 8),

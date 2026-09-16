@@ -21,25 +21,32 @@ class _SwitchDemoState extends State<SwitchDemo> {
       runSpacing: 12,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Switch(value: _a, onChanged: (v) => setState(() => _a = v)),
         Switch(
+          semanticsLabel: 'Wi-Fi',
+          value: _a,
+          onChanged: (v) => setState(() => _a = v),
+        ),
+        Switch(
+          semanticsLabel: 'Bluetooth',
           value: _b,
           size: SoftSize.small,
           onChanged: (v) => setState(() => _b = v),
         ),
         Switch(
+          semanticsLabel: 'Aeroplane mode',
           value: _b,
           size: const ControlSize.height(54),
           onChanged: (v) => setState(() => _b = v),
         ),
         Switch(
+          semanticsLabel: 'Notifications',
           value: _c,
           onChanged: (v) => setState(() => _c = v),
           checkedChild: const Text('ON'),
           uncheckedChild: const Text('OFF'),
         ),
-        const Switch(value: true, disabled: true),
-        const Switch(value: true, loading: true),
+        const Switch(semanticsLabel: 'Barred', value: true, disabled: true),
+        const Switch(semanticsLabel: 'Saving', value: true, loading: true),
       ],
     );
   }

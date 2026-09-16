@@ -53,6 +53,7 @@ class _SpinDemoState extends State<SpinDemo> {
                   children: [
                     const Text('Loading State: '),
                     Switch(
+                      semanticsLabel: 'Spinning',
                       value: _spinning,
                       onChanged: (v) => setState(() => _spinning = v),
                     ),

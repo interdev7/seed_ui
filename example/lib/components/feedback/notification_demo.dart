@@ -64,6 +64,7 @@ class _NotificationDemoState extends State<NotificationDemo> {
                     ),
                     const SizedBox(width: 12),
                     Switch(
+                      semanticsLabel: 'Stack notifications',
                       value: _stackEnabled,
                       onChanged: (val) {
                         setState(() {

@@ -122,14 +122,20 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
             spacing: 16,
             runSpacing: 16,
             children: [
-              FloatButton(icon: const Icon(Icons.search), onPressed: () {}),
+              FloatButton(
+                icon: const Icon(Icons.search),
+                semanticsLabel: 'Search',
+                onPressed: () {},
+              ),
               FloatButton(
                 icon: const Icon(Icons.person),
+                semanticsLabel: 'Profile',
                 color: ButtonColor.primary,
                 onPressed: () {},
               ),
               FloatButton(
                 icon: const Icon(Icons.search),
+                semanticsLabel: 'Search',
                 shape: ButtonShape.defaultShape,
                 onPressed: () {},
               ),
@@ -138,6 +144,7 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                 count: 5,
                 child: FloatButton(
                   icon: const Icon(Icons.mail),
+                  semanticsLabel: 'Mail',
                   onPressed: () {},
                 ),
               ),
@@ -186,6 +193,7 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
               _stage(
                 FloatButtonGroup<FabAction>(
                   layout: _chosen,
+                  semanticsLabel: 'Actions',
                   color: ButtonColor.primary,
                   labelPlacement: _labels,
                   direction: _direction,
@@ -408,6 +416,7 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
               _stage(
                 FloatButtonGroup<FabAction>(
                   controller: _controller,
+                  semanticsLabel: 'Actions',
                   layout: const FloatButtonLayout.vertical(),
                   items: _actions,
                 ),
@@ -419,6 +428,7 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
           'Opened by hovering',
           _stage(
             const FloatButtonGroup<FabAction>(
+              semanticsLabel: 'Actions',
               trigger: FloatButtonTrigger.hover,
               layout: FloatButtonLayout.horizontal(),
               items: _actions,

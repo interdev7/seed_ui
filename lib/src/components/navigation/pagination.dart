@@ -689,7 +689,7 @@ class _PaginationState extends State<Pagination> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Go to',
+          context.seedLocale.goToPage,
           style: TextStyle(
             fontFamily: token.fontFamily,
             fontFamilyFallback: token.fontFamilyFallback,
@@ -704,6 +704,9 @@ class _PaginationState extends State<Pagination> {
           child: Input(
             size: _controlSize,
             disabled: !_enabled,
+            // The words beside it name it on the page; a reader hears them
+            // in the node next door and this one as an unnamed field.
+            semanticsLabel: context.seedLocale.goToPage,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             inputFormatters: [
@@ -904,25 +907,36 @@ class _EllipsisState extends State<_Ellipsis> {
           widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
+      // Three dots that jump five pages, so the name says which way: the
+      // glyph turns into a chevron under the pointer and says nothing at all
+      // to a reader.
+      child: Semantics(
+        button: true,
+        enabled: widget.enabled,
+        label: widget.forward
+            ? context.seedLocale.next
+            : context.seedLocale.previous,
         onTap: widget.enabled ? widget.onTap : null,
-        child: SizedBox(
-          width: widget.height,
-          height: widget.height,
-          child: Center(
-            child: _hovered && widget.enabled
-                ? CustomPaint(
-                    size: const Size(14, 10),
-                    painter: _DoubleChevronPainter(
-                      t.primary.base,
-                      widget.forward !=
-                          (Directionality.of(context) == TextDirection.rtl),
+        child: GestureDetector(
+          onTap: widget.enabled ? widget.onTap : null,
+          child: SizedBox(
+            width: widget.height,
+            height: widget.height,
+            child: Center(
+              child: _hovered && widget.enabled
+                  ? CustomPaint(
+                      size: const Size(14, 10),
+                      painter: _DoubleChevronPainter(
+                        t.primary.base,
+                        widget.forward !=
+                            (Directionality.of(context) == TextDirection.rtl),
+                      ),
+                    )
+                  : CustomPaint(
+                      size: const Size(16, 16),
+                      painter: _DotsPainter(t.colorTextTertiary),
                     ),
-                  )
-                : CustomPaint(
-                    size: const Size(16, 16),
-                    painter: _DotsPainter(t.colorTextTertiary),
-                  ),
+            ),
           ),
         ),
       ),

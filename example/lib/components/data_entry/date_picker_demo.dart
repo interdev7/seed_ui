@@ -57,6 +57,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           row(
             DatePicker(
               value: _basic,
+              semanticsLabel: 'A day',
               onChanged: (v) => setState(() => _basic = v),
             ),
             _basic,
@@ -68,6 +69,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           row(
             DatePicker(
               value: _named,
+              semanticsLabel: 'A day, written out',
               format: 'd MMM yyyy',
               onChanged: (v) => setState(() => _named = v),
             ),
@@ -82,6 +84,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             children: [
               DatePicker(
                 showTime: true,
+                semanticsLabel: 'A day and a time',
                 format: 'yyyy-MM-dd HH:mm',
                 value: _at,
                 onChanged: (v) => setState(() => _at = v),
@@ -105,6 +108,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           row(
             DatePicker(
               value: _preset,
+              semanticsLabel: 'A day, or one from the rail',
               onChanged: (v) => setState(() => _preset = v),
               presets: [
                 const DatePreset.of('Today', DateTime.now),
@@ -145,13 +149,17 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
                     width: 200,
                     child: DatePicker(
                       picker: DatePickerKind.quarter,
+                      semanticsLabel: 'A quarter',
                       value: _quarter,
                       onChanged: (v) => setState(() => _quarter = v),
                     ),
                   ),
                   const SizedBox(
                     width: 200,
-                    child: DatePicker(picker: DatePickerKind.year),
+                    child: DatePicker(
+                      picker: DatePickerKind.year,
+                      semanticsLabel: 'A year',
+                    ),
                   ),
                 ],
               ),
@@ -252,7 +260,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DatePicker(),
+              DatePicker(placeholder: 'Pick a day'),
               SizedBox(height: 8),
               Text(
                 'Open it and press the month in the header: the panel goes up '
@@ -315,7 +323,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             children: [
               DatePicker(format: 'yyyy-MM-dd', placeholder: ''),
               DatePicker(format: 'd MMM yyyy', placeholder: ''),
-              DatePicker(),
+              DatePicker(placeholder: 'Pick a day'),
             ],
           ),
         ),
@@ -325,7 +333,8 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 10,
             children: [
-              for (final size in SoftSize.values) DatePicker(size: size),
+              for (final size in SoftSize.values)
+                DatePicker(size: size, semanticsLabel: 'A day, ${size.name}'),
             ],
           ),
         ),
@@ -338,9 +347,20 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  DatePicker(size: ControlSize.height(28), placeholder: ''),
-                  DatePicker(size: ControlSize.height(44), placeholder: ''),
-                  DatePicker(size: ControlSize.box(240, 36)),
+                  DatePicker(
+                    size: ControlSize.height(28),
+                    placeholder: '',
+                    semanticsLabel: 'A day, 28 tall',
+                  ),
+                  DatePicker(
+                    size: ControlSize.height(44),
+                    placeholder: '',
+                    semanticsLabel: 'A day, 44 tall',
+                  ),
+                  DatePicker(
+                    size: ControlSize.box(240, 36),
+                    semanticsLabel: 'A day, 240 by 36',
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -434,7 +454,10 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             ],
           ),
         ),
-        const Group('Panel only, no typing', DatePicker(inputReadOnly: true)),
+        const Group(
+          'Panel only, no typing',
+          DatePicker(inputReadOnly: true, placeholder: 'Pick a day'),
+        ),
         const Group(
           'Its own tokens',
           // Per instance, without touching the theme.
@@ -453,7 +476,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
             spacing: 10,
             children: [
               for (final variant in DatePickerVariant.values)
-                DatePicker(variant: variant),
+                DatePicker(variant: variant, placeholder: 'Pick a day'),
             ],
           ),
         ),
@@ -512,7 +535,7 @@ class _DatePickerDemoState extends State<DatePickerDemo> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const DatePicker(),
+              const DatePicker(placeholder: 'Pick a day'),
               const SizedBox(height: 8),
               Text(
                 'Switch the language in the header. The month and weekday '

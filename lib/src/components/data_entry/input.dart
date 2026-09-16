@@ -1347,42 +1347,49 @@ class _SearchButtonState extends State<_SearchButton> {
       cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
+      // Named where it carries only a magnifier: with words on it they name
+      // it, and saying both would say it twice.
+      child: Semantics(
+        button: true,
+        label: widget.label == null ? context.seedLocale.search : null,
         onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: token.motionDurationFast,
-          height: widget.height,
-          padding: EdgeInsets.symmetric(horizontal: token.sizeMD),
-          decoration: BoxDecoration(
-            color: fill,
-            // A ring of its own colour, the same width as the field's.
-            //
-            // It changes nothing to look at — the line is the fill's colour —
-            // and it makes the two boxes the same shape: a bordered box and a
-            // plain one have their edges rounded to device pixels by
-            // different sums, and on a screen with more than one pixel to the
-            // point they landed half a pixel apart. Joined, that shows.
-            border: Border.all(color: fill, width: token.lineWidth),
-            // The addon caps the far end of the field, and keeps whatever
-            // corners the run leaves it there.
-            borderRadius: BorderRadiusDirectional.only(
-              topEnd: widget.corners.topEnd,
-              bottomEnd: widget.corners.bottomEnd,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: token.motionDurationFast,
+            height: widget.height,
+            padding: EdgeInsets.symmetric(horizontal: token.sizeMD),
+            decoration: BoxDecoration(
+              color: fill,
+              // A ring of its own colour, the same width as the field's.
+              //
+              // It changes nothing to look at — the line is the fill's colour —
+              // and it makes the two boxes the same shape: a bordered box and a
+              // plain one have their edges rounded to device pixels by
+              // different sums, and on a screen with more than one pixel to the
+              // point they landed half a pixel apart. Joined, that shows.
+              border: Border.all(color: fill, width: token.lineWidth),
+              // The addon caps the far end of the field, and keeps whatever
+              // corners the run leaves it there.
+              borderRadius: BorderRadiusDirectional.only(
+                topEnd: widget.corners.topEnd,
+                bottomEnd: widget.corners.bottomEnd,
+              ),
             ),
-          ),
-          alignment: Alignment.center,
-          child: widget.label == null
-              ? glyph
-              : DefaultTextStyle.merge(
-                  style: TextStyle(
-                    color: fg,
-                    fontSize: widget.fontSize,
-                    fontFamily: token.fontFamily,
-                    fontFamilyFallback: token.fontFamilyFallback,
-                    decoration: TextDecoration.none,
+            alignment: Alignment.center,
+            child: widget.label == null
+                ? glyph
+                : DefaultTextStyle.merge(
+                    style: TextStyle(
+                      color: fg,
+                      fontSize: widget.fontSize,
+                      fontFamily: token.fontFamily,
+                      fontFamilyFallback: token.fontFamilyFallback,
+                      decoration: TextDecoration.none,
+                    ),
+                    child: widget.label!,
                   ),
-                  child: widget.label!,
-                ),
+          ),
         ),
       ),
     );

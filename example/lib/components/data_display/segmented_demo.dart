@@ -246,18 +246,26 @@ class _SegmentedDemoState extends State<SegmentedDemo> {
               onChanged: (v) => setState(() => _density = v),
               // One builder for both, told apart by the enum — the shape
               // emptyBuilder already has.
-              arrowBuilder: (context, arrow, step) => GestureDetector(
+              // A builder of your own draws the arrow and names it: the kit's
+              // own says "next" or "previous" out loud, and one written here
+              // has to say it too.
+              arrowBuilder: (context, arrow, step) => Semantics(
+                button: true,
+                label: arrow == SegmentedArrow.next ? 'Next' : 'Previous',
                 onTap: step,
-                child: Container(
-                  width: 28,
-                  color: const Color(0xCC1677FF),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    arrow == SegmentedArrow.next
-                        ? Icons.chevron_right
-                        : Icons.chevron_left,
-                    size: 16,
-                    color: const Color(0xFFFFFFFF),
+                child: GestureDetector(
+                  onTap: step,
+                  child: Container(
+                    width: 28,
+                    color: const Color(0xCC1677FF),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      arrow == SegmentedArrow.next
+                          ? Icons.chevron_right
+                          : Icons.chevron_left,
+                      size: 16,
+                      color: const Color(0xFFFFFFFF),
+                    ),
                   ),
                 ),
               ),

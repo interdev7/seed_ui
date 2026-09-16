@@ -844,32 +844,37 @@ class _Labelled extends StatelessWidget {
         ),
     };
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        child,
-        Positioned.fill(
-          child: IgnorePointer(
-            child: Transform.translate(
-              offset: by,
-              child: OverflowBox(
-                alignment: from,
-                // The minimums matter as much as the maximums here. Left
-                // unset they are inherited from the box this fills — the
-                // button's — and a caption shorter than the button would be
-                // stretched out to it, padding the text away from the button
-                // it names and giving it a footprint that overlaps the item
-                // next door.
-                minWidth: 0,
-                minHeight: 0,
-                maxWidth: double.infinity,
-                maxHeight: double.infinity,
-                child: chip,
+    // The words and the button read as one thing: the caption sits beside
+    // the button rather than inside it, so without this the button announced
+    // itself as "button" while its own name stood in the node next door.
+    return MergeSemantics(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          child,
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Transform.translate(
+                offset: by,
+                child: OverflowBox(
+                  alignment: from,
+                  // The minimums matter as much as the maximums here. Left
+                  // unset they are inherited from the box this fills — the
+                  // button's — and a caption shorter than the button would be
+                  // stretched out to it, padding the text away from the button
+                  // it names and giving it a footprint that overlaps the item
+                  // next door.
+                  minWidth: 0,
+                  minHeight: 0,
+                  maxWidth: double.infinity,
+                  maxHeight: double.infinity,
+                  child: chip,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

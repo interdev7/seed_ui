@@ -373,6 +373,7 @@ class _PopoverDemoState extends State<PopoverDemo> {
             children: [
               Switch(
                 key: const Key('popoverControlledSwitch'),
+                semanticsLabel: 'Controlled',
                 value: _controlled,
                 onChanged: (v) => setState(() => _controlled = v),
               ),
@@ -435,7 +436,12 @@ class _PopoverDemoState extends State<PopoverDemo> {
   Widget _toggle(String label, bool value, ValueChanged<bool> onChanged) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Switch(size: SoftSize.small, value: value, onChanged: onChanged),
+      Switch(
+        size: SoftSize.small,
+        semanticsLabel: label,
+        value: value,
+        onChanged: onChanged,
+      ),
       const SizedBox(width: 8),
       Text(label),
     ],

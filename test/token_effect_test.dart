@@ -2,7 +2,15 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+    hide
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Slider,
+        Switch,
+        Tooltip,
+        Drawer;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -23,7 +31,7 @@ import 'package:seed_ui/seed_ui.dart';
 /// have to differ. A field wired to nothing draws the same picture, and the
 /// test says which field it was.
 class _Probe {
-  const _Probe(this.field, this.build, {this.act, this.hover});
+  const _Probe(this.field, this.build, {this.act, this.hover, this.hoverAt});
 
   /// What is being proved, as `TokenType.field`.
   final String field;
@@ -39,6 +47,11 @@ class _Probe {
   /// What the pointer has to rest on. A hover colour is only visible while
   /// something is hovered.
   final Finder Function()? hover;
+
+  /// Where the pointer has to rest, where the centre of the widget is not
+  /// the part that answers — a slider's rail has labels under it, and the
+  /// middle of the whole control falls between the two.
+  final Offset Function(WidgetTester tester)? hoverAt;
 }
 
 final _key = GlobalKey();
@@ -69,6 +82,7 @@ Future<int> _shot(
   Widget child,
   Future<void> Function(WidgetTester)? act,
   Finder Function()? hover,
+  Offset Function(WidgetTester)? hoverAt,
 ) async {
   // A blank frame first: the two shots share a test, and what the first one
   // left open — a panel in the overlay, a pointer's idea of what it is over —
@@ -84,11 +98,13 @@ Future<int> _shot(
   // taken away again before the test ends — left in place, the next shot
   // adds a second one and the framework's own tracker asserts.
   TestGesture? mouse;
-  if (hover != null) {
+  if (hover != null || hoverAt != null) {
     mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await mouse.addPointer(location: Offset.zero);
     await tester.pump();
-    await mouse.moveTo(tester.getCenter(hover()));
+    await mouse.moveTo(
+      hover != null ? tester.getCenter(hover()) : hoverAt!(tester),
+    );
     await tester.pump();
   }
   // Long enough for every motion the kit has to have finished; not
@@ -114,10 +130,10 @@ Future<int> _shot(
 void main() {
   for (final probe in _probes) {
     testWidgets('${probe.field} changes what is drawn', (tester) async {
-      final plain =
-          await _shot(tester, probe.build(false), probe.act, probe.hover);
-      final named =
-          await _shot(tester, probe.build(true), probe.act, probe.hover);
+      final plain = await _shot(
+          tester, probe.build(false), probe.act, probe.hover, probe.hoverAt);
+      final named = await _shot(
+          tester, probe.build(true), probe.act, probe.hover, probe.hoverAt);
       expect(
         named,
         isNot(plain),
@@ -207,6 +223,60 @@ Widget _button(ButtonToken? token, {SoftSize? size}) => Button(
 Future<void> _focusField(WidgetTester tester) async {
   await tester.tap(find.byType(Input));
   await tester.pumpAndSettle();
+}
+
+const _tabs = [
+  TabItem(key: 'one', label: Text('One'), content: Text('First')),
+  TabItem(key: 'two', label: Text('Two'), content: Text('Second')),
+];
+
+Widget _tabsOf(
+  TabsToken? token, {
+  SoftSize? size,
+  TabsType type = TabsType.line,
+  TabPosition? position,
+}) =>
+    SizedBox(
+      width: 300,
+      height: 160,
+      child: Tabs(
+        items: _tabs,
+        defaultActiveKey: 'one',
+        size: size,
+        type: type,
+        tabPosition: position,
+        token: token,
+      ),
+    );
+
+const _marks = [
+  SliderMark(0, 'nil'),
+  SliderMark(50, 'half'),
+  SliderMark(100, 'all'),
+];
+
+Widget _slider(
+  SliderToken? token, {
+  bool disabled = false,
+  bool dots = false,
+}) =>
+    SizedBox(
+      width: 260,
+      child: Slider(
+        value: 40,
+        marks: _marks,
+        dots: dots,
+        disabled: disabled,
+        onChanged: (_) {},
+        token: token,
+      ),
+    );
+
+/// The rail itself: a slider's box includes the labels under it, so its
+/// centre is below the rail rather than on it.
+Offset _onTheRail(WidgetTester tester) {
+  final box = tester.getRect(find.byType(Slider));
+  return Offset(box.center.dx, box.top + 10);
 }
 
 final _probes = <_Probe>[
@@ -587,5 +657,214 @@ final _probes = <_Probe>[
       c ? const ButtonToken(paddingInlineLG: 48) : null,
       size: SoftSize.large,
     ),
+  ),
+  _Probe(
+    'TabsToken.inkBarColor',
+    (c) => _tabsOf(c ? const TabsToken(inkBarColor: _loud) : null),
+  ),
+  _Probe(
+    'TabsToken.itemColor',
+    (c) => _tabsOf(c ? const TabsToken(itemColor: _loud) : null),
+  ),
+  _Probe(
+    'TabsToken.itemSelectedColor',
+    (c) => _tabsOf(c ? const TabsToken(itemSelectedColor: _loud) : null),
+  ),
+  _Probe(
+    'TabsToken.itemHoverColor',
+    (c) => _tabsOf(c ? const TabsToken(itemHoverColor: _loud) : null),
+    hover: () => find.text('Two'),
+  ),
+  _Probe(
+    'TabsToken.titleFontSize',
+    (c) => _tabsOf(c ? const TabsToken(titleFontSize: 24) : null),
+  ),
+  _Probe(
+    'TabsToken.titleFontSizeSM',
+    (c) => _tabsOf(
+      c ? const TabsToken(titleFontSizeSM: 24) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'TabsToken.titleFontSizeLG',
+    (c) => _tabsOf(
+      c ? const TabsToken(titleFontSizeLG: 24) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'TabsToken.fontWeightActive',
+    (c) =>
+        _tabsOf(c ? const TabsToken(fontWeightActive: FontWeight.w900) : null),
+  ),
+  _Probe(
+    'TabsToken.horizontalItemGutter',
+    (c) => _tabsOf(c ? const TabsToken(horizontalItemGutter: 48) : null),
+  ),
+  _Probe(
+    'TabsToken.horizontalItemPadding',
+    (c) => _tabsOf(
+      c
+          ? const TabsToken(
+              horizontalItemPadding: EdgeInsets.symmetric(horizontal: 30),
+            )
+          : null,
+    ),
+  ),
+  _Probe(
+    'TabsToken.horizontalItemPaddingSM',
+    (c) => _tabsOf(
+      c
+          ? const TabsToken(
+              horizontalItemPaddingSM: EdgeInsets.symmetric(horizontal: 30),
+            )
+          : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'TabsToken.horizontalItemPaddingLG',
+    (c) => _tabsOf(
+      c
+          ? const TabsToken(
+              horizontalItemPaddingLG: EdgeInsets.symmetric(horizontal: 30),
+            )
+          : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'TabsToken.verticalItemPadding',
+    (c) => _tabsOf(
+      c
+          ? const TabsToken(
+              verticalItemPadding: EdgeInsets.symmetric(vertical: 24),
+            )
+          : null,
+      position: TabPosition.left,
+    ),
+  ),
+  _Probe(
+    'TabsToken.cardBg',
+    (c) => _tabsOf(
+      c ? const TabsToken(cardBg: _loud) : null,
+      type: TabsType.card,
+    ),
+  ),
+  _Probe(
+    'TabsToken.cardGutter',
+    (c) => _tabsOf(
+      c ? const TabsToken(cardGutter: 24) : null,
+      type: TabsType.card,
+    ),
+  ),
+  _Probe(
+    'TabsToken.cardPadding',
+    (c) => _tabsOf(
+      c ? const TabsToken(cardPadding: EdgeInsets.all(24)) : null,
+      type: TabsType.card,
+    ),
+  ),
+  _Probe(
+    'TabsToken.cardPaddingSM',
+    (c) => _tabsOf(
+      c ? const TabsToken(cardPaddingSM: EdgeInsets.all(24)) : null,
+      type: TabsType.card,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'TabsToken.cardPaddingLG',
+    (c) => _tabsOf(
+      c ? const TabsToken(cardPaddingLG: EdgeInsets.all(24)) : null,
+      type: TabsType.card,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'SliderToken.railSize',
+    (c) => _slider(c ? const SliderToken(railSize: 16) : null),
+  ),
+  _Probe(
+    'SliderToken.railBg',
+    (c) => _slider(c ? const SliderToken(railBg: _loud) : null),
+  ),
+  _Probe(
+    'SliderToken.trackBg',
+    (c) => _slider(c ? const SliderToken(trackBg: _loud) : null),
+  ),
+  _Probe(
+    'SliderToken.handleSize',
+    (c) => _slider(c ? const SliderToken(handleSize: 28) : null),
+  ),
+  _Probe(
+    'SliderToken.handleColor',
+    (c) => _slider(c ? const SliderToken(handleColor: _loud) : null),
+  ),
+  _Probe(
+    'SliderToken.handleLineWidth',
+    (c) => _slider(c ? const SliderToken(handleLineWidth: 8) : null),
+  ),
+  _Probe(
+    'SliderToken.markColor',
+    (c) => _slider(c ? const SliderToken(markColor: _loud) : null),
+  ),
+  _Probe(
+    'SliderToken.dotSize',
+    (c) => _slider(c ? const SliderToken(dotSize: 20) : null, dots: true),
+  ),
+  _Probe(
+    'SliderToken.dotBorderColor',
+    (c) => _slider(
+      c ? const SliderToken(dotBorderColor: _loud) : null,
+      dots: true,
+    ),
+  ),
+  _Probe(
+    'SliderToken.dotActiveBorderColor',
+    (c) => _slider(
+      c ? const SliderToken(dotActiveBorderColor: _loud) : null,
+      dots: true,
+    ),
+  ),
+  _Probe(
+    'SliderToken.handleColorDisabled',
+    (c) => _slider(
+      c ? const SliderToken(handleColorDisabled: _loud) : null,
+      disabled: true,
+    ),
+  ),
+  _Probe(
+    'SliderToken.trackBgDisabled',
+    (c) => _slider(
+      c ? const SliderToken(trackBgDisabled: _loud) : null,
+      disabled: true,
+    ),
+  ),
+  _Probe(
+    'SliderToken.railHoverBg',
+    (c) => _slider(c ? const SliderToken(railHoverBg: _loud) : null),
+    hoverAt: _onTheRail,
+  ),
+  _Probe(
+    'SliderToken.trackHoverBg',
+    (c) => _slider(c ? const SliderToken(trackHoverBg: _loud) : null),
+    hoverAt: _onTheRail,
+  ),
+  _Probe(
+    'SliderToken.handleSizeHover',
+    (c) => _slider(c ? const SliderToken(handleSizeHover: 30) : null),
+    hoverAt: _onTheRail,
+  ),
+  _Probe(
+    'SliderToken.handleLineWidthHover',
+    (c) => _slider(c ? const SliderToken(handleLineWidthHover: 9) : null),
+    hoverAt: _onTheRail,
+  ),
+  _Probe(
+    'SliderToken.handleActiveColor',
+    (c) => _slider(c ? const SliderToken(handleActiveColor: _loud) : null),
+    hoverAt: _onTheRail,
   ),
 ];

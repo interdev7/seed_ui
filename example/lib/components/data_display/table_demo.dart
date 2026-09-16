@@ -816,6 +816,11 @@ class _TableDemoState extends State<TableDemo> {
                   TableColumn(
                     title: const Text('Note'),
                     value: (p) => 'about ${p.city}',
+                    // Five columns is more than a phone has room for, and the
+                    // two that carry the least stand down first. A span keeps
+                    // meaning what it meant: a column stood down keeps its
+                    // place among the ones listed here.
+                    showFrom: 560,
                     // Two rows *and* two columns at once, taking the last
                     // column with it.
                     span: (_, p, i) => i == 2
@@ -824,6 +829,7 @@ class _TableDemoState extends State<TableDemo> {
                   ),
                   TableColumn(
                     title: const Text('Last'),
+                    showFrom: 560,
                     value: (p) => 'x${p.age}',
                   ),
                 ],
@@ -834,7 +840,8 @@ class _TableDemoState extends State<TableDemo> {
                 'not drawn — the table works out which, so nothing has to '
                 'return a nought. Note on the third row takes two columns and '
                 'two rows at once. Point at any cell: what lights up is that '
-                'cell and the rows it stands over, not the rows beside it.',
+                'cell and the rows it stands over, not the rows beside it. Note and '
+                'Last stand down below 560, so the run fits a phone.',
               ),
             ],
           ),

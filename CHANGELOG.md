@@ -58,6 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   own name stood in the node next door.
 - **The attached search button on an `Input`** carried a magnifier and no
   name, unless it had been given words of its own.
+- **A `Table` in the demo ran past a phone's edge**, where five columns were
+  three more than the screen had room for. The two that carry least stand
+  down below 560 now — which is what `showFrom` is for — and a test holds the
+  whole page to it, naming the three tables that are meant to be wider than
+  their box.
 - **An editable `Tabs` bar's add button had no name** — a plus and nothing
   else.
 - **A picker with a date in it lost its name.** The placeholder names the

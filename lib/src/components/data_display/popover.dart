@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
@@ -377,7 +378,11 @@ class _PopoverState extends State<Popover> {
     Widget card = Container(
       constraints: BoxConstraints(
         minWidth: r.minWidth,
-        maxWidth: r.maxWidth,
+        // A floor above the ceiling is a floor the caller meant: naming a
+        // `minWidth` wider than the standard `maxWidth` threw rather than
+        // widening the card, which is a crash for asking one field for one
+        // thing.
+        maxWidth: math.max(r.minWidth, r.maxWidth),
       ),
       padding: r.padding,
       decoration: BoxDecoration(

@@ -18,10 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A test that holds every token field to the pixels.** Each one draws its
   component twice, plain and with the one field named, and the two pictures
   have to differ — which is how the `Select` panel's deaf token above was
-  found — twice now. Two hundred and thirty-three fields are covered so far,
-  across `Progress`, `Segmented`, `InputNumber`, `Select`, `Input`, `Button`,
-  `Tabs`, `Slider`, `Steps`, `Card`, `Upload`, `Form`, `Table`, `FloatButton`,
-  `Avatar`, `Switch`, `Radio`, `Badge` and `Ribbon`.
+  found — three times now. Two hundred and sixty-six fields are covered so
+  far, across twenty-three components.
+- **A test that every widget taking a `token` reads it.** `Radio` collected
+  one and resolved without it, which is invisible from outside — the field is
+  there, the doc comment is there, and only the pixels disagree. This reads
+  the source instead, so the next one is caught the day it is written.
 - **`SegmentedOption.semanticsLabel`.** A segment made of an icon alone has no
   words to be named by, and a segment carried no role either: it is a button
   with a selected state now, whatever it is drawn from.
@@ -32,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `Popover` threw where its `minWidth` was wider than the standard
+  `maxWidth`.** Asking one field for one thing crashed the card with
+  non-normalized constraints instead of widening it; the ceiling now gives
+  way to a floor the caller named on purpose.
 - **A `Radio` ignored the token it was given.** `Radio.token` was collected,
   documented and never read: a radio could only be restyled through a
   `ConfigProvider` above it, and naming the token on the widget itself did

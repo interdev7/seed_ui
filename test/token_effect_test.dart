@@ -16,6 +16,7 @@ import 'package:flutter/material.dart'
         ThemeData,
         Tooltip;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
@@ -578,6 +579,66 @@ Widget _ribbon(RibbonToken? token) => Ribbon(
       token: token,
       child: const SizedBox(width: 120, height: 60),
     );
+
+Widget _dropdown(DropdownToken? token) => Dropdown<String>(
+      open: true,
+      token: token,
+      menu: const [
+        DropdownItem(value: 'a', label: 'Rename'),
+        DropdownItem(value: 'b', label: 'Delete'),
+      ],
+      child: const Text('Menu'),
+    );
+
+Widget _popover(PopoverToken? token) => Popover(
+      open: true,
+      title: const Text('A title'),
+      content: const Text('And a line under it.'),
+      token: token,
+      child: const Text('Anchor'),
+    );
+
+Widget _timeline(TimelineToken? token, {TimelineOrientation? orientation}) =>
+    SizedBox(
+      width: 300,
+      child: Timeline(
+        token: token,
+        orientation: orientation,
+        items: const [
+          TimelineItem(title: Text('First'), description: Text('one')),
+          TimelineItem(title: Text('Second'), description: Text('two')),
+        ],
+      ),
+    );
+
+Widget _datePanel(
+  DatePickerToken? token, {
+  bool withPresets = false,
+  bool withTime = false,
+}) =>
+    SizedBox(
+      width: 320,
+      child: DatePicker(
+        value: DateTime(2026, 3, 10),
+        showTime: withTime,
+        presets: withPresets
+            ? [DatePreset('Today', DateTime(2026, 3, 10))]
+            : const [],
+        token: token,
+      ),
+    );
+
+/// Lights the first menu row the way a keyboard does.
+Future<void> _highlightFirstItem(WidgetTester tester) async {
+  await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+  await tester.pumpAndSettle();
+}
+
+/// Opens a picker's panel, which is where every field of its token is drawn.
+Future<void> _openPicker(WidgetTester tester) async {
+  await tester.tap(find.byType(DatePicker));
+  await tester.pumpAndSettle();
+}
 
 final _probes = <_Probe>[
   _Probe(
@@ -1990,5 +2051,186 @@ final _probes = <_Probe>[
   _Probe(
     'RibbonToken.textColor',
     (c) => _ribbon(c ? const RibbonToken(textColor: _loud) : null),
+  ),
+  _Probe(
+    'DropdownToken.menuBg',
+    (c) => _dropdown(c ? const DropdownToken(menuBg: _loud) : null),
+  ),
+  _Probe(
+    'DropdownToken.gradient',
+    (c) => _dropdown(
+      c
+          ? const DropdownToken(
+              gradient: LinearGradient(colors: [_loud, Color(0xFF00FFAA)]),
+            )
+          : null,
+    ),
+  ),
+  _Probe(
+    'DropdownToken.padding',
+    (c) => _dropdown(
+      c ? const DropdownToken(padding: EdgeInsets.all(28)) : null,
+    ),
+  ),
+  _Probe(
+    'DropdownToken.borderRadius',
+    (c) => _dropdown(c ? const DropdownToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'DropdownToken.border',
+    (c) => _dropdown(
+      c
+          ? const DropdownToken(border: BorderSide(color: _loud, width: 3))
+          : null,
+    ),
+  ),
+  _Probe(
+    'DropdownToken.shadow',
+    (c) => _dropdown(
+      c
+          ? const DropdownToken(
+              shadow: [BoxShadow(color: _loud, blurRadius: 12)],
+            )
+          : null,
+    ),
+  ),
+  _Probe(
+    'DropdownToken.gap',
+    (c) => _dropdown(c ? const DropdownToken(gap: 40) : null),
+  ),
+  _Probe(
+    'DropdownToken.itemHeight',
+    (c) => _dropdown(c ? const DropdownToken(itemHeight: 60) : null),
+  ),
+  _Probe(
+    'DropdownToken.itemPadding',
+    (c) => _dropdown(
+      c ? const DropdownToken(itemPadding: EdgeInsets.all(30)) : null,
+    ),
+  ),
+  _Probe(
+    'DropdownToken.itemHoverBg',
+    (c) => _dropdown(c ? const DropdownToken(itemHoverBg: _loud) : null),
+    // The keyboard rather than the pointer: the same single highlight
+    // answers both, and a menu puts a barrier between the page and the
+    // pointer that a test's mouse cannot reach past.
+    act: _highlightFirstItem,
+  ),
+  _Probe(
+    'PopoverToken.colorBg',
+    (c) => _popover(c ? const PopoverToken(colorBg: _loud) : null),
+  ),
+  _Probe(
+    'PopoverToken.titleColor',
+    (c) => _popover(c ? const PopoverToken(titleColor: _loud) : null),
+  ),
+  _Probe(
+    'PopoverToken.contentColor',
+    (c) => _popover(c ? const PopoverToken(contentColor: _loud) : null),
+  ),
+  _Probe(
+    'PopoverToken.borderRadius',
+    (c) => _popover(c ? const PopoverToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'PopoverToken.padding',
+    (c) => _popover(
+      c ? const PopoverToken(padding: EdgeInsets.all(32)) : null,
+    ),
+  ),
+  _Probe(
+    'PopoverToken.minWidth',
+    (c) => _popover(c ? const PopoverToken(minWidth: 400) : null),
+  ),
+  _Probe(
+    'PopoverToken.maxWidth',
+    // Narrow enough to force the line to wrap: a ceiling above what the
+    // content asks for changes nothing at all.
+    (c) => _popover(c ? const PopoverToken(maxWidth: 120) : null),
+  ),
+  _Probe(
+    'TimelineToken.tailColor',
+    (c) => _timeline(c ? const TimelineToken(tailColor: _loud) : null),
+  ),
+  _Probe(
+    'TimelineToken.tailWidth',
+    (c) => _timeline(c ? const TimelineToken(tailWidth: 8) : null),
+  ),
+  _Probe(
+    'TimelineToken.dotBg',
+    (c) => _timeline(c ? const TimelineToken(dotBg: _loud) : null),
+  ),
+  _Probe(
+    'TimelineToken.dotBorderWidth',
+    (c) => _timeline(c ? const TimelineToken(dotBorderWidth: 6) : null),
+  ),
+  _Probe(
+    'TimelineToken.dotSize',
+    (c) => _timeline(c ? const TimelineToken(dotSize: 24) : null),
+  ),
+  _Probe(
+    'TimelineToken.railInset',
+    (c) => _timeline(
+      c ? const TimelineToken(railInset: RailInsets.all(20)) : null,
+    ),
+  ),
+  _Probe(
+    'TimelineToken.itemPaddingBottom',
+    (c) => _timeline(c ? const TimelineToken(itemPaddingBottom: 60) : null),
+  ),
+  _Probe(
+    'TimelineToken.itemPaddingEnd',
+    // The space to the right of an item, which a column of them has no room
+    // for: the field belongs to a timeline laid out along a line.
+    (c) => _timeline(
+      c ? const TimelineToken(itemPaddingEnd: 60) : null,
+      orientation: TimelineOrientation.horizontal,
+    ),
+  ),
+  _Probe(
+    'DatePickerToken.borderRadius',
+    (c) => _datePanel(c ? const DatePickerToken(borderRadius: 0) : null),
+    act: _openPicker,
+  ),
+  _Probe(
+    'DatePickerToken.cellWidth',
+    (c) => _datePanel(c ? const DatePickerToken(cellWidth: 52) : null),
+    act: _openPicker,
+  ),
+  _Probe(
+    'DatePickerToken.cellHeight',
+    (c) => _datePanel(c ? const DatePickerToken(cellHeight: 52) : null),
+    act: _openPicker,
+  ),
+  _Probe(
+    'DatePickerToken.headerHeight',
+    (c) => _datePanel(c ? const DatePickerToken(headerHeight: 80) : null),
+    act: _openPicker,
+  ),
+  _Probe(
+    'DatePickerToken.mainAxisSpacing',
+    (c) => _datePanel(c ? const DatePickerToken(mainAxisSpacing: 16) : null),
+    act: _openPicker,
+  ),
+  _Probe(
+    'DatePickerToken.crossAxisSpacing',
+    (c) => _datePanel(c ? const DatePickerToken(crossAxisSpacing: 16) : null),
+    act: _openPicker,
+  ),
+  _Probe(
+    'DatePickerToken.presetsWidth',
+    (c) => _datePanel(
+      c ? const DatePickerToken(presetsWidth: 220) : null,
+      withPresets: true,
+    ),
+    act: _openPicker,
+  ),
+  _Probe(
+    'DatePickerToken.timeColumnWidth',
+    (c) => _datePanel(
+      c ? const DatePickerToken(timeColumnWidth: 120) : null,
+      withTime: true,
+    ),
+    act: _openPicker,
   ),
 ];

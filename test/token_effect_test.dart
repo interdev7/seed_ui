@@ -279,6 +279,34 @@ Offset _onTheRail(WidgetTester tester) {
   return Offset(box.center.dx, box.top + 10);
 }
 
+const _steps = [
+  StepItem(title: Text('One'), content: Text('First')),
+  StepItem(title: Text('Two'), content: Text('Second')),
+  StepItem(title: Text('Three'), content: Text('Third')),
+];
+
+Widget _stepsOf(
+  StepsToken? token, {
+  SoftSize? size,
+  StepsType type = StepsType.standard,
+  StepsOrientation orientation = StepsOrientation.horizontal,
+  double width = 420,
+}) =>
+    SizedBox(
+      // Width only: a run given a height of someone else's choosing spills
+      // past it, and what a probe then photographs is the same clipped strip
+      // whatever the token said.
+      width: width,
+      child: Steps(
+        items: _steps,
+        current: 1,
+        size: size,
+        type: type,
+        orientation: orientation,
+        token: token,
+      ),
+    );
+
 final _probes = <_Probe>[
   _Probe(
     'ProgressToken.defaultColor',
@@ -866,5 +894,147 @@ final _probes = <_Probe>[
     'SliderToken.handleActiveColor',
     (c) => _slider(c ? const SliderToken(handleActiveColor: _loud) : null),
     hoverAt: _onTheRail,
+  ),
+  _Probe(
+    'StepsToken.iconSize',
+    (c) => _stepsOf(c ? const StepsToken(iconSize: 44) : null),
+  ),
+  _Probe(
+    'StepsToken.iconSizeSM',
+    (c) => _stepsOf(
+      c ? const StepsToken(iconSizeSM: 40) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'StepsToken.iconSizeLG',
+    (c) => _stepsOf(
+      c ? const StepsToken(iconSizeLG: 52) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'StepsToken.railThickness',
+    (c) => _stepsOf(c ? const StepsToken(railThickness: 8) : null),
+  ),
+  _Probe(
+    'StepsToken.itemGap',
+    (c) => _stepsOf(c ? const StepsToken(itemGap: 40) : null),
+  ),
+  _Probe(
+    'StepsToken.railInset',
+    (c) => _stepsOf(
+      c ? const StepsToken(railInset: RailInsets.all(24)) : null,
+    ),
+  ),
+  _Probe(
+    'StepsToken.railLength',
+    (c) => _stepsOf(
+      c ? const StepsToken(railLength: 12) : null,
+      // Room to stay on one line: squeezed, the run stacks each step instead
+      // and the fields that share a line out have nothing to share.
+      width: 900,
+    ),
+  ),
+  _Probe(
+    'StepsToken.railMinLength',
+    (c) => _stepsOf(c ? const StepsToken(railMinLength: 120) : null),
+  ),
+  _Probe(
+    'StepsToken.contentMaxWidth',
+    (c) => _stepsOf(
+      c ? const StepsToken(contentMaxWidth: 60) : null,
+      // Room to stay on one line: squeezed, the run stacks each step instead
+      // and the fields that share a line out have nothing to share.
+      width: 900,
+    ),
+  ),
+  _Probe(
+    'StepsToken.itemWidth',
+    (c) => _stepsOf(
+      c ? const StepsToken(itemWidth: 90) : null,
+      type: StepsType.navigation,
+    ),
+  ),
+  _Probe(
+    'StepsToken.itemMinWidth',
+    (c) => _stepsOf(
+      // Wide enough that the three steps no longer fit the room and each is
+      // drawn at the floor instead of its share — named lower, the floor is
+      // real but invisible: the run simply keeps sharing as it did.
+      c ? const StepsToken(itemMinWidth: 400) : null,
+      width: 900,
+    ),
+  ),
+  _Probe(
+    'StepsToken.itemHeight',
+    (c) => _stepsOf(
+      c ? const StepsToken(itemHeight: 120) : null,
+      type: StepsType.navigation,
+    ),
+  ),
+  _Probe(
+    'StepsToken.dotSize',
+    (c) => _stepsOf(
+      c ? const StepsToken(dotSize: 24) : null,
+      type: StepsType.dot,
+    ),
+  ),
+  _Probe(
+    'StepsToken.dotCurrentSize',
+    (c) => _stepsOf(
+      c ? const StepsToken(dotCurrentSize: 26) : null,
+      type: StepsType.dot,
+    ),
+  ),
+  _Probe(
+    'StepsToken.panelPadding',
+    (c) => _stepsOf(
+      c ? const StepsToken(panelPadding: EdgeInsets.all(28)) : null,
+      type: StepsType.panel,
+    ),
+  ),
+  _Probe(
+    'StepsToken.panelRadius',
+    (c) => _stepsOf(
+      c ? const StepsToken(panelRadius: 0) : null,
+      type: StepsType.panel,
+    ),
+  ),
+  _Probe(
+    'StepsToken.panelArrowWidth',
+    (c) => _stepsOf(
+      c ? const StepsToken(panelArrowWidth: 36) : null,
+      type: StepsType.panel,
+    ),
+  ),
+  _Probe(
+    'StepsToken.panelMinWidth',
+    (c) => _stepsOf(
+      c ? const StepsToken(panelMinWidth: 260) : null,
+      type: StepsType.panel,
+    ),
+  ),
+  _Probe(
+    'StepsToken.panelWidth',
+    (c) => _stepsOf(
+      c ? const StepsToken(panelWidth: 260) : null,
+      type: StepsType.panel,
+    ),
+  ),
+  _Probe(
+    'StepsToken.panelHeight',
+    (c) => _stepsOf(
+      c ? const StepsToken(panelHeight: 120) : null,
+      type: StepsType.panel,
+    ),
+  ),
+  _Probe(
+    'StepsToken.arrowColor',
+    // The chevron between blocks belongs to the navigation run alone.
+    (c) => _stepsOf(
+      c ? const StepsToken(arrowColor: _loud) : null,
+      type: StepsType.navigation,
+    ),
   ),
 ];

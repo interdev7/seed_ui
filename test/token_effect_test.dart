@@ -2135,19 +2135,24 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'AvatarToken.textFontSize',
-    (c) => _avatar(c ? const AvatarToken(textFontSize: 28) : null),
+    // Smaller than the preset, not larger: the initials sit in a FittedBox
+    // that scales them *down* to the circle, so two letters already wide
+    // enough to touch its sides come out the same size whatever was asked —
+    // and how wide "AB" is at 14 differs between the test font on one
+    // platform and another. A smaller size is never scaled and always shows.
+    (c) => _avatar(c ? const AvatarToken(textFontSize: 6) : null),
   ),
   _Probe(
     'AvatarToken.textFontSizeSM',
     (c) => _avatar(
-      c ? const AvatarToken(textFontSizeSM: 26) : null,
+      c ? const AvatarToken(textFontSizeSM: 6) : null,
       size: SoftSize.small,
     ),
   ),
   _Probe(
     'AvatarToken.textFontSizeLG',
     (c) => _avatar(
-      c ? const AvatarToken(textFontSizeLG: 30) : null,
+      c ? const AvatarToken(textFontSizeLG: 8) : null,
       size: SoftSize.large,
     ),
   ),

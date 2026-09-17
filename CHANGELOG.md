@@ -15,38 +15,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when to grey itself out. It asks rather than owns — every method goes out
   through the widget's own `onChanged`, exactly as a drag or an arrow key
   does, so the value still has one owner.
-- **A mark is somewhere to be sent to.** Pressing one puts the nearest handle
-  on it, pulled onto the steps and held inside `bounds` like any other
+- **A slider mark is somewhere to be sent to.** Pressing one puts the nearest
+  handle on it, pulled onto the steps and held inside `bounds` like any other
   journey — the shortest way to a named place, and the one a thumb reaches
   for. A mark the handle may not rest on stays a label; a mark with no words
   is named by the number it stands on, so a screen reader meets a button that
   says where it goes.
-
 - **`Button.semanticsLabel`.** A button carrying nothing but an icon had no
   words to be named by, so a screen reader announced "button" and no more,
   and there was no way to say otherwise.
 - **`Switch.semanticsLabel`.** A switch is a track and a handle and no words,
   so it arrived as "switch, on" and nothing about what was on — and there was
   no way to say otherwise.
+- **`SegmentedOption.semanticsLabel`.** A segment made of an icon alone has no
+  words to be named by, and a segment carried no role either: it is a button
+  with a selected state now, whatever it is drawn from.
+- **Seven words for the glyphs**, in all eleven languages: `clear`, `remove`,
+  `retry`, `preview` and `download` for the crosses and arrows that had been
+  silent; `goToPage` for the jump field a `Pagination` can carry, whose label
+  was hard-coded English; and `add` for the plus that opens one more tab.
+- **A test that every control a person can act on is one they can hear
+  named.** It walks every page of the demo and fails on a node that carries a
+  tap and no words. The sweep it closes found a hundred and sixty-nine of
+  them — the fixes are listed below — and it holds the count at zero.
 - **A test that holds every token field to the pixels.** Each one draws its
   component twice, plain and with the one field named, and the two pictures
-  have to differ — which is how the `Select` panel's deaf token above was
-  found — five times now, and one of those was a crash rather than a field
-  that did nothing. Three hundred and sixty-one of the kit's three hundred and
+  have to differ. Three hundred and sixty-one of the kit's three hundred and
   seventy-five token fields are covered; the fourteen left out say why in the
   file — a hover that a still pointer cannot start, a duration, a floor
-  nothing reaches, a font a test cannot swap.
+  nothing reaches, a font a test cannot swap. It found five of the fixes
+  below, one of them a crash rather than a field that did nothing.
 - **A test that every widget taking a `token` reads it.** `Radio` collected
   one and resolved without it, which is invisible from outside — the field is
   there, the doc comment is there, and only the pixels disagree. This reads
   the source instead, so the next one is caught the day it is written.
-- **`SegmentedOption.semanticsLabel`.** A segment made of an icon alone has no
-  words to be named by, and a segment carried no role either: it is a button
-  with a selected state now, whatever it is drawn from.
-- **Six words for the glyphs**, in all eleven languages: `clear`, `remove`,
-  `retry`, `preview`, `download`, and `goToPage` for the jump field a
-  `Pagination` can carry, and `add` for the plus that opens one more tab. The crosses and arrows that carry them had been
-  silent, and the jump field's own label was hard-coded English.
+- **A test that the `Table` demo fits a phone.** At 390 wide no table on the
+  page may need dragging sideways, save the three that are about being wider
+  than their box and are named as such.
 
 ### Fixed
 
@@ -56,25 +61,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a hot restart — that overlay was gone and the entry with it, while the stack
   still held a reference to it. Nothing was inserted into the new overlay, and
   every message after that went nowhere at all, silently and for good.
-- **`PaginationToken.fontSize` did nothing.** Every figure in the pager took
-  the theme's size whatever the token said. It is read now, and the field
-  documents what it cannot do: a page button is square, sized by the control
-  preset, so a much larger figure needs a larger `size` beside it.
 - **A `Popover` threw where its `minWidth` was wider than the standard
   `maxWidth`.** Asking one field for one thing crashed the card with
   non-normalized constraints instead of widening it; the ceiling now gives
   way to a floor the caller named on purpose.
-- **A `Radio` ignored the token it was given.** `Radio.token` was collected,
-  documented and never read: a radio could only be restyled through a
-  `ConfigProvider` above it, and naming the token on the widget itself did
-  nothing at all. It is read first now, as every other component reads its
-  own.
 - **A `Select`'s panel ignored the token the field was given.** Every
   option-facing field of `SelectToken` — `optionSelectedBg`, `optionActiveBg`,
   `optionPadding`, `optionFontSize` — worked through `ConfigProvider` and did
   nothing when named on the widget itself: a panel is drawn in the overlay
   above the app, so it inherits nothing from where the field stands. The
   token is carried down by hand now.
+- **A `Radio` ignored the token it was given.** `Radio.token` was collected,
+  documented and never read: a radio could only be restyled through a
+  `ConfigProvider` above it, and naming the token on the widget itself did
+  nothing at all. It is read first now, as every other component reads its
+  own.
+- **`PaginationToken.fontSize` did nothing.** Every figure in the pager took
+  the theme's size whatever the token said. It is read now, and the field
+  documents what it cannot do: a page button is square, sized by the control
+  preset, so a much larger figure needs a larger `size` beside it.
 - **A `Dropdown`'s menu reached a screen reader as one node.** Every item's
   words ran together into a single label — "Rename\nDelete" — carrying one
   tap between them: nothing could be chosen, and a barred item was not marked
@@ -86,6 +91,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A `Pagination`'s arrows had no name**, and nothing said which page you
   were on. The arrows take the words the kit already had for them, and the
   page you are on is marked selected.
+- **A `Pagination`'s five-page jump had no name** — three dots that turn into
+  a chevron under the pointer and said nothing at all — and its jump field
+  was named only by the words standing next to it. Those words were
+  `'Go to'`, written into the widget in English whatever the locale; they are
+  translated now.
 - **A `Tree`'s chevron and its node boxes had no name.** The chevron says
   which way it would go — open or shut — and a node's box is named the way a
   `Table`'s row box is, so it is no longer "checkbox, checked" and nothing
@@ -98,21 +108,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   increase and decrease actions that do it; the buttons are that same
   operation drawn for a pointer, and a second way in read as two more unnamed
   buttons.
-- **A `Pagination`'s five-page jump had no name** — three dots that turn into
-  a chevron under the pointer and said nothing at all — and its jump field
-  was named only by the words standing next to it. Those words were
-  `'Go to'`, written into the widget in English whatever the locale; they are
-  translated now.
 - **A `FloatButton` and the words beside it read as one.** The caption sits
   outside the button, so the button announced itself as "button" while its
   own name stood in the node next door.
 - **The attached search button on an `Input`** carried a magnifier and no
   name, unless it had been given words of its own.
-- **A `Table` in the demo ran past a phone's edge**, where five columns were
-  three more than the screen had room for. The two that carry least stand
-  down below 560 now — which is what `showFrom` is for — and a test holds the
-  whole page to it, naming the three tables that are meant to be wider than
-  their box.
 - **An editable `Tabs` bar's add button had no name** — a plus and nothing
   else.
 - **A picker with a date in it lost its name.** The placeholder names the
@@ -121,6 +121,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The cross that empties a picker had no name** — on `DatePicker`,
   `DateRangePicker`, `MultiDatePicker` and `TimePicker` alike — and neither
   did an `Upload` row's remove, retry, preview and download.
+- **A `Table` in the demo ran past a phone's edge**, where five columns were
+  three more than the screen had room for. The two that carry least stand
+  down below 560 now — which is what `showFrom` is for.
 
 ## 0.25.0
 

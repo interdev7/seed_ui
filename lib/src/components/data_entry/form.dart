@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/services.dart' show TextCapitalization;
 
 import 'package:flutter/widgets.dart' hide Form, FormField, RadioGroup;
 
@@ -1323,6 +1324,11 @@ class FormItem<T> extends StatefulWidget {
     Widget? suffix,
     int? maxLines,
     ValueChanged<String>? onSubmitted,
+    TextCapitalization? textCapitalization,
+    bool? autocorrect,
+    bool? enableSuggestions,
+    bool? enableIMEPersonalizedLearning,
+    Iterable<String>? autofillHints,
   }) =>
       FormItem<String>(
         key: key,
@@ -1347,6 +1353,11 @@ class FormItem<T> extends StatefulWidget {
           suffix: suffix,
           maxLines: maxLines,
           onSubmitted: onSubmitted,
+          textCapitalization: textCapitalization,
+          autocorrect: autocorrect,
+          enableSuggestions: enableSuggestions,
+          enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
+          autofillHints: autofillHints,
           onChanged: field.didChange,
         ),
       );

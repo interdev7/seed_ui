@@ -457,6 +457,9 @@ class _InputNumberState extends State<InputNumber> {
         placeholder: widget.placeholder,
         keyboardType:
             const TextInputType.numberWithOptions(decimal: true, signed: true),
+        // A number is never what a keyboard has a better idea about.
+        autocorrect: false,
+        enableSuggestions: false,
         inputFormatters: [
           // Digits, an optional sign and a single decimal point.
           FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),

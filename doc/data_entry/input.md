@@ -213,6 +213,34 @@ Input(
 )
 ```
 
+## What the keyboard is told
+
+A field left alone is treated as prose: corrected, suggested, remembered. Most
+fields are not prose, and five properties say so:
+
+| Property | Default | Turn it off / set it for |
+| --- | --- | --- |
+| `autocorrect` | `true` | an e-mail, a username, a code — iOS corrects `ivanov` to `Ivanov's` |
+| `enableSuggestions` | `true` | a login, a code — Android only |
+| `enableIMEPersonalizedLearning` | `true` | a card number, a one-time code — typed once, not offered back tomorrow |
+| `textCapitalization` | `none` | a name (`words`), a sentence (`sentences`) |
+| `autofillHints` | none | `[AutofillHints.email]`, `[AutofillHints.password]` — what lets a password manager fill a login |
+
+```dart
+Input(
+  placeholder: 'E-mail',
+  keyboardType: TextInputType.emailAddress,
+  autocorrect: false,
+  autofillHints: const [AutofillHints.email],
+)
+```
+
+`autofillHints` is the one worth never forgetting on a sign-in form: without
+it the form works, and is one the phone cannot help with. `FormItem.text`
+takes all five, so a form's fields can say the same. An `InputNumber` asks for
+no corrections and no suggestions on its own — a number is never what a
+keyboard has a better idea about.
+
 ## Notes
 
 The field is built on Flutter's `EditableText` with platform-appropriate

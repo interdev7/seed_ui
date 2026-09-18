@@ -608,6 +608,8 @@ class _PaginationState extends State<Pagination> {
             disabled: !_enabled || readOnly,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
+            autocorrect: false,
+            enableSuggestions: false,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               _MaxValueFormatter(_pageCount),
@@ -717,6 +719,8 @@ class _PaginationState extends State<Pagination> {
             semanticsLabel: context.seedLocale.goToPage,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
+            autocorrect: false,
+            enableSuggestions: false,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               _MaxValueFormatter(_pageCount),

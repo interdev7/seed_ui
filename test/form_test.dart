@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' as m;
+import 'package:flutter/services.dart' show TextCapitalization;
 import 'package:flutter/widgets.dart' hide Form;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -807,6 +808,33 @@ void main() {
       await tester.pumpAndSettle();
       expect(form.value('email'), 'nope');
       expect(form.error('email'), 'Enter a valid email address');
+    });
+
+    testWidgets('a text field tells the keyboard what it is for', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: FormController(),
+            child: FormItem.text(
+              name: 'email',
+              autocorrect: false,
+              enableSuggestions: false,
+              enableIMEPersonalizedLearning: false,
+              textCapitalization: TextCapitalization.characters,
+              autofillHints: const [AutofillHints.email],
+            ),
+          ),
+        ),
+      );
+
+      final e = tester.widget<EditableText>(find.byType(EditableText));
+      expect(e.autocorrect, isFalse);
+      expect(e.enableSuggestions, isFalse);
+      expect(e.enableIMEPersonalizedLearning, isFalse);
+      expect(e.textCapitalization, TextCapitalization.characters);
+      expect(e.autofillHints, [AutofillHints.email]);
     });
 
     testWidgets('a number field holds numbers', (tester) async {

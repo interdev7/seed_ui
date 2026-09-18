@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Input` tells the keyboard what it is for.** `autocorrect`,
+  `enableSuggestions`, `enableIMEPersonalizedLearning`, `textCapitalization`
+  and `autofillHints`, all of them left as they were unless named. Every field
+  had been prose to the keyboard — corrected, suggested, remembered — with no
+  way to say that an e-mail is not, and a sign-in form could not ask a
+  password manager to fill it. `FormItem.text` takes the same five. An
+  `InputNumber`, and the page field of a `Pagination`, ask for no corrections
+  and no suggestions on their own: a number is never what a keyboard has a
+  better idea about.
 - **`FloatButtonToken.maskColor`.** A group opened over a photograph or a busy
   table left its items with nothing to stand against, and there was no way to
   ask for the page behind them to be dimmed — while `colorBgMask` is what a

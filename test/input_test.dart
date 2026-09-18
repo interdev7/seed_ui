@@ -325,6 +325,77 @@ void _selectionTests() {
     });
   });
 
+  group('what the keyboard is told about the field', () {
+    EditableText editable(WidgetTester tester) =>
+        tester.widget<EditableText>(find.byType(EditableText));
+
+    testWidgets('left alone, it is prose: corrected, suggested, remembered', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_host(const Input()));
+      final e = editable(tester);
+      expect(e.autocorrect, isTrue);
+      expect(e.enableSuggestions, isTrue);
+      expect(e.enableIMEPersonalizedLearning, isTrue);
+      expect(e.textCapitalization, TextCapitalization.none);
+      expect(e.autofillHints, isNull);
+    });
+
+    testWidgets('each wish reaches the editable', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Input(
+            textCapitalization: TextCapitalization.words,
+            autocorrect: false,
+            enableSuggestions: false,
+            enableIMEPersonalizedLearning: false,
+            autofillHints: [AutofillHints.email],
+          ),
+        ),
+      );
+      final e = editable(tester);
+      expect(e.textCapitalization, TextCapitalization.words);
+      expect(e.autocorrect, isFalse);
+      expect(e.enableSuggestions, isFalse);
+      expect(e.enableIMEPersonalizedLearning, isFalse);
+      expect(e.autofillHints, [AutofillHints.email]);
+    });
+
+    testWidgets('the platform is told too, not only the widget', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          const Input(
+            autocorrect: false,
+            enableSuggestions: false,
+            autofillHints: [AutofillHints.username],
+          ),
+        ),
+      );
+      await tester.tap(find.byType(Input));
+      await tester.pumpAndSettle();
+
+      final config = tester.testTextInput.setClientArgs!;
+      expect(config['autocorrect'], isFalse);
+      expect(config['enableSuggestions'], isFalse);
+      expect(
+        (config['autofill'] as Map)['hints'],
+        [AutofillHints.username],
+        reason: 'a password manager reads the connection, not the tree',
+      );
+    });
+
+    testWidgets('a number asks for no corrections and no suggestions', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_host(const InputNumber(value: 1)));
+      final e = editable(tester);
+      expect(e.autocorrect, isFalse);
+      expect(e.enableSuggestions, isFalse);
+    });
+  });
+
   group('asking for the keyboard again', () {
     // Putting the keyboard away with the phone's back button hides it without
     // taking the field's focus: the framework still believes there is an

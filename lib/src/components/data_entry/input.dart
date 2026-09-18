@@ -397,6 +397,11 @@ class Input extends StatefulWidget {
     this.textAlign = TextAlign.start,
     this.keyboardType,
     this.textInputAction,
+    this.textCapitalization,
+    this.autocorrect,
+    this.enableSuggestions,
+    this.enableIMEPersonalizedLearning,
+    this.autofillHints,
     this.inputFormatters,
     this.count,
     this.search,
@@ -497,6 +502,37 @@ class Input extends StatefulWidget {
 
   /// What the keyboard's action key does — send, next, done.
   final TextInputAction? textInputAction;
+
+  /// Which letters the keyboard offers upper-case first — a name, a title.
+  /// Defaults to none.
+  final TextCapitalization? textCapitalization;
+
+  /// Whether the keyboard may correct what is typed. Defaults to yes.
+  ///
+  /// Turn it off for anything that is not prose: an e-mail address, a
+  /// username, a code. iOS corrects `ivanov` to `Ivanov's` and means well.
+  final bool? autocorrect;
+
+  /// Whether the keyboard may suggest words above itself. Defaults to yes.
+  ///
+  /// Android only; the others take no notice. Off for a code or a login,
+  /// where a suggestion is never what was meant.
+  final bool? enableSuggestions;
+
+  /// Whether the keyboard may learn from what is typed here. Defaults to yes.
+  ///
+  /// Off for a card number or a one-time code — what is typed once should
+  /// not be offered back tomorrow.
+  final bool? enableIMEPersonalizedLearning;
+
+  /// What this field is for, to the platform's autofill — `[AutofillHints.email]`,
+  /// `[AutofillHints.password]`. Null asks for nothing.
+  ///
+  /// This is what lets a password manager offer to fill a login, and what
+  /// makes a keyboard put the user's own e-mail and phone above itself. A
+  /// sign-in form without them works, and is a form the phone cannot help
+  /// with.
+  final Iterable<String>? autofillHints;
 
   /// Formatters applied to every edit, in order.
   final List<TextInputFormatter>? inputFormatters;
@@ -777,6 +813,12 @@ class _SoftInputState extends State<Input> {
       keyboardType: widget.keyboardType ??
           (_multiline ? TextInputType.multiline : TextInputType.text),
       textInputAction: widget.textInputAction,
+      textCapitalization: widget.textCapitalization ?? TextCapitalization.none,
+      autocorrect: widget.autocorrect ?? true,
+      enableSuggestions: widget.enableSuggestions ?? true,
+      enableIMEPersonalizedLearning:
+          widget.enableIMEPersonalizedLearning ?? true,
+      autofillHints: widget.autofillHints,
       inputFormatters: [
         if (widget.maxLength != null)
           LengthLimitingTextInputFormatter(widget.maxLength),

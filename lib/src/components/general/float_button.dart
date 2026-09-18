@@ -446,6 +446,7 @@ class FloatButtonToken {
     this.shadow,
     this.motionDuration,
     this.curve,
+    this.maskColor,
   });
 
   /// Diameter of a round button, height of a square one — the standard
@@ -482,6 +483,19 @@ class FloatButtonToken {
   /// The shape of the opening — how the items accelerate along their way.
   final Curve? curve;
 
+  /// What is drawn over the page behind an open group.
+  ///
+  /// Transparent by default. A group of float buttons is a lighter thing than
+  /// a modal, and dimming a whole page for four actions is more than they
+  /// ask for — but over a photograph or a busy table the items have nothing
+  /// to stand against, and `colorBgMask` is what the kit dims with elsewhere.
+  ///
+  /// Only a group opened by a tap wears one: a mask on
+  /// [FloatButtonTrigger.hover] would flash every time a pointer crossed the
+  /// corner. It is drawn whether or not the group closes on a tap outside —
+  /// dimming the page and taking that tap are two different wishes.
+  final Color? maskColor;
+
   _ResolvedFloatButtonToken _resolve(Token t) => _ResolvedFloatButtonToken(
         size: size ?? t.controlHeightLG + t.sizeXS,
         sizeSM: sizeSM ?? t.controlHeight + t.sizeXS,
@@ -512,6 +526,7 @@ class FloatButtonToken {
             ],
         motionDuration: motionDuration ?? t.motionDurationSlow,
         curve: curve ?? t.easeOutBack,
+        maskColor: maskColor ?? const Color(0x00000000),
       );
 
   /// This one with [other]'s fields laid over it, one field at a time.
@@ -526,6 +541,7 @@ class FloatButtonToken {
         borderRadius: other.borderRadius ?? borderRadius,
         shadow: other.shadow ?? shadow,
         motionDuration: other.motionDuration ?? motionDuration,
+        maskColor: other.maskColor ?? maskColor,
         curve: other.curve ?? curve,
       );
 }
@@ -544,6 +560,7 @@ class _ResolvedFloatButtonToken {
     required this.shadow,
     required this.motionDuration,
     required this.curve,
+    required this.maskColor,
   });
 
   final double size;
@@ -557,6 +574,7 @@ class _ResolvedFloatButtonToken {
   final List<BoxShadow> shadow;
   final Duration motionDuration;
   final Curve curve;
+  final Color maskColor;
 }
 
 /// Defaults for every [FloatButton] and [FloatButtonGroup] under a
@@ -1509,6 +1527,29 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
         ),
       );
 
+  /// The page dimmed behind an open group.
+  ///
+  /// Below the barrier and out of its way: the mask is something to look at,
+  /// and a tap on it belongs to whatever the caller asked for — a group that
+  /// does not close on an outside tap has no barrier, and its mask must not
+  /// quietly start eating them.
+  ///
+  /// It follows the same controller as the items, so the page darkens as they
+  /// travel and lightens as they come home. Not [_ResolvedFloatButtonToken.curve]
+  /// though: that one overshoots, and a colour lerped past its end comes back
+  /// as a flash of something darker than was asked for.
+  Widget _mask(Color color) => Positioned.fill(
+        child: IgnorePointer(
+          child: FadeTransition(
+            opacity: CurvedAnimation(
+              parent: _controller!,
+              curve: Curves.easeOut,
+            ),
+            child: ColoredBox(color: color),
+          ),
+        ),
+      );
+
   Widget _buildLayer(BuildContext overlayContext) {
     final r = _resolved();
     final layout = _wrapped ?? _layout;
@@ -1556,8 +1597,11 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
       children: children,
     );
 
+    final masked = _trigger == FloatButtonTrigger.click && r.maskColor.a > 0;
+
     return Stack(
       children: [
+        if (masked) _mask(r.maskColor),
         if (_trigger == FloatButtonTrigger.click && _dismissible) _barrier(),
         Positioned.fill(child: flow),
       ],

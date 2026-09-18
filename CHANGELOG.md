@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.28.0
+
+### Added
+
+- **`FloatButtonToken.maskColor`.** A group opened over a photograph or a busy
+  table left its items with nothing to stand against, and there was no way to
+  ask for the page behind them to be dimmed — while `colorBgMask` is what a
+  modal, a drawer and an upload all dim with. Transparent by default, so
+  nothing changes for anyone who does not name it: a group of float buttons is
+  a lighter thing than a modal. The mask fades in as the items travel, only a
+  group opened by a tap wears one — on a hover trigger it would flash as a
+  pointer crossed the corner — and it never takes a tap, so dimming the page
+  and closing on an outside tap stay two separate wishes.
+
 ## 0.27.0
 
 ### Added

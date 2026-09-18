@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
 import 'package:flutter/services.dart';
@@ -687,6 +688,111 @@ void main() {
           items: const [],
         ),
         throwsAssertionError,
+      );
+    });
+  });
+
+  group('the mask behind an open group', () {
+    const dim = Color(0x80000000);
+
+    Finder mask() => find.descendant(
+          of: find.byType(Overlay),
+          matching: find.byWidgetPredicate(
+            (w) => w is ColoredBox && w.color == dim,
+          ),
+        );
+
+    testWidgets('nothing is drawn behind a group unasked', (tester) async {
+      await tester.pumpWidget(_host(_group(count: 2)));
+      await _open(tester);
+
+      expect(mask(), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(Overlay),
+          matching: find.byWidgetPredicate(
+            (w) => w is ColoredBox && w.color.a > 0,
+          ),
+        ),
+        findsNothing,
+        reason: 'a group of float buttons is lighter than a modal',
+      );
+    });
+
+    testWidgets('the page dims once the token names a colour', (tester) async {
+      await tester.pumpWidget(
+        _host(_group(count: 2, token: const FloatButtonToken(maskColor: dim))),
+      );
+      await _open(tester);
+
+      expect(mask(), findsOneWidget);
+    });
+
+    testWidgets('it arrives with the items and leaves with them',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(_group(count: 2, token: const FloatButtonToken(maskColor: dim))),
+      );
+      await tester.tap(find.byType(FloatButton).first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      final half = tester.widget<FadeTransition>(
+        find.ancestor(of: mask(), matching: find.byType(FadeTransition)),
+      );
+      expect(half.opacity.value, greaterThan(0));
+      expect(
+        half.opacity.value,
+        lessThan(1),
+        reason: 'the page darkens as the items travel, not before',
+      );
+    });
+
+    testWidgets('a mask does not take the taps a barrier was not asked for',
+        (tester) async {
+      var closed = 0;
+      await tester.pumpWidget(
+        _host(
+          _group(
+            count: 2,
+            dismissible: false,
+            onOpenChanged: (open) {
+              if (!open) closed++;
+            },
+            token: const FloatButtonToken(maskColor: dim),
+          ),
+        ),
+      );
+      await _open(tester);
+      expect(mask(), findsOneWidget, reason: 'dimming is its own wish');
+
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pumpAndSettle();
+
+      expect(closed, 0);
+      expect(mask(), findsOneWidget);
+    });
+
+    testWidgets('a group opened by hovering wears none', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const FloatButtonGroup<String>(
+            trigger: FloatButtonTrigger.hover,
+            token: FloatButtonToken(maskColor: dim),
+            items: [FloatButtonItem(value: 'a', icon: UserIcon())],
+          ),
+        ),
+      );
+      final pointer = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await pointer.addPointer(location: Offset.zero);
+      addTearDown(pointer.removePointer);
+      await pointer.moveTo(tester.getCenter(find.byType(FloatButton).first));
+      await tester.pumpAndSettle();
+
+      expect(
+        mask(),
+        findsNothing,
+        reason: 'it would flash as a pointer crossed the corner',
       );
     });
   });

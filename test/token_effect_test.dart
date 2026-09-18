@@ -3187,6 +3187,15 @@ final _probes = <_Probe>[
     act: _pressAnchor,
   ),
   _Probe(
+    'FloatButtonToken.maskColor',
+    // The page behind an open group, which only a group opened by a tap dims.
+    (c) => FloatButtonGroup(
+      open: true,
+      token: c ? const FloatButtonToken(maskColor: _loud) : null,
+      items: const [FloatButtonItem(value: 'a', icon: Icon(Icons.edit))],
+    ),
+  ),
+  _Probe(
     'FloatButtonToken.gap',
     // The space between a group's buttons, which a group of one has none of.
     (c) => FloatButtonGroup(

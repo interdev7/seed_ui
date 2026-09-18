@@ -435,6 +435,37 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
           ),
         ),
         Group(
+          'Dimming the page behind it',
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: SizedBox(
+              height: 220,
+              child: DecoratedBox(
+                // Something busy to stand against: over a flat page the items
+                // need no help, which is why nothing is dimmed unasked.
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      context.softToken.primary.base,
+                      context.softToken.error.base,
+                    ],
+                  ),
+                ),
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: FloatButtonGroup<FabAction>(
+                    semanticsLabel: 'Actions',
+                    items: _actions,
+                    token: FloatButtonToken(
+                      maskColor: context.softToken.colorBgMask,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Group(
           'Driven by a controller',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

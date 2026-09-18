@@ -140,6 +140,29 @@ wrapper that changes the item's size is worth knowing about: the layout spaces
 items by the size in the token, so something much larger will crowd its
 neighbours.
 
+### Dimming the page behind it
+
+Nothing is drawn behind an open group unless you ask. A group of float buttons
+is a lighter thing than a modal, and dimming a whole page for four actions is
+more than they ask for — but over a photograph or a busy table the items have
+nothing to stand against:
+
+```dart
+FloatButtonGroup(
+  token: FloatButtonToken(maskColor: context.softToken.colorBgMask),
+  items: [...],
+)
+```
+
+The mask fades in as the items travel and out as they come home. Two things
+about it are worth knowing:
+
+* Only a group opened by a tap wears one. On `FloatButtonTrigger.hover` it
+  would flash every time a pointer crossed the corner.
+* It never takes a tap. Whether an outside tap closes the group is
+  `dismissible`, and dimming the page is a separate wish — a group with
+  `dismissible: false` dims and still lets taps through to the page.
+
 ### Drawing the caption
 
 `FloatButtonItem.label` is a string, because an item is data. When a line of

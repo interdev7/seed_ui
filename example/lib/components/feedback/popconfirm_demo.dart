@@ -85,7 +85,7 @@ class PopconfirmDemo extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               return SizedBox(
-                width: constraints.maxWidth,
+                width: constraints.maxWidth * 0.6,
                 height: constraints.maxWidth * 0.7,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),

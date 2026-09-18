@@ -176,38 +176,6 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
           ),
         ),
         Group(
-          'A caption drawn rather than written',
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: SizedBox(
-              height: 220,
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: FloatButtonGroup<FabAction>(
-                  items: _actions,
-                  // The item's `label` is a string, because an item is data.
-                  // This is how it reaches the plate and the second line that
-                  // a lone FloatButton's widget label could always have had.
-                  labelBuilder: (context, item) => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.softToken.colorBgElevated,
-                      borderRadius: BorderRadius.circular(
-                        context.softToken.borderRadiusSM,
-                      ),
-                      boxShadow: context.softToken.boxShadowSecondary,
-                    ),
-                    child: Text(item.label ?? ''),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        Group(
           'Layouts',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -420,6 +388,50 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
                 '${_last == null ? '' : '  Last tapped: ${_last!.name}.'}',
               ),
             ],
+          ),
+        ),
+        Group(
+          'A caption drawn rather than written',
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: SizedBox(
+              height: 220,
+              child: Align(
+                alignment: Alignment.bottomRight,
+                child: FloatButtonGroup<FabAction>(
+                  semanticsLabel: 'Actions',
+                  items: const [
+                    FloatButtonItem(
+                      value: FabAction.share,
+                      label: 'Send to a friend',
+                      icon: Icon(Icons.share),
+                    ),
+                    FloatButtonItem(
+                      value: FabAction.copy,
+                      label: 'Duplicate',
+                      icon: Icon(Icons.copy),
+                    ),
+                  ],
+                  // The item's `label` is a string, because an item is data.
+                  // This is how it reaches the plate and the second line that
+                  // a lone FloatButton's widget label could always have had.
+                  labelBuilder: (context, item) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.softToken.colorBgElevated,
+                      borderRadius: BorderRadius.circular(
+                        context.softToken.borderRadiusSM,
+                      ),
+                      boxShadow: context.softToken.boxShadowSecondary,
+                    ),
+                    child: Text(item.label ?? ''),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
         Group(

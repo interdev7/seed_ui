@@ -715,6 +715,84 @@ void main() {
       );
     });
 
+    testWidgets('labelBuilder draws the caption in place of the plain text',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          FloatButtonGroup<String>(
+            labelBuilder: (context, item) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [Text(item.label!), const Text('3')],
+            ),
+            items: const [
+              FloatButtonItem(value: 'a', icon: UserIcon(), label: 'Edit'),
+            ],
+          ),
+        ),
+      );
+      await _open(tester);
+
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('Edit'), findsOneWidget);
+    });
+
+    testWidgets('a builder that returns null leaves the caption alone',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          FloatButtonGroup<String>(
+            labelBuilder: (context, item) =>
+                item.value == 'a' ? const Text('dressed') : null,
+            items: const [
+              FloatButtonItem(value: 'a', icon: UserIcon(), label: 'Edit'),
+              FloatButtonItem(value: 'b', icon: UserIcon(), label: 'Share'),
+            ],
+          ),
+        ),
+      );
+      await _open(tester);
+
+      expect(find.text('dressed'), findsOneWidget);
+      expect(find.text('Edit'), findsNothing);
+      expect(find.text('Share'), findsOneWidget);
+    });
+
+    testWidgets('an item with no label of its own can still be given one',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          FloatButtonGroup<String>(
+            labelBuilder: (context, item) => const Text('from the builder'),
+            items: const [FloatButtonItem(value: 'a', icon: UserIcon())],
+          ),
+        ),
+      );
+      await _open(tester);
+
+      expect(find.text('from the builder'), findsOneWidget);
+    });
+
+    testWidgets('the screen reader still hears the item\'s own words',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          FloatButtonGroup<String>(
+            labelBuilder: (context, item) => const UserIcon(),
+            items: const [
+              FloatButtonItem(value: 'a', icon: UserIcon(), label: 'Edit'),
+            ],
+          ),
+        ),
+      );
+      await _open(tester);
+
+      expect(
+        find.bySemanticsLabel('Edit'),
+        findsWidgets,
+        reason: 'a widget cannot be read out, so the string still names it',
+      );
+    });
+
     testWidgets('a key is fastened to the item, for a Tour to aim at',
         (tester) async {
       final key = GlobalKey();

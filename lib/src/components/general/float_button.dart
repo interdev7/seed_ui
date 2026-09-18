@@ -949,6 +949,15 @@ typedef FloatButtonItemBuilder<T> = Widget Function(
   Widget child,
 );
 
+/// Draws the caption beside item [item] in place of its plain text.
+///
+/// Returning null leaves the item with the caption it would have had, so a
+/// builder can dress one item and let the rest alone.
+typedef FloatButtonLabelBuilder<T> = Widget? Function(
+  BuildContext context,
+  FloatButtonItem<T> item,
+);
+
 /// Opens and closes a [FloatButtonGroup] from outside the build.
 ///
 /// Reach for this when the group has to answer to something that is not a
@@ -1030,6 +1039,7 @@ class FloatButtonGroup<T> extends StatefulWidget {
     this.onOpenChanged,
     this.onItemTap,
     this.itemBuilder,
+    this.labelBuilder,
     this.dismissible,
     this.closeOnSelect,
     this.labelPlacement,
@@ -1086,6 +1096,23 @@ class FloatButtonGroup<T> extends StatefulWidget {
 
   /// Wraps each built item — a `Tooltip`, a `Badge`, anything.
   final FloatButtonItemBuilder<T>? itemBuilder;
+
+  /// Draws the captions, where a line of plain text is not enough — two
+  /// lines, a count beside the words, a plate behind them to stay legible
+  /// over a photograph.
+  ///
+  /// [FloatButtonItem.label] is a string because an item is data; a lone
+  /// [FloatButton] takes a widget, and this is how a group's items reach the
+  /// same place. It is asked about every item, including those with no label
+  /// of their own, so it can give one a caption the data does not carry.
+  ///
+  /// What a screen reader announces still comes from [FloatButtonItem.label],
+  /// which no widget can be read out of: name the item there as well as
+  /// drawing it here, or the button arrives with no name at all.
+  ///
+  /// Use [itemBuilder] instead to wrap the whole item, button and caption
+  /// together.
+  final FloatButtonLabelBuilder<T>? labelBuilder;
 
   /// Whether a tap on open ground closes the group. Defaults to yes.
   ///
@@ -1445,7 +1472,8 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     Widget built = FloatButton(
       icon: item.icon,
       size: widget.size,
-      label: item.label == null ? null : Text(item.label!),
+      label: widget.labelBuilder?.call(context, item) ??
+          (item.label == null ? null : Text(item.label!)),
       labelPlacement: placement,
       color: item.color ?? widget.color,
       shape: widget.shape,

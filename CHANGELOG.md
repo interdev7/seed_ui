@@ -5,7 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.26.1
+## 0.27.0
+
+### Added
+
+- **`FloatButtonGroup.labelBuilder`.** A group's captions could only ever be a
+  line of plain text: `FloatButtonItem.label` is a string, because an item is
+  data, and `itemBuilder` wraps the button and its caption together — too late
+  to dress one of them. A lone `FloatButton` has taken a widget there all
+  along, so the kit was offering through a group less than it offers beside
+  one. The builder is asked about every item, including those carrying no
+  label of their own, and returning null leaves an item with the caption it
+  would have had. What a screen reader announces still comes from the item's
+  own string, which no widget can be read out of.
 
 ### Fixed
 

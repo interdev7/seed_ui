@@ -140,6 +140,36 @@ wrapper that changes the item's size is worth knowing about: the layout spaces
 items by the size in the token, so something much larger will crowd its
 neighbours.
 
+### Drawing the caption
+
+`FloatButtonItem.label` is a string, because an item is data. When a line of
+plain text is not enough — two lines, a count beside the words, a plate behind
+them to stay legible over a photograph — `labelBuilder` draws it instead:
+
+```dart
+labelBuilder: (context, item) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  decoration: BoxDecoration(
+    color: context.softToken.colorBgElevated,
+    borderRadius: BorderRadius.circular(context.softToken.borderRadiusSM),
+    boxShadow: context.softToken.boxShadowSecondary,
+  ),
+  child: Text(item.label ?? ''),
+),
+```
+
+It is asked about every item, including those carrying no label of their own,
+so it can give one a caption the data does not hold. Return null to leave an
+item with the caption it would have had, which is how one item is dressed and
+the rest left alone.
+
+Keep filling in `label` even when you draw something else there: a screen
+reader is given that string, and no widget can be read out. An item drawn by
+the builder and left without one arrives as a button with no name.
+
+Use `itemBuilder` to wrap the button and its caption together; use this to
+replace the caption alone.
+
 ## Layouts
 
 `FloatButtonLayout` is a sealed type rather than an enum, because the variants

@@ -47,8 +47,10 @@ class InputNumberToken {
 
   /// Hover background color of handles (`handleHoverBg`).
   ///
-  /// Transparent by default: The control answers a hover on the chevron itself
+  /// Transparent by default: the control answers a hover on the glyph itself
   /// rather than with a filled block. Set one only to bring the block back.
+  /// It is a wash laid over [handleBg], not a colour in place of it, so a
+  /// half-transparent value tints the handle instead of hollowing it.
   final Color? handleHoverBg;
 
   /// Chevron colour under the pointer (`handleHoverColor`). Defaults to the
@@ -741,11 +743,21 @@ class _StepButtonState extends State<_StepButton> {
             height: widget.height - t.lineWidth * 2,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: _pressed && active
-                  ? r.handleActiveBg
-                  : _hovered && active
-                      ? r.handleHoverBg
-                      : r.handleBg,
+              // Laid over the handle's own ground rather than in place of it.
+              // Both washes are mostly transparent — `handleActiveBg` is two
+              // per cent of the text colour — so used raw they did not tint
+              // the button, they punched a hole in it: the handle faded to
+              // nothing under the pointer and the page showed through.
+              color: active
+                  ? Color.alphaBlend(
+                      _pressed
+                          ? r.handleActiveBg
+                          : _hovered
+                              ? r.handleHoverBg
+                              : const Color(0x00000000),
+                      r.handleBg,
+                    )
+                  : r.handleBg,
               // The rule goes between the handle and the field, whichever side
               // the handle was put on.
               border: BorderDirectional(

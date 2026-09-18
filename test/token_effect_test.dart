@@ -28,11 +28,12 @@ import 'package:seed_ui/seed_ui.dart';
 /// Not every field can be proved this way, and the ones that cannot say so
 /// here rather than quietly going missing.
 ///
-/// * A handle that only appears under the pointer: the button slides in
+/// * A handle that only appears under the pointer: the chevron pair slides in
 ///   because the field is hovered, and by then the pointer is already still,
-///   so the button's own `MouseRegion` never sees it arrive —
-///   `InputNumberToken.handleHoverBg`, `handleHoverColor` and
-///   `handleActiveBg`.
+///   so the button's own `MouseRegion` never sees it arrive. That is what
+///   kept `InputNumberToken.handleHoverColor` out; the two washes beside it
+///   are proved on the spinner's plus and minus, which stand there always.
+///   The hole they were hiding is in the changelog for 0.26.1.
 /// * Things that are not drawn at all: `TableToken.resizeHandleWidth` is how
 ///   wide a border is to take hold of, and `PopconfirmToken`'s and
 ///   `DropdownToken`'s durations and curves are how long something takes
@@ -45,8 +46,10 @@ import 'package:seed_ui/seed_ui.dart';
 /// * `TableToken.dragShadow` is worn by a column while it is carried, which
 ///   needs a drag the test framework starts and holds across a rebuild.
 /// * `TableToken.resizeLineColor` puts its line in the tree while a border is
-///   dragged — the widget is there, and no pixel of the shot changes. That
-///   one is worth a look on a device.
+///   dragged — the widget is there, and no pixel of the shot changes. Tried
+///   by hand on the web build: the line is drawn and the border drags as it
+///   should, so what is missing is the drag this framework can hold across a
+///   rebuild, not the colour.
 /// * `SeedToken.fontFamily` and `fontFamilyFallback`: a test renders with one
 ///   face whatever is asked for, so the letters come back the same shape.
 ///
@@ -781,6 +784,29 @@ Widget _sortable(SortableListToken? token) => SizedBox(
       ),
     );
 
+/// Where the spinner's plus sits: the handle at the trailing edge, which is
+/// what wears `handleHoverBg` and `handleActiveBg`.
+Offset _plusOf(WidgetTester tester) {
+  final plus = find
+      .descendant(
+        of: find.byType(InputNumber),
+        matching: find.byType(AnimatedContainer),
+      )
+      .last;
+  return tester.getCenter(plus);
+}
+
+/// Presses the plus and keeps it down: a pressed wash only exists while
+/// something is pressed.
+Future<void> _holdPlus(WidgetTester tester) async {
+  final gesture = await tester.startGesture(_plusOf(tester));
+  _letGo = gesture.up;
+  // The press is a state change like any other: without a frame the shot is
+  // taken of the button as it was before the finger landed.
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
+}
+
 /// Picks a row up and keeps hold of it: what a lift is drawn with only
 /// exists while something is being carried.
 Future<void> _liftRow(WidgetTester tester) async {
@@ -1026,6 +1052,24 @@ final _probes = <_Probe>[
             )
           : null,
     ),
+  ),
+  _Probe(
+    'InputNumberToken.handleHoverBg',
+    (c) => _number(
+      c ? const InputNumberToken(handleHoverBg: _loud) : null,
+      mode: InputNumberMode.spinner,
+    ),
+    // The spinner's two buttons stand there always, so the pointer can rest
+    // on one — the chevron pair slides in on hover and is still arriving.
+    hoverAt: _plusOf,
+  ),
+  _Probe(
+    'InputNumberToken.handleActiveBg',
+    (c) => _number(
+      c ? const InputNumberToken(handleActiveBg: _loud) : null,
+      mode: InputNumberMode.spinner,
+    ),
+    act: _holdPlus,
   ),
   _Probe(
     'InputNumberToken.handleBg',

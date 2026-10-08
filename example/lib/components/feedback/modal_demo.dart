@@ -85,6 +85,25 @@ class ModalDemo extends StatelessWidget {
           ),
           child: const Text('barrierColor'),
         ),
+        // The same dialog twice, so the two placements can be compared: a
+        // block that wants the whole width shows what the column beside it
+        // costs.
+        for (final placement in ModalClosePlacement.values)
+          Button(
+            onPressed: () => Modal.open(
+              ModalConfig(
+                title: const Text('Order #1042'),
+                content: Container(
+                  height: 96,
+                  alignment: Alignment.center,
+                  color: context.softToken.colorFillTertiary,
+                  child: const Text('a block that wants the whole width'),
+                ),
+                closePlacement: placement,
+              ),
+            ),
+            child: Text('close: ${placement.name}'),
+          ),
       ],
     );
   }

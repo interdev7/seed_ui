@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`ModalConfig.closePlacement`.** The close button took a column of its own
+  beside the title and the content, so the whole body was narrower than the
+  dialog all the way down — a table or an image gave up the cross's width for
+  the sake of one line at the top — and there was no way to say otherwise.
+  `ModalClosePlacement.corner` stands the cross over the corner instead: the
+  title keeps clear of it, the content below runs the full width, and the
+  cross itself does not move. `beside` stays the default.
 - **`readOnly` on all three sliders.** A slider showing a live value could
   only be `disabled`, which greys it as if the value did not matter, or given
   a null `onChanged`, which shuts out its `SliderController` as well. A

@@ -302,7 +302,13 @@ export 'src/components/feedback/message.dart'
         StatusType,
         message;
 export 'src/components/feedback/modal.dart'
-    show Modal, ModalApi, ModalConfig, ModalHandle, ModalToken;
+    show
+        Modal,
+        ModalApi,
+        ModalClosePlacement,
+        ModalConfig,
+        ModalHandle,
+        ModalToken;
 export 'src/components/feedback/notification.dart'
     show
         NotificationApi,

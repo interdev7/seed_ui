@@ -163,6 +163,7 @@ MessagePlacement
 MessageToken
 Modal
 ModalApi
+ModalClosePlacement
 ModalConfig
 ModalHandle
 ModalToken

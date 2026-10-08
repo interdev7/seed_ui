@@ -225,4 +225,133 @@ void main() {
     Modal.destroyAll();
     await _settle(tester);
   });
+
+  group('where the cross stands, and what makes room for it', () {
+    Finder cross() => find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == 'CrossPainter',
+        );
+
+    /// Opens a modal whose body is a box that takes all the width it is given.
+    Future<void> open(
+      WidgetTester tester, {
+      ModalClosePlacement? placement,
+      bool title = true,
+      bool closable = true,
+      TextDirection direction = TextDirection.ltr,
+    }) async {
+      // One at a time: a second open stacks over the first, and the probes
+      // measure the one that is there.
+      Modal.destroyAll();
+      await _settle(tester);
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          builder: (context, child) =>
+              Directionality(textDirection: direction, child: child!),
+          home: const Scaffold(body: SizedBox()),
+        ),
+      );
+      Modal.open(
+        ModalConfig(
+          title: title
+              ? const Text(
+                  'A title long enough to reach the corner of the card')
+              : null,
+          content: const SizedBox(
+            key: Key('body'),
+            width: double.infinity,
+            height: 40,
+          ),
+          closable: closable,
+          closePlacement: placement ?? ModalClosePlacement.beside,
+        ),
+      );
+      await _settle(tester);
+    }
+
+    double bodyWidth(WidgetTester tester) =>
+        tester.getSize(find.byKey(const Key('body'))).width;
+
+    testWidgets('beside, the default, narrows the content all the way down', (
+      tester,
+    ) async {
+      await open(tester, closable: false);
+      final whole = bodyWidth(tester);
+
+      await open(tester);
+      expect(bodyWidth(tester), lessThan(whole));
+    });
+
+    testWidgets('in the corner the content has the full width', (
+      tester,
+    ) async {
+      await open(tester, closable: false);
+      final whole = bodyWidth(tester);
+
+      await open(tester, placement: ModalClosePlacement.corner);
+      expect(bodyWidth(tester), whole);
+    });
+
+    testWidgets('in the corner the title still keeps clear of the cross', (
+      tester,
+    ) async {
+      await open(tester, placement: ModalClosePlacement.corner);
+
+      final title = tester.getRect(
+        find.text('A title long enough to reach the corner of the card'),
+      );
+      final x = tester.getRect(cross());
+      expect(
+        title.right,
+        lessThanOrEqualTo(x.left),
+        reason: 'a title running under the cross is half a title',
+      );
+    });
+
+    testWidgets('the cross itself does not move between the two', (
+      tester,
+    ) async {
+      await open(tester);
+      final beside = tester.getRect(cross());
+
+      await open(tester, placement: ModalClosePlacement.corner);
+      expect(tester.getRect(cross()), beside);
+    });
+
+    testWidgets('in a right-to-left dialog the corner is the left one', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        placement: ModalClosePlacement.corner,
+        direction: TextDirection.rtl,
+      );
+
+      final body = tester.getRect(find.byKey(const Key('body')));
+      final x = tester.getRect(cross());
+      expect(x.left, closeTo(body.left, 0.5));
+    });
+
+    testWidgets('the cross in the corner still closes it', (tester) async {
+      await tester.pumpWidget(_host());
+      final future = Modal.open(
+        const ModalConfig(
+          title: Text('Title'),
+          closePlacement: ModalClosePlacement.corner,
+        ),
+      );
+      await _settle(tester);
+
+      await tester.tap(find.byWidgetPredicate(
+        (w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == 'CrossPainter',
+      ));
+      await _settle(tester);
+
+      expect(await future, isFalse);
+    });
+  });
 }

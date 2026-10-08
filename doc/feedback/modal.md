@@ -156,6 +156,34 @@ Modal.confirm(
 
 Long content scrolls: the dialog is capped at 80% of the viewport height.
 
+## Where the close button stands
+
+By default the cross takes a column of its own beside the title and the
+content, so the body is narrower than the dialog all the way down — nothing
+ever runs under it, and a table or an image in the body gives up the cross's
+width for the sake of one line at the top. `closePlacement` lets it stand in
+the corner instead:
+
+```dart
+Modal.open(
+  ModalConfig(
+    title: const Text('Order #1042'),
+    content: OrderTable(order),
+    closePlacement: ModalClosePlacement.corner,
+  ),
+);
+```
+
+| `closePlacement` | The cross | The title | The content |
+| --- | --- | --- | --- |
+| `beside` (default) | in its own column | narrowed | narrowed all the way down |
+| `corner` | over the corner | keeps clear of it | the dialog's full width |
+
+The cross stands in exactly the same place either way; only what is under it
+changes. With no title, nothing makes room in the corner, so content that
+starts at the top runs under the cross unless it leaves room itself. In a
+right-to-left dialog the corner is the left one.
+
 ## Custom footer
 
 `footer` replaces the default buttons entirely. The supplied widgets are
@@ -194,6 +222,7 @@ one. `Modal.destroyAll()` clears every layer.
 | `centered` | `bool` | `false` | Centers vertically; wins over `top` |
 | `top` | `double?` | `null` | Exact offset from the top of the safe area |
 | `closable` | `bool` | `true` | Shows the close icon |
+| `closePlacement` | `ModalClosePlacement` | `beside` | Whether the cross narrows the content or stands over its corner |
 | `maskClosable` | `bool` | `true` | Mask taps dismiss |
 | `escapeClosable` | `bool` | `true` | Escape dismisses |
 | `barrierColor` | `Color?` | `null` | Background color of the dismiss barrier |

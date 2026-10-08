@@ -89,6 +89,20 @@ class _ResolvedModalToken {
   final double contentFontSize;
 }
 
+/// Where a [Modal]'s close button stands, and what makes room for it.
+enum ModalClosePlacement {
+  /// In a column of its own beside the title and the content, which are both
+  /// narrowed by it all the way down. Nothing can ever run under it.
+  beside,
+
+  /// In the corner, over the dialog. The title keeps clear of it; the
+  /// content below the title runs the dialog's full width.
+  ///
+  /// With no title, nothing makes room: content that starts at the top runs
+  /// under the cross unless it leaves room itself.
+  corner,
+}
+
 /// Everything a single modal can be configured with.
 ///
 /// Pass one to [ModalApi.open] when the shorthand openers such as
@@ -110,6 +124,7 @@ class ModalConfig {
     this.centered = false,
     this.top,
     this.closable = true,
+    this.closePlacement = ModalClosePlacement.beside,
     this.maskClosable = true,
     this.escapeClosable = true,
     this.barrierColor,
@@ -179,6 +194,16 @@ class ModalConfig {
 
   /// Whether to show the close icon in the corner.
   final bool closable;
+
+  /// Whether the close button narrows the content or stands over it.
+  ///
+  /// [ModalClosePlacement.beside], the default, gives the cross a column of
+  /// its own, so the content is narrower than the dialog all the way down —
+  /// a table or an image in the body loses the cross's width for the sake of
+  /// one line at the top. [ModalClosePlacement.corner] lets the content have
+  /// the whole width and keeps only the title clear of the cross. Ignored
+  /// when [closable] is false.
+  final ModalClosePlacement closePlacement;
 
   /// Whether tapping the mask dismisses the modal.
   ///
@@ -597,6 +622,11 @@ class _ModalCardState extends State<_ModalCard>
     // meets a stack of loose text over a dimmed page and is not told that a
     // window has opened, nor which one — the routes it announces are the
     // ones a Navigator pushed, and this one is an overlay.
+    final close = _ModalCloseButton(
+      token: token,
+      onTap: () => widget.entry.dismiss(false),
+    );
+
     return Semantics(
       scopesRoute: true,
       namesRoute: true,
@@ -613,75 +643,121 @@ class _ModalCardState extends State<_ModalCard>
           borderRadius: BorderRadius.circular(r.borderRadius),
           boxShadow: token.boxShadow,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Flexible bounds the body's height against the dialog's maxHeight,
-            // which is what lets long content scroll instead of overflowing.
-            Flexible(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (hasIcon) ...[
-                    config.icon ?? StatusIcon(type: config.type!, token: token),
-                    SizedBox(width: token.sizeSM),
-                  ],
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (config.title != null)
-                          DefaultTextStyle(
-                            style: TextStyle(
-                              color: token.colorText,
-                              fontSize: r.titleFontSize,
-                              fontFamily: token.fontFamily,
-                              fontFamilyFallback: token.fontFamilyFallback,
-                              fontWeight: token.fontWeightStrong,
-                              decoration: TextDecoration.none,
-                            ),
-                            child: config.title!,
-                          ),
-                        if (config.title != null && config.content != null)
-                          SizedBox(height: token.sizeXS),
-                        if (config.content != null)
-                          // Scrolls only once the body outgrows the dialog's
-                          // height cap, so short content is unaffected.
-                          Flexible(
-                            child: SingleChildScrollView(
-                              child: DefaultTextStyle(
+        child: _withCornerClose(
+          config,
+          close,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Flexible bounds the body's height against the dialog's maxHeight,
+              // which is what lets long content scroll instead of overflowing.
+              Flexible(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (hasIcon) ...[
+                      config.icon ??
+                          StatusIcon(type: config.type!, token: token),
+                      SizedBox(width: token.sizeSM),
+                    ],
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (config.title != null)
+                            _clearOfCorner(
+                              config,
+                              token,
+                              DefaultTextStyle(
                                 style: TextStyle(
-                                  color: token.colorTextSecondary,
-                                  fontSize: r.contentFontSize,
+                                  color: token.colorText,
+                                  fontSize: r.titleFontSize,
                                   fontFamily: token.fontFamily,
                                   fontFamilyFallback: token.fontFamilyFallback,
-                                  height: token.lineHeight,
+                                  fontWeight: token.fontWeightStrong,
                                   decoration: TextDecoration.none,
                                 ),
-                                child: config.content!,
+                                child: config.title!,
                               ),
                             ),
-                          ),
-                      ],
+                          if (config.title != null && config.content != null)
+                            SizedBox(height: token.sizeXS),
+                          if (config.content != null)
+                            // Scrolls only once the body outgrows the dialog's
+                            // height cap, so short content is unaffected.
+                            Flexible(
+                              child: SingleChildScrollView(
+                                child: DefaultTextStyle(
+                                  style: TextStyle(
+                                    color: token.colorTextSecondary,
+                                    fontSize: r.contentFontSize,
+                                    fontFamily: token.fontFamily,
+                                    fontFamilyFallback:
+                                        token.fontFamilyFallback,
+                                    height: token.lineHeight,
+                                    decoration: TextDecoration.none,
+                                  ),
+                                  child: config.content!,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  if (config.closable) ...[
-                    SizedBox(width: token.sizeXS),
-                    _ModalCloseButton(
-                      token: token,
-                      onTap: () => widget.entry.dismiss(false),
-                    ),
+                    if (config.closable &&
+                        config.closePlacement ==
+                            ModalClosePlacement.beside) ...[
+                      SizedBox(width: token.sizeXS),
+                      close,
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            SizedBox(height: token.sizeLG),
-            _footer(token),
-          ],
+              SizedBox(height: token.sizeLG),
+              _footer(token),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  /// The dialog's body with the cross laid over its corner, where it is
+  /// [ModalClosePlacement.corner]; otherwise the body as it is.
+  ///
+  /// Over the padded box rather than the card's edge, so the cross stands
+  /// exactly where it stands beside the content — switching placement moves
+  /// what is under it, never the cross itself. Last in the stack, so a
+  /// screen reader still meets it after the words, as it does beside them.
+  Widget _withCornerClose(ModalConfig config, Widget close, Widget body) {
+    if (!config.closable ||
+        config.closePlacement != ModalClosePlacement.corner) {
+      return body;
+    }
+    return Stack(
+      children: [
+        body,
+        PositionedDirectional(top: 0, end: 0, child: close),
+      ],
+    );
+  }
+
+  /// The title, kept clear of a cross standing over its corner.
+  ///
+  /// The width a column beside it would have taken, on the title alone: the
+  /// title shares the cross's line, and the content under it does not.
+  Widget _clearOfCorner(ModalConfig config, Token token, Widget title) {
+    if (!config.closable ||
+        config.closePlacement != ModalClosePlacement.corner) {
+      return title;
+    }
+    return Padding(
+      padding: EdgeInsetsDirectional.only(
+        end: _ModalCloseButton.extent + token.sizeXS,
+      ),
+      child: title,
     );
   }
 
@@ -733,6 +809,10 @@ class _ModalCardState extends State<_ModalCard>
 class _ModalCloseButton extends StatefulWidget {
   const _ModalCloseButton({required this.token, required this.onTap});
 
+  /// How wide and tall the button is, which is also the room a title leaves
+  /// for it in the corner.
+  static const double extent = 22;
+
   final Token token;
   final VoidCallback onTap;
 
@@ -753,8 +833,8 @@ class _ModalCloseButtonState extends State<_ModalCloseButton> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          width: 22,
-          height: 22,
+          width: _ModalCloseButton.extent,
+          height: _ModalCloseButton.extent,
           decoration: BoxDecoration(
             color: _hovered ? token.colorFillSecondary : null,
             borderRadius: BorderRadius.circular(token.borderRadiusSM),

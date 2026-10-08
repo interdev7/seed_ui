@@ -45,12 +45,65 @@ RangeSlider(defaultValues: (20, 80))
 MultiRangeSlider(defaultValues: const [0, 40, 70])
 ```
 
-A null `onChanged` on a **controlled** slider makes it read-only: nothing can
-move the handle, so nothing does. An uncontrolled one moves whether or not
-anybody is listening. `disabled` bars it either way.
+A null `onChanged` on a **controlled** slider makes it inert: nothing can
+move the handle, not even a [controller](#moving-it-from-outside), so nothing
+does. An uncontrolled one moves whether or not anybody is listening.
+`disabled` bars it either way, and `readOnly` bars people while letting a
+controller through.
 
 Left unsaid, an uncontrolled `Slider` starts at `min`, and both range sliders
 start with a handle at each end of the scale.
+
+## Moving it from outside
+
+A `SliderController` moves the handles from somewhere that is not the slider:
+a pair of buttons beside it, a preset, a figure arriving from elsewhere.
+
+```dart
+final volume = SliderController();
+
+Slider(
+  value: _v,
+  step: 5,
+  controller: volume,
+  onChanged: (v) => setState(() => _v = v),
+);
+
+volume.stepUp();        // one step, as an arrow key takes
+volume.toMark(50);      // pulled onto a step, held inside `bounds`
+volume.canStepUp;       // for a button of your own to grey itself
+```
+
+It asks rather than owns: every call goes out through `onChanged`, exactly
+as a drag does, so the value still has one owner.
+
+**A controller's journey glides.** The handle travels to where it was sent
+over the theme's `motionDurationMid` instead of jumping, and the dots and
+marks it passes light up as it goes. Only the picture travels — `onChanged` is
+told the destination once, and a screen reader hears where it is going. A
+hand, a key or a tap on the groove still moves it at once: a handle that
+trailed behind the finger moving it would feel like one that had not heard.
+Pressing on a gliding handle stops it where it stands, and where the platform
+asks for reduced motion it does not glide at all.
+
+### Read-only
+
+`readOnly` shows a live value that people may not change:
+
+```dart
+Slider(
+  value: _level,
+  readOnly: true,
+  controller: level,                       // still moves it
+  onChanged: (v) => setState(() => _level = v),
+);
+```
+
+Unlike `disabled` it keeps its colours, because the value is worth reading.
+Unlike a null `onChanged` it still answers its controller, which is the point
+of showing it at all. A drag, a tap, a key or a press on a mark does nothing;
+it takes no focus, and a screen reader hears it as read-only with no swipe to
+move it. All three sliders take it.
 
 ## Marks and dots
 
@@ -364,6 +417,8 @@ rebuilt for each one. An ancestor that clips will clip it too.
 | `snapToMarks` | `bool` | `false` | Rest on the marks as well as on the steps |
 | `included` | `bool` | `true` | Whether the groove is filled |
 | `disabled` | `bool` | `false` | Greys it out and blocks dragging |
+| `readOnly` | `bool` | `false` | Blocks people but not the controller, and keeps its colours |
+| `controller` | `SliderController?` | `null` | Moves it from outside, gliding there |
 | `vertical` | `bool` | `false` | Runs the scale down the page |
 | `reverse` | `bool` | `false` | Starts it at the far end |
 | `tooltip` | `String? Function(double)?` | `null` | What the bubble says |

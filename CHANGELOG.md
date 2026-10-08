@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`readOnly` on all three sliders.** A slider showing a live value could
+  only be `disabled`, which greys it as if the value did not matter, or given
+  a null `onChanged`, which shuts out its `SliderController` as well. A
+  read-only slider keeps its colours and answers its controller; a drag, a
+  tap, a key, a press on a mark and a screen reader's swipe all do nothing,
+  and it takes no focus.
+- **A controller's journey glides.** `stepUp`, `stepDown` and `toMark` carry
+  the handle to where it was sent over the theme's `motionDurationMid` rather
+  than jumping, and the dots and marks it passes light up as it goes. Only the
+  picture travels: `onChanged` is told the destination once. A hand, a key or
+  a tap still moves the handle at once, a press on a gliding handle stops it
+  where it stands, and nothing glides where reduced motion is asked for.
 - **`Steps` takes colours of its own.** `markerColor`, `markerWaitBg`,
   `markerWaitColor`, `railColor`, `railFinishColor`, `dotColor` and
   `dotWaitColor` on `StepsToken`. The markers, dots and rail were drawn in the

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'
     hide Slider, RangeSlider, ThemeData, Checkbox, Radio, Switch, Tooltip;
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +22,8 @@ Rect _groove(WidgetTester tester) =>
     tester.getRect(find.byType(CustomPaint).last);
 
 void main() {
+  _readOnlyTests();
+  _glideTests();
   _markAndControllerTests();
   _wordlessMarkTests();
 
@@ -1856,5 +1859,426 @@ void _wordlessMarkTests() {
       reason: 'a wordless mark can be pressed, so it has to say where it goes',
     );
     handle.dispose();
+  });
+}
+
+/// The handle's own semantics node, which stands where the handle is drawn.
+Finder _handleNode() => find.byWidgetPredicate(
+      (w) => w is Semantics && (w.properties.slider ?? false),
+    );
+
+/// How far along the groove the first handle is drawn, from 0 to 1.
+double _drawnAt(WidgetTester tester) {
+  final groove = _groove(tester);
+  return (tester.getCenter(_handleNode().first).dx - groove.left) /
+      groove.width;
+}
+
+void _readOnlyTests() {
+  group('a slider that shows and does not take', () {
+    Widget held(
+      ValueChanged<double> onChanged, {
+      SliderController? controller,
+      List<SliderMark> marks = const [],
+    }) =>
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) {
+              return _Owned(
+                onChanged: onChanged,
+                controller: controller,
+                marks: marks,
+              );
+            },
+          ),
+        );
+
+    testWidgets('a hand moves nothing: not a drag, not a tap', (tester) async {
+      final moved = <double>[];
+      await tester.pumpWidget(held(moved.add));
+
+      final groove = _groove(tester);
+      await tester
+          .tapAt(Offset(groove.left + groove.width * 0.8, groove.center.dy));
+      await tester.dragFrom(
+        Offset(groove.left + groove.width * 0.5, groove.center.dy),
+        Offset(groove.width * 0.3, 0),
+      );
+      await tester.pumpAndSettle();
+
+      expect(moved, isEmpty);
+    });
+
+    testWidgets('nor a key, which never gets the focus to ask with', (
+      tester,
+    ) async {
+      final moved = <double>[];
+      await tester.pumpWidget(held(moved.add));
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+
+      expect(moved, isEmpty);
+    });
+
+    testWidgets('nor a press on a mark', (tester) async {
+      final moved = <double>[];
+      await tester.pumpWidget(
+        held(moved.add, marks: const [SliderMark(80, 'High')]),
+      );
+
+      await tester.tap(find.text('High'));
+      await tester.pumpAndSettle();
+
+      expect(moved, isEmpty);
+    });
+
+    testWidgets('a controller still moves it, which is the point', (
+      tester,
+    ) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      final moved = <double>[];
+      await tester.pumpWidget(held(moved.add, controller: controller));
+
+      controller.stepUp();
+      controller.toMark(90);
+
+      expect(moved, [60, 90]);
+    });
+
+    testWidgets('a reader hears a live value it cannot change', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(held((_) {}));
+
+      final node = tester.getSemantics(_handleNode().first);
+      expect(
+        node,
+        matchesSemantics(
+          isSlider: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isReadOnly: true,
+          value: '50',
+          increasedValue: '60',
+          decreasedValue: '40',
+          // No increase and no decrease: a swipe is a hand too.
+        ),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('it keeps its colours, where a disabled one greys', (
+      tester,
+    ) async {
+      Future<int> shot(Widget slider) async {
+        await tester.pumpWidget(_host(RepaintBoundary(child: slider)));
+        await tester.pumpAndSettle();
+        final image = await tester.runAsync(() async {
+          final boundary = tester.renderObject<RenderRepaintBoundary>(
+            find.byType(RepaintBoundary).last,
+          );
+          final picture = await boundary.toImage();
+          final data = await picture.toByteData();
+          picture.dispose();
+          return Object.hashAll(data!.buffer.asUint32List());
+        });
+        return image!;
+      }
+
+      final live = await shot(Slider(value: 50, onChanged: (_) {}));
+      final shown =
+          await shot(Slider(value: 50, readOnly: true, onChanged: (_) {}));
+      final greyed = await shot(
+        Slider(value: 50, disabled: true, onChanged: (_) {}),
+      );
+
+      expect(shown, live, reason: 'read-only is not a look');
+      expect(greyed, isNot(live));
+    });
+
+    testWidgets('a range is held the same way', (tester) async {
+      final moved = <(double, double)>[];
+      await tester.pumpWidget(
+        _host(
+          RangeSlider(
+            values: (20, 60),
+            readOnly: true,
+            onChanged: moved.add,
+          ),
+        ),
+      );
+      final groove = _groove(tester);
+      await tester.dragFrom(
+        Offset(groove.left + groove.width * 0.2, groove.center.dy),
+        Offset(groove.width * 0.2, 0),
+      );
+      await tester.pumpAndSettle();
+
+      expect(moved, isEmpty);
+    });
+  });
+}
+
+/// A read-only slider at 50 that keeps whatever it is sent, the way a page
+/// showing a live figure back would.
+class _Owned extends StatefulWidget {
+  const _Owned({
+    required this.onChanged,
+    this.controller,
+    this.marks = const [],
+  });
+
+  final ValueChanged<double> onChanged;
+  final SliderController? controller;
+  final List<SliderMark> marks;
+
+  @override
+  State<_Owned> createState() => _OwnedState();
+}
+
+class _OwnedState extends State<_Owned> {
+  double _value = 50;
+
+  @override
+  Widget build(BuildContext context) => Slider(
+        value: _value,
+        step: 10,
+        readOnly: true,
+        marks: widget.marks,
+        controller: widget.controller,
+        onChanged: (v) {
+          widget.onChanged(v);
+          setState(() => _value = v);
+        },
+      );
+}
+
+void _glideTests() {
+  group('a controller\'s journey glides', () {
+    Widget owned({
+      required SliderController controller,
+      ValueChanged<double>? onSet,
+      double start = 0,
+    }) {
+      var value = start;
+      return _host(
+        StatefulBuilder(
+          builder: (context, setState) => Slider(
+            value: value,
+            controller: controller,
+            onChanged: (v) {
+              onSet?.call(v);
+              setState(() => value = v);
+            },
+          ),
+        ),
+      );
+    }
+
+    testWidgets('it travels to where it was sent rather than jumping', (
+      tester,
+    ) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(owned(controller: controller));
+      expect(_drawnAt(tester), closeTo(0, 0.01));
+
+      controller.toMark(100);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 60));
+
+      final midway = _drawnAt(tester);
+      expect(midway, greaterThan(0.05), reason: 'it has set out');
+      expect(midway, lessThan(0.95), reason: 'and has not arrived');
+
+      await tester.pumpAndSettle();
+      expect(_drawnAt(tester), closeTo(1, 0.01));
+    });
+
+    testWidgets('the owner is told the end at once, not every frame', (
+      tester,
+    ) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      final told = <double>[];
+      await tester.pumpWidget(owned(controller: controller, onSet: told.add));
+
+      controller.toMark(100);
+      await tester.pumpAndSettle();
+
+      expect(told, [100], reason: 'only the picture travels');
+    });
+
+    testWidgets('a second call sets out from where the first had got to', (
+      tester,
+    ) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(owned(controller: controller));
+
+      controller.toMark(100);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      final before = _drawnAt(tester);
+
+      controller.toMark(0);
+      await tester.pump();
+      expect(
+        _drawnAt(tester),
+        closeTo(before, 0.02),
+        reason: 'starting from the first one\'s end would jump there first',
+      );
+      await tester.pumpAndSettle();
+      expect(_drawnAt(tester), closeTo(0, 0.01));
+    });
+
+    testWidgets('a hand moves it at once, glide or no glide', (tester) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(owned(controller: controller));
+
+      final groove = _groove(tester);
+      await tester.tapAt(
+        Offset(groove.left + groove.width * 0.7, groove.center.dy),
+      );
+      await tester.pump();
+
+      expect(
+        _drawnAt(tester),
+        closeTo(0.7, 0.02),
+        reason: 'a handle trailing the finger feels like one that did not '
+            'hear',
+      );
+    });
+
+    testWidgets('a hand taking hold mid-glide stops it there', (tester) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(owned(controller: controller));
+
+      controller.toMark(100);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 60));
+
+      final groove = _groove(tester);
+      await tester.tapAt(
+        Offset(groove.left + groove.width * 0.3, groove.center.dy),
+      );
+      await tester.pump();
+      expect(_drawnAt(tester), closeTo(0.3, 0.02));
+
+      await tester.pumpAndSettle();
+      expect(_drawnAt(tester), closeTo(0.3, 0.02));
+    });
+
+    testWidgets('the owner setting the value moves it at once', (
+      tester,
+    ) async {
+      var value = 0.0;
+      late StateSetter set;
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) {
+              set = setState;
+              return Slider(value: value, onChanged: (_) {});
+            },
+          ),
+        ),
+      );
+
+      set(() => value = 100);
+      await tester.pump();
+
+      expect(_drawnAt(tester), closeTo(1, 0.01));
+    });
+
+    testWidgets('a call that went nowhere leaves no glide behind it', (
+      tester,
+    ) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      var value = 0.0;
+      var disabled = true;
+      late StateSetter set;
+      await tester.pumpWidget(
+        _host(
+          StatefulBuilder(
+            builder: (context, setState) {
+              set = setState;
+              return Slider(
+                value: value,
+                disabled: disabled,
+                controller: controller,
+                onChanged: (v) => setState(() => value = v),
+              );
+            },
+          ),
+        ),
+      );
+
+      // Disabled: the call is turned away before it reaches anybody, so
+      // nothing rebuilds to take the mark it set.
+      controller.toMark(50);
+      await tester.pump();
+
+      set(() {
+        disabled = false;
+        value = 100;
+      });
+      await tester.pump();
+      expect(
+        _drawnAt(tester),
+        closeTo(1, 0.01),
+        reason: 'the mark lasts a frame, not until somebody else moves it',
+      );
+    });
+
+    testWidgets('a hand taking hold stops it, before it has moved at all', (
+      tester,
+    ) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(owned(controller: controller));
+
+      controller.toMark(100);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 60));
+      final held = _drawnAt(tester);
+
+      final groove = _groove(tester);
+      final gesture = await tester.startGesture(
+        Offset(groove.left + groove.width * held, groove.center.dy),
+      );
+      // Pressed and held still: not yet a drag, nor a tap.
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(
+        _drawnAt(tester),
+        closeTo(held, 0.03),
+        reason: 'a handle sliding on out from under a finger is not held',
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('it does not glide where motion has been turned down', (
+      tester,
+    ) async {
+      final controller = SliderController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: owned(controller: controller),
+        ),
+      );
+
+      controller.toMark(100);
+      await tester.pump();
+
+      expect(_drawnAt(tester), closeTo(1, 0.01));
+    });
   });
 }

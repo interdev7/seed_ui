@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/gestures.dart' show DragStartBehavior;
+import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:flutter/services.dart'
     show KeyDownEvent, KeyEvent, KeyRepeatEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
@@ -511,6 +513,7 @@ class Slider extends StatefulWidget {
     this.dots,
     this.included,
     this.disabled,
+    this.readOnly = false,
     this.vertical = false,
     this.reverse = false,
     this.zones = const [],
@@ -564,6 +567,15 @@ class Slider extends StatefulWidget {
 
   /// Greys the slider out and blocks dragging.
   final bool? disabled;
+
+  /// Whether the slider shows its value without letting anyone change it.
+  ///
+  /// Not [disabled]: the slider keeps its colours, because the value is
+  /// live and worth reading — a level set elsewhere, a figure the page is
+  /// showing back. A hand, a key or a press on a mark does nothing, and
+  /// neither does a screen reader's swipe; a [SliderController] still moves
+  /// it, which is the point of showing it at all. Defaults to false.
+  final bool readOnly;
 
   /// Runs the scale down the page instead of across it.
   final bool vertical;
@@ -674,6 +686,7 @@ class _SliderState extends State<Slider> {
       dots: _dots,
       included: _included,
       disabled: _disabled,
+      readOnly: widget.readOnly,
       vertical: widget.vertical,
       reverse: widget.reverse,
       tooltip: widget.tooltip,
@@ -717,6 +730,7 @@ class RangeSlider extends StatefulWidget {
     this.dots,
     this.included,
     this.disabled,
+    this.readOnly = false,
     this.vertical = false,
     this.reverse = false,
     this.draggableTrack = false,
@@ -776,6 +790,15 @@ class RangeSlider extends StatefulWidget {
 
   /// Greys the slider out and blocks dragging.
   final bool? disabled;
+
+  /// Whether the slider shows its value without letting anyone change it.
+  ///
+  /// Not [disabled]: the slider keeps its colours, because the value is
+  /// live and worth reading — a level set elsewhere, a figure the page is
+  /// showing back. A hand, a key or a press on a mark does nothing, and
+  /// neither does a screen reader's swipe; a [SliderController] still moves
+  /// it, which is the point of showing it at all. Defaults to false.
+  final bool readOnly;
 
   /// Runs the scale down the page.
   final bool vertical;
@@ -885,6 +908,7 @@ class _RangeSliderState extends State<RangeSlider> {
       dots: _dots,
       included: _included,
       disabled: _disabled,
+      readOnly: widget.readOnly,
       vertical: widget.vertical,
       reverse: widget.reverse,
       tooltip: widget.tooltip,
@@ -961,6 +985,7 @@ class MultiRangeSlider extends StatefulWidget {
     this.dots,
     this.included,
     this.disabled,
+    this.readOnly = false,
     this.vertical = false,
     this.reverse = false,
     this.draggableTrack = false,
@@ -1020,6 +1045,15 @@ class MultiRangeSlider extends StatefulWidget {
 
   /// Greys the slider out and blocks dragging.
   final bool? disabled;
+
+  /// Whether the slider shows its value without letting anyone change it.
+  ///
+  /// Not [disabled]: the slider keeps its colours, because the value is
+  /// live and worth reading — a level set elsewhere, a figure the page is
+  /// showing back. A hand, a key or a press on a mark does nothing, and
+  /// neither does a screen reader's swipe; a [SliderController] still moves
+  /// it, which is the point of showing it at all. Defaults to false.
+  final bool readOnly;
 
   /// Runs the scale down the page.
   final bool vertical;
@@ -1147,6 +1181,7 @@ class _MultiRangeSliderState extends State<MultiRangeSlider> {
       dots: _dots,
       included: _included,
       disabled: _disabled,
+      readOnly: widget.readOnly,
       vertical: widget.vertical,
       reverse: widget.reverse,
       tooltip: widget.tooltip,
@@ -1178,6 +1213,7 @@ class _SliderCore extends StatefulWidget {
     required this.dots,
     required this.included,
     required this.disabled,
+    this.readOnly = false,
     required this.vertical,
     required this.reverse,
     required this.tooltip,
@@ -1206,6 +1242,7 @@ class _SliderCore extends StatefulWidget {
   final bool dots;
   final bool included;
   final bool disabled;
+  final bool readOnly;
   final bool vertical;
   final bool reverse;
   final String? Function(double value)? tooltip;
@@ -1238,7 +1275,8 @@ class _SliderCore extends StatefulWidget {
   State<_SliderCore> createState() => _SliderCoreState();
 }
 
-class _SliderCoreState extends State<_SliderCore> {
+class _SliderCoreState extends State<_SliderCore>
+    with SingleTickerProviderStateMixin {
   bool _hovered = false;
   int? _dragging;
   int? _focused;
@@ -1257,10 +1295,68 @@ class _SliderCoreState extends State<_SliderCore> {
   /// can work out which handle it began nearest to.
   Size _size = Size.zero;
 
+  /// Carries the handles from where they were drawn to where the controller
+  /// sent them.
+  ///
+  /// Only a controller's journey glides. A hand, a key and a press on the
+  /// groove move the handle at once: a handle that trailed behind the finger
+  /// moving it would feel like a slider that had not heard.
+  late final AnimationController _glide;
+
+  /// Where the glide set out from, one value per handle.
+  List<double>? _glideFrom;
+
+  /// Set while a controller's call is on its way out through `onChanged`, so
+  /// the rebuild it brings back is known for one to glide to.
+  bool _glideNext = false;
+
+  /// Where the handles are drawn: on their values, or partway there.
+  ///
+  /// What is announced, what a drag measures from and what the owner is told
+  /// all stay on [_SliderCore.values] — only the picture travels.
+  List<double> get _shown {
+    final from = _glideFrom;
+    if (from == null || from.length != widget.values.length) {
+      return widget.values;
+    }
+    return _shownBetween(from, widget.values, _glide.value);
+  }
+
+  void _attachController() => widget.controller?._attach(
+        step: (handle, forward) =>
+            _asController(() => _stepHandle(handle, forward)),
+        moveTo: (handle, value) => _asController(() => _sendTo(handle, value)),
+      );
+
+  /// Runs a controller's call with the rebuild it brings back marked as one to
+  /// glide to.
+  ///
+  /// The mark lasts one frame. An owner that does not rebuild — the handle
+  /// already at the end, a value it refused — would otherwise leave it set,
+  /// and the next change from anywhere else would glide in its place.
+  void _asController(VoidCallback call) {
+    _glideNext = true;
+    call();
+    SchedulerBinding.instance
+      ..addPostFrameCallback((_) => _glideNext = false)
+      ..ensureVisualUpdate();
+  }
+
+  /// Drops the glide where it stands and draws the handles on their values.
+  void _stopGlide() {
+    if (_glideFrom == null) return;
+    _glide.stop();
+    _glideFrom = null;
+  }
+
   @override
   void initState() {
     super.initState();
-    widget.controller?._attach(step: _stepHandle, moveTo: _sendTo);
+    // Made here, not lazily: one first touched in `dispose` would be asking a
+    // tree already taken apart for its ticker.
+    _glide = AnimationController(vsync: this)
+      ..addListener(() => setState(() {}));
+    _attachController();
   }
 
   @override
@@ -1268,13 +1364,59 @@ class _SliderCoreState extends State<_SliderCore> {
     super.didUpdateWidget(old);
     if (old.controller != widget.controller) {
       old.controller?._detach();
-      widget.controller?._attach(step: _stepHandle, moveTo: _sendTo);
+      _attachController();
     }
+
+    final glide = _glideNext;
+    _glideNext = false;
+    if (listEquals(old.values, widget.values)) return;
+    if (!glide ||
+        _dragging != null ||
+        old.values.length != widget.values.length) {
+      // Somebody else moved it — a hand, a key, the owner — and it goes at
+      // once, glide or no glide underway.
+      _stopGlide();
+      return;
+    }
+
+    // Set out from where the handles are drawn now, which is partway along
+    // an earlier glide if one was still running: starting from its end would
+    // make them jump there first.
+    final from = _glideFrom == null
+        ? old.values
+        : _shownBetween(_glideFrom!, old.values, _glide.value);
+    final duration = MediaQuery.maybeDisableAnimationsOf(context) ?? false
+        ? Duration.zero
+        : context.softToken.motionDurationMid;
+    if (duration == Duration.zero) {
+      _stopGlide();
+      return;
+    }
+    _glideFrom = from;
+    _glide
+      ..duration = duration
+      ..forward(from: 0).whenCompleteOrCancel(() {
+        if (mounted && _glide.value == 1) setState(() => _glideFrom = null);
+      });
+  }
+
+  /// Where a glide from [from] to [to] has got to at [progress].
+  List<double> _shownBetween(
+    List<double> from,
+    List<double> to,
+    double progress,
+  ) {
+    if (from.length != to.length) return to;
+    final t = Curves.easeInOutCubic.transform(progress);
+    return [
+      for (var i = 0; i < to.length; i++) from[i] + (to[i] - from[i]) * t
+    ];
   }
 
   @override
   void dispose() {
     widget.controller?._detach();
+    _glide.dispose();
     super.dispose();
   }
 
@@ -1320,6 +1462,11 @@ class _SliderCoreState extends State<_SliderCore> {
   }
 
   bool get _enabled => !widget.disabled && widget.onChanged != null;
+
+  /// Whether a person may move it — by hand, by key, by a press on a mark or
+  /// a screen reader's swipe. A read-only slider is enabled, so it keeps its
+  /// colours and a controller still drives it; it is only deaf to people.
+  bool get _takesHand => _enabled && !widget.readOnly;
 
   /// Whether the scale runs from the far end.
   ///
@@ -1448,7 +1595,7 @@ class _SliderCoreState extends State<_SliderCore> {
         final painted = CustomPaint(
           size: size,
           painter: _SliderPainter(
-            fractions: widget.values.map(_fractionOf).toList(),
+            fractions: _shown.map(_fractionOf).toList(),
             zones: [
               for (final zone in widget.zones)
                 (
@@ -1533,33 +1680,43 @@ class _SliderCoreState extends State<_SliderCore> {
         );
 
         return Focus(
-          canRequestFocus: _enabled,
+          canRequestFocus: _takesHand,
           onKeyEvent: (_, event) => _onKey(_focused ?? 0, event),
           child: MouseRegion(
-            cursor:
-                _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+            cursor: _takesHand
+                ? SystemMouseCursors.click
+                : SystemMouseCursors.basic,
             onEnter: (_) => _setHovered(true),
             onExit: (_) => _setHovered(false),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              dragStartBehavior: DragStartBehavior.down,
-              // On the way up, not on the way down. A press is not yet a
-              // tap: pressed and then dragged, a slider that acted at once
-              // had already moved the nearest handle under the finger — and a
-              // span about to be taken hold of was no longer under the press
-              // by the time the drag began.
-              onTapUp: (details) => _tap(details.localPosition, size),
-              onHorizontalDragStart: widget.vertical ? null : _dragStart,
-              onHorizontalDragUpdate: widget.vertical
-                  ? null
-                  : (d) => _dragUpdate(d.localPosition, size),
-              onHorizontalDragEnd: widget.vertical ? null : (_) => _dragEnd(),
-              onVerticalDragStart: widget.vertical ? _dragStart : null,
-              onVerticalDragUpdate: widget.vertical
-                  ? (d) => _dragUpdate(d.localPosition, size)
-                  : null,
-              onVerticalDragEnd: widget.vertical ? (_) => _dragEnd() : null,
-              child: body,
+            // A press stops a glide where it stands, before anything has
+            // decided what the press is. The gestures below only hear of it
+            // once it has moved past the slop or been let go, and a handle
+            // sliding on out from under a finger pressed on it is not held.
+            child: Listener(
+              onPointerDown: (_) {
+                if (_takesHand) _stopGlide();
+              },
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                dragStartBehavior: DragStartBehavior.down,
+                // On the way up, not on the way down. A press is not yet a
+                // tap: pressed and then dragged, a slider that acted at once
+                // had already moved the nearest handle under the finger — and a
+                // span about to be taken hold of was no longer under the press
+                // by the time the drag began.
+                onTapUp: (details) => _tap(details.localPosition, size),
+                onHorizontalDragStart: widget.vertical ? null : _dragStart,
+                onHorizontalDragUpdate: widget.vertical
+                    ? null
+                    : (d) => _dragUpdate(d.localPosition, size),
+                onHorizontalDragEnd: widget.vertical ? null : (_) => _dragEnd(),
+                onVerticalDragStart: widget.vertical ? _dragStart : null,
+                onVerticalDragUpdate: widget.vertical
+                    ? (d) => _dragUpdate(d.localPosition, size)
+                    : null,
+                onVerticalDragEnd: widget.vertical ? (_) => _dragEnd() : null,
+                child: body,
+              ),
             ),
           ),
         );
@@ -1588,8 +1745,10 @@ class _SliderCoreState extends State<_SliderCore> {
     final value = widget.values[index];
     final step = widget.step ?? (widget.max - widget.min) / 100;
     final target = r.handleSizeHover + r.handleLineWidthHover * 2;
+    // Placed where the handle is drawn, so touch exploration lands on it
+    // mid-glide; the value it reads out is where it is going.
     final along = _alongFor(
-        _fractionOf(value), widget.vertical ? size.height : size.width);
+        _fractionOf(_shown[index]), widget.vertical ? size.height : size.width);
 
     // The keys run with the scale, so a reversed one swaps which way "more"
     // is — and the announcement has to swap with it, or the reader is told
@@ -1611,12 +1770,13 @@ class _SliderCoreState extends State<_SliderCore> {
           container: true,
           slider: true,
           enabled: _enabled,
+          readOnly: widget.readOnly,
           label: widget.semanticsLabel,
           value: _announce(value),
           increasedValue: _announce(forward.clamp(widget.min, widget.max)),
           decreasedValue: _announce(back.clamp(widget.min, widget.max)),
-          onIncrease: _enabled ? () => _nudge(index, forward: true) : null,
-          onDecrease: _enabled ? () => _nudge(index, forward: false) : null,
+          onIncrease: _takesHand ? () => _nudge(index, forward: true) : null,
+          onDecrease: _takesHand ? () => _nudge(index, forward: false) : null,
           // Nothing is drawn here and nothing is taken from the pointer: the
           // groove's own gestures still get every touch.
           child: IgnorePointer(
@@ -1669,7 +1829,7 @@ class _SliderCoreState extends State<_SliderCore> {
       );
 
   void _dragStart(DragStartDetails details) {
-    if (!_enabled) return;
+    if (!_takesHand) return;
     // Between the handles rather than on one: the whole span moves. A handle
     // always wins, though — asked of the handles themselves and not of the
     // value under the press.
@@ -1695,6 +1855,9 @@ class _SliderCoreState extends State<_SliderCore> {
   }
 
   void _dragUpdate(Offset local, Size size) {
+    // Its own check, not only the start's: a drag the start turned away still
+    // sends its updates, and every one of them would move the nearest handle.
+    if (!_takesHand) return;
     final from = _trackFrom;
     if (from != null) {
       _moveTrack(_valueAt(_fractionFor(local, size)), from);
@@ -1766,7 +1929,7 @@ class _SliderCoreState extends State<_SliderCore> {
   /// else it does what it always did, which is move the handle already
   /// nearest to where it landed.
   void _tap(Offset local, Size size) {
-    if (!_enabled) return;
+    if (!_takesHand) return;
     final fraction = _fractionFor(local, size);
     if (!widget.editable) {
       _moveNearest(fraction, complete: true);
@@ -1896,6 +2059,7 @@ class _SliderCoreState extends State<_SliderCore> {
   }
 
   KeyEventResult _onKey(int index, KeyEvent event) {
+    if (!_takesHand) return KeyEventResult.ignored;
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
     }
@@ -1943,19 +2107,21 @@ class _SliderCoreState extends State<_SliderCore> {
             for (final m in widget.marks)
               if (!m.hidden) m.value
           ];
+    final shown = _shown;
     final low = widget.fillFromStart
         ? widget.min
-        : widget.values.reduce((a, b) => a < b ? a : b);
-    final high = widget.values.reduce((a, b) => a > b ? a : b);
+        : shown.reduce((a, b) => a < b ? a : b);
+    final high = shown.reduce((a, b) => a > b ? a : b);
     return [for (final v in values) v >= low && v <= high];
   }
 
   /// Whether the handle has reached [value].
   bool _reached(double value) {
+    final shown = _shown;
     final low = widget.fillFromStart
         ? widget.min
-        : widget.values.reduce((a, b) => a < b ? a : b);
-    final high = widget.values.reduce((a, b) => a > b ? a : b);
+        : shown.reduce((a, b) => a < b ? a : b);
+    final high = shown.reduce((a, b) => a > b ? a : b);
     return value >= low && value <= high;
   }
 
@@ -1984,7 +2150,7 @@ class _SliderCoreState extends State<_SliderCore> {
     // A mark names a place on the scale, so pressing it is a way of asking to
     // go there — the shortest one there is, and the one a thumb reaches for.
     // A mark the handle may not rest on stays a label and nothing more.
-    final takeable = _enabled && !mark.disabled && widget.onChanged != null;
+    final takeable = _takesHand && !mark.disabled && widget.onChanged != null;
     if (!takeable) return content;
     return Semantics(
       button: true,

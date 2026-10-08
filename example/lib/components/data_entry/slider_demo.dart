@@ -23,6 +23,7 @@ class SliderDemo extends StatefulWidget {
 class _SliderDemoState extends State<SliderDemo> {
   final _steered = SliderController();
   double _volume = 40;
+  bool _volumeReadOnly = false;
   double _pulse = 140;
   double _delivery = 12;
   double _temp = 0;
@@ -361,13 +362,14 @@ class _SliderDemoState extends State<SliderDemo> {
           ),
         ),
         Group(
-          'Marks you can press, and a controller that asks',
+          'Marks you can press, a controller that asks, and read-only',
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Slider(
                 value: _volume,
                 controller: _steered,
+                readOnly: _volumeReadOnly,
                 step: 10,
                 marks: const [
                   SliderMark(0, 'off'),
@@ -398,15 +400,35 @@ class _SliderDemoState extends State<SliderDemo> {
                       onPressed: () => _steered.toMark(50),
                       child: const Text('To half'),
                     ),
+                    // The whole scale in one call, which is where the glide
+                    // shows: a single step is too short to see travel.
+                    Button(
+                      onPressed: () => _steered.toMark(_volume < 50 ? 100 : 0),
+                      child: Text(_volume < 50 ? 'To all' : 'To off'),
+                    ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Switch(
+                    value: _volumeReadOnly,
+                    semanticsLabel: 'Read-only',
+                    onChanged: (v) => setState(() => _volumeReadOnly = v),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Read-only'),
+                ],
               ),
               const SizedBox(height: 8),
               Text(
                 'Press a mark and the handle goes there — loud is barred, so '
                 'it stays a label. The buttons drive the same slider from '
                 'outside: the controller asks through onChanged, so the value '
-                'still has one owner. Now: ${_volume.round()}.',
+                'still has one owner, and the handle glides where a hand would '
+                'have moved it at once. Read-only keeps the colours and the '
+                'buttons, and turns away a hand. Now: ${_volume.round()}.',
                 style: TextStyle(color: t.colorTextSecondary),
               ),
             ],

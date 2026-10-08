@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart' show CheckPainter, CrossPainter, ChevronPainter;
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 import '../../utils/rail.dart';
 import '../../utils/roving_focus.dart';
 import '../feedback/progress.dart';
@@ -240,6 +241,13 @@ class StepsToken {
     this.railLength,
     this.railMinLength,
     this.arrowColor,
+    this.markerColor,
+    this.markerWaitBg,
+    this.markerWaitColor,
+    this.railColor,
+    this.railFinishColor,
+    this.dotColor,
+    this.dotWaitColor,
   });
 
   /// Diameter of a numbered marker (`iconSize`).
@@ -329,6 +337,43 @@ class StepsToken {
   /// Colour of the arrow between navigation and panel steps (`navArrowColor`).
   final Color? arrowColor;
 
+  /// The accent a step's marker is drawn in, once the run has reached it.
+  ///
+  /// One colour rather than one for each state: the current marker is filled
+  /// with it, a finished one wears its pale tint with the tick in the colour
+  /// itself, and the hover takes its lighter shade — all worked out from this
+  /// the way the theme works them out from `colorPrimary`, so a marker cannot
+  /// be assembled from colours that were never meant to sit together.
+  /// Defaults to the primary.
+  ///
+  /// An error keeps to the theme's error colour whatever is named here: the
+  /// red is there for what it says, not for how it looks.
+  final Color? markerColor;
+
+  /// Fill of a marker the run has not reached yet. Defaults to the faintest
+  /// of the theme's fills. A filled run only: an outlined one has none.
+  final Color? markerWaitBg;
+
+  /// Number or icon of a marker the run has not reached yet, and the outline
+  /// round it on an outlined run. Defaults to the tertiary text colour, and
+  /// the theme's border colour for the outline.
+  final Color? markerWaitColor;
+
+  /// The rail between steps, where the run has not passed yet. Defaults to
+  /// the theme's split colour.
+  final Color? railColor;
+
+  /// The rail between steps, once the run has passed along it. Defaults to
+  /// [markerColor].
+  final Color? railFinishColor;
+
+  /// A dot the run has reached, on a dotted run. Defaults to [markerColor].
+  final Color? dotColor;
+
+  /// A dot the run has not reached, on a dotted run. Defaults to [railColor],
+  /// so an unpassed dot and the rail to it read as one line.
+  final Color? dotWaitColor;
+
   _ResolvedStepsToken _resolve(Token t, ControlSize size) {
     final scale = _Scale.of(size);
     final small = scale == _Scale.small;
@@ -341,6 +386,20 @@ class StepsToken {
       ExplicitWidth(:final width) => width,
       ExplicitBox(:final height) => height,
     };
+    // A colour of the caller's own, shaded into the same set a preset has —
+    // as a button does with one — so the hover and the pale tint of a
+    // finished marker come from it rather than from the theme's primary.
+    final accent = markerColor == null
+        ? t.primary
+        : ColorGroup.fromPalette(
+            generate(
+              markerColor!,
+              dark: t.isDark,
+              background: t.colorBgContainer,
+            ),
+          );
+    final rail = railColor ?? t.colorSplit;
+
     return _ResolvedStepsToken(
       iconSize: marker,
       dotSize: dotSize ?? 8,
@@ -365,6 +424,14 @@ class StepsToken {
       railLength: railLength,
       railMinLength: railMinLength ?? t.size * 2,
       arrowColor: arrowColor ?? t.colorTextQuaternary,
+      accent: accent,
+      markerWaitBg: markerWaitBg ?? t.colorFillQuaternary,
+      markerWaitColor: markerWaitColor ?? t.colorTextTertiary,
+      markerWaitBorder: markerWaitColor ?? t.colorBorder,
+      railColor: rail,
+      railFinishColor: railFinishColor ?? accent.base,
+      dotColor: dotColor ?? accent.base,
+      dotWaitColor: dotWaitColor ?? rail,
       scale: scale,
     );
   }
@@ -392,6 +459,13 @@ class StepsToken {
         railMinLength: other.railMinLength ?? railMinLength,
         itemMinWidth: other.itemMinWidth ?? itemMinWidth,
         arrowColor: other.arrowColor ?? arrowColor,
+        markerColor: other.markerColor ?? markerColor,
+        markerWaitBg: other.markerWaitBg ?? markerWaitBg,
+        markerWaitColor: other.markerWaitColor ?? markerWaitColor,
+        railColor: other.railColor ?? railColor,
+        railFinishColor: other.railFinishColor ?? railFinishColor,
+        dotColor: other.dotColor ?? dotColor,
+        dotWaitColor: other.dotWaitColor ?? dotWaitColor,
       );
 }
 
@@ -419,6 +493,14 @@ class _ResolvedStepsToken {
     required this.railLength,
     required this.railMinLength,
     required this.arrowColor,
+    required this.accent,
+    required this.markerWaitBg,
+    required this.markerWaitColor,
+    required this.markerWaitBorder,
+    required this.railColor,
+    required this.railFinishColor,
+    required this.dotColor,
+    required this.dotWaitColor,
     required this.scale,
   });
 
@@ -459,6 +541,14 @@ class _ResolvedStepsToken {
   final double? railLength;
   final double railMinLength;
   final Color arrowColor;
+  final ColorGroup accent;
+  final Color markerWaitBg;
+  final Color markerWaitColor;
+  final Color markerWaitBorder;
+  final Color railColor;
+  final Color railFinishColor;
+  final Color dotColor;
+  final Color dotWaitColor;
 
   /// Which type scale the run's `size` landed on.
   final _Scale scale;
@@ -1015,7 +1105,7 @@ class _StepsState extends State<Steps> {
             const StepsToken())
         ._resolve(t, _size);
 
-    final palette = _Palette(t, _variant);
+    final palette = _Palette(t, r, _variant);
 
     Widget build(StepsOrientation orientation) => switch (_type) {
           StepsType.panel => _PanelRun(
@@ -1093,12 +1183,17 @@ class _StepsState extends State<Steps> {
 
 /// The colours a status takes, in one place so every type agrees.
 class _Palette {
-  _Palette(this.t, this.variant);
+  _Palette(this.t, this.r, this.variant);
 
   final Token t;
+  final _ResolvedStepsToken r;
   final StepsVariant variant;
 
   bool get _outlined => variant == StepsVariant.outlined;
+
+  /// The accent a reached step is drawn in: the token's, else the primary.
+  ColorGroup get accent => r.accent;
+  ColorGroup get _a => accent;
 
   /// Lays a fill on the surface instead of leaving it translucent.
   ///
@@ -1110,34 +1205,36 @@ class _Palette {
 
   Color markerFill(StepStatus s) => switch (s) {
         StepStatus.wait =>
-          _outlined ? const Color(0x00000000) : opaque(t.colorFillQuaternary),
-        StepStatus.process =>
-          _outlined ? const Color(0x00000000) : t.primary.base,
-        StepStatus.finish => _outlined ? const Color(0x00000000) : t.primary.bg,
+          _outlined ? const Color(0x00000000) : opaque(r.markerWaitBg),
+        StepStatus.process => _outlined ? const Color(0x00000000) : _a.base,
+        StepStatus.finish => _outlined ? const Color(0x00000000) : _a.bg,
         StepStatus.error => _outlined ? const Color(0x00000000) : t.error.base,
       };
 
   Color? markerBorder(StepStatus s) => !_outlined
       ? null
       : switch (s) {
-          StepStatus.wait => t.colorBorder,
-          StepStatus.process => t.primary.base,
-          StepStatus.finish => t.primary.base,
+          StepStatus.wait => r.markerWaitBorder,
+          StepStatus.process => _a.base,
+          StepStatus.finish => _a.base,
           StepStatus.error => t.error.base,
         };
 
   /// Colour of the number, tick or cross inside the marker.
+  ///
+  /// On a filled marker the ink is whatever reads on the fill — white on the
+  /// kit's blue, but not on a pale yellow somebody named, which is why it is
+  /// worked out rather than written down.
   Color markerInk(StepStatus s) => switch (s) {
-        StepStatus.wait => t.colorTextTertiary,
-        StepStatus.process =>
-          _outlined ? t.primary.base : const Color(0xFFFFFFFF),
-        StepStatus.finish => t.primary.base,
+        StepStatus.wait => r.markerWaitColor,
+        StepStatus.process => _outlined ? _a.base : _a.onBase,
+        StepStatus.finish => _a.base,
         StepStatus.error => _outlined ? t.error.base : const Color(0xFFFFFFFF),
       };
 
   Color dot(StepStatus s) => switch (s) {
-        StepStatus.wait => t.colorSplit,
-        StepStatus.process || StepStatus.finish => t.primary.base,
+        StepStatus.wait => r.dotWaitColor,
+        StepStatus.process || StepStatus.finish => r.dotColor,
         StepStatus.error => t.error.base,
       };
 
@@ -1147,25 +1244,25 @@ class _Palette {
       ? const Color(0x00000000)
       : switch (s) {
           StepStatus.error => opaque(t.error.bgHover),
-          _ => opaque(t.primary.bgHover),
+          _ => opaque(_a.bgHover),
         };
 
   Color? markerBorderHover(StepStatus s) => !_outlined
       ? null
       : switch (s) {
           StepStatus.error => t.error.hover,
-          _ => t.primary.hover,
+          _ => _a.hover,
         };
 
   Color markerInkHover(StepStatus s) => switch (s) {
         StepStatus.error => _outlined ? t.error.hover : t.error.base,
-        _ => _outlined ? t.primary.hover : t.primary.base,
+        _ => _outlined ? _a.hover : _a.base,
       };
 
   /// Hover colour of a step's title and content — the error status keeps to
   /// its own family rather than turning blue.
   Color textHover(StepStatus s) =>
-      s == StepStatus.error ? t.error.hover : t.primary.hover;
+      s == StepStatus.error ? t.error.hover : _a.hover;
 
   Color title(StepStatus s) => switch (s) {
         StepStatus.wait => t.colorTextTertiary,
@@ -1181,7 +1278,7 @@ class _Palette {
 
   /// The rail leading *into* a step: travelled once the step is done.
   Color rail(StepStatus s) =>
-      s == StepStatus.finish ? t.primary.base : t.colorSplit;
+      s == StepStatus.finish ? r.railFinishColor : r.railColor;
 }
 
 /// The marker: a numbered or icon circle, or a dot.
@@ -1359,8 +1456,8 @@ class _Marker extends StatelessWidget {
           percent: value,
           type: ProgressType.circle,
           showInfo: false,
-          color: t.primary.base,
-          trailColor: t.colorSplit,
+          color: palette.accent.base,
+          trailColor: r.railColor,
         );
     return template.copyWith(
       percent: value,
@@ -1429,10 +1526,10 @@ class _StepText extends StatelessWidget {
     final titleSize = scale.title(t);
     final titleColour = colorOverride ??
         (hovered
-            ? t.primary.hover
+            ? palette.accent.hover
             : (inline ? t.colorTextSecondary : palette.title(status)));
-    final contentColour =
-        colorOverride ?? (hovered ? t.primary.hover : palette.content(status));
+    final contentColour = colorOverride ??
+        (hovered ? palette.accent.hover : palette.content(status));
 
     final column = Column(
       crossAxisAlignment:
@@ -2333,7 +2430,8 @@ class _NavigationRun extends StatelessWidget {
               // reads as navigation, not as a set of buttons.
               border: Border(
                 bottom: BorderSide(
-                  color: selected ? t.primary.base : const Color(0x00000000),
+                  color:
+                      selected ? palette.accent.base : const Color(0x00000000),
                   width: 2,
                 ),
               ),
@@ -2409,7 +2507,7 @@ class _PanelRun extends StatelessWidget {
 
     if (_outlined) {
       final base = switch (status) {
-        StepStatus.process => t.primary.bg,
+        StepStatus.process => palette.accent.bg,
         StepStatus.finish => t.colorBgContainer,
         StepStatus.error => t.colorBgContainer,
         StepStatus.wait => t.colorBgContainer,
@@ -2417,12 +2515,12 @@ class _PanelRun extends StatelessWidget {
       return hovered && !current ? palette.opaque(t.colorFillQuaternary) : base;
     }
 
-    if (current && status == StepStatus.process) return t.primary.base;
+    if (current && status == StepStatus.process) return palette.accent.base;
     final base = switch (status) {
-      StepStatus.finish => t.primary.bg,
+      StepStatus.finish => palette.accent.bg,
       StepStatus.error => t.error.bg,
-      StepStatus.wait => palette.opaque(t.colorFillQuaternary),
-      StepStatus.process => t.primary.base,
+      StepStatus.wait => palette.opaque(r.markerWaitBg),
+      StepStatus.process => palette.accent.base,
     };
     return hovered ? Color.alphaBlend(t.colorFillQuaternary, base) : base;
   }
@@ -2431,9 +2529,9 @@ class _PanelRun extends StatelessWidget {
   Color? _stroke(int index) {
     if (!_outlined) return null;
     return switch (state._statusOf(index)) {
-      StepStatus.process || StepStatus.finish => t.primary.base,
+      StepStatus.process || StepStatus.finish => palette.accent.base,
       StepStatus.error => t.error.base,
-      StepStatus.wait => t.colorBorder,
+      StepStatus.wait => r.markerWaitBorder,
     };
   }
 
@@ -2456,20 +2554,20 @@ class _PanelRun extends StatelessWidget {
 
     if (!_outlined) {
       if (current && status == StepStatus.process) {
-        return const Color(0xFFFFFFFF);
+        return palette.accent.onBase;
       }
       return switch (status) {
-        StepStatus.finish => t.primary.text,
+        StepStatus.finish => palette.accent.text,
         StepStatus.error => t.error.base,
-        StepStatus.wait => t.colorTextTertiary,
-        StepStatus.process => const Color(0xFFFFFFFF),
+        StepStatus.wait => r.markerWaitColor,
+        StepStatus.process => palette.accent.onBase,
       };
     }
 
     return switch (status) {
-      StepStatus.process || StepStatus.finish => t.primary.base,
+      StepStatus.process || StepStatus.finish => palette.accent.base,
       StepStatus.error => t.error.base,
-      StepStatus.wait => t.colorTextTertiary,
+      StepStatus.wait => r.markerWaitColor,
     };
   }
 

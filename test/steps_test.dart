@@ -998,6 +998,65 @@ void main() {
     });
   });
 
+  group('colours of its own', () {
+    const items = [
+      StepItem(title: Text('One')),
+      StepItem(title: Text('Two')),
+      StepItem(title: Text('Three')),
+    ];
+
+    Color? inkOf(WidgetTester tester, String digit) =>
+        tester.widget<Text>(find.text(digit)).style?.color;
+
+    List<Color?> fills(WidgetTester tester) =>
+        _decorations(tester).map((d) => d.color).toList();
+
+    testWidgets('a pale accent gets dark ink, not the white a blue one wears',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Steps(
+            current: 1,
+            items: items,
+            token: StepsToken(markerColor: Color(0xFFFFE58F)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(fills(tester), contains(const Color(0xFFFFE58F)));
+      final ink = inkOf(tester, '2')!;
+      expect(
+        ink.computeLuminance(),
+        lessThan(0.2),
+        reason: 'white on pale yellow is a digit nobody can read',
+      );
+    });
+
+    testWidgets('an error stays red whatever accent is named', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          const Steps(
+            current: 1,
+            status: StepStatus.error,
+            items: items,
+            token: StepsToken(markerColor: Color(0xFF52C41A)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final t = tester.element(find.byType(Steps)).softToken;
+
+      expect(fills(tester), contains(t.error.base));
+      expect(
+        fills(tester),
+        isNot(contains(const Color(0xFF52C41A))),
+        reason: 'the step in play failed, so nothing is in the accent but '
+            'the one behind it, which is pale',
+      );
+    });
+  });
+
   group('Progress ring', () {
     testWidgets('the ring is the kit\'s own Progress, wrapping the marker',
         (tester) async {

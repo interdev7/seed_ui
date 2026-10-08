@@ -1705,6 +1705,43 @@ final _probes = <_Probe>[
       type: StepsType.panel,
     ),
   ),
+  // With `current: 1` the run has one step behind it, one in play and one
+  // ahead, so every colour below has somewhere to be seen.
+  _Probe(
+    'StepsToken.markerColor',
+    (c) => _stepsOf(c ? const StepsToken(markerColor: _loud) : null),
+  ),
+  _Probe(
+    'StepsToken.markerWaitBg',
+    (c) => _stepsOf(c ? const StepsToken(markerWaitBg: _loud) : null),
+  ),
+  _Probe(
+    'StepsToken.markerWaitColor',
+    (c) => _stepsOf(c ? const StepsToken(markerWaitColor: _loud) : null),
+  ),
+  _Probe(
+    'StepsToken.railColor',
+    (c) => _stepsOf(c ? const StepsToken(railColor: _loud) : null),
+  ),
+  _Probe(
+    'StepsToken.railFinishColor',
+    (c) => _stepsOf(c ? const StepsToken(railFinishColor: _loud) : null),
+  ),
+  _Probe(
+    'StepsToken.dotColor',
+    (c) => _stepsOf(
+      c ? const StepsToken(dotColor: _loud) : null,
+      type: StepsType.dot,
+    ),
+  ),
+  _Probe(
+    'StepsToken.dotWaitColor',
+    (c) => _stepsOf(
+      // Named apart from the rail, which it takes after otherwise.
+      c ? const StepsToken(dotWaitColor: _loud) : null,
+      type: StepsType.dot,
+    ),
+  ),
   _Probe(
     'StepsToken.arrowColor',
     // The chevron between blocks belongs to the navigation run alone.

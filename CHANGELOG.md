@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Steps` takes colours of its own.** `markerColor`, `markerWaitBg`,
+  `markerWaitColor`, `railColor`, `railFinishColor`, `dotColor` and
+  `dotWaitColor` on `StepsToken`. The markers, dots and rail were drawn in the
+  theme's primary and greys with no way round it short of a second theme over
+  the run, which recoloured everything else under it as well. `markerColor` is
+  one colour rather than one per state: the pale tint, the hover and the
+  digit's ink are worked out from it the way the theme works them out from
+  `colorPrimary`, so a pale accent gets dark digits instead of white ones. The
+  progress ring, the navigation underline and the panels follow it too. An
+  error keeps to the theme's red. Nothing changes unless a field is named.
 - **`Input` tells the keyboard what it is for.** `autocorrect`,
   `enableSuggestions`, `enableIMEPersonalizedLearning`, `textCapitalization`
   and `autofillHints`, all of them left as they were unless named. Every field

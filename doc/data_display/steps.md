@@ -450,7 +450,8 @@ run is built.
 drawn (`railMinLength`), the gap between a marker
 and its title, the floor on a step's width (`itemMinWidth`),
 the cap on a step's text column (`contentMaxWidth`), the panel padding and
-radius, and the arrow colour.
+radius, the arrow colour, and the colours of the markers, dots and rail —
+see [Colours](#colours).
 
 ```dart
 Steps(
@@ -466,3 +467,42 @@ ConfigProvider(
 ```
 
 A per-instance `token` wins over the `ConfigProvider` one.
+
+### Colours
+
+Left alone, a run is drawn in the theme's primary and its greys. Seven fields
+take it over, each `null` by default and each falling back to what was there:
+
+| Field | What it paints | Defaults to |
+| --- | --- | --- |
+| `markerColor` | the accent of a reached marker — the current one filled, a finished one in its pale tint with the tick in the colour itself, and the hover | primary |
+| `markerWaitBg` | the fill of a marker not reached yet | the faintest fill |
+| `markerWaitColor` | its number, and its outline on an outlined run | tertiary text, border |
+| `railColor` | the rail ahead of the run | split colour |
+| `railFinishColor` | the rail behind it | `markerColor` |
+| `dotColor` | a reached dot, on a dotted run | `markerColor` |
+| `dotWaitColor` | a dot ahead | `railColor` |
+
+```dart
+Steps(
+  items: items,
+  current: 1,
+  token: const StepsToken(
+    markerColor: Color(0xFF52C41A),
+    railColor: Color(0xFFD9F7BE),
+  ),
+);
+```
+
+`markerColor` is one colour rather than one per state. The pale tint, the
+hover and the digit's ink are all worked out from it the way the theme works
+them out from `colorPrimary`, so a pale yellow gets dark digits rather than
+white ones, and a marker cannot be assembled from colours that were never
+meant to sit together. The progress ring, the navigation underline and the
+panels follow it too.
+
+An error keeps to the theme's red whatever is named here: it is red for what
+it says. Change the theme's `colorError` to change that.
+
+To recolour everything a subtree draws in the primary — not only the steps —
+a `ConfigProvider` with a different `colorPrimary` still does it.

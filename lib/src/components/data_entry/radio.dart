@@ -5,6 +5,7 @@ import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
 import '../general/compact.dart';
+import 'input.dart' show InputStatus;
 
 /// How a [RadioGroup] renders its options.
 enum RadioOptionType {
@@ -241,6 +242,8 @@ class Radio<T> extends StatefulWidget {
     this.child,
     this.disabled,
     this.readOnly = false,
+    this.semanticsLabel,
+    this.status,
     this.size,
     this.token,
     this.focusNode,
@@ -284,6 +287,18 @@ class Radio<T> extends StatefulWidget {
   /// reading. A tap, a key or a screen reader's double-tap does nothing, it
   /// takes no focus, and a reader hears it as read-only.
   final bool readOnly;
+
+  /// What a screen reader calls this radio, in place of the words beside it.
+  ///
+  /// A radio with no words beside it arrives as "radio button, not checked"
+  /// and nothing about what it chooses. Given [child] too, this replaces it for a
+  /// reader rather than being read beside it.
+  final String? semanticsLabel;
+
+  /// Recolours the box's edge to say the answer is wanting: red for
+  /// [InputStatus.error], amber for [InputStatus.warning]. A form's field
+  /// hands its own here, as it does to an input's border.
+  final InputStatus? status;
 
   /// Per-instance token overrides.
   final RadioToken? token;
@@ -356,6 +371,7 @@ class _SoftRadioState<T> extends State<Radio<T>> {
         inMutuallyExclusiveGroup: true,
         checked: widget._selected,
         enabled: _enabled,
+        label: widget.semanticsLabel,
         readOnly: widget.readOnly,
         onTap: _takesHand ? _select : null,
         child: MouseRegion(
@@ -363,42 +379,50 @@ class _SoftRadioState<T> extends State<Radio<T>> {
               _takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),
+          // For the pointer only: the node above announces the control and
+          // takes a reader's tap. Left in, this one was a second, wordless
+          // stop under it.
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
             onTap: _select,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RadioDot(
-                  focused: _focusVisible,
-                  selected: widget._selected,
-                  enabled: _enabled,
-                  hovered: _hovered && _takesHand,
-                  token: token,
-                  componentToken: r,
-                ),
-                if (widget.child != null) ...[
-                  SizedBox(width: token.sizeXS),
-                  // Flexible, so words longer than the room they are in give
-                  // way rather than running off the end of the row: a label
-                  // takes the width its words want, and in a narrow column that
-                  // is more than there is.
-                  Flexible(
-                    child: DefaultTextStyle.merge(
-                      style: TextStyle(
-                        color: _enabled
-                            ? token.colorText
-                            : token.colorTextQuaternary,
-                        fontSize: r.fontSize,
-                        fontFamily: token.fontFamily,
-                        fontFamilyFallback: token.fontFamilyFallback,
-                        decoration: TextDecoration.none,
-                      ),
-                      child: widget.child!,
-                    ),
+            child: ExcludeSemantics(
+              excluding: widget.semanticsLabel != null,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioDot(
+                    focused: _focusVisible,
+                    selected: widget._selected,
+                    enabled: _enabled,
+                    hovered: _hovered && _takesHand,
+                    status: widget.status,
+                    token: token,
+                    componentToken: r,
                   ),
+                  if (widget.child != null) ...[
+                    SizedBox(width: token.sizeXS),
+                    // Flexible, so words longer than the room they are in give
+                    // way rather than running off the end of the row: a label
+                    // takes the width its words want, and in a narrow column that
+                    // is more than there is.
+                    Flexible(
+                      child: DefaultTextStyle.merge(
+                        style: TextStyle(
+                          color: _enabled
+                              ? token.colorText
+                              : token.colorTextQuaternary,
+                          fontSize: r.fontSize,
+                          fontFamily: token.fontFamily,
+                          fontFamilyFallback: token.fontFamilyFallback,
+                          decoration: TextDecoration.none,
+                        ),
+                        child: widget.child!,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -418,6 +442,7 @@ class RadioDot extends StatelessWidget {
     // ignore: library_private_types_in_public_api
     this.componentToken,
     this.hovered = false,
+    this.status,
     this.focused = false,
   });
 
@@ -429,6 +454,9 @@ class RadioDot extends StatelessWidget {
 
   /// Whether the pointer is currently over the dot.
   final bool hovered;
+
+  /// What the edge says about the answer, where it says anything.
+  final InputStatus? status;
 
   /// Whether the dot wears the halo that says the keyboard is on it.
   final bool focused;
@@ -449,7 +477,11 @@ class RadioDot extends StatelessWidget {
         ? token.colorBorder
         : (selected || hovered)
             ? r.colorPrimary
-            : r.colorBorder;
+            : switch (status) {
+                InputStatus.error => token.error.base,
+                InputStatus.warning => token.warning.base,
+                _ => r.colorBorder,
+              };
 
     final borderWidth =
         selected ? ((r.radioSize - r.dotSize) / 2) : token.lineWidth;
@@ -583,6 +615,7 @@ class RadioGroup<T> extends StatefulWidget {
     this.optionType,
     this.buttonStyle,
     this.size,
+    this.status,
     this.block = false,
   });
 
@@ -633,6 +666,10 @@ class RadioGroup<T> extends StatefulWidget {
   /// it is drawn — it used to size the buttons alone, and a group of dots
   /// took no notice. See [Radio.size].
   final ControlSize? size;
+
+  /// Recolours every box's edge to say the answer is wanting. See
+  /// the single control's `status`.
+  final InputStatus? status;
 
   /// Stretch button-style options to fill the width equally.
   final bool block;
@@ -693,6 +730,7 @@ class _RadioGroupState<T> extends State<RadioGroup<T>> {
           groupValue: current,
           disabled: !_enabled || option.disabled,
           readOnly: widget.readOnly,
+          status: widget.status,
           // The same word that sizes the buttons sizes the dots: one name,
           // one meaning. It used to reach only the buttons.
           size: widget.size ??

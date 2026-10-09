@@ -408,6 +408,9 @@ class FormController extends ChangeNotifier {
   /// away before it starts.
   VoidCallback? _onSubmitStart;
 
+  /// Set by the form it is handed to, from [Form.scrollToFirstError].
+  bool _revealOnFail = false;
+
   /// Called by the form it is handed to, so `submit` can do what the form's
   /// own `onFinish` would.
   void Function(Map<String, Object?> values)? _onFinish;
@@ -534,7 +537,34 @@ class FormController extends ChangeNotifier {
       _onFinish?.call(values);
     } else {
       _onFinishFailed?.call(values, errors);
+      if (_revealOnFail) await scrollToFirstError();
     }
+  }
+
+  /// Brings the first field the rules refused into view, and puts the
+  /// keyboard in it where it takes one.
+  ///
+  /// First by where it stands — the highest, then the one furthest towards
+  /// the start of the line — not by when it was added: rows added to a form
+  /// as it is filled in register in the order they were added, which is not
+  /// the order a reader meets them. Does nothing when nothing has failed.
+  ///
+  /// [Form.scrollToFirstError] calls this after a submit that fails; call it
+  /// yourself after a [validate] of your own.
+  Future<void> scrollToFirstError() async {
+    final failed = [
+      for (final field in _fields.values)
+        if (field.failed) field,
+    ];
+    if (failed.isEmpty) return;
+    failed.sort((a, b) {
+      final pa = a.origin;
+      final pb = b.origin;
+      if (pa == null || pb == null) return pa == null ? 1 : -1;
+      final rows = pa.dy.compareTo(pb.dy);
+      return rows != 0 ? rows : pa.dx.compareTo(pb.dx);
+    });
+    await failed.first.reveal();
   }
 
   void _register(String name, _Field field) {
@@ -615,6 +645,16 @@ abstract class _Field {
   Object? get initialValue;
   Future<bool> validate();
 
+  /// Whether the rules refused it the last time they were asked.
+  bool get failed;
+
+  /// Where it stands on the screen, or null where it is not laid out.
+  Offset? get origin;
+
+  /// Scrolls it into view and, where there is somewhere to type, puts the
+  /// keyboard there.
+  Future<void> reveal();
+
   /// The fields this one is measured against.
   List<String> get dependsOn;
 
@@ -671,6 +711,7 @@ class Form extends StatefulWidget {
     this.readOnly,
     this.trigger,
     this.unfocusOnSubmit = true,
+    this.scrollToFirstError = false,
     this.initialValues,
     this.onFinish,
     this.onFinishFailed,
@@ -757,6 +798,14 @@ class Form extends StatefulWidget {
   /// bar somebody is refining.
   final bool unfocusOnSubmit;
 
+  /// Whether a submit that fails brings the first field it refused into view,
+  /// with the keyboard in it.
+  ///
+  /// A long form refused below the fold says so where nobody is looking. Off
+  /// by default, so a form keeps the place its reader left it unless asked;
+  /// [FormController.scrollToFirstError] does the same on demand.
+  final bool scrollToFirstError;
+
   /// What the fields start with, by name. A field's own `initialValue` fills
   /// in where this says nothing.
   final Map<String, Object?>? initialValues;
@@ -818,6 +867,7 @@ class _FormState extends State<Form> {
       if (widget.unfocusOnSubmit && mounted) FocusScope.of(context).unfocus();
     };
     controller._onFinish = (values) => widget.onFinish?.call(values);
+    controller._revealOnFail = widget.scrollToFirstError;
     controller._onFinishFailed =
         (values, errors) => widget.onFinishFailed?.call(values, errors);
     // A controller made outside the form is told what to start with here,
@@ -1130,6 +1180,19 @@ class _FormListState extends State<FormList> implements _Field {
       return;
     }
     if (value != null) controller._values[prefix] = value;
+  }
+
+  @override
+  bool get failed => _error != null;
+
+  @override
+  Offset? get origin => _originOf(context);
+
+  /// Into view and no further: a list's own error is about the rows, and
+  /// there is no one box to type the answer into.
+  @override
+  Future<void> reveal() async {
+    if (mounted) await _bringIntoView(context);
   }
 
   @override
@@ -1479,6 +1542,7 @@ class FormItem<T> extends StatefulWidget {
             checked: field.value ?? false,
             disabled: field.disabled,
             readOnly: field.readOnly,
+            status: field.status,
             label: title,
             onChanged: field.didChange,
           ),
@@ -1750,6 +1814,7 @@ class FormItem<T> extends StatefulWidget {
             value: field.value,
             disabled: field.disabled,
             readOnly: field.readOnly,
+            status: field.status,
             options: options,
             direction: direction,
             optionType: optionType,
@@ -2006,6 +2071,13 @@ class FormItem<T> extends StatefulWidget {
 
 class _FormItemState<T> extends State<FormItem<T>> implements _Field {
   _FormScope? _scope;
+
+  /// Stands round the control, so the form can find somewhere to put the
+  /// keyboard inside it without the control having to hand over a node of
+  /// its own.
+  final FocusNode _anchor =
+      FocusNode(canRequestFocus: false, skipTraversal: true);
+
   String? _error;
   String? _warning;
   bool _asked = false;
@@ -2058,7 +2130,27 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
   }
 
   @override
+  bool get failed => _error != null;
+
+  @override
+  Offset? get origin => _originOf(context);
+
+  @override
+  Future<void> reveal() async {
+    if (!mounted) return;
+    await _bringIntoView(context);
+    if (!mounted) return;
+    for (final node in _anchor.traversalDescendants) {
+      if (node.canRequestFocus) {
+        node.requestFocus();
+        return;
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    _anchor.dispose();
     _scope?.controller._unregister(widget.name, this);
     super.dispose();
   }
@@ -2164,6 +2256,7 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
       animation: scope.controller,
       builder: (context, _) {
         final control = Focus(
+          focusNode: _anchor,
           canRequestFocus: false,
           skipTraversal: true,
           onFocusChange: (has) {
@@ -2541,3 +2634,20 @@ class _ResolvedFormToken {
         itemGap,
       );
 }
+
+/// Where [context]'s box stands on the screen, or null where it is not laid
+/// out — a field in a tab that is not showing, say.
+Offset? _originOf(BuildContext context) {
+  final box = context.findRenderObject();
+  if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+  return box.localToGlobal(Offset.zero);
+}
+
+/// Scrolls every scrollable around [context] until it shows, a little below
+/// the top so the label above the field shows with it.
+Future<void> _bringIntoView(BuildContext context) => Scrollable.ensureVisible(
+      context,
+      alignment: 0.1,
+      duration: context.softToken.motionDurationMid,
+      curve: context.softToken.motionEaseInOut,
+    );

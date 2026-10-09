@@ -84,6 +84,24 @@ Left unset, a box takes `CheckboxDefaults.size`, then the subtree's
 token: `boxSize`, `boxSizeSM`, `boxSizeLG`, and `fontSize`, `fontSizeSM`,
 `fontSizeLG` for the words.
 
+## Without words beside it
+
+A box with no `label` — a tick in a row of your own table, a box whose words
+are drawn somewhere else — has nothing to be named by, and a screen reader
+says "checkbox, not checked" and no more. `semanticsLabel` names it, and
+where there is a `label` too, is read in its place:
+
+```dart
+Checkbox(checked: picked, semanticsLabel: 'Select ${row.name}', onChanged: pick)
+```
+
+## Saying the answer is wanting
+
+`status` recolours the box's edge — red for `InputStatus.error`, amber for
+`InputStatus.warning` — as it does an input's border. `CheckboxGroup` hands it
+to every box, and `FormItem.check` passes its own, so a box a rule refused
+turns red beside its message.
+
 ## From the keyboard
 
 The control takes its turn in the tab order and answers **Space** and

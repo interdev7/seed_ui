@@ -5,6 +5,7 @@ import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
+import 'input.dart' show InputStatus;
 
 /// Per-component design tokens for [Checkbox].
 ///
@@ -167,6 +168,8 @@ class Checkbox extends StatefulWidget {
     this.label,
     this.disabled,
     this.readOnly = false,
+    this.semanticsLabel,
+    this.status,
     this.size,
     this.indeterminate = false,
     this.token,
@@ -208,6 +211,19 @@ class Checkbox extends StatefulWidget {
   /// editing. A tap, a key or a screen reader's double-tap does nothing, it
   /// takes no focus, and a reader hears it as read-only.
   final bool readOnly;
+
+  /// What a screen reader calls this box, in place of the words beside it.
+  ///
+  /// A box with no [label] — a tick in a row of somebody's own table, a box
+  /// whose words are drawn elsewhere — arrives as "checkbox, not checked" and
+  /// nothing about what it checks. Given [label] too, this replaces it for a
+  /// reader rather than being read beside it.
+  final String? semanticsLabel;
+
+  /// Recolours the box's edge to say the answer is wanting: red for
+  /// [InputStatus.error], amber for [InputStatus.warning]. A form's field
+  /// hands its own here, as it does to an input's border.
+  final InputStatus? status;
 
   /// Shows a dash rather than a tick — the "some but not all" state of a
   /// parent checkbox. Toggling still reports the opposite of [checked].
@@ -305,6 +321,7 @@ class _SoftCheckboxState extends State<Checkbox> {
         checked: _checked,
         mixed: widget.indeterminate,
         enabled: _enabled,
+        label: widget.semanticsLabel,
         readOnly: widget.readOnly,
         onTap: _takesHand ? _toggle : null,
         child: MouseRegion(
@@ -312,44 +329,52 @@ class _SoftCheckboxState extends State<Checkbox> {
               _takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),
+          // For the pointer only: the node above announces the control and
+          // takes a reader's tap. Left in, this one was a second, wordless
+          // stop under it.
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
             onTap: _toggle,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CheckboxBox(
-                  focused: _focusVisible,
-                  value: _checked,
-                  indeterminate: widget.indeterminate,
-                  enabled: _enabled,
-                  hovered: _hovered && _takesHand,
-                  token: token,
-                  componentToken: r,
-                ),
-                if (widget.label != null) ...[
-                  SizedBox(width: token.sizeXS),
-                  // Flexible, so words longer than the room they are in give
-                  // way rather than running off the end of the row: a label
-                  // takes the width its words want, and in a narrow column that
-                  // is more than there is.
-                  Flexible(
-                    child: DefaultTextStyle.merge(
-                      style: TextStyle(
-                        color: _enabled
-                            ? token.colorText
-                            : token.colorTextQuaternary,
-                        fontSize: r.fontSize,
-                        fontFamily: token.fontFamily,
-                        fontFamilyFallback: token.fontFamilyFallback,
-                        decoration: TextDecoration.none,
-                      ),
-                      child: widget.label!,
-                    ),
+            child: ExcludeSemantics(
+              excluding: widget.semanticsLabel != null,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CheckboxBox(
+                    focused: _focusVisible,
+                    value: _checked,
+                    indeterminate: widget.indeterminate,
+                    enabled: _enabled,
+                    hovered: _hovered && _takesHand,
+                    status: widget.status,
+                    token: token,
+                    componentToken: r,
                   ),
+                  if (widget.label != null) ...[
+                    SizedBox(width: token.sizeXS),
+                    // Flexible, so words longer than the room they are in give
+                    // way rather than running off the end of the row: a label
+                    // takes the width its words want, and in a narrow column that
+                    // is more than there is.
+                    Flexible(
+                      child: DefaultTextStyle.merge(
+                        style: TextStyle(
+                          color: _enabled
+                              ? token.colorText
+                              : token.colorTextQuaternary,
+                          fontSize: r.fontSize,
+                          fontFamily: token.fontFamily,
+                          fontFamilyFallback: token.fontFamilyFallback,
+                          decoration: TextDecoration.none,
+                        ),
+                        child: widget.label!,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -371,6 +396,7 @@ class CheckboxBox extends StatelessWidget {
     this.componentToken,
     this.indeterminate = false,
     this.hovered = false,
+    this.status,
     this.focused = false,
   });
 
@@ -385,6 +411,9 @@ class CheckboxBox extends StatelessWidget {
 
   /// Whether the pointer is currently over the box.
   final bool hovered;
+
+  /// What the edge says about the answer, where it says anything.
+  final InputStatus? status;
 
   /// Whether the box wears the halo that says the keyboard is on it.
   final bool focused;
@@ -407,7 +436,11 @@ class CheckboxBox extends StatelessWidget {
         ? token.colorBorder
         : (active || hovered)
             ? r.colorPrimary
-            : r.colorBorder;
+            : switch (status) {
+                InputStatus.error => token.error.base,
+                InputStatus.warning => token.warning.base,
+                _ => r.colorBorder,
+              };
     final fill = value && !indeterminate
         ? (enabled ? r.colorPrimary : token.colorTextQuaternary)
         : (enabled ? r.colorBgContainer : token.colorFillTertiary);
@@ -524,6 +557,7 @@ class CheckboxGroup<T> extends StatefulWidget {
     this.disabled,
     this.readOnly = false,
     this.size,
+    this.status,
     this.direction,
     this.spacing = 16,
     this.runSpacing = 8,
@@ -556,6 +590,10 @@ class CheckboxGroup<T> extends StatefulWidget {
   /// How big every box in the group is. See [Checkbox.size]. Null takes what
   /// [CheckboxGroupDefaults.size] says, and then the subtree's.
   final ControlSize? size;
+
+  /// Recolours every box's edge to say the answer is wanting. See
+  /// the single control's `status`.
+  final InputStatus? status;
 
   /// Whether the options run in a row (wrapping) or a column.
   final Axis? direction;
@@ -621,6 +659,7 @@ class _CheckboxGroupState<T> extends State<CheckboxGroup<T>> {
           checked: current.contains(option.value),
           disabled: !_enabled || option.disabled,
           readOnly: widget.readOnly,
+          status: widget.status,
           size: widget.size ??
               ConfigProvider.defaultsOf<CheckboxGroupDefaults>(context)?.size,
           onChanged: (checked) => _toggle(option.value, checked),

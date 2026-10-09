@@ -474,7 +474,9 @@ class _CheckableTagState extends State<CheckableTag> {
         selected: widget.checked,
         enabled: _enabled,
         onTap: _enabled ? () => widget.onChanged!(!widget.checked) : null,
+        // The pointer's; the node above is the reader's.
         child: GestureDetector(
+          excludeFromSemantics: true,
           onTap: _enabled ? () => widget.onChanged!(!widget.checked) : null,
           child: AnimatedContainer(
             duration: token.motionDurationFast,

@@ -852,14 +852,20 @@ class _SoftButtonState extends State<Button> {
         enabled: _enabled,
         label: widget.semanticsLabel,
         onTap: pressable ? widget.onPressed : null,
+        onLongPress:
+            _enabled && widget.onLongPress != null ? widget.onLongPress : null,
         child: MouseRegion(
           cursor: _enabled
               ? SystemMouseCursors.click
               : SystemMouseCursors.forbidden,
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),
+          // For the pointer only. The node above already says what this
+          // does and does it; left in the tree, this one stood under it as
+          // a second button with no name, and a reader stopped twice.
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
             onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
             onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
             onTapCancel:

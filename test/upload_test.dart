@@ -1,3 +1,7 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
+import 'package:flutter/material.dart' as material;
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -18,6 +22,7 @@ const _items = [
 ];
 
 void main() {
+  _keyboardTests();
   group('The list', () {
     testWidgets('every file is named', (tester) async {
       await tester.pumpWidget(_wrap(const Upload<String>(items: _items)));
@@ -805,6 +810,137 @@ void main() {
 
       expect(barOf(tester).strokeWidth, 6);
       expect(barOf(tester).percent, 0.6);
+    });
+  });
+}
+
+/// A whole app: the Tab key is the app's to turn into a move of focus.
+Widget _app(Widget child) => ConfigProvider(
+      child: material.MaterialApp(
+        home: material.Scaffold(body: Center(child: child)),
+      ),
+    );
+
+void _keyboardTests() {
+  group('every file can be reached without a pointer', () {
+    /// What the keyboard stops on, in order, by the name a reader hears.
+    Future<List<String>> stops(WidgetTester tester) async {
+      final out = <String>[];
+      for (var i = 0; i < 8; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+        final focus = FocusManager.instance.primaryFocus?.context;
+        if (focus == null) continue;
+        final label = tester
+            .getSemantics(find.byElementPredicate((e) => e == focus))
+            .label;
+        if (!out.contains(label)) out.add(label);
+      }
+      return out;
+    }
+
+    for (final variant in UploadVariant.values) {
+      testWidgets('$variant: preview, remove and the trigger', (tester) async {
+        final semantics = tester.ensureSemantics();
+        var previewed = 0;
+        var removed = 0;
+        await tester.pumpWidget(
+          _app(
+            SizedBox(
+              width: 400,
+              child: Upload<String>(
+                variant: variant,
+                items: const [
+                  UploadItem(name: 'report.pdf', status: UploadStatus.done),
+                ],
+                onPick: () async {},
+                onPreview: (_) => previewed++,
+                onRemove: (_) => removed++,
+              ),
+            ),
+          ),
+        );
+
+        final reached = await stops(tester);
+        expect(reached, contains('Preview: report.pdf'));
+        expect(reached, contains('Remove'));
+
+        // And each does what it says from the keyboard.
+        while (FocusManager.instance.primaryFocus?.context == null ||
+            tester
+                    .getSemantics(find.byElementPredicate(
+                      (e) => e == FocusManager.instance.primaryFocus!.context,
+                    ))
+                    .label !=
+                'Preview: report.pdf') {
+          await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.pump();
+        }
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pump();
+        expect(previewed, 1);
+        expect(removed, 0);
+        semantics.dispose();
+      },
+          // A desktop, where a card's actions stay hidden until asked for.
+          variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }
+
+    testWidgets("a card's actions show while the keyboard is inside it", (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          SizedBox(
+            width: 400,
+            child: Upload<String>(
+              variant: UploadVariant.cards,
+              items: const [
+                UploadItem(name: 'report.pdf', status: UploadStatus.done),
+              ],
+              onRemove: (_) {},
+            ),
+          ),
+        ),
+      );
+      double shown() => tester
+          .widget<AnimatedOpacity>(find.byType(AnimatedOpacity).last)
+          .opacity;
+      expect(shown(), 0, reason: 'a wall of tiles stays a wall of pictures');
+
+      for (var i = 0; i < 4 && shown() == 0; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+      }
+      expect(shown(), 1);
+    },
+        // A desktop, which has a pointer to hover with: on a touch screen the
+        // actions are never hidden in the first place.
+        variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+    testWidgets("a card's actions are always there on a touch screen", (
+      tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      await tester.pumpWidget(
+        _app(
+          SizedBox(
+            width: 400,
+            child: Upload<String>(
+              variant: UploadVariant.cards,
+              items: const [
+                UploadItem(name: 'report.pdf', status: UploadStatus.done),
+              ],
+              onRemove: (_) {},
+            ),
+          ),
+        ),
+      );
+      final opacity = tester
+          .widget<AnimatedOpacity>(find.byType(AnimatedOpacity).last)
+          .opacity;
+      debugDefaultTargetPlatformOverride = null;
+      expect(opacity, 1, reason: 'a phone has no hover to bring them up');
     });
   });
 }

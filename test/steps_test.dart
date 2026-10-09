@@ -1057,6 +1057,47 @@ void main() {
     });
   });
 
+  group('the cross on a step that failed', () {
+    /// How far the cross's arms reach — the canvas less the margin on both
+    /// sides — which is what is actually drawn.
+    double reach(WidgetTester tester) {
+      final paint = find.byWidgetPredicate(
+        (w) => w is CustomPaint && w.painter is CrossPainter,
+      );
+      final painter =
+          tester.widget<CustomPaint>(paint).painter! as CrossPainter;
+      return tester.getSize(paint).width - painter.inset * 2;
+    }
+
+    final reaches = <double>[];
+    for (final size in SoftSize.values) {
+      testWidgets('is drawn the right way out at $size', (tester) async {
+        await tester.pumpWidget(
+          _host(
+            Steps(
+              current: 0,
+              status: StepStatus.error,
+              size: size,
+              items: const [StepItem(title: Text('A'))],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final arms = reach(tester);
+        expect(
+          arms,
+          greaterThan(6),
+          reason: 'a fixed seven-pixel margin met itself in the middle and '
+              'left a pixel, or turned the cross inside out',
+        );
+        reaches.add(arms);
+        if (reaches.length > 1) {
+          expect(arms, greaterThan(reaches[reaches.length - 2]));
+        }
+      });
+    }
+  });
+
   group('Progress ring', () {
     testWidgets('the ring is the kit\'s own Progress, wrapping the marker',
         (tester) async {

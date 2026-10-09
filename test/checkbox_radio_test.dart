@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+    hide
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer,
+        Form,
+        FormField;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui/src/components/data_entry/checkbox.dart'
@@ -11,6 +20,8 @@ Widget _host(Widget child) => MaterialApp(
     );
 
 void main() {
+  _statusTests();
+  _nameTests();
   _sizeTests();
   group('Checkbox', () {
     testWidgets('toggles and reports the new value', (tester) async {
@@ -636,6 +647,137 @@ void _sizeTests() {
       );
       expect(boxOf(tester), 28);
       expect(dotOf(tester), 12);
+    });
+  });
+}
+
+void _nameTests() {
+  group('a box or a radio with no words beside it can still be named', () {
+    testWidgets('a box with nothing beside it', (tester) async {
+      final h = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(Checkbox(semanticsLabel: 'Select row 3', onChanged: (_) {})),
+      );
+      expect(find.bySemanticsLabel('Select row 3'), findsOneWidget);
+      h.dispose();
+    });
+
+    testWidgets('a name given replaces the words, not joins them', (
+      tester,
+    ) async {
+      final h = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(
+          Radio<String>(
+            value: 'a',
+            groupValue: 'b',
+            semanticsLabel: 'Pay monthly',
+            onChanged: (_) {},
+            child: const Text('Monthly'),
+          ),
+        ),
+      );
+      expect(find.bySemanticsLabel('Pay monthly'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp('Monthly')),
+        findsNothing,
+        reason: 'read in place of the words, not beside them',
+      );
+      h.dispose();
+    });
+
+    testWidgets('left unnamed, the words beside it still name it', (
+      tester,
+    ) async {
+      final h = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _host(Checkbox(onChanged: (_) {}, label: const Text('Remember me'))),
+      );
+      expect(find.bySemanticsLabel('Remember me'), findsOneWidget);
+      h.dispose();
+    });
+  });
+}
+
+void _statusTests() {
+  group('a box or a dot can say its answer is wanting', () {
+    Color edgeOf(WidgetTester tester, Type type) {
+      final box = tester.widget<AnimatedContainer>(
+        find
+            .descendant(
+                of: find.byType(type), matching: find.byType(AnimatedContainer))
+            .first,
+      );
+      return ((box.decoration! as BoxDecoration).border! as Border).top.color;
+    }
+
+    testWidgets('red where it is wrong, amber where it is doubtful', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(Column(children: [
+          Checkbox(status: InputStatus.error, onChanged: (_) {}),
+          Radio<String>(
+            value: 'a',
+            groupValue: 'b',
+            status: InputStatus.warning,
+            onChanged: (_) {},
+          ),
+        ])),
+      );
+      final t = tester.element(find.byType(Checkbox)).softToken;
+      expect(edgeOf(tester, CheckboxBox), t.error.base);
+      expect(edgeOf(tester, RadioDot), t.warning.base);
+    });
+
+    testWidgets('left alone, the edge is the plain one', (tester) async {
+      await tester.pumpWidget(_host(Checkbox(onChanged: (_) {})));
+      final t = tester.element(find.byType(Checkbox)).softToken;
+      expect(edgeOf(tester, CheckboxBox), t.colorBorder);
+    });
+
+    testWidgets('a group hands it to every box', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          CheckboxGroup<String>(
+            value: const [],
+            status: InputStatus.error,
+            onChanged: (_) {},
+            options: const [
+              CheckboxOption(value: 'a', label: Text('A')),
+              CheckboxOption(value: 'b', label: Text('B')),
+            ],
+          ),
+        ),
+      );
+      final t = tester.element(find.byType(CheckboxGroup<String>)).softToken;
+      for (final box
+          in tester.widgetList<CheckboxBox>(find.byType(CheckboxBox))) {
+        expect(box.status, InputStatus.error);
+      }
+      expect(edgeOf(tester, CheckboxBox), t.error.base);
+    });
+
+    testWidgets("a form's refused box turns red with its message", (
+      tester,
+    ) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: FormItem.check(
+              name: 'terms',
+              label: const Text('I accept'),
+              rules: const [FormRule.required()],
+            ),
+          ),
+        ),
+      );
+      await form.validate();
+      await tester.pumpAndSettle();
+      final t = tester.element(find.byType(Checkbox)).softToken;
+      expect(edgeOf(tester, CheckboxBox), t.error.base);
     });
   });
 }

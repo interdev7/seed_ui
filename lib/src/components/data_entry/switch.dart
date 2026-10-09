@@ -373,8 +373,12 @@ class _SoftSwitchState extends State<Switch> {
         child: MouseRegion(
           cursor:
               _takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          // For the pointer only: the node above announces the control and
+          // takes a reader's tap. Left in, this one was a second, wordless
+          // stop under it.
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
             onTap: _toggle,
             onTapDown:
                 _takesHand ? (_) => setState(() => _pressed = true) : null,

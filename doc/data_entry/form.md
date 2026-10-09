@@ -252,6 +252,26 @@ field the reader cannot type into would otherwise refuse the form for ever,
 pointing at a box they are not allowed to touch. Bar a field with `disabled`
 on it, or every field with `disabled` on the form.
 
+### Taking the reader to what was refused
+
+A long form refused below the fold says so where nobody is looking.
+`scrollToFirstError: true` brings the first field a submit refused into view
+and puts the keyboard in it — first by where it stands on the screen, not by
+when it was added:
+
+```dart
+Form(
+  controller: form,
+  scrollToFirstError: true,
+  child: ...,
+)
+```
+
+Off by default, so a form leaves its reader where they are unless asked.
+After a `validate()` of your own, `form.scrollToFirstError()` does the same.
+It works for every field, a hand-built `FormItem` included: the form looks
+for somewhere to type inside the field, not for a focus node handed to it.
+
 ### Read-only
 
 `readOnly` is the same form in a view that is not for editing — a profile

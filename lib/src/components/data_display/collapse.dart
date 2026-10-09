@@ -602,8 +602,10 @@ class _TappableState extends State<_Tappable> {
         onTap: widget.onTap,
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
+          // The pointer's; the node above is the reader's.
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
             onTap: widget.onTap,
             child: DecoratedBox(
               // Inside the header rather than around it: a halo spread outside

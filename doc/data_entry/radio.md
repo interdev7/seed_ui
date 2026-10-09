@@ -109,6 +109,19 @@ token: `radioSize`, `radioSizeSM`, `radioSizeLG`, the checked dot's
 `dotSize`, `dotSizeSM`, `dotSizeLG`, and `fontSize`, `fontSizeSM`,
 `fontSizeLG`.
 
+## Without words beside it
+
+A radio with no words beside it says "radio button, not checked" and no more.
+`semanticsLabel` names it, and where there is a `child` too, is read in its
+place.
+
+## Saying the answer is wanting
+
+`status` recolours the dot's edge — red for `InputStatus.error`, amber for
+`InputStatus.warning`. `RadioGroup` hands it to every dot, and
+`FormItem.radio` passes its own. Buttons drawn by `RadioOptionType.button`
+keep their look; the message under the field says it for them.
+
 ## Standalone
 
 For a one-off outside a group, use `Radio<T>` directly, driving it with a

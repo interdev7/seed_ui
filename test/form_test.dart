@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart' as m;
 import 'package:flutter/services.dart' show TextCapitalization, TextInputType;
 import 'package:flutter/widgets.dart' hide Form;
@@ -42,6 +44,7 @@ FormItem<String> _text(
     );
 
 void main() {
+  _revealTests();
   _listTests();
   _dependsOnTests();
   _widthTests();
@@ -1579,5 +1582,145 @@ void _dependsOnTests() {
       tester.getSize(find.byType(Select<String>)).width,
       moreOrLessEquals(tester.getSize(find.byType(Input)).width, epsilon: 0.5),
     );
+  });
+}
+
+void _revealTests() {
+  group('a refused form takes the reader to what it refused', () {
+    /// A form taller than the screen: twenty fields, any of them required.
+    Widget long(
+      FormController form, {
+      required Set<int> required,
+      bool reveal = true,
+      bool upwards = false,
+    }) =>
+        ConfigProvider(
+          child: m.MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: m.Scaffold(
+              body: SingleChildScrollView(
+                child: Form(
+                  controller: form,
+                  scrollToFirstError: reveal,
+                  child: Column(
+                    // Built top to bottom, drawn bottom to top: the order the
+                    // fields register in is then not the order on the screen.
+                    verticalDirection:
+                        upwards ? VerticalDirection.up : VerticalDirection.down,
+                    children: [
+                      for (var i = 0; i < 20; i++)
+                        FormItem.text(
+                          name: 'f$i',
+                          label: Text('Field $i'),
+                          rules: [
+                            if (required.contains(i)) const FormRule.required(),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+    bool onScreen(WidgetTester tester, String label) {
+      final rect = tester.getRect(find.text(label));
+      final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+      return rect.top >= 0 && rect.bottom <= screen.height;
+    }
+
+    testWidgets('a field below the fold is brought up, with the keyboard in it',
+        (tester) async {
+      final form = FormController();
+      await tester.pumpWidget(long(form, required: {15}));
+      expect(onScreen(tester, 'Field 15'), isFalse, reason: 'to begin with');
+
+      unawaited(form.submit());
+      await tester.pumpAndSettle();
+
+      expect(onScreen(tester, 'Field 15'), isTrue);
+      final focused = FocusManager.instance.primaryFocus!.context!;
+      expect(
+        find.descendant(
+          of: find.ancestor(
+            of: find.text('Field 15'),
+            matching: find.byType(FormItem<String>),
+          ),
+          matching: find.byElementPredicate((e) => e == focused),
+        ),
+        findsOneWidget,
+        reason: 'the keyboard is in the field that was refused',
+      );
+    });
+
+    testWidgets('of two, the one higher up, not the one added first', (
+      tester,
+    ) async {
+      final form = FormController();
+      // Drawn upwards, field 7 stands above field 2 though it was added
+      // after it — as rows added to a form while it is filled in do.
+      await tester.pumpWidget(long(form, required: {2, 7}, upwards: true));
+      unawaited(form.submit());
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text('Field 7')).top,
+        lessThan(tester.getRect(find.text('Field 2')).top),
+      );
+      final focused = FocusManager.instance.primaryFocus!.context!;
+      expect(
+        find.descendant(
+          of: find.ancestor(
+            of: find.text('Field 7'),
+            matching: find.byType(FormItem<String>),
+          ),
+          matching: find.byElementPredicate((e) => e == focused),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('left alone, a form keeps the reader where they were', (
+      tester,
+    ) async {
+      final form = FormController();
+      await tester.pumpWidget(long(form, required: {15}, reveal: false));
+      unawaited(form.submit());
+      await tester.pumpAndSettle();
+      expect(onScreen(tester, 'Field 15'), isFalse);
+
+      // And on demand, after a validate of the app's own.
+      unawaited(form.scrollToFirstError());
+      await tester.pumpAndSettle();
+      expect(onScreen(tester, 'Field 15'), isTrue);
+    });
+
+    testWidgets('a picker is a field like any other', (tester) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            scrollToFirstError: true,
+            child: FormItem.date(
+              name: 'due',
+              rules: const [FormRule.required()],
+            ),
+          ),
+        ),
+      );
+      unawaited(form.submit());
+      await tester.pumpAndSettle();
+      final focused = FocusManager.instance.primaryFocus?.context;
+      expect(
+        focused == null
+            ? null
+            : find.descendant(
+                of: find.byType(DatePicker),
+                matching: find.byElementPredicate((e) => e == focused),
+              ),
+        isNot(findsNothing),
+      );
+    });
   });
 }

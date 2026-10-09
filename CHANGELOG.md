@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Form.scrollToFirstError` and `FormController.scrollToFirstError()`.** A
+  long form refused below the fold said so where nobody was looking. A submit
+  that fails can now bring the first field it refused into view — the highest
+  on the screen, not the first added — and put the keyboard in it, for a
+  hand-built field as much as a kit one. Off unless asked.
+- **`semanticsLabel` and `status` on `Checkbox` and `Radio`.** A box or a
+  radio with no words beside it could not be named for a screen reader at
+  all; `semanticsLabel` names it, in place of any words that are there.
+  `status` reddens the edge as it does an input's border, the groups hand it
+  to every box, and `FormItem.check` and `FormItem.radio` pass their own.
+
 - **`Button.iconPlacement` and `ButtonToken.iconGap`.** A button's icon stood
   before its words and nowhere else, at a gap nobody could change — an arrow
   meaning "next" had to be built by hand. `ButtonIconPlacement.end` puts it
@@ -111,6 +122,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `colorTextPlaceholder` or `foregroundColor` to choose for yourself.
 
 ### Fixed
+
+- **One control was two stops for a screen reader** — `Button`, and through
+  it `FloatButton` and every page of a `Pagination`, as well as `Checkbox`,
+  `Radio`, `Switch`, `CheckableTag`, `Collapse` and `Upload`. Each announced
+  itself and then wrapped a gesture detector that made a second node with a
+  tap of its own: a reader met "button", nameless, and then the words. A gate
+  now holds twenty-two controls to one node each.
+- **An `Upload`'s files could not be reached without a pointer.** A card's
+  remove and retry showed only on hover — so never from the keyboard, to a
+  screen reader, or on a phone — and preview was a tap on the whole row or
+  card, which nothing but a pointer could make. A file's name or picture is
+  now the preview button, a card's actions come up while the keyboard is in
+  it and stay up on a touch screen, and a reader hears them hidden or not.
+- **A failed step's cross in `Steps` was drawn inside out** — a pixel across
+  at the standard size, backwards at the small one — for the same reason a
+  tour's was three pixels: a fixed seven-pixel margin on a canvas too small
+  for it. `CrossPainter` now asserts in debug that its margin leaves
+  something to draw, so the next one fails a test instead of shipping.
 
 - **A `Tour`'s close cross was three pixels across.** It was drawn on half
   its button, and the cross's fixed seven-pixel margin met itself in the

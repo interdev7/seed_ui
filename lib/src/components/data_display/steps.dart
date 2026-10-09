@@ -1396,9 +1396,13 @@ class _Marker extends StatelessWidget {
       );
     } else if (status == StepStatus.error) {
       glyph = easeInk(
+        // A margin that is a share of the canvas, not CrossPainter's fixed
+        // seven pixels: on a canvas of 12.8 those met in the middle and
+        // turned the cross inside out — a pixel across at the standard size,
+        // and drawn backwards at the small one.
         (c) => CustomPaint(
           size: Size.square(r.iconSize * 0.4),
-          painter: CrossPainter(c),
+          painter: CrossPainter(c, inset: r.iconSize * 0.4 * 0.1),
         ),
       );
     } else {

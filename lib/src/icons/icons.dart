@@ -179,6 +179,15 @@ class CrossPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // The margin is in pixels, so a canvas that is too small for it turns the
+    // cross inside out rather than shrinking it. Twice that shipped — a tour's
+    // close cross three pixels across, a failed step's one pixel — and both
+    // looked like a design choice until somebody measured.
+    assert(
+      size.shortestSide > inset * 2,
+      'A CrossPainter inset of $inset leaves nothing to draw on a $size '
+      'canvas: pass an inset that is a share of the canvas.',
+    );
     final paint = Paint()
       ..color = color
       ..strokeWidth = strokeWidth

@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/widgets.dart';
 
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/pressable.dart';
 import '../feedback/message.dart' show StatusType;
 import '../feedback/progress.dart';
 
@@ -832,8 +835,10 @@ class _DropzoneState extends State<_Dropzone> {
               : SystemMouseCursors.click,
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),
+          // The pointer's; the node above is the reader's.
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
             onTap: widget.onTap == null ? null : () => widget.onTap!(),
             // The dash traces the zone, not what is inside it: as a foreground
             // painter it takes the container's own box, so a tile is outlined
@@ -918,8 +923,13 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
           : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
+      // A tap anywhere on the row previews, for the pointer. To the keyboard
+      // and a reader the preview is the file's name, below: a row that was
+      // itself the button held the download and remove buttons inside it,
+      // and a reader met each of those twice.
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
         onTap: widget.actions.preview,
         child: Container(
           padding: EdgeInsets.all(t.sizeXS),
@@ -939,16 +949,22 @@ class _UploadRowState<T> extends State<_UploadRow<T>> {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(
+                          child: _previewing(
+                            context,
+                            widget.actions.preview,
                             item.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: failed ? t.error.base : t.colorText,
-                              fontSize: t.fontSize,
-                              fontFamily: t.fontFamily,
-                              fontFamilyFallback: t.fontFamilyFallback,
-                              decoration: TextDecoration.none,
+                            t,
+                            Text(
+                              item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: failed ? t.error.base : t.colorText,
+                                fontSize: t.fontSize,
+                                fontFamily: t.fontFamily,
+                                fontFamilyFallback: t.fontFamilyFallback,
+                                decoration: TextDecoration.none,
+                              ),
                             ),
                           ),
                         ),
@@ -1060,6 +1076,21 @@ class _UploadCard<T> extends StatefulWidget {
 class _UploadCardState<T> extends State<_UploadCard<T>> {
   bool _hovered = false;
 
+  /// Whether the keyboard is somewhere inside the card.
+  bool _focusWithin = false;
+
+  /// Whether the card's actions are drawn.
+  ///
+  /// They surface on hover so a wall of tiles reads as pictures rather than a
+  /// grid of buttons. Hover is the pointer's alone, though: a keyboard brings
+  /// them up by arriving, and on a touch screen, which has no hover, they are
+  /// always there — before, a phone could not remove a card at all.
+  bool get _shown =>
+      _hovered ||
+      _focusWithin ||
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
+
   @override
   Widget build(BuildContext context) {
     final t = widget.token;
@@ -1076,8 +1107,10 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
           : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
+      // The pointer's; the preview below is the keyboard's and a reader's.
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
         onTap: widget.actions.preview,
         child: SizedBox(
           width: r.cardSize,
@@ -1087,7 +1120,13 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                ColoredBox(color: r.dropzoneBg, child: widget.thumbnail),
+                _previewing(
+                  context,
+                  widget.actions.preview,
+                  item.name,
+                  t,
+                  ColoredBox(color: r.dropzoneBg, child: widget.thumbnail),
+                ),
                 if (item.status == UploadStatus.uploading)
                   ColoredBox(
                     color: t.colorBgMask,
@@ -1105,35 +1144,50 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
                       child: StatusIcon(type: StatusType.error, token: t),
                     ),
                   ),
-                // The actions only surface on hover, so a wall of tiles stays
-                // readable as pictures rather than as a grid of buttons.
-                if (_hovered &&
-                    (widget.actions.remove != null ||
-                        widget.actions.retry != null))
-                  Positioned(
+                // Always built, so the keyboard and a reader can reach them;
+                // drawn, and open to the pointer, only when [_shown].
+                if (widget.actions.remove != null ||
+                    widget.actions.retry != null)
+                  PositionedDirectional(
                     top: t.sizeXXS,
-                    right: t.sizeXXS,
-                    child: Row(
-                      children: [
-                        if (widget.actions.retry != null)
-                          _IconButton(
-                            token: t,
-                            semanticsLabel: words.retry,
-                            onTap: widget.actions.retry!,
-                            painter: RetryPainter(_onMask),
-                            background: t.colorBgMask,
+                    end: t.sizeXXS,
+                    child: Focus(
+                      canRequestFocus: false,
+                      skipTraversal: true,
+                      onFocusChange: (inside) =>
+                          setState(() => _focusWithin = inside),
+                      child: IgnorePointer(
+                        ignoring: !_shown,
+                        child: AnimatedOpacity(
+                          opacity: _shown ? 1 : 0,
+                          duration: t.motionDurationFast,
+                          // Hidden from the eye, not from a reader: a screen
+                          // reader has no hover to bring them up with.
+                          alwaysIncludeSemantics: true,
+                          child: Row(
+                            children: [
+                              if (widget.actions.retry != null)
+                                _IconButton(
+                                  token: t,
+                                  semanticsLabel: words.retry,
+                                  onTap: widget.actions.retry!,
+                                  painter: RetryPainter(_onMask),
+                                  background: t.colorBgMask,
+                                ),
+                              if (widget.actions.remove != null) ...[
+                                SizedBox(width: t.sizeXXS),
+                                _IconButton(
+                                  token: t,
+                                  semanticsLabel: words.remove,
+                                  onTap: widget.actions.remove!,
+                                  painter: CrossPainter(_onMask, inset: 5),
+                                  background: t.colorBgMask,
+                                ),
+                              ],
+                            ],
                           ),
-                        if (widget.actions.remove != null) ...[
-                          SizedBox(width: t.sizeXXS),
-                          _IconButton(
-                            token: t,
-                            semanticsLabel: words.remove,
-                            onTap: widget.actions.remove!,
-                            painter: CrossPainter(_onMask, inset: 5),
-                            background: t.colorBgMask,
-                          ),
-                        ],
-                      ],
+                        ),
+                      ),
                     ),
                   ),
               ],
@@ -1143,6 +1197,29 @@ class _UploadCardState<T> extends State<_UploadCard<T>> {
       ),
     );
   }
+}
+
+/// [child] as the way to preview a file, for the keyboard and a screen
+/// reader; [child] as it is where there is nothing to preview.
+///
+/// Wraps the name or the picture alone, never the row or the card around
+/// them, so the remove and the retry beside it stand on their own and are
+/// not met a second time inside it. A pointer still previews from anywhere on
+/// the row or the card.
+Widget _previewing(
+  BuildContext context,
+  VoidCallback? preview,
+  String name,
+  Token t,
+  Widget child,
+) {
+  if (preview == null) return child;
+  return Pressable(
+    onPressed: preview,
+    semanticsLabel: '${context.seedLocale.preview}: $name',
+    radius: t.borderRadiusSM,
+    child: ExcludeSemantics(child: child),
+  );
 }
 
 /// Glyph colour for the actions that sit on a card's dark hover mask.
@@ -1202,7 +1279,9 @@ class _IconButtonState extends State<_IconButton> {
           cursor: SystemMouseCursors.click,
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),
+          // The pointer's; the node above is the reader's.
           child: GestureDetector(
+            excludeFromSemantics: true,
             onTap: widget.onTap,
             child: Container(
               width: 22,

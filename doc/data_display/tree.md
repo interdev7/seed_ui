@@ -107,6 +107,35 @@ Tree(
 
 ```
 
+## Thousands of nodes
+
+Left without a height, a tree is laid out in full: every open row is built,
+and the tree is as tall as they are, scrolled by the page around it. That is
+right for tens or hundreds of nodes. A tree of thousands — a folder of files
+on a desktop — wants a `height`:
+
+```dart
+Tree(
+  height: 480,
+  nodes: folder,
+  loadData: (node) => readDirectory(node),
+)
+```
+
+It then scrolls inside a window that tall and builds only the rows in it:
+five thousand files in an open folder cost a screenful of rows. Opening such a
+folder builds no more than the window either, since the reveal shows its top
+first.
+
+It looks and answers exactly as the full tree does — the same rows, the same
+taps, keys, checks, drags and loading, and the same pixels, the opening and
+closing of a branch included, frame for frame. Two things differ, both
+because it scrolls itself: the arrow keys bring the row they reach into view,
+and a focused tree outlines its window rather than its rows.
+
+`loadData` and a height go well together: a folder's contents are read when
+it is opened, and however many there are, only those on screen are built.
+
 ## Drag and drop
 
 `draggable: true` lets nodes be dragged to reorder them. On a drop, `onDrop`

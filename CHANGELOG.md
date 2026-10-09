@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Tree.height`, for trees of thousands of nodes.** A tree was laid out in
+  full, every open row built: a folder of five thousand files built five
+  thousand rows. Given a height, a tree scrolls inside a window that tall and
+  builds only the rows in it, and opening such a folder builds no more than
+  the window. It is the same tree — the same rows, taps, keys, checks, drags
+  and lazy loading, and the same pixels: at rest, in both directions of
+  reading, and in every frame of a branch opening, closing or turning round
+  part-way. The arrow keys bring the row they reach into view.
+  Left without a height, a tree is built exactly as before.
+
 - **`Form.scrollToFirstError` and `FormController.scrollToFirstError()`.** A
   long form refused below the fold said so where nobody was looking. A submit
   that fails can now bring the first field it refused into view — the highest

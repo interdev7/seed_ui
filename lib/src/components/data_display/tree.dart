@@ -314,6 +314,7 @@ class Tree extends StatefulWidget {
     this.token,
     this.focusNode,
     this.autofocus = false,
+    this.height,
   });
 
   /// The root nodes.
@@ -419,6 +420,19 @@ class Tree extends StatefulWidget {
   /// Whether the tree takes focus as soon as it is built.
   final bool autofocus;
 
+  /// A window this tall that the tree scrolls inside, building only the rows
+  /// in it.
+  ///
+  /// Left null, the tree is laid out in full, every open row built, and it is
+  /// as tall as they are — the place to scroll it is the page around it. That
+  /// is right for a tree of tens or hundreds of nodes. A tree of thousands —
+  /// a folder of files, say — wants a height: it then builds the rows a
+  /// screenful needs and no more, however many there are below. It looks and
+  /// answers exactly as the full one does, the opening and closing of a branch
+  /// included; the one difference is that it scrolls itself, and brings the
+  /// row the arrow keys move to into view.
+  final double? height;
+
   @override
   State<Tree> createState() => _TreeState();
 }
@@ -471,6 +485,15 @@ class _TreeState extends State<Tree> {
   final Set<String> _loading = {};
   final Set<String> _loaded = {};
 
+  /// The branches opening (true) or closing (false) in a tree with a
+  /// [Tree.height], until their reveal settles. While one moves, its rows are
+  /// drawn as a block inside the same reveal the full tree uses, so the two
+  /// open and close alike; settled, the block falls back into single rows.
+  final Map<String, bool> _moving = {};
+
+  /// Scrolls a tree with a [Tree.height].
+  final ScrollController _scroll = ScrollController();
+
   // Drag-and-drop: the node being dragged and the current drop target/position.
   String? _dragKey;
   String? _dropKey;
@@ -510,6 +533,12 @@ class _TreeState extends State<Tree> {
     return widget.autoExpandParent && widget.expandedKeys != null
         ? _withAncestors(set)
         : set;
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   @override
@@ -562,6 +591,31 @@ class _TreeState extends State<Tree> {
     return out;
   }
 
+  /// Scrolls a tree with a [Tree.height] so the row under the keyboard
+  /// shows. A row the full tree lays out is always built, and the page around
+  /// it scrolls; a row the lazy tree has not built cannot be seen until it is
+  /// scrolled to.
+  void _reveal(String key) {
+    if (widget.height == null || !_scroll.hasClients) return;
+    final at = _visible(_resolveExpanded()).indexWhere((n) => n.key == key);
+    if (at < 0) return;
+    final r = (widget.token ??
+            ConfigProvider.componentOf<TreeToken>(context) ??
+            const TreeToken())
+        ._resolve(context.softToken);
+    final top = at * r.titleHeight;
+    final bottom = top + r.titleHeight;
+    final position = _scroll.position;
+    if (top < position.pixels) {
+      _scroll.jumpTo(top);
+    } else if (bottom > position.pixels + position.viewportDimension) {
+      _scroll.jumpTo(
+        (bottom - position.viewportDimension)
+            .clamp(0.0, position.maxScrollExtent),
+      );
+    }
+  }
+
   void _moveCursor(int delta) {
     final rows = _visible(_resolveExpanded());
     if (rows.isEmpty) return;
@@ -574,6 +628,7 @@ class _TreeState extends State<Tree> {
       if (i < 0 || i >= rows.length) return;
       if (!rows[i].disabled) {
         setState(() => _cursor = rows[i].key);
+        _reveal(rows[i].key);
         return;
       }
     }
@@ -607,6 +662,7 @@ class _TreeState extends State<Tree> {
       } else if (expanded.contains(current.key) &&
           current.children.isNotEmpty) {
         setState(() => _cursor = current.children.first.key);
+        _reveal(current.children.first.key);
       }
       return KeyEventResult.handled;
     }
@@ -615,7 +671,10 @@ class _TreeState extends State<Tree> {
         _toggleExpand(current.key);
       } else {
         final parent = _parentOf[current.key];
-        if (parent != null) setState(() => _cursor = parent);
+        if (parent != null) {
+          setState(() => _cursor = parent);
+          _reveal(parent);
+        }
       }
       return KeyEventResult.handled;
     }
@@ -633,6 +692,12 @@ class _TreeState extends State<Tree> {
     final expanding = !cur.contains(key);
     final next = {...cur};
     expanding ? next.add(key) : next.remove(key);
+    if (widget.height != null) {
+      final node = _nodeOf[key];
+      if (node != null && node.children.isNotEmpty) {
+        setState(() => _moving[key] = expanding);
+      }
+    }
     if (_expanded.commit(widget.expandedKeys, next)) setState(() {});
     widget.onExpand?.call(next.toList());
 
@@ -851,21 +916,112 @@ class _TreeState extends State<Tree> {
               : null,
           borderRadius: BorderRadius.circular(t.borderRadiusSM),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: _buildLevel(
-            t,
-            r,
-            widget.nodes,
-            0,
-            const [],
-            expanded,
-            selected,
-            checked,
-            half,
-          ),
-        ),
+        child: widget.height == null
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: _buildLevel(
+                  t,
+                  r,
+                  widget.nodes,
+                  0,
+                  const [],
+                  expanded,
+                  selected,
+                  checked,
+                  half,
+                ),
+              )
+            : _lazyBody(t, r, expanded, selected, checked, half),
+      ),
+    );
+  }
+
+  /// The rows a tree with a [Tree.height] builds, as a list that builds what
+  /// is on screen.
+  Widget _lazyBody(
+    Token t,
+    _ResolvedTreeToken r,
+    Set<String> expanded,
+    Set<String> selected,
+    Set<String> checked,
+    Set<String> half,
+  ) {
+    final items = <_LazyItem>[];
+    void walk(List<TreeNode> nodes, int level, List<bool> ancestorsLast,
+        List<_LazyRow>? into, Set<String> open) {
+      for (var i = 0; i < nodes.length; i++) {
+        final node = nodes[i];
+        final row = _LazyRow(
+          node,
+          level,
+          ancestorsLast,
+          i == 0,
+          i == nodes.length - 1,
+        );
+        if (into != null) {
+          into.add(row);
+        } else {
+          items.add(row);
+        }
+        final children = node.children;
+        if (children.isEmpty || !_expandable(node)) continue;
+        final moving = into == null ? _moving[node.key] : null;
+        if (moving != null) {
+          // The branch is on its way open or shut: its rows as they are when
+          // open, drawn inside the reveal, the way the full tree draws them.
+          final block = <_LazyRow>[];
+          walk(children, level + 1, [...ancestorsLast, row.isLast], block,
+              {...open, node.key});
+          items.add(_LazyBlock(node.key, moving, block));
+        } else if (open.contains(node.key)) {
+          walk(children, level + 1, [...ancestorsLast, row.isLast], into, open);
+        }
+      }
+    }
+
+    walk(widget.nodes, 0, const [], null, expanded);
+
+    Widget rowOf(_LazyRow row) => KeyedSubtree(
+          key: ValueKey('row:${row.node.key}'),
+          child: _rowFor(t, r, row.node, row.level, row.ancestorsLast,
+              row.isFirst, row.isLast, expanded, selected, checked, half),
+        );
+
+    return SizedBox(
+      height: widget.height,
+      child: ListView.builder(
+        controller: _scroll,
+        padding: EdgeInsets.zero,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          if (item is _LazyRow) return rowOf(item);
+          final block = item as _LazyBlock;
+          // A reveal shows its top first and never more than the window, so
+          // a branch of thousands opens with the rows the window can hold.
+          // The block still measures as tall as all of them, so it opens at
+          // the same pace the full tree's does.
+          final fits = (widget.height! / r.titleHeight).ceil() + 1;
+          final shown = block.rows.length <= fits
+              ? block.rows
+              : block.rows.sublist(0, fits);
+          return _BranchReveal(
+            key: ValueKey('reveal:${block.key}'),
+            opening: block.opening,
+            onSettled: () {
+              if (mounted) setState(() => _moving.remove(block.key));
+            },
+            child: SizedBox(
+              height: block.rows.length * r.titleHeight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [for (final row in shown) rowOf(row)],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -915,7 +1071,71 @@ class _TreeState extends State<Tree> {
     final isExpanded = expanded.contains(node.key);
     final hasChildren = _expandable(node);
 
-    final row = _NodeRow(
+    final row = _rowFor(
+      t,
+      r,
+      node,
+      level,
+      ancestorsLast,
+      isFirst,
+      isLast,
+      expanded,
+      selected,
+      checked,
+      half,
+    );
+
+    if (!hasChildren) return row;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        row,
+        Expandable(
+          expanded: isExpanded,
+          // Unmount collapsed subtrees ( far cheaper
+          // for large trees) rather than keeping them at zero height.
+          destroyWhenCollapsed: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: _buildLevel(
+              t,
+              r,
+              node.children,
+              level + 1,
+              [...ancestorsLast, isLast],
+              expanded,
+              selected,
+              checked,
+              half,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// One node's row, the same in a tree laid out in full and in one built a
+  /// screenful at a time: everything the row draws — its guides included —
+  /// it is told here, and nothing comes from where it stands in the tree.
+  Widget _rowFor(
+    Token t,
+    _ResolvedTreeToken r,
+    TreeNode node,
+    int level,
+    List<bool> ancestorsLast,
+    bool isFirst,
+    bool isLast,
+    Set<String> expanded,
+    Set<String> selected,
+    Set<String> checked,
+    Set<String> half,
+  ) {
+    final isExpanded = expanded.contains(node.key);
+    final hasChildren = _expandable(node);
+    return _NodeRow(
       token: t,
       style: r,
       node: node,
@@ -957,37 +1177,6 @@ class _TreeState extends State<Tree> {
       onDropHover: (pos) => _hoverDrop(node.key, pos),
       onDropLeave: () => _leaveDrop(node.key),
       onDropAccept: _commitDrop,
-    );
-
-    if (!hasChildren) return row;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        row,
-        Expandable(
-          expanded: isExpanded,
-          // Unmount collapsed subtrees ( far cheaper
-          // for large trees) rather than keeping them at zero height.
-          destroyWhenCollapsed: true,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: _buildLevel(
-              t,
-              r,
-              node.children,
-              level + 1,
-              [...ancestorsLast, isLast],
-              expanded,
-              selected,
-              checked,
-              half,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1534,4 +1723,134 @@ bool _listEquals(List<bool> a, List<bool> b) {
     if (a[i] != b[i]) return false;
   }
   return true;
+}
+
+/// An entry in a tree with a [Tree.height]: a single row, or a branch on its
+/// way open or shut.
+sealed class _LazyItem {
+  const _LazyItem();
+}
+
+/// One row, and everything it needs to draw itself where it stands.
+class _LazyRow extends _LazyItem {
+  const _LazyRow(
+    this.node,
+    this.level,
+    this.ancestorsLast,
+    this.isFirst,
+    this.isLast,
+  );
+
+  final TreeNode node;
+  final int level;
+  final List<bool> ancestorsLast;
+  final bool isFirst;
+  final bool isLast;
+}
+
+/// The rows of a branch that is opening or closing, drawn as one.
+class _LazyBlock extends _LazyItem {
+  const _LazyBlock(this.key, this.opening, this.rows);
+
+  final String key;
+  final bool opening;
+  final List<_LazyRow> rows;
+}
+
+/// Opens or shuts a branch the way [Expandable] does in a tree laid out in
+/// full — the same pace, curve and clip — and says when it has settled.
+///
+/// Not [Expandable] itself: that one is mounted with the branch and only ever
+/// moves from where it stands, so a branch that is shut has nothing to close
+/// from. This is mounted at the start of each move, from open or from shut,
+/// and goes once it is done.
+class _BranchReveal extends StatefulWidget {
+  const _BranchReveal({
+    super.key,
+    required this.opening,
+    required this.onSettled,
+    required this.child,
+  });
+
+  final bool opening;
+  final VoidCallback onSettled;
+  final Widget child;
+
+  @override
+  State<_BranchReveal> createState() => _BranchRevealState();
+}
+
+class _BranchRevealState extends State<_BranchReveal>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    value: widget.opening ? 0 : 1,
+  )..addStatusListener(_settle);
+
+  bool _started = false;
+
+  /// Settled only where it has arrived where it was going: turned round
+  /// part-way, the move it left was cut short, not finished, and a block
+  /// that fell apart then dropped the branch mid-flight.
+  void _settle(AnimationStatus status) {
+    final arrived = widget.opening
+        ? status == AnimationStatus.completed
+        : status == AnimationStatus.dismissed;
+    if (arrived && mounted) widget.onSettled();
+  }
+
+  /// Towards open, or back towards shut. Back, not *to* zero: a controller
+  /// sent to zero going forward reports itself completed, never dismissed,
+  /// and a branch closing would never be told it had shut.
+  void _move() =>
+      widget.opening ? _controller.forward() : _controller.reverse();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    _controller.duration = context.softToken.motionDurationMid;
+    _move();
+  }
+
+  @override
+  void didUpdateWidget(_BranchReveal old) {
+    super.didUpdateWidget(old);
+    // Turned round part-way, as the full tree's reveal is: from where it is.
+    if (old.opening != widget.opening) {
+      _move();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final animation = CurvedAnimation(
+        parent: _controller, curve: context.softToken.motionEaseInOut);
+    // As [Expandable] builds it, line for line, so the two reveal alike.
+    return LayoutBuilder(
+      builder: (context, constraints) => AnimatedBuilder(
+        animation: animation,
+        child: widget.child,
+        builder: (context, child) {
+          final factor = animation.value.clamp(0.0, 1.0);
+          return ClipRect(
+            child: Align(
+              alignment: AlignmentDirectional.topStart,
+              heightFactor: factor,
+              child: constraints.hasBoundedWidth
+                  ? SizedBox(width: constraints.maxWidth, child: child)
+                  : child,
+            ),
+          );
+        },
+      ),
+    );
+  }
 }

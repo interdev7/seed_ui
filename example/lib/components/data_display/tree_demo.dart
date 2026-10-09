@@ -139,10 +139,54 @@ class TreeDemo extends StatelessWidget {
             defaultExpandAll: true,
           ),
         ),
+        _BigFolderDemo(),
       ],
     );
   }
 }
+
+/// A folder of five thousand files, which a tree with a height builds a
+/// screenful at a time.
+class _BigFolderDemo extends StatelessWidget {
+  const _BigFolderDemo();
+
+  @override
+  Widget build(BuildContext context) => Group(
+    'Thousands of nodes — a folder of 5,000 files',
+    // A height makes the tree scroll inside a window that tall and build
+    // only the rows in it: five thousand files cost a screenful.
+    Tree(height: 320, showIcon: true, showLine: true, nodes: _bigFolder),
+  );
+}
+
+/// Two folders, one of them holding five thousand files.
+final _bigFolder = [
+  TreeNode(
+    key: 'big',
+    title: const Text('photos'),
+    icon: const Icon(Icons.folder),
+    children: [
+      for (var i = 0; i < 5000; i++)
+        TreeNode(
+          key: 'big-$i',
+          title: Text('IMG_${(1000 + i).toString()}.jpg'),
+          icon: const Icon(Icons.image_outlined),
+        ),
+    ],
+  ),
+  const TreeNode(
+    key: 'small',
+    title: Text('notes'),
+    icon: Icon(Icons.folder),
+    children: [
+      TreeNode(
+        key: 'small-0',
+        title: Text('todo.txt'),
+        icon: Icon(Icons.description),
+      ),
+    ],
+  ),
+];
 
 /// A node representing a directory/folder.
 class DirectoryNode extends TreeNode {

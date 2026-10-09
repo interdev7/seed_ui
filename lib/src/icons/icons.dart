@@ -305,11 +305,16 @@ class _SoftSpinnerState extends State<Spinner>
 
   @override
   Widget build(BuildContext context) {
-    return RotationTransition(
-      turns: _controller,
-      child: CustomPaint(
-        size: Size.square(widget.size),
-        painter: _SpinnerPainter(widget.color),
+    // A layer of its own, so the turn it takes sixty times a second repaints
+    // the spinner and nothing else. Without it every frame repainted whatever
+    // shared its layer — a whole page, while one button was loading.
+    return RepaintBoundary(
+      child: RotationTransition(
+        turns: _controller,
+        child: CustomPaint(
+          size: Size.square(widget.size),
+          painter: _SpinnerPainter(widget.color),
+        ),
       ),
     );
   }

@@ -123,6 +123,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A spinner repainted everything around it, sixty times a second.** It
+  turned on the layer it shared with its neighbours, so while one button was
+  loading the page around it was redrawn every frame — work for the processor
+  and the battery that changed no pixel. The spinner has a layer of its own
+  now, and so does a `Countdown` to the millisecond; a `Spin`'s veil fades as
+  a transition instead of rebuilding on every frame of the fade. Nothing
+  looks different: twenty-four frames across the four were compared pixel for
+  pixel before and after. A test holds the kit's moving parts to repainting
+  only themselves.
+
 - **One control was two stops for a screen reader** — `Button`, and through
   it `FloatButton` and every page of a `Pagination`, as well as `Checkbox`,
   `Radio`, `Switch`, `CheckableTag`, `Collapse` and `Upload`. Each announced

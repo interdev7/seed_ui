@@ -731,16 +731,16 @@ class _FullscreenSpinOverlayState extends State<_FullscreenSpinOverlay>
     return Directionality(
       textDirection: widget.textDirection,
       child: Positioned.fill(
-        child: AnimatedBuilder(
-          animation: _opacityAnim,
-          builder: (context, child) {
-            final isVisible = _opacityAnim.value > 0.0;
+        // The fade is a transition, not a rebuild: the veil and the spinner
+        // in it are built once and only their opacity moves, frame by frame.
+        child: Builder(
+          builder: (context) {
             return IgnorePointer(
               ignoring: !widget.showSpin,
-              child: Opacity(
-                opacity: _opacityAnim.value,
+              child: FadeTransition(
+                opacity: _opacityAnim,
                 child: AbsorbPointer(
-                  absorbing: isVisible && widget.showSpin,
+                  absorbing: widget.showSpin,
                   child: Container(
                     color: widget.r.colorBgContainer.withValues(alpha: 0.65),
                     child: Align(

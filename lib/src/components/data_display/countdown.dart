@@ -466,7 +466,7 @@ class _CountdownState extends State<Countdown>
         ._resolve(t);
 
     final shown = context.seedLocale.figures(_shown);
-    return widget.builder?.call(context, shown) ??
+    final face = widget.builder?.call(context, shown) ??
         Text(
           shown,
           style: TextStyle(
@@ -477,6 +477,10 @@ class _CountdownState extends State<Countdown>
             fontWeight: r.fontWeight,
           ),
         );
+    // A count down to the millisecond changes every frame; on a layer of its
+    // own it repaints alone, not the page around it. A count by the second
+    // changes once a second and does not need the extra layer.
+    return _perFrame ? RepaintBoundary(child: face) : face;
   }
 }
 

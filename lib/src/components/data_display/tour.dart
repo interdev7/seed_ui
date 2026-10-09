@@ -1877,9 +1877,17 @@ class _CloseButtonState extends State<_CloseButton> {
             ),
             child: Center(
               child: widget.icon == null
+                  // The whole button for a canvas, as every other cross in the
+                  // kit draws on, with the margin scaled to it. On half the
+                  // button, CrossPainter's seven-pixel margin met itself in the
+                  // middle and left a cross three pixels across — a third of
+                  // the one on a modal beside it.
                   ? CustomPaint(
-                      size: Size.square(widget.size * 0.5),
-                      painter: CrossPainter(widget.colour),
+                      size: Size.square(widget.size),
+                      painter: CrossPainter(
+                        widget.colour,
+                        inset: widget.size * 7 / 22,
+                      ),
                     )
                   : IconTheme.merge(
                       data: IconThemeData(

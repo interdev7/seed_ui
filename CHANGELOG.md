@@ -104,6 +104,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `Tour`'s close cross was three pixels across.** It was drawn on half
+  its button, and the cross's fixed seven-pixel margin met itself in the
+  middle of a canvas that small — a third of the cross on a modal or a drawer.
+  It draws on the whole button now, with the margin scaled to it, so it
+  matches every other cross at the standard size and grows with a larger
+  `closeBtnSize`.
+
 - **Thirty-three examples in the documentation did not compile.** Every
   document's "for every one in a subtree" showed
   `ConfigProvider(components: …)`, which has never existed; it is

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer, Card;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
+import 'package:seed_ui/src/utils/close_cross.dart' show CloseCross;
 
 /// Records the shapes a painter draws.
 class _PathCanvas implements Canvas {
@@ -250,6 +251,56 @@ void main() {
     expect(finished, 1);
     expect(closed, 1, reason: 'finishing closes the tour');
     expect(find.text('Second'), findsNothing);
+  });
+
+  group('the cross is the size of every other cross', () {
+    /// How far the cross's arms reach, from the canvas and the painter's own
+    /// margin — what is actually drawn, not the button around it.
+    double span(WidgetTester tester, Finder within) {
+      final paint = find.descendant(
+        of: within,
+        matching: find.byWidgetPredicate(
+          (w) => w is CustomPaint && w.painter is CrossPainter,
+        ),
+      );
+      final painter =
+          tester.widget<CustomPaint>(paint).painter! as CrossPainter;
+      return tester.getSize(paint).width - painter.inset * 2;
+    }
+
+    testWidgets("a tour's cross reaches as far as a modal's", (tester) async {
+      await open(tester, const _Host(steps: _twoSteps));
+      final tour = span(tester, find.byKey(const Key('softTourClose')));
+
+      // Measured, not remembered: the cross a modal, a drawer, a notification
+      // and an alert all draw.
+      await tester.pumpWidget(
+        MaterialApp(home: Center(child: CloseCross(onPressed: () {}))),
+      );
+      final shared = span(tester, find.byType(CloseCross));
+
+      expect(tour, greaterThan(0), reason: 'a cross whose arms meet is none');
+      expect(tour, closeTo(shared, 0.01));
+    });
+
+    testWidgets('a larger button carries a larger cross', (tester) async {
+      await open(
+        tester,
+        ConfigProvider(
+          theme: ThemeData(
+            components: const ComponentsConfig(
+              tour: TourToken(closeBtnSize: 44),
+            ),
+          ),
+          child: const _Host(steps: _twoSteps),
+        ),
+      );
+      expect(
+        span(tester, find.byKey(const Key('softTourClose'))),
+        closeTo(16, 0.01),
+        reason: 'twice the button, twice the cross',
+      );
+    });
   });
 
   testWidgets('the close button and a tap on the mask both dismiss it',

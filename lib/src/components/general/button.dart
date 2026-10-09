@@ -109,6 +109,18 @@ final class ButtonCustomColor extends ButtonColor {
 
 /// Control height preset for a [Button].
 
+/// Which side of a [Button]'s words its icon stands on.
+///
+/// The reading sides, not the left and the right: in a right-to-left app
+/// [end] is on the left, where the words finish.
+enum ButtonIconPlacement {
+  /// Before the words — the usual place for what the button does.
+  start,
+
+  /// After them — where an arrow says where the button goes.
+  end,
+}
+
 /// Outline shape of a [Button].
 enum ButtonShape {
   /// Rounded rectangle, radius scaled to the size.
@@ -144,6 +156,7 @@ class ButtonToken {
     this.paddingInline,
     this.paddingInlineSM,
     this.paddingInlineLG,
+    this.iconGap,
     this.shadow,
   });
 
@@ -183,6 +196,9 @@ class ButtonToken {
   /// Horizontal padding for large button.
   final double? paddingInlineLG;
 
+  /// The space between the icon and the words (`iconGap`).
+  final double? iconGap;
+
   /// What a button that carries a shadow casts.
   ///
   /// None where nothing is said, which is how buttons in this kit have always
@@ -215,6 +231,7 @@ class ButtonToken {
         paddingInline: paddingInline ?? t.sizeSM,
         paddingInlineSM: paddingInlineSM ?? t.sizeXS,
         paddingInlineLG: paddingInlineLG ?? t.size,
+        iconGap: iconGap ?? t.sizeXS,
         shadow: shadow,
       );
 
@@ -232,6 +249,7 @@ class ButtonToken {
         paddingInline: other.paddingInline ?? paddingInline,
         paddingInlineSM: other.paddingInlineSM ?? paddingInlineSM,
         paddingInlineLG: other.paddingInlineLG ?? paddingInlineLG,
+        iconGap: other.iconGap ?? iconGap,
         shadow: other.shadow ?? shadow,
         fontWeight: other.fontWeight ?? fontWeight,
       );
@@ -253,6 +271,7 @@ class _ResolvedButtonToken {
     required this.paddingInline,
     required this.paddingInlineSM,
     required this.paddingInlineLG,
+    required this.iconGap,
     required this.shadow,
   });
 
@@ -270,6 +289,7 @@ class _ResolvedButtonToken {
   final double paddingInline;
   final double paddingInlineSM;
   final double paddingInlineLG;
+  final double iconGap;
   final List<BoxShadow>? shadow;
 }
 
@@ -296,6 +316,7 @@ class ButtonDefaults {
     this.shape,
     this.size,
     this.disabled,
+    this.iconPlacement,
   });
 
   /// How buttons are filled and bordered.
@@ -313,6 +334,10 @@ class ButtonDefaults {
   /// both are set — 'small buttons on an otherwise normal screen'.
   final ControlSize? size;
 
+  /// Which side of the words a button's icon stands on, unless it says
+  /// otherwise.
+  final ButtonIconPlacement? iconPlacement;
+
   /// Whether Button is disabled, unless it says otherwise.
   ///
   /// Nearer than `ConfigProvider.componentDisabled`, and beaten by the
@@ -326,6 +351,7 @@ class ButtonDefaults {
         shape: other.shape ?? shape,
         size: other.size ?? size,
         disabled: other.disabled ?? disabled,
+        iconPlacement: other.iconPlacement ?? iconPlacement,
       );
 }
 
@@ -355,6 +381,7 @@ class Button extends StatefulWidget {
     this.size,
     this.shape,
     this.icon,
+    this.iconPlacement,
     this.semanticsLabel,
     this.loading = false,
     this.block = false,
@@ -402,8 +429,15 @@ class Button extends StatefulWidget {
   /// The outline shape. Use [ButtonShape.circle] for icon-only buttons.
   final ButtonShape? shape;
 
-  /// Leading icon, tinted and sized to match the label.
+  /// An icon beside the words, tinted and sized to match them.
   final Widget? icon;
+
+  /// Which side of the words [icon] stands on — and the spinner while
+  /// [loading], which takes the icon's place. Null takes what
+  /// [ButtonDefaults.iconPlacement] says, then [ButtonIconPlacement.start].
+  ///
+  /// How far apart they stand is the token's `iconGap`.
+  final ButtonIconPlacement? iconPlacement;
 
   /// What a screen reader calls this button.
   ///
@@ -459,6 +493,11 @@ class _SoftButtonState extends State<Button> {
 
   ButtonShape get _shape =>
       widget.shape ?? _defaults?.shape ?? ButtonShape.defaultShape;
+
+  ButtonIconPlacement get _iconPlacement =>
+      widget.iconPlacement ??
+      _defaults?.iconPlacement ??
+      ButtonIconPlacement.start;
 
   /// Whether this button is disabled: its own word, else the one set for the
   /// subtree, else no.
@@ -672,8 +711,9 @@ class _SoftButtonState extends State<Button> {
     final height = _height(r);
     final fontSize = _fontSize(r);
     final foreground = style.foreground;
+    final atStart = _iconPlacement == ButtonIconPlacement.start;
 
-    final leading = widget.loading
+    final glyph = widget.loading
         ? Spinner(size: fontSize, color: foreground)
         : widget.icon != null
             ? IconTheme.merge(
@@ -705,11 +745,16 @@ class _SoftButtonState extends State<Button> {
         // and `block` inside a `Row` is exactly that.
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
+        // The Row reads the ambient direction, so `end` lands on the left in
+        // a right-to-left app without being told.
         children: [
-          if (leading != null) leading,
-          if (leading != null && widget.child != null)
-            SizedBox(width: token.sizeXS),
+          if (glyph != null && atStart) glyph,
+          if (glyph != null && widget.child != null && atStart)
+            SizedBox(width: r.iconGap),
           if (widget.child != null) Flexible(child: widget.child!),
+          if (glyph != null && widget.child != null && !atStart)
+            SizedBox(width: r.iconGap),
+          if (glyph != null && !atStart) glyph,
         ],
       ),
     );

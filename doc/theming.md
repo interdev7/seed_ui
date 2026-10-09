@@ -788,7 +788,7 @@ house-style decision rather than the state of one instance:
 | `Alert` | `showIcon`, `closable` |
 | `Avatar` | `shape`, `size` |
 | `Badge` | `size`, `overflowCount`, `showZero` |
-| `Button` | `variant`, `color`, `shape`, `size`, `disabled` |
+| `Button` | `variant`, `color`, `shape`, `size`, `disabled`, `iconPlacement` |
 | `Card` | `hoverable`, `variant`, `type`, `size` |
 | `CheckableTagGroup` | `multiple`, `disabled` |
 | `Checkbox` | `disabled`, `size` |

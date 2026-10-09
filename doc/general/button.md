@@ -83,7 +83,8 @@ Button(variant: ButtonVariant.outlined, onPressed: () {}, child: const Text('Def
 | `color` | `ButtonColor?` | `null` | A preset, or a colour of your own. Follows `ButtonDefaults.color`, else `defaultColor` |
 | `size` | `ControlSize?` | `null` | A preset — `small` (24), `middle` (32), `large` (40) — or a measurement of your own. Follows `ButtonDefaults.size`, then `componentSize`, else `middle` |
 | `shape` | `ButtonShape?` | `null` | Follows `ButtonDefaults.shape`, else `defaultShape`. `defaultShape`, `circle`, `round` |
-| `icon` | `Widget?` | `null` | Leading icon, tinted and sized to the label |
+| `icon` | `Widget?` | `null` | An icon beside the label, tinted and sized to it |
+| `iconPlacement` | `ButtonIconPlacement?` | `start` | Which side of the label the icon stands on |
 | `semanticsLabel` | `String?` | `null` | What a screen reader calls it. A button carrying nothing but an icon has no words to be named by, and arrives as "button" and no more |
 | `loading` | `bool` | `false` | Swaps the icon for a spinner and blocks taps |
 | `gradient` | `Gradient?` | `null` | Optional background gradient (e.g. `LinearGradient`) |
@@ -139,7 +140,7 @@ honouring both would make it an oval.
 
 ## Icons
 
-An `icon` with a `child` renders as a leading icon; an `icon` with no `child`
+An `icon` with a `child` stands beside the words; an `icon` with no `child`
 makes a square — or, with `ButtonShape.circle`, a round — icon-only button.
 The icon inherits the button's foreground colour and font size.
 
@@ -150,6 +151,35 @@ Button(
   shape: ButtonShape.circle,
   icon: const Icon(Icons.search),
   onPressed: onSearch,
+)
+```
+
+### Which side, and how far
+
+`iconPlacement` puts the icon before the words or after them — after is where
+an arrow saying where the button goes belongs:
+
+```dart
+Button(
+  icon: const Icon(Icons.arrow_forward),
+  iconPlacement: ButtonIconPlacement.end,
+  onPressed: next,
+  child: const Text('Next'),
+)
+```
+
+The sides are the reading ones: in a right-to-left app `end` is on the left.
+A spinner, while `loading`, stands where the icon does. `ButtonDefaults` takes
+`iconPlacement` too, for every button in a subtree.
+
+How far the icon stands from the words is the token's `iconGap` — 8 pixels,
+the theme's `sizeXS`, unless named:
+
+```dart
+Button(
+  icon: const Icon(Icons.download),
+  token: const ButtonToken(iconGap: 4),
+  child: const Text('Download'),
 )
 ```
 

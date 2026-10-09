@@ -337,6 +337,7 @@ export 'src/components/general/button.dart'
         ButtonDefaults,
         Button,
         ButtonColor,
+        ButtonIconPlacement,
         ButtonShape,
         ButtonToken,
         ButtonVariant;

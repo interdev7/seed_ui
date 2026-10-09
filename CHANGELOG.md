@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Button.iconPlacement` and `ButtonToken.iconGap`.** A button's icon stood
+  before its words and nowhere else, at a gap nobody could change — an arrow
+  meaning "next" had to be built by hand. `ButtonIconPlacement.end` puts it
+  after them, on the reading side, so on the left in a right-to-left app; the
+  spinner of a loading button takes the icon's side, and `ButtonDefaults`
+  carries it for a subtree. `iconGap` is the space between, the theme's
+  `sizeXS` as it always was unless named.
+
 - **`size` on `Checkbox`, `CheckboxGroup` and `Radio`**, a `ControlSize` like
   every other control's, scaling the box or the dot and its words together:
   14, 16 and 20 pixels at the theme's small, standard and large type, or a

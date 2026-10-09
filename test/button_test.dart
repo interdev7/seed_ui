@@ -11,6 +11,7 @@ Widget _host(Widget child) => ConfigProvider(
     );
 
 void main() {
+  _iconTests();
   testWidgets('renders button with label', (tester) async {
     await tester.pumpWidget(
       _host(
@@ -468,6 +469,106 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       expect(tester.getSize(find.byType(Button).first).width, 400);
+    });
+  });
+}
+
+void _iconTests() {
+  group('which side the icon stands on, and how far from the words', () {
+    const icon = Icon(Icons.arrow_forward, key: Key('icon'));
+
+    Widget button({
+      ButtonIconPlacement? placement,
+      bool loading = false,
+      ButtonToken? token,
+    }) =>
+        Center(
+          child: Button(
+            icon: icon,
+            iconPlacement: placement,
+            loading: loading,
+            token: token,
+            onPressed: () {},
+            child: const Text('Next'),
+          ),
+        );
+
+    Rect iconRect(WidgetTester tester) =>
+        tester.getRect(find.byKey(const Key('icon')));
+    Rect words(WidgetTester tester) => tester.getRect(find.text('Next'));
+
+    testWidgets('left alone, it stands before the words', (tester) async {
+      await tester.pumpWidget(_host(button()));
+      expect(iconRect(tester).right, lessThan(words(tester).left));
+    });
+
+    testWidgets('at the end, it stands after them', (tester) async {
+      await tester
+          .pumpWidget(_host(button(placement: ButtonIconPlacement.end)));
+      expect(iconRect(tester).left, greaterThan(words(tester).right));
+    });
+
+    testWidgets('the end is the left, where the words read leftwards', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: button(placement: ButtonIconPlacement.end),
+          ),
+        ),
+      );
+      expect(iconRect(tester).right, lessThan(words(tester).left));
+    });
+
+    testWidgets('the spinner takes the icon\'s side while loading', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(button(placement: ButtonIconPlacement.end, loading: true)),
+      );
+      expect(
+        tester.getRect(find.byType(Spinner)).left,
+        greaterThan(words(tester).right),
+      );
+    });
+
+    testWidgets('a subtree can move every icon at once', (tester) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          theme: ThemeData(),
+          defaults: const ComponentDefaults(
+            button: ButtonDefaults(iconPlacement: ButtonIconPlacement.end),
+          ),
+          child: MaterialApp(home: Scaffold(body: button())),
+        ),
+      );
+      expect(iconRect(tester).left, greaterThan(words(tester).right));
+    });
+
+    testWidgets('the gap is the token\'s, on either side', (tester) async {
+      for (final placement in ButtonIconPlacement.values) {
+        await tester.pumpWidget(
+          _host(
+            button(
+              placement: placement,
+              token: const ButtonToken(iconGap: 20),
+            ),
+          ),
+        );
+        final gap = placement == ButtonIconPlacement.start
+            ? words(tester).left - iconRect(tester).right
+            : iconRect(tester).left - words(tester).right;
+        expect(gap, closeTo(20, 0.5), reason: '$placement');
+      }
+    });
+
+    testWidgets('left alone, the gap is what it always was', (tester) async {
+      await tester.pumpWidget(_host(button()));
+      final t = tester.element(find.byType(Button)).softToken;
+      expect(
+          words(tester).left - iconRect(tester).right, closeTo(t.sizeXS, 0.5));
     });
   });
 }

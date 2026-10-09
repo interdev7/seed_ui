@@ -1285,6 +1285,16 @@ final _probes = <_Probe>[
     act: _focusField,
   ),
   _Probe(
+    'ButtonToken.iconGap',
+    // Only a button with an icon and words has a gap between them.
+    (c) => Button(
+      icon: const Icon(Icons.add),
+      onPressed: () {},
+      token: c ? const ButtonToken(iconGap: 30) : null,
+      child: const Text('Press'),
+    ),
+  ),
+  _Probe(
     'ButtonToken.borderRadius',
     (c) => _button(c ? const ButtonToken(borderRadius: 0) : null),
   ),

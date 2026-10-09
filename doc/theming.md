@@ -218,6 +218,26 @@ Spacing steps are multiples of `sizeUnit`:
 Control heights: `controlHeightSM` (24), `controlHeight` (32),
 `controlHeightLG` (40).
 
+#### The gaps inside components
+
+The space a component leaves between its own parts — an icon and its words
+in a tag, a tab, a menu item or an alert; a box and its label; a title and the
+text under it — is not a number of its own. It is one of these steps, so it
+moves with `sizeUnit`:
+
+```dart
+ConfigProvider(
+  // Every inner gap in the kit a quarter wider, in proportion.
+  theme: ThemeData(token: const SeedToken(sizeUnit: 5)),
+  child: MaterialApp(...),
+)
+```
+
+That is on purpose: one knob keeps a tag, a tab and a menu item spaced alike,
+where a field per component would let them drift apart. A component with a
+field of its own for a gap — `ButtonToken.iconGap` — has one because its gap
+is part of what it is asked to look like; the rest follow the scale.
+
 Radii: `borderRadiusXS` (2), `borderRadiusSM` (4), `borderRadius` (6),
 `borderRadiusLG` (8).
 

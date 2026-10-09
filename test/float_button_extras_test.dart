@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
 import 'package:flutter_test/flutter_test.dart';
@@ -370,6 +371,56 @@ void main() {
         carried(offset: told.last, onOffsetChanged: told.add),
       );
       expect(at(tester).left, lessThan(before.left));
+    });
+
+    testWidgets('a quick hand loses no ground, held or free', (tester) async {
+      // A mouse reports more often than the screen draws: several moves can
+      // land before the owner of a held button has rebuilt with the last one.
+      // Each has to count, or the button falls behind the pointer.
+      for (final held in [false, true]) {
+        var offset = Offset.zero;
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpWidget(
+          _host(
+            StatefulBuilder(
+              builder: (context, setState) => Stack(
+                children: [
+                  Positioned(
+                    right: 24,
+                    bottom: 24,
+                    child: FloatButton(
+                      draggable: true,
+                      offset: held ? offset : null,
+                      onOffsetChanged: (o) => setState(() => offset = o),
+                      onPressed: () {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        final before = at(tester);
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byType(Button)),
+          kind: PointerDeviceKind.mouse,
+        );
+        // Thirty moves of ten pixels, three to a frame.
+        for (var frame = 0; frame < 10; frame++) {
+          for (var i = 0; i < 3; i++) {
+            await gesture.moveBy(const Offset(-10, -5));
+          }
+          await tester.pump();
+        }
+        await gesture.up();
+        await tester.pump();
+        final moved = at(tester).topLeft - before.topLeft;
+        expect(
+          (moved - const Offset(-300, -150)).distance,
+          lessThan(1),
+          reason: held ? 'held' : 'free',
+        );
+      }
     });
 
     testWidgets('not draggable, a drag does nothing', (tester) async {

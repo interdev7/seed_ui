@@ -2191,10 +2191,22 @@ class _DragShiftState extends State<_DragShift> {
   /// begins, to keep it on the screen while it moves.
   Rect? _home;
 
-  void _start(DragStartDetails _) {
+  /// Where it stood and where the pointer came down, as the drag began.
+  ///
+  /// Every move is measured from these, not added to where the button was
+  /// last drawn. A mouse reports more often than the screen draws, and a
+  /// button whose owner holds its offset has not been handed the last move
+  /// back when the next arrives: added up, all but one move a frame were
+  /// lost, and the button fell further behind the pointer the faster it went.
+  Offset _from = Offset.zero;
+  Offset _grip = Offset.zero;
+
+  void _start(DragStartDetails details) {
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     _home = box.localToGlobal(Offset.zero) & box.size;
+    _from = _at;
+    _grip = details.globalPosition;
     widget.onStart?.call();
   }
 
@@ -2202,7 +2214,7 @@ class _DragShiftState extends State<_DragShift> {
     final home = _home;
     if (home == null) return;
     final screen = MediaQuery.sizeOf(context);
-    final wanted = _at + details.delta;
+    final wanted = _from + (details.globalPosition - _grip);
     // Kept whole on the screen: a button carried off its edge is a button
     // nobody can reach to bring back.
     final next = Offset(

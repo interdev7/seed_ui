@@ -448,6 +448,7 @@ class DatePicker extends StatefulWidget {
     this.showToday,
     this.allowClear,
     this.disabled,
+    this.readOnly = false,
     this.size,
     this.variant,
     this.placeholder,
@@ -502,6 +503,14 @@ class DatePicker extends StatefulWidget {
 
   /// Whether the field is disabled. Follows `ConfigProvider.componentDisabled`.
   final bool? disabled;
+
+  /// Shows the value without letting anyone change it.
+  ///
+  /// Not [disabled]: the field keeps its colours, because the value is worth
+  /// reading — a form in a view that is not for editing. It does not open,
+  /// offers no cross to clear it, takes nothing typed, and a screen reader
+  /// hears it as read-only.
+  final bool readOnly;
 
   /// Which control height to use. Follows `ConfigProvider.componentSize`.
   final ControlSize? size;
@@ -694,6 +703,10 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   bool get _showToday => widget.showToday ?? _defaults?.showToday ?? true;
 
   bool get _enabled => !_disabled;
+
+  /// Whether a person may change the value. A read-only picker is enabled —
+  /// it keeps its colours — and only deaf to people.
+  bool get _takesHand => _enabled && !widget.readOnly;
 
   /// The format the picker actually reads and writes.
   ///
@@ -899,7 +912,7 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   }
 
   void _openPanel() {
-    if (_open || !_enabled) return;
+    if (_open || !_takesHand) return;
     // Started from the value rather than from nothing: a picker reopened on
     // a date it already holds should mark it, and the clock beside it.
     if (widget.showTime) _draft = _value;
@@ -1107,6 +1120,7 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   }
 
   void _clear() {
+    if (!_takesHand) return;
     _text.clear();
     _commit(null);
     widget.onClear?.call();
@@ -1254,7 +1268,7 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
     // So the slot holds one target either way and decides what to do when it
     // is tapped, by which time `_hovered` is set whether or not a frame has
     // been painted.
-    final canClear = _allowClear && _enabled && _value != null;
+    final canClear = _allowClear && _takesHand && _value != null;
     // Open as well as hovered, as a Select's mark is: the panel covers the
     // pointer's way back to the field on a touchscreen, where there is no
     // hovering to be done.
@@ -1305,8 +1319,12 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
     final field = EditableText(
       controller: _text,
       focusNode: _focus,
-      readOnly: widget.inputReadOnly || !_enabled,
-      showCursor: !widget.inputReadOnly && _enabled,
+      readOnly: widget.inputReadOnly || !_takesHand,
+      // A date or a time is not prose: a keyboard's corrections and
+      // suggestions only get in the way of the figures being typed.
+      autocorrect: false,
+      enableSuggestions: false,
+      showCursor: !widget.inputReadOnly && _takesHand,
       style: textStyle,
       strutStyle: StrutStyle.fromTextStyle(textStyle, forceStrutHeight: true),
       cursorColor: t.primary.base,
@@ -1327,13 +1345,16 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
     final named = _size.explicitWidth;
 
     final control = MouseRegion(
-      cursor:
-          _enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+      cursor: _takesHand
+          ? SystemMouseCursors.click
+          : _enabled
+              ? SystemMouseCursors.basic
+              : SystemMouseCursors.forbidden,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: _enabled ? () => _requestOpen(!_open) : null,
+        onTap: _takesHand ? () => _requestOpen(!_open) : null,
         child: AnimatedContainer(
           duration: t.motionDurationMid,
           curve: t.motionEaseInOut,
@@ -1452,6 +1473,7 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
     return Semantics(
       button: true,
       enabled: _enabled,
+      readOnly: widget.readOnly,
       // The placeholder is what the empty field reads, so it names the picker
       // too — but it is gone once a date is chosen, and a caller who never set
       // one leaves the field nameless. The word the field itself falls back to

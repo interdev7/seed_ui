@@ -187,9 +187,15 @@ class _SpinDemoState extends State<SpinDemo> {
                       position: SpinPosition.topLeft,
                       tip: const Text('Top Left'),
                       child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            width: 1,
+                            color: token.primary.base,
+                          ),
+                        ),
                         width: size,
                         height: 140,
-                        color: token.colorBgContainer,
+
                         padding: const EdgeInsets.all(8),
                         child: const Text('Content'),
                       ),
@@ -200,9 +206,15 @@ class _SpinDemoState extends State<SpinDemo> {
                       position: SpinPosition.topCenter,
                       tip: const Text('Top Center'),
                       child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            width: 1,
+                            color: token.primary.base,
+                          ),
+                        ),
                         width: size,
                         height: 140,
-                        color: token.colorBgContainer,
+
                         padding: const EdgeInsets.all(8),
                         child: const Text('Content'),
                       ),
@@ -213,9 +225,15 @@ class _SpinDemoState extends State<SpinDemo> {
                       position: SpinPosition.topRight,
                       tip: const Text('Top Right'),
                       child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            width: 1,
+                            color: token.primary.base,
+                          ),
+                        ),
                         width: size,
                         height: 140,
-                        color: token.colorBgContainer,
+
                         padding: const EdgeInsets.all(8),
                         child: const Text('Content'),
                       ),
@@ -226,9 +244,15 @@ class _SpinDemoState extends State<SpinDemo> {
                       position: SpinPosition.centerRight,
                       tip: const Text('Center Right'),
                       child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            width: 1,
+                            color: token.primary.base,
+                          ),
+                        ),
                         width: size,
                         height: 140,
-                        color: token.colorBgContainer,
+
                         padding: const EdgeInsets.all(8),
                         child: const Text('Content'),
                       ),
@@ -239,9 +263,15 @@ class _SpinDemoState extends State<SpinDemo> {
                       position: SpinPosition.bottomRight,
                       tip: const Text('Bottom Right'),
                       child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            width: 1,
+                            color: token.primary.base,
+                          ),
+                        ),
                         width: size,
                         height: 140,
-                        color: token.colorBgContainer,
+
                         padding: const EdgeInsets.all(8),
                         child: const Text('Content'),
                       ),
@@ -252,9 +282,15 @@ class _SpinDemoState extends State<SpinDemo> {
                       position: SpinPosition.bottomCenter,
                       tip: const Text('Bottom Center'),
                       child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            width: 1,
+                            color: token.primary.base,
+                          ),
+                        ),
                         width: size,
                         height: 140,
-                        color: token.colorBgContainer,
+
                         padding: const EdgeInsets.all(8),
                         child: const Text('Content'),
                       ),
@@ -265,9 +301,15 @@ class _SpinDemoState extends State<SpinDemo> {
                       position: SpinPosition.bottomLeft,
                       tip: const Text('Bottom Left'),
                       child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            width: 1,
+                            color: token.primary.base,
+                          ),
+                        ),
                         width: size,
                         height: 140,
-                        color: token.colorBgContainer,
+
                         padding: const EdgeInsets.all(8),
                         child: const Text('Content'),
                       ),
@@ -278,9 +320,15 @@ class _SpinDemoState extends State<SpinDemo> {
                       position: SpinPosition.centerLeft,
                       tip: const Text('Center Left'),
                       child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            width: 1,
+                            color: token.primary.base,
+                          ),
+                        ),
                         width: size,
                         height: 140,
-                        color: token.colorBgContainer,
+
                         padding: const EdgeInsets.all(8),
                         child: const Text('Content'),
                       ),

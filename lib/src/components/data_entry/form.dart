@@ -1,21 +1,25 @@
 import 'dart:async';
-import 'package:flutter/services.dart' show TextCapitalization;
 
+import 'package:flutter/services.dart' show TextCapitalization, TextInputType;
 import 'package:flutter/widgets.dart' hide Form, FormField, RadioGroup;
 
 import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../data_display/segmented.dart' show Segmented, SegmentedOption;
 import '../data_entry/checkbox.dart' show Checkbox;
 import '../data_entry/date_picker.dart' show DatePicker;
+import '../data_entry/date_range_picker.dart' show DateRange, DateRangePicker;
 import '../data_entry/input.dart' show Input, InputStatus, PasswordConfig;
 import '../data_entry/input_number.dart' show InputNumber;
+import '../data_entry/multi_date_picker.dart' show MultiDatePicker;
 import '../data_entry/radio.dart' show RadioGroup, RadioOption, RadioOptionType;
 import '../data_entry/select.dart'
     show Select, SelectMode, SelectOption, SelectStatus;
 import '../data_entry/slider.dart' show Slider, SliderMark;
 import '../data_entry/switch.dart' show Switch;
 import '../data_entry/time_picker.dart' show TimePicker;
+import '../data_entry/upload.dart' show Upload, UploadItem, UploadVariant;
 
 /// Where a field's label stands in relation to what it labels.
 enum FormLayout {
@@ -270,6 +274,7 @@ class FormFieldHandle<T> {
     required this.didChange,
     required this.validate,
     required this.disabled,
+    this.readOnly = false,
     this.semanticsLabel,
   });
 
@@ -284,6 +289,10 @@ class FormFieldHandle<T> {
 
   /// Whether the field is barred from being changed.
   final bool disabled;
+
+  /// Whether the field shows its value without letting anyone change it.
+  /// Hand it to the control's own `readOnly`.
+  final bool readOnly;
 
   /// What a screen reader should call the control, taken from the field's
   /// own [FormItem.label] where that label is words.
@@ -659,6 +668,7 @@ class Form extends StatefulWidget {
     this.colon,
     this.requiredMark,
     this.disabled,
+    this.readOnly,
     this.trigger,
     this.unfocusOnSubmit = true,
     this.initialValues,
@@ -721,6 +731,17 @@ class Form extends StatefulWidget {
   /// Defaults to false, or to what
   /// [FormDefaults.disabled] says.
   final bool? disabled;
+
+  /// Shows every field's value without letting anyone change it — the same
+  /// form, in a view that is not for editing.
+  ///
+  /// Not [disabled]: the fields keep their colours, because what they hold is
+  /// the point of the page. Their rules are not asked — a required field the
+  /// reader cannot fill would refuse the form for ever. A field may still say
+  /// otherwise for itself through [FormItem.readOnly].
+  ///
+  /// Defaults to false, or to what [FormDefaults.readOnly] says.
+  final bool? readOnly;
 
   /// When a field's rules are asked, unless the field says otherwise.
   ///
@@ -835,6 +856,7 @@ class _FormState extends State<Form> {
       requiredMark:
           widget.requiredMark ?? d?.requiredMark ?? FormRequiredMark.required,
       disabled: widget.disabled ?? d?.disabled ?? false,
+      readOnly: widget.readOnly ?? d?.readOnly ?? false,
       trigger: widget.trigger ?? d?.trigger ?? FormTrigger.change,
       onValuesChanged: widget.onValuesChanged,
       style: r,
@@ -867,6 +889,7 @@ class _FormScope extends InheritedWidget {
     required this.colon,
     required this.requiredMark,
     required this.disabled,
+    required this.readOnly,
     required this.trigger,
     required this.onValuesChanged,
     required this.style,
@@ -880,6 +903,7 @@ class _FormScope extends InheritedWidget {
   final bool colon;
   final FormRequiredMark requiredMark;
   final bool disabled;
+  final bool readOnly;
   final FormTrigger trigger;
   final void Function(String name, Map<String, Object?> values)?
       onValuesChanged;
@@ -894,6 +918,7 @@ class _FormScope extends InheritedWidget {
       colon != old.colon ||
       requiredMark != old.requiredMark ||
       disabled != old.disabled ||
+      readOnly != old.readOnly ||
       trigger != old.trigger ||
       style != old.style;
 }
@@ -1241,6 +1266,7 @@ class FormItem<T> extends StatefulWidget {
     this.required,
     this.trigger,
     this.disabled,
+    this.readOnly,
     this.dependsOn = const [],
   });
 
@@ -1300,6 +1326,10 @@ class FormItem<T> extends StatefulWidget {
   /// Bars this field alone.
   final bool? disabled;
 
+  /// Shows this field's value without letting anyone change it. Null takes
+  /// what the form says.
+  final bool? readOnly;
+
   /// A field of words, drawn with [Input].
   ///
   /// A static method rather than a named constructor: a constructor of
@@ -1318,12 +1348,14 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
     String? placeholder,
     PasswordConfig? password,
     Widget? prefix,
     Widget? suffix,
     int? maxLines,
     ValueChanged<String>? onSubmitted,
+    TextInputType? keyboardType,
     TextCapitalization? textCapitalization,
     bool? autocorrect,
     bool? enableSuggestions,
@@ -1342,10 +1374,12 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => Input(
           value: field.value ?? '',
           status: field.status,
           disabled: field.disabled,
+          readOnly: field.readOnly,
           semanticsLabel: field.semanticsLabel,
           placeholder: placeholder,
           password: password,
@@ -1353,6 +1387,7 @@ class FormItem<T> extends StatefulWidget {
           suffix: suffix,
           maxLines: maxLines,
           onSubmitted: onSubmitted,
+          keyboardType: keyboardType,
           textCapitalization: textCapitalization,
           autocorrect: autocorrect,
           enableSuggestions: enableSuggestions,
@@ -1375,6 +1410,7 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
     num? min,
     num? max,
     num step = 1,
@@ -1393,10 +1429,12 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => InputNumber(
           value: field.value,
           status: field.status,
           disabled: field.disabled,
+          readOnly: field.readOnly,
           min: min,
           max: max,
           step: step,
@@ -1420,6 +1458,7 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
   }) =>
       FormItem<bool>(
         key: key,
@@ -1433,11 +1472,13 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => Align(
           alignment: AlignmentDirectional.centerStart,
           child: Checkbox(
             checked: field.value ?? false,
             disabled: field.disabled,
+            readOnly: field.readOnly,
             label: title,
             onChanged: field.didChange,
           ),
@@ -1457,6 +1498,7 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
     Widget? checkedChild,
     Widget? uncheckedChild,
   }) =>
@@ -1472,11 +1514,13 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => Align(
           alignment: AlignmentDirectional.centerStart,
           child: Switch(
             value: field.value ?? false,
             disabled: field.disabled,
+            readOnly: field.readOnly,
             checkedChild: checkedChild,
             uncheckedChild: uncheckedChild,
             onChanged: field.didChange,
@@ -1497,6 +1541,7 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
     DateTime? minDate,
     DateTime? maxDate,
     String format = 'yyyy-MM-dd',
@@ -1514,11 +1559,13 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => DatePicker(
           semanticsLabel: field.semanticsLabel,
           value: field.value,
           status: field.status,
           disabled: field.disabled,
+          readOnly: field.readOnly,
           minDate: minDate,
           maxDate: maxDate,
           format: format,
@@ -1540,6 +1587,7 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
     String format = 'HH:mm:ss',
     String? placeholder,
   }) =>
@@ -1555,11 +1603,13 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => TimePicker(
           semanticsLabel: field.semanticsLabel,
           value: field.value,
           status: field.status,
           disabled: field.disabled,
+          readOnly: field.readOnly,
           format: format,
           placeholder: placeholder,
           onChanged: field.didChange,
@@ -1584,6 +1634,7 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
     String? placeholder,
     bool showSearch = false,
     bool allowClear = false,
@@ -1600,11 +1651,13 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => Select<V>(
           semanticsLabel: field.semanticsLabel,
           value: [if (field.value != null) field.value as V],
           status: field.status == null ? null : SelectStatus.error,
           disabled: field.disabled,
+          readOnly: field.readOnly,
           options: options,
           placeholder: placeholder,
           showSearch: showSearch,
@@ -1627,6 +1680,7 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
     String? placeholder,
     bool showSearch = false,
     bool allowClear = false,
@@ -1643,11 +1697,13 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => Select<V>(
           semanticsLabel: field.semanticsLabel,
           value: field.value ?? const [],
           status: field.status == null ? null : SelectStatus.error,
           disabled: field.disabled,
+          readOnly: field.readOnly,
           mode: SelectMode.multiple,
           options: options,
           placeholder: placeholder,
@@ -1671,6 +1727,7 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
     Axis? direction,
     RadioOptionType? optionType,
   }) =>
@@ -1686,11 +1743,13 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => Align(
           alignment: AlignmentDirectional.centerStart,
           child: RadioGroup<V>(
             value: field.value,
             disabled: field.disabled,
+            readOnly: field.readOnly,
             options: options,
             direction: direction,
             optionType: optionType,
@@ -1712,6 +1771,7 @@ class FormItem<T> extends StatefulWidget {
     FormTrigger? trigger,
     List<String> dependsOn = const [],
     bool? disabled,
+    bool? readOnly,
     double min = 0,
     double max = 100,
     double step = 1,
@@ -1729,15 +1789,215 @@ class FormItem<T> extends StatefulWidget {
         trigger: trigger,
         dependsOn: dependsOn,
         disabled: disabled,
+        readOnly: readOnly,
         builder: (field) => Slider(
           value: field.value ?? min,
           disabled: field.disabled,
+          readOnly: field.readOnly,
           min: min,
           max: max,
           step: step,
           marks: marks,
           onChanged: field.didChange,
         ),
+      );
+
+  /// A field holding a span of days, drawn with [DateRangePicker].
+  static FormItem<DateRange> dateRange({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    DateRange? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    List<String> dependsOn = const [],
+    bool? disabled,
+    bool? readOnly,
+    DateTime? minDate,
+    DateTime? maxDate,
+    String format = 'yyyy-MM-dd',
+  }) =>
+      FormItem<DateRange>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        dependsOn: dependsOn,
+        disabled: disabled,
+        readOnly: readOnly,
+        builder: (field) => DateRangePicker(
+          semanticsLabel: field.semanticsLabel,
+          value: field.value,
+          status: field.status,
+          disabled: field.disabled,
+          readOnly: field.readOnly,
+          minDate: minDate,
+          maxDate: maxDate,
+          format: format,
+          onChanged: field.didChange,
+        ),
+      );
+
+  /// A field holding any number of separate days, drawn with
+  /// [MultiDatePicker].
+  ///
+  /// An empty list is no answer, so a `FormRule.required()` asks for one day
+  /// at least.
+  static FormItem<List<DateTime>> multiDate({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    List<DateTime>? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    List<String> dependsOn = const [],
+    bool? disabled,
+    bool? readOnly,
+    DateTime? minDate,
+    DateTime? maxDate,
+    String format = 'yyyy-MM-dd',
+    String? placeholder,
+  }) =>
+      FormItem<List<DateTime>>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        dependsOn: dependsOn,
+        disabled: disabled,
+        readOnly: readOnly,
+        builder: (field) => MultiDatePicker(
+          semanticsLabel: field.semanticsLabel,
+          values: field.value ?? const [],
+          status: field.status,
+          disabled: field.disabled,
+          readOnly: field.readOnly,
+          minDate: minDate,
+          maxDate: maxDate,
+          format: format,
+          placeholder: placeholder,
+          onChanged: field.didChange,
+        ),
+      );
+
+  /// A field holding one of a few choices laid side by side, drawn with
+  /// [Segmented].
+  ///
+  /// A segmented control always shows one choice taken, so the field has to
+  /// start with one: [initialValue] is required here where it is optional
+  /// elsewhere.
+  static FormItem<V> segmented<V>({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    required V initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    List<String> dependsOn = const [],
+    bool? disabled,
+    bool? readOnly,
+    required List<SegmentedOption<V>> options,
+    bool block = false,
+  }) =>
+      FormItem<V>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        dependsOn: dependsOn,
+        disabled: disabled,
+        readOnly: readOnly,
+        builder: (field) => Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Segmented<V>(
+            value: field.value ?? initialValue,
+            options: options,
+            block: block,
+            disabled: field.disabled,
+            readOnly: field.readOnly,
+            onChanged: field.didChange,
+          ),
+        ),
+      );
+
+  /// A field holding a list of files, drawn with [Upload].
+  ///
+  /// [pick] is the app's: it opens whatever chooser the app uses and hands
+  /// back the files chosen, which the field adds to what it already holds. A
+  /// file's remove takes it out of the field. Uploading them anywhere is the
+  /// app's business too, after the form is finished.
+  static FormItem<List<UploadItem<T>>> upload<T>({
+    Key? key,
+    required String name,
+    Widget? label,
+    List<FormRule> rules = const [],
+    List<UploadItem<T>>? initialValue,
+    String? help,
+    Widget? extra,
+    bool? required,
+    FormTrigger? trigger,
+    List<String> dependsOn = const [],
+    bool? disabled,
+    bool? readOnly,
+    required Future<List<UploadItem<T>>> Function() pick,
+    UploadVariant? variant,
+    int? maxCount,
+    Widget? hint,
+  }) =>
+      FormItem<List<UploadItem<T>>>(
+        key: key,
+        name: name,
+        label: label,
+        rules: rules,
+        initialValue: initialValue,
+        help: help,
+        extra: extra,
+        required: required,
+        trigger: trigger,
+        dependsOn: dependsOn,
+        disabled: disabled,
+        readOnly: readOnly,
+        builder: (field) {
+          final held = field.value ?? const [];
+          return Upload<T>(
+            items: held,
+            variant: variant,
+            maxCount: maxCount,
+            hint: hint,
+            disabled: field.disabled,
+            readOnly: field.readOnly,
+            onPick: () async {
+              final picked = await pick();
+              if (picked.isEmpty) return;
+              field.didChange([...held, ...picked]);
+            },
+            onRemove: (item) => field.didChange([...held]..remove(item)),
+          );
+        },
       );
 
   @override
@@ -1807,6 +2067,8 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
 
   bool get _disabled => widget.disabled ?? _scope!.disabled;
 
+  bool get _readOnly => widget.readOnly ?? _scope!.readOnly;
+
   bool get _demanded =>
       widget.required ?? widget.rules.any((rule) => rule._demands);
 
@@ -1824,7 +2086,9 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
     // A barred field is not being asked, so its rules have no standing: a
     // required one the reader cannot type into would refuse the form for
     // ever, pointing at a box they are not allowed to touch.
-    if (_disabled) {
+    // A read-only one no more so: what nobody may change, nobody may be told
+    // to fix.
+    if (_disabled || _readOnly) {
       _scope!.controller._report(widget.name);
       if (mounted && (_error != null || _warning != null)) {
         setState(() {
@@ -1911,6 +2175,7 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
               error: widget.help == null ? _error : null,
               warning: _warning,
               disabled: _disabled,
+              readOnly: _readOnly,
               didChange: _didChange,
               validate: validate,
               // Only where the label is words. A label built of widgets —
@@ -2112,6 +2377,7 @@ class FormDefaults {
     this.requiredMark,
     this.trigger,
     this.disabled,
+    this.readOnly,
   });
 
   /// How labels stand to their fields.
@@ -2138,6 +2404,9 @@ class FormDefaults {
   /// Whether every field is barred.
   final bool? disabled;
 
+  /// Whether every field shows its value without letting anyone change it.
+  final bool? readOnly;
+
   /// This one with [other]'s fields laid over it, one field at a time.
   FormDefaults merge(FormDefaults other) => FormDefaults(
         layout: other.layout ?? layout,
@@ -2148,6 +2417,7 @@ class FormDefaults {
         requiredMark: other.requiredMark ?? requiredMark,
         trigger: other.trigger ?? trigger,
         disabled: other.disabled ?? disabled,
+        readOnly: other.readOnly ?? readOnly,
       );
 }
 

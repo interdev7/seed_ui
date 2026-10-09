@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart' as m;
-import 'package:flutter/services.dart' show TextCapitalization;
+import 'package:flutter/services.dart' show TextCapitalization, TextInputType;
 import 'package:flutter/widgets.dart' hide Form;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -835,6 +835,115 @@ void main() {
       expect(e.enableIMEPersonalizedLearning, isFalse);
       expect(e.textCapitalization, TextCapitalization.characters);
       expect(e.autofillHints, [AutofillHints.email]);
+    });
+
+    testWidgets('a text field passes on the keyboard it asks for', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: FormController(),
+            child: FormItem.text(
+              name: 'email',
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ),
+        ),
+      );
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).keyboardType,
+        TextInputType.emailAddress,
+        reason: 'an e-mail field with no @ on its keyboard',
+      );
+    });
+
+    testWidgets('a range field holds a span', (tester) async {
+      final form = FormController();
+      final span = DateRange(DateTime(2026, 3, 14), DateTime(2026, 3, 20));
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            initialValues: {'stay': span},
+            child: FormItem.dateRange(name: 'stay', readOnly: true),
+          ),
+        ),
+      );
+      final picker =
+          tester.widget<DateRangePicker>(find.byType(DateRangePicker));
+      expect(picker.value, span);
+      expect(picker.readOnly, isTrue);
+    });
+
+    testWidgets('a field of several days asks for one when required', (
+      tester,
+    ) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: FormItem.multiDate(
+              name: 'days',
+              rules: const [FormRule.required()],
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(MultiDatePicker), findsOneWidget);
+      expect(await form.validate(), isFalse, reason: 'no day is no answer');
+
+      form.setValue('days', [DateTime(2026, 3, 14)]);
+      await tester.pump();
+      expect(await form.validate(), isTrue);
+    });
+
+    testWidgets('a segmented field holds the choice taken', (tester) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: FormItem.segmented<String>(
+              name: 'period',
+              initialValue: 'day',
+              options: const [
+                SegmentedOption(value: 'day', label: 'Day'),
+                SegmentedOption(value: 'week', label: 'Week'),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(form.value('period'), 'day');
+
+      await tester.tap(find.text('Week'));
+      await tester.pumpAndSettle();
+      expect(form.value('period'), 'week');
+    });
+
+    testWidgets('an upload field adds what is picked and drops what is removed',
+        (tester) async {
+      final form = FormController();
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: form,
+            child: FormItem.upload<String>(
+              name: 'files',
+              pick: () async => const [
+                UploadItem(name: 'a.pdf', status: UploadStatus.done),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Choose a file'));
+      await tester.pumpAndSettle();
+      final held = form.value('files')! as List<UploadItem<String>>;
+      expect(held.map((f) => f.name), ['a.pdf']);
     });
 
     testWidgets('a number field holds numbers', (tester) async {

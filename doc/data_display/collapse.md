@@ -87,7 +87,11 @@ Collapse(
 
 ```dart
 ConfigProvider(
-  components: const [CollapseToken(headerBg: Color(0x14EB2F96))],
+  theme: ThemeData(
+    components: const ComponentsConfig(
+      collapse: CollapseToken(headerBg: Color(0x14EB2F96)),
+    ),
+  ),
   child: MaterialApp(...),
 )
 ```

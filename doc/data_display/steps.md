@@ -461,7 +461,9 @@ Steps(
 
 // …or for every Steps in a subtree:
 ConfigProvider(
-  components: const [StepsToken(iconSize: 40)],
+  theme: ThemeData(
+    components: const ComponentsConfig(steps: StepsToken(iconSize: 40)),
+  ),
   child: MaterialApp(...),
 );
 ```

@@ -572,9 +572,15 @@ Widget _switchOf(SwitchToken? token, {SoftSize? size, bool on = true}) =>
       token: token,
     );
 
-Widget _radio(RadioToken? token, {bool checked = true}) => Radio<String>(
+Widget _radio(
+  RadioToken? token, {
+  bool checked = true,
+  ControlSize? size,
+}) =>
+    Radio<String>(
       value: 'a',
       groupValue: checked ? 'a' : 'b',
+      size: size,
       onChanged: (_) {},
       token: token,
       child: const Text('Aaa'),
@@ -688,8 +694,14 @@ Widget _tag(TagToken? token, {TagVariant? variant}) => Tag(
       child: const Text('A tag'),
     );
 
-Widget _checkbox(CheckboxToken? token, {bool checked = true}) => Checkbox(
+Widget _checkbox(
+  CheckboxToken? token, {
+  bool checked = true,
+  ControlSize? size,
+}) =>
+    Checkbox(
       checked: checked,
+      size: size,
       onChanged: (_) {},
       label: const Text('Ticked'),
       token: token,
@@ -2334,6 +2346,48 @@ final _probes = <_Probe>[
     ),
   ),
   _Probe(
+    'RadioToken.radioSizeSM',
+    (c) => _radio(
+      c ? const RadioToken(radioSizeSM: 24) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'RadioToken.radioSizeLG',
+    (c) => _radio(
+      c ? const RadioToken(radioSizeLG: 30) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'RadioToken.dotSizeSM',
+    (c) => _radio(
+      c ? const RadioToken(dotSizeSM: 2) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'RadioToken.dotSizeLG',
+    (c) => _radio(
+      c ? const RadioToken(dotSizeLG: 4) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'RadioToken.fontSizeSM',
+    (c) => _radio(
+      c ? const RadioToken(fontSizeSM: 22) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'RadioToken.fontSizeLG',
+    (c) => _radio(
+      c ? const RadioToken(fontSizeLG: 26) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
     'RadioToken.radioSize',
     (c) => _radio(c ? const RadioToken(radioSize: 32) : null),
   ),
@@ -2642,6 +2696,34 @@ final _probes = <_Probe>[
   _Probe(
     'TagToken.borderRadius',
     (c) => _tag(c ? const TagToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'CheckboxToken.boxSizeSM',
+    (c) => _checkbox(
+      c ? const CheckboxToken(boxSizeSM: 24) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'CheckboxToken.boxSizeLG',
+    (c) => _checkbox(
+      c ? const CheckboxToken(boxSizeLG: 30) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'CheckboxToken.fontSizeSM',
+    (c) => _checkbox(
+      c ? const CheckboxToken(fontSizeSM: 22) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'CheckboxToken.fontSizeLG',
+    (c) => _checkbox(
+      c ? const CheckboxToken(fontSizeLG: 26) : null,
+      size: SoftSize.large,
+    ),
   ),
   _Probe(
     'CheckboxToken.boxSize',

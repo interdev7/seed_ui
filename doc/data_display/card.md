@@ -94,7 +94,11 @@ Card(
 
 ```dart
 ConfigProvider(
-  components: const [CardToken(headerBg: Color(0xFFF0F5FF))],
+  theme: ThemeData(
+    components: const ComponentsConfig(
+      card: CardToken(headerBg: Color(0xFFF0F5FF)),
+    ),
+  ),
   child: MaterialApp(...),
 )
 ```

@@ -115,7 +115,9 @@ Tag(
 
 // …or for every Tag in a subtree:
 ConfigProvider(
-  components: const [TagToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(tag: TagToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../l10n/seed_localizations.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 
 /// The state a standalone [Badge] reports.
 ///
@@ -102,6 +103,10 @@ class BadgeToken {
   final Color? bg;
 
   /// Colour of the digits (`textColor`).
+  ///
+  /// Left unset, whichever of a dark and a light ink reads on the fill: white
+  /// on the kit's red, dark on a yellow somebody named — white there was
+  /// 1.4:1, a digit nobody could read.
   final Color? textColor;
 
   /// The ring separating the badge from what it sits on (`ringColor`).
@@ -114,7 +119,7 @@ class BadgeToken {
         statusSize: statusSize ?? 6,
         fontSize: fontSize ?? t.fontSizeSM,
         bg: bg ?? t.error.base,
-        textColor: textColor ?? const Color(0xFFFFFFFF),
+        textColor: textColor,
         ringColor: ringColor ?? t.colorBgContainer,
       );
 
@@ -150,7 +155,7 @@ class _ResolvedBadgeToken {
   final double statusSize;
   final double fontSize;
   final Color bg;
-  final Color textColor;
+  final Color? textColor;
   final Color ringColor;
 }
 
@@ -371,7 +376,7 @@ class Badge extends StatelessWidget {
     final style = TextStyle(
       fontFamily: t.fontFamily,
       fontFamilyFallback: t.fontFamilyFallback,
-      color: r.textColor,
+      color: r.textColor ?? inkOn(fill),
       fontSize: r.fontSize,
       fontWeight: t.fontWeight,
       // No forced line height. Latin figures sit squarely in a box of exactly
@@ -523,13 +528,15 @@ class RibbonToken {
   final Color? bg;
 
   /// Colour of the text on the band (`textColor`).
+  ///
+  /// Left unset, whichever of a dark and a light ink reads on the band.
   final Color? textColor;
 
   _ResolvedRibbonToken _resolve(Token t) => _ResolvedRibbonToken(
         height: height ?? 22,
         fontSize: fontSize ?? t.fontSize,
         bg: bg ?? t.primary.base,
-        textColor: textColor ?? const Color(0xFFFFFFFF),
+        textColor: textColor,
       );
 
   /// This one with [other]'s fields laid over it, one field at a time.
@@ -553,7 +560,7 @@ class _ResolvedRibbonToken {
   final double height;
   final double fontSize;
   final Color bg;
-  final Color textColor;
+  final Color? textColor;
 }
 
 /// Defaults for every [Ribbon] under a `ConfigProvider`.
@@ -645,7 +652,11 @@ class Ribbon extends StatelessWidget {
         ),
       ),
       child: DefaultTextStyle.merge(
-        style: TextStyle(color: r.textColor, fontSize: r.fontSize, height: 1),
+        style: TextStyle(
+          color: r.textColor ?? inkOn(fill),
+          fontSize: r.fontSize,
+          height: 1,
+        ),
         child: text ?? const SizedBox.shrink(),
       ),
     );

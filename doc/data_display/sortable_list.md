@@ -63,7 +63,9 @@ SortableList(
 
 // …or for every SortableList in a subtree:
 ConfigProvider(
-  components: const [SortableListToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(sortableList: SortableListToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

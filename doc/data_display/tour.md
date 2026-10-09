@@ -324,7 +324,9 @@ Tour(steps: steps, token: const TourToken(width: 360));
 
 // …or for every Tour in a subtree:
 ConfigProvider(
-  components: const [TourToken(width: 360)],
+  theme: ThemeData(
+    components: const ComponentsConfig(tour: TourToken(width: 360)),
+  ),
   child: MaterialApp(...),
 );
 ```

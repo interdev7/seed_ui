@@ -356,6 +356,7 @@ class Upload<T> extends StatelessWidget {
     this.itemBuilder,
     this.dragging = false,
     this.disabled,
+    this.readOnly = false,
     this.maxCount,
     this.trigger,
     this.label,
@@ -421,6 +422,14 @@ class Upload<T> extends StatelessWidget {
   /// Greys the trigger out and stops it answering.
   final bool? disabled;
 
+  /// Shows the files without letting anyone add to them or take them away.
+  ///
+  /// The trigger goes, and so do each file's remove and retry; preview and
+  /// download stay, because looking at a file is not changing the list — a
+  /// form in a view that is not for editing still lets the reader open what
+  /// was attached.
+  final bool readOnly;
+
   /// Whether this control is disabled: its own word, else the one set for
   /// the subtree, else no.
   bool _disabledIn(BuildContext context) =>
@@ -481,7 +490,9 @@ class Upload<T> extends StatelessWidget {
 
   /// Whether the trigger has room left to accept more files.
   bool get _accepting =>
-      onPick != null && (maxCount == null || items.length < maxCount!);
+      !readOnly &&
+      onPick != null &&
+      (maxCount == null || items.length < maxCount!);
 
   @override
   Widget build(BuildContext context) {
@@ -500,10 +511,11 @@ class Upload<T> extends StatelessWidget {
   /// The handlers for [item], with the ones it cannot use left null.
   UploadActions _actionsFor(BuildContext context, UploadItem<T> item) =>
       UploadActions(
-        remove: _showRemoveIn(context) && onRemove != null
+        remove: !readOnly && _showRemoveIn(context) && onRemove != null
             ? () => onRemove!(item)
             : null,
-        retry: _showRetryIn(context) &&
+        retry: !readOnly &&
+                _showRetryIn(context) &&
                 onRetry != null &&
                 item.status == UploadStatus.error
             ? () => onRetry!(item)
@@ -771,7 +783,11 @@ class _DropzoneState extends State<_Dropzone> {
                 decoration: TextDecoration.none,
               ),
               child: widget.label ??
-                  Text(widget.compact ? 'Upload' : 'Choose a file'),
+                  Text(
+                    widget.compact
+                        ? context.seedLocale.upload
+                        : context.seedLocale.chooseFile,
+                  ),
             ),
             if (!widget.compact) ...[
               if (widget.hint != null) ...[

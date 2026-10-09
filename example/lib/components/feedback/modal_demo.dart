@@ -88,7 +88,7 @@ class ModalDemo extends StatelessWidget {
         // The same dialog twice, so the two placements can be compared: a
         // block that wants the whole width shows what the column beside it
         // costs.
-        for (final placement in ModalClosePlacement.values)
+        for (final placement in ClosePlacement.values)
           Button(
             onPressed: () => Modal.open(
               ModalConfig(

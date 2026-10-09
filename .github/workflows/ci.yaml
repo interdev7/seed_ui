@@ -92,7 +92,9 @@ jobs:
 
       - name: Analyze
         working-directory: example
-        run: flutter analyze
+        # As strict as the package: an info let through here is one the
+        # package's own check would have stopped.
+        run: flutter analyze --fatal-infos
 
       - name: Test
         working-directory: example

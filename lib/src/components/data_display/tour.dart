@@ -1070,10 +1070,18 @@ class _TourMask extends StatelessWidget {
 
     // Everything outside the hole absorbs taps and dismisses the tour; the
     // hole itself is left alone, so the target underneath still answers.
-    final barrier = GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    //
+    // A screen reader is told what a tap on it does, as a modal's mask tells
+    // it — and told nothing where it does nothing.
+    final barrier = Semantics(
+      label: onTapOutside == null ? null : context.seedLocale.close,
       onTap: onTapOutside,
-      child: IgnorePointer(child: dimming),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        onTap: onTapOutside,
+        child: IgnorePointer(child: dimming),
+      ),
     );
 
     if (hole == null || blockTarget) return barrier;
@@ -1088,8 +1096,13 @@ class _TourMask extends StatelessWidget {
   }
 
   Iterable<Widget> _strips(Rect r) sync* {
+    // For the pointer only. Four nodes saying "close" round the target would
+    // be four of one thing to a reader, and one node over the whole screen
+    // would stand on the very target the step is showing. The panel's own
+    // cross, which is named, is the reader's way out.
     Widget strip() => GestureDetector(
           behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
           onTap: onTapOutside,
         );
     yield Positioned(left: 0, top: 0, right: 0, height: r.top, child: strip());
@@ -1839,6 +1852,7 @@ class _CloseButtonState extends State<_CloseButton> {
     final t = context.softToken;
     return Pressable(
       onPressed: widget.onPressed,
+      semanticsLabel: context.seedLocale.close,
       radius: widget.size,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -1846,6 +1860,8 @@ class _CloseButtonState extends State<_CloseButton> {
         onExit: (_) => setState(() => _hovered = false),
         child: GestureDetector(
           onTap: widget.onPressed,
+          // [Pressable] announces the press; this only takes the pointer.
+          excludeFromSemantics: true,
           behavior: HitTestBehavior.opaque,
           child: AnimatedContainer(
             duration: t.motionDurationMid,

@@ -45,11 +45,13 @@ Re-selecting the current value does nothing (no `onChanged` fires).
 
 ## Custom labels
 
-An option's label can be any widget via `child`, replacing the plain `label`
-string:
+An option's `label` is a widget, so it can be anything — not only words:
 
 ```dart
-RadioOption(value: 'a', child: Row(children: [Icon(Icons.star), Text('Pro')]))
+RadioOption(
+  value: 'a',
+  label: Row(children: [Icon(Icons.star), Text('Pro')]),
+)
 ```
 
 ## Button style
@@ -88,6 +90,25 @@ RadioGroup<String>(
 )
 ```
 
+## Sizes
+
+`size` means the same thing however a radio is drawn: the dot and its words,
+or a button's height. A dot is 14, 16 or 20 pixels across at the theme's
+small, standard and large type:
+
+```dart
+Radio<String>(value: 'a', groupValue: _v, size: SoftSize.small, child: const Text('A'))
+RadioGroup<String>(size: SoftSize.large, value: _v, options: options)
+```
+
+A group used to pass its `size` to buttons alone, and a group of dots took no
+notice; now both take it. Left unset, a radio takes `RadioDefaults.size`, a
+group `RadioGroupDefaults.size`, and both then the subtree's
+`ConfigProvider.componentSize`. How many pixels each preset is lives in the
+token: `radioSize`, `radioSizeSM`, `radioSizeLG`, the checked dot's
+`dotSize`, `dotSizeSM`, `dotSizeLG`, and `fontSize`, `fontSizeSM`,
+`fontSizeLG`.
+
 ## Standalone
 
 For a one-off outside a group, use `Radio<T>` directly, driving it with a
@@ -119,6 +140,17 @@ focused too, and a ring around that is noise.
 
 The halo sits on the dot, not on the words beside it.
 
+## Read-only
+
+`readOnly` shows which option is chosen without letting anyone choose another, dots and buttons alike: a tap, a key or a screen reader's double-tap does nothing. `Radio` and `RadioGroup` both take it.
+
+```dart
+RadioGroup<String>(value: _plan, readOnly: true, options: plans)
+Radio<String>(value: 'pro', groupValue: _plan, readOnly: true, child: const Text('Pro'))
+```
+
+Unlike `disabled` it keeps its colours, because the value is worth reading; unlike a null `onChanged` it is told apart for a screen reader, which hears it as read-only.
+
 ## Design tokens
 
 `RadioToken` overrides this component's own tokens. Every field is an override; an
@@ -132,7 +164,9 @@ Radio(
 
 // …or for every Radio in a subtree:
 ConfigProvider(
-  components: const [RadioToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(radio: RadioToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

@@ -9,13 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`ModalConfig.closePlacement`.** The close button took a column of its own
-  beside the title and the content, so the whole body was narrower than the
-  dialog all the way down — a table or an image gave up the cross's width for
-  the sake of one line at the top — and there was no way to say otherwise.
-  `ModalClosePlacement.corner` stands the cross over the corner instead: the
-  title keeps clear of it, the content below runs the full width, and the
-  cross itself does not move. `beside` stays the default.
+- **`size` on `Checkbox`, `CheckboxGroup` and `Radio`**, a `ControlSize` like
+  every other control's, scaling the box or the dot and its words together:
+  14, 16 and 20 pixels at the theme's small, standard and large type, or a
+  measurement for the side. Left unset they take their defaults and then the
+  subtree's `componentSize`, so in a small form a checkbox is small beside a
+  `Switch` that already was. `CheckboxToken` gains `boxSizeSM`, `boxSizeLG`,
+  `fontSizeSM` and `fontSizeLG`, and `RadioToken` the same for `radioSize`,
+  `dotSize` and `fontSize`; the existing fields stay the standard preset, so
+  nothing changes unasked.
+- **`readOnly` across every control a form is built from.** `Checkbox`,
+  `CheckboxGroup`, `Radio`, `RadioGroup`, `Switch`, `Segmented`, `Select`,
+  `DatePicker`, `DateRangePicker`, `MultiDatePicker`, `TimePicker` and
+  `Upload` join `Input`, `InputNumber` and the sliders. A value shown back
+  could only be `disabled`, which greys it as if it did not matter. A
+  read-only control keeps its colours, takes no tap, key or screen reader's
+  double-tap, takes no focus, and is announced as read-only. A select or a
+  picker does not open and offers no cross; an upload keeps preview and
+  download and drops its trigger, remove and retry.
+- **`Form.readOnly`** — the same form, in a view that is not for editing.
+  Every field takes it through `FormFieldHandle.readOnly`, a field may say
+  otherwise with `FormItem.readOnly`, `FormDefaults.readOnly` sets it for a
+  subtree, and a read-only field's rules are not asked: a required field
+  nobody may fill would refuse the form for ever.
+- **`FormItem.dateRange`, `FormItem.multiDate`, `FormItem.segmented` and
+  `FormItem.upload`**, for the four controls a form could hold only through a
+  hand-built `FormItem`. `FormItem.upload` takes a `pick` that hands back the
+  files chosen, and a file's remove takes it out of the field.
+- **`FormItem.text` takes `keyboardType`.** An e-mail field in a form had a
+  keyboard with no `@` on it.
+
+- **`closePlacement` on `ModalConfig` and `NotificationConfig`.** The close
+  button took a column of its own beside the title and the content, so the
+  whole body was narrower than the card all the way down — a table or an
+  image gave up the cross's width for the sake of one line at the top — and
+  there was no way to say otherwise. `ClosePlacement.corner` stands the cross
+  over the corner instead: the title keeps clear of it, everything below runs
+  the full width, and the cross itself does not move. `beside` stays the
+  default.
 - **`readOnly` on all three sliders.** A slider showing a live value could
   only be `disabled`, which greys it as if the value did not matter, or given
   a null `onChanged`, which shuts out its `SliderController` as well. A
@@ -56,6 +87,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   group opened by a tap wears one — on a hover trigger it would flash as a
   pointer crossed the corner — and it never takes a tap, so dimming the page
   and closing on an outside tap stay two separate wishes.
+
+### Changed
+
+- **A `RadioGroup`'s `size` sizes its dots as well as its buttons.** It used
+  to reach the buttons alone, and a group of dots took no notice of it — one
+  word meaning two things. A group of dots that names a size is drawn at that
+  size now.
+- **An `Avatar` with no colour of its own is drawn from the theme, with
+  initials that can be read.** The fill was a fixed `#CCCCCC` — light in a
+  dark theme too — and the initials a fixed white on it, at 1.6:1 where text
+  wants 4.5. The fill is the theme's own `colorFill` on the surface now, and
+  the initials whichever of a dark and a light ink reads on it, on a
+  `backgroundColor` given to one avatar as much as on the default. Name
+  `colorTextPlaceholder` or `foregroundColor` to choose for yourself.
+
+### Fixed
+
+- **Thirty-three examples in the documentation did not compile.** Every
+  document's "for every one in a subtree" showed
+  `ConfigProvider(components: …)`, which has never existed; it is
+  `ConfigProvider(theme: ThemeData(components: ComponentsConfig(…)))`. A
+  `Modal.confirm(child:)`, a `RadioOption(child:)` and a
+  `ButtonToken(colorPrimary:)` were wrong the same way. The documentation
+  check now holds every named argument in an example to the call it is
+  passed to.
+- **A copy of a language lost half its words.** `copyWith` passed on 26 of
+  53, so `SeedLocalizations.ru.copyWith(ok: 'Ладно')` — the example the class
+  gives — made every other word English again. It passes on all of them, and
+  a test reads the source so the next word added cannot be left out.
+- **The cross on a modal, a drawer and a tour had no name**, and the one on a
+  notification, an alert and a tag stood over a second, wordless node a
+  screen reader could land on. Four of them were one cross written four
+  times; they are one now, named in the app's language, and reached from the
+  keyboard. The mask behind a modal, a drawer and a tour says what a tap on it
+  does, and the strips round a select's or a picker's field that catch the
+  tap outside are out of the semantics tree. A test opens eleven overlays and
+  holds each to the rule the page gate holds pages to.
+- **White text that could not be read.** A `Badge`'s count and a `Ribbon`'s
+  words on a `color` somebody named, and a `Progress` bar's figure on its
+  fill, were always white — 1.4:1 on a yellow. They take whichever of a dark
+  and a light ink reads on the fill; on the kit's own red and blue that is
+  white, as before.
+- **Words the kit wrote in English.** `Upload`'s "Choose a file" and
+  "Upload", a `Select`'s "Create …" and a new tab's "Tab N" are in all eleven
+  languages, and `Progress`, `Avatar`'s `+N` and the `+N` of a select and a
+  picker of several days take the language's own digits.
+- **Two gaps on the wrong side in a right-to-left layout** — between a tab
+  bar and its extras, and between the buttons of a modal's or a
+  notification's own footer, which stood off the card's edge instead.
+- **A date or a time typed into a picker, or a search typed into a select,
+  was corrected and suggested at** as if it were prose.
 
 ## 0.27.0
 

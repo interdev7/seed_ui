@@ -181,6 +181,16 @@ build the same list the pointer can.
 The field says it is a button, what it is called, whether its panel is open,
 and — as its value — the days it holds, in order.
 
+## Read-only
+
+`readOnly` shows the days without letting anyone change them: the field does not open, and neither the field nor any day offers a cross.
+
+```dart
+MultiDatePicker(values: _days, readOnly: true)
+```
+
+Unlike `disabled` it keeps its colours, because the value is worth reading; unlike a null `onChanged` it is told apart for a screen reader, which hears it as read-only.
+
 ## Design tokens
 
 The panel is `DatePicker`'s, so `DatePickerToken` carries its numbers.

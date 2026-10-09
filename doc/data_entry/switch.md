@@ -93,6 +93,16 @@ focused too, and a ring around that is noise.
 
 The halo sits on the track.
 
+## Read-only
+
+`readOnly` shows whether the switch is on without letting anyone flip it: a tap, Space or a screen reader's double-tap does nothing, and it takes no focus.
+
+```dart
+Switch(value: _wifi, readOnly: true, semanticsLabel: 'Wi-Fi')
+```
+
+Unlike `disabled` it keeps its colours, because the value is worth reading; unlike a null `onChanged` it is told apart for a screen reader, which hears it as read-only.
+
 ## Design tokens
 
 `SwitchToken` overrides this component's own tokens. Every field is an override; an
@@ -106,7 +116,9 @@ Switch(
 
 // …or for every Switch in a subtree:
 ConfigProvider(
-  components: const [SwitchToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(switchToken: SwitchToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

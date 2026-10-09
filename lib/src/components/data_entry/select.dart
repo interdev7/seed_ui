@@ -272,6 +272,7 @@ class Select<T> extends StatefulWidget {
     this.placeholder,
     this.semanticsLabel,
     this.disabled,
+    this.readOnly = false,
     this.loading = false,
     this.allowClear,
     this.showSearch,
@@ -327,6 +328,14 @@ class Select<T> extends StatefulWidget {
 
   /// Greys the field out and blocks interaction.
   final bool? disabled;
+
+  /// Shows what is chosen without letting anyone change it.
+  ///
+  /// Not [disabled]: the field keeps its colours, because the choice is worth
+  /// reading — a form in a view that is not for editing. It does not open,
+  /// offers no cross to clear it and no cross on a tag, and Backspace takes
+  /// nothing away; a screen reader hears it as read-only.
+  final bool readOnly;
 
   /// Shows a spinner in place of the arrow and a loading row in the dropdown.
   final bool loading;
@@ -453,6 +462,10 @@ class _SelectState<T> extends State<Select<T>> {
   bool get _multi => widget.mode != SelectMode.single;
   bool get _enabled => !_disabled;
 
+  /// Whether a person may change the choice. A read-only select is enabled —
+  /// it keeps its colours — and only deaf to people.
+  bool get _takesHand => _enabled && !widget.readOnly;
+
   @override
   void initState() {
     super.initState();
@@ -561,7 +574,7 @@ class _SelectState<T> extends State<Select<T>> {
   }
 
   void _openDropdown() {
-    if (_open || !_enabled) return;
+    if (_open || !_takesHand) return;
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     final anchor = box.localToGlobal(Offset.zero) & box.size;
@@ -655,12 +668,14 @@ class _SelectState<T> extends State<Select<T>> {
   }
 
   void _remove(T value) {
+    if (!_takesHand) return;
     final next = List<T>.of(_current)..remove(value);
     _emit(next);
     _refresh();
   }
 
   void _clearAll() {
+    if (!_takesHand) return;
     _emit(const []);
     _refresh();
   }
@@ -861,7 +876,7 @@ class _SelectState<T> extends State<Select<T>> {
     final searching = _searchable;
     _syncAnchor();
     final showClear =
-        _allowClear && _enabled && hasValue && (_hovered || _open);
+        _allowClear && _takesHand && hasValue && (_hovered || _open);
 
     final bordered = _variant != SelectVariant.borderless;
     final Color fill;
@@ -897,7 +912,11 @@ class _SelectState<T> extends State<Select<T>> {
     final searchField = EditableText(
       controller: _searchCtrl,
       focusNode: _focusNode,
-      readOnly: !searching || !_enabled,
+      readOnly: !searching || !_takesHand,
+      // What is typed here is a search, not prose: a keyboard's corrections
+      // and suggestions only get between the reader and what they meant.
+      autocorrect: false,
+      enableSuggestions: false,
       showCursor: searching,
       style: textStyle,
       strutStyle: StrutStyle.fromTextStyle(textStyle, forceStrutHeight: true),
@@ -1076,12 +1095,12 @@ class _SelectState<T> extends State<Select<T>> {
     final named = _size.explicitWidth;
 
     final control = MouseRegion(
-      cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      cursor: _takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: _enabled
+        onTap: _takesHand
             ? () {
                 _focusNode.requestFocus();
                 _requestOpen(!_open);
@@ -1100,6 +1119,7 @@ class _SelectState<T> extends State<Select<T>> {
     return Semantics(
       button: true,
       enabled: _enabled,
+      readOnly: widget.readOnly,
       label: widget.semanticsLabel ?? widget.placeholder,
       value: _spokenValue,
       expanded: _open,
@@ -1138,14 +1158,14 @@ class _SelectState<T> extends State<Select<T>> {
           fontSize: fontSize,
           enabled: _enabled,
           label: _displayFor(v),
-          onRemove: _enabled ? () => _remove(v) : null,
+          onRemove: _takesHand ? () => _remove(v) : null,
         );
 
     ValueTag overflowChip(int n) => ValueTag(
           token: token,
           fontSize: fontSize,
           enabled: _enabled,
-          label: Text('+ $n ...'),
+          label: Text(context.seedLocale.figures('+ $n ...')),
         );
 
     // The inline field must size to its content, not stretch to the row width —
@@ -1277,8 +1297,12 @@ class _Dropdown<T> extends StatelessWidget {
             // The create row (tags mode) sits after the filtered options.
             if (showCreate && i == options.length) {
               return _OptionRow<String>(
-                option:
-                    SelectOption(value: query, label: Text('Create "$query"')),
+                option: SelectOption(
+                  value: query,
+                  label: Text(
+                    context.seedLocale.createOption.replaceAll('{text}', query),
+                  ),
+                ),
                 selected: false,
                 highlighted: options.isEmpty,
                 token: token,

@@ -250,6 +250,16 @@ all.
 Each file's own actions — preview, download, retry, remove — are stops too, in
 the order they are drawn, and answer `Space` and `Enter`.
 
+## Read-only
+
+`readOnly` shows the files without letting anyone add to them or take them away. The trigger goes, and so do each file's remove and retry; preview and download stay, because looking at a file is not changing the list.
+
+```dart
+Upload<String>(items: _attached, readOnly: true, onPreview: open, onDownload: save)
+```
+
+Unlike `disabled` it keeps its colours, because the value is worth reading; unlike a null `onChanged` it is told apart for a screen reader, which hears it as read-only.
+
 ## Design tokens
 
 `Upload` has its own token set: `dropzoneBorderColor`,

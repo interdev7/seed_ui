@@ -237,7 +237,9 @@ Progress(
 
 // …or for every Progress in a subtree:
 ConfigProvider(
-  components: const [ProgressToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(progress: ProgressToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

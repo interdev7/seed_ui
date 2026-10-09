@@ -190,7 +190,9 @@ Popconfirm(
 
 // …or for every Popconfirm in a subtree:
 ConfigProvider(
-  components: const [PopconfirmToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(popconfirm: PopconfirmToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

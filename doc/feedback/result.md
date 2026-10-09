@@ -84,7 +84,9 @@ Result(
 
 // …or for every Result in a subtree:
 ConfigProvider(
-  components: const [ResultToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(result: ResultToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

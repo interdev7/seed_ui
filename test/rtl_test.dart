@@ -1480,4 +1480,83 @@ void main() {
       );
     });
   });
+
+  group('a gap that belongs between two things', () {
+    // Spelled `left` and `right`, each of these put its gap on the outer side
+    // once the row turned round: against the edge, and nothing between the
+    // things it was meant to separate.
+
+    for (final direction in TextDirection.values) {
+      testWidgets('the extras of a tab bar face the tabs ($direction)', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _host(
+            const SizedBox(
+              width: 500,
+              child: Tabs(
+                items: [TabItem(key: 'a', label: Text('Alpha'))],
+                tabBarExtraContent: TabBarExtra(
+                  left: SizedBox(key: Key('start'), width: 30, height: 20),
+                  right: SizedBox(key: Key('end'), width: 30, height: 20),
+                ),
+              ),
+            ),
+            direction,
+          ),
+        );
+        final bar = tester.getRect(find.byType(Tabs));
+        final start = tester.getRect(find.byKey(const Key('start')));
+        final end = tester.getRect(find.byKey(const Key('end')));
+        final rtl = direction == TextDirection.rtl;
+
+        // Each extra sits flush against its own edge of the bar.
+        expect(rtl ? start.right : start.left,
+            closeTo(rtl ? bar.right : bar.left, 0.5));
+        expect(rtl ? end.left : end.right,
+            closeTo(rtl ? bar.left : bar.right, 0.5));
+      });
+    }
+
+    for (final direction in TextDirection.values) {
+      testWidgets('a footer of its own meets the dialog\'s end ($direction)', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            builder: (context, child) =>
+                Directionality(textDirection: direction, child: child!),
+            home: const Scaffold(body: SizedBox()),
+          ),
+        );
+        // Completes when the modal closes, which this test never asks for.
+        // ignore: unawaited_futures
+        Modal.open(
+          const ModalConfig(
+            title: Text('Title'),
+            content:
+                SizedBox(key: Key('body'), width: double.infinity, height: 20),
+            closable: false,
+            footer: [
+              SizedBox(key: Key('one'), width: 40, height: 20),
+              SizedBox(key: Key('two'), width: 40, height: 20),
+            ],
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        final body = tester.getRect(find.byKey(const Key('body')));
+        final last = tester.getRect(find.byKey(const Key('two')));
+        final rtl = direction == TextDirection.rtl;
+        expect(
+          rtl ? last.left : last.right,
+          closeTo(rtl ? body.left : body.right, 0.5),
+        );
+        Modal.destroyAll();
+        await tester.pump(const Duration(milliseconds: 500));
+      });
+    }
+  });
 }

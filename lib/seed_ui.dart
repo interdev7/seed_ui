@@ -302,13 +302,7 @@ export 'src/components/feedback/message.dart'
         StatusType,
         message;
 export 'src/components/feedback/modal.dart'
-    show
-        Modal,
-        ModalApi,
-        ModalClosePlacement,
-        ModalConfig,
-        ModalHandle,
-        ModalToken;
+    show Modal, ModalApi, ModalConfig, ModalHandle, ModalToken;
 export 'src/components/feedback/notification.dart'
     show
         NotificationApi,
@@ -417,6 +411,7 @@ export 'src/theme/design_token.dart'
 export 'src/theme/material_theme.dart'
     show MaterialThemeFromThemeData, MaterialThemeFromToken;
 export 'src/theme/palette.dart' show generate, inkOn;
+export 'src/utils/close_cross.dart' show ClosePlacement;
 export 'src/utils/date_format.dart'
     show
         DateFields,

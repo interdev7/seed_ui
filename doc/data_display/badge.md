@@ -183,6 +183,11 @@ reads as shadow on every hue rather than going muddy on the darker ones.
 
 `RibbonToken`: `height`, `fontSize`, `bg`, `textColor`.
 
+Left unset, `textColor` is whichever of a dark and a light ink reads on the
+fill. On the kit's own red and blue that is white, as it always was; on a
+`color` you name — a yellow, a pale green — it is dark, because white there
+cannot be read.
+
 Override one instance:
 
 ```dart

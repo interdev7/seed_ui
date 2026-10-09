@@ -37,6 +37,7 @@ CheckboxGroupDefaults
 CheckboxOption
 CheckboxToken
 ChevronPainter
+ClosePlacement
 Collapse
 CollapseDefaults
 CollapseIconPosition
@@ -163,7 +164,6 @@ MessagePlacement
 MessageToken
 Modal
 ModalApi
-ModalClosePlacement
 ModalConfig
 ModalHandle
 ModalToken

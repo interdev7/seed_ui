@@ -95,16 +95,18 @@ Return `false` from `onOk` to keep the dialog open — useful when validation
 fails:
 
 ```dart
-Modal.confirm(
-  title: 'Rename',
-  child: TextField(controller: controller),
-  onOk: () {
-    if (controller.text.trim().isEmpty) {
-      message.error('Name cannot be empty');
-      return false;
-    }
-    return true;
-  },
+Modal.open(
+  ModalConfig(
+    title: const Text('Rename'),
+    content: Input(controller: controller),
+    onOk: () {
+      if (controller.text.trim().isEmpty) {
+        message.error('Name cannot be empty');
+        return false;
+      }
+      return true;
+    },
+  ),
 );
 ```
 
@@ -142,14 +144,17 @@ to the page when the modal closes.
 
 ## Custom content
 
-`child` replaces the body text with any widget:
+The shorthand openers take the body as a string. For any widget, open the
+modal with a `ModalConfig` and give it `content`:
 
 ```dart
-Modal.confirm(
-  title: 'Pick a colour',
-  child: Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [for (final c in colours) ColourTile(c)],
+Modal.open(
+  ModalConfig(
+    title: const Text('Pick a colour'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [for (final c in colours) ColourTile(c)],
+    ),
   ),
 );
 ```
@@ -169,7 +174,7 @@ Modal.open(
   ModalConfig(
     title: const Text('Order #1042'),
     content: OrderTable(order),
-    closePlacement: ModalClosePlacement.corner,
+    closePlacement: ClosePlacement.corner,
   ),
 );
 ```
@@ -222,7 +227,7 @@ one. `Modal.destroyAll()` clears every layer.
 | `centered` | `bool` | `false` | Centers vertically; wins over `top` |
 | `top` | `double?` | `null` | Exact offset from the top of the safe area |
 | `closable` | `bool` | `true` | Shows the close icon |
-| `closePlacement` | `ModalClosePlacement` | `beside` | Whether the cross narrows the content or stands over its corner |
+| `closePlacement` | `ClosePlacement` | `beside` | Whether the cross narrows the content or stands over its corner |
 | `maskClosable` | `bool` | `true` | Mask taps dismiss |
 | `escapeClosable` | `bool` | `true` | Escape dismisses |
 | `barrierColor` | `Color?` | `null` | Background color of the dismiss barrier |
@@ -282,7 +287,9 @@ modal.open(ModalConfig(
 
 // …or for every modal in a subtree:
 ConfigProvider(
-  components: const [ModalToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(modal: ModalToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

@@ -138,6 +138,7 @@ class MultiDatePicker extends StatefulWidget {
     this.maxTagCountResponsive = false,
     this.allowClear,
     this.disabled,
+    this.readOnly = false,
     this.size,
     this.variant,
     this.placeholder,
@@ -209,6 +210,14 @@ class MultiDatePicker extends StatefulWidget {
 
   /// Whether the field is barred.
   final bool? disabled;
+
+  /// Shows the value without letting anyone change it.
+  ///
+  /// Not [disabled]: the field keeps its colours, because the value is worth
+  /// reading — a form in a view that is not for editing. It does not open,
+  /// offers no cross to clear it, takes nothing typed, and a screen reader
+  /// hears it as read-only.
+  final bool readOnly;
 
   /// The control height, as a preset or a measurement.
   final ControlSize? size;
@@ -299,6 +308,10 @@ class _MultiDatePickerState extends State<MultiDatePicker>
       false;
 
   bool get _enabled => !_disabled;
+
+  /// Whether a person may change the value. A read-only picker is enabled —
+  /// it keeps its colours — and only deaf to people.
+  bool get _takesHand => _enabled && !widget.readOnly;
 
   ControlSize get _size =>
       widget.size ??
@@ -424,6 +437,7 @@ class _MultiDatePickerState extends State<MultiDatePicker>
   }
 
   void _clear() {
+    if (!_takesHand) return;
     _emit(const []);
     widget.onClear?.call();
   }
@@ -506,7 +520,7 @@ class _MultiDatePickerState extends State<MultiDatePicker>
   }
 
   void _openPanel() {
-    if (_open || !_enabled) return;
+    if (_open || !_takesHand) return;
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     setState(() {
@@ -659,7 +673,7 @@ class _MultiDatePickerState extends State<MultiDatePicker>
 
     final fontSize = _fontSize(t);
     final held = _value;
-    final canClear = _allowClear && _enabled && held.isNotEmpty;
+    final canClear = _allowClear && _takesHand && held.isNotEmpty;
     final showClear = canClear && (_hovered || _open);
 
     final Color fill;
@@ -706,7 +720,7 @@ class _MultiDatePickerState extends State<MultiDatePicker>
 
     Widget tagFor(DateTime day) {
       final label = _write(day, words);
-      final remove = _enabled ? () => _remove(day) : null;
+      final remove = _takesHand ? () => _remove(day) : null;
       final drawn = ValueTag(
         key: ValueKey(day),
         token: t,
@@ -734,7 +748,7 @@ class _MultiDatePickerState extends State<MultiDatePicker>
           token: t,
           fontSize: fontSize,
           enabled: _enabled,
-          label: Text('+ $rest ...'),
+          label: Text(context.seedLocale.figures('+ $rest ...')),
         );
 
     final tags = <Widget>[
@@ -747,13 +761,16 @@ class _MultiDatePickerState extends State<MultiDatePicker>
     final named_ = _size.explicitWidth;
 
     final control = MouseRegion(
-      cursor:
-          _enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+      cursor: _takesHand
+          ? SystemMouseCursors.click
+          : _enabled
+              ? SystemMouseCursors.basic
+              : SystemMouseCursors.forbidden,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: _enabled ? () => _requestOpen(!_open) : null,
+        onTap: _takesHand ? () => _requestOpen(!_open) : null,
         child: AnimatedContainer(
           duration: t.motionDurationMid,
           curve: t.motionEaseInOut,
@@ -863,6 +880,7 @@ class _MultiDatePickerState extends State<MultiDatePicker>
     return Semantics(
       button: true,
       enabled: _enabled,
+      readOnly: widget.readOnly,
       expanded: _open,
       label: widget.semanticsLabel,
       value: held.isEmpty

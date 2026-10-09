@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/close_cross.dart';
 import '../../utils/overlay_host.dart';
 
 /// Edge a drawer slides in from.
@@ -334,10 +334,19 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
         Positioned.fill(
           child: FadeTransition(
             opacity: curved,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            // A screen reader is told what a tap on the mask does — the
+            // way Flutter's own barrier says "dismiss" — and is told nothing
+            // when it does nothing: a full-screen node with a tap and no words
+            // was what a reader met everywhere outside the panel.
+            child: Semantics(
+              label: _config.maskClosable ? context.seedLocale.close : null,
               onTap: _config.maskClosable ? widget.entry.dismiss : null,
-              child: ColoredBox(color: _config.barrierColor ?? r.colorBgMask),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                excludeFromSemantics: true,
+                onTap: _config.maskClosable ? widget.entry.dismiss : null,
+                child: ColoredBox(color: _config.barrierColor ?? r.colorBgMask),
+              ),
             ),
           ),
         ),
@@ -430,56 +439,13 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
               ),
               if (_config.closable) ...[
                 SizedBox(width: token.sizeXS),
-                _DrawerCloseButton(
-                  token: token,
-                  onTap: widget.entry.dismiss,
-                ),
+                CloseCross(onPressed: widget.entry.dismiss),
               ],
             ],
           ),
         ),
         Container(height: token.lineWidth, color: token.colorSplit),
       ],
-    );
-  }
-}
-
-class _DrawerCloseButton extends StatefulWidget {
-  const _DrawerCloseButton({required this.token, required this.onTap});
-
-  final Token token;
-  final VoidCallback onTap;
-
-  @override
-  State<_DrawerCloseButton> createState() => _DrawerCloseButtonState();
-}
-
-class _DrawerCloseButtonState extends State<_DrawerCloseButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final token = widget.token;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-          width: 22,
-          height: 22,
-          decoration: BoxDecoration(
-            color: _hovered ? token.colorFillSecondary : null,
-            borderRadius: BorderRadius.circular(token.borderRadiusSM),
-          ),
-          child: CustomPaint(
-            painter: CrossPainter(
-              _hovered ? token.colorText : token.colorTextTertiary,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

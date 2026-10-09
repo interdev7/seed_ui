@@ -504,12 +504,15 @@ Or you can override them on a single instance:
 
 ```dart
 Button(
-  token: const ButtonToken(
-    colorPrimary: Colors.red, // Overrides the global theme just for this button
-  ),
+  token: const ButtonToken(borderRadius: 16), // this button only
   child: const Text('Delete'),
 )
 ```
+
+A token holds a component's numbers and colours, not the theme's seeds, so
+there is no `colorPrimary` on it. To colour one button, name its colour —
+`Button(color: ButtonColor(Colors.red), …)` — and the hover and pressed
+shades are worked out from it.
 
 ### Nesting providers
 
@@ -788,8 +791,8 @@ house-style decision rather than the state of one instance:
 | `Button` | `variant`, `color`, `shape`, `size`, `disabled` |
 | `Card` | `hoverable`, `variant`, `type`, `size` |
 | `CheckableTagGroup` | `multiple`, `disabled` |
-| `Checkbox` | `disabled` |
-| `CheckboxGroup` | `direction`, `disabled` |
+| `Checkbox` | `disabled`, `size` |
+| `CheckboxGroup` | `direction`, `disabled`, `size` |
 | `Collapse` | `accordion`, `bordered`, `ghost`, `expandIconPosition`, `collapsible`, `size` |
 | `Countdown` | `type` |
 | `DatePicker` | `variant`, `allowClear`, `showToday`, `size`, `disabled` |
@@ -797,7 +800,7 @@ house-style decision rather than the state of one instance:
 | `Dropdown` | `placement`, `arrow`, `closeOnSelect`, `trigger`, `disabled` |
 | `Empty` | `image` |
 | `FloatButton` | `shape`, `color`, `size`, `layout`, `direction`, `trigger`, `labelPlacement`, `disabled`, `dismissible`, `closeOnSelect` |
-| `Form` | `layout`, `maxWidth`, `labelWidth`, `labelAlign`, `colon`, `requiredMark`, `trigger`, `disabled` |
+| `Form` | `layout`, `maxWidth`, `labelWidth`, `labelAlign`, `colon`, `requiredMark`, `trigger`, `disabled`, `readOnly` |
 | `Input` | `allowClear`, `size`, `disabled` |
 | `InputNumber` | `controls`, `keyboard`, `mode`, `size`, `disabled` |
 | `Listy` | `sticky`, `padding`, `physics` |
@@ -807,7 +810,7 @@ house-style decision rather than the state of one instance:
 | `Popconfirm` | `placement`, `arrow`, `showCancel` |
 | `Popover` | `placement`, `trigger`, `arrow`, `animation`, `dismissOnOutsideTap` |
 | `Progress` | `showInfo`, `gapPlacement`, `size` |
-| `Radio` | `disabled` |
+| `Radio` | `disabled`, `size` |
 | `RadioGroup` | `direction`, `optionType`, `buttonStyle`, `size`, `disabled` |
 | `Ribbon` | `placement` |
 | `Segmented` | `direction`, `scrollButtons`, `size`, `disabled` |

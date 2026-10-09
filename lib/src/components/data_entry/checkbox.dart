@@ -4,6 +4,7 @@ import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
+import '../../utils/size_resolver.dart';
 
 /// Per-component design tokens for [Checkbox].
 ///
@@ -15,14 +16,20 @@ class CheckboxDefaults {
   /// Creates a [CheckboxDefaults].
   const CheckboxDefaults({
     this.disabled,
+    this.size,
   });
 
   /// Whether boxes are barred, unless one says otherwise.
   final bool? disabled;
 
+  /// How big boxes are, unless one says otherwise. Nearer than
+  /// `ConfigProvider.componentSize`.
+  final ControlSize? size;
+
   /// This one with [other]'s fields laid over it, one field at a time.
   CheckboxDefaults merge(CheckboxDefaults other) => CheckboxDefaults(
         disabled: other.disabled ?? disabled,
+        size: other.size ?? size,
       );
 }
 
@@ -35,15 +42,28 @@ class CheckboxToken {
   /// Creates a [CheckboxToken].
   const CheckboxToken({
     this.boxSize,
+    this.boxSizeSM,
+    this.boxSizeLG,
     this.borderRadius,
     this.colorPrimary,
     this.colorBorder,
     this.colorBgContainer,
     this.fontSize,
+    this.fontSizeSM,
+    this.fontSizeLG,
   });
 
-  /// Width and height of the checkbox box (`boxSize`).
+  /// Width and height of the box at the standard size (`boxSize`).
+  ///
+  /// The size a checkbox takes is chosen with [Checkbox.size]; this and the
+  /// two beside it say how many pixels each preset is.
   final double? boxSize;
+
+  /// Width and height of the box at [SoftSize.small].
+  final double? boxSizeSM;
+
+  /// Width and height of the box at [SoftSize.large].
+  final double? boxSizeLG;
 
   /// Corner radius of the checkbox box (`borderRadius`).
   final double? borderRadius;
@@ -57,26 +77,51 @@ class CheckboxToken {
   /// Background fill when unchecked (`colorBgContainer`).
   final Color? colorBgContainer;
 
-  /// Label font size (`fontSize`).
+  /// Label font size at the standard size (`fontSize`).
   final double? fontSize;
 
-  _ResolvedCheckboxToken _resolve(Token t) => _ResolvedCheckboxToken(
-        boxSize: boxSize ?? 16,
-        borderRadius: borderRadius ?? t.borderRadiusSM,
-        colorPrimary: colorPrimary ?? t.primary.base,
-        colorBorder: colorBorder ?? t.colorBorder,
-        colorBgContainer: colorBgContainer ?? t.colorBgContainer,
-        fontSize: fontSize ?? t.fontSize,
-      );
+  /// Label font size at [SoftSize.small].
+  final double? fontSizeSM;
+
+  /// Label font size at [SoftSize.large].
+  final double? fontSizeLG;
+
+  /// The numbers for [size]: a preset takes its own, and a measurement is the
+  /// box's side, with the words of whichever preset it is nearest.
+  _ResolvedCheckboxToken _resolve(
+    Token t, [
+    ControlSize size = SoftSize.middle,
+  ]) {
+    final small = boxSizeSM ?? 14;
+    final middle = boxSize ?? 16;
+    final large = boxSizeLG ?? 20;
+    return _ResolvedCheckboxToken(
+      boxSize: size.resolve1D(small: small, middle: middle, large: large),
+      borderRadius: borderRadius ?? t.borderRadiusSM,
+      colorPrimary: colorPrimary ?? t.primary.base,
+      colorBorder: colorBorder ?? t.colorBorder,
+      colorBgContainer: colorBgContainer ?? t.colorBgContainer,
+      fontSize: switch (
+          size.nearestPreset(small: small, middle: middle, large: large)) {
+        SoftSize.small => fontSizeSM ?? t.fontSizeSM,
+        SoftSize.middle => fontSize ?? t.fontSize,
+        SoftSize.large => fontSizeLG ?? t.fontSizeLG,
+      },
+    );
+  }
 
   /// This one with [other]'s fields laid over it, one field at a time.
   CheckboxToken merge(CheckboxToken other) => CheckboxToken(
         boxSize: other.boxSize ?? boxSize,
+        boxSizeSM: other.boxSizeSM ?? boxSizeSM,
+        boxSizeLG: other.boxSizeLG ?? boxSizeLG,
         borderRadius: other.borderRadius ?? borderRadius,
         colorPrimary: other.colorPrimary ?? colorPrimary,
         colorBorder: other.colorBorder ?? colorBorder,
         colorBgContainer: other.colorBgContainer ?? colorBgContainer,
         fontSize: other.fontSize ?? fontSize,
+        fontSizeSM: other.fontSizeSM ?? fontSizeSM,
+        fontSizeLG: other.fontSizeLG ?? fontSizeLG,
       );
 }
 
@@ -121,6 +166,8 @@ class Checkbox extends StatefulWidget {
     this.onChanged,
     this.label,
     this.disabled,
+    this.readOnly = false,
+    this.size,
     this.indeterminate = false,
     this.token,
     this.focusNode,
@@ -145,6 +192,22 @@ class Checkbox extends StatefulWidget {
 
   /// Greys the checkbox out and blocks toggling.
   final bool? disabled;
+
+  /// How big the box and its words are: a preset, or the box's side in
+  /// pixels.
+  ///
+  /// Null takes what [CheckboxDefaults.size] says, then the subtree's
+  /// `ConfigProvider.componentSize`, then [SoftSize.middle] — so a box beside
+  /// a `Switch` in a small form is small with it.
+  final ControlSize? size;
+
+  /// Shows whether it is ticked without letting anyone change it.
+  ///
+  /// Not [disabled]: the box keeps its colours, because the answer is worth
+  /// reading — a setting shown back, a form in a view that is not for
+  /// editing. A tap, a key or a screen reader's double-tap does nothing, it
+  /// takes no focus, and a reader hears it as read-only.
+  final bool readOnly;
 
   /// Shows a dash rather than a tick — the "some but not all" state of a
   /// parent checkbox. Toggling still reports the opposite of [checked].
@@ -189,11 +252,22 @@ class _SoftCheckboxState extends State<Checkbox> {
   bool get _enabled =>
       !_disabled && (widget.onChanged != null || widget.checked == null);
 
+  /// Whether a person may change it. A read-only box is enabled — it keeps
+  /// its colours — and only deaf to people.
+  bool get _takesHand => _enabled && !widget.readOnly;
+
+  /// This box's own size, then the one set for boxes, then the subtree's.
+  ControlSize get _size =>
+      widget.size ??
+      ConfigProvider.defaultsOf<CheckboxDefaults>(context)?.size ??
+      ConfigProvider.componentSizeOf(context) ??
+      SoftSize.middle;
+
   /// Whether the focus should be seen: only where it arrived by keyboard.
   bool _focusVisible = false;
 
   void _toggle() {
-    if (!_enabled) return;
+    if (!_takesHand) return;
     final next = !_checked;
     // Kept in step whether or not somebody else is driving this: it is only
     // the fallback for `checked`, and a stale one would show through the
@@ -208,11 +282,11 @@ class _SoftCheckboxState extends State<Checkbox> {
     final r = (widget.token ??
             ConfigProvider.componentOf<CheckboxToken>(context) ??
             const CheckboxToken())
-        ._resolve(token);
+        ._resolve(token, _size);
     return FocusableActionDetector(
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
-      enabled: _enabled,
+      enabled: _takesHand,
       onShowFocusHighlight: (visible) {
         if (_focusVisible != visible) setState(() => _focusVisible = visible);
       },
@@ -231,10 +305,11 @@ class _SoftCheckboxState extends State<Checkbox> {
         checked: _checked,
         mixed: widget.indeterminate,
         enabled: _enabled,
-        onTap: _enabled ? _toggle : null,
+        readOnly: widget.readOnly,
+        onTap: _takesHand ? _toggle : null,
         child: MouseRegion(
           cursor:
-              _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+              _takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),
           child: GestureDetector(
@@ -249,7 +324,7 @@ class _SoftCheckboxState extends State<Checkbox> {
                   value: _checked,
                   indeterminate: widget.indeterminate,
                   enabled: _enabled,
-                  hovered: _hovered && _enabled,
+                  hovered: _hovered && _takesHand,
                   token: token,
                   componentToken: r,
                 ),
@@ -402,6 +477,7 @@ class CheckboxGroupDefaults {
   const CheckboxGroupDefaults({
     this.direction,
     this.disabled,
+    this.size,
   });
 
   /// Which way the boxes run.
@@ -413,11 +489,15 @@ class CheckboxGroupDefaults {
   /// the widget's own word.
   final bool? disabled;
 
+  /// How big a group's boxes are, unless it says otherwise.
+  final ControlSize? size;
+
   /// This one with [other]'s fields laid over it, one field at a time.
   CheckboxGroupDefaults merge(CheckboxGroupDefaults other) =>
       CheckboxGroupDefaults(
         direction: other.direction ?? direction,
         disabled: other.disabled ?? disabled,
+        size: other.size ?? size,
       );
 }
 
@@ -442,6 +522,8 @@ class CheckboxGroup<T> extends StatefulWidget {
     required this.options,
     this.onChanged,
     this.disabled,
+    this.readOnly = false,
+    this.size,
     this.direction,
     this.spacing = 16,
     this.runSpacing = 8,
@@ -466,6 +548,14 @@ class CheckboxGroup<T> extends StatefulWidget {
 
   /// Greys the whole group out.
   final bool? disabled;
+
+  /// Shows which are ticked without letting anyone change them. See
+  /// [Checkbox.readOnly].
+  final bool readOnly;
+
+  /// How big every box in the group is. See [Checkbox.size]. Null takes what
+  /// [CheckboxGroupDefaults.size] says, and then the subtree's.
+  final ControlSize? size;
 
   /// Whether the options run in a row (wrapping) or a column.
   final Axis? direction;
@@ -530,6 +620,9 @@ class _CheckboxGroupState<T> extends State<CheckboxGroup<T>> {
         Checkbox(
           checked: current.contains(option.value),
           disabled: !_enabled || option.disabled,
+          readOnly: widget.readOnly,
+          size: widget.size ??
+              ConfigProvider.defaultsOf<CheckboxGroupDefaults>(context)?.size,
           onChanged: (checked) => _toggle(option.value, checked),
           label: option.label,
         ),

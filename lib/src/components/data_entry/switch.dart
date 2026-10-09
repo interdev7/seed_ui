@@ -166,6 +166,7 @@ class Switch extends StatefulWidget {
     this.onChanged,
     this.size,
     this.disabled,
+    this.readOnly = false,
     this.loading = false,
     this.semanticsLabel,
     this.checkedChild,
@@ -205,6 +206,14 @@ class Switch extends StatefulWidget {
   /// Shows a spinner on the thumb and blocks toggling — for a setting whose
   /// change is being persisted.
   final bool loading;
+
+  /// Shows whether it is on without letting anyone flip it.
+  ///
+  /// Not [disabled]: the track keeps its colour, because the state is worth
+  /// reading — a setting shown back, a form in a view that is not for
+  /// editing. A tap, a key or a screen reader's double-tap does nothing, it
+  /// takes no focus, and a reader hears it as read-only.
+  final bool readOnly;
 
   /// What a screen reader calls this switch.
   ///
@@ -264,6 +273,10 @@ class _SoftSwitchState extends State<Switch> {
       !widget.loading &&
       (widget.onChanged != null || widget.value == null);
 
+  /// Whether a person may flip it. A read-only switch is enabled — it keeps
+  /// its colour — and only deaf to people.
+  bool get _takesHand => _enabled && !widget.readOnly;
+
   /// The size in force: this switch's own, else the one set for switches,
   /// else the one set for the subtree, else the standard preset.
   ControlSize get _size =>
@@ -314,7 +327,7 @@ class _SoftSwitchState extends State<Switch> {
   }
 
   void _toggle() {
-    if (!_enabled) return;
+    if (!_takesHand) return;
     final next = !_on;
     // Kept in step whether or not somebody else is driving this: it is only
     // the fallback for `value`, and a stale one would show through the moment
@@ -339,7 +352,7 @@ class _SoftSwitchState extends State<Switch> {
     return FocusableActionDetector(
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
-      enabled: _enabled,
+      enabled: _takesHand,
       onShowFocusHighlight: (visible) {
         if (_focusVisible != visible) setState(() => _focusVisible = visible);
       },
@@ -355,17 +368,20 @@ class _SoftSwitchState extends State<Switch> {
         label: widget.semanticsLabel,
         toggled: _on,
         enabled: _enabled,
-        onTap: _enabled ? _toggle : null,
+        readOnly: widget.readOnly,
+        onTap: _takesHand ? _toggle : null,
         child: MouseRegion(
           cursor:
-              _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+              _takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: _toggle,
-            onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
-            onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
+            onTapDown:
+                _takesHand ? (_) => setState(() => _pressed = true) : null,
+            onTapUp:
+                _takesHand ? (_) => setState(() => _pressed = false) : null,
             onTapCancel:
-                _enabled ? () => setState(() => _pressed = false) : null,
+                _takesHand ? () => setState(() => _pressed = false) : null,
             child: AnimatedContainer(
               duration: token.motionDurationMid,
               curve: token.motionEaseInOut,

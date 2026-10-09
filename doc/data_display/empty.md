@@ -86,7 +86,9 @@ Empty(
 
 // …or for every Empty in a subtree:
 ConfigProvider(
-  components: const [EmptyToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(empty: EmptyToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

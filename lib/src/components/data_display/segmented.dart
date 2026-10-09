@@ -401,6 +401,7 @@ class Segmented<T> extends StatefulWidget {
     this.arrowBuilder,
     this.controller,
     this.disabled,
+    this.readOnly = false,
     this.trackColor,
     this.thumbColor,
     this.focusNode,
@@ -448,6 +449,14 @@ class Segmented<T> extends StatefulWidget {
 
   /// Greys the whole control out and blocks selection.
   final bool? disabled;
+
+  /// Shows which is chosen without letting anyone choose another.
+  ///
+  /// Not [disabled]: the track and the thumb keep their colours, because the
+  /// choice is worth reading. A tap, an arrow key or a screen reader's
+  /// double-tap does nothing, it takes no focus, and a reader hears it as
+  /// read-only.
+  final bool readOnly;
 
   /// Overrides the track (background) colour.
   final Color? trackColor;
@@ -704,6 +713,10 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
   }
 
   bool get _enabled => !_disabled && widget.onChanged != null;
+
+  /// Whether a person may choose. A read-only control is enabled — it keeps
+  /// its colours — and only deaf to people.
+  bool get _takesHand => _enabled && !widget.readOnly;
   bool get _vertical => _direction == Axis.vertical;
 
   /// Whether the focus should be seen: only where it arrived by keyboard.
@@ -819,7 +832,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
 
     final reachable = RovingGroup(
       direction: _direction,
-      enabled: _enabled,
+      enabled: _takesHand,
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
       onStep: _moveChoice,
@@ -999,7 +1012,8 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
     bool selected,
   ) {
     final enabled = _enabled && !option.disabled;
-    final hovered = _hoveredIndex == index && enabled && !selected;
+    final takesHand = enabled && !widget.readOnly;
+    final hovered = _hoveredIndex == index && takesHand && !selected;
     // An unselected segment darkens under the pointer as well as taking a
     // fill: `itemHoverColor` is a token of its own, and the text stayed the
     // resting colour while only the fill answered.
@@ -1058,14 +1072,14 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
     final segment = KeyedSubtree(
       key: _keyFor(index),
       child: MouseRegion(
-        cursor: enabled && !selected
+        cursor: takesHand && !selected
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
-        onEnter: enabled ? (_) => _setHovered(index) : null,
-        onExit: enabled ? (_) => _setHovered(null) : null,
+        onEnter: takesHand ? (_) => _setHovered(index) : null,
+        onExit: takesHand ? (_) => _setHovered(null) : null,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: enabled && !selected
+          onTap: takesHand && !selected
               ? () => widget.onChanged!(option.value)
               : null,
           child: AnimatedContainer(
@@ -1095,6 +1109,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
       button: true,
       selected: selected,
       enabled: enabled,
+      readOnly: widget.readOnly,
       label: option.semanticsLabel,
       child: MergeSemantics(
         child: option.semanticsLabel == null

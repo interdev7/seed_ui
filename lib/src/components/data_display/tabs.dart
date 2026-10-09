@@ -817,7 +817,11 @@ class _TabsState extends State<Tabs> {
     final index = controller.items.length;
     final data = widget.onCreateTab?.call(index);
     final key = data?.key ?? controller.nextKey();
-    final label = data?.label ?? Text('Tab ${index + 1}');
+    final words = context.seedLocale;
+    final label = data?.label ??
+        Text(
+          words.tabFallback.replaceAll('{n}', words.figures('${index + 1}')),
+        );
     controller.add(TabItem(key: key, label: label, content: data?.content));
     widget.onEdit?.call(key, TabEditAction.add);
     widget.onChanged?.call(key);
@@ -1079,9 +1083,12 @@ class _TabsState extends State<Tabs> {
     if (_horizontal && (extra != null || widget.centered)) {
       content = Row(
         children: [
+          // `left` and `right` are the bar's start and end — the Row turns
+          // them round in a right-to-left bar — so the gap goes on the side
+          // that faces the tabs, which is the logical end and start.
           if (extra?.left != null)
             Padding(
-              padding: EdgeInsets.only(right: token.size),
+              padding: EdgeInsetsDirectional.only(end: token.size),
               child: extra!.left!,
             ),
           if (widget.centered) const Spacer(),
@@ -1089,7 +1096,7 @@ class _TabsState extends State<Tabs> {
           if (widget.centered) const Spacer(),
           if (extra?.right != null)
             Padding(
-              padding: EdgeInsets.only(left: token.size),
+              padding: EdgeInsetsDirectional.only(start: token.size),
               child: extra!.right!,
             ),
         ],

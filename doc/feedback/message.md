@@ -181,7 +181,9 @@ message.open(const MessageConfig(
 
 // …or for every message in a subtree:
 ConfigProvider(
-  components: const [MessageToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(message: MessageToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

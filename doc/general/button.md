@@ -226,7 +226,9 @@ Button(
 
 // …or for every Button in a subtree:
 ConfigProvider(
-  components: const [ButtonToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(button: ButtonToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

@@ -380,6 +380,10 @@ class Tag extends StatelessWidget {
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
                   onTap: onClose,
+                  // The press is [Pressable]'s to announce; this one only
+                  // takes the pointer, and a second node for it would be a
+                  // wordless button under the named one.
+                  excludeFromSemantics: true,
                   child: closeIcon ??
                       CustomPaint(
                         size: const Size.square(12),

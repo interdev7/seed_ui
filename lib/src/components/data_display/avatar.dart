@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 import '../../utils/popover.dart' show PopoverPlacement;
 import '../../utils/size_resolver.dart';
 import '../navigation/dropdown.dart';
@@ -51,6 +52,11 @@ class AvatarToken {
   final double? textFontSizeLG;
 
   /// Text and icon color.
+  ///
+  /// Left unset, it is whichever of a dark and a light ink reads on the
+  /// avatar's fill — not a fixed white. White on the default grey was 1.6:1,
+  /// a third of what a screen asks for, and white on a pale fill somebody
+  /// named was worse.
   final Color? colorTextPlaceholder;
 
   /// Border color when inside a group.
@@ -75,8 +81,10 @@ class AvatarToken {
         textFontSize: textFontSize ?? 14,
         textFontSizeSM: textFontSizeSM ?? 14,
         textFontSizeLG: textFontSizeLG ?? 24,
-        bg: bg ?? const Color(0xFFCCCCCC),
-        colorTextPlaceholder: colorTextPlaceholder ?? const Color(0xFFFFFFFF),
+        // The theme's own fill laid on the surface, so a dark theme gets a
+        // dark disc — the fixed light grey this was stayed light in both.
+        bg: bg ?? Color.alphaBlend(t.colorFill, t.colorBgContainer),
+        colorTextPlaceholder: colorTextPlaceholder,
         groupBorderColor: groupBorderColor ?? t.colorBgContainer,
         groupOverlapping: groupOverlapping ?? -8,
         borderRadius: borderRadius ?? t.borderRadius,
@@ -126,7 +134,7 @@ class _ResolvedAvatarToken {
   final double textFontSizeSM;
   final double textFontSizeLG;
   final Color bg;
-  final Color colorTextPlaceholder;
+  final Color? colorTextPlaceholder;
   final Color groupBorderColor;
   final double groupOverlapping;
   final double borderRadius;
@@ -298,7 +306,11 @@ class Avatar extends StatelessWidget {
 
     final bg =
         backgroundColor ?? (image == null ? rt.bg : const Color(0x00000000));
-    final fg = foregroundColor ?? rt.colorTextPlaceholder;
+    // Worked out against what is actually behind the letters: the fill, or
+    // the surface where an image leaves the fill clear.
+    final fg = foregroundColor ??
+        rt.colorTextPlaceholder ??
+        inkOn(Color.alphaBlend(bg, context.softToken.colorBgContainer));
 
     final boxShape = resolvedShape == AvatarShape.circle
         ? BoxShape.circle
@@ -486,7 +498,7 @@ class AvatarGroup extends StatelessWidget {
             rt.groupBorderColor,
           ),
           foregroundColor: t.colorText,
-          child: Text('+$overflowCount'),
+          child: Text(context.seedLocale.figures('+$overflowCount')),
         );
       }
 

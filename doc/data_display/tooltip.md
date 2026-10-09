@@ -165,7 +165,9 @@ Tooltip(
 
 // …or for every Tooltip in a subtree:
 ConfigProvider(
-  components: const [TooltipToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(tooltip: TooltipToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

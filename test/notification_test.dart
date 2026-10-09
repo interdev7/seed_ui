@@ -151,4 +151,62 @@ void main() {
     notification.destroy();
     await _settle(tester);
   });
+
+  group('where the cross stands, and what makes room for it', () {
+    Finder cross() => find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == 'CrossPainter',
+        );
+
+    Future<void> open(WidgetTester tester, {ClosePlacement? placement}) async {
+      notification.destroy();
+      await _settle(tester);
+      await tester.pumpWidget(_host());
+      notification.open(
+        NotificationConfig(
+          message: const Text('A message long enough to reach the corner'),
+          description: const SizedBox(
+            key: Key('body'),
+            width: double.infinity,
+            height: 20,
+          ),
+          duration: Duration.zero,
+          closePlacement: placement ?? ClosePlacement.beside,
+        ),
+      );
+      await _settle(tester);
+    }
+
+    double bodyWidth(WidgetTester tester) =>
+        tester.getSize(find.byKey(const Key('body'))).width;
+
+    testWidgets('in the corner the words below the message run full width', (
+      tester,
+    ) async {
+      await open(tester);
+      final beside = bodyWidth(tester);
+
+      await open(tester, placement: ClosePlacement.corner);
+      expect(bodyWidth(tester), greaterThan(beside));
+    });
+
+    testWidgets('the message still keeps clear of the cross', (tester) async {
+      await open(tester, placement: ClosePlacement.corner);
+      final message = tester.getRect(
+        find.text('A message long enough to reach the corner'),
+      );
+      expect(message.right, lessThanOrEqualTo(tester.getRect(cross()).left));
+    });
+
+    testWidgets('the cross itself does not move between the two', (
+      tester,
+    ) async {
+      await open(tester);
+      final beside = tester.getRect(cross());
+
+      await open(tester, placement: ClosePlacement.corner);
+      expect(tester.getRect(cross()), beside);
+    });
+  });
 }

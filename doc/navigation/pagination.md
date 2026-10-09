@@ -94,7 +94,9 @@ Pagination(
 
 // …or for every Pagination in a subtree:
 ConfigProvider(
-  components: const [PaginationToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(pagination: PaginationToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

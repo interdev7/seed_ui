@@ -188,7 +188,11 @@ Tabs(
 
 ```dart
 ConfigProvider(
-  components: const [TabsToken(itemSelectedColor: Color(0xFFEB2F96))],
+  theme: ThemeData(
+    components: const ComponentsConfig(
+      tabs: TabsToken(itemSelectedColor: Color(0xFFEB2F96)),
+    ),
+  ),
   child: MaterialApp(...),
 )
 ```

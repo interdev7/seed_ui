@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
-import '../../utils/pressable.dart';
+import '../../utils/close_cross.dart';
 import 'message.dart' show StatusType;
 
 /// Per-component design tokens for [Alert].
@@ -245,9 +245,11 @@ class _SoftAlertState extends State<Alert> {
           ],
           if (_closable) ...[
             SizedBox(width: token.sizeXS),
-            _CloseButton(
-              token: token,
-              onTap: () {
+            CloseCross(
+              // The alert is tinted already; a fill behind the cross would be
+              // a second tint on top of it.
+              wash: false,
+              onPressed: () {
                 setState(() => _closed = true);
                 widget.onClose?.call();
               },
@@ -306,47 +308,6 @@ class _SoftAlertState extends State<Alert> {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _CloseButton extends StatefulWidget {
-  const _CloseButton({required this.token, required this.onTap});
-
-  final Token token;
-  final VoidCallback onTap;
-
-  @override
-  State<_CloseButton> createState() => _CloseButtonState();
-}
-
-class _CloseButtonState extends State<_CloseButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final token = widget.token;
-    return Pressable(
-      onPressed: widget.onTap,
-      semanticsLabel: context.seedLocale.close,
-      radius: token.borderRadiusSM,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: CustomPaint(
-              painter: CrossPainter(
-                _hovered ? token.colorText : token.colorTextTertiary,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

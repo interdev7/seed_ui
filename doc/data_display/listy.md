@@ -420,7 +420,9 @@ Listy(
 
 // …or for every Listy in a subtree:
 ConfigProvider(
-  components: const [ListyToken(itemPaddingBlock: 16)],
+  theme: ThemeData(
+    components: const ComponentsConfig(listy: ListyToken(itemPaddingBlock: 16)),
+  ),
   child: MaterialApp(...),
 );
 ```
@@ -435,7 +437,11 @@ section headings from `groupTitle` — they compose freely:
 
 ```dart
 ConfigProvider(
-  components: [ListyToken(itemPaddingBlock: density, itemPaddingInline: 16)],
+  theme: ThemeData(
+    components: ComponentsConfig(
+      listy: ListyToken(itemPaddingBlock: density, itemPaddingInline: 16),
+    ),
+  ),
   child: Listy(
     height: 320,
     sticky: true,

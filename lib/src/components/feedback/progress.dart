@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../theme/palette.dart';
 import '../../utils/size_resolver.dart';
 import 'message.dart' show StatusType;
 
@@ -736,7 +737,8 @@ class _ProgressState extends State<Progress> {
 
   /// The label for [p]: the caller's own widget, or the default percentage.
   Widget _label(double p) =>
-      widget.format?.call(p) ?? Text('${(p * 100).round()}%');
+      widget.format?.call(p) ??
+      Text(context.seedLocale.figures('${(p * 100).round()}%'));
 
   _ProgressResolvedSize _resolveSize(Token token, _ResolvedProgressToken r) {
     final effectiveSize = widget.size ??
@@ -948,6 +950,7 @@ class _ProgressState extends State<Progress> {
                                   token,
                                   currentPercent,
                                   isRtl,
+                                  _inkOver(fill),
                                 ),
                               ),
                             );
@@ -962,6 +965,7 @@ class _ProgressState extends State<Progress> {
                             currentPercent,
                             pos.align,
                             isRtl,
+                            _inkOver(fill),
                           ),
                         ),
                       ),
@@ -1092,11 +1096,24 @@ class _ProgressState extends State<Progress> {
     }
   }
 
+  /// The ink that reads on the filled part of the bar.
+  ///
+  /// The label inside the bar was always white, and white on a pale bar
+  /// somebody named — a light yellow, a soft green — is a figure nobody can
+  /// read. A gradient is read at its middle, where a label most often sits.
+  Color _inkOver(Color fill) {
+    final gradient = widget.gradient;
+    if (gradient == null || gradient.colors.isEmpty) return inkOn(fill);
+    final colors = gradient.colors;
+    return inkOn(Color.lerp(colors.first, colors.last, 0.5)!);
+  }
+
   Widget _buildInnerInfoWidget(
     Token token,
     double p,
     PercentInfoAlign align,
     bool isRtl,
+    Color ink,
   ) {
     if (widget.child != null) return widget.child!;
     final showBadge = widget.format == null && _isComplete(p);
@@ -1129,7 +1146,7 @@ class _ProgressState extends State<Progress> {
                 alignment: textAlignment,
                 child: DefaultTextStyle(
                   style: TextStyle(
-                    color: const Color(0xFFFFFFFF),
+                    color: ink,
                     fontSize: token.fontSizeSM,
                     fontWeight: token.fontWeightStrong,
                     fontFamily: token.fontFamily,
@@ -1147,7 +1164,12 @@ class _ProgressState extends State<Progress> {
   /// Inner info widget for [PercentInfoAlign.follow].
   /// Both children use [ConstrainedBox] with the same [minWidth] so they
   /// occupy identical space, preventing horizontal shift on swap.
-  Widget _buildFollowInnerInfoWidget(Token token, double p, bool isRtl) {
+  Widget _buildFollowInnerInfoWidget(
+    Token token,
+    double p,
+    bool isRtl,
+    Color ink,
+  ) {
     if (widget.child != null) return widget.child!;
     final showBadge = widget.format == null && _isComplete(p);
     final edgeAlign = isRtl ? Alignment.centerRight : Alignment.centerLeft;
@@ -1185,7 +1207,7 @@ class _ProgressState extends State<Progress> {
                   maxLines: 1,
                   overflow: TextOverflow.clip,
                   style: TextStyle(
-                    color: const Color(0xFFFFFFFF),
+                    color: ink,
                     fontSize: token.fontSizeSM,
                     fontWeight: token.fontWeightStrong,
                     fontFamily: token.fontFamily,

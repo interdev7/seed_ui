@@ -83,6 +83,11 @@ Avatar(
 `AvatarToken` overrides this component's own tokens. Every field is an override; an
 unset one falls back to the value derived from the global theme.
 
+The fill is the theme's own `colorFill` laid on the surface, so a dark theme
+gets a dark disc. The initials are whichever of a dark and a light ink reads
+on the fill — on `bg`, on a `backgroundColor` you give one avatar, in either
+theme. Name `colorTextPlaceholder` or `foregroundColor` to choose yourself.
+
 ```dart
 Avatar(
   // …
@@ -91,7 +96,9 @@ Avatar(
 
 // …or for every Avatar in a subtree:
 ConfigProvider(
-  components: const [AvatarToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(avatar: AvatarToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

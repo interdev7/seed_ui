@@ -237,6 +237,16 @@ A halo appears round the track when the focus arrived by keyboard, and not
 when it arrived by a tap. `focusNode` drives the focus yourself; `autofocus`
 puts it there as soon as the run is built.
 
+## Read-only
+
+`readOnly` shows which segment is taken without letting anyone take another: a tap, an arrow key or a screen reader's double-tap does nothing, and the control takes no focus.
+
+```dart
+Segmented<String>(value: _period, readOnly: true, options: periods)
+```
+
+Unlike `disabled` it keeps its colours, because the value is worth reading; unlike a null `onChanged` it is told apart for a screen reader, which hears it as read-only.
+
 ## Design tokens
 
 | `arrowBg` | Fill behind a scroll button — translucent, so the segment under it stays legible |
@@ -255,7 +265,9 @@ Segmented(
 
 // …or for every Segmented in a subtree:
 ConfigProvider(
-  components: const [SegmentedToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(segmented: SegmentedToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

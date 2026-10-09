@@ -236,7 +236,7 @@ void main() {
     /// Opens a modal whose body is a box that takes all the width it is given.
     Future<void> open(
       WidgetTester tester, {
-      ModalClosePlacement? placement,
+      ClosePlacement? placement,
       bool title = true,
       bool closable = true,
       TextDirection direction = TextDirection.ltr,
@@ -265,7 +265,7 @@ void main() {
             height: 40,
           ),
           closable: closable,
-          closePlacement: placement ?? ModalClosePlacement.beside,
+          closePlacement: placement ?? ClosePlacement.beside,
         ),
       );
       await _settle(tester);
@@ -290,14 +290,14 @@ void main() {
       await open(tester, closable: false);
       final whole = bodyWidth(tester);
 
-      await open(tester, placement: ModalClosePlacement.corner);
+      await open(tester, placement: ClosePlacement.corner);
       expect(bodyWidth(tester), whole);
     });
 
     testWidgets('in the corner the title still keeps clear of the cross', (
       tester,
     ) async {
-      await open(tester, placement: ModalClosePlacement.corner);
+      await open(tester, placement: ClosePlacement.corner);
 
       final title = tester.getRect(
         find.text('A title long enough to reach the corner of the card'),
@@ -316,7 +316,7 @@ void main() {
       await open(tester);
       final beside = tester.getRect(cross());
 
-      await open(tester, placement: ModalClosePlacement.corner);
+      await open(tester, placement: ClosePlacement.corner);
       expect(tester.getRect(cross()), beside);
     });
 
@@ -325,7 +325,7 @@ void main() {
     ) async {
       await open(
         tester,
-        placement: ModalClosePlacement.corner,
+        placement: ClosePlacement.corner,
         direction: TextDirection.rtl,
       );
 
@@ -339,7 +339,7 @@ void main() {
       final future = Modal.open(
         const ModalConfig(
           title: Text('Title'),
-          closePlacement: ModalClosePlacement.corner,
+          closePlacement: ClosePlacement.corner,
         ),
       );
       await _settle(tester);

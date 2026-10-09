@@ -237,7 +237,9 @@ Timeline(
 
 ```dart
 ConfigProvider(
-  components: const [TimelineToken(dotSize: 12)],
+  theme: ThemeData(
+    components: const ComponentsConfig(timeline: TimelineToken(dotSize: 12)),
+  ),
   child: MaterialApp(...),
 )
 ```

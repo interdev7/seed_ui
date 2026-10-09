@@ -66,6 +66,24 @@ CheckboxGroup<String>(
 stack the options, or tune `spacing`/`runSpacing`. Disable one option with its
 `disabled` flag, or the whole group with the group's `disabled`.
 
+## Sizes
+
+`size` takes a preset or a measurement, as every control does, and scales the
+box and its words together — 14, 16 and 20 pixels, at the theme's small,
+standard and large type:
+
+```dart
+Checkbox(size: SoftSize.small, label: const Text('Remember me'))
+CheckboxGroup<String>(size: SoftSize.large, value: _days, options: days)
+Checkbox(size: const ControlSize.height(24))   // a 24-pixel box
+```
+
+Left unset, a box takes `CheckboxDefaults.size`, then the subtree's
+`ConfigProvider.componentSize` — so in a small form it is small beside a
+`Switch` that is small too. How many pixels each preset is lives in the
+token: `boxSize`, `boxSizeSM`, `boxSizeLG`, and `fontSize`, `fontSizeSM`,
+`fontSizeLG` for the words.
+
 ## From the keyboard
 
 The control takes its turn in the tab order and answers **Space** and
@@ -78,6 +96,17 @@ focused too, and a ring around that is noise.
 
 The halo sits on the box, not on the words beside it: the label is not the
 control.
+
+## Read-only
+
+`readOnly` shows whether a box is ticked without letting anyone change it: a tap, Space or a screen reader's double-tap does nothing, and it takes no focus. Both `Checkbox` and `CheckboxGroup` take it.
+
+```dart
+Checkbox(checked: _remember, readOnly: true, label: const Text('Remember me'))
+CheckboxGroup<String>(value: _days, readOnly: true, options: days)
+```
+
+Unlike `disabled` it keeps its colours, because the value is worth reading; unlike a null `onChanged` it is told apart for a screen reader, which hears it as read-only.
 
 ## Design tokens
 
@@ -92,7 +121,9 @@ Checkbox(
 
 // …or for every Checkbox in a subtree:
 ConfigProvider(
-  components: const [CheckboxToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(checkbox: CheckboxToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

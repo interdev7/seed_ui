@@ -339,6 +339,16 @@ named twice.
 field's, say; the placeholder names one that stands on its own. An error status
 marks it invalid.
 
+## Read-only
+
+`readOnly` shows the date without letting anyone change it: the field does not open, offers no cross to clear it and takes nothing typed.
+
+```dart
+DatePicker(value: _due, readOnly: true)
+```
+
+Unlike `disabled` it keeps its colours, because the value is worth reading; unlike a null `onChanged` it is told apart for a screen reader, which hears it as read-only.
+
 ## Design tokens
 
 | Token | Default |

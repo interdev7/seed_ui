@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart'
     hide Badge, ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer;
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -385,5 +387,132 @@ void main() {
     expect(SeedLocalizations.en.firstDayOfWeek, DateTime.monday);
     expect(SeedLocalizations.ja.firstDayOfWeek, DateTime.sunday);
     expect(SeedLocalizations.ar.firstDayOfWeek, DateTime.saturday);
+  });
+
+  group('every word survives a copy', () {
+    // `copyWith` builds a new set of words from the constructor, so a word
+    // the copy forgets falls back to English — quietly, in a Russian app.
+    // Twenty-seven of fifty-three had gone that way: `ru.copyWith(ok: …)`,
+    // the very example the class documents, gave English buttons everywhere
+    // else. Read from the source, so the next word added is held to it too.
+    test('copyWith passes on every field the constructor takes', () {
+      final source =
+          File('lib/src/l10n/seed_localizations.dart').readAsStringSync();
+      final ctor = source.substring(
+        source.indexOf('  const SeedLocalizations({'),
+        source.indexOf('  }) : assert('),
+      );
+      final fields = RegExp(r'this\.(\w+)')
+          .allMatches(ctor)
+          .map((m) => m.group(1)!)
+          .toList();
+      final copy = source.substring(
+        source.indexOf('  SeedLocalizations copyWith({'),
+      );
+      final forgotten = [
+        for (final f in fields)
+          if (!RegExp('\\b$f: $f \\?\\? this\\.$f\\b').hasMatch(copy)) f,
+      ];
+      expect(fields, isNotEmpty);
+      expect(forgotten, isEmpty);
+    });
+
+    test('a copy of Russian is Russian, but for what was changed', () {
+      final tweaked = SeedLocalizations.ru.copyWith(ok: 'Ладно');
+      expect(tweaked.ok, 'Ладно');
+      expect(tweaked.close, SeedLocalizations.ru.close);
+      expect(tweaked.formRequired, SeedLocalizations.ru.formRequired);
+      expect(tweaked.upload, SeedLocalizations.ru.upload);
+    });
+  });
+
+  group('words the components used to write in English', () {
+    Widget inRussian(Widget child) => ConfigProvider(
+          locale: SeedLocalizations.ru,
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(body: Center(child: child)),
+          ),
+        );
+
+    testWidgets('an upload button', (tester) async {
+      await tester.pumpWidget(inRussian(Upload<String>(onPick: () async {})));
+      expect(find.text('Выберите файл'), findsOneWidget);
+
+      // A card is too small for a sentence, so it takes the shorter word.
+      await tester.pumpWidget(
+        inRussian(
+          Upload<String>(variant: UploadVariant.cards, onPick: () async {}),
+        ),
+      );
+      expect(find.text('Загрузить'), findsOneWidget);
+    });
+
+    testWidgets('a tab the plus adds with no label of its own', (
+      tester,
+    ) async {
+      final controller = TabsController(
+        items: const [TabItem(key: 'a', label: Text('Первая'))],
+      );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        inRussian(
+          SizedBox(
+            width: 400,
+            child: Tabs(type: TabsType.editableCard, controller: controller),
+          ),
+        ),
+      );
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == 'PlusPainter',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Вкладка 2'), findsOneWidget);
+    });
+
+    testWidgets('the tag a select offers to create', (tester) async {
+      await tester.pumpWidget(
+        inRussian(
+          SizedBox(
+            width: 260,
+            child: Select<String>(
+              mode: SelectMode.tags,
+              placeholder: 'Теги',
+              options: const [SelectOption(value: 'a', label: Text('Альфа'))],
+              onChanged: (_) {},
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Теги'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.enterText(find.byType(EditableText).last, 'бета');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Создать «бета»'), findsOneWidget);
+    });
+
+    testWidgets('a progress figure, in the digits of its language', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const ConfigProvider(
+          locale: SeedLocalizations.ar,
+          child: MaterialApp(
+            home: Scaffold(
+              body: SizedBox(width: 300, child: Progress(percent: 0.42)),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('٤٢%'), findsOneWidget);
+    });
   });
 }

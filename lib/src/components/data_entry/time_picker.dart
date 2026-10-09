@@ -170,6 +170,7 @@ class TimePicker extends StatefulWidget {
     this.needConfirm,
     this.allowClear,
     this.disabled,
+    this.readOnly = false,
     this.size,
     this.variant,
     this.placeholder,
@@ -238,6 +239,14 @@ class TimePicker extends StatefulWidget {
 
   /// Whether the field is disabled. Follows `ConfigProvider.componentDisabled`.
   final bool? disabled;
+
+  /// Shows the value without letting anyone change it.
+  ///
+  /// Not [disabled]: the field keeps its colours, because the value is worth
+  /// reading — a form in a view that is not for editing. It does not open,
+  /// offers no cross to clear it, takes nothing typed, and a screen reader
+  /// hears it as read-only.
+  final bool readOnly;
 
   /// Which control height to use. Follows `ConfigProvider.componentSize`.
   final ControlSize? size;
@@ -351,6 +360,10 @@ class _TimePickerState extends State<TimePicker> {
   }
 
   bool get _enabled => !_disabled;
+
+  /// Whether a person may change the value. A read-only picker is enabled —
+  /// it keeps its colours — and only deaf to people.
+  bool get _takesHand => _enabled && !widget.readOnly;
 
   @override
   void initState() {
@@ -515,7 +528,7 @@ class _TimePickerState extends State<TimePicker> {
   }
 
   void _openPanel() {
-    if (_open || !_enabled) return;
+    if (_open || !_takesHand) return;
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     final anchor = box.localToGlobal(Offset.zero) & box.size;
@@ -656,6 +669,7 @@ class _TimePickerState extends State<TimePicker> {
   }
 
   void _clear() {
+    if (!_takesHand) return;
     setState(() => _draft = null);
     _text.clear();
     _commit(null);
@@ -755,7 +769,7 @@ class _TimePickerState extends State<TimePicker> {
     // there yet when a pointer arrives and clicks in the same frame, and the
     // first click went to the clock beside it instead. See `DatePicker`,
     // where the same slot is built the same way.
-    final canClear = _allowClear && _enabled && _value != null;
+    final canClear = _allowClear && _takesHand && _value != null;
     final showClear = canClear && (_hovered || _open);
 
     final Color fill;
@@ -806,8 +820,12 @@ class _TimePickerState extends State<TimePicker> {
     final field = EditableText(
       controller: _text,
       focusNode: _focus,
-      readOnly: widget.inputReadOnly || !_enabled,
-      showCursor: !widget.inputReadOnly && _enabled,
+      readOnly: widget.inputReadOnly || !_takesHand,
+      // A date or a time is not prose: a keyboard's corrections and
+      // suggestions only get in the way of the figures being typed.
+      autocorrect: false,
+      enableSuggestions: false,
+      showCursor: !widget.inputReadOnly && _takesHand,
       style: textStyle,
       strutStyle: StrutStyle.fromTextStyle(textStyle, forceStrutHeight: true),
       cursorColor: t.primary.base,
@@ -831,13 +849,16 @@ class _TimePickerState extends State<TimePicker> {
     final named = _size.explicitWidth;
 
     final control = MouseRegion(
-      cursor:
-          _enabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+      cursor: _takesHand
+          ? SystemMouseCursors.click
+          : _enabled
+              ? SystemMouseCursors.basic
+              : SystemMouseCursors.forbidden,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: _enabled ? () => _requestOpen(!_open) : null,
+        onTap: _takesHand ? () => _requestOpen(!_open) : null,
         child: AnimatedContainer(
           duration: t.motionDurationMid,
           curve: t.motionEaseInOut,
@@ -961,6 +982,7 @@ class _TimePickerState extends State<TimePicker> {
     return Semantics(
       button: true,
       enabled: _enabled,
+      readOnly: widget.readOnly,
       label: widget.semanticsLabel ?? widget.placeholder,
       // No `value` here: the field inside is an editable, and what it holds
       // is already spoken. Naming it twice would say it twice.

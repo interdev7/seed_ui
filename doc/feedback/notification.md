@@ -124,6 +124,26 @@ Pair actions with `duration: Duration.zero`: a card that vanishes mid-decision
 is worse than no card. Use `late final` for the handle so the buttons can
 close their own notification.
 
+## Where the close button stands
+
+By default the cross takes a column of its own, so the description and the
+actions are narrower than the card all the way down. `closePlacement` lets it
+stand over the corner instead — the same choice a `Modal` offers, under the
+same name:
+
+```dart
+notification.open(
+  NotificationConfig(
+    message: const Text('Export finished'),
+    description: const Text('report-2026-10.csv · 4.2 MB'),
+    closePlacement: ClosePlacement.corner,
+  ),
+);
+```
+
+The message keeps clear of the cross, everything below it runs the card's
+full width, and the cross itself stands where it always did.
+
 ## Keys
 
 Reusing a `key` replaces the card showing under it. `destroy(key)` dismisses
@@ -162,6 +182,7 @@ notification.config(
 | `onClose` | `VoidCallback?` | Runs after the exit animation |
 | `onTap` | `VoidCallback?` | Tap handler for the card body |
 | `closable` | `bool` | Shows the close button; defaults to true |
+| `closePlacement` | `ClosePlacement` | Whether the cross narrows the words or stands over the corner; defaults to `beside` |
 | `key` | `Object?` | Identity for replacement |
 | `token` | `NotificationToken?` | Per-instance token overrides |
 

@@ -218,6 +218,16 @@ your options a `filterText` and they are heard as well as seen.
 
 `status: SelectStatus.error` marks the control invalid.
 
+## Read-only
+
+`readOnly` shows what is chosen without letting anyone change it. The field does not open, offers no cross to clear it and no cross on a tag, and Backspace takes nothing away.
+
+```dart
+Select<String>(value: [_country], readOnly: true, options: countries)
+```
+
+Unlike `disabled` it keeps its colours, because the value is worth reading; unlike a null `onChanged` it is told apart for a screen reader, which hears it as read-only.
+
 ## Design tokens
 
 `SelectToken` overrides this component's own tokens. Every field is an override; an
@@ -231,7 +241,9 @@ Select(
 
 // …or for every Select in a subtree:
 ConfigProvider(
-  components: const [SelectToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(select: SelectToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

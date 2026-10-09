@@ -143,7 +143,9 @@ InputNumber(
 
 // …or for every InputNumber in a subtree:
 ConfigProvider(
-  components: const [InputNumberToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(inputNumber: InputNumberToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

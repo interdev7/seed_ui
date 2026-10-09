@@ -26,6 +26,7 @@ class _FormDemoState extends State<FormDemo> {
   final _every = FormController(
     initialValues: const {'seats': 3, 'budget': 40.0, 'billing': 'monthly'},
   );
+  bool _profileShown = false;
   String? _fromTheServer;
   int _filled = 0;
 
@@ -187,12 +188,28 @@ class _FormDemoState extends State<FormDemo> {
           ),
         ),
         Group(
-          'Labels beside the fields',
+          'Labels beside the fields, and shown back read-only',
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Row(
+                children: [
+                  Switch(
+                    value: _profileShown,
+                    semanticsLabel: 'Read-only',
+                    onChanged: (v) => setState(() => _profileShown = v),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Read-only'),
+                ],
+              ),
+              const SizedBox(height: 12),
               Form(
                 controller: _profile,
+                // The same form, in a view that is not for editing: every
+                // field keeps its colours and takes no change, and its rules
+                // are not asked.
+                readOnly: _profileShown,
                 maxWidth: 480,
                 layout: FormLayout.horizontal,
                 labelWidth: 96,
@@ -208,9 +225,12 @@ class _FormDemoState extends State<FormDemo> {
                       name: 'name',
                       label: const Text('Name'),
                       rules: const [FormRule.required()],
+                      // A field built by hand passes the form's word on to its
+                      // control, or the control never hears it.
                       builder: (field) => Input(
                         value: field.value ?? '',
                         status: field.status,
+                        readOnly: field.readOnly,
                         onChanged: field.didChange,
                       ),
                     ),
@@ -220,6 +240,7 @@ class _FormDemoState extends State<FormDemo> {
                       builder: (field) => Input(
                         value: field.value ?? '',
                         status: field.status,
+                        readOnly: field.readOnly,
                         onChanged: field.didChange,
                       ),
                     ),
@@ -231,6 +252,7 @@ class _FormDemoState extends State<FormDemo> {
                         value: field.value ?? '',
                         status: field.status,
                         placeholder: 'https://…',
+                        readOnly: field.readOnly,
                         onChanged: field.didChange,
                       ),
                     ),

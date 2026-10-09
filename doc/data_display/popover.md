@@ -285,7 +285,9 @@ Popover(token: const PopoverToken(minWidth: 240), …);
 
 // …or for every popover in a subtree:
 ConfigProvider(
-  components: const [PopoverToken(minWidth: 240)],
+  theme: ThemeData(
+    components: const ComponentsConfig(popover: PopoverToken(minWidth: 240)),
+  ),
   child: MaterialApp(...),
 );
 ```

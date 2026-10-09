@@ -298,7 +298,9 @@ Input(
 
 // …or for every Input in a subtree:
 ConfigProvider(
-  components: const [InputToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(input: InputToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

@@ -2,12 +2,16 @@ import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
+import 'package:seed_ui/src/components/data_entry/checkbox.dart'
+    show CheckboxBox;
+import 'package:seed_ui/src/components/data_entry/radio.dart' show RadioDot;
 
 Widget _host(Widget child) => MaterialApp(
       home: Scaffold(body: Center(child: child)),
     );
 
 void main() {
+  _sizeTests();
   group('Checkbox', () {
     testWidgets('toggles and reports the new value', (tester) async {
       bool? seen;
@@ -495,3 +499,143 @@ bool _ticked(WidgetTester tester) =>
         .properties
         .checked ??
     false;
+
+void _sizeTests() {
+  group('one size, meaning the same thing for both', () {
+    double boxOf(WidgetTester tester) =>
+        tester.getSize(find.byType(CheckboxBox)).width;
+    double dotOf(WidgetTester tester) =>
+        tester.getSize(find.byType(RadioDot).first).width;
+    double wordsOf(WidgetTester tester, String label) => tester
+        .widget<RichText>(
+          find.descendant(
+              of: find.text(label), matching: find.byType(RichText)),
+        )
+        .text
+        .style!
+        .fontSize!;
+
+    Widget box({ControlSize? size}) =>
+        Checkbox(size: size, onChanged: (_) {}, label: const Text('Box'));
+    Widget dot({ControlSize? size}) => Radio<String>(
+          value: 'a',
+          groupValue: 'a',
+          size: size,
+          onChanged: (_) {},
+          child: const Text('Dot'),
+        );
+
+    testWidgets('left alone, nothing has moved', (tester) async {
+      await tester.pumpWidget(_host(Column(children: [box(), dot()])));
+      expect(boxOf(tester), 16);
+      expect(dotOf(tester), 16);
+    });
+
+    for (final (size, side) in [
+      (SoftSize.small, 14.0),
+      (SoftSize.middle, 16.0),
+      (SoftSize.large, 20.0),
+    ]) {
+      testWidgets('$size sizes a box and a radio alike', (tester) async {
+        await tester.pumpWidget(
+          _host(Column(children: [box(size: size), dot(size: size)])),
+        );
+        expect(boxOf(tester), side);
+        expect(dotOf(tester), side);
+      });
+    }
+
+    testWidgets('the words come with it', (tester) async {
+      await tester.pumpWidget(_host(box(size: SoftSize.small)));
+      final t = tester.element(find.byType(Checkbox)).softToken;
+      expect(wordsOf(tester, 'Box'), t.fontSizeSM);
+
+      await tester.pumpWidget(_host(dot(size: SoftSize.large)));
+      expect(wordsOf(tester, 'Dot'), t.fontSizeLG);
+    });
+
+    testWidgets("a number is the side, with the nearest preset's words", (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(Column(children: [
+          box(size: const ControlSize.height(24)),
+          dot(size: const ControlSize.height(24)),
+        ])),
+      );
+      final t = tester.element(find.byType(Checkbox)).softToken;
+      expect(boxOf(tester), 24);
+      expect(dotOf(tester), 24);
+      expect(wordsOf(tester, 'Box'), t.fontSizeLG);
+    });
+
+    testWidgets('a small subtree makes them small, beside a switch', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ConfigProvider(
+          componentSize: SoftSize.small,
+          child: _host(Column(children: [box(), dot()])),
+        ),
+      );
+      expect(boxOf(tester), 14);
+      expect(dotOf(tester), 14);
+    });
+
+    testWidgets("a group of dots takes the group's size", (tester) async {
+      await tester.pumpWidget(
+        _host(
+          RadioGroup<String>(
+            value: 'a',
+            size: SoftSize.large,
+            onChanged: (_) {},
+            options: const [
+              RadioOption(value: 'a', label: Text('A')),
+              RadioOption(value: 'b', label: Text('B')),
+            ],
+          ),
+        ),
+      );
+      expect(dotOf(tester), 20, reason: 'it used to reach the buttons alone');
+    });
+
+    testWidgets("a group of boxes takes the group's size", (tester) async {
+      await tester.pumpWidget(
+        _host(
+          CheckboxGroup<String>(
+            value: const [],
+            size: SoftSize.small,
+            onChanged: (_) {},
+            options: const [CheckboxOption(value: 'a', label: Text('A'))],
+          ),
+        ),
+      );
+      expect(boxOf(tester), 14);
+    });
+
+    testWidgets('the token says how many pixels each preset is', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          Column(children: [
+            Checkbox(
+              size: SoftSize.large,
+              token: const CheckboxToken(boxSizeLG: 28),
+              onChanged: (_) {},
+            ),
+            Radio<String>(
+              value: 'a',
+              groupValue: 'a',
+              size: SoftSize.small,
+              token: const RadioToken(radioSizeSM: 12),
+              onChanged: (_) {},
+            ),
+          ]),
+        ),
+      );
+      expect(boxOf(tester), 28);
+      expect(dotOf(tester), 12);
+    });
+  });
+}

@@ -43,6 +43,7 @@ The handle carries what the field holds and what may be done to it:
 | `error` / `warning` | What the rules made of it |
 | `status` | The same, as an `InputStatus` — hand it straight to `Input`, `Select`, `InputNumber` or a picker and the border recolours itself |
 | `disabled` | Whether the form or the field has barred it |
+| `readOnly` | Whether the form or the field shows its value and takes no change — hand it to the control's own `readOnly` |
 | `validate` | Ask the rules now, whatever the trigger says |
 
 ## A field of a kind the kit knows
@@ -70,11 +71,15 @@ FormItem.check(name: 'terms', title: const Text('I agree'))
 | `FormItem.selectMany` | `Select`, multiple | a list of them |
 | `FormItem.radio` | `RadioGroup` | one value |
 | `FormItem.slider` | `Slider` | `double` |
+| `FormItem.dateRange` | `DateRangePicker` | `DateRange` |
+| `FormItem.multiDate` | `MultiDatePicker` | a list of `DateTime` |
+| `FormItem.segmented` | `Segmented` | one value — and needs `initialValue`, since a segmented control always shows one taken |
+| `FormItem.upload` | `Upload` | a list of `UploadItem` — `pick` hands back the files chosen, and a file's remove takes it out |
 
 Each takes everything a `FormItem` takes — `label`, `rules`, `initialValue`,
-`help`, `extra`, `required`, `trigger`, `disabled` — and a handful of the
-control's own: `placeholder` for text, `min`/`max` for a number, `options`
-for a choice. Only a handful, deliberately: passing the whole of a control's
+`help`, `extra`, `required`, `trigger`, `disabled`, `readOnly` — and a
+handful of the control's own: `placeholder` and `keyboardType` for text,
+`min`/`max` for a number, `options` for a choice. Only a handful, deliberately: passing the whole of a control's
 API through would leave two interfaces to keep in step instead of one. For
 anything further, or for a control the kit has never heard of, the general
 `FormItem<T>` with a `builder` is still there.
@@ -246,6 +251,29 @@ A barred field's rules are not asked, and any message it had goes. A required
 field the reader cannot type into would otherwise refuse the form for ever,
 pointing at a box they are not allowed to touch. Bar a field with `disabled`
 on it, or every field with `disabled` on the form.
+
+### Read-only
+
+`readOnly` is the same form in a view that is not for editing — a profile
+shown back, an order already placed. Every field keeps its colours, because
+what it holds is the point of the page, and none of them takes a change. Their
+rules are not asked, for the same reason a barred field's are not.
+
+```dart
+Form(
+  readOnly: !_editing,
+  initialValues: profile,
+  child: Column(children: [
+    FormItem.text(name: 'name', label: const Text('Name')),
+    FormItem.check(name: 'newsletter', label: const Text('Newsletter')),
+    // Still open while the rest is shown back.
+    FormItem.text(name: 'note', readOnly: false),
+  ]),
+)
+```
+
+A field may say otherwise for itself with its own `readOnly`; left null it
+takes the form's.
 
 Two fields may not share a name. The second would take the first's place —
 only one of them validated, both writing to the same value — so the form says

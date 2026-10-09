@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/close_cross.dart';
 import '../../utils/overlay_host.dart';
 import '../general/button.dart';
 import 'message.dart' show StatusType;
@@ -89,20 +90,6 @@ class _ResolvedModalToken {
   final double contentFontSize;
 }
 
-/// Where a [Modal]'s close button stands, and what makes room for it.
-enum ModalClosePlacement {
-  /// In a column of its own beside the title and the content, which are both
-  /// narrowed by it all the way down. Nothing can ever run under it.
-  beside,
-
-  /// In the corner, over the dialog. The title keeps clear of it; the
-  /// content below the title runs the dialog's full width.
-  ///
-  /// With no title, nothing makes room: content that starts at the top runs
-  /// under the cross unless it leaves room itself.
-  corner,
-}
-
 /// Everything a single modal can be configured with.
 ///
 /// Pass one to [ModalApi.open] when the shorthand openers such as
@@ -124,7 +111,7 @@ class ModalConfig {
     this.centered = false,
     this.top,
     this.closable = true,
-    this.closePlacement = ModalClosePlacement.beside,
+    this.closePlacement = ClosePlacement.beside,
     this.maskClosable = true,
     this.escapeClosable = true,
     this.barrierColor,
@@ -197,13 +184,13 @@ class ModalConfig {
 
   /// Whether the close button narrows the content or stands over it.
   ///
-  /// [ModalClosePlacement.beside], the default, gives the cross a column of
+  /// [ClosePlacement.beside], the default, gives the cross a column of
   /// its own, so the content is narrower than the dialog all the way down —
   /// a table or an image in the body loses the cross's width for the sake of
-  /// one line at the top. [ModalClosePlacement.corner] lets the content have
+  /// one line at the top. [ClosePlacement.corner] lets the content have
   /// the whole width and keeps only the title clear of the cross. Ignored
   /// when [closable] is false.
-  final ModalClosePlacement closePlacement;
+  final ClosePlacement closePlacement;
 
   /// Whether tapping the mask dismisses the modal.
   ///
@@ -574,12 +561,23 @@ class _ModalCardState extends State<_ModalCard>
       child: Stack(
         children: [
           Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            // A screen reader is told what a tap on the mask does — the
+            // way Flutter's own barrier says "dismiss" — and is told nothing
+            // when it does nothing: a full-screen node with a tap and no words
+            // was what a reader met everywhere outside the panel.
+            child: Semantics(
+              label: _config.maskClosable ? context.seedLocale.close : null,
               onTap: _config.maskClosable
                   ? () => widget.entry.dismiss(false)
                   : null,
-              child: ColoredBox(color: _config.barrierColor ?? r.colorBgMask),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                excludeFromSemantics: true,
+                onTap: _config.maskClosable
+                    ? () => widget.entry.dismiss(false)
+                    : null,
+                child: ColoredBox(color: _config.barrierColor ?? r.colorBgMask),
+              ),
             ),
           ),
           Positioned.fill(
@@ -622,9 +620,8 @@ class _ModalCardState extends State<_ModalCard>
     // meets a stack of loose text over a dimmed page and is not told that a
     // window has opened, nor which one — the routes it announces are the
     // ones a Navigator pushed, and this one is an overlay.
-    final close = _ModalCloseButton(
-      token: token,
-      onTap: () => widget.entry.dismiss(false),
+    final close = CloseCross(
+      onPressed: () => widget.entry.dismiss(false),
     );
 
     return Semantics(
@@ -707,8 +704,7 @@ class _ModalCardState extends State<_ModalCard>
                       ),
                     ),
                     if (config.closable &&
-                        config.closePlacement ==
-                            ModalClosePlacement.beside) ...[
+                        config.closePlacement == ClosePlacement.beside) ...[
                       SizedBox(width: token.sizeXS),
                       close,
                     ],
@@ -725,15 +721,14 @@ class _ModalCardState extends State<_ModalCard>
   }
 
   /// The dialog's body with the cross laid over its corner, where it is
-  /// [ModalClosePlacement.corner]; otherwise the body as it is.
+  /// [ClosePlacement.corner]; otherwise the body as it is.
   ///
   /// Over the padded box rather than the card's edge, so the cross stands
   /// exactly where it stands beside the content — switching placement moves
   /// what is under it, never the cross itself. Last in the stack, so a
   /// screen reader still meets it after the words, as it does beside them.
   Widget _withCornerClose(ModalConfig config, Widget close, Widget body) {
-    if (!config.closable ||
-        config.closePlacement != ModalClosePlacement.corner) {
+    if (!config.closable || config.closePlacement != ClosePlacement.corner) {
       return body;
     }
     return Stack(
@@ -749,13 +744,12 @@ class _ModalCardState extends State<_ModalCard>
   /// The width a column beside it would have taken, on the title alone: the
   /// title shares the cross's line, and the content under it does not.
   Widget _clearOfCorner(ModalConfig config, Token token, Widget title) {
-    if (!config.closable ||
-        config.closePlacement != ModalClosePlacement.corner) {
+    if (!config.closable || config.closePlacement != ClosePlacement.corner) {
       return title;
     }
     return Padding(
       padding: EdgeInsetsDirectional.only(
-        end: _ModalCloseButton.extent + token.sizeXS,
+        end: CloseCross.extent + token.sizeXS,
       ),
       child: title,
     );
@@ -781,7 +775,9 @@ class _ModalCardState extends State<_ModalCard>
         if (custom != null)
           for (final widget in custom)
             Padding(
-              padding: EdgeInsets.only(left: token.sizeXS),
+              // Before each button in reading order, so the last one meets
+              // the dialog's edge in either direction.
+              padding: EdgeInsetsDirectional.only(start: token.sizeXS),
               child: widget,
             )
         else ...[
@@ -802,50 +798,6 @@ class _ModalCardState extends State<_ModalCard>
           ),
         ],
       ],
-    );
-  }
-}
-
-class _ModalCloseButton extends StatefulWidget {
-  const _ModalCloseButton({required this.token, required this.onTap});
-
-  /// How wide and tall the button is, which is also the room a title leaves
-  /// for it in the corner.
-  static const double extent = 22;
-
-  final Token token;
-  final VoidCallback onTap;
-
-  @override
-  State<_ModalCloseButton> createState() => _ModalCloseButtonState();
-}
-
-class _ModalCloseButtonState extends State<_ModalCloseButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final token = widget.token;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-          width: _ModalCloseButton.extent,
-          height: _ModalCloseButton.extent,
-          decoration: BoxDecoration(
-            color: _hovered ? token.colorFillSecondary : null,
-            borderRadius: BorderRadius.circular(token.borderRadiusSM),
-          ),
-          child: CustomPaint(
-            painter: CrossPainter(
-              _hovered ? token.colorText : token.colorTextTertiary,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

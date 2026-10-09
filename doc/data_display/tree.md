@@ -176,7 +176,11 @@ Tree(
 
 ```dart
 ConfigProvider(
-  components: const [TreeToken(nodeSelectedBg: Color(0xFFE6F4FF))],
+  theme: ThemeData(
+    components: const ComponentsConfig(
+      tree: TreeToken(nodeSelectedBg: Color(0xFFE6F4FF)),
+    ),
+  ),
   child: MaterialApp(...),
 )
 ```

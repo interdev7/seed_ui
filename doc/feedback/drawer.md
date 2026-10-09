@@ -189,7 +189,9 @@ drawer.open(DrawerConfig(
 
 // …or for every drawer in a subtree:
 ConfigProvider(
-  components: const [DrawerToken()],
+  theme: ThemeData(
+    components: const ComponentsConfig(drawer: DrawerToken()),
+  ),
   child: MaterialApp(...),
 );
 ```

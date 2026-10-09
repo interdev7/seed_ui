@@ -6,8 +6,8 @@ import 'package:flutter/widgets.dart';
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
+import '../../utils/close_cross.dart';
 import '../../utils/overlay_host.dart';
-import '../../utils/pressable.dart';
 import 'message.dart' show StatusType;
 
 /// Screen corner a notification is anchored to.
@@ -124,6 +124,7 @@ class NotificationConfig {
     this.onClose,
     this.onTap,
     this.closable = true,
+    this.closePlacement = ClosePlacement.beside,
     this.key,
     this.token,
   });
@@ -173,6 +174,16 @@ class NotificationConfig {
   /// or through its own [actions] — otherwise the user is left with no way
   /// out.
   final bool closable;
+
+  /// Whether the close button narrows the card's words or stands over its
+  /// corner.
+  ///
+  /// [ClosePlacement.beside], the default, gives the cross a column of its
+  /// own, so the description and the actions are narrower than the card all
+  /// the way down. [ClosePlacement.corner] lets them have the whole width and
+  /// keeps only the message clear of the cross. Ignored when [closable] is
+  /// false.
+  final ClosePlacement closePlacement;
 
   /// Reusing a key replaces the notification already showing under it.
   final Object? key;
@@ -926,6 +937,78 @@ class _NotificationCardState extends State<_NotificationCard>
   Widget _card(Token token, _ResolvedNotificationToken r) {
     final config = widget.config;
     final hasIcon = config.icon != null || config.type != null;
+    final corner =
+        config.closable && config.closePlacement == ClosePlacement.corner;
+    final close = CloseCross(onPressed: widget.onClose);
+
+    final content = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (hasIcon) ...[
+          config.icon ?? StatusIcon(type: config.type!, token: token),
+          SizedBox(width: token.sizeSM),
+        ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DefaultTextStyle(
+                style: TextStyle(
+                  color: token.colorText,
+                  fontSize: r.titleFontSize,
+                  fontFamily: token.fontFamily,
+                  fontFamilyFallback: token.fontFamilyFallback,
+                  decoration: TextDecoration.none,
+                ),
+                child: corner
+                    ? Padding(
+                        // The width a column beside it would have taken, on
+                        // the message alone: it shares the cross's line,
+                        // and nothing under it does.
+                        padding: EdgeInsetsDirectional.only(
+                          end: CloseCross.extent + token.sizeXS,
+                        ),
+                        child: config.message,
+                      )
+                    : config.message,
+              ),
+              if (config.description != null) ...[
+                SizedBox(height: token.sizeXS),
+                DefaultTextStyle(
+                  style: TextStyle(
+                    color: token.colorTextSecondary,
+                    fontSize: r.descriptionFontSize,
+                    fontFamily: token.fontFamily,
+                    fontFamilyFallback: token.fontFamilyFallback,
+                    height: token.lineHeight,
+                    decoration: TextDecoration.none,
+                  ),
+                  child: config.description!,
+                ),
+              ],
+              if (config.actions != null && config.actions!.isNotEmpty) ...[
+                SizedBox(height: token.sizeSM),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    for (final action in config.actions!)
+                      Padding(
+                        padding:
+                            EdgeInsetsDirectional.only(start: token.sizeXS),
+                        child: action,
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (config.closable && !corner) ...[
+          SizedBox(width: token.sizeXS),
+          close,
+        ],
+      ],
+    );
 
     Widget card = Container(
       // Nominal width, capped to whatever room the viewport leaves.
@@ -936,63 +1019,17 @@ class _NotificationCardState extends State<_NotificationCard>
         borderRadius: BorderRadius.circular(r.borderRadius),
         boxShadow: token.boxShadow,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (hasIcon) ...[
-            config.icon ?? StatusIcon(type: config.type!, token: token),
-            SizedBox(width: token.sizeSM),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      // In the corner, the cross is laid over the padded box, so it stands
+      // exactly where it stands beside the words; last, so a reader still
+      // meets it after them.
+      child: corner
+          ? Stack(
               children: [
-                DefaultTextStyle(
-                  style: TextStyle(
-                    color: token.colorText,
-                    fontSize: r.titleFontSize,
-                    fontFamily: token.fontFamily,
-                    fontFamilyFallback: token.fontFamilyFallback,
-                    decoration: TextDecoration.none,
-                  ),
-                  child: config.message,
-                ),
-                if (config.description != null) ...[
-                  SizedBox(height: token.sizeXS),
-                  DefaultTextStyle(
-                    style: TextStyle(
-                      color: token.colorTextSecondary,
-                      fontSize: r.descriptionFontSize,
-                      fontFamily: token.fontFamily,
-                      fontFamilyFallback: token.fontFamilyFallback,
-                      height: token.lineHeight,
-                      decoration: TextDecoration.none,
-                    ),
-                    child: config.description!,
-                  ),
-                ],
-                if (config.actions != null && config.actions!.isNotEmpty) ...[
-                  SizedBox(height: token.sizeSM),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      for (final action in config.actions!)
-                        Padding(
-                          padding: EdgeInsets.only(left: token.sizeXS),
-                          child: action,
-                        ),
-                    ],
-                  ),
-                ],
+                content,
+                PositionedDirectional(top: 0, end: 0, child: close),
               ],
-            ),
-          ),
-          if (config.closable) ...[
-            SizedBox(width: token.sizeXS),
-            _CloseButton(onTap: widget.onClose, token: token),
-          ],
-        ],
-      ),
+            )
+          : content,
     );
 
     if (config.onTap != null) {
@@ -1003,50 +1040,5 @@ class _NotificationCardState extends State<_NotificationCard>
       );
     }
     return card;
-  }
-}
-
-class _CloseButton extends StatefulWidget {
-  const _CloseButton({required this.onTap, required this.token});
-
-  final VoidCallback onTap;
-  final Token token;
-
-  @override
-  State<_CloseButton> createState() => _CloseButtonState();
-}
-
-class _CloseButtonState extends State<_CloseButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final token = widget.token;
-    return Pressable(
-      onPressed: widget.onTap,
-      semanticsLabel: context.seedLocale.close,
-      radius: token.borderRadiusSM,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: _hovered ? token.colorFillSecondary : null,
-              borderRadius: BorderRadius.circular(token.borderRadiusSM),
-            ),
-            child: CustomPaint(
-              painter: CrossPainter(
-                _hovered ? token.colorText : token.colorTextTertiary,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

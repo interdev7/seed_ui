@@ -1122,8 +1122,13 @@ class _HoleBarrier extends StatelessWidget {
 
   /// One of the four strips around the hole: it catches the tap that
   /// dismisses, and paints nothing — the wash below covers it.
+  ///
+  /// For the pointer only. To a screen reader four strips were four wordless
+  /// buttons round the field — a select, a picker — and a reader has the
+  /// field itself, which the hole leaves within reach, and Escape.
   Widget get _strip => GestureDetector(
         behavior: HitTestBehavior.translucent,
+        excludeFromSemantics: true,
         onTap: onTap,
       );
 

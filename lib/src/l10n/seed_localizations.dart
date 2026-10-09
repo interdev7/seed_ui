@@ -79,6 +79,7 @@ class SeedLocalizations {
     this.chooseFile = 'Choose a file',
     this.createOption = 'Create "{text}"',
     this.tabFallback = 'Tab {n}',
+    this.backToTop = 'Back to top',
     this.search = 'Search',
     this.selectAll = 'Select all items',
     this.sortedAscending = 'sorted ascending',
@@ -167,6 +168,9 @@ class SeedLocalizations {
 
   /// A `Tabs` item given no label of its own; `{n}` counts from one.
   final String tabFallback;
+
+  /// What a `BackTop` button is called out loud: an arrow, and no words.
+  final String backToTop;
 
   /// Placeholder of the field that narrows a `Table` column's filter menu.
   final String search;
@@ -415,6 +419,7 @@ class SeedLocalizations {
     String? chooseFile,
     String? createOption,
     String? tabFallback,
+    String? backToTop,
     String? search,
     String? selectAll,
     String? sortedAscending,
@@ -474,6 +479,7 @@ class SeedLocalizations {
         chooseFile: chooseFile ?? this.chooseFile,
         createOption: createOption ?? this.createOption,
         tabFallback: tabFallback ?? this.tabFallback,
+        backToTop: backToTop ?? this.backToTop,
         search: search ?? this.search,
         selectAll: selectAll ?? this.selectAll,
         sortedAscending: sortedAscending ?? this.sortedAscending,
@@ -617,6 +623,7 @@ class SeedLocalizations {
     chooseFile: 'Выберите файл',
     createOption: 'Создать «{text}»',
     tabFallback: 'Вкладка {n}',
+    backToTop: 'Наверх',
     clear: 'Очистить',
     add: 'Добавить',
     remove: 'Убрать',
@@ -698,6 +705,7 @@ class SeedLocalizations {
     chooseFile: 'Faýl saýlaň',
     createOption: '«{text}» döret',
     tabFallback: 'Bölüm {n}',
+    backToTop: 'Ýokaryk',
     clear: 'Arassalamak',
     add: 'Goşmak',
     remove: 'Aýyrmak',
@@ -778,6 +786,7 @@ class SeedLocalizations {
     chooseFile: 'Datei auswählen',
     createOption: '„{text}“ erstellen',
     tabFallback: 'Tab {n}',
+    backToTop: 'Nach oben',
     clear: 'Leeren',
     add: 'Hinzufügen',
     remove: 'Entfernen',
@@ -858,6 +867,7 @@ class SeedLocalizations {
     chooseFile: 'Choisir un fichier',
     createOption: 'Créer « {text} »',
     tabFallback: 'Onglet {n}',
+    backToTop: 'Haut de page',
     clear: 'Effacer',
     add: 'Ajouter',
     remove: 'Retirer',
@@ -939,6 +949,7 @@ class SeedLocalizations {
     chooseFile: 'Elegir un archivo',
     createOption: 'Crear «{text}»',
     tabFallback: 'Pestaña {n}',
+    backToTop: 'Volver arriba',
     clear: 'Borrar',
     add: 'Añadir',
     remove: 'Quitar',
@@ -1020,6 +1031,7 @@ class SeedLocalizations {
     chooseFile: '选择文件',
     createOption: '创建“{text}”',
     tabFallback: '标签页 {n}',
+    backToTop: '回到顶部',
     clear: '清除',
     add: '添加',
     remove: '移除',
@@ -1100,6 +1112,7 @@ class SeedLocalizations {
     chooseFile: 'ファイルを選択',
     createOption: '「{text}」を作成',
     tabFallback: 'タブ {n}',
+    backToTop: 'トップへ戻る',
     clear: 'クリア',
     add: '追加',
     remove: '削除',
@@ -1181,6 +1194,7 @@ class SeedLocalizations {
     chooseFile: 'Dosya seçin',
     createOption: '"{text}" oluştur',
     tabFallback: 'Sekme {n}',
+    backToTop: 'Başa dön',
     clear: 'Temizle',
     add: 'Ekle',
     remove: 'Kaldır',
@@ -1261,6 +1275,7 @@ class SeedLocalizations {
     chooseFile: 'Escolher um arquivo',
     createOption: 'Criar "{text}"',
     tabFallback: 'Aba {n}',
+    backToTop: 'Voltar ao topo',
     clear: 'Limpar',
     add: 'Adicionar',
     remove: 'Remover',
@@ -1342,6 +1357,7 @@ class SeedLocalizations {
     chooseFile: 'اختر ملفًا',
     createOption: 'إنشاء "{text}"',
     tabFallback: 'علامة التبويب {n}',
+    backToTop: 'العودة إلى الأعلى',
     clear: 'مسح',
     add: 'إضافة',
     remove: 'إزالة',
@@ -1424,6 +1440,7 @@ class SeedLocalizations {
     chooseFile: 'בחירת קובץ',
     createOption: 'יצירת "{text}"',
     tabFallback: 'כרטיסייה {n}',
+    backToTop: 'חזרה למעלה',
     clear: 'ניקוי',
     add: 'הוספה',
     remove: 'הסרה',

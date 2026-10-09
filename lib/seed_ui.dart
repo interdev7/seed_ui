@@ -345,6 +345,7 @@ export 'src/components/general/compact.dart'
     show Compact, CompactPosition, CompactSlot;
 export 'src/components/general/float_button.dart'
     show
+        BackTop,
         FloatButton,
         FloatButtonController,
         FloatButtonCustom,

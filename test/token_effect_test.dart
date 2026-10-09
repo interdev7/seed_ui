@@ -3316,6 +3316,36 @@ final _probes = <_Probe>[
     act: _pressAnchor,
   ),
   _Probe(
+    'FloatButtonToken.progressColor',
+    // Only a button carrying a ring has one to colour or thicken.
+    (c) => FloatButton(
+      icon: const Icon(Icons.add),
+      progress: 0.4,
+      onPressed: () {},
+      token: c ? const FloatButtonToken(progressColor: _loud) : null,
+    ),
+  ),
+  _Probe(
+    'FloatButtonToken.progressTrailColor',
+    // Only a button carrying a ring has one to colour or thicken.
+    (c) => FloatButton(
+      icon: const Icon(Icons.add),
+      progress: 0.4,
+      onPressed: () {},
+      token: c ? const FloatButtonToken(progressTrailColor: _loud) : null,
+    ),
+  ),
+  _Probe(
+    'FloatButtonToken.progressWidth',
+    // Only a button carrying a ring has one to colour or thicken.
+    (c) => FloatButton(
+      icon: const Icon(Icons.add),
+      progress: 0.4,
+      onPressed: () {},
+      token: c ? const FloatButtonToken(progressWidth: 8) : null,
+    ),
+  ),
+  _Probe(
     'FloatButtonToken.maskColor',
     // The page behind an open group, which only a group opened by a tap dims.
     (c) => FloatButtonGroup(

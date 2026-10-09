@@ -61,6 +61,10 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
   final _controller = FloatButtonController();
   String _layout = 'fan';
   double _jitter = 0;
+  double _upload = 0.35;
+  Offset _carried = Offset.zero;
+  final _page = ScrollController();
+
   double? _radius;
   ControlSize _size = SoftSize.middle;
   FloatButtonDirection _direction = FloatButtonDirection.auto;
@@ -92,6 +96,7 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
   @override
   void dispose() {
     _controller.dispose();
+    _page.dispose();
     super.dispose();
   }
 
@@ -507,6 +512,84 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
               trigger: FloatButtonTrigger.hover,
               layout: FloatButtonLayout.horizontal(),
               items: _actions,
+            ),
+          ),
+        ),
+        Group(
+          'A ring of progress',
+          Row(
+            children: [
+              FloatButton(
+                icon: const Icon(Icons.upload),
+                progress: _upload,
+                semanticsLabel: 'Uploading',
+                onPressed: () {},
+              ),
+              const SizedBox(width: 16),
+              FloatButton(
+                icon: const Icon(Icons.upload),
+                shape: ButtonShape.defaultShape,
+                progress: _upload,
+                semanticsLabel: 'Uploading',
+                onPressed: () {},
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Slider(
+                  value: _upload * 100,
+                  semanticsLabel: 'How far',
+                  onChanged: (v) => setState(() => _upload = v / 100),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Group(
+          'Back to the top, with how far down the page is',
+          // A page of its own in a box, so there is something to scroll
+          // without moving the whole demo.
+          Container(
+            height: 260,
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0x22000000)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Stack(
+              children: [
+                ListView(
+                  controller: _page,
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    for (var i = 1; i <= 60; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text('Paragraph $i — scroll down'),
+                      ),
+                  ],
+                ),
+                Positioned(
+                  right: 16,
+                  bottom: 16,
+                  child: BackTop(
+                    controller: _page,
+                    visibilityHeight: 120,
+                    showProgress: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Group(
+          'Carried by hand — drag it anywhere, press it still',
+          _stage(
+            FloatButton(
+              icon: const Icon(Icons.chat_bubble_outline),
+              semanticsLabel: 'Chat',
+              draggable: true,
+              offset: _carried,
+              onOffsetChanged: (o) => setState(() => _carried = o),
+              onPressed: () => message.info('Pressed, not dragged'),
             ),
           ),
         ),

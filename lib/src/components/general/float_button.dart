@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart'
     show HardwareKeyboard, KeyDownEvent, KeyEvent, LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
@@ -447,6 +448,9 @@ class FloatButtonToken {
     this.motionDuration,
     this.curve,
     this.maskColor,
+    this.progressColor,
+    this.progressTrailColor,
+    this.progressWidth,
   });
 
   /// Diameter of a round button, height of a square one — the standard
@@ -496,6 +500,17 @@ class FloatButtonToken {
   /// dimming the page and taking that tap are two different wishes.
   final Color? maskColor;
 
+  /// The part of a progress ring already done. Defaults to the primary.
+  final Color? progressColor;
+
+  /// The part of a progress ring still to go. Defaults to the theme's
+  /// secondary border colour.
+  final Color? progressTrailColor;
+
+  /// How thick a progress ring is. Defaults to twice the theme's line width:
+  /// it is drawn where the button's edge is, and has to read as more than one.
+  final double? progressWidth;
+
   _ResolvedFloatButtonToken _resolve(Token t) => _ResolvedFloatButtonToken(
         size: size ?? t.controlHeightLG + t.sizeXS,
         sizeSM: sizeSM ?? t.controlHeight + t.sizeXS,
@@ -527,6 +542,9 @@ class FloatButtonToken {
         motionDuration: motionDuration ?? t.motionDurationSlow,
         curve: curve ?? t.easeOutBack,
         maskColor: maskColor ?? const Color(0x00000000),
+        progressColor: progressColor ?? t.primary.base,
+        progressTrailColor: progressTrailColor ?? t.colorBorderSecondary,
+        progressWidth: progressWidth ?? t.lineWidth * 2,
       );
 
   /// This one with [other]'s fields laid over it, one field at a time.
@@ -542,6 +560,9 @@ class FloatButtonToken {
         shadow: other.shadow ?? shadow,
         motionDuration: other.motionDuration ?? motionDuration,
         maskColor: other.maskColor ?? maskColor,
+        progressColor: other.progressColor ?? progressColor,
+        progressTrailColor: other.progressTrailColor ?? progressTrailColor,
+        progressWidth: other.progressWidth ?? progressWidth,
         curve: other.curve ?? curve,
       );
 }
@@ -561,6 +582,9 @@ class _ResolvedFloatButtonToken {
     required this.motionDuration,
     required this.curve,
     required this.maskColor,
+    required this.progressColor,
+    required this.progressTrailColor,
+    required this.progressWidth,
   });
 
   final double size;
@@ -575,6 +599,9 @@ class _ResolvedFloatButtonToken {
   final Duration motionDuration;
   final Curve curve;
   final Color maskColor;
+  final Color progressColor;
+  final Color progressTrailColor;
+  final double progressWidth;
 }
 
 /// Defaults for every [FloatButton] and [FloatButtonGroup] under a
@@ -677,6 +704,11 @@ class FloatButton extends StatelessWidget {
     this.disabled,
     this.labelPlacement,
     this.semanticsLabel,
+    this.progress,
+    this.draggable = false,
+    this.offset,
+    this.defaultOffset,
+    this.onOffsetChanged,
     this.token,
   });
 
@@ -716,6 +748,37 @@ class FloatButton extends StatelessWidget {
   /// What a screen reader announces. Falls back to nothing, so give one to
   /// any button whose mark is an icon alone.
   final String? semanticsLabel;
+
+  /// How far something has got, from 0 to 1, drawn as a ring round the
+  /// button's edge: done in the token's `progressColor`, still to go in its
+  /// `progressTrailColor`, starting at the top and running clockwise, and
+  /// following the button's own shape — round or square.
+  ///
+  /// A file uploading, a timer, how far down a page is — [BackTop] passes
+  /// the last of those. Null draws no ring and leaves the edge as it was. A
+  /// screen reader is told the figure as the button's value.
+  final double? progress;
+
+  /// Whether a hand may carry the button somewhere else on the screen.
+  ///
+  /// A press that moves more than a touch's slop becomes a drag; one that
+  /// does not is still a press. The button is kept on the screen however far
+  /// it is pushed. Where it ends up is [offset] from where it is laid out —
+  /// handed back through [onOffsetChanged] to be kept, so a button the reader
+  /// moved out of the way stays where they put it.
+  final bool draggable;
+
+  /// How far the button stands from where it is laid out (controlled).
+  /// Moving it calls [onOffsetChanged]; the button moves when this does.
+  final Offset? offset;
+
+  /// Where it starts, from where it is laid out (uncontrolled). Moving it
+  /// then moves it without anyone having to hand the offset back.
+  final Offset? defaultOffset;
+
+  /// Called as a drag moves the button, with how far it now stands from
+  /// where it is laid out.
+  final ValueChanged<Offset>? onOffsetChanged;
 
   /// Per-instance token overrides.
   final FloatButtonToken? token;
@@ -779,6 +842,23 @@ class FloatButton extends StatelessWidget {
       child: button,
     );
 
+    final done = progress;
+    if (done != null) {
+      // Over the button's edge, where the border is, and as thick as the
+      // token says: the ring takes the border's place rather than circling
+      // outside it, so the button keeps the size it had.
+      button = CustomPaint(
+        foregroundPainter: _ProgressRingPainter(
+          progress: done.clamp(0.0, 1.0),
+          radius: radius,
+          width: r.progressWidth,
+          color: r.progressColor,
+          trail: r.progressTrailColor,
+        ),
+        child: button,
+      );
+    }
+
     if (label != null) {
       button = _Labelled(
         placement: labelPlacement ??
@@ -792,12 +872,91 @@ class FloatButton extends StatelessWidget {
       );
     }
 
-    return Semantics(
+    final semantic = Semantics(
       button: true,
       label: semanticsLabel,
+      value: done == null
+          ? null
+          : context.seedLocale
+              .figures('${(done.clamp(0.0, 1.0) * 100).round()}%'),
       child: button,
     );
+    if (!draggable && offset == null && defaultOffset == null) return semantic;
+    return _DragShift(
+      enabled: draggable,
+      offset: offset,
+      defaultOffset: defaultOffset,
+      onChanged: onOffsetChanged,
+      child: semantic,
+    );
   }
+}
+
+/// A ring round a float button's edge: [progress] of it in [color], the rest
+/// in [trail].
+///
+/// The edge is walked from its top centre, clockwise, along the button's own
+/// outline — a circle, or a square with rounded corners — so the same share
+/// covers the same length of edge whatever the shape.
+class _ProgressRingPainter extends CustomPainter {
+  const _ProgressRingPainter({
+    required this.progress,
+    required this.radius,
+    required this.width,
+    required this.color,
+    required this.trail,
+  });
+
+  final double progress;
+  final double radius;
+  final double width;
+  final Color color;
+  final Color trail;
+
+  /// The outline, from the top centre round clockwise, inset by half the
+  /// stroke so the ring sits inside the edge as a border does.
+  Path _outline(Size size) {
+    final rect = (Offset.zero & size).deflate(width / 2);
+    final r = math.min(
+      math.max(0.0, radius - width / 2),
+      math.min(rect.width, rect.height) / 2,
+    );
+    final corner = Radius.circular(r);
+    return Path()
+      ..moveTo(rect.center.dx, rect.top)
+      ..lineTo(rect.right - r, rect.top)
+      ..arcToPoint(Offset(rect.right, rect.top + r), radius: corner)
+      ..lineTo(rect.right, rect.bottom - r)
+      ..arcToPoint(Offset(rect.right - r, rect.bottom), radius: corner)
+      ..lineTo(rect.left + r, rect.bottom)
+      ..arcToPoint(Offset(rect.left, rect.bottom - r), radius: corner)
+      ..lineTo(rect.left, rect.top + r)
+      ..arcToPoint(Offset(rect.left + r, rect.top), radius: corner)
+      ..close();
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final outline = _outline(size);
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width;
+    canvas.drawPath(outline, stroke..color = trail);
+    if (progress <= 0) return;
+    final metric = outline.computeMetrics().first;
+    canvas.drawPath(
+      metric.extractPath(0, metric.length * progress),
+      stroke..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ProgressRingPainter old) =>
+      old.progress != progress ||
+      old.radius != radius ||
+      old.width != width ||
+      old.color != color ||
+      old.trail != trail;
 }
 
 /// A button with its caption hung outside its own box.
@@ -1058,6 +1217,10 @@ class FloatButtonGroup<T> extends StatefulWidget {
     this.onItemTap,
     this.itemBuilder,
     this.labelBuilder,
+    this.draggable = false,
+    this.offset,
+    this.defaultOffset,
+    this.onOffsetChanged,
     this.dismissible,
     this.closeOnSelect,
     this.labelPlacement,
@@ -1131,6 +1294,28 @@ class FloatButtonGroup<T> extends StatefulWidget {
   /// Use [itemBuilder] instead to wrap the whole item, button and caption
   /// together.
   final FloatButtonLabelBuilder<T>? labelBuilder;
+
+  /// Whether a hand may carry the group's trigger somewhere else on the screen.
+  ///
+  /// The group closes as a drag begins and opens from wherever it is left.
+  /// A press that moves more than a touch's slop becomes a drag; one that
+  /// does not is still a press. The button is kept on the screen however far
+  /// it is pushed. Where it ends up is [offset] from where it is laid out —
+  /// handed back through [onOffsetChanged] to be kept, so a button the reader
+  /// moved out of the way stays where they put it.
+  final bool draggable;
+
+  /// How far the button stands from where it is laid out (controlled).
+  /// Moving it calls [onOffsetChanged]; the button moves when this does.
+  final Offset? offset;
+
+  /// Where it starts, from where it is laid out (uncontrolled). Moving it
+  /// then moves it without anyone having to hand the offset back.
+  final Offset? defaultOffset;
+
+  /// Called as a drag moves the button, with how far it now stands from
+  /// where it is laid out.
+  final ValueChanged<Offset>? onOffsetChanged;
 
   /// Whether a tap on open ground closes the group. Defaults to yes.
   ///
@@ -1641,17 +1826,31 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
           ),
     );
 
-    if (_trigger == FloatButtonTrigger.hover) {
-      return MouseRegion(
-        onEnter: (_) {
-          _cancelClose();
-          _ask(true);
-        },
-        onExit: (_) => _scheduleClose(),
-        child: trigger,
-      );
+    final Widget body = _trigger == FloatButtonTrigger.hover
+        ? MouseRegion(
+            onEnter: (_) {
+              _cancelClose();
+              _ask(true);
+            },
+            onExit: (_) => _scheduleClose(),
+            child: trigger,
+          )
+        : trigger;
+    if (!widget.draggable &&
+        widget.offset == null &&
+        widget.defaultOffset == null) {
+      return body;
     }
-    return trigger;
+    return _DragShift(
+      enabled: widget.draggable,
+      offset: widget.offset,
+      defaultOffset: widget.defaultOffset,
+      onChanged: widget.onOffsetChanged,
+      // Shut as it is picked up: a fan left open where the trigger was would
+      // hang from nothing, and it opens from wherever the trigger is put.
+      onStart: () => _ask(false),
+      child: body,
+    );
   }
 }
 
@@ -1724,4 +1923,317 @@ class _FloatFlowDelegate extends FlowDelegate {
       gap != old.gap ||
       curve != old.curve ||
       progress != old.progress;
+}
+
+/// A float button that takes a page back to its top, shown once the page has
+/// been scrolled far enough to need it.
+///
+/// ```dart
+/// Scaffold(
+///   body: ListView(controller: scroll, children: [...]),
+///   floatingActionButton: BackTop(controller: scroll, showProgress: true),
+/// )
+/// ```
+///
+/// It watches [controller] — or, given none, the screen's primary scroll
+/// controller — and fades in once the page is [visibilityHeight] down. A
+/// press scrolls back up over [duration]; where the platform asks for
+/// reduced motion it goes at once. [showProgress] draws how far down the page
+/// is as a ring round the button's edge.
+class BackTop extends StatefulWidget {
+  /// Creates a [BackTop].
+  const BackTop({
+    super.key,
+    this.controller,
+    this.visibilityHeight = 400,
+    this.duration = const Duration(milliseconds: 450),
+    this.showProgress = false,
+    this.icon,
+    this.color,
+    this.shape,
+    this.size,
+    this.onPressed,
+    this.semanticsLabel,
+    this.token,
+  });
+
+  /// The scrolling it watches and takes back up. Null takes the screen's
+  /// primary scroll controller, which is what a `Scaffold`'s scrolling body
+  /// uses unless it is handed a controller of its own.
+  final ScrollController? controller;
+
+  /// How far down the page has to be, in pixels, before the button shows.
+  /// Zero shows it from the start.
+  final double visibilityHeight;
+
+  /// How long the way back up takes. Ignored where the platform asks for
+  /// reduced motion: then it is instant.
+  final Duration duration;
+
+  /// Whether a ring round the edge shows how far down the page is. See
+  /// [FloatButton.progress].
+  final bool showProgress;
+
+  /// The mark on the button. Defaults to an arrow up to a bar.
+  final Widget? icon;
+
+  /// See [FloatButton.color].
+  final ButtonColor? color;
+
+  /// See [FloatButton.shape].
+  final ButtonShape? shape;
+
+  /// See [FloatButton.size].
+  final ControlSize? size;
+
+  /// Called when it is pressed, as the way back up begins.
+  final VoidCallback? onPressed;
+
+  /// What a screen reader calls it. Defaults to the kit's words for back to
+  /// top, in the app's language.
+  final String? semanticsLabel;
+
+  /// See [FloatButton.token].
+  final FloatButtonToken? token;
+
+  @override
+  State<BackTop> createState() => _BackTopState();
+}
+
+class _BackTopState extends State<BackTop> {
+  ScrollController? _watched;
+
+  ScrollController? get _controller =>
+      widget.controller ?? PrimaryScrollController.maybeOf(context);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _watch();
+  }
+
+  @override
+  void didUpdateWidget(BackTop old) {
+    super.didUpdateWidget(old);
+    _watch();
+  }
+
+  /// Listens to the controller in force, and to no other.
+  void _watch() {
+    final next = _controller;
+    if (identical(next, _watched)) return;
+    _watched?.removeListener(_onScroll);
+    _watched = next?..addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _watched?.removeListener(_onScroll);
+    super.dispose();
+  }
+
+  /// A scroll is a rebuild, and nothing more: what to show is worked out in
+  /// [build] from where the page is, so a page that changes height — a window
+  /// resized, content loaded — is read afresh too.
+  void _onScroll() {
+    if (mounted) setState(() {});
+  }
+
+  /// The first attached position, or null where nothing scrolls yet.
+  ScrollPosition? get _position {
+    final c = _watched;
+    if (c == null || !c.hasClients) return null;
+    return c.positions.first;
+  }
+
+  void _toTop() {
+    final position = _position;
+    widget.onPressed?.call();
+    if (position == null || !position.hasContentDimensions) return;
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (still || widget.duration == Duration.zero) {
+      position.jumpTo(position.minScrollExtent);
+    } else {
+      position.animateTo(
+        position.minScrollExtent,
+        duration: widget.duration,
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final position = _position;
+    // Before the page has been laid out its position knows where it is but
+    // not how far it reaches, and asking the second throws.
+    final measured =
+        position != null && position.hasPixels && position.hasContentDimensions;
+    final down = measured ? position.pixels - position.minScrollExtent : 0.0;
+    final visible = down >= widget.visibilityHeight;
+    double progress = 0;
+    if (measured && position.maxScrollExtent > position.minScrollExtent) {
+      progress = (down / (position.maxScrollExtent - position.minScrollExtent))
+          .clamp(0.0, 1.0);
+    }
+
+    final button = FloatButton(
+      icon: widget.icon ??
+          Builder(
+            // Inside the button, so it takes the foreground and size the
+            // button settled on.
+            builder: (context) {
+              final theme = IconTheme.of(context);
+              final size = theme.size ?? 16;
+              return CustomPaint(
+                size: Size.square(size),
+                painter: _ToTopPainter(
+                  theme.color ?? const Color(0xFF000000),
+                ),
+              );
+            },
+          ),
+      color: widget.color,
+      shape: widget.shape,
+      size: widget.size,
+      progress: widget.showProgress ? progress : null,
+      semanticsLabel: widget.semanticsLabel ?? context.seedLocale.backToTop,
+      token: widget.token,
+      onPressed: _toTop,
+    );
+
+    // Faded out rather than taken away, so the page does not jump when it
+    // comes; and out of reach of a hand and a reader while it is gone.
+    return IgnorePointer(
+      ignoring: !visible,
+      child: ExcludeSemantics(
+        excluding: !visible,
+        child: AnimatedOpacity(
+          opacity: visible ? 1 : 0,
+          duration: context.softToken.motionDurationMid,
+          curve: context.softToken.motionEaseInOut,
+          child: button,
+        ),
+      ),
+    );
+  }
+}
+
+/// An arrow pointing up to a bar: back to the top.
+class _ToTopPainter extends CustomPainter {
+  const _ToTopPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.09
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    // The bar along the top.
+    canvas.drawLine(
+        Offset(w * 0.18, h * 0.16), Offset(w * 0.82, h * 0.16), paint);
+    // The shaft, from the bottom up towards the bar.
+    canvas.drawLine(
+        Offset(w * 0.5, h * 0.88), Offset(w * 0.5, h * 0.36), paint);
+    // The head.
+    canvas.drawPath(
+      Path()
+        ..moveTo(w * 0.24, h * 0.6)
+        ..lineTo(w * 0.5, h * 0.34)
+        ..lineTo(w * 0.76, h * 0.6),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ToTopPainter old) => old.color != color;
+}
+
+/// Carries [child] by hand, kept on the screen, and remembers how far.
+///
+/// The detector stands inside the shift, not around it: a hit is tested
+/// against where a box is laid out, so a detector outside would go on
+/// answering where the button used to be.
+class _DragShift extends StatefulWidget {
+  const _DragShift({
+    required this.enabled,
+    required this.child,
+    this.offset,
+    this.defaultOffset,
+    this.onChanged,
+    this.onStart,
+  });
+
+  final bool enabled;
+  final Offset? offset;
+  final Offset? defaultOffset;
+  final ValueChanged<Offset>? onChanged;
+  final VoidCallback? onStart;
+  final Widget child;
+
+  @override
+  State<_DragShift> createState() => _DragShiftState();
+}
+
+class _DragShiftState extends State<_DragShift> {
+  late Offset _own = widget.defaultOffset ?? Offset.zero;
+
+  /// Where it stands: where it is told to, else where it was left.
+  Offset get _at => widget.offset ?? _own;
+
+  /// Where it is laid out, on the screen, and how big — read as a drag
+  /// begins, to keep it on the screen while it moves.
+  Rect? _home;
+
+  void _start(DragStartDetails _) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    _home = box.localToGlobal(Offset.zero) & box.size;
+    widget.onStart?.call();
+  }
+
+  void _move(DragUpdateDetails details) {
+    final home = _home;
+    if (home == null) return;
+    final screen = MediaQuery.sizeOf(context);
+    final wanted = _at + details.delta;
+    // Kept whole on the screen: a button carried off its edge is a button
+    // nobody can reach to bring back.
+    final next = Offset(
+      wanted.dx
+          .clamp(-home.left, math.max(-home.left, screen.width - home.right)),
+      wanted.dy
+          .clamp(-home.top, math.max(-home.top, screen.height - home.bottom)),
+    );
+    if (next == _at) return;
+    if (widget.offset == null) setState(() => _own = next);
+    widget.onChanged?.call(next);
+  }
+
+  @override
+  Widget build(BuildContext context) => Transform.translate(
+        offset: _at,
+        child: widget.enabled
+            ? GestureDetector(
+                // The pointer's alone: the button inside is what a reader
+                // meets, and a drag is not something it can be asked for.
+                excludeFromSemantics: true,
+                // Measured from where the finger came down, not from where
+                // the drag was recognised: the button stays under the finger
+                // instead of trailing it by the slop.
+                dragStartBehavior: DragStartBehavior.down,
+                onPanStart: _start,
+                onPanUpdate: _move,
+                onPanEnd: (_) => _home = null,
+                onPanCancel: () => _home = null,
+                child: widget.child,
+              )
+            : widget.child,
+      );
 }

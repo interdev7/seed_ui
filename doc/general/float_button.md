@@ -49,6 +49,74 @@ Only a group's **expansion** goes into the nearest `Overlay`, and only while it
 is open. That is what lets a fan reach past whatever the trigger is sitting in,
 and lets a label hang off the side without being clipped.
 
+## A ring of progress
+
+`progress`, from 0 to 1, draws a ring round the button's edge — done in the
+primary colour, still to go in a pale grey, starting at the top and running
+clockwise, round or square as the button is:
+
+```dart
+FloatButton(
+  icon: const Icon(Icons.upload),
+  progress: sent / total,
+  semanticsLabel: 'Uploading',
+  onPressed: cancel,
+)
+```
+
+The ring takes the edge's place rather than circling outside it, so the
+button keeps its size. A screen reader hears the figure as the button's value.
+`FloatButtonToken` has `progressColor`, `progressTrailColor` and
+`progressWidth` — two of the theme's line widths unless named.
+
+## Back to the top
+
+`BackTop` is a float button that takes a page back to its top, and only shows
+once the page is far enough down to need it:
+
+```dart
+Scaffold(
+  body: ListView(controller: scroll, children: [...]),
+  floatingActionButton: BackTop(controller: scroll, showProgress: true),
+)
+```
+
+| Property | Default | |
+| --- | --- | --- |
+| `controller` | the screen's primary one | The scrolling it watches and takes back up |
+| `visibilityHeight` | `400` | How far down, in pixels, before it shows; `0` shows it from the start |
+| `duration` | 450 ms | How long the way up takes — instant where the platform asks for reduced motion |
+| `showProgress` | `false` | A ring round the edge showing how far down the page is |
+| `onPressed` | — | Called as the way up begins |
+
+It fades in and out rather than appearing, and while it is away neither a
+hand nor a screen reader can find it. It takes `icon`, `color`, `shape`,
+`size` and `token` as any float button does, and is named "Back to top" in
+the app's language unless given a `semanticsLabel`.
+
+## Carried by hand
+
+`draggable: true` lets a hand carry the button out of the way — a press that
+moves past a touch's slop becomes a drag, and one that does not is still a
+press:
+
+```dart
+FloatButton(
+  icon: const Icon(Icons.chat),
+  draggable: true,
+  defaultOffset: saved,                       // where it was left last time
+  onOffsetChanged: (offset) => saved = offset,
+  onPressed: openChat,
+)
+```
+
+The button stays under the finger the whole way and is kept whole on the
+screen however far it is pushed. Where it ends up is an `offset` from where it
+is laid out: `defaultOffset` lets it keep its own place, `offset` makes it
+stand where it is told, and `onOffsetChanged` hands every move back to be
+kept. A `FloatButtonGroup` takes the same four; it shuts as it is picked up
+and opens from wherever it is put.
+
 ## Groups
 
 ```dart

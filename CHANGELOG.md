@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`BackTop`** — a float button that takes a page back to its top, shown
+  once the page is `visibilityHeight` down (400 unless named). It watches a
+  `ScrollController`, or the screen's primary one; fades in and out, and is
+  out of reach of a hand and a screen reader while away; scrolls back up over
+  `duration`, at once where reduced motion is asked for; and is named "Back to
+  top" in all eleven languages. `showProgress` draws how far down the page is.
+- **`FloatButton.progress`** — a ring round a float button's edge, from 0 to
+  1: done in the primary, still to go in a pale grey, from the top clockwise
+  and following the button's shape. It takes the edge's place, so the button
+  keeps its size, and a reader hears the figure. `FloatButtonToken` gains
+  `progressColor`, `progressTrailColor` and `progressWidth`.
+- **`draggable` on `FloatButton` and `FloatButtonGroup`.** A hand can carry
+  the button out of the way: a press that moves past the slop becomes a drag,
+  one that does not is still a press. It stays under the finger and is kept
+  whole on the screen; `offset`, `defaultOffset` and `onOffsetChanged` let the
+  place be kept. A group shuts as it is picked up and opens from where it is
+  put.
+
 - **`Tree.height`, for trees of thousands of nodes.** A tree was laid out in
   full, every open row built: a folder of five thousand files built five
   thousand rows. Given a height, a tree scrolls inside a window that tall and

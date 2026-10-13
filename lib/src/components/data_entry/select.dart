@@ -1411,7 +1411,9 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
         ? r.optionSelectedBg
         : active && !disabled
             ? r.optionActiveBg
-            : const Color(0x00000000);
+            // The hover's own colour made clear, not a clear black: the row
+            // eases between the two, and from black it passed through grey.
+            : r.optionActiveBg.withValues(alpha: 0);
     final color = disabled
         ? t.colorTextQuaternary
         : widget.selected

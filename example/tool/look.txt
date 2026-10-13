@@ -20,6 +20,7 @@ progress light 2385652313
 result light 205592738
 skeleton light 3345487790
 spin light 2738948955
+autocomplete light 4246725949
 input light 1808611980
 inputnumber light 3038534652
 inputotp light 401764604
@@ -70,6 +71,7 @@ progress dark 4047174117
 result dark 512677250
 skeleton dark 3273487464
 spin dark 1911627865
+autocomplete dark 3267208921
 input dark 1920701504
 inputnumber dark 2668439061
 inputotp dark 349975326

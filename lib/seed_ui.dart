@@ -180,6 +180,8 @@ export 'src/components/data_display/tree.dart'
         TreeToken,
         TreeDropPosition,
         TreeDropDetails;
+export 'src/components/data_entry/auto_complete.dart'
+    show AutoComplete, AutoCompleteOption, AutoCompleteToken;
 export 'src/components/data_entry/checkbox.dart'
     show
         Checkbox,

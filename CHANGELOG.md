@@ -30,6 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   finger, so a thumb scrolling past cannot shove it aside and a tap still
   presses it. `FloatButtonToken.liftScale` (1.08) is how much it grows while
   held.
+- **`AutoComplete`** — a text field that offers to finish what is being
+  typed. Suggestions open under it as it takes the focus and as it is typed
+  in, narrowed by `filterOption` (by default, those holding the text in any
+  case), the matching part in bold. The arrow keys walk them past disabled
+  ones, Enter takes one, Escape puts them away; `backfill` writes the one
+  reached into the field; `onSearch` reports only what was typed, for
+  suggestions fetched from a server, and the list updates while open. An
+  `Input` underneath, with its placeholder, clear button, status and size.
+  `AutoCompleteToken` styles the suggestions.
 - **`Rate`** — a rating in stars. A tap gives that many, and tapping the
   rating given takes it back (`allowClear`); `allowHalf` stops at half a star,
   the first half following the reading direction. The pointer shows what a
@@ -58,6 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reader hears what is selected and what is open. A horizontal menu folds
   the items that do not fit into a `…` that opens a menu of them. `MenuToken`
   and `MenuDefaults` configure it.
+- **`Dropdown.onPlacementChanged`** — where the menu opened once laid out:
+  the placement asked for, or its opposite where the screen had no room.
 - **`DropdownItem.selected`** — marks an item as the current choice, drawn in
   `DropdownToken.itemSelectedColor` on `itemSelectedBg` and heard as selected;
   a submenu title marked so takes the colour alone.
@@ -97,10 +108,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the whole menu under it: each submenu floats in an overlay of its own, and
   leaving the menu's panel for one counted as leaving the menu. Every menu in
   the chain now stays open while the pointer is over any of them.
-- A `Dropdown` row faded its hover in and out from a clear black, which
-  passes through grey on the way — a grey flash as the pointer crossed a row,
-  plain to see in a dark theme. It fades from the hover's own colour made
-  clear.
+- A `Dropdown` row, a `Select` option and an `InputNumber` step button
+  faded their wash in and out from a clear black, which passes through grey
+  on the way — a grey flash as the pointer crossed them, plain to see in a
+  dark theme. Each fades from its own wash made clear.
+- A `Dropdown` submenu short of room opened on the other side, and its caret
+  went on pointing the way it had been asked to. The caret now turns with it,
+  and in a right-to-left layout points left from the start.
 
 - `DirectoryNode` and `FileNode` drew their icons in fixed light-theme
   colours; in a dark theme they now use the primary and the tertiary text

@@ -186,6 +186,57 @@ void main() {
     await mouse.removePointer();
   });
 
+  testWidgets('it says where it opened, and a submenu caret points there', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final placed = <PopoverPlacement>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: UiKit.navigatorKey,
+        home: Scaffold(
+          body: Align(
+            // At the foot of the screen, so a menu asked to drop down has no
+            // room to.
+            alignment: Alignment.bottomRight,
+            child: Dropdown<String>(
+              open: true,
+              placement: PopoverPlacement.bottomLeft,
+              onPlacementChanged: placed.add,
+              menu: const [
+                DropdownItem(
+                  label: 'More',
+                  children: [DropdownItem(value: 'logs', label: 'Logs')],
+                ),
+              ],
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(placed, [PopoverPlacement.topLeft]);
+
+    String caret() => tester
+        .widgetList<CustomPaint>(find.byType(CustomPaint))
+        .map((p) => p.painter.toString())
+        .firstWhere((p) => p.startsWith('caret'));
+    expect(caret(), 'caret right', reason: 'before it opens, the way it reads');
+
+    await tester.tap(find.text('More'));
+    await tester.pumpAndSettle();
+    // At the right edge of the screen, the submenu has no room to the right
+    // and opens on the left — and the caret turns with it.
+    expect(
+      tester.getRect(find.text('Logs')).right,
+      lessThan(tester.getRect(find.text('More')).left),
+    );
+    expect(caret(), 'caret left');
+  });
+
   testWidgets('a pointer two submenus deep holds every menu open', (
     tester,
   ) async {

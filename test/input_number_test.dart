@@ -411,4 +411,35 @@ void main() {
       expect(told.height, 36);
     });
   });
+
+  testWidgets('a step button at rest is its hover colour made clear', (
+    tester,
+  ) async {
+    // Dark, where the hover is a white: a fade from a clear black there runs
+    // through grey, and the button flashed as the pointer crossed it.
+    await tester.pumpWidget(
+      ConfigProvider(
+        theme: ThemeData(dark: true),
+        child: const MaterialApp(
+          home: Scaffold(body: Center(child: InputNumber(value: 1))),
+        ),
+      ),
+    );
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(
+        location: tester.getCenter(find.byType(InputNumber)));
+    await tester.pumpAndSettle();
+    final fills = tester
+        .widgetList<AnimatedContainer>(
+          find.descendant(
+            of: find.byType(InputNumber),
+            matching: find.byType(AnimatedContainer),
+          ),
+        )
+        .map((c) => (c.decoration as BoxDecoration?)?.color)
+        .whereType<Color>()
+        .toList();
+    expect(fills, isNot(contains(const Color(0x00000000))));
+    await mouse.removePointer();
+  });
 }

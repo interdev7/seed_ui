@@ -422,6 +422,75 @@ void main() {
         reason: 'the item and its title alike');
   });
 
+  testWidgets('a title\'s chevron points where its submenu opened', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(380, 400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    int turns() => tester
+        .widget<RotatedBox>(
+          find.descendant(
+            of: find
+                .ancestor(
+                  of: find.text('Settings'),
+                  matching: find.byType(Row),
+                )
+                .first,
+            matching: find.byType(RotatedBox),
+          ),
+        )
+        .quarterTurns;
+    await tester.pumpWidget(
+      _host(const Menu<String>(mode: MenuMode.vertical, items: _items),
+          width: 330),
+    );
+    expect(turns(), 0, reason: 'out to the right, as it reads');
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.text('Profile')).right,
+      lessThan(tester.getRect(find.text('Settings')).right),
+      reason: 'no room to the right: it opened on the left',
+    );
+    expect(turns(), 2);
+  });
+
+  testWidgets('read the other way, a submenu floats out to the left', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ConfigProvider(
+        child: MaterialApp(
+          navigatorKey: UiKit.navigatorKey,
+          home: const Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              // In the middle, with room on either side: where it opens is
+              // the reading direction's choice, not the screen's.
+              body: Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: 240,
+                  child: Menu<String>(
+                    mode: MenuMode.vertical,
+                    items: _items,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.text('Profile')).right,
+      lessThan(tester.getRect(find.text('Settings')).left),
+    );
+  });
+
   group('horizontal', () {
     testWidgets('a row; a submenu drops down; a bar under the selected', (
       tester,

@@ -18,6 +18,7 @@ import '../components/data_display/timeline.dart';
 import '../components/data_display/tooltip.dart';
 import '../components/data_display/tour.dart';
 import '../components/data_display/tree.dart';
+import '../components/data_entry/auto_complete.dart';
 import '../components/data_entry/checkbox.dart';
 import '../components/data_entry/date_picker.dart';
 import '../components/data_entry/form.dart';
@@ -55,6 +56,7 @@ class ComponentsConfig {
   /// Creates a [ComponentsConfig].
   const ComponentsConfig({
     this.alert,
+    this.autoComplete,
     this.avatar,
     this.badge,
     this.breadcrumb,
@@ -107,6 +109,9 @@ class ComponentsConfig {
 
   /// Overrides applied to every [Alert] under this provider.
   final AlertToken? alert;
+
+  /// Overrides applied to every [AutoComplete] under this provider.
+  final AutoCompleteToken? autoComplete;
 
   /// Overrides applied to every [Avatar] under this provider.
   final AvatarToken? avatar;
@@ -266,6 +271,9 @@ class ComponentsConfig {
         alert: alert == null || other.alert == null
             ? (other.alert ?? alert)
             : alert!.merge(other.alert!),
+        autoComplete: autoComplete == null || other.autoComplete == null
+            ? (other.autoComplete ?? autoComplete)
+            : autoComplete!.merge(other.autoComplete!),
         avatar: avatar == null || other.avatar == null
             ? (other.avatar ?? avatar)
             : avatar!.merge(other.avatar!),
@@ -415,6 +423,9 @@ class ComponentsConfig {
   /// Fast lookup for a specific component token type [T].
   T? of<T>() {
     if (T == AlertToken && alert != null) return alert as T;
+    if (T == AutoCompleteToken && autoComplete != null) {
+      return autoComplete as T;
+    }
     if (T == AvatarToken && avatar != null) return avatar as T;
     if (T == BadgeToken && badge != null) return badge as T;
     if (T == BreadcrumbToken && breadcrumb != null) {

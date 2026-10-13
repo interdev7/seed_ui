@@ -341,6 +341,7 @@ class Dropdown<T> extends StatefulWidget {
     this.disabled,
     this.open,
     this.onOpenChanged,
+    this.onPlacementChanged,
     this.arrow,
     this.onItemTap,
     this.closeOnSelect,
@@ -383,6 +384,12 @@ class Dropdown<T> extends StatefulWidget {
 
   /// Notified when the menu wants to open or close.
   final ValueChanged<bool>? onOpenChanged;
+
+  /// Told where the menu opened, once it is laid out: [placement], or its
+  /// opposite where the screen had no room on that side. A trigger that
+  /// draws a chevron can point it at the menu — up, when a menu meant to
+  /// drop down had to open above.
+  final ValueChanged<PopoverPlacement>? onPlacementChanged;
 
   /// Draws a caret pointing at the trigger.
   final bool? arrow;
@@ -456,6 +463,9 @@ class _DropdownState<T> extends State<Dropdown<T>> {
   /// for one of them is leaving the panel, and without this count the whole
   /// menu shut under a pointer on its way to an item.
   int _overSubmenus = 0;
+
+  /// Where the menu last opened, as last reported.
+  PopoverPlacement? _placed;
 
   /// Where a tap-trigger press started, so a drag or a scroll that ends over
   /// the trigger is not mistaken for a tap.
@@ -545,6 +555,12 @@ class _DropdownState<T> extends State<Dropdown<T>> {
       placement: _placement,
       anchorRect: anchor,
       gap: r.gap,
+      onSide: (side) {
+        final where = placementOnSide(_placement, side);
+        if (!mounted || where == _placed) return;
+        _placed = where;
+        widget.onPlacementChanged?.call(where);
+      },
       // Hover menus have no dismiss barrier, so hovering elsewhere still works;
       // tap/context menus close on an outside tap.
       onDismiss: _hoverMode ? null : () => _requestOpen(false),
@@ -1015,6 +1031,9 @@ class _MenuRow<T> extends StatefulWidget {
 class _MenuRowState<T> extends State<_MenuRow<T>> {
   bool _hovered = false;
 
+  /// The side this row's submenu went to; null until it has opened.
+  PopoverSide? _submenuSide;
+
   /// How many panels from this row's submenu down have the pointer over
   /// them: the submenu itself, and any opened out of it.
   int _inside = 0;
@@ -1095,6 +1114,14 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
       anchorRect: anchor,
       gap: r.gap,
       interactive: true,
+      // The caret points where the submenu went, and it does not always go
+      // where it was asked: short of room on that side, it opens on the
+      // other.
+      onSide: (side) {
+        if (mounted && side != _submenuSide) {
+          setState(() => _submenuSide = side);
+        }
+      },
       // The row's own context, so whatever dressed this menu dresses the one
       // opening out of it: an overlay is mounted above the app, and without
       // this a submenu is built outside every provider its parent stood in.
@@ -1246,7 +1273,14 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
                   SizedBox(width: token.sizeXS),
                   CustomPaint(
                     size: const Size(8, 12),
-                    painter: _CaretPainter(token.colorTextTertiary),
+                    painter: _CaretPainter(
+                      token.colorTextTertiary,
+                      left: (_submenuSide ??
+                              (Directionality.of(context) == TextDirection.rtl
+                                  ? PopoverSide.left
+                                  : PopoverSide.right)) ==
+                          PopoverSide.left,
+                    ),
                   ),
                 ],
               ],
@@ -1258,11 +1292,14 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
   }
 }
 
-/// A right-pointing caret marking a submenu parent.
+/// A caret marking a submenu parent, pointing the way the submenu opens.
 class _CaretPainter extends CustomPainter {
-  _CaretPainter(this.color);
+  _CaretPainter(this.color, {this.left = false});
 
   final Color color;
+
+  /// Whether it points left rather than right.
+  final bool left;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1272,17 +1309,24 @@ class _CaretPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
+    final back = left ? 0.75 : 0.25;
+    final tip = left ? 0.25 : 0.75;
     canvas.drawPath(
       Path()
-        ..moveTo(size.width * 0.25, size.height * 0.2)
-        ..lineTo(size.width * 0.75, size.height * 0.5)
-        ..lineTo(size.width * 0.25, size.height * 0.8),
+        ..moveTo(size.width * back, size.height * 0.2)
+        ..lineTo(size.width * tip, size.height * 0.5)
+        ..lineTo(size.width * back, size.height * 0.8),
       paint,
     );
   }
 
   @override
-  bool shouldRepaint(_CaretPainter old) => old.color != color;
+  bool shouldRepaint(_CaretPainter old) =>
+      old.color != color || old.left != left;
+
+  // Says which way it points, for a test to read.
+  @override
+  String toString() => 'caret ${left ? 'left' : 'right'}';
 }
 
 /// Tells the menus above that the pointer is over one of their submenus.

@@ -63,6 +63,23 @@ A pointer can travel from a menu into its submenus, and from those into
 theirs, without the menus behind it shutting: every one of them stays open
 while the pointer is over any of them.
 
+A menu short of room on the side it was asked for opens on the other, and a
+submenu's caret turns to point where its submenu went. `onPlacementChanged`
+says where the menu itself opened, so a trigger with a chevron can point it
+at the menu:
+
+```dart
+Dropdown<String>(
+  placement: PopoverPlacement.bottomLeft,
+  onPlacementChanged: (p) => setState(() => above = p == PopoverPlacement.topLeft),
+  menu: items,
+  child: Row(children: [
+    const Text('Sort'),
+    Icon(above ? Icons.expand_less : Icons.expand_more),
+  ]),
+)
+```
+
 ### When the type has to be named
 
 A menu of items alone infers `T` from the items — nothing to write:

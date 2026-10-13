@@ -843,7 +843,16 @@ class _ColumnItem<T> extends StatelessWidget {
             ? r.dangerItemColor
             : (selected ? r.itemSelectedColor : r.itemColor);
 
-    Widget row(bool hovered, bool focused) => Container(
+    final rtl = Directionality.maybeOf(context) == TextDirection.rtl;
+    // Out to the side the menu reads towards.
+    final outward = rtl ? PopoverPlacement.leftTop : PopoverPlacement.rightTop;
+
+    Widget row(
+      bool hovered,
+      bool focused, {
+      PopoverPlacement placed = PopoverPlacement.rightTop,
+    }) =>
+        Container(
           height: r.itemHeight,
           margin: EdgeInsets.symmetric(
             horizontal: r.itemMarginInline,
@@ -868,10 +877,15 @@ class _ColumnItem<T> extends StatelessWidget {
             item: item,
             color: color,
             collapsed: ctx.collapsed,
+            // Pointing where the submenu opens — which is not always where
+            // it was asked to: short of room, it opens on the other side.
             trailing: submenu && !ctx.collapsed
-                ? CustomPaint(
-                    size: Size.square(t.fontSizeSM),
-                    painter: ChevronPainter(color),
+                ? RotatedBox(
+                    quarterTurns: placed == PopoverPlacement.leftTop ? 2 : 0,
+                    child: CustomPaint(
+                      size: Size.square(t.fontSizeSM),
+                      painter: ChevronPainter(color),
+                    ),
                   )
                 : null,
           ),
@@ -888,7 +902,7 @@ class _ColumnItem<T> extends StatelessWidget {
       );
       if (!ctx.collapsed || item.label == null) return leaf;
       return Tooltip(
-        placement: PopoverPlacement.right,
+        placement: rtl ? PopoverPlacement.left : PopoverPlacement.right,
         message: Text(item.label!),
         child: leaf,
       );
@@ -897,15 +911,15 @@ class _ColumnItem<T> extends StatelessWidget {
     return _Floating<T>(
       ctx: ctx,
       item: item,
-      placement: PopoverPlacement.rightTop,
-      builder: (open) => _Row(
+      placement: outward,
+      builder: (open, placed) => _Row(
         token: r,
         enabled: !item.disabled,
         selected: selected,
         expanded: false,
         semanticsLabel: ctx.collapsed ? item.label : null,
         onTap: open,
-        builder: row,
+        builder: (hovered, focused) => row(hovered, focused, placed: placed),
       ),
     );
   }
@@ -923,7 +937,10 @@ class _Floating<T> extends StatefulWidget {
   final _Ctx<T> ctx;
   final MenuItem<T> item;
   final PopoverPlacement placement;
-  final Widget Function(VoidCallback open) builder;
+
+  /// Builds the title, given what opens the submenu and where it opened
+  /// last — [placement] until it has opened.
+  final Widget Function(VoidCallback open, PopoverPlacement placed) builder;
 
   @override
   State<_Floating<T>> createState() => _FloatingState<T>();
@@ -931,6 +948,15 @@ class _Floating<T> extends StatefulWidget {
 
 class _FloatingState<T> extends State<_Floating<T>> {
   bool _open = false;
+  PopoverPlacement? _placed;
+
+  @override
+  void didUpdateWidget(_Floating<T> old) {
+    super.didUpdateWidget(old);
+    // Asked for the other side — the reading direction turned — the last
+    // answer no longer stands.
+    if (old.placement != widget.placement) _placed = null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -942,12 +968,16 @@ class _FloatingState<T> extends State<_Floating<T>> {
       trigger: const [DropdownTrigger.hover],
       open: _open,
       onOpenChanged: (open) => setState(() => _open = open),
+      onPlacementChanged: (placed) => setState(() => _placed = placed),
       disabled: widget.item.disabled,
       onItemTap: (value) {
         setState(() => _open = false);
         widget.ctx.state._chooseValue(value, widget.item.children!);
       },
-      child: widget.builder(() => setState(() => _open = !_open)),
+      child: widget.builder(
+        () => setState(() => _open = !_open),
+        _placed ?? widget.placement,
+      ),
     );
   }
 }
@@ -1165,7 +1195,7 @@ class _HorizontalItem<T> extends StatelessWidget {
       ctx: ctx,
       item: item,
       placement: PopoverPlacement.bottomLeft,
-      builder: (open) => _Row(
+      builder: (open, _) => _Row(
         token: r,
         enabled: !item.disabled,
         selected: selected,

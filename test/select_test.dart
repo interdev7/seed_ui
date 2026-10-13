@@ -807,4 +807,25 @@ void _pickLandsTests() {
       expect(boxFor(tester, 'Banana').duration, isNot(Duration.zero));
     });
   });
+
+  testWidgets('a row at rest is its hover colour made clear, not clear black',
+      (tester) async {
+    // Dark, where the hover is a white: a fade from a clear black there runs
+    // through grey, and the row flashed as the pointer crossed it.
+    await tester.pumpWidget(
+      ConfigProvider(
+        theme: ThemeData(dark: true),
+        child: _host(const Select<String>(options: _options)),
+      ),
+    );
+    await tester.tap(find.byType(Select<String>));
+    await tester.pumpAndSettle();
+    final washes = tester
+        .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+        .map((c) => (c.decoration as BoxDecoration?)?.color)
+        .whereType<Color>()
+        .toList();
+    expect(washes.where((c) => c.a == 0), isNotEmpty);
+    expect(washes, isNot(contains(const Color(0x00000000))));
+  });
 }

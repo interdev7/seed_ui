@@ -912,7 +912,13 @@ class _SpinButtonState extends State<SpinButton> {
         ? widget.pressedColor
         : _hovered && _active
             ? widget.hoverColor
-            : const Color(0x00000000);
+            // The wash it eases to, made clear, not a clear black: from
+            // black the fade passed through grey. The hover wash where there
+            // is one; the kit's own is clear, and only a press shows.
+            : (widget.hoverColor.a > 0
+                    ? widget.hoverColor
+                    : widget.pressedColor)
+                .withValues(alpha: 0);
 
     return MouseRegion(
       cursor: _active ? SystemMouseCursors.click : SystemMouseCursors.forbidden,

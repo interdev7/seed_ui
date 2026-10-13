@@ -55,6 +55,8 @@ import 'package:seed_ui/seed_ui.dart';
 ///   rebuild, not the colour.
 /// * `SeedToken.fontFamily` and `fontFamilyFallback`: a test renders with one
 ///   face whatever is asked for, so the letters come back the same shape.
+///   So does `AutoCompleteToken.matchWeight` — one face has one weight; its
+///   test reads the weight off the bold span instead.
 ///
 /// This holds the promise to the pixels. Each probe draws the component
 /// twice, once plain and once with one field named, and the two pictures
@@ -716,6 +718,24 @@ Widget _empty(EmptyToken? token) => Empty(
       token: token,
     );
 
+/// A field with its suggestions open on 'an'.
+Widget _autoComplete(AutoCompleteToken? token) => SizedBox(
+      width: 240,
+      child: AutoComplete(
+        token: token,
+        options: const [
+          AutoCompleteOption(value: 'Ankara'),
+          AutoCompleteOption(value: 'Andorra'),
+        ],
+      ),
+    );
+
+/// Types into the field, so its suggestions open.
+Future<void> _typeAn(WidgetTester tester) async {
+  await tester.enterText(find.byType(EditableText), 'an');
+  await tester.pump();
+}
+
 /// A four-cell code with two characters in it.
 Widget _otp(InputOtpToken? token, {bool disabled = false}) => InputOtp(
       length: 4,
@@ -1180,6 +1200,30 @@ final _probes = <_Probe>[
         child: const Text('Body'),
       ),
     ),
+  ),
+  _Probe(
+    'AutoCompleteToken.optionActiveBg',
+    (c) => _autoComplete(
+        c ? const AutoCompleteToken(optionActiveBg: _loud) : null),
+    act: _typeAn,
+  ),
+  _Probe(
+    'AutoCompleteToken.optionColor',
+    (c) =>
+        _autoComplete(c ? const AutoCompleteToken(optionColor: _loud) : null),
+    act: _typeAn,
+  ),
+  _Probe(
+    'AutoCompleteToken.optionPadding',
+    (c) => _autoComplete(
+        c ? const AutoCompleteToken(optionPadding: EdgeInsets.all(20)) : null),
+    act: _typeAn,
+  ),
+  _Probe(
+    'AutoCompleteToken.optionFontSize',
+    (c) =>
+        _autoComplete(c ? const AutoCompleteToken(optionFontSize: 24) : null),
+    act: _typeAn,
   ),
   _Probe(
     'RateToken.starColor',

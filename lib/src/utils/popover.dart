@@ -81,6 +81,26 @@ enum PopoverSide {
   right
 }
 
+/// [placement] moved to [side] — the same alignment along the anchor, on
+/// the side the bubble actually went to.
+PopoverPlacement placementOnSide(PopoverPlacement placement, PopoverSide side) {
+  if (placement.side == side) return placement;
+  return switch (placement) {
+    PopoverPlacement.topLeft => PopoverPlacement.bottomLeft,
+    PopoverPlacement.top => PopoverPlacement.bottom,
+    PopoverPlacement.topRight => PopoverPlacement.bottomRight,
+    PopoverPlacement.bottomLeft => PopoverPlacement.topLeft,
+    PopoverPlacement.bottom => PopoverPlacement.top,
+    PopoverPlacement.bottomRight => PopoverPlacement.topRight,
+    PopoverPlacement.leftTop => PopoverPlacement.rightTop,
+    PopoverPlacement.left => PopoverPlacement.right,
+    PopoverPlacement.leftBottom => PopoverPlacement.rightBottom,
+    PopoverPlacement.rightTop => PopoverPlacement.leftTop,
+    PopoverPlacement.right => PopoverPlacement.left,
+    PopoverPlacement.rightBottom => PopoverPlacement.leftBottom,
+  };
+}
+
 extension _PlacementInfo on PopoverPlacement {
   PopoverSide get side => switch (this) {
         PopoverPlacement.top ||
@@ -178,6 +198,7 @@ class PopoverController {
     Curve? curve,
     BuildContext? anchorContext,
     VoidCallback? onScrollDismiss,
+    ValueChanged<PopoverSide>? onSide,
   }) {
     if (_entry != null) return;
     _anchor.value = anchorRect;
@@ -206,6 +227,7 @@ class PopoverController {
         animation: animation,
         duration: duration,
         curve: curve,
+        onSide: onSide,
         builder: captured == null
             ? builder
             : (context) => captured.wrap(builder(context)),
@@ -299,6 +321,7 @@ class _SoftPopoverLayer extends StatefulWidget {
     this.animation = PopoverAnimation.simple,
     this.duration,
     this.curve,
+    this.onSide,
   });
 
   final PopoverAnimation animation;
@@ -309,6 +332,10 @@ class _SoftPopoverLayer extends StatefulWidget {
 
   /// The curve the arrival runs on. Null takes the pace the [animation] wants.
   final Curve? curve;
+
+  /// Told which side the bubble went to, once it is laid out — the one asked
+  /// for, or the opposite where there was no room.
+  final ValueChanged<PopoverSide>? onSide;
   final PopoverPlacement placement;
   final ValueListenable<Rect> anchor;
   final double gap;
@@ -391,6 +418,7 @@ class _SoftPopoverLayerState extends State<_SoftPopoverLayer>
           gap:
               widget.gap + (widget.arrowColor != null ? popoverArrowLength : 0),
           arrowSink: widget.arrowColor != null ? _arrow : null,
+          onSide: widget.onSide,
           viewportPadding: EdgeInsets.fromLTRB(
             8 + padding.left,
             8 + padding.top,
@@ -1179,6 +1207,7 @@ class PopoverLayoutDelegate extends SingleChildLayoutDelegate {
     required this.gap,
     required this.viewportPadding,
     this.arrowSink,
+    this.onSide,
     this.decisionSize,
   });
 
@@ -1197,6 +1226,9 @@ class PopoverLayoutDelegate extends SingleChildLayoutDelegate {
   /// Receives the caret geometry once the bubble is measured. Written during
   /// layout, so listeners repaint on the following frame.
   final ValueNotifier<PopoverArrowGeometry?>? arrowSink;
+
+  /// Told which side the bubble went to, after the layout that decided it.
+  final ValueChanged<PopoverSide>? onSide;
 
   /// The size to judge *which side* the bubble goes on, when that is not the
   /// size it is being laid out at — a bubble easing between two sizes would
@@ -1261,6 +1293,12 @@ class PopoverLayoutDelegate extends SingleChildLayoutDelegate {
 
     if (arrowSink != null) {
       _emitArrow(side, Offset(x, y), childSize);
+    }
+    final told = onSide;
+    // After the frame: whoever listens may rebuild, and nothing may be
+    // rebuilt while it is being laid out.
+    if (told != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => told(side));
     }
     return Offset(x, y);
   }

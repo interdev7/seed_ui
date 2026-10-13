@@ -108,6 +108,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Result](doc/feedback/result.md)                  | Full-page operation outcome                                                    |
 | [Form](doc/data_entry/form.md)                    | Named fields, rules with words in every language, and a controller you hold |
 | [Input](doc/data_entry/input.md)                  | Single- or multi-line text field                                               |
+| [AutoComplete](doc/data_entry/auto_complete.md)   | A text field that offers to finish what is typed; fetched or local suggestions |
 | [InputNumber](doc/data_entry/input_number.md)     | Numeric input with steppers, range, precision                                  |
 | [InputOtp](doc/data_entry/input_otp.md)           | A code typed one character to a cell; paste, autofill from messages, a mask    |
 | [Segmented](doc/data_display/segmented.md)        | Segmented single-select control                                                |

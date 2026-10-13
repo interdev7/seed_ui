@@ -36,6 +36,7 @@ import 'components/data_display/reorderable_list_demo.dart';
 import 'components/data_display/timeline_demo.dart';
 import 'components/data_display/tour_demo.dart';
 import 'components/data_display/popover_demo.dart';
+import 'components/data_entry/auto_complete_demo.dart';
 import 'components/data_entry/checkbox_demo.dart';
 import 'components/feedback/drawer_demo.dart';
 import 'components/data_display/empty_demo.dart';
@@ -446,6 +447,7 @@ final List<Demo> demos = [
   Demo('skeleton', 'Skeleton', (_) => const SkeletonDemo(), isNew: true),
   Demo('spin', 'Spin', (_) => const SpinDemo()),
   Demo('form', 'Form', (_) => const FormDemo()),
+  Demo('autocomplete', 'AutoComplete', (_) => const AutoCompleteDemo()),
   Demo('input', 'Input', (_) => const InputDemo()),
   Demo('inputnumber', 'InputNumber', (_) => const InputNumberDemo()),
   Demo('inputotp', 'InputOtp', (_) => const InputOtpDemo()),

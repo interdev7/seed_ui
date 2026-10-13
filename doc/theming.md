@@ -831,6 +831,7 @@ house-style decision rather than the state of one instance:
 | `Input` | `allowClear`, `size`, `disabled` |
 | `InputNumber` | `controls`, `keyboard`, `mode`, `size`, `disabled` |
 | `Listy` | `sticky`, `padding`, `physics` |
+| `Menu` | `mode`, `accordion` |
 | `MultiDatePicker` | `variant`, `allowClear`, `size`, `disabled`, `maxTagCount`, `maxTagCountResponsive` |
 | `MultiRangeSlider` | `draggableTrack`, `disabled` |
 | `Pagination` | `showSizeChanger`, `showQuickJumper`, `hideOnSinglePage`, `showLessItems`, `align`, `size`, `disabled` |

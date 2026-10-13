@@ -169,6 +169,14 @@ ListyStyles
 ListyToken
 MaterialThemeFromThemeData
 MaterialThemeFromToken
+Menu
+MenuDefaults
+MenuDivider
+MenuEntry
+MenuGroup
+MenuItem
+MenuMode
+MenuToken
 MessageApi
 MessageConfig
 MessageHandle

@@ -41,6 +41,7 @@ select light 1138985610
 breadcrumb light 1632136348
 dropdown light 129436275
 empty light 4257679929
+menu light 82717959
 pagination light 3059001991
 tag light 404491375
 checkbox light 16453094
@@ -88,6 +89,7 @@ select dark 3981774201
 breadcrumb dark 841616013
 dropdown dark 128396860
 empty dark 2101925004
+menu dark 2908681672
 pagination dark 880421129
 tag dark 1550634849
 checkbox dark 4132026910

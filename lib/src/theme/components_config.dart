@@ -44,6 +44,7 @@ import '../components/general/divider.dart';
 import '../components/general/float_button.dart';
 import '../components/navigation/breadcrumb.dart';
 import '../components/navigation/dropdown.dart';
+import '../components/navigation/menu.dart';
 import '../components/navigation/pagination.dart';
 
 /// Strongly-typed container for all component-specific token overrides.
@@ -70,6 +71,7 @@ class ComponentsConfig {
     this.input,
     this.inputNumber,
     this.listy,
+    this.menu,
     this.message,
     this.modal,
     this.notification,
@@ -155,6 +157,9 @@ class ComponentsConfig {
 
   /// Overrides applied to every [Listy] under this provider.
   final ListyToken? listy;
+
+  /// Overrides applied to every [Menu] under this provider.
+  final MenuToken? menu;
 
   /// Overrides applied to every [Message] under this provider.
   final MessageToken? message;
@@ -308,6 +313,9 @@ class ComponentsConfig {
         listy: listy == null || other.listy == null
             ? (other.listy ?? listy)
             : listy!.merge(other.listy!),
+        menu: menu == null || other.menu == null
+            ? (other.menu ?? menu)
+            : menu!.merge(other.menu!),
         message: message == null || other.message == null
             ? (other.message ?? message)
             : message!.merge(other.message!),
@@ -415,6 +423,7 @@ class ComponentsConfig {
     if (T == InputToken && input != null) return input as T;
     if (T == InputNumberToken && inputNumber != null) return inputNumber as T;
     if (T == ListyToken && listy != null) return listy as T;
+    if (T == MenuToken && menu != null) return menu as T;
     if (T == MessageToken && message != null) return message as T;
     if (T == ModalToken && modal != null) return modal as T;
     if (T == NotificationToken && notification != null) {

@@ -43,6 +43,26 @@ The `menu` is a list of `DropdownEntry`:
 too. A `danger` item is red; a `disabled` item is greyed and inert. A submenu's
 `children` carry the same `T` as the menu they hang from.
 
+`selected: true` marks an item as the current choice — the order a list is
+sorted in, the page a menu stands on. It is drawn in the selected colour on
+the selected wash, and a screen reader hears it as selected. A submenu title
+marked so takes the colour without the wash, as the way down to the choice.
+
+```dart
+Dropdown<SortBy>(
+  menu: [
+    for (final by in SortBy.values)
+      DropdownItem(value: by, label: by.label, selected: by == sortBy),
+  ],
+  onItemTap: (by) => setState(() => sortBy = by!),
+  child: const Text('Sort'),
+)
+```
+
+A pointer can travel from a menu into its submenus, and from those into
+theirs, without the menus behind it shutting: every one of them stays open
+while the pointer is over any of them.
+
 ### When the type has to be named
 
 A menu of items alone infers `T` from the items — nothing to write:
@@ -373,6 +393,7 @@ override; an unset one falls back to the value derived from the global theme.
 | `shadow` | `boxShadowSecondary` — an empty list casts nothing |
 | `gap` | `sizeXXS` — between a menu and its trigger, and between a submenu and its row |
 | `itemHoverBg` | `colorFillTertiary` |
+| `itemSelectedColor`, `itemSelectedBg` | `primary.base`, `primary.bg` — a `selected` item |
 | `itemHeight` | `controlHeight` — the least a row may be, not the height it must be |
 | `itemPadding` | `sizeSM` across — how far a row's contents sit from its edges |
 | `barrierColor` | none — no barrier is painted unless one is asked for |

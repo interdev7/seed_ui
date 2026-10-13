@@ -637,6 +637,7 @@ Widget _dropdown(DropdownToken? token) => Dropdown<String>(
       menu: const [
         DropdownItem(value: 'a', label: 'Rename'),
         DropdownItem(value: 'b', label: 'Delete'),
+        DropdownItem(value: 'c', label: 'Sort', selected: true),
       ],
       child: const Text('Menu'),
     );
@@ -713,6 +714,41 @@ Widget _checkbox(
 Widget _empty(EmptyToken? token) => Empty(
       description: const Text('Nothing here'),
       token: token,
+    );
+
+/// A menu with one of everything: a selected item, a disabled one, a
+/// dangerous one, a group, and an open submenu.
+Widget _menu(
+  MenuToken? token, {
+  MenuMode mode = MenuMode.inline,
+  bool collapsed = false,
+  String selected = 'a',
+}) =>
+    SizedBox(
+      width: mode == MenuMode.horizontal ? 500 : null,
+      child: Menu<String>(
+        token: token,
+        mode: mode,
+        inlineCollapsed: collapsed,
+        selectedValue: selected,
+        defaultOpenValues: const {'sub'},
+        items: const [
+          MenuItem(value: 'a', label: 'Mail', icon: Icon(Icons.mail)),
+          MenuItem(value: 'b', label: 'Off', disabled: true),
+          MenuItem(value: 'c', label: 'Delete', danger: true),
+          MenuGroup(
+            label: 'More',
+            children: [
+              MenuItem(
+                value: 'sub',
+                label: 'Settings',
+                icon: Icon(Icons.settings),
+                children: [MenuItem(value: 'd', label: 'Profile')],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
 
 /// A path of three crumbs, the middle one with an icon.
@@ -1123,6 +1159,101 @@ final _probes = <_Probe>[
         child: const Text('Body'),
       ),
     ),
+  ),
+  _Probe(
+    'MenuToken.itemColor',
+    (c) => _menu(c ? const MenuToken(itemColor: _loud) : null),
+  ),
+  _Probe(
+    'MenuToken.itemHoverBg',
+    (c) => _menu(c ? const MenuToken(itemHoverBg: _loud) : null),
+    hover: () => find.text('Profile'),
+  ),
+  _Probe(
+    'MenuToken.itemSelectedColor',
+    (c) => _menu(c ? const MenuToken(itemSelectedColor: _loud) : null),
+  ),
+  _Probe(
+    'MenuToken.itemSelectedBg',
+    (c) => _menu(c ? const MenuToken(itemSelectedBg: _loud) : null),
+  ),
+  _Probe(
+    'MenuToken.itemDisabledColor',
+    (c) => _menu(c ? const MenuToken(itemDisabledColor: _loud) : null),
+  ),
+  _Probe(
+    'MenuToken.dangerItemColor',
+    (c) => _menu(c ? const MenuToken(dangerItemColor: _loud) : null),
+  ),
+  _Probe(
+    'MenuToken.dangerItemSelectedBg',
+    (c) => _menu(c ? const MenuToken(dangerItemSelectedBg: _loud) : null,
+        selected: 'c'),
+  ),
+  _Probe(
+    'MenuToken.groupTitleColor',
+    (c) => _menu(c ? const MenuToken(groupTitleColor: _loud) : null),
+  ),
+  _Probe(
+    'MenuToken.subMenuItemBg',
+    (c) => _menu(c ? const MenuToken(subMenuItemBg: _loud) : null),
+  ),
+  _Probe(
+    'MenuToken.itemHeight',
+    (c) => _menu(c ? const MenuToken(itemHeight: 60) : null),
+  ),
+  _Probe(
+    'MenuToken.itemBorderRadius',
+    (c) => _menu(c ? const MenuToken(itemBorderRadius: 0) : null),
+  ),
+  _Probe(
+    'MenuToken.itemMarginInline',
+    (c) => _menu(c ? const MenuToken(itemMarginInline: 20) : null),
+  ),
+  _Probe(
+    'MenuToken.itemPaddingInline',
+    (c) => _menu(c ? const MenuToken(itemPaddingInline: 40) : null),
+  ),
+  _Probe(
+    'MenuToken.inlineIndent',
+    (c) => _menu(c ? const MenuToken(inlineIndent: 60) : null),
+  ),
+  _Probe(
+    'MenuToken.iconSize',
+    (c) => _menu(c ? const MenuToken(iconSize: 30) : null),
+  ),
+  _Probe(
+    'MenuToken.iconGap',
+    (c) => _menu(c ? const MenuToken(iconGap: 30) : null),
+  ),
+  _Probe(
+    'MenuToken.horizontalItemHeight',
+    (c) => _menu(c ? const MenuToken(horizontalItemHeight: 70) : null,
+        mode: MenuMode.horizontal),
+  ),
+  _Probe(
+    'MenuToken.horizontalItemPaddingInline',
+    (c) => _menu(c ? const MenuToken(horizontalItemPaddingInline: 40) : null,
+        mode: MenuMode.horizontal),
+  ),
+  _Probe(
+    'MenuToken.horizontalBarHeight',
+    (c) => _menu(c ? const MenuToken(horizontalBarHeight: 8) : null,
+        mode: MenuMode.horizontal),
+  ),
+  _Probe(
+    'MenuToken.collapsedWidth',
+    (c) =>
+        _menu(c ? const MenuToken(collapsedWidth: 120) : null, collapsed: true),
+  ),
+  _Probe(
+    'MenuToken.collapsedIconSize',
+    (c) => _menu(c ? const MenuToken(collapsedIconSize: 30) : null,
+        collapsed: true),
+  ),
+  _Probe(
+    'MenuToken.fontSize',
+    (c) => _menu(c ? const MenuToken(fontSize: 22) : null),
   ),
   _Probe(
     'BreadcrumbToken.itemColor',
@@ -2876,6 +3007,14 @@ final _probes = <_Probe>[
     // answers both, and a menu puts a barrier between the page and the
     // pointer that a test's mouse cannot reach past.
     act: _highlightFirstItem,
+  ),
+  _Probe(
+    'DropdownToken.itemSelectedColor',
+    (c) => _dropdown(c ? const DropdownToken(itemSelectedColor: _loud) : null),
+  ),
+  _Probe(
+    'DropdownToken.itemSelectedBg',
+    (c) => _dropdown(c ? const DropdownToken(itemSelectedBg: _loud) : null),
   ),
   _Probe(
     'PopoverToken.colorBg',

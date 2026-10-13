@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart'
     hide
@@ -9,6 +11,7 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
+import 'package:flutter/semantics.dart' show SemanticsNode;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
@@ -68,6 +71,172 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
     expect(find.text('Edit'), findsOneWidget);
+  });
+
+  testWidgets('a selected item is marked, to the eye and to a reader', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      _host(
+        const Dropdown<String>(
+          open: true,
+          menu: [
+            DropdownItem(value: 'name', label: 'Name'),
+            DropdownItem(value: 'date', label: 'Date', selected: true),
+          ],
+          child: Text('Sort'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    Color colorOf(String text) => tester
+        .widget<RichText>(
+          find.descendant(of: find.text(text), matching: find.byType(RichText)),
+        )
+        .text
+        .style!
+        .color!;
+    expect(colorOf('Date'), isNot(colorOf('Name')));
+    // The row's own node is the button; its words sit in a node under it.
+    Tristate selectedOf(String label) {
+      Tristate? found;
+      bool says(SemanticsNode node) {
+        if (node.getSemanticsData().label == label) return true;
+        var any = false;
+        node.visitChildren((SemanticsNode child) {
+          any = any || says(child);
+          return !any;
+        });
+        return any;
+      }
+
+      void walk(SemanticsNode node) {
+        final data = node.getSemanticsData();
+        if (data.flagsCollection.isButton && says(node)) {
+          found = data.flagsCollection.isSelected;
+        }
+        node.visitChildren((SemanticsNode child) {
+          walk(child);
+          return true;
+        });
+      }
+
+      walk(
+        tester.semantics
+            .find(find.byType(MaterialApp))
+            .owner!
+            .rootSemanticsNode!,
+      );
+      return found!;
+    }
+
+    expect(selectedOf('Date'), Tristate.isTrue);
+    expect(selectedOf('Name'), Tristate.isFalse);
+    handle.dispose();
+  });
+
+  testWidgets('the choice keeps its wash, and nothing fades through grey', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      // Dark, where the hover is a white: a clear black is not the same
+      // colour made clear there, and a fade from it greys the row.
+      ConfigProvider(
+        theme: ThemeData(dark: true),
+        child: _host(
+          const Dropdown<String>(
+            open: true,
+            menu: [
+              DropdownItem(value: 'logs', label: 'Logs', selected: true),
+              DropdownItem(value: 'flags', label: 'Flags'),
+            ],
+            child: Text('Advanced'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    Color washOf(String text) => (tester
+            .widget<AnimatedContainer>(
+              find.ancestor(
+                of: find.text(text),
+                matching: find.byType(AnimatedContainer),
+              ),
+            )
+            .decoration! as BoxDecoration)
+        .color!;
+    final chosen = washOf('Logs');
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: tester.getCenter(find.text('Logs')));
+    await tester.pumpAndSettle();
+    expect(washOf('Logs'), chosen, reason: 'not the grey of a hover');
+
+    await mouse.moveTo(tester.getCenter(find.text('Flags')));
+    await tester.pumpAndSettle();
+    expect(washOf('Logs'), chosen);
+    final hover = washOf('Flags');
+
+    await mouse.moveTo(Offset.zero);
+    await tester.pumpAndSettle();
+    // At rest, the hover's own colour made clear — so the fade to and from
+    // it never passes through the grey of a clear black.
+    expect(washOf('Flags'), hover.withValues(alpha: 0));
+    await mouse.removePointer();
+  });
+
+  testWidgets('a pointer two submenus deep holds every menu open', (
+    tester,
+  ) async {
+    // Each submenu floats in an overlay of its own. Leaving the menu's panel
+    // for one is leaving the panel, and the whole menu used to shut under a
+    // pointer on its way to an item.
+    String? chosen;
+    await tester.pumpWidget(
+      _host(
+        Dropdown<String>(
+          onItemTap: (v) => chosen = v,
+          menu: const [
+            DropdownItem(value: 'edit', label: 'Edit'),
+            DropdownItem(
+              label: 'More',
+              children: [
+                DropdownItem(value: 'copy', label: 'Copy'),
+                DropdownItem(
+                  label: 'Advanced',
+                  children: [DropdownItem(value: 'logs', label: 'Logs')],
+                ),
+              ],
+            ),
+          ],
+          child: const Text('Open'),
+        ),
+      ),
+    );
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: tester.getCenter(find.text('Open')));
+    await tester.pumpAndSettle();
+
+    Future<void> moveTo(String text) async {
+      await mouse.moveTo(tester.getCenter(find.text(text)));
+      await tester.pumpAndSettle(const Duration(milliseconds: 50));
+      // Longer than the grace a pointer is given between two panels.
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+    }
+
+    await moveTo('More');
+    await moveTo('Advanced');
+    await moveTo('Logs');
+    expect(find.text('Logs'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget, reason: 'the menu itself too');
+
+    await tester.tap(find.text('Logs'));
+    await tester.pumpAndSettle();
+    expect(chosen, 'logs');
+
+    await mouse.removePointer();
   });
 
   testWidgets('a divider asks for the type to be named once', (tester) async {

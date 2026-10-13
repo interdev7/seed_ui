@@ -41,6 +41,7 @@ import 'components/feedback/drawer_demo.dart';
 import 'components/data_display/empty_demo.dart';
 import 'components/navigation/breadcrumb_demo.dart';
 import 'components/navigation/dropdown_demo.dart';
+import 'components/navigation/menu_demo.dart';
 import 'components/data_entry/form_demo.dart';
 import 'components/data_entry/input_demo.dart';
 import 'components/data_entry/input_number_demo.dart';
@@ -461,9 +462,10 @@ final List<Demo> demos = [
   Demo('switch', 'Switch', (_) => const SwitchDemo()),
   Demo('upload', 'Upload', (_) => const UploadDemo()),
   Demo('select', 'Select', (_) => const SelectDemo()),
-  Demo('breadcrumb', 'Breadcrumb', (_) => const BreadcrumbDemo()),
+  Demo('breadcrumb', 'Breadcrumb', (_) => const BreadcrumbDemo(), isNew: true),
   Demo('dropdown', 'Dropdown', (_) => const DropdownDemo()),
   Demo('empty', 'Empty', (_) => const EmptyDemo()),
+  Demo('menu', 'Menu', (_) => const MenuDemo()),
   Demo('pagination', 'Pagination', (_) => const PaginationDemo()),
   Demo('tag', 'Tag', (_) => const TagDemo()),
   Demo('checkbox', 'Checkbox', (_) => const CheckboxDemo()),

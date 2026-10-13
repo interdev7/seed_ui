@@ -30,6 +30,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   finger, so a thumb scrolling past cannot shove it aside and a tap still
   presses it. `FloatButtonToken.liftScale` (1.08) is how much it grows while
   held.
+- **`Menu`** — a sidebar, a top bar, the sections of a settings page. Three
+  modes: `inline`, where a submenu slides open under its title; `vertical`,
+  where it floats out beside it; and `horizontal`, a row whose submenus drop
+  down. Entries are data (`MenuItem`, `MenuGroup`, `MenuDivider`); one item is
+  selected and the titles above it are lit; inline submenus can be opened from
+  outside (`openValues`) or one at a time (`accordion`); `inlineCollapsed`
+  folds a sidebar to its icons, with its words in tooltips. Every item is a tab
+  stop, the arrows walk the menu and open and shut submenus, and a screen
+  reader hears what is selected and what is open. A horizontal menu folds
+  the items that do not fit into a `…` that opens a menu of them. `MenuToken`
+  and `MenuDefaults` configure it.
+- **`DropdownItem.selected`** — marks an item as the current choice, drawn in
+  `DropdownToken.itemSelectedColor` on `itemSelectedBg` and heard as selected;
+  a submenu title marked so takes the colour alone.
 - **`Breadcrumb`** — the path to the current page, every crumb but the last
   a link back up it. Crumbs are data (`BreadcrumbItem<T>`: a value, a label,
   an icon); `onItemTap` reports the value of a crumb or of a menu item. A crumb
@@ -61,6 +75,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   names still work, read as `tap`, and go in 1.0.0.
 
 ### Fixed
+
+- A pointer moving from a `Dropdown` menu into a submenu of a submenu shut
+  the whole menu under it: each submenu floats in an overlay of its own, and
+  leaving the menu's panel for one counted as leaving the menu. Every menu in
+  the chain now stays open while the pointer is over any of them.
+- A `Dropdown` row faded its hover in and out from a clear black, which
+  passes through grey on the way — a grey flash as the pointer crossed a row,
+  plain to see in a dark theme. It fades from the hover's own colour made
+  clear.
 
 - `DirectoryNode` and `FileNode` drew their icons in fixed light-theme
   colours; in a dark theme they now use the primary and the tertiary text

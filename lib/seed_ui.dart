@@ -398,6 +398,16 @@ export 'src/components/navigation/dropdown.dart'
         DropdownPanel,
         DropdownToken,
         DropdownTrigger;
+export 'src/components/navigation/menu.dart'
+    show
+        Menu,
+        MenuDefaults,
+        MenuDivider,
+        MenuEntry,
+        MenuGroup,
+        MenuItem,
+        MenuMode,
+        MenuToken;
 export 'src/components/navigation/pagination.dart'
     show PaginationDefaults, Pagination, PaginationSimple, PaginationToken;
 export 'src/icons/icons.dart'

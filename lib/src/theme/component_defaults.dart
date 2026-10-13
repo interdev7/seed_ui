@@ -40,6 +40,7 @@ import '../components/general/button.dart';
 import '../components/general/divider.dart';
 import '../components/general/float_button.dart';
 import '../components/navigation/dropdown.dart';
+import '../components/navigation/menu.dart';
 import '../components/navigation/pagination.dart';
 
 /// Default props for components under a `ConfigProvider`.
@@ -95,6 +96,7 @@ class ComponentDefaults {
     this.tree,
     this.datePicker,
     this.divider,
+    this.menu,
     this.dropdown,
     this.empty,
     this.floatButton,
@@ -189,6 +191,9 @@ class ComponentDefaults {
 
   /// Applied to every [Divider] under this provider.
   final DividerDefaults? divider;
+
+  /// Applied to every [Menu] under this provider.
+  final MenuDefaults? menu;
 
   /// Applied to every [Dropdown] under this provider.
   final DropdownDefaults? dropdown;
@@ -340,6 +345,9 @@ class ComponentDefaults {
         divider: divider == null || other.divider == null
             ? (other.divider ?? divider)
             : divider!.merge(other.divider!),
+        menu: menu == null || other.menu == null
+            ? (other.menu ?? menu)
+            : menu!.merge(other.menu!),
         dropdown: dropdown == null || other.dropdown == null
             ? (other.dropdown ?? dropdown)
             : dropdown!.merge(other.dropdown!),
@@ -413,6 +421,7 @@ class ComponentDefaults {
     if (T == TableDefaults && table != null) return table as T;
     if (T == ButtonDefaults && button != null) return button as T;
     if (T == SkeletonDefaults && skeleton != null) return skeleton as T;
+    if (T == MenuDefaults && menu != null) return menu as T;
     if (T == DividerDefaults && divider != null) return divider as T;
     if (T == EmptyDefaults && empty != null) return empty as T;
     if (T == FloatButtonDefaults && floatButton != null) {

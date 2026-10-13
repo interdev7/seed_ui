@@ -58,6 +58,7 @@ class DropdownItem<T> extends DropdownEntry<T> {
     this.icon,
     this.disabled = false,
     this.danger = false,
+    this.selected = false,
     this.children,
     this.onTap,
   });
@@ -81,6 +82,11 @@ class DropdownItem<T> extends DropdownEntry<T> {
 
   /// Recolours the row red, for destructive actions.
   final bool danger;
+
+  /// Marks the item as the current choice: the sort a list is in, the page
+  /// a menu stands on. A submenu title marked so draws in the selected colour
+  /// without the wash, as the way down to the choice.
+  final bool selected;
 
   /// A nested submenu, opened to the side on hover.
   final List<DropdownEntry<T>>? children;
@@ -136,6 +142,8 @@ class DropdownToken {
     this.itemHeight,
     this.itemPadding,
     this.barrierColor,
+    this.itemSelectedColor,
+    this.itemSelectedBg,
   });
 
   /// Menu background color (`menuBg`).
@@ -188,7 +196,16 @@ class DropdownToken {
   /// Dismiss barrier background color (`barrierColor`).
   final Color? barrierColor;
 
+  /// The words of a selected item (`DropdownItem.selected`), and of the
+  /// submenu titles above it.
+  final Color? itemSelectedColor;
+
+  /// The wash behind a selected item.
+  final Color? itemSelectedBg;
+
   _ResolvedDropdownToken _resolve(Token t) => _ResolvedDropdownToken(
+        itemSelectedBg: itemSelectedBg ?? t.primary.bg,
+        itemSelectedColor: itemSelectedColor ?? t.primary.base,
         menuBg: menuBg ?? t.colorBgElevated,
         gradient: gradient,
         padding: padding ?? EdgeInsets.all(t.sizeXXS),
@@ -204,6 +221,8 @@ class DropdownToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   DropdownToken merge(DropdownToken other) => DropdownToken(
+        itemSelectedBg: other.itemSelectedBg ?? itemSelectedBg,
+        itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
         menuBg: other.menuBg ?? menuBg,
         gradient: other.gradient ?? gradient,
         padding: other.padding ?? padding,
@@ -232,6 +251,8 @@ class _ResolvedDropdownToken {
     required this.itemHeight,
     required this.itemPadding,
     this.barrierColor,
+    required this.itemSelectedColor,
+    required this.itemSelectedBg,
   });
 
   final Color menuBg;
@@ -245,6 +266,8 @@ class _ResolvedDropdownToken {
   final double itemHeight;
   final EdgeInsets itemPadding;
   final Color? barrierColor;
+  final Color itemSelectedColor;
+  final Color itemSelectedBg;
 }
 
 /// Defaults for every [Dropdown] under a `ConfigProvider`.
@@ -428,6 +451,12 @@ class _DropdownState<T> extends State<Dropdown<T>> {
   bool _overTrigger = false;
   bool _overPanel = false;
 
+  /// How many of this menu's submenus, at any depth, have the pointer over
+  /// them. Each floats in an overlay of its own, so leaving the menu's panel
+  /// for one of them is leaving the panel, and without this count the whole
+  /// menu shut under a pointer on its way to an item.
+  int _overSubmenus = 0;
+
   /// Where a tap-trigger press started, so a drag or a scroll that ends over
   /// the trigger is not mistaken for a tap.
   Offset? _tapOrigin;
@@ -534,7 +563,14 @@ class _DropdownState<T> extends State<Dropdown<T>> {
                   _overPanel = false;
                   _scheduleHoverClose();
                 },
-                child: _panel(context),
+                child: _SubmenuHover(
+                  onEnter: () => _overSubmenus++,
+                  onExit: () {
+                    if (_overSubmenus > 0) _overSubmenus--;
+                    _scheduleHoverClose();
+                  },
+                  child: _panel(context),
+                ),
               )
             : _panel(context),
       ),
@@ -578,13 +614,16 @@ class _DropdownState<T> extends State<Dropdown<T>> {
     // hover flags here — otherwise a stale _overPanel keeps the next hover open.
     _overPanel = false;
     _overTrigger = false;
+    _overSubmenus = 0;
     setState(() => _open = false);
     _popover.close();
   }
 
   void _scheduleHoverClose() {
     Future<void>.delayed(const Duration(milliseconds: 120), () {
-      if (mounted && !_overTrigger && !_overPanel) _requestOpen(false);
+      if (mounted && !_overTrigger && !_overPanel && _overSubmenus == 0) {
+        _requestOpen(false);
+      }
     });
   }
 
@@ -975,6 +1014,22 @@ class _MenuRow<T> extends StatefulWidget {
 
 class _MenuRowState<T> extends State<_MenuRow<T>> {
   bool _hovered = false;
+
+  /// How many panels from this row's submenu down have the pointer over
+  /// them: the submenu itself, and any opened out of it.
+  int _inside = 0;
+
+  void _enterSubmenu(_SubmenuHover? above) {
+    _inside++;
+    above?.onEnter();
+  }
+
+  void _exitSubmenu(_SubmenuHover? above) {
+    if (_inside > 0) _inside--;
+    above?.onExit();
+    _closeSubmenuSoon();
+  }
+
   final PopoverController _submenu = PopoverController();
   bool _submenuOpen = false;
 
@@ -1023,6 +1078,9 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
         : row;
     final anchor = Rect.fromLTRB(panel.left, row.top, panel.right, row.bottom);
     _submenuOpen = true;
+    // The menus this row stands in, to be told when the pointer is over its
+    // submenu, so none of them shuts while it is.
+    final above = _SubmenuHover.maybeOf(context);
     final token = context.softToken;
     final r = (widget.token ??
             ConfigProvider.componentOf<DropdownToken>(context) ??
@@ -1042,18 +1100,19 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
       // this a submenu is built outside every provider its parent stood in.
       anchorContext: context,
       builder: (context) => MouseRegion(
-        onEnter: (_) => _hovered = true,
-        onExit: (_) {
-          _hovered = false;
-          _closeSubmenuSoon();
-        },
-        child: DropdownPanel(
-          token: widget.token,
-          child: DropdownMenuList<T>(
-            entries: widget.item.children!,
-            onSelect: widget.onSelect,
-            itemBuilder: widget.itemBuilder,
+        onEnter: (_) => _enterSubmenu(above),
+        onExit: (_) => _exitSubmenu(above),
+        child: _SubmenuHover(
+          onEnter: () => _enterSubmenu(above),
+          onExit: () => _exitSubmenu(above),
+          child: DropdownPanel(
             token: widget.token,
+            child: DropdownMenuList<T>(
+              entries: widget.item.children!,
+              onSelect: widget.onSelect,
+              itemBuilder: widget.itemBuilder,
+              token: widget.token,
+            ),
           ),
         ),
       ),
@@ -1062,7 +1121,7 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
 
   void _closeSubmenuSoon() {
     Future<void>.delayed(const Duration(milliseconds: 120), () {
-      if (mounted && !_hovered) {
+      if (mounted && !_hovered && _inside == 0) {
         _submenu.close();
         _submenuOpen = false;
       }
@@ -1091,16 +1150,26 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
     final token = context.softToken;
     final item = widget.item;
     final disabled = item.disabled;
-    final base = item.danger ? token.error.base : token.colorText;
-    final color = disabled ? token.colorTextQuaternary : base;
     final r = (widget.token ??
             ConfigProvider.componentOf<DropdownToken>(context) ??
             const DropdownToken())
         ._resolve(token);
+    final base = item.danger
+        ? token.error.base
+        : (item.selected ? r.itemSelectedColor : token.colorText);
+    final color = disabled ? token.colorTextQuaternary : base;
     final lit = _hovered || widget.highlighted;
-    final bg = lit && !disabled
-        ? (item.danger ? token.error.bg : r.itemHoverBg)
-        : const Color(0x00000000);
+    final chosen = item.selected && !item._hasChildren && !disabled;
+    // The choice keeps its own wash under the pointer: a grey one over it
+    // read as the choice going away, and flashed grey as the pointer passed.
+    final wash = item.danger ? token.error.bg : r.itemHoverBg;
+    final bg = chosen
+        ? (item.danger ? token.error.bg : r.itemSelectedBg)
+        : lit && !disabled
+            ? wash
+            // The hover's own colour, clear rather than clear black: the row
+            // fades between the two, and from black it passed through grey.
+            : wash.withValues(alpha: 0);
 
     return MouseRegion(
       cursor: disabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
@@ -1121,6 +1190,7 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
         container: true,
         button: true,
         enabled: !disabled,
+        selected: item._hasChildren ? null : item.selected,
         // A row that opens a submenu is a way further in rather than a
         // choice, and says so.
         expanded: item._hasChildren ? _submenuOpen : null,
@@ -1213,4 +1283,31 @@ class _CaretPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CaretPainter old) => old.color != color;
+}
+
+/// Tells the menus above that the pointer is over one of their submenus.
+///
+/// A theme, so that it travels: a submenu is built in an overlay of its own,
+/// and an overlay takes from the context it opens from only what is a theme.
+/// Every submenu passes the news up through the one it opened from, so a
+/// pointer three menus deep holds all three open.
+class _SubmenuHover extends InheritedTheme {
+  const _SubmenuHover({
+    required this.onEnter,
+    required this.onExit,
+    required super.child,
+  });
+
+  final VoidCallback onEnter;
+  final VoidCallback onExit;
+
+  static _SubmenuHover? maybeOf(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<_SubmenuHover>();
+
+  @override
+  Widget wrap(BuildContext context, Widget child) =>
+      _SubmenuHover(onEnter: onEnter, onExit: onExit, child: child);
+
+  @override
+  bool updateShouldNotify(_SubmenuHover old) => false;
 }

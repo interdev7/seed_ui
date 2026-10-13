@@ -125,6 +125,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Popover](doc/data_display/popover.md)            | Floating card with a title and a body — hover, tap or long-press               |
 | [Switch](doc/data_entry/switch.md)                | On/off toggle                                                                  |
 | [Checkbox](doc/data_entry/checkbox.md)            | Checkbox, single or grouped                                                    |
+| [ColorPicker](doc/data_entry/color_picker.md)     | A colour from shades, hue and opacity strips, typed or ready; or the panel alone |
 | [Radio](doc/data_entry/radio.md)                  | Radio button group                                                             |
 | [Rate](doc/data_entry/rate.md)                    | A rating in stars — halves, words for each star, your own character            |
 | [Select](doc/data_entry/select.md)                | Dropdown select — single, multiple or tags                                     |

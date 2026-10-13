@@ -52,7 +52,13 @@ CollapseIconPosition
 CollapseItem
 CollapseToken
 CollapsibleTrigger
+ColorFormat
 ColorGroup
+ColorPicker
+ColorPickerDefaults
+ColorPickerPanel
+ColorPickerToken
+ColorPreset
 Compact
 CompactPosition
 CompactSlot

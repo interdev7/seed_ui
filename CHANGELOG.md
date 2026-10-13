@@ -30,6 +30,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   finger, so a thumb scrolling past cannot shove it aside and a tap still
   presses it. `FloatButtonToken.liftScale` (1.08) is how much it grows while
   held.
+- **`ColorPicker`** and **`ColorPickerPanel`** — a colour chosen from a
+  square of shades, a hue strip and an opacity strip, typed in as HEX, RGB or
+  HSB, or taken from ready colours (`presets`). The panel keeps hue,
+  saturation and brightness, so a grey keeps its hue. `onChanged` while a
+  handle moves, `onChangeComplete` once it is let go; `allowClear` for no
+  colour at all; `disabledAlpha` for opaque colours only; `canCopy` puts the
+  colour on the clipboard as the fields write it. The field is a
+  swatch, its hex beside it with `showText`; the panel stands alone too. The
+  square and the strips move by the arrow keys and are heard as sliders, in
+  all eleven languages. `ColorPickerToken` and `ColorPickerDefaults`
+  configure it.
 - **`AutoComplete`** — a text field that offers to finish what is being
   typed. Suggestions open under it as it takes the focus and as it is typed
   in, narrowed by `filterOption` (by default, those holding the text in any

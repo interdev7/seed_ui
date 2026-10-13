@@ -19,6 +19,7 @@ import '../components/data_display/tooltip.dart';
 import '../components/data_display/tour.dart';
 import '../components/data_display/tree.dart';
 import '../components/data_entry/checkbox.dart';
+import '../components/data_entry/color_picker.dart';
 import '../components/data_entry/date_picker.dart';
 import '../components/data_entry/date_range_picker.dart';
 import '../components/data_entry/form.dart';
@@ -96,6 +97,7 @@ class ComponentDefaults {
     this.tabs,
     this.tree,
     this.datePicker,
+    this.colorPicker,
     this.divider,
     this.menu,
     this.rate,
@@ -190,6 +192,10 @@ class ComponentDefaults {
 
   /// Applied to every [Skeleton] and skeleton block under this provider.
   final SkeletonDefaults? skeleton;
+
+  /// Applied to every [ColorPicker] and [ColorPickerPanel] under this
+  /// provider.
+  final ColorPickerDefaults? colorPicker;
 
   /// Applied to every [Divider] under this provider.
   final DividerDefaults? divider;
@@ -347,6 +353,9 @@ class ComponentDefaults {
         skeleton: skeleton == null || other.skeleton == null
             ? (other.skeleton ?? skeleton)
             : skeleton!.merge(other.skeleton!),
+        colorPicker: colorPicker == null || other.colorPicker == null
+            ? (other.colorPicker ?? colorPicker)
+            : colorPicker!.merge(other.colorPicker!),
         divider: divider == null || other.divider == null
             ? (other.divider ?? divider)
             : divider!.merge(other.divider!),
@@ -431,6 +440,9 @@ class ComponentDefaults {
     if (T == SkeletonDefaults && skeleton != null) return skeleton as T;
     if (T == RateDefaults && rate != null) return rate as T;
     if (T == MenuDefaults && menu != null) return menu as T;
+    if (T == ColorPickerDefaults && colorPicker != null) {
+      return colorPicker as T;
+    }
     if (T == DividerDefaults && divider != null) return divider as T;
     if (T == EmptyDefaults && empty != null) return empty as T;
     if (T == FloatButtonDefaults && floatButton != null) {

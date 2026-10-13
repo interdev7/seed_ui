@@ -47,6 +47,7 @@ menu light 82717959
 pagination light 3059001991
 tag light 404491375
 checkbox light 16453094
+colorpicker light 745089425
 radio light 3401510951
 rate light 3986494972
 avatar dark 2251538348
@@ -98,5 +99,6 @@ menu dark 2908681672
 pagination dark 880421129
 tag dark 1550634849
 checkbox dark 4132026910
+colorpicker dark 588750070
 radio dark 1600344315
 rate dark 1213292267

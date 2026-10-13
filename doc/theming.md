@@ -820,6 +820,7 @@ house-style decision rather than the state of one instance:
 | `Checkbox` | `disabled`, `size` |
 | `CheckboxGroup` | `direction`, `disabled`, `size` |
 | `Collapse` | `accordion`, `bordered`, `ghost`, `expandIconPosition`, `collapsible`, `size` |
+| `ColorPicker` | `format`, `disabledAlpha`, `canCopy` |
 | `Countdown` | `type` |
 | `DatePicker` | `variant`, `allowClear`, `showToday`, `size`, `disabled` |
 | `DateRangePicker` | `variant`, `allowClear`, `size`, `disabled` |

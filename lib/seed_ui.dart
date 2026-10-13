@@ -190,6 +190,14 @@ export 'src/components/data_entry/checkbox.dart'
         CheckboxGroupDefaults,
         CheckboxOption,
         CheckboxToken;
+export 'src/components/data_entry/color_picker.dart'
+    show
+        ColorFormat,
+        ColorPicker,
+        ColorPickerDefaults,
+        ColorPickerPanel,
+        ColorPickerToken,
+        ColorPreset;
 export 'src/components/data_entry/date_picker.dart'
     show
         DatePanelMode,

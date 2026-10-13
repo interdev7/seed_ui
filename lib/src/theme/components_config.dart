@@ -20,6 +20,7 @@ import '../components/data_display/tour.dart';
 import '../components/data_display/tree.dart';
 import '../components/data_entry/auto_complete.dart';
 import '../components/data_entry/checkbox.dart';
+import '../components/data_entry/color_picker.dart';
 import '../components/data_entry/date_picker.dart';
 import '../components/data_entry/form.dart';
 import '../components/data_entry/input.dart';
@@ -64,6 +65,7 @@ class ComponentsConfig {
     this.card,
     this.checkbox,
     this.collapse,
+    this.colorPicker,
     this.countdown,
     this.datePicker,
     this.divider,
@@ -133,6 +135,10 @@ class ComponentsConfig {
 
   /// Overrides applied to every [Collapse] under this provider.
   final CollapseToken? collapse;
+
+  /// Overrides applied to every [ColorPicker] and [ColorPickerPanel] under
+  /// this provider.
+  final ColorPickerToken? colorPicker;
 
   /// Overrides applied to every [Countdown] under this provider.
   final CountdownToken? countdown;
@@ -295,6 +301,9 @@ class ComponentsConfig {
         collapse: collapse == null || other.collapse == null
             ? (other.collapse ?? collapse)
             : collapse!.merge(other.collapse!),
+        colorPicker: colorPicker == null || other.colorPicker == null
+            ? (other.colorPicker ?? colorPicker)
+            : colorPicker!.merge(other.colorPicker!),
         countdown: countdown == null || other.countdown == null
             ? (other.countdown ?? countdown)
             : countdown!.merge(other.countdown!),
@@ -435,6 +444,9 @@ class ComponentsConfig {
     if (T == CardToken && card != null) return card as T;
     if (T == CheckboxToken && checkbox != null) return checkbox as T;
     if (T == CollapseToken && collapse != null) return collapse as T;
+    if (T == ColorPickerToken && colorPicker != null) {
+      return colorPicker as T;
+    }
     if (T == CountdownToken && countdown != null) return countdown as T;
     if (T == DatePickerToken && datePicker != null) {
       return datePicker as T;

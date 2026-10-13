@@ -718,6 +718,16 @@ Widget _empty(EmptyToken? token) => Empty(
       token: token,
     );
 
+/// A see-through blue on a panel with a ready colour under it.
+Widget _colorPanel(ColorPickerToken? token) => ColorPickerPanel(
+      value: const Color(0x801677FF),
+      token: token,
+      allowClear: true,
+      presets: const [
+        ColorPreset(label: 'Brand', colors: [Color(0xFF52C41A)]),
+      ],
+    );
+
 /// A field with its suggestions open on 'an'.
 Widget _autoComplete(AutoCompleteToken? token) => SizedBox(
       width: 240,
@@ -1200,6 +1210,53 @@ final _probes = <_Probe>[
         child: const Text('Body'),
       ),
     ),
+  ),
+  _Probe(
+    'ColorPickerToken.panelWidth',
+    (c) => _colorPanel(c ? const ColorPickerToken(panelWidth: 300) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.saturationHeight',
+    (c) => _colorPanel(c ? const ColorPickerToken(saturationHeight: 80) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.sliderHeight',
+    (c) => _colorPanel(c ? const ColorPickerToken(sliderHeight: 14) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.handleSize',
+    (c) => _colorPanel(c ? const ColorPickerToken(handleSize: 24) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.presetSize',
+    (c) => _colorPanel(c ? const ColorPickerToken(presetSize: 32) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.gap',
+    (c) => _colorPanel(c ? const ColorPickerToken(gap: 24) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.borderRadius',
+    (c) => _colorPanel(c ? const ColorPickerToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.checkerColor',
+    (c) => _colorPanel(c ? const ColorPickerToken(checkerColor: _loud) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.checkerSize',
+    (c) => _colorPanel(c ? const ColorPickerToken(checkerSize: 10) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.panelBg',
+    (c) => _colorPanel(c ? const ColorPickerToken(panelBg: _loud) : null),
+  ),
+  _Probe(
+    'ColorPickerToken.handleShadow',
+    (c) => _colorPanel(c
+        ? const ColorPickerToken(
+            handleShadow: [BoxShadow(color: _loud, blurRadius: 6)])
+        : null),
   ),
   _Probe(
     'AutoCompleteToken.optionActiveBg',

@@ -38,6 +38,7 @@ import 'components/data_display/tour_demo.dart';
 import 'components/data_display/popover_demo.dart';
 import 'components/data_entry/auto_complete_demo.dart';
 import 'components/data_entry/checkbox_demo.dart';
+import 'components/data_entry/color_picker_demo.dart';
 import 'components/feedback/drawer_demo.dart';
 import 'components/data_display/empty_demo.dart';
 import 'components/navigation/breadcrumb_demo.dart';
@@ -447,10 +448,15 @@ final List<Demo> demos = [
   Demo('skeleton', 'Skeleton', (_) => const SkeletonDemo(), isNew: true),
   Demo('spin', 'Spin', (_) => const SpinDemo()),
   Demo('form', 'Form', (_) => const FormDemo()),
-  Demo('autocomplete', 'AutoComplete', (_) => const AutoCompleteDemo()),
+  Demo(
+    'autocomplete',
+    'AutoComplete',
+    (_) => const AutoCompleteDemo(),
+    isNew: true,
+  ),
   Demo('input', 'Input', (_) => const InputDemo()),
   Demo('inputnumber', 'InputNumber', (_) => const InputNumberDemo()),
-  Demo('inputotp', 'InputOtp', (_) => const InputOtpDemo()),
+  Demo('inputotp', 'InputOtp', (_) => const InputOtpDemo(), isNew: true),
   Demo('segmented', 'Segmented', (_) => const SegmentedDemo()),
   Demo('table', 'Table', (_) => const TableDemo()),
   Demo('table2d', 'Table (2D pkg)', (_) => const TableTwoDDemo()),
@@ -474,8 +480,14 @@ final List<Demo> demos = [
   Demo('pagination', 'Pagination', (_) => const PaginationDemo()),
   Demo('tag', 'Tag', (_) => const TagDemo()),
   Demo('checkbox', 'Checkbox', (_) => const CheckboxDemo()),
+  Demo(
+    'colorpicker',
+    'ColorPicker',
+    (_) => const ColorPickerDemo(),
+    isNew: true,
+  ),
   Demo('radio', 'Radio', (_) => const RadioDemo()),
-  Demo('rate', 'Rate', (_) => const RateDemo()),
+  Demo('rate', 'Rate', (_) => const RateDemo(), isNew: true),
 ];
 
 class HomePage extends StatelessWidget {

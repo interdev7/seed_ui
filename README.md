@@ -109,6 +109,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Form](doc/data_entry/form.md)                    | Named fields, rules with words in every language, and a controller you hold |
 | [Input](doc/data_entry/input.md)                  | Single- or multi-line text field                                               |
 | [InputNumber](doc/data_entry/input_number.md)     | Numeric input with steppers, range, precision                                  |
+| [InputOtp](doc/data_entry/input_otp.md)           | A code typed one character to a cell; paste, autofill from messages, a mask    |
 | [Segmented](doc/data_display/segmented.md)        | Segmented single-select control                                                |
 | [Table](doc/data_display/table.md)                | Rows and columns; a column fits its content unless told a width or a flex   |
 | [Tabs](doc/data_display/tabs.md)                  | Tabbed panels — line, card, editable-card                                      |

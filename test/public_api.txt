@@ -155,6 +155,9 @@ InputNumber
 InputNumberDefaults
 InputNumberMode
 InputNumberToken
+InputOtp
+InputOtpCharacters
+InputOtpToken
 InputStatus
 InputToken
 Listy

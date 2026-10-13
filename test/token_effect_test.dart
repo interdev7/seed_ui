@@ -716,6 +716,27 @@ Widget _empty(EmptyToken? token) => Empty(
       token: token,
     );
 
+/// A four-cell code with two characters in it.
+Widget _otp(InputOtpToken? token, {bool disabled = false}) => InputOtp(
+      length: 4,
+      defaultValue: '12',
+      disabled: disabled,
+      token: token,
+    );
+
+/// Puts the cursor into the code field, so its active cell shows.
+Future<void> _focusOtp(WidgetTester tester) async {
+  await tester.tap(find.byType(InputOtp));
+  await tester.pump();
+}
+
+/// The same, held until the caret is lit: the shot is taken 600ms after
+/// this, and a caret blinks on a one-second beat, lit for the first half.
+Future<void> _focusOtpCaret(WidgetTester tester) async {
+  await _focusOtp(tester);
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
 /// A menu with one of everything: a selected item, a disabled one, a
 /// dangerous one, a group, and an open submenu.
 Widget _menu(
@@ -1159,6 +1180,54 @@ final _probes = <_Probe>[
         child: const Text('Body'),
       ),
     ),
+  ),
+  _Probe(
+    'InputOtpToken.gap',
+    (c) => _otp(c ? const InputOtpToken(gap: 24) : null),
+  ),
+  _Probe(
+    'InputOtpToken.cellWidth',
+    (c) => _otp(c ? const InputOtpToken(cellWidth: 56) : null),
+  ),
+  _Probe(
+    'InputOtpToken.colorBorder',
+    (c) => _otp(c ? const InputOtpToken(colorBorder: _loud) : null),
+  ),
+  _Probe(
+    'InputOtpToken.activeBorderColor',
+    (c) => _otp(c ? const InputOtpToken(activeBorderColor: _loud) : null),
+    act: _focusOtp,
+  ),
+  _Probe(
+    'InputOtpToken.hoverBorderColor',
+    (c) => _otp(c ? const InputOtpToken(hoverBorderColor: _loud) : null),
+    hover: () => find.byType(InputOtp),
+  ),
+  _Probe(
+    'InputOtpToken.cellBg',
+    (c) => _otp(c ? const InputOtpToken(cellBg: _loud) : null),
+  ),
+  _Probe(
+    'InputOtpToken.disabledCellBg',
+    (c) => _otp(c ? const InputOtpToken(disabledCellBg: _loud) : null,
+        disabled: true),
+  ),
+  _Probe(
+    'InputOtpToken.colorText',
+    (c) => _otp(c ? const InputOtpToken(colorText: _loud) : null),
+  ),
+  _Probe(
+    'InputOtpToken.caretColor',
+    (c) => _otp(c ? const InputOtpToken(caretColor: _loud) : null),
+    act: _focusOtpCaret,
+  ),
+  _Probe(
+    'InputOtpToken.borderRadius',
+    (c) => _otp(c ? const InputOtpToken(borderRadius: 0) : null),
+  ),
+  _Probe(
+    'InputOtpToken.fontSize',
+    (c) => _otp(c ? const InputOtpToken(fontSize: 28) : null),
   ),
   _Probe(
     'MenuToken.itemColor',

@@ -22,6 +22,7 @@ skeleton light 3345487790
 spin light 2738948955
 input light 1808611980
 inputnumber light 3038534652
+inputotp light 401764604
 segmented light 2207017762
 table light 2401522163
 table2d light 2510181290
@@ -70,6 +71,7 @@ skeleton dark 3273487464
 spin dark 1911627865
 input dark 1920701504
 inputnumber dark 2668439061
+inputotp dark 349975326
 segmented dark 480712354
 table dark 2581992052
 table2d dark 4115687414

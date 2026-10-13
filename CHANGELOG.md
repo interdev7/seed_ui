@@ -30,6 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   finger, so a thumb scrolling past cannot shove it aside and a tap still
   presses it. `FloatButtonToken.liftScale` (1.08) is how much it grows while
   held.
+- **`InputOtp`** — a code typed one character to a cell. One field stands
+  behind the cells, so a whole code pasted at once fills them, a phone offers
+  the code from its messages (`AutofillHints.oneTimeCode`), Backspace walks
+  back and a long press offers Paste. A tap on a cell puts the cursor there
+  and typing replaces the character. `characters` takes digits, letters and
+  digits, or anything; `mask` hides what is typed from the eye and from a
+  screen reader; `separator` draws between cells; `onCompleted` fires once
+  every cell is filled. Sizes, statuses and `disabled` as on an `Input`.
+  `InputOtpToken` styles it.
 - **`Menu`** — a sidebar, a top bar, the sections of a settings page. Three
   modes: `inline`, where a submenu slides open under its title; `vertical`,
   where it floats out beside it; and `horizontal`, a row whose submenus drop

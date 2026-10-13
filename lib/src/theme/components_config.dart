@@ -23,6 +23,7 @@ import '../components/data_entry/date_picker.dart';
 import '../components/data_entry/form.dart';
 import '../components/data_entry/input.dart';
 import '../components/data_entry/input_number.dart';
+import '../components/data_entry/input_otp.dart';
 import '../components/data_entry/radio.dart';
 import '../components/data_entry/select.dart';
 import '../components/data_entry/slider.dart';
@@ -70,6 +71,7 @@ class ComponentsConfig {
     this.form,
     this.input,
     this.inputNumber,
+    this.inputOtp,
     this.listy,
     this.menu,
     this.message,
@@ -154,6 +156,9 @@ class ComponentsConfig {
 
   /// Overrides applied to every [InputNumber] under this provider.
   final InputNumberToken? inputNumber;
+
+  /// Overrides applied to every [InputOtp] under this provider.
+  final InputOtpToken? inputOtp;
 
   /// Overrides applied to every [Listy] under this provider.
   final ListyToken? listy;
@@ -310,6 +315,9 @@ class ComponentsConfig {
         inputNumber: inputNumber == null || other.inputNumber == null
             ? (other.inputNumber ?? inputNumber)
             : inputNumber!.merge(other.inputNumber!),
+        inputOtp: inputOtp == null || other.inputOtp == null
+            ? (other.inputOtp ?? inputOtp)
+            : inputOtp!.merge(other.inputOtp!),
         listy: listy == null || other.listy == null
             ? (other.listy ?? listy)
             : listy!.merge(other.listy!),
@@ -421,6 +429,7 @@ class ComponentsConfig {
       return floatButton as T;
     }
     if (T == InputToken && input != null) return input as T;
+    if (T == InputOtpToken && inputOtp != null) return inputOtp as T;
     if (T == InputNumberToken && inputNumber != null) return inputNumber as T;
     if (T == ListyToken && listy != null) return listy as T;
     if (T == MenuToken && menu != null) return menu as T;

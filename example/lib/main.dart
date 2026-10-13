@@ -45,6 +45,7 @@ import 'components/navigation/menu_demo.dart';
 import 'components/data_entry/form_demo.dart';
 import 'components/data_entry/input_demo.dart';
 import 'components/data_entry/input_number_demo.dart';
+import 'components/data_entry/input_otp_demo.dart';
 import 'components/feedback/message_demo.dart';
 import 'components/feedback/modal_demo.dart';
 import 'components/feedback/notification_demo.dart';
@@ -446,6 +447,7 @@ final List<Demo> demos = [
   Demo('form', 'Form', (_) => const FormDemo()),
   Demo('input', 'Input', (_) => const InputDemo()),
   Demo('inputnumber', 'InputNumber', (_) => const InputNumberDemo()),
+  Demo('inputotp', 'InputOtp', (_) => const InputOtpDemo()),
   Demo('segmented', 'Segmented', (_) => const SegmentedDemo()),
   Demo('table', 'Table', (_) => const TableDemo()),
   Demo('table2d', 'Table (2D pkg)', (_) => const TableTwoDDemo()),

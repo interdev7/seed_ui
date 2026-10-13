@@ -234,6 +234,8 @@ export 'src/components/data_entry/input_number.dart'
         InputNumberMode,
         InputNumberToken,
         SpinDirection;
+export 'src/components/data_entry/input_otp.dart'
+    show InputOtp, InputOtpCharacters, InputOtpToken;
 export 'src/components/data_entry/multi_date_picker.dart'
     show DateTag, DateTagBuilder, MultiDatePicker, MultiDatePickerDefaults;
 export 'src/components/data_entry/radio.dart'

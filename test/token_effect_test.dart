@@ -715,6 +715,16 @@ Widget _empty(EmptyToken? token) => Empty(
       token: token,
     );
 
+/// A path of three crumbs, the middle one with an icon.
+Widget _breadcrumb(BreadcrumbToken? token) => Breadcrumb<String>(
+      token: token,
+      items: const [
+        BreadcrumbItem(value: 'a', label: 'Home'),
+        BreadcrumbItem(value: 'b', label: 'Projects', icon: Icon(Icons.folder)),
+        BreadcrumbItem(label: 'Seed'),
+      ],
+    );
+
 /// A divider with a title, between two words so its margins show.
 Widget _divider(
   DividerToken? token, {
@@ -1113,6 +1123,49 @@ final _probes = <_Probe>[
         child: const Text('Body'),
       ),
     ),
+  ),
+  _Probe(
+    'BreadcrumbToken.itemColor',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(itemColor: _loud) : null),
+  ),
+  _Probe(
+    'BreadcrumbToken.lastItemColor',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(lastItemColor: _loud) : null),
+  ),
+  _Probe(
+    'BreadcrumbToken.linkHoverColor',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(linkHoverColor: _loud) : null),
+    hover: () => find.text('Home'),
+  ),
+  _Probe(
+    'BreadcrumbToken.linkHoverBg',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(linkHoverBg: _loud) : null),
+    hover: () => find.text('Home'),
+  ),
+  _Probe(
+    'BreadcrumbToken.separatorColor',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(separatorColor: _loud) : null),
+  ),
+  _Probe(
+    'BreadcrumbToken.separatorMargin',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(separatorMargin: 30) : null),
+  ),
+  _Probe(
+    'BreadcrumbToken.fontSize',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(fontSize: 24) : null),
+  ),
+  _Probe(
+    'BreadcrumbToken.iconFontSize',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(iconFontSize: 30) : null),
+  ),
+  _Probe(
+    'BreadcrumbToken.itemPaddingInline',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(itemPaddingInline: 20) : null),
+  ),
+  _Probe(
+    'BreadcrumbToken.borderRadius',
+    (c) => _breadcrumb(c ? const BreadcrumbToken(borderRadius: 12) : null),
+    hover: () => find.text('Home'),
   ),
   _Probe(
     'DividerToken.lineColor',

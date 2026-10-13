@@ -383,6 +383,8 @@ export 'src/components/general/float_button.dart'
         FloatButtonToken,
         FloatButtonDragStart,
         FloatButtonTrigger;
+export 'src/components/navigation/breadcrumb.dart'
+    show Breadcrumb, BreadcrumbItem, BreadcrumbToken;
 export 'src/components/navigation/dropdown.dart'
     show
         DropdownDefaults,

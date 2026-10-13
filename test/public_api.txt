@@ -11,6 +11,9 @@ Badge
 BadgeDefaults
 BadgeStatus
 BadgeToken
+Breadcrumb
+BreadcrumbItem
+BreadcrumbToken
 Button
 ButtonColor
 ButtonCustomColor

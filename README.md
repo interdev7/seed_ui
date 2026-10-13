@@ -125,6 +125,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Checkbox](doc/data_entry/checkbox.md)            | Checkbox, single or grouped                                                    |
 | [Radio](doc/data_entry/radio.md)                  | Radio button group                                                             |
 | [Select](doc/data_entry/select.md)                | Dropdown select — single, multiple or tags                                     |
+| [Breadcrumb](doc/navigation/breadcrumb.md)        | The path to the current page; menus on crumbs, a long path folded              |
 | [Dropdown](doc/navigation/dropdown.md)            | Menu floating from a trigger; submenus, groups                                 |
 | [Empty](doc/data_display/empty.md)                | Empty-state placeholder; global emptyBuilder                                    |
 | [Pagination](doc/navigation/pagination.md)        | Pager: numbers, size-changer, jumper, simple                                   |

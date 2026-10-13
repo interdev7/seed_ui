@@ -81,6 +81,7 @@ class SeedLocalizations {
     this.tabFallback = 'Tab {n}',
     this.backToTop = 'Back to top',
     this.loading = 'Loading',
+    this.showMore = 'Show more',
     this.search = 'Search',
     this.selectAll = 'Select all items',
     this.sortedAscending = 'sorted ascending',
@@ -175,6 +176,10 @@ class SeedLocalizations {
 
   /// What a `Skeleton` is called out loud while it stands in for content.
   final String loading;
+
+  /// What the `…` standing for a `Breadcrumb`'s folded items is called out
+  /// loud.
+  final String showMore;
 
   /// Placeholder of the field that narrows a `Table` column's filter menu.
   final String search;
@@ -425,6 +430,7 @@ class SeedLocalizations {
     String? tabFallback,
     String? backToTop,
     String? loading,
+    String? showMore,
     String? search,
     String? selectAll,
     String? sortedAscending,
@@ -486,6 +492,7 @@ class SeedLocalizations {
         tabFallback: tabFallback ?? this.tabFallback,
         backToTop: backToTop ?? this.backToTop,
         loading: loading ?? this.loading,
+        showMore: showMore ?? this.showMore,
         search: search ?? this.search,
         selectAll: selectAll ?? this.selectAll,
         sortedAscending: sortedAscending ?? this.sortedAscending,
@@ -631,6 +638,7 @@ class SeedLocalizations {
     tabFallback: 'Вкладка {n}',
     backToTop: 'Наверх',
     loading: 'Загрузка',
+    showMore: 'Показать ещё',
     clear: 'Очистить',
     add: 'Добавить',
     remove: 'Убрать',
@@ -714,6 +722,7 @@ class SeedLocalizations {
     tabFallback: 'Bölüm {n}',
     backToTop: 'Ýokaryk',
     loading: 'Ýüklenýär',
+    showMore: 'Ýene görkez',
     clear: 'Arassalamak',
     add: 'Goşmak',
     remove: 'Aýyrmak',
@@ -796,6 +805,7 @@ class SeedLocalizations {
     tabFallback: 'Tab {n}',
     backToTop: 'Nach oben',
     loading: 'Wird geladen',
+    showMore: 'Mehr anzeigen',
     clear: 'Leeren',
     add: 'Hinzufügen',
     remove: 'Entfernen',
@@ -878,6 +888,7 @@ class SeedLocalizations {
     tabFallback: 'Onglet {n}',
     backToTop: 'Haut de page',
     loading: 'Chargement',
+    showMore: 'Afficher plus',
     clear: 'Effacer',
     add: 'Ajouter',
     remove: 'Retirer',
@@ -961,6 +972,7 @@ class SeedLocalizations {
     tabFallback: 'Pestaña {n}',
     backToTop: 'Volver arriba',
     loading: 'Cargando',
+    showMore: 'Mostrar más',
     clear: 'Borrar',
     add: 'Añadir',
     remove: 'Quitar',
@@ -1044,6 +1056,7 @@ class SeedLocalizations {
     tabFallback: '标签页 {n}',
     backToTop: '回到顶部',
     loading: '加载中',
+    showMore: '显示更多',
     clear: '清除',
     add: '添加',
     remove: '移除',
@@ -1126,6 +1139,7 @@ class SeedLocalizations {
     tabFallback: 'タブ {n}',
     backToTop: 'トップへ戻る',
     loading: '読み込み中',
+    showMore: 'さらに表示',
     clear: 'クリア',
     add: '追加',
     remove: '削除',
@@ -1209,6 +1223,7 @@ class SeedLocalizations {
     tabFallback: 'Sekme {n}',
     backToTop: 'Başa dön',
     loading: 'Yükleniyor',
+    showMore: 'Daha fazla göster',
     clear: 'Temizle',
     add: 'Ekle',
     remove: 'Kaldır',
@@ -1291,6 +1306,7 @@ class SeedLocalizations {
     tabFallback: 'Aba {n}',
     backToTop: 'Voltar ao topo',
     loading: 'Carregando',
+    showMore: 'Mostrar mais',
     clear: 'Limpar',
     add: 'Adicionar',
     remove: 'Remover',
@@ -1374,6 +1390,7 @@ class SeedLocalizations {
     tabFallback: 'علامة التبويب {n}',
     backToTop: 'العودة إلى الأعلى',
     loading: 'جارٍ التحميل',
+    showMore: 'عرض المزيد',
     clear: 'مسح',
     add: 'إضافة',
     remove: 'إزالة',
@@ -1458,6 +1475,7 @@ class SeedLocalizations {
     tabFallback: 'כרטיסייה {n}',
     backToTop: 'חזרה למעלה',
     loading: 'טוען',
+    showMore: 'הצג עוד',
     clear: 'ניקוי',
     add: 'הוספה',
     remove: 'הסרה',

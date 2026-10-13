@@ -39,6 +39,7 @@ import 'components/data_display/popover_demo.dart';
 import 'components/data_entry/checkbox_demo.dart';
 import 'components/feedback/drawer_demo.dart';
 import 'components/data_display/empty_demo.dart';
+import 'components/navigation/breadcrumb_demo.dart';
 import 'components/navigation/dropdown_demo.dart';
 import 'components/data_entry/form_demo.dart';
 import 'components/data_entry/input_demo.dart';
@@ -460,6 +461,7 @@ final List<Demo> demos = [
   Demo('switch', 'Switch', (_) => const SwitchDemo()),
   Demo('upload', 'Upload', (_) => const UploadDemo()),
   Demo('select', 'Select', (_) => const SelectDemo()),
+  Demo('breadcrumb', 'Breadcrumb', (_) => const BreadcrumbDemo()),
   Demo('dropdown', 'Dropdown', (_) => const DropdownDemo()),
   Demo('empty', 'Empty', (_) => const EmptyDemo()),
   Demo('pagination', 'Pagination', (_) => const PaginationDemo()),

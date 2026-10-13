@@ -42,6 +42,7 @@ import '../components/feedback/spin.dart';
 import '../components/general/button.dart';
 import '../components/general/divider.dart';
 import '../components/general/float_button.dart';
+import '../components/navigation/breadcrumb.dart';
 import '../components/navigation/dropdown.dart';
 import '../components/navigation/pagination.dart';
 
@@ -53,6 +54,7 @@ class ComponentsConfig {
     this.alert,
     this.avatar,
     this.badge,
+    this.breadcrumb,
     this.button,
     this.card,
     this.checkbox,
@@ -105,6 +107,9 @@ class ComponentsConfig {
 
   /// Overrides applied to every [Badge] under this provider.
   final BadgeToken? badge;
+
+  /// Overrides applied to every [Breadcrumb] under this provider.
+  final BreadcrumbToken? breadcrumb;
 
   /// Overrides applied to every [Button] under this provider.
   final ButtonToken? button;
@@ -252,6 +257,9 @@ class ComponentsConfig {
         badge: badge == null || other.badge == null
             ? (other.badge ?? badge)
             : badge!.merge(other.badge!),
+        breadcrumb: breadcrumb == null || other.breadcrumb == null
+            ? (other.breadcrumb ?? breadcrumb)
+            : breadcrumb!.merge(other.breadcrumb!),
         button: button == null || other.button == null
             ? (other.button ?? button)
             : button!.merge(other.button!),
@@ -385,6 +393,9 @@ class ComponentsConfig {
     if (T == AlertToken && alert != null) return alert as T;
     if (T == AvatarToken && avatar != null) return avatar as T;
     if (T == BadgeToken && badge != null) return badge as T;
+    if (T == BreadcrumbToken && breadcrumb != null) {
+      return breadcrumb as T;
+    }
     if (T == ButtonToken && button != null) return button as T;
     if (T == CardToken && card != null) return card as T;
     if (T == CheckboxToken && checkbox != null) return checkbox as T;

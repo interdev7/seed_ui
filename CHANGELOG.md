@@ -30,6 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   finger, so a thumb scrolling past cannot shove it aside and a tap still
   presses it. `FloatButtonToken.liftScale` (1.08) is how much it grows while
   held.
+- **`Breadcrumb`** — the path to the current page, every crumb but the last
+  a link back up it. Crumbs are data (`BreadcrumbItem<T>`: a value, a label,
+  an icon); `onItemTap` reports the value of a crumb or of a menu item. A crumb
+  can carry a menu of places beside it; `maxItems` folds the middle of a long
+  path into a `…` that opens a menu of what it hides. Links are tab stops,
+  pressed with Enter or Space, and heard as links; the `…` is "Show more" in
+  all eleven languages (`SeedLocalizations.showMore`). `BreadcrumbToken`
+  styles it.
 - **`Skeleton`** — grey blocks where an avatar, a title and a paragraph will
   be, swapped for `child` once `loading` turns false. `active` sweeps a light
   across every block in step; it stays still where the platform asks for less

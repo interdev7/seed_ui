@@ -38,6 +38,7 @@ tour light 28359017
 switch light 2967480937
 upload light 3040490386
 select light 1138985610
+breadcrumb light 1632136348
 dropdown light 129436275
 empty light 4257679929
 pagination light 3059001991
@@ -84,6 +85,7 @@ tour dark 2805119397
 switch dark 604843588
 upload dark 2259636165
 select dark 3981774201
+breadcrumb dark 841616013
 dropdown dark 128396860
 empty dark 2101925004
 pagination dark 880421129

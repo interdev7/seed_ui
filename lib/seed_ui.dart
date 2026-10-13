@@ -328,6 +328,18 @@ export 'src/components/feedback/progress.dart'
         ProgressToken,
         ProgressType;
 export 'src/components/feedback/result.dart' show Result, ResultToken;
+export 'src/components/feedback/skeleton.dart'
+    show
+        Skeleton,
+        SkeletonAvatar,
+        SkeletonButton,
+        SkeletonDefaults,
+        SkeletonImage,
+        SkeletonInput,
+        SkeletonNode,
+        SkeletonParagraph,
+        SkeletonTitle,
+        SkeletonToken;
 export 'src/components/feedback/spin.dart'
     show Spin, SpinDefaults, SpinPosition, SpinToken;
 export 'src/components/general/button.dart'

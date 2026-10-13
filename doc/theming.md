@@ -842,6 +842,7 @@ house-style decision rather than the state of one instance:
 | `Ribbon` | `placement` |
 | `Segmented` | `direction`, `scrollButtons`, `size`, `disabled` |
 | `Select` | `variant`, `allowClear`, `showSearch`, `size`, `disabled` |
+| `Skeleton` | `active`, `round` |
 | `Slider` | `dots`, `included`, `disabled` |
 | `SortableList` | `direction`, `showHandle` |
 | `Spin` | `size`, `delay`, `position` |

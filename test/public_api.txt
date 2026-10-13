@@ -251,6 +251,16 @@ SelectSearch
 SelectStatus
 SelectToken
 SelectVariant
+Skeleton
+SkeletonAvatar
+SkeletonButton
+SkeletonDefaults
+SkeletonImage
+SkeletonInput
+SkeletonNode
+SkeletonParagraph
+SkeletonTitle
+SkeletonToken
 Slider
 SliderController
 SliderDefaults

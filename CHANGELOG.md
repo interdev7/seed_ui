@@ -30,6 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   finger, so a thumb scrolling past cannot shove it aside and a tap still
   presses it. `FloatButtonToken.liftScale` (1.08) is how much it grows while
   held.
+- **`Skeleton`** — grey blocks where an avatar, a title and a paragraph will
+  be, swapped for `child` once `loading` turns false. `active` sweeps a light
+  across every block in step; it stays still where the platform asks for less
+  motion, and repaints the blocks alone. `SkeletonButton`, `SkeletonAvatar`,
+  `SkeletonInput`, `SkeletonImage` and `SkeletonNode` stand in for other
+  shapes. A screen reader hears "Loading" once, in all eleven languages
+  (`SeedLocalizations.loading`). `SkeletonToken` and `SkeletonDefaults`
+  configure it.
 - **`Divider`** — a line between blocks of a page, or between words and
   buttons in a row. Horizontal or vertical; solid, dashed or dotted; three
   sizes of room around it; a title at the start, centre or end, as a heading

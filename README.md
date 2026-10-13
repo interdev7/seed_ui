@@ -97,6 +97,7 @@ key is how they find it. Without it they assert in debug mode.
 | [MultiDatePicker](doc/data_entry/multi_date_picker.md) | Any number of days, each a tag in the field                               |
 | [Spinner](doc/feedback/spinner.md)                | Indeterminate circular progress indicator                                      |
 | [Spin](doc/feedback/spin.md)                      | Loading state for a region, with tip, delay, percent and fullscreen mask       |
+| [Skeleton](doc/feedback/skeleton.md)              | Grey blocks where content will be, with a light across them while it loads     |
 | [message](doc/feedback/message.md)                | Brief centred status toasts                                                    |
 | [notification](doc/feedback/notification.md)      | Corner-anchored cards with a headline, detail and actions                      |
 | [Modal](doc/feedback/modal.md)                    | Blocking dialogs that return the user's decision                               |

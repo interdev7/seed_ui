@@ -51,6 +51,7 @@ import 'components/feedback/popconfirm_demo.dart';
 import 'components/feedback/progress_demo.dart';
 import 'components/data_entry/radio_demo.dart';
 import 'components/feedback/result_demo.dart';
+import 'components/feedback/skeleton_demo.dart';
 import 'components/feedback/spin_demo.dart';
 import 'components/data_display/segmented_demo.dart';
 import 'components/data_display/steps_demo.dart';
@@ -438,6 +439,7 @@ final List<Demo> demos = [
   Demo('alert', 'Alert', (_) => const AlertDemo()),
   Demo('progress', 'Progress', (_) => const ProgressDemo()),
   Demo('result', 'Result', (_) => const ResultDemo()),
+  Demo('skeleton', 'Skeleton', (_) => const SkeletonDemo(), isNew: true),
   Demo('spin', 'Spin', (_) => const SpinDemo()),
   Demo('form', 'Form', (_) => const FormDemo()),
   Demo('input', 'Input', (_) => const InputDemo()),

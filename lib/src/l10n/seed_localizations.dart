@@ -80,6 +80,7 @@ class SeedLocalizations {
     this.createOption = 'Create "{text}"',
     this.tabFallback = 'Tab {n}',
     this.backToTop = 'Back to top',
+    this.loading = 'Loading',
     this.search = 'Search',
     this.selectAll = 'Select all items',
     this.sortedAscending = 'sorted ascending',
@@ -171,6 +172,9 @@ class SeedLocalizations {
 
   /// What a `BackTop` button is called out loud: an arrow, and no words.
   final String backToTop;
+
+  /// What a `Skeleton` is called out loud while it stands in for content.
+  final String loading;
 
   /// Placeholder of the field that narrows a `Table` column's filter menu.
   final String search;
@@ -420,6 +424,7 @@ class SeedLocalizations {
     String? createOption,
     String? tabFallback,
     String? backToTop,
+    String? loading,
     String? search,
     String? selectAll,
     String? sortedAscending,
@@ -480,6 +485,7 @@ class SeedLocalizations {
         createOption: createOption ?? this.createOption,
         tabFallback: tabFallback ?? this.tabFallback,
         backToTop: backToTop ?? this.backToTop,
+        loading: loading ?? this.loading,
         search: search ?? this.search,
         selectAll: selectAll ?? this.selectAll,
         sortedAscending: sortedAscending ?? this.sortedAscending,
@@ -624,6 +630,7 @@ class SeedLocalizations {
     createOption: 'Создать «{text}»',
     tabFallback: 'Вкладка {n}',
     backToTop: 'Наверх',
+    loading: 'Загрузка',
     clear: 'Очистить',
     add: 'Добавить',
     remove: 'Убрать',
@@ -706,6 +713,7 @@ class SeedLocalizations {
     createOption: '«{text}» döret',
     tabFallback: 'Bölüm {n}',
     backToTop: 'Ýokaryk',
+    loading: 'Ýüklenýär',
     clear: 'Arassalamak',
     add: 'Goşmak',
     remove: 'Aýyrmak',
@@ -787,6 +795,7 @@ class SeedLocalizations {
     createOption: '„{text}“ erstellen',
     tabFallback: 'Tab {n}',
     backToTop: 'Nach oben',
+    loading: 'Wird geladen',
     clear: 'Leeren',
     add: 'Hinzufügen',
     remove: 'Entfernen',
@@ -868,6 +877,7 @@ class SeedLocalizations {
     createOption: 'Créer « {text} »',
     tabFallback: 'Onglet {n}',
     backToTop: 'Haut de page',
+    loading: 'Chargement',
     clear: 'Effacer',
     add: 'Ajouter',
     remove: 'Retirer',
@@ -950,6 +960,7 @@ class SeedLocalizations {
     createOption: 'Crear «{text}»',
     tabFallback: 'Pestaña {n}',
     backToTop: 'Volver arriba',
+    loading: 'Cargando',
     clear: 'Borrar',
     add: 'Añadir',
     remove: 'Quitar',
@@ -1032,6 +1043,7 @@ class SeedLocalizations {
     createOption: '创建“{text}”',
     tabFallback: '标签页 {n}',
     backToTop: '回到顶部',
+    loading: '加载中',
     clear: '清除',
     add: '添加',
     remove: '移除',
@@ -1113,6 +1125,7 @@ class SeedLocalizations {
     createOption: '「{text}」を作成',
     tabFallback: 'タブ {n}',
     backToTop: 'トップへ戻る',
+    loading: '読み込み中',
     clear: 'クリア',
     add: '追加',
     remove: '削除',
@@ -1195,6 +1208,7 @@ class SeedLocalizations {
     createOption: '"{text}" oluştur',
     tabFallback: 'Sekme {n}',
     backToTop: 'Başa dön',
+    loading: 'Yükleniyor',
     clear: 'Temizle',
     add: 'Ekle',
     remove: 'Kaldır',
@@ -1276,6 +1290,7 @@ class SeedLocalizations {
     createOption: 'Criar "{text}"',
     tabFallback: 'Aba {n}',
     backToTop: 'Voltar ao topo',
+    loading: 'Carregando',
     clear: 'Limpar',
     add: 'Adicionar',
     remove: 'Remover',
@@ -1358,6 +1373,7 @@ class SeedLocalizations {
     createOption: 'إنشاء "{text}"',
     tabFallback: 'علامة التبويب {n}',
     backToTop: 'العودة إلى الأعلى',
+    loading: 'جارٍ التحميل',
     clear: 'مسح',
     add: 'إضافة',
     remove: 'إزالة',
@@ -1441,6 +1457,7 @@ class SeedLocalizations {
     createOption: 'יצירת "{text}"',
     tabFallback: 'כרטיסייה {n}',
     backToTop: 'חזרה למעלה',
+    loading: 'טוען',
     clear: 'ניקוי',
     add: 'הוספה',
     remove: 'הסרה',

@@ -37,6 +37,7 @@ import '../components/feedback/notification.dart';
 import '../components/feedback/popconfirm.dart';
 import '../components/feedback/progress.dart';
 import '../components/feedback/result.dart';
+import '../components/feedback/skeleton.dart';
 import '../components/feedback/spin.dart';
 import '../components/general/button.dart';
 import '../components/general/divider.dart';
@@ -78,6 +79,7 @@ class ComponentsConfig {
     this.ribbon,
     this.result,
     this.segmented,
+    this.skeleton,
     this.select,
     this.slider,
     this.sortableList,
@@ -191,6 +193,10 @@ class ComponentsConfig {
 
   /// Overrides applied to every [SortableList] under this provider.
   final SortableListToken? sortableList;
+
+  /// Overrides applied to every [Skeleton] and skeleton block under this
+  /// provider.
+  final SkeletonToken? skeleton;
 
   /// Overrides applied to every [Spin] under this provider.
   final SpinToken? spin;
@@ -330,6 +336,9 @@ class ComponentsConfig {
         select: select == null || other.select == null
             ? (other.select ?? select)
             : select!.merge(other.select!),
+        skeleton: skeleton == null || other.skeleton == null
+            ? (other.skeleton ?? skeleton)
+            : skeleton!.merge(other.skeleton!),
         slider: slider == null || other.slider == null
             ? (other.slider ?? slider)
             : slider!.merge(other.slider!),
@@ -412,6 +421,7 @@ class ComponentsConfig {
     if (T == SortableListToken && sortableList != null) {
       return sortableList as T;
     }
+    if (T == SkeletonToken && skeleton != null) return skeleton as T;
     if (T == SliderToken && slider != null) return slider as T;
     if (T == SpinToken && spin != null) return spin as T;
     if (T == StepsToken && steps != null) return steps as T;

@@ -39,7 +39,7 @@ import 'package:seed_ui/seed_ui.dart';
 ///   wide a border is to take hold of, and `PopconfirmToken`'s and
 ///   `DropdownToken`'s durations and curves are how long something takes
 ///   rather than what it looks like — `FloatButtonToken.motionDuration` and
-///   `curve`, `TourToken.travelDuration` and `travelCurve`.
+///   `curve`, `SkeletonToken.motionDuration`, `TourToken.travelDuration` and `travelCurve`.
 /// * Floors that only show where something reaches them:
 ///   `TableToken.columnMinWidth` — every arrangement tried here either had
 ///   slack to share or was already scrolling.
@@ -1178,6 +1178,48 @@ final _probes = <_Probe>[
       c ? const DividerToken(plainTitleFontSize: 28) : null,
       plain: true,
     ),
+  ),
+  _Probe(
+    'SkeletonToken.blockColor',
+    (c) => Skeleton(token: c ? const SkeletonToken(blockColor: _loud) : null),
+  ),
+  _Probe(
+    'SkeletonToken.blockRadius',
+    (c) => Skeleton(
+        round: false, token: c ? const SkeletonToken(blockRadius: 8) : null),
+  ),
+  _Probe(
+    'SkeletonToken.titleHeight',
+    (c) => Skeleton(token: c ? const SkeletonToken(titleHeight: 40) : null),
+  ),
+  _Probe(
+    'SkeletonToken.titleGap',
+    (c) => Skeleton(token: c ? const SkeletonToken(titleGap: 60) : null),
+  ),
+  _Probe(
+    'SkeletonToken.paragraphLineHeight',
+    (c) => Skeleton(
+        token: c ? const SkeletonToken(paragraphLineHeight: 40) : null),
+  ),
+  _Probe(
+    'SkeletonToken.paragraphLineGap',
+    (c) =>
+        Skeleton(token: c ? const SkeletonToken(paragraphLineGap: 40) : null),
+  ),
+  _Probe(
+    'SkeletonToken.avatarGap',
+    (c) => Skeleton(
+        avatar: const SkeletonAvatar(),
+        token: c ? const SkeletonToken(avatarGap: 80) : null),
+  ),
+  _Probe(
+    'SkeletonToken.highlightColor',
+    // The light is only there while it moves: started, then caught mid-way.
+    (c) => Skeleton(
+      active: true,
+      token: c ? const SkeletonToken(highlightColor: _loud) : null,
+    ),
+    act: (tester) => tester.pump(const Duration(milliseconds: 700)),
   ),
   _Probe(
     'EmptyToken.imageStroke',

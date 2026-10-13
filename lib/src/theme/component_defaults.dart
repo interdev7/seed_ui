@@ -34,6 +34,7 @@ import '../components/data_entry/upload.dart';
 import '../components/feedback/alert.dart';
 import '../components/feedback/popconfirm.dart';
 import '../components/feedback/progress.dart';
+import '../components/feedback/skeleton.dart';
 import '../components/feedback/spin.dart';
 import '../components/general/button.dart';
 import '../components/general/divider.dart';
@@ -86,6 +87,7 @@ class ComponentDefaults {
     this.pagination,
     this.progress,
     this.segmented,
+    this.skeleton,
     this.slider,
     this.steps,
     this.table,
@@ -181,6 +183,9 @@ class ComponentDefaults {
 
   /// Applied to every [DatePicker] under this provider.
   final DatePickerDefaults? datePicker;
+
+  /// Applied to every [Skeleton] and skeleton block under this provider.
+  final SkeletonDefaults? skeleton;
 
   /// Applied to every [Divider] under this provider.
   final DividerDefaults? divider;
@@ -329,6 +334,9 @@ class ComponentDefaults {
         datePicker: datePicker == null || other.datePicker == null
             ? (other.datePicker ?? datePicker)
             : datePicker!.merge(other.datePicker!),
+        skeleton: skeleton == null || other.skeleton == null
+            ? (other.skeleton ?? skeleton)
+            : skeleton!.merge(other.skeleton!),
         divider: divider == null || other.divider == null
             ? (other.divider ?? divider)
             : divider!.merge(other.divider!),
@@ -404,6 +412,7 @@ class ComponentDefaults {
   T? of<T>() {
     if (T == TableDefaults && table != null) return table as T;
     if (T == ButtonDefaults && button != null) return button as T;
+    if (T == SkeletonDefaults && skeleton != null) return skeleton as T;
     if (T == DividerDefaults && divider != null) return divider as T;
     if (T == EmptyDefaults && empty != null) return empty as T;
     if (T == FloatButtonDefaults && floatButton != null) {

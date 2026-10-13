@@ -18,6 +18,7 @@ popover light 1170199593
 alert light 664217818
 progress light 2385652313
 result light 205592738
+skeleton light 3345487790
 spin light 2738948955
 input light 1808611980
 inputnumber light 3038534652
@@ -63,6 +64,7 @@ popover dark 3667334453
 alert dark 2225457248
 progress dark 4047174117
 result dark 512677250
+skeleton dark 3273487464
 spin dark 1911627865
 input dark 1920701504
 inputnumber dark 2668439061

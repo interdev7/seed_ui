@@ -26,6 +26,7 @@ import '../components/data_entry/input.dart';
 import '../components/data_entry/input_number.dart';
 import '../components/data_entry/multi_date_picker.dart';
 import '../components/data_entry/radio.dart';
+import '../components/data_entry/rate.dart';
 import '../components/data_entry/select.dart';
 import '../components/data_entry/slider.dart';
 import '../components/data_entry/switch.dart';
@@ -97,6 +98,7 @@ class ComponentDefaults {
     this.datePicker,
     this.divider,
     this.menu,
+    this.rate,
     this.dropdown,
     this.empty,
     this.floatButton,
@@ -191,6 +193,9 @@ class ComponentDefaults {
 
   /// Applied to every [Divider] under this provider.
   final DividerDefaults? divider;
+
+  /// Applied to every [Rate] under this provider.
+  final RateDefaults? rate;
 
   /// Applied to every [Menu] under this provider.
   final MenuDefaults? menu;
@@ -345,6 +350,9 @@ class ComponentDefaults {
         divider: divider == null || other.divider == null
             ? (other.divider ?? divider)
             : divider!.merge(other.divider!),
+        rate: rate == null || other.rate == null
+            ? (other.rate ?? rate)
+            : rate!.merge(other.rate!),
         menu: menu == null || other.menu == null
             ? (other.menu ?? menu)
             : menu!.merge(other.menu!),
@@ -421,6 +429,7 @@ class ComponentDefaults {
     if (T == TableDefaults && table != null) return table as T;
     if (T == ButtonDefaults && button != null) return button as T;
     if (T == SkeletonDefaults && skeleton != null) return skeleton as T;
+    if (T == RateDefaults && rate != null) return rate as T;
     if (T == MenuDefaults && menu != null) return menu as T;
     if (T == DividerDefaults && divider != null) return divider as T;
     if (T == EmptyDefaults && empty != null) return empty as T;

@@ -125,6 +125,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Switch](doc/data_entry/switch.md)                | On/off toggle                                                                  |
 | [Checkbox](doc/data_entry/checkbox.md)            | Checkbox, single or grouped                                                    |
 | [Radio](doc/data_entry/radio.md)                  | Radio button group                                                             |
+| [Rate](doc/data_entry/rate.md)                    | A rating in stars — halves, words for each star, your own character            |
 | [Select](doc/data_entry/select.md)                | Dropdown select — single, multiple or tags                                     |
 | [Breadcrumb](doc/navigation/breadcrumb.md)        | The path to the current page; menus on crumbs, a long path folded              |
 | [Dropdown](doc/navigation/dropdown.md)            | Menu floating from a trigger; submenus, groups                                 |

@@ -25,6 +25,7 @@ import '../components/data_entry/input.dart';
 import '../components/data_entry/input_number.dart';
 import '../components/data_entry/input_otp.dart';
 import '../components/data_entry/radio.dart';
+import '../components/data_entry/rate.dart';
 import '../components/data_entry/select.dart';
 import '../components/data_entry/slider.dart';
 import '../components/data_entry/switch.dart';
@@ -82,6 +83,7 @@ class ComponentsConfig {
     this.popover,
     this.progress,
     this.radio,
+    this.rate,
     this.ribbon,
     this.result,
     this.segmented,
@@ -189,6 +191,9 @@ class ComponentsConfig {
 
   /// Overrides applied to every [Radio] under this provider.
   final RadioToken? radio;
+
+  /// Overrides applied to every [Rate] under this provider.
+  final RateToken? rate;
 
   /// Overrides applied to every [Ribbon] under this provider.
   final RibbonToken? ribbon;
@@ -348,6 +353,9 @@ class ComponentsConfig {
         radio: radio == null || other.radio == null
             ? (other.radio ?? radio)
             : radio!.merge(other.radio!),
+        rate: rate == null || other.rate == null
+            ? (other.rate ?? rate)
+            : rate!.merge(other.rate!),
         ribbon: ribbon == null || other.ribbon == null
             ? (other.ribbon ?? ribbon)
             : ribbon!.merge(other.ribbon!),
@@ -442,6 +450,7 @@ class ComponentsConfig {
     if (T == PopconfirmToken && popconfirm != null) return popconfirm as T;
     if (T == PopoverToken && popover != null) return popover as T;
     if (T == ProgressToken && progress != null) return progress as T;
+    if (T == RateToken && rate != null) return rate as T;
     if (T == RadioToken && radio != null) return radio as T;
     if (T == RibbonToken && ribbon != null) return ribbon as T;
     if (T == ResultToken && result != null) return result as T;

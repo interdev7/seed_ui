@@ -47,6 +47,7 @@ pagination light 3059001991
 tag light 404491375
 checkbox light 16453094
 radio light 3401510951
+rate light 3986494972
 avatar dark 2251538348
 badge dark 1203230193
 slider dark 3611743857
@@ -96,3 +97,4 @@ pagination dark 880421129
 tag dark 1550634849
 checkbox dark 4132026910
 radio dark 1600344315
+rate dark 1213292267

@@ -238,6 +238,9 @@ RailInsets
 RailPainter
 RailSegment
 RangeSlider
+Rate
+RateDefaults
+RateToken
 Result
 ResultToken
 Ribbon

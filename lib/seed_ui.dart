@@ -248,6 +248,7 @@ export 'src/components/data_entry/radio.dart'
         RadioOption,
         RadioOptionType,
         RadioToken;
+export 'src/components/data_entry/rate.dart' show Rate, RateDefaults, RateToken;
 export 'src/components/data_entry/select.dart'
     show
         SelectDefaults,

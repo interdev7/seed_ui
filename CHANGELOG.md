@@ -30,6 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   finger, so a thumb scrolling past cannot shove it aside and a tap still
   presses it. `FloatButtonToken.liftScale` (1.08) is how much it grows while
   held.
+- **`Rate`** — a rating in stars. A tap gives that many, and tapping the
+  rating given takes it back (`allowClear`); `allowHalf` stops at half a star,
+  the first half following the reading direction. The pointer shows what a
+  tap would give before it is given (`onHoverChanged`); `tooltips` gives each
+  star a word; `character` draws a heart, a letter, anything, in the stars'
+  colour. One tab stop, moved by the arrow keys, Home and End; a screen
+  reader hears a slider, "3 / 5". `readOnly` for a rating already given.
+  `RateToken` and `RateDefaults` configure it.
 - **`InputOtp`** — a code typed one character to a cell. One field stands
   behind the cells, so a whole code pasted at once fills them, a phone offers
   the code from its messages (`AutofillHints.oneTimeCode`), Backspace walks

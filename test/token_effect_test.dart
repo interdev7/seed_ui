@@ -1182,6 +1182,30 @@ final _probes = <_Probe>[
     ),
   ),
   _Probe(
+    'RateToken.starColor',
+    (c) => Rate(
+      defaultValue: 3,
+      token: c ? const RateToken(starColor: _loud) : null,
+    ),
+  ),
+  _Probe(
+    'RateToken.starBg',
+    (c) => Rate(
+      defaultValue: 3,
+      token: c ? const RateToken(starBg: _loud) : null,
+    ),
+  ),
+  _Probe(
+    'RateToken.gap',
+    (c) => Rate(token: c ? const RateToken(gap: 30) : null),
+  ),
+  _Probe(
+    'RateToken.hoverScale',
+    // Only the star under the pointer grows.
+    (c) => Rate(token: c ? const RateToken(hoverScale: 1.6) : null),
+    hover: () => find.byType(Rate),
+  ),
+  _Probe(
     'InputOtpToken.gap',
     (c) => _otp(c ? const InputOtpToken(gap: 24) : null),
   ),

@@ -840,6 +840,7 @@ house-style decision rather than the state of one instance:
 | `Progress` | `showInfo`, `gapPlacement`, `size` |
 | `Radio` | `disabled`, `size` |
 | `RadioGroup` | `direction`, `optionType`, `buttonStyle`, `size`, `disabled` |
+| `Rate` | `allowHalf`, `allowClear` |
 | `Ribbon` | `placement` |
 | `Segmented` | `direction`, `scrollButtons`, `size`, `disabled` |
 | `Select` | `variant`, `allowClear`, `showSearch`, `size`, `disabled` |

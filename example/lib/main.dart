@@ -53,6 +53,7 @@ import 'components/navigation/pagination_demo.dart';
 import 'components/feedback/popconfirm_demo.dart';
 import 'components/feedback/progress_demo.dart';
 import 'components/data_entry/radio_demo.dart';
+import 'components/data_entry/rate_demo.dart';
 import 'components/feedback/result_demo.dart';
 import 'components/feedback/skeleton_demo.dart';
 import 'components/feedback/spin_demo.dart';
@@ -472,6 +473,7 @@ final List<Demo> demos = [
   Demo('tag', 'Tag', (_) => const TagDemo()),
   Demo('checkbox', 'Checkbox', (_) => const CheckboxDemo()),
   Demo('radio', 'Radio', (_) => const RadioDemo()),
+  Demo('rate', 'Rate', (_) => const RateDemo()),
 ];
 
 class HomePage extends StatelessWidget {

@@ -1229,7 +1229,7 @@ class _Palette {
         StepStatus.wait => r.markerWaitColor,
         StepStatus.process => _outlined ? _a.base : _a.onBase,
         StepStatus.finish => _a.base,
-        StepStatus.error => _outlined ? t.error.base : const Color(0xFFFFFFFF),
+        StepStatus.error => _outlined ? t.error.base : t.error.onBase,
       };
 
   Color dot(StepStatus s) => switch (s) {
@@ -2392,7 +2392,7 @@ class _NavigationRun extends StatelessWidget {
           child: RotatedBox(
             quarterTurns: orientation == StepsOrientation.horizontal ? 0 : 1,
             child: CustomPaint(
-              size: const Size(12, 12),
+              size: Size.square(t.fontSizeSM),
               painter: ChevronPainter(r.arrowColor),
             ),
           ),
@@ -2436,7 +2436,7 @@ class _NavigationRun extends StatelessWidget {
                 bottom: BorderSide(
                   color:
                       selected ? palette.accent.base : const Color(0x00000000),
-                  width: 2,
+                  width: t.lineWidth * 2,
                 ),
               ),
             ),

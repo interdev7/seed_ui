@@ -774,7 +774,7 @@ class _StepButtonState extends State<_StepButton> {
               ),
             ),
             child: CustomPaint(
-              size: const Size(12, 12),
+              size: Size.square(context.softToken.fontSizeSM),
               painter: _SignPainter(
                 ink,
                 plus: widget.direction == _StepDirection.up,
@@ -948,7 +948,7 @@ class _SpinButtonState extends State<SpinButton> {
           // The control answers a hover by lighting the chevron up, not by
           // washing the whole handle grey.
           child: CustomPaint(
-            size: const Size(12, 12),
+            size: Size.square(context.softToken.fontSizeSM),
             painter: _ChevronPainter(
               !_active
                   ? widget.iconColor.withValues(alpha: 0.4)

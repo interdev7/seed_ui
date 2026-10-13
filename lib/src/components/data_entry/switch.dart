@@ -50,6 +50,7 @@ class SwitchToken {
     this.handleShadow,
     this.colorPrimary,
     this.colorBg,
+    this.handleBg,
   });
 
   /// Height of default switch track (`trackHeight`).
@@ -88,7 +89,11 @@ class SwitchToken {
   /// Inactive track background color (`colorBg`).
   final Color? colorBg;
 
+  /// The fill of the handle that slides along the track.
+  final Color? handleBg;
+
   _ResolvedSwitchToken _resolve(Token t) => _ResolvedSwitchToken(
+        handleBg: handleBg ?? const Color(0xFFFFFFFF),
         trackHeight: trackHeight ?? 22,
         trackHeightSM: trackHeightSM ?? 16,
         trackHeightLG: trackHeightLG ?? 28,
@@ -106,6 +111,7 @@ class SwitchToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SwitchToken merge(SwitchToken other) => SwitchToken(
+        handleBg: other.handleBg ?? handleBg,
         trackHeight: other.trackHeight ?? trackHeight,
         trackHeightSM: other.trackHeightSM ?? trackHeightSM,
         trackHeightLG: other.trackHeightLG ?? trackHeightLG,
@@ -132,6 +138,7 @@ class _ResolvedSwitchToken {
     required this.handleShadow,
     required this.colorPrimary,
     required this.colorBg,
+    required this.handleBg,
   });
 
   final double trackHeight;
@@ -144,6 +151,7 @@ class _ResolvedSwitchToken {
   final List<BoxShadow>? handleShadow;
   final Color colorPrimary;
   final Color colorBg;
+  final Color handleBg;
 }
 
 /// A toggle for an immediate on/off setting — flipping it should take effect at
@@ -400,7 +408,7 @@ class _SoftSwitchState extends State<Switch> {
                         BoxShadow(
                           color: r.colorPrimary.withValues(alpha: 0.12),
                           blurRadius: 0,
-                          spreadRadius: 3,
+                          spreadRadius: token.focusRingWidth,
                         ),
                       ]
                     : null,
@@ -427,7 +435,7 @@ class _SoftSwitchState extends State<Switch> {
                       width: _pressed ? thumbSize + _pad(r) * 2 : thumbSize,
                       height: thumbSize,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFFFFF),
+                        color: r.handleBg,
                         borderRadius: BorderRadius.circular(thumbSize),
                         boxShadow: r.handleShadow ??
                             [

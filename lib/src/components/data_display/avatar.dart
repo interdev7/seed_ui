@@ -505,7 +505,9 @@ class AvatarGroup extends StatelessWidget {
       if (showPopover) {
         Widget popoverContent(BuildContext context) {
           final group = Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: EdgeInsets.symmetric(
+                horizontal: context.softToken.sizeSM,
+                vertical: context.softToken.sizeXS),
             child: AvatarGroup(
               size: size,
               shape: shape,
@@ -541,7 +543,8 @@ class AvatarGroup extends StatelessWidget {
 
     final border = Border.all(
       color: rt.groupBorderColor,
-      width: 2.0, // Default group border width
+      // Two of the theme's lines: it parts one face from the next.
+      width: context.softToken.lineWidth * 2,
       strokeAlign: BorderSide.strokeAlignOutside,
     );
 

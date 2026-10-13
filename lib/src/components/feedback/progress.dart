@@ -315,6 +315,12 @@ class ProgressToken {
     this.remainingColor,
     this.lineHeight,
     this.circleSize,
+    this.lineHeightSM,
+    this.lineHeightLG,
+    this.circleSizeSM,
+    this.circleSizeLG,
+    this.circleStrokeWidthSM,
+    this.circleStrokeWidth,
   });
 
   /// Filled track color (`defaultColor`).
@@ -329,7 +335,31 @@ class ProgressToken {
   /// Diameter of the ring (`circleSize`).
   final double? circleSize;
 
+  /// How thick a line bar is at the small size (`lineHeight` is the standard).
+  final double? lineHeightSM;
+
+  /// How thick a line bar is at the large size.
+  final double? lineHeightLG;
+
+  /// How wide a circle is at the small size (`circleSize` is the standard).
+  final double? circleSizeSM;
+
+  /// How wide a circle is at the large size.
+  final double? circleSizeLG;
+
+  /// Ring thickness of a small circle when no `strokeWidth` is given.
+  final double? circleStrokeWidthSM;
+
+  /// Ring thickness of a middle or large circle when no `strokeWidth` is given.
+  final double? circleStrokeWidth;
+
   _ResolvedProgressToken _resolve(Token t) => _ResolvedProgressToken(
+        circleStrokeWidth: circleStrokeWidth ?? 6,
+        circleStrokeWidthSM: circleStrokeWidthSM ?? 4,
+        circleSizeLG: circleSizeLG ?? 160,
+        circleSizeSM: circleSizeSM ?? 80,
+        lineHeightLG: lineHeightLG ?? 12,
+        lineHeightSM: lineHeightSM ?? 6,
         defaultColor: defaultColor ?? t.primary.base,
         remainingColor: remainingColor ?? t.colorFillSecondary,
         lineHeight: lineHeight ?? 8,
@@ -338,6 +368,12 @@ class ProgressToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ProgressToken merge(ProgressToken other) => ProgressToken(
+        circleStrokeWidth: other.circleStrokeWidth ?? circleStrokeWidth,
+        circleStrokeWidthSM: other.circleStrokeWidthSM ?? circleStrokeWidthSM,
+        circleSizeLG: other.circleSizeLG ?? circleSizeLG,
+        circleSizeSM: other.circleSizeSM ?? circleSizeSM,
+        lineHeightLG: other.lineHeightLG ?? lineHeightLG,
+        lineHeightSM: other.lineHeightSM ?? lineHeightSM,
         defaultColor: other.defaultColor ?? defaultColor,
         remainingColor: other.remainingColor ?? remainingColor,
         lineHeight: other.lineHeight ?? lineHeight,
@@ -352,12 +388,24 @@ class _ResolvedProgressToken {
     required this.remainingColor,
     required this.lineHeight,
     required this.circleSize,
+    required this.lineHeightSM,
+    required this.lineHeightLG,
+    required this.circleSizeSM,
+    required this.circleSizeLG,
+    required this.circleStrokeWidthSM,
+    required this.circleStrokeWidth,
   });
 
   final Color defaultColor;
   final Color remainingColor;
   final double lineHeight;
   final double circleSize;
+  final double lineHeightSM;
+  final double lineHeightLG;
+  final double circleSizeSM;
+  final double circleSizeLG;
+  final double circleStrokeWidthSM;
+  final double circleStrokeWidth;
 }
 
 /// Defaults for every [Progress] under a `ConfigProvider`.
@@ -746,10 +794,12 @@ class _ProgressState extends State<Progress> {
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
     return switch (effectiveSize) {
-      SoftSize.small => const _ProgressResolvedSize(width: 80, height: 6),
+      SoftSize.small =>
+        _ProgressResolvedSize(width: r.circleSizeSM, height: r.lineHeightSM),
       SoftSize.middle =>
         _ProgressResolvedSize(width: r.circleSize, height: r.lineHeight),
-      SoftSize.large => const _ProgressResolvedSize(width: 160, height: 12),
+      SoftSize.large =>
+        _ProgressResolvedSize(width: r.circleSizeLG, height: r.lineHeightLG),
       // One number names the height; a bar with no length of its own fills
       // what it is given, as it does for a preset.
       ExplicitHeight(:final height) =>
@@ -959,7 +1009,8 @@ class _ProgressState extends State<Progress> {
                       )
                     : Positioned.fill(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: token.sizeXS),
                           child: _buildInnerInfoWidget(
                             token,
                             currentPercent,
@@ -1120,7 +1171,7 @@ class _ProgressState extends State<Progress> {
     final textAlignment = _resolveInnerAlignment(align, p, isRtl);
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 100),
+      duration: token.motionDurationFast,
       layoutBuilder: (currentChild, previousChildren) => Stack(
         alignment: textAlignment,
         children: [
@@ -1175,7 +1226,7 @@ class _ProgressState extends State<Progress> {
     final edgeAlign = isRtl ? Alignment.centerRight : Alignment.centerLeft;
     const minInfoWidth = 36.0;
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 100),
+      duration: token.motionDurationFast,
       layoutBuilder: (currentChild, previousChildren) => Stack(
         alignment: edgeAlign,
         children: [
@@ -1235,7 +1286,7 @@ class _ProgressState extends State<Progress> {
         maxHeight: token.fontSizeLG,
       ),
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 100),
+        duration: token.motionDurationFast,
         layoutBuilder: (currentChild, previousChildren) => Stack(
           alignment: isRtl ? Alignment.centerRight : Alignment.centerLeft,
           children: [
@@ -1284,7 +1335,9 @@ class _ProgressState extends State<Progress> {
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
     final resSize = _resolveSize(token, r);
-    final defaultStroke = effectiveSize == SoftSize.small ? 4.0 : 6.0;
+    final defaultStroke = effectiveSize == SoftSize.small
+        ? r.circleStrokeWidthSM
+        : r.circleStrokeWidth;
     final stroke = widget.strokeWidth ??
         (effectiveSize is ExplicitHeight
             ? effectiveSize.height * 0.1
@@ -1328,7 +1381,7 @@ class _ProgressState extends State<Progress> {
   Widget _circleInfo(Token token, Color fill, double p) {
     final showBadge = widget.format == null && _isComplete(p);
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 100),
+      duration: token.motionDurationFast,
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: animation,
         child: child,

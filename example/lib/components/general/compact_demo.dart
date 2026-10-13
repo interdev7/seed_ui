@@ -70,7 +70,7 @@ class _CompactDemoState extends State<CompactDemo> {
               // group — and still finds its slot, because a control asks
               // for it by looking up rather than being handed it.
               Dropdown<String>(
-                trigger: const [DropdownTrigger.click],
+                trigger: const [DropdownTrigger.tap],
                 placement: PopoverPlacement.bottomRight,
                 menu: const [
                   DropdownItem(value: 'schedule', label: 'Schedule…'),

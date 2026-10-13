@@ -461,7 +461,7 @@ class CheckboxBox extends StatelessWidget {
                 BoxShadow(
                   color: r.colorPrimary.withValues(alpha: 0.12),
                   blurRadius: 0,
-                  spreadRadius: 3,
+                  spreadRadius: token.focusRingWidth,
                 ),
               ]
             : null,

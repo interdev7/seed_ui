@@ -429,7 +429,7 @@ class _Panel extends StatelessWidget {
       curve: token.motionEaseInOut,
       turns: active ? 0.25 : 0.0,
       child: CustomPaint(
-        size: const Size.square(12),
+        size: Size.square(context.softToken.fontSizeSM),
         painter: ChevronPainter(color, strokeWidth: 1.3),
       ),
     );

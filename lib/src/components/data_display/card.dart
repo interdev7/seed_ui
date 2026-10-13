@@ -44,6 +44,7 @@ class CardToken {
     this.actionsLiMargin,
     this.extraColor,
     this.borderRadius,
+    this.tabsGap,
   });
 
   /// Header background (`headerBg`). Transparent by default.
@@ -85,7 +86,11 @@ class CardToken {
   /// Corner radius of the card.
   final double? borderRadius;
 
+  /// The space between the header and the tabs under it.
+  final double? tabsGap;
+
   _ResolvedCardToken _resolve(Token t) => _ResolvedCardToken(
+        tabsGap: tabsGap ?? 10,
         headerBg: headerBg ?? const Color(0x00000005),
         headerFontSize: headerFontSize ?? t.fontSizeLG,
         headerFontSizeSM: headerFontSizeSM ?? t.fontSize,
@@ -103,6 +108,7 @@ class CardToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   CardToken merge(CardToken other) => CardToken(
+        tabsGap: other.tabsGap ?? tabsGap,
         headerBg: other.headerBg ?? headerBg,
         headerFontSize: other.headerFontSize ?? headerFontSize,
         headerFontSizeSM: other.headerFontSizeSM ?? headerFontSizeSM,
@@ -136,6 +142,7 @@ class _ResolvedCardToken {
     required this.actionsLiMargin,
     required this.extraColor,
     required this.borderRadius,
+    required this.tabsGap,
   });
 
   final Color headerBg;
@@ -151,6 +158,7 @@ class _ResolvedCardToken {
   final double actionsLiMargin;
   final Color extraColor;
   final double borderRadius;
+  final double tabsGap;
 }
 
 /// A tab in a [Card]'s [Card.tabList] — a key and a bar label.
@@ -484,7 +492,7 @@ class _CardState extends State<Card> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 wrapper(extra, constrained: false),
-                const SizedBox(height: 10),
+                SizedBox(height: r.tabsGap),
                 tabsBar,
               ],
             )

@@ -25,6 +25,9 @@ class EmptyToken {
     this.imageHeight,
     this.colorTextDescription,
     this.fontSize,
+    this.imageStroke,
+    this.imageFill,
+    this.imageShadow,
   });
 
   /// Height of the illustration (`imageHeight`).
@@ -36,7 +39,22 @@ class EmptyToken {
   /// Description font size (`fontSize`).
   final double? fontSize;
 
+  /// The outline of the empty-box picture.
+  final Color? imageStroke;
+
+  /// The faces of the empty-box picture.
+  final Color? imageFill;
+
+  /// The shadow the empty-box picture stands on.
+  final Color? imageShadow;
+
   _ResolvedEmptyToken _resolve(Token t) => _ResolvedEmptyToken(
+        imageShadow: imageShadow ??
+            (t.isDark ? const Color(0xFF303030) : const Color(0xFFF5F5F5)),
+        imageFill: imageFill ??
+            (t.isDark ? const Color(0xFF1F1F1F) : const Color(0xFFFAFAFA)),
+        imageStroke: imageStroke ??
+            (t.isDark ? const Color(0xFF434343) : const Color(0xFFD9D9D9)),
         imageHeight: imageHeight ?? 41,
         colorTextDescription: colorTextDescription ?? t.colorTextTertiary,
         fontSize: fontSize ?? t.fontSize,
@@ -44,6 +62,9 @@ class EmptyToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   EmptyToken merge(EmptyToken other) => EmptyToken(
+        imageShadow: other.imageShadow ?? imageShadow,
+        imageFill: other.imageFill ?? imageFill,
+        imageStroke: other.imageStroke ?? imageStroke,
         imageHeight: other.imageHeight ?? imageHeight,
         colorTextDescription:
             other.colorTextDescription ?? colorTextDescription,
@@ -57,11 +78,17 @@ class _ResolvedEmptyToken {
     required this.imageHeight,
     required this.colorTextDescription,
     required this.fontSize,
+    required this.imageStroke,
+    required this.imageFill,
+    required this.imageShadow,
   });
 
   final double imageHeight;
   final Color colorTextDescription;
   final double fontSize;
+  final Color imageStroke;
+  final Color imageFill;
+  final Color imageShadow;
 }
 
 /// Defaults for every [Empty] under a `ConfigProvider`.
@@ -137,7 +164,7 @@ class Empty extends StatelessWidget {
     final art = imageWidget ??
         CustomPaint(
           size: Size(64, r.imageHeight),
-          painter: _EmptyPainter(token: t, simple: simple),
+          painter: _EmptyPainter(style: r, simple: simple),
         );
 
     return Padding(
@@ -171,21 +198,19 @@ class Empty extends StatelessWidget {
 /// Draws the empty-state illustration: an ellipse "shadow" under a simple
 /// outlined container, echoing the default and simple images.
 class _EmptyPainter extends CustomPainter {
-  _EmptyPainter({required this.token, required this.simple});
+  _EmptyPainter({required this.style, required this.simple});
 
-  final Token token;
+  /// The picture's colours, as the token resolved them.
+  final _ResolvedEmptyToken style;
   final bool simple;
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final stroke =
-        token.isDark ? const Color(0xFF434343) : const Color(0xFFD9D9D9);
-    final fill =
-        token.isDark ? const Color(0xFF1F1F1F) : const Color(0xFFFAFAFA);
-    final shadow =
-        token.isDark ? const Color(0xFF303030) : const Color(0xFFF5F5F5);
+    final stroke = style.imageStroke;
+    final fill = style.imageFill;
+    final shadow = style.imageShadow;
 
     // Ground shadow.
     canvas.drawOval(
@@ -229,5 +254,8 @@ class _EmptyPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_EmptyPainter old) =>
-      old.token != token || old.simple != simple;
+      old.style.imageStroke != style.imageStroke ||
+      old.style.imageFill != style.imageFill ||
+      old.style.imageShadow != style.imageShadow ||
+      old.simple != simple;
 }

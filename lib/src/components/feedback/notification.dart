@@ -966,7 +966,7 @@ class _NotificationCardState extends State<_NotificationCard>
                         // the message alone: it shares the cross's line,
                         // and nothing under it does.
                         padding: EdgeInsetsDirectional.only(
-                          end: CloseCross.extent + token.sizeXS,
+                          end: CloseCross.extentOf(token) + token.sizeXS,
                         ),
                         child: config.message,
                       )

@@ -43,6 +43,8 @@ import 'package:seed_ui/seed_ui.dart';
 ///   `TableToken.columnMinWidth` — every arrangement tried here either had
 ///   slack to share or was already scrolling.
 /// * `PaginationToken.borderRadius` rounds a focus ring and nothing else.
+/// * `FloatButtonToken.liftScale` shows only while a long press holds the
+///   button up; `float_button_extras_test` holds it there and reads the scale.
 /// * `TableToken.dragShadow` is worn by a column while it is carried, which
 ///   needs a drag the test framework starts and holds across a rebuild.
 /// * `TableToken.resizeLineColor` puts its line in the tree while a border is
@@ -985,6 +987,122 @@ final _probes = <_Probe>[
   _Probe(
     'ProgressToken.remainingColor',
     (c) => _progress(c ? const ProgressToken(remainingColor: _loud) : null),
+  ),
+  _Probe(
+    'ProgressToken.lineHeightSM',
+    (c) => SizedBox(
+      width: 300,
+      child: Progress(
+        percent: 0.4,
+        size: SoftSize.small,
+        type: ProgressType.line,
+        token: c ? const ProgressToken(lineHeightSM: 20) : null,
+      ),
+    ),
+  ),
+  _Probe(
+    'ProgressToken.lineHeightLG',
+    (c) => SizedBox(
+      width: 300,
+      child: Progress(
+        percent: 0.4,
+        size: SoftSize.large,
+        type: ProgressType.line,
+        token: c ? const ProgressToken(lineHeightLG: 20) : null,
+      ),
+    ),
+  ),
+  _Probe(
+    'ProgressToken.circleSizeSM',
+    // No width from above, as for `circleSize`: a ring takes the width it
+    // is handed.
+    (c) => Progress(
+      percent: 0.4,
+      size: SoftSize.small,
+      type: ProgressType.circle,
+      token: c ? const ProgressToken(circleSizeSM: 140) : null,
+    ),
+  ),
+  _Probe(
+    'ProgressToken.circleSizeLG',
+    // No width from above, as for `circleSize`: a ring takes the width it
+    // is handed.
+    (c) => Progress(
+      percent: 0.4,
+      size: SoftSize.large,
+      type: ProgressType.circle,
+      token: c ? const ProgressToken(circleSizeLG: 60) : null,
+    ),
+  ),
+  _Probe(
+    'ProgressToken.circleStrokeWidthSM',
+    (c) => Progress(
+      percent: 0.4,
+      size: SoftSize.small,
+      type: ProgressType.circle,
+      token: c ? const ProgressToken(circleStrokeWidthSM: 12) : null,
+    ),
+  ),
+  _Probe(
+    'ProgressToken.circleStrokeWidth',
+    (c) => Progress(
+      percent: 0.4,
+      type: ProgressType.circle,
+      token: c ? const ProgressToken(circleStrokeWidth: 14) : null,
+    ),
+  ),
+  _Probe(
+    'PaginationToken.sizeChangerWidth',
+    (c) => SizedBox(
+      width: 800,
+      child: Pagination(
+        total: 120,
+        current: 2,
+        showSizeChanger: true,
+        token: c ? const PaginationToken(sizeChangerWidth: 200) : null,
+      ),
+    ),
+  ),
+  _Probe(
+    'CardToken.tabsGap',
+    // Only a card with tabs under its header has the gap between them.
+    (c) => SizedBox(
+      width: 320,
+      child: Card(
+        title: const Text('Title'),
+        extra: const Text('More'),
+        tabList: const [
+          CardTab(key: 'a', label: Text('One')),
+          CardTab(key: 'b', label: Text('Two')),
+        ],
+        token: c ? const CardToken(tabsGap: 40) : null,
+        child: const Text('Body'),
+      ),
+    ),
+  ),
+  _Probe(
+    'EmptyToken.imageStroke',
+    (c) => _empty(c ? const EmptyToken(imageStroke: _loud) : null),
+  ),
+  _Probe(
+    'EmptyToken.imageFill',
+    (c) => _empty(c ? const EmptyToken(imageFill: _loud) : null),
+  ),
+  _Probe(
+    'EmptyToken.imageShadow',
+    (c) => _empty(c ? const EmptyToken(imageShadow: _loud) : null),
+  ),
+  _Probe(
+    'SwitchToken.handleBg',
+    (c) => _switchOf(c ? const SwitchToken(handleBg: _loud) : null),
+  ),
+  _Probe(
+    'SliderToken.handleBg',
+    (c) => _slider(c ? const SliderToken(handleBg: _loud) : null),
+  ),
+  _Probe(
+    'SliderToken.dotBg',
+    (c) => _slider(c ? const SliderToken(dotBg: _loud) : null, dots: true),
   ),
   _Probe(
     'ProgressToken.lineHeight',

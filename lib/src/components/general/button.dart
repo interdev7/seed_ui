@@ -792,7 +792,7 @@ class _SoftButtonState extends State<Button> {
                 BoxShadow(
                   color: _ringColor(token, style).withValues(alpha: 0.12),
                   blurRadius: 0,
-                  spreadRadius: 3,
+                  spreadRadius: token.focusRingWidth,
                 ),
                 if (style.shadow && r.shadow != null) ...r.shadow!,
               ]

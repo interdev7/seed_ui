@@ -1,6 +1,8 @@
-import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/gestures.dart'
+    show PointerDeviceKind, kLongPressTimeout;
 import 'package:flutter/material.dart'
     hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
@@ -288,6 +290,8 @@ void main() {
   group('carried by hand', () {
     Widget carried({
       bool draggable = true,
+      FloatButtonDragStart dragStart = FloatButtonDragStart.immediate,
+      FloatButtonToken? token,
       Offset? offset,
       ValueChanged<Offset>? onOffsetChanged,
       VoidCallback? onPressed,
@@ -301,6 +305,8 @@ void main() {
                 child: FloatButton(
                   key: const Key('fab'),
                   draggable: draggable,
+                  dragStart: dragStart,
+                  token: token,
                   offset: offset,
                   onOffsetChanged: onOffsetChanged,
                   onPressed: onPressed ?? () {},
@@ -421,6 +427,92 @@ void main() {
           reason: held ? 'held' : 'free',
         );
       }
+    });
+
+    group('picked up by a long press', () {
+      Widget held({FloatButtonToken? token, VoidCallback? onPressed}) =>
+          carried(
+            dragStart: FloatButtonDragStart.longPress,
+            token: token,
+            onPressed: onPressed,
+          );
+
+      double scale(WidgetTester tester) => tester
+          .widget<AnimatedScale>(
+            find.ancestor(
+              of: find.byType(Button),
+              matching: find.byType(AnimatedScale),
+            ),
+          )
+          .scale;
+
+      testWidgets('a quick drag leaves it where it is', (tester) async {
+        await tester.pumpWidget(held());
+        final before = at(tester);
+        await tester.drag(find.byType(Button), const Offset(-120, -200));
+        await tester.pumpAndSettle();
+        expect(at(tester), before);
+      });
+
+      testWidgets('a press is still a press', (tester) async {
+        var pressed = 0;
+        await tester.pumpWidget(held(onPressed: () => pressed++));
+        await tester.tap(find.byType(Button));
+        await tester.pump();
+        expect(pressed, 1);
+      });
+
+      testWidgets('held, it lifts and buzzes; moved, it follows', (
+        tester,
+      ) async {
+        final buzzes = <String>[];
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          (call) async {
+            if (call.method == 'HapticFeedback.vibrate') {
+              buzzes.add(call.arguments as String);
+            }
+            return null;
+          },
+        );
+        addTearDown(
+          () => tester.binding.defaultBinaryMessenger
+              .setMockMethodCallHandler(SystemChannels.platform, null),
+        );
+        var pressed = 0;
+        await tester.pumpWidget(held(onPressed: () => pressed++));
+        final before = at(tester).center;
+        expect(scale(tester), 1);
+
+        final hand = await tester.startGesture(before);
+        await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+        expect(scale(tester), 1.08);
+        expect(buzzes, ['HapticFeedbackType.mediumImpact']);
+
+        await hand.moveBy(const Offset(-60, -90));
+        await tester.pump();
+        await hand.moveBy(const Offset(-60, -110));
+        await tester.pump();
+        expect(
+            ((at(tester).center - before) - const Offset(-120, -200)).distance,
+            lessThan(1));
+
+        await hand.up();
+        await tester.pumpAndSettle();
+        expect(scale(tester), 1, reason: 'let go, it is put down');
+        expect(pressed, 0, reason: 'a carry is not a press');
+      });
+
+      testWidgets('liftScale is how much it grows', (tester) async {
+        await tester.pumpWidget(
+          held(token: const FloatButtonToken(liftScale: 1.2)),
+        );
+        final hand = await tester.startGesture(at(tester).center);
+        await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+        expect(scale(tester), 1.2);
+        await hand.up();
+        await tester.pumpAndSettle();
+      });
     });
 
     testWidgets('not draggable, a drag does nothing', (tester) async {

@@ -570,7 +570,7 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
               Align(
                 alignment: align,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(context.softToken.size),
                   child: _buildSpinContent(token, r),
                 ),
               ),
@@ -746,7 +746,7 @@ class _FullscreenSpinOverlayState extends State<_FullscreenSpinOverlay>
                     child: Align(
                       alignment: widget.position?.alignment ?? Alignment.center,
                       child: Padding(
-                        padding: const EdgeInsets.all(24.0),
+                        padding: EdgeInsets.all(context.softToken.sizeLG),
                         child: widget.spinContent,
                       ),
                     ),

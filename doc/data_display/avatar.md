@@ -55,7 +55,7 @@ When the number of avatars exceeds `maxCount`, a `+N` avatar appears. Hovering o
 You can configure the popover using:
 - `showPopover`: Controls whether the popover appears at all.
 - `maxPopoverPlacement`: Where the popover anchors relative to the `+N` avatar.
-- `maxPopoverTrigger`: Which gestures open the popover (e.g., `DropdownTrigger.hover`, `DropdownTrigger.click`).
+- `maxPopoverTrigger`: Which gestures open the popover (e.g., `DropdownTrigger.hover`, `DropdownTrigger.tap`).
 - `maxPopoverArrow`: Whether to draw an arrow pointing to the `+N` avatar.
 - `maxPopoverToken`: Token overrides specific to the dropdown popover.
 - `popupRender`: A custom widget builder that receives the default popup content (the group of hidden avatars) and lets you wrap or modify it.

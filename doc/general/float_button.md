@@ -114,8 +114,31 @@ The button stays under the finger the whole way and is kept whole on the
 screen however far it is pushed. Where it ends up is an `offset` from where it
 is laid out: `defaultOffset` lets it keep its own place, `offset` makes it
 stand where it is told, and `onOffsetChanged` hands every move back to be
-kept. A `FloatButtonGroup` takes the same four; it shuts as it is picked up
-and opens from wherever it is put.
+kept. A `FloatButtonGroup` takes the same; it shuts as it is picked up and
+opens from wherever it is put.
+
+### Picked up by a long press
+
+`dragStart` says what picks the button up:
+
+| `FloatButtonDragStart` | Picks it up |
+| --- | --- |
+| `immediate` (the default) | As soon as a press moves |
+| `longPress` | After a long press: it lifts, the device gives a short buzz, then it follows the finger |
+
+```dart
+FloatButton(
+  icon: const Icon(Icons.chat),
+  draggable: true,
+  dragStart: FloatButtonDragStart.longPress,
+  onPressed: openChat,
+)
+```
+
+`longPress` suits a phone: a thumb scrolling the page past the button cannot
+shove it aside, and a plain tap still presses it. The long press belongs to
+the drag, so nothing else on the button can answer it. How much the button
+grows while it is held is `FloatButtonToken.liftScale`.
 
 ## Groups
 
@@ -406,7 +429,7 @@ removes the barrier altogether and leaves Escape as the way out.
 
 | Prop | Meaning |
 | --- | --- |
-| `trigger` | `FloatButtonTrigger.click` (the default) or `.hover` |
+| `trigger` | `FloatButtonTrigger.tap` (the default) or `.hover` |
 | `open` | Drives the group from the widget tree; null lets it manage itself |
 | `controller` | Drives it from outside the build. Excludes `open` |
 | `onOpenChanged` | Called whenever the group wants to open or close |
@@ -448,6 +471,7 @@ fab.open();   // and close(), and toggle()
 | `shadow` | The button's own lift — a tight two-layer shadow, not the one a popover floats on |
 | `motionDuration` | `motionDurationSlow` |
 | `curve` | `motionEaseOut` — the shape of the opening |
+| `liftScale` | `1.08` — how much a button grows while a long press holds it |
 
 ```dart
 ConfigProvider(

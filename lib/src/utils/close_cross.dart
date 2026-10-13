@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../icons/icons.dart' show CrossPainter;
 import '../theme/config_provider.dart';
+import '../theme/design_token.dart';
 import 'pressable.dart';
 
 /// The cross that closes a dialog, a drawer, a notification or an alert.
@@ -24,8 +25,8 @@ class CloseCross extends StatefulWidget {
   });
 
   /// How wide and tall the cross's target is — also the room a title leaves
-  /// for one standing over its corner.
-  static const double extent = 22;
+  /// for one standing over its corner: the theme's smallest pressable.
+  static double extentOf(Token token) => token.controlHeightXS;
 
   /// Called when it is pressed, by any means.
   final VoidCallback onPressed;
@@ -63,8 +64,8 @@ class _CloseCrossState extends State<CloseCross> {
           onTap: widget.onPressed,
           excludeFromSemantics: true,
           child: Container(
-            width: CloseCross.extent,
-            height: CloseCross.extent,
+            width: CloseCross.extentOf(token),
+            height: CloseCross.extentOf(token),
             decoration: BoxDecoration(
               color: _hovered && widget.wash ? token.colorFillSecondary : null,
               borderRadius: BorderRadius.circular(token.borderRadiusSM),

@@ -676,6 +676,13 @@ class Token {
   /// Height of a standard control. Defaults to 32.
   double get controlHeight => seed.controlHeight;
 
+  /// The smallest thing that can be pressed — a close cross, an action on a
+  /// file — as tall as a line of body text. Defaults to 22.
+  ///
+  /// Rounded to a whole pixel: a line is the font size times its height, and
+  /// the product of the two is rarely a whole number.
+  double get controlHeightXS => (fontSize * lineHeight).roundToDouble();
+
   /// Height of a prominent control, such as a call-to-action button.
   /// Defaults to 40.
   double get controlHeightLG => seed.controlHeight * 1.25;
@@ -695,6 +702,14 @@ class Token {
 
   /// Thickness of borders and dividers.
   double get lineWidth => seed.lineWidth;
+
+  /// How far the ring a focused control wears reaches out from its edge.
+  /// Defaults to 3 — three lines' width, so it moves with the theme's lines.
+  ///
+  /// One ring for every control that takes the keyboard: a button, a field, a
+  /// box, a switch. It is as much a part of how the kit looks as its colour,
+  /// and it was written into eight controls as a 3 each.
+  double get focusRingWidth => seed.lineWidth * 3;
 
   // --- typography ---
 

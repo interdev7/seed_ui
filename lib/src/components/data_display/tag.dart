@@ -386,7 +386,7 @@ class Tag extends StatelessWidget {
                   excludeFromSemantics: true,
                   child: closeIcon ??
                       CustomPaint(
-                        size: const Size.square(12),
+                        size: Size.square(context.softToken.fontSizeSM),
                         painter: CrossPainter(
                           style.text,
                           strokeWidth: 1.1,

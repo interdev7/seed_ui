@@ -386,6 +386,30 @@ void _selectionTests() {
       );
     });
 
+    testWidgets('a phone keyboard is asked for suggestions all the same', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          const Input(
+            keyboardType: TextInputType.phone,
+            enableSuggestions: true,
+            autofillHints: [AutofillHints.telephoneNumber],
+          ),
+        ),
+      );
+      await tester.tap(find.byType(Input));
+      await tester.pumpAndSettle();
+
+      final config = tester.testTextInput.setClientArgs!;
+      expect((config['inputType'] as Map)['name'], 'TextInputType.phone');
+      expect(config['enableSuggestions'], isTrue);
+      expect(
+        (config['autofill'] as Map)['hints'],
+        [AutofillHints.telephoneNumber],
+      );
+    });
+
     testWidgets('a number asks for no corrections and no suggestions', (
       tester,
     ) async {

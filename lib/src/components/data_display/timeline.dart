@@ -1189,7 +1189,7 @@ class _AxisVertical extends StatelessWidget {
     final gapBelow = gap(token.railInset.bottom);
 
     return SizedBox(
-      width: 24,
+      width: t.controlHeightSM,
       child: Stack(
         children: [
           Positioned.fill(
@@ -1288,7 +1288,7 @@ class _AxisHorizontal extends StatelessWidget {
     }
 
     return SizedBox(
-      height: 24,
+      height: context.softToken.controlHeightSM,
       child: Stack(
         children: [
           // The two runs meet where the dot is — the cell's centre — and the

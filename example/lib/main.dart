@@ -311,7 +311,7 @@ class MainLayout extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Dropdown(
-                          trigger: const [DropdownTrigger.click],
+                          trigger: const [DropdownTrigger.tap],
                           menu: const [
                             DropdownItem(
                               value: ThemeModeOption.light,
@@ -345,7 +345,7 @@ class MainLayout extends StatelessWidget {
                         ),
                         SizedBox(width: token.sizeSM),
                         Dropdown(
-                          trigger: const [DropdownTrigger.click],
+                          trigger: const [DropdownTrigger.tap],
                           menu: [
                             for (final e in demoLanguages.entries)
                               DropdownItem(value: e.key, label: e.value),

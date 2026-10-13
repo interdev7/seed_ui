@@ -143,9 +143,12 @@ class DirectoryNode extends TreeNode {
     super.checkable,
   }) : super(
           // Dynamic icon builder that reacts to the node's expanded state.
+          // The theme's primary, not the default one written down: a folder
+          // drawn in a fixed blue stayed that blue in a dark theme and under
+          // a brand colour of anyone's choosing.
           iconBuilder: (context, isExpanded) => Icon(
             isExpanded ? Icons.folder_open : Icons.folder,
-            color: const Color(0xFF1677FF), // The default primary blue
+            color: context.softToken.primary.base,
           ),
         );
 
@@ -171,9 +174,14 @@ class FileNode extends TreeNode {
           // A file is ALWAYS a leaf; it cannot have children or an expander arrow.
           isLeaf: true,
           // Static file icon.
-          iconBuilder: (context, _) => const Icon(
+          // The theme's tertiary ink, laid on the surface so a hover behind
+          // the row does not show through it.
+          iconBuilder: (context, _) => Icon(
             Icons.insert_drive_file_outlined,
-            color: Color(0xFF8C8C8C), // Secondary text gray
+            color: Color.alphaBlend(
+              context.softToken.colorTextTertiary,
+              context.softToken.colorBgContainer,
+            ),
           ),
         );
 
@@ -1509,7 +1517,7 @@ class _NodeRowState extends State<_NodeRow> {
       bottom: pos == TreeDropPosition.after ? 0 : null,
       child: IgnorePointer(
         child: Container(
-          height: 2,
+          height: t.lineWidth * 2,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(1),
@@ -1525,7 +1533,8 @@ class _NodeRowState extends State<_NodeRow> {
 
     // A pending lazy load shows a spinner in place of the switcher.
     if (widget.loading) {
-      return Center(child: Spinner(size: 12, color: t.colorTextSecondary));
+      return Center(
+          child: Spinner(size: t.fontSizeSM, color: t.colorTextSecondary));
     }
 
     // Leaves: a small leaf marker when guide lines want one, else nothing.
@@ -1533,7 +1542,7 @@ class _NodeRowState extends State<_NodeRow> {
       if (widget.showLine && widget.showLeafIcon) {
         return Center(
           child: CustomPaint(
-            size: const Size.square(12),
+            size: Size.square(context.softToken.fontSizeSM),
             painter: TreeLeafIconPainter(t.colorTextTertiary),
           ),
         );
@@ -1556,7 +1565,7 @@ class _NodeRowState extends State<_NodeRow> {
                   ? 0.5
                   : 0.0,
           child: CustomPaint(
-            size: const Size.square(12),
+            size: Size.square(context.softToken.fontSizeSM),
             painter: ChevronPainter(t.colorTextSecondary, strokeWidth: 1.3),
           ),
         );

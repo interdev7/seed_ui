@@ -1537,9 +1537,13 @@ class _TourPanel extends StatelessWidget {
   bool get _primary => type == TourType.primary;
   bool get _isLast => current == total - 1;
 
-  Color get _ink => _primary ? const Color(0xFFFFFFFF) : t.colorText;
-  Color get _inkSecondary =>
-      _primary ? const Color(0xE6FFFFFF) : t.colorTextSecondary;
+  Color get _ink => _primary ? t.primary.onBase : t.colorText;
+
+  /// The softer ink on a primary panel: the primary's own ink at nine-tenths,
+  /// for what is said second.
+  Color get _inkSoft =>
+      t.primary.onBase.withValues(alpha: t.primary.onBase.a * 0xE6 / 0xFF);
+  Color get _inkSecondary => _primary ? _inkSoft : t.colorTextSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -1716,9 +1720,7 @@ class _TourPanel extends StatelessWidget {
                   child: _CloseButton(
                     key: const Key('softTourClose'),
                     size: r.closeBtnSize,
-                    colour: _primary
-                        ? const Color(0xE6FFFFFF)
-                        : t.colorTextTertiary,
+                    colour: _primary ? _inkSoft : t.colorTextTertiary,
                     icon: closeIcon,
                     onPressed: onClose,
                   ),
@@ -1764,7 +1766,7 @@ class _TourPanel extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: i == current
-                      ? (_primary ? const Color(0xFFFFFFFF) : t.primary.base)
+                      ? (_primary ? t.primary.onBase : t.primary.base)
                       : (_primary ? r.primaryPrevBtnBg : t.colorFill),
                 ),
               ),

@@ -361,6 +361,7 @@ export 'src/components/general/float_button.dart'
         FloatButtonLine,
         FloatButtonPlacer,
         FloatButtonToken,
+        FloatButtonDragStart,
         FloatButtonTrigger;
 export 'src/components/navigation/dropdown.dart'
     show

@@ -160,14 +160,14 @@ DropdownItem(
 | `DropdownTrigger` | Opens on                                                  |
 | ----------------- | --------------------------------------------------------- |
 | `hover` (default) | Pointer over the trigger; stays open while over the panel |
-| `click`           | Primary tap; closes on an outside tap                     |
+| `tap`             | Primary tap; closes on an outside tap                     |
 | `contextMenu`     | Secondary tap or long-press                               |
 
 ```dart
-Dropdown(trigger: const [DropdownTrigger.click], menu: items, child: trigger)
+Dropdown(trigger: const [DropdownTrigger.tap], menu: items, child: trigger)
 ```
 
-`click` listens for pointer events rather than claiming a tap gesture, so it
+`tap` listens for pointer events rather than claiming a tap gesture, so it
 works even when the child is itself tappable — a `Button` with its own
 `onPressed` opens the menu *and* runs its callback, instead of swallowing the
 tap. A drag or a scroll that ends over the trigger is not mistaken for one.
@@ -180,7 +180,7 @@ tap. A drag or a scroll that ends over the trigger is not mistaken for one.
 
 `closeOnSelect` (default `true`) decides whether tapping an item dismisses the
 menu — submenu parents never close. `barrierColor` tints the dismiss barrier a
-click/context menu puts behind itself; `token` overrides `DropdownToken` for
+tap/context menu puts behind itself; `token` overrides `DropdownToken` for
 this instance.
 
 ## Controlled visibility
@@ -191,7 +191,7 @@ Drive it with `open` + `onOpenChanged`:
 Dropdown(
   open: _open,
   onOpenChanged: (v) => setState(() => _open = v),
-  trigger: const [DropdownTrigger.click],
+  trigger: const [DropdownTrigger.tap],
   menu: items,
   child: trigger,
 )
@@ -204,7 +204,7 @@ Instead of `menu`, pass `content` for a fully custom popup (the
 
 ```dart
 Dropdown(
-  trigger: const [DropdownTrigger.click],
+  trigger: const [DropdownTrigger.tap],
   content: (context, close) => DropdownPanel(
     child: Padding(padding: const EdgeInsets.all(12), child: MyBody(onDone: close)),
   ),

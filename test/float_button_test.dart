@@ -37,8 +37,10 @@ FloatButtonGroup<String> _group({
   ValueChanged<bool>? onOpenChanged,
   FloatButtonController? controller,
   FloatButtonToken? token,
+  FloatButtonTrigger? trigger,
 }) =>
     FloatButtonGroup<String>(
+      trigger: trigger,
       layout: layout,
       direction: direction,
       dismissible: dismissible,
@@ -604,6 +606,20 @@ void main() {
       await tester.tap(find.byType(FloatButtonGroup<String>));
       await tester.pumpAndSettle();
       expect(find.byType(UserIcon), findsNothing);
+    });
+
+    testWidgets('the old name, click, is still a tap', (tester) async {
+      await tester.pumpWidget(
+        // ignore: deprecated_member_use
+        _host(_group(trigger: FloatButtonTrigger.click)),
+      );
+      await _open(tester);
+      expect(find.byType(UserIcon), findsOneWidget);
+
+      await tester.tapAt(const Offset(60, 60));
+      await tester.pumpAndSettle();
+      expect(find.byType(UserIcon), findsNothing,
+          reason: 'a tap group is shut by open ground; a hover one is not');
     });
 
     testWidgets('a tap on open ground closes the group', (tester) async {

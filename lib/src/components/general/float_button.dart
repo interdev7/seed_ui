@@ -3,7 +3,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart'
-    show HardwareKeyboard, KeyDownEvent, KeyEvent, LogicalKeyboardKey;
+    show
+        HapticFeedback,
+        HardwareKeyboard,
+        KeyDownEvent,
+        KeyEvent,
+        LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 
 import '../../icons/icons.dart';
@@ -95,10 +100,23 @@ enum FloatButtonDirection {
 /// What opens a [FloatButtonGroup].
 enum FloatButtonTrigger {
   /// A tap on the trigger toggles the group.
+  tap,
+
+  /// The old name for [tap].
+  @Deprecated('Use FloatButtonTrigger.tap. Will be removed in 1.0.0.')
   click,
 
   /// The group opens while the pointer is over it.
   hover,
+}
+
+/// What picks up a draggable [FloatButton] or [FloatButtonGroup].
+enum FloatButtonDragStart {
+  /// The button moves as soon as the pointer moves.
+  immediate,
+
+  /// The button lifts after a long press, then follows the finger.
+  longPress,
 }
 
 /// Where item `index` of `count` goes, measured from the trigger's centre.
@@ -451,6 +469,7 @@ class FloatButtonToken {
     this.progressColor,
     this.progressTrailColor,
     this.progressWidth,
+    this.liftScale,
   });
 
   /// Diameter of a round button, height of a square one — the standard
@@ -511,7 +530,12 @@ class FloatButtonToken {
   /// it is drawn where the button's edge is, and has to read as more than one.
   final double? progressWidth;
 
+  /// How much larger a button grows while a long press holds it up to be
+  /// carried (`FloatButtonDragStart.longPress`). `1` keeps it its own size.
+  final double? liftScale;
+
   _ResolvedFloatButtonToken _resolve(Token t) => _ResolvedFloatButtonToken(
+        liftScale: liftScale ?? 1.08,
         size: size ?? t.controlHeightLG + t.sizeXS,
         sizeSM: sizeSM ?? t.controlHeight + t.sizeXS,
         sizeLG: sizeLG ?? t.controlHeightLG + t.size,
@@ -549,6 +573,7 @@ class FloatButtonToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   FloatButtonToken merge(FloatButtonToken other) => FloatButtonToken(
+        liftScale: other.liftScale ?? liftScale,
         size: other.size ?? size,
         sizeSM: other.sizeSM ?? sizeSM,
         sizeLG: other.sizeLG ?? sizeLG,
@@ -585,6 +610,7 @@ class _ResolvedFloatButtonToken {
     required this.progressColor,
     required this.progressTrailColor,
     required this.progressWidth,
+    required this.liftScale,
   });
 
   final double size;
@@ -602,6 +628,7 @@ class _ResolvedFloatButtonToken {
   final Color progressColor;
   final Color progressTrailColor;
   final double progressWidth;
+  final double liftScale;
 }
 
 /// Defaults for every [FloatButton] and [FloatButtonGroup] under a
@@ -706,6 +733,7 @@ class FloatButton extends StatelessWidget {
     this.semanticsLabel,
     this.progress,
     this.draggable = false,
+    this.dragStart = FloatButtonDragStart.immediate,
     this.offset,
     this.defaultOffset,
     this.onOffsetChanged,
@@ -767,6 +795,16 @@ class FloatButton extends StatelessWidget {
   /// handed back through [onOffsetChanged] to be kept, so a button the reader
   /// moved out of the way stays where they put it.
   final bool draggable;
+
+  /// What picks the button up when [draggable] is on.
+  ///
+  /// [FloatButtonDragStart.immediate] (the default) carries it as soon as a
+  /// press moves. [FloatButtonDragStart.longPress] waits for a long press: the
+  /// button lifts, the device gives a short buzz, and only then does it follow
+  /// the finger — so a page scrolled under a thumb cannot shove it aside, and
+  /// a plain tap still presses it. The long press is the drag's, so it cannot
+  /// also be heard by something else on the button.
+  final FloatButtonDragStart dragStart;
 
   /// How far the button stands from where it is laid out (controlled).
   /// Moving it calls [onOffsetChanged]; the button moves when this does.
@@ -884,6 +922,8 @@ class FloatButton extends StatelessWidget {
     if (!draggable && offset == null && defaultOffset == null) return semantic;
     return _DragShift(
       enabled: draggable,
+      dragStart: dragStart,
+      liftScale: r.liftScale,
       offset: offset,
       defaultOffset: defaultOffset,
       onChanged: onOffsetChanged,
@@ -1218,6 +1258,7 @@ class FloatButtonGroup<T> extends StatefulWidget {
     this.itemBuilder,
     this.labelBuilder,
     this.draggable = false,
+    this.dragStart = FloatButtonDragStart.immediate,
     this.offset,
     this.defaultOffset,
     this.onOffsetChanged,
@@ -1305,6 +1346,16 @@ class FloatButtonGroup<T> extends StatefulWidget {
   /// moved out of the way stays where they put it.
   final bool draggable;
 
+  /// What picks the button up when [draggable] is on.
+  ///
+  /// [FloatButtonDragStart.immediate] (the default) carries it as soon as a
+  /// press moves. [FloatButtonDragStart.longPress] waits for a long press: the
+  /// button lifts, the device gives a short buzz, and only then does it follow
+  /// the finger — so a page scrolled under a thumb cannot shove it aside, and
+  /// a plain tap still presses it. The long press is the drag's, so it cannot
+  /// also be heard by something else on the button.
+  final FloatButtonDragStart dragStart;
+
   /// How far the button stands from where it is laid out (controlled).
   /// Moving it calls [onOffsetChanged]; the button moves when this does.
   final Offset? offset;
@@ -1372,8 +1423,13 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
   FloatButtonDirection get _direction =>
       widget.direction ?? _defaults?.direction ?? FloatButtonDirection.auto;
 
+  /// The deprecated `click` is read as [FloatButtonTrigger.tap].
   FloatButtonTrigger get _trigger =>
-      widget.trigger ?? _defaults?.trigger ?? FloatButtonTrigger.click;
+      switch (widget.trigger ?? _defaults?.trigger ?? FloatButtonTrigger.tap) {
+        // ignore: deprecated_member_use_from_same_package
+        FloatButtonTrigger.click => FloatButtonTrigger.tap,
+        final t => t,
+      };
 
   bool get _dismissible => widget.dismissible ?? _defaults?.dismissible ?? true;
 
@@ -1782,12 +1838,12 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
       children: children,
     );
 
-    final masked = _trigger == FloatButtonTrigger.click && r.maskColor.a > 0;
+    final masked = _trigger == FloatButtonTrigger.tap && r.maskColor.a > 0;
 
     return Stack(
       children: [
         if (masked) _mask(r.maskColor),
-        if (_trigger == FloatButtonTrigger.click && _dismissible) _barrier(),
+        if (_trigger == FloatButtonTrigger.tap && _dismissible) _barrier(),
         Positioned.fill(child: flow),
       ],
     );
@@ -1843,6 +1899,8 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     }
     return _DragShift(
       enabled: widget.draggable,
+      dragStart: widget.dragStart,
+      liftScale: _resolved().liftScale,
       offset: widget.offset,
       defaultOffset: widget.defaultOffset,
       onChanged: widget.onOffsetChanged,
@@ -2163,6 +2221,8 @@ class _ToTopPainter extends CustomPainter {
 class _DragShift extends StatefulWidget {
   const _DragShift({
     required this.enabled,
+    required this.dragStart,
+    required this.liftScale,
     required this.child,
     this.offset,
     this.defaultOffset,
@@ -2171,6 +2231,8 @@ class _DragShift extends StatefulWidget {
   });
 
   final bool enabled;
+  final FloatButtonDragStart dragStart;
+  final double liftScale;
   final Offset? offset;
   final Offset? defaultOffset;
   final ValueChanged<Offset>? onChanged;
@@ -2201,20 +2263,35 @@ class _DragShiftState extends State<_DragShift> {
   Offset _from = Offset.zero;
   Offset _grip = Offset.zero;
 
-  void _start(DragStartDetails details) {
+  /// Whether a long press has picked it up and not yet let it go.
+  bool _lifted = false;
+
+  void _start(Offset pointer) {
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     _home = box.localToGlobal(Offset.zero) & box.size;
     _from = _at;
-    _grip = details.globalPosition;
+    _grip = pointer;
     widget.onStart?.call();
   }
 
-  void _move(DragUpdateDetails details) {
+  void _end() {
+    _home = null;
+    if (_lifted) setState(() => _lifted = false);
+  }
+
+  void _lift(LongPressStartDetails details) {
+    _start(details.globalPosition);
+    if (_home == null) return;
+    HapticFeedback.mediumImpact();
+    setState(() => _lifted = true);
+  }
+
+  void _move(Offset pointer) {
     final home = _home;
     if (home == null) return;
     final screen = MediaQuery.sizeOf(context);
-    final wanted = _from + (details.globalPosition - _grip);
+    final wanted = _from + (pointer - _grip);
     // Kept whole on the screen: a button carried off its edge is a button
     // nobody can reach to bring back.
     final next = Offset(
@@ -2229,23 +2306,39 @@ class _DragShiftState extends State<_DragShift> {
   }
 
   @override
-  Widget build(BuildContext context) => Transform.translate(
-        offset: _at,
-        child: widget.enabled
-            ? GestureDetector(
-                // The pointer's alone: the button inside is what a reader
-                // meets, and a drag is not something it can be asked for.
-                excludeFromSemantics: true,
-                // Measured from where the finger came down, not from where
-                // the drag was recognised: the button stays under the finger
-                // instead of trailing it by the slop.
-                dragStartBehavior: DragStartBehavior.down,
-                onPanStart: _start,
-                onPanUpdate: _move,
-                onPanEnd: (_) => _home = null,
-                onPanCancel: () => _home = null,
-                child: widget.child,
-              )
-            : widget.child,
-      );
+  Widget build(BuildContext context) {
+    if (!widget.enabled) {
+      return Transform.translate(offset: _at, child: widget.child);
+    }
+    final Widget carried = switch (widget.dragStart) {
+      FloatButtonDragStart.immediate => GestureDetector(
+          // The pointer's alone: the button inside is what a reader meets,
+          // and a drag is not something it can be asked for.
+          excludeFromSemantics: true,
+          // Measured from where the finger came down, not from where the
+          // drag was recognised: the button stays under the finger instead
+          // of trailing it by the slop.
+          dragStartBehavior: DragStartBehavior.down,
+          onPanStart: (d) => _start(d.globalPosition),
+          onPanUpdate: (d) => _move(d.globalPosition),
+          onPanEnd: (_) => _end(),
+          onPanCancel: _end,
+          child: widget.child,
+        ),
+      FloatButtonDragStart.longPress => GestureDetector(
+          excludeFromSemantics: true,
+          onLongPressStart: _lift,
+          onLongPressMoveUpdate: (d) => _move(d.globalPosition),
+          onLongPressEnd: (_) => _end(),
+          onLongPressCancel: _end,
+          // A little larger while held: the hand can see it has it.
+          child: AnimatedScale(
+            scale: _lifted ? widget.liftScale : 1,
+            duration: context.softToken.motionDurationFast,
+            child: widget.child,
+          ),
+        ),
+    };
+    return Transform.translate(offset: _at, child: carried);
+  }
 }

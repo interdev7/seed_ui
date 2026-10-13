@@ -1029,7 +1029,7 @@ class _SelectState<T> extends State<Select<T>> {
                               : token.primary)
                       .base
                       .withValues(alpha: 0.12),
-                  spreadRadius: 3,
+                  spreadRadius: token.focusRingWidth,
                 ),
               ]
             : null,
@@ -1506,7 +1506,7 @@ class _ClearButton extends StatelessWidget {
         // taller than it is wide.
         child: Center(
           child: CustomPaint(
-            size: const Size.square(16),
+            size: Size.square(context.softToken.fontSizeLG),
             painter: ClearIconPainter(token.colorTextTertiary),
           ),
         ),
@@ -1526,7 +1526,7 @@ class _Arrow extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedRotation(
       turns: open ? 0.5 : 0,
-      duration: const Duration(milliseconds: 200),
+      duration: context.softToken.motionDurationMid,
       child: CustomPaint(
         size: const Size(12, 8),
         painter: _ChevronPainter(color),
@@ -1572,7 +1572,7 @@ class SearchIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size.square(14),
+      size: Size.square(context.softToken.fontSize),
       painter: _MagnifierPainter(color),
     );
   }

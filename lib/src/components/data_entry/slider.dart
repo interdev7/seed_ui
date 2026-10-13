@@ -218,6 +218,8 @@ class SliderToken {
     this.markColor,
     this.markDisabledColor,
     this.markFontSize,
+    this.handleBg,
+    this.dotBg,
   });
 
   /// Thickness of the groove (`railSize`).
@@ -277,11 +279,19 @@ class SliderToken {
   /// A mark's dot once it has (`dotActiveBorderColor`).
   final Color? dotActiveBorderColor;
 
+  /// The fill inside the handle's ring.
+  final Color? handleBg;
+
+  /// The fill inside a dot on the rail.
+  final Color? dotBg;
+
   _ResolvedSliderToken _resolve(Token t) {
     // The handle is a quarter of the large control height, so it grows with
     // the theme's own scale rather than carrying a number of its own.
     final size = t.controlHeightLG / 4;
     return _ResolvedSliderToken(
+      dotBg: dotBg ?? const Color(0xFFFFFFFF),
+      handleBg: handleBg ?? const Color(0xFFFFFFFF),
       railSize: railSize ?? 4,
       handleSize: handleSize ?? size,
       handleSizeHover: handleSizeHover ?? t.controlHeightSM / 2,
@@ -306,6 +316,8 @@ class SliderToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SliderToken merge(SliderToken other) => SliderToken(
+        dotBg: other.dotBg ?? dotBg,
+        handleBg: other.handleBg ?? handleBg,
         railSize: other.railSize ?? railSize,
         handleSize: other.handleSize ?? handleSize,
         handleSizeHover: other.handleSizeHover ?? handleSizeHover,
@@ -352,6 +364,8 @@ class _ResolvedSliderToken {
     required this.markColor,
     required this.markDisabledColor,
     required this.markFontSize,
+    required this.handleBg,
+    required this.dotBg,
   });
 
   final double railSize;
@@ -379,6 +393,8 @@ class _ResolvedSliderToken {
 
   /// How big a mark's words are.
   final double markFontSize;
+  final Color handleBg;
+  final Color dotBg;
 }
 
 /// Defaults for every [Slider] under a `ConfigProvider`.
@@ -2357,7 +2373,7 @@ class _SliderPainter extends CustomPainter {
         ..drawCircle(
           centre,
           token.dotSize / 2,
-          Paint()..color = const Color(0xFFFFFFFF),
+          Paint()..color = token.dotBg,
         )
         ..drawCircle(
           centre,
@@ -2396,8 +2412,8 @@ class _SliderPainter extends CustomPainter {
           diameter / 2,
           Paint()
             ..color = leaving
-                ? const Color(0xFFFFFFFF).withValues(alpha: 0.3)
-                : const Color(0xFFFFFFFF),
+                ? token.handleBg.withValues(alpha: token.handleBg.a * 0.3)
+                : token.handleBg,
         );
     }
   }

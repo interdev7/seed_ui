@@ -789,7 +789,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
                 BoxShadow(
                   color: token.primary.base.withValues(alpha: 0.12),
                   blurRadius: 0,
-                  spreadRadius: 3,
+                  spreadRadius: token.focusRingWidth,
                 ),
               ]
             : null,

@@ -49,6 +49,7 @@ class PaginationToken {
     this.itemActiveColorPrimary,
     this.fontSize,
     this.borderRadius,
+    this.sizeChangerWidth,
   });
 
   /// Active page item primary / border color.
@@ -65,7 +66,11 @@ class PaginationToken {
   /// Corner radius.
   final double? borderRadius;
 
+  /// How wide the page-size picker is.
+  final double? sizeChangerWidth;
+
   _ResolvedPaginationToken _resolve(Token t) => _ResolvedPaginationToken(
+        sizeChangerWidth: sizeChangerWidth ?? 110,
         itemActiveColorPrimary: itemActiveColorPrimary ?? t.primary.base,
         fontSize: fontSize ?? t.fontSize,
         borderRadius: borderRadius ?? t.borderRadius,
@@ -73,6 +78,7 @@ class PaginationToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   PaginationToken merge(PaginationToken other) => PaginationToken(
+        sizeChangerWidth: other.sizeChangerWidth ?? sizeChangerWidth,
         itemActiveColorPrimary:
             other.itemActiveColorPrimary ?? itemActiveColorPrimary,
         fontSize: other.fontSize ?? fontSize,
@@ -86,11 +92,13 @@ class _ResolvedPaginationToken {
     required this.itemActiveColorPrimary,
     required this.fontSize,
     required this.borderRadius,
+    required this.sizeChangerWidth,
   });
 
   final Color itemActiveColorPrimary;
   final double fontSize;
   final double borderRadius;
+  final double sizeChangerWidth;
 }
 
 /// Defaults for every [Pagination] under a `ConfigProvider`.
@@ -469,7 +477,7 @@ class _PaginationState extends State<Pagination> {
                   BoxShadow(
                     color: token.primary.base.withValues(alpha: 0.12),
                     blurRadius: 0,
-                    spreadRadius: 3,
+                    spreadRadius: token.focusRingWidth,
                   ),
                 ]
               : null,
@@ -494,7 +502,7 @@ class _PaginationState extends State<Pagination> {
           child: steppable,
         ),
       ),
-      if (_showSizeChanger) _sizeChanger(token),
+      if (_showSizeChanger) _sizeChanger(token, pt),
       if (_showQuickJumper && !_simpleMode)
         _quickJumper(token, fontSize, height),
     ];
@@ -516,7 +524,7 @@ class _PaginationState extends State<Pagination> {
                   BoxShadow(
                     color: token.primary.base.withValues(alpha: 0.12),
                     blurRadius: 0,
-                    spreadRadius: 3,
+                    spreadRadius: token.focusRingWidth,
                   ),
                 ]
               : null,
@@ -672,9 +680,9 @@ class _PaginationState extends State<Pagination> {
     );
   }
 
-  Widget _sizeChanger(Token token) {
+  Widget _sizeChanger(Token token, _ResolvedPaginationToken pt) {
     return SizedBox(
-      width: 110,
+      width: pt.sizeChangerWidth,
       child: Select<int>(
         value: [_size],
         size: _controlSize,
@@ -945,7 +953,7 @@ class _EllipsisState extends State<_Ellipsis> {
                       ),
                     )
                   : CustomPaint(
-                      size: const Size(16, 16),
+                      size: Size.square(context.softToken.fontSizeLG),
                       painter: _DotsPainter(t.colorTextTertiary),
                     ),
             ),

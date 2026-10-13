@@ -546,7 +546,7 @@ class Upload<T> extends StatelessWidget {
                 style: r,
                 showSize: _showSizeIn(context),
                 leading: _leadingFor(context, item, t, r),
-                progress: _progressFor(item),
+                progress: _progressFor(item, t),
                 actions: _actionsFor(context, item),
               ),
         ],
@@ -567,7 +567,7 @@ class Upload<T> extends StatelessWidget {
                 style: r,
                 round: _variantIn(context) == UploadVariant.circleCards,
                 thumbnail: _thumbnailFor(item, t, r),
-                progress: _progressFor(item),
+                progress: _progressFor(item, t),
                 actions: _actionsFor(context, item),
               ),
         if (_accepting)
@@ -587,9 +587,9 @@ class Upload<T> extends StatelessWidget {
   }
 
   /// The bar for [item], from the caller's template or a plain default.
-  Widget _progressFor(UploadItem<T> item) =>
-      (progress ?? const Progress(percent: 0, showInfo: false, strokeWidth: 4))
-          .copyWith(percent: item.progress);
+  Widget _progressFor(UploadItem<T> item, Token t) => (progress ??
+          Progress(percent: 0, showInfo: false, strokeWidth: t.sizeXXS))
+      .copyWith(percent: item.progress);
 
   /// What sits before the name in a row.
   ///
@@ -1284,8 +1284,8 @@ class _IconButtonState extends State<_IconButton> {
             excludeFromSemantics: true,
             onTap: widget.onTap,
             child: Container(
-              width: 22,
-              height: 22,
+              width: t.controlHeightXS,
+              height: t.controlHeightXS,
               decoration: BoxDecoration(
                 // The mark the pointer leaves, for the keyboard too.
                 color: widget.background ??

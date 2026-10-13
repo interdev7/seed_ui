@@ -4609,7 +4609,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     final r = _token;
     final t = context.softToken;
     return Dropdown<int>(
-      trigger: const [DropdownTrigger.click],
+      trigger: const [DropdownTrigger.tap],
       menu: [
         for (var i = 0; i < entries.length; i++)
           DropdownItem<int>(value: i, label: entries[i].label),
@@ -5259,7 +5259,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     return Dropdown<Object?>(
       // A click, not a hover: a menu with checkboxes and two words to end it
       // is not something to open by passing over it.
-      trigger: const [DropdownTrigger.click],
+      trigger: const [DropdownTrigger.tap],
       open: _filterOpen == index,
       onOpenChanged: (open) =>
           setState(() => _filterOpen = open ? index : null),

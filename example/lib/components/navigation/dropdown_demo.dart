@@ -164,7 +164,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
         Group(
           'itemBuilder (a row drawn by the caller)',
           Dropdown(
-            trigger: const [DropdownTrigger.click],
+            trigger: const [DropdownTrigger.tap],
             menu: _menu,
             // The row's height, highlight, submenu caret and tap stay with
             // the menu; this draws what is inside it. `hovered` is the one
@@ -186,7 +186,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
         Group(
           'popupRender (menu + custom footer)',
           Dropdown(
-            trigger: const [DropdownTrigger.click],
+            trigger: const [DropdownTrigger.tap],
             menu: [
               for (final item in _items) DropdownItem(value: item, label: item),
             ],
@@ -242,7 +242,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
           // menu — the submenu under `More` carries it on. A popupRender
           // could not: it dresses the panel it is handed and no other.
           Dropdown(
-            trigger: const [DropdownTrigger.click],
+            trigger: const [DropdownTrigger.tap],
             token: DropdownToken(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -276,7 +276,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
           // token — blanked here. Style a nested menu through the token, as
           // the group above does.
           Dropdown(
-            trigger: const [DropdownTrigger.click],
+            trigger: const [DropdownTrigger.tap],
             token: const DropdownToken(
               menuBg: Color(0x00000000),
               borderRadius: 0,
@@ -352,7 +352,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
             children: [
               for (final gap in const [0.0, 4.0, 20.0]) ...[
                 Dropdown(
-                  trigger: const [DropdownTrigger.click],
+                  trigger: const [DropdownTrigger.tap],
                   // The same distance twice over: this menu from its button,
                   // and the submenu under `More` from its row. At zero the two
                   // surfaces touch and read as one.
@@ -398,7 +398,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
             child: Row(
               children: [
                 Dropdown(
-                  trigger: const [DropdownTrigger.click],
+                  trigger: const [DropdownTrigger.tap],
                   menu: _menu,
                   onItemTap: (a) => message.info('Tapped: ${a?.name}'),
                   child: Button(
@@ -408,7 +408,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
                 ),
                 const SizedBox(width: 12),
                 Dropdown(
-                  trigger: const [DropdownTrigger.click],
+                  trigger: const [DropdownTrigger.tap],
                   menu: _menu,
                   onItemTap: (a) => message.info('Tapped: ${a?.name}'),
                   child: Button(

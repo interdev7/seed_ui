@@ -27,7 +27,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Dropdown(
-          trigger: const [DropdownTrigger.click],
+          trigger: const [DropdownTrigger.tap],
           open: true,
           menu: const [
             DropdownItem(value: _Action.edit, label: 'Edit'),
@@ -45,6 +45,23 @@ void main() {
     expect(tapped, _Action.remove);
   });
 
+  testWidgets('the old name, click, still opens on a tap', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        const Dropdown(
+          // ignore: deprecated_member_use
+          trigger: [DropdownTrigger.click],
+          menu: [DropdownItem(value: _Action.edit, label: 'Edit')],
+          child: Text('Open'),
+        ),
+      ),
+    );
+    expect(find.text('Edit'), findsNothing);
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit'), findsOneWidget);
+  });
+
   testWidgets('a divider asks for the type to be named once', (tester) async {
     // A divider carries no value, and Dart settles a list's element type
     // before the menu's, so a mixed literal has nothing to go on and falls to
@@ -54,7 +71,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Dropdown<_Action>(
-          trigger: const [DropdownTrigger.click],
+          trigger: const [DropdownTrigger.tap],
           open: true,
           menu: const [
             DropdownItem(value: _Action.edit, label: 'Edit'),
@@ -90,7 +107,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Dropdown(
-          trigger: const [DropdownTrigger.click],
+          trigger: const [DropdownTrigger.tap],
           menu: _menu,
           onItemTap: (k) => tapped = k,
           child: const Text('Open'),
@@ -115,7 +132,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Dropdown(
-          trigger: const [DropdownTrigger.click],
+          trigger: const [DropdownTrigger.tap],
           menu: _menu,
           onItemTap: (k) => tapped = k,
           child: const Text('Open'),
@@ -135,7 +152,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         const Dropdown(
-          trigger: [DropdownTrigger.click],
+          trigger: [DropdownTrigger.tap],
           menu: _menu,
           child: Text('Open'),
         ),
@@ -155,7 +172,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         Dropdown(
-          trigger: const [DropdownTrigger.click],
+          trigger: const [DropdownTrigger.tap],
           menu: _menu,
           popupRender: (context, menu) => Column(
             mainAxisSize: MainAxisSize.min,
@@ -203,7 +220,7 @@ void main() {
         // Never: built from content, so it has no items and no value to
         // report.
         Dropdown<Never>(
-          trigger: const [DropdownTrigger.click],
+          trigger: const [DropdownTrigger.tap],
           content: (context, close) => DropdownPanel(
             child: Padding(
               padding: const EdgeInsets.all(12),
@@ -251,7 +268,7 @@ void main() {
               // runs and carries its open state across.
               child: Dropdown(
                 key: ValueKey(direction),
-                trigger: const [DropdownTrigger.click],
+                trigger: const [DropdownTrigger.tap],
                 menu: const [
                   DropdownItem(
                     value: 'more',

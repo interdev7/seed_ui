@@ -218,6 +218,12 @@ Spacing steps are multiples of `sizeUnit`:
 Control heights: `controlHeightSM` (24), `controlHeight` (32),
 `controlHeightLG` (40).
 
+Two smaller steps follow the font rather than the size unit:
+`controlHeightXS` (22, one line of body text) is the box of small inline
+buttons such as a close cross or an upload row's actions, and
+`focusRingWidth` (three `lineWidth`s) is how far a focus ring reaches past a
+control.
+
 #### The gaps inside components
 
 The space a component leaves between its own parts — an icon and its words

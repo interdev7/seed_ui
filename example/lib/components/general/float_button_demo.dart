@@ -63,6 +63,7 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
   double _jitter = 0;
   double _upload = 0.35;
   Offset _carried = Offset.zero;
+  Offset _held = Offset.zero;
   final _page = ScrollController();
 
   double? _radius;
@@ -589,6 +590,20 @@ class _FloatButtonDemoState extends State<FloatButtonDemo> {
               draggable: true,
               offset: _carried,
               onOffsetChanged: (o) => setState(() => _carried = o),
+              onPressed: () => message.info('Pressed, not dragged'),
+            ),
+          ),
+        ),
+        Group(
+          'Picked up by a long press — hold it, then carry it',
+          _stage(
+            FloatButton(
+              icon: const Icon(Icons.chat_bubble_outline),
+              semanticsLabel: 'Chat',
+              draggable: true,
+              dragStart: FloatButtonDragStart.longPress,
+              offset: _held,
+              onOffsetChanged: (o) => setState(() => _held = o),
               onPressed: () => message.info('Pressed, not dragged'),
             ),
           ),

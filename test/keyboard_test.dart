@@ -535,7 +535,7 @@ void main() {
             home: Scaffold(
               body: Center(
                 child: Dropdown<String>(
-                  trigger: const [DropdownTrigger.click],
+                  trigger: const [DropdownTrigger.tap],
                   menu: menu,
                   onItemTap: taken.add,
                   child: Button(onPressed: () {}, child: const Text('Open')),

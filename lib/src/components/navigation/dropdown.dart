@@ -14,6 +14,10 @@ enum DropdownTrigger {
   hover,
 
   /// Opens on a primary tap and closes on an outside tap.
+  tap,
+
+  /// The old name for [tap].
+  @Deprecated('Use DropdownTrigger.tap. Will be removed in 1.0.0.')
   click,
 
   /// Opens on a secondary tap / long-press (a context menu).
@@ -397,8 +401,15 @@ class _DropdownState<T> extends State<Dropdown<T>> {
       widget.closeOnSelect ?? _defaults?.closeOnSelect ?? true;
 
   /// This widget's word, then the subtree's, then the kit's.
-  List<DropdownTrigger> get _trigger =>
-      widget.trigger ?? _defaults?.trigger ?? const [DropdownTrigger.hover];
+  ///
+  /// The deprecated `click` is read as [DropdownTrigger.tap].
+  List<DropdownTrigger> get _trigger => [
+        for (final t in widget.trigger ??
+            _defaults?.trigger ??
+            const [DropdownTrigger.hover])
+          // ignore: deprecated_member_use_from_same_package
+          t == DropdownTrigger.click ? DropdownTrigger.tap : t,
+      ];
 
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
@@ -417,7 +428,7 @@ class _DropdownState<T> extends State<Dropdown<T>> {
   bool _overTrigger = false;
   bool _overPanel = false;
 
-  /// Where a click-trigger press started, so a drag or a scroll that ends over
+  /// Where a tap-trigger press started, so a drag or a scroll that ends over
   /// the trigger is not mistaken for a tap.
   Offset? _tapOrigin;
 
@@ -506,7 +517,7 @@ class _DropdownState<T> extends State<Dropdown<T>> {
       anchorRect: anchor,
       gap: r.gap,
       // Hover menus have no dismiss barrier, so hovering elsewhere still works;
-      // click/context menus close on an outside tap.
+      // tap/context menus close on an outside tap.
       onDismiss: _hoverMode ? null : () => _requestOpen(false),
       interactive: true,
       arrowColor: _arrow ? token.colorBgElevated : null,
@@ -600,7 +611,7 @@ class _DropdownState<T> extends State<Dropdown<T>> {
   Widget build(BuildContext context) {
     Widget trigger = KeyedSubtree(key: _anchorKey, child: widget.child);
 
-    if (_trigger.contains(DropdownTrigger.click)) {
+    if (_trigger.contains(DropdownTrigger.tap)) {
       // Deliberately a Listener, not a GestureDetector: the child is often a
       // Button or another tappable, whose own recognizer sits deeper in the
       // tree and would win the gesture arena outright, leaving the menu dead.

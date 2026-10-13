@@ -517,6 +517,12 @@ class Input extends StatefulWidget {
   ///
   /// Android only; the others take no notice. Off for a code or a login,
   /// where a suggestion is never what was meant.
+  ///
+  /// Only a keyboard of letters has a row of suggestions: the platform hands
+  /// a [TextInputType.phone] or [TextInputType.number] field a keypad, which
+  /// has none whatever this says. To have the phone offer the user's own
+  /// number there, name it in [autofillHints] —
+  /// `[AutofillHints.telephoneNumber]`.
   final bool? enableSuggestions;
 
   /// Whether the keyboard may learn from what is typed here. Defaults to yes.
@@ -1097,7 +1103,12 @@ class _SoftInputState extends State<Input> {
                 ),
                 boxShadow: ring == null
                     ? null
-                    : [BoxShadow(color: ring, blurRadius: 0, spreadRadius: 3)],
+                    : [
+                        BoxShadow(
+                            color: ring,
+                            blurRadius: 0,
+                            spreadRadius: token.focusRingWidth)
+                      ],
               ),
               child: content,
             ),
@@ -1203,7 +1214,7 @@ class _ClearButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: CustomPaint(
-          size: const Size.square(16),
+          size: Size.square(context.softToken.fontSizeLG),
           painter: ClearIconPainter(token.colorTextTertiary),
         ),
       ),
@@ -1306,15 +1317,15 @@ class SearchIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final glyph = loading
         ? SizedBox(
-            width: 16,
-            height: 16,
+            width: context.softToken.size,
+            height: context.softToken.size,
             child: CustomPaint(
               painter: _SpinnerPainter(token.colorTextTertiary),
             ),
           )
         : icon ??
             CustomPaint(
-              size: const Size.square(16),
+              size: Size.square(context.softToken.fontSizeLG),
               painter: _MagnifierPainter(token.colorTextTertiary),
             );
     return MouseRegion(
@@ -1375,13 +1386,13 @@ class _SearchButtonState extends State<_SearchButton> {
 
     final glyph = widget.loading
         ? SizedBox(
-            width: 16,
-            height: 16,
+            width: context.softToken.size,
+            height: context.softToken.size,
             child: CustomPaint(painter: _SpinnerPainter(fg)),
           )
         : widget.icon ??
             CustomPaint(
-              size: const Size.square(16),
+              size: Size.square(context.softToken.fontSizeLG),
               painter: _MagnifierPainter(fg),
             );
 

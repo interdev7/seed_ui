@@ -1419,7 +1419,7 @@ class _CloseButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: CustomPaint(
-          size: const Size.square(12),
+          size: Size.square(context.softToken.fontSizeSM),
           painter: CrossPainter(color, strokeWidth: 1.1, inset: 3),
         ),
       ),
@@ -1480,7 +1480,7 @@ class _AddButtonState extends State<_AddButton> {
             ),
             child: widget.icon ??
                 CustomPaint(
-                  size: const Size.square(14),
+                  size: Size.square(context.softToken.fontSize),
                   painter: PlusPainter(color),
                 ),
           ),

@@ -316,7 +316,7 @@ class _SliderDemoState extends State<SliderDemo> {
                         Dropdown<String>(
                           arrow: true,
                           placement: PopoverPlacement.top,
-                          trigger: const [DropdownTrigger.click],
+                          trigger: const [DropdownTrigger.tap],
                           menu: const [
                             DropdownItem(value: 'who', label: 'Who booked it'),
                             DropdownItem(value: 'free', label: 'Free it up'),

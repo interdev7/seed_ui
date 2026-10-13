@@ -5,6 +5,46 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.29.0
+
+### Added
+
+- **Every look value now lives in the theme.** The sizes and colours that
+  components used to carry as bare numbers are now either theme steps or
+  component-token fields that default to the same value, so nothing looks
+  different, but each one can now be changed.
+  - Theme: `Token.controlHeightXS` (22) and `Token.focusRingWidth` (three
+    `lineWidth`s). Focus rings, close crosses and the upload row's buttons
+    follow them; paddings, spinners and icon boxes follow `size*` and
+    `fontSize*`; small animations follow `motionDuration*`.
+  - `ProgressToken`: `lineHeightSM`, `lineHeightLG`, `circleSizeSM`,
+    `circleSizeLG`, `circleStrokeWidthSM`, `circleStrokeWidth`.
+  - `PaginationToken.sizeChangerWidth`, `CardToken.tabsGap`.
+  - `EmptyToken`: `imageStroke`, `imageFill`, `imageShadow`.
+  - `SwitchToken.handleBg`; `SliderToken.handleBg` and `dotBg`.
+  - Steps and Tour draw their light ink in the theme's `onBase` colours.
+- **`FloatButton.dragStart`** and **`FloatButtonGroup.dragStart`** — what
+  picks up a draggable button. `FloatButtonDragStart.immediate` (the default)
+  carries it as soon as a press moves, as before; `longPress` waits for a long
+  press, lifts the button with a short buzz, and then lets it follow the
+  finger, so a thumb scrolling past cannot shove it aside and a tap still
+  presses it. `FloatButtonToken.liftScale` (1.08) is how much it grows while
+  held.
+- **`DropdownTrigger.tap`** and **`FloatButtonTrigger.tap`** — the kit says
+  `tap` for a press everywhere now, as `TooltipTrigger` and `PopoverTrigger`
+  already did.
+
+### Deprecated
+
+- `DropdownTrigger.click` and `FloatButtonTrigger.click`: use `.tap`. The old
+  names still work, read as `tap`, and go in 1.0.0.
+
+### Fixed
+
+- `DirectoryNode` and `FileNode` drew their icons in fixed light-theme
+  colours; in a dark theme they now use the primary and the tertiary text
+  colour.
+
 ## 0.28.0
 
 ### Added

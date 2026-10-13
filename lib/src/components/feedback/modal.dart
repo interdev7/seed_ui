@@ -749,7 +749,7 @@ class _ModalCardState extends State<_ModalCard>
     }
     return Padding(
       padding: EdgeInsetsDirectional.only(
-        end: CloseCross.extent + token.sizeXS,
+        end: CloseCross.extentOf(token) + token.sizeXS,
       ),
       child: title,
     );

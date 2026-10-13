@@ -146,7 +146,7 @@ SliderMark(
   60,
   'booked',
   markBuilder: (context, mark, active, child) => Dropdown<String>(
-    trigger: const [DropdownTrigger.click],
+    trigger: const [DropdownTrigger.tap],
     menu: const [DropdownItem(value: 'free', label: 'Free it up')],
     onItemTap: (value) => ...,
     child: child,

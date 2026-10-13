@@ -1,5 +1,15 @@
+import 'package:flutter/material.dart' as material show Divider;
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer, Card;
+    hide
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer,
+        Card,
+        Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 import '../group.dart';
@@ -208,7 +218,7 @@ class TimelineDemo extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        const Divider(height: 1),
+        const material.Divider(height: 1),
 
         Group('Basic', Timeline(items: basic)),
         Group(
@@ -478,7 +488,7 @@ class TimelineDemo extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        const Divider(height: 1),
+        const material.Divider(height: 1),
 
         Group('Horizontal - Basic', horizontalTimeline(items: horizontalBasic)),
 

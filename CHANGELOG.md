@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   finger, so a thumb scrolling past cannot shove it aside and a tap still
   presses it. `FloatButtonToken.liftScale` (1.08) is how much it grows while
   held.
+- **`Divider`** — a line between blocks of a page, or between words and
+  buttons in a row. Horizontal or vertical; solid, dashed or dotted; three
+  sizes of room around it; a title at the start, centre or end, as a heading
+  or `plain`. `DividerToken` and `DividerDefaults` configure it. Material has
+  a `Divider` too: hide it when importing both, as for `Drawer`.
 - **`DropdownTrigger.tap`** and **`FloatButtonTrigger.tap`** — the kit says
   `tap` for a press everywhere now, as `TooltipTrigger` and `PopoverTrigger`
   already did.

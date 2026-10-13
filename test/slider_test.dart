@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart'
-    hide Slider, RangeSlider, ThemeData, Checkbox, Radio, Switch, Tooltip;
+    hide
+        Slider,
+        RangeSlider,
+        ThemeData,
+        Checkbox,
+        Radio,
+        Switch,
+        Tooltip,
+        Divider;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;

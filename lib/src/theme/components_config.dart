@@ -39,6 +39,7 @@ import '../components/feedback/progress.dart';
 import '../components/feedback/result.dart';
 import '../components/feedback/spin.dart';
 import '../components/general/button.dart';
+import '../components/general/divider.dart';
 import '../components/general/float_button.dart';
 import '../components/navigation/dropdown.dart';
 import '../components/navigation/pagination.dart';
@@ -57,6 +58,7 @@ class ComponentsConfig {
     this.collapse,
     this.countdown,
     this.datePicker,
+    this.divider,
     this.drawer,
     this.dropdown,
     this.empty,
@@ -125,6 +127,9 @@ class ComponentsConfig {
 
   /// Overrides applied to every [Form] under this provider.
   final FormToken? form;
+
+  /// Overrides applied to every [Divider] under this provider.
+  final DividerToken? divider;
 
   /// Overrides applied to every [Drawer] under this provider.
   final DrawerToken? drawer;
@@ -256,6 +261,9 @@ class ComponentsConfig {
         countdown: countdown == null || other.countdown == null
             ? (other.countdown ?? countdown)
             : countdown!.merge(other.countdown!),
+        divider: divider == null || other.divider == null
+            ? (other.divider ?? divider)
+            : divider!.merge(other.divider!),
         drawer: drawer == null || other.drawer == null
             ? (other.drawer ?? drawer)
             : drawer!.merge(other.drawer!),
@@ -376,6 +384,7 @@ class ComponentsConfig {
     if (T == DatePickerToken && datePicker != null) {
       return datePicker as T;
     }
+    if (T == DividerToken && divider != null) return divider as T;
     if (T == DrawerToken && drawer != null) return drawer as T;
     if (T == DropdownToken && dropdown != null) return dropdown as T;
     if (T == EmptyToken && empty != null) return empty as T;

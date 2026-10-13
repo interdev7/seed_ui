@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Table, TableRow;
+    hide
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Table,
+        TableRow,
+        Divider;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';

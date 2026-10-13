@@ -1,6 +1,15 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer, Card;
+    hide
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer,
+        Card,
+        Divider;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui/src/utils/close_cross.dart' show CloseCross;

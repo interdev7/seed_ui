@@ -10,7 +10,8 @@ import 'package:flutter/material.dart'
         Drawer,
         Card,
         Slider,
-        RangeSlider;
+        RangeSlider,
+        Divider;
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';

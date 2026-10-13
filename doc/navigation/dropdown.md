@@ -226,7 +226,7 @@ Dropdown(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       menu,
-      const Divider(height: 1),
+      const Divider(size: SoftSize.small),
       Padding(padding: const EdgeInsets.all(8), child: MyAddItemRow()),
     ],
   ),

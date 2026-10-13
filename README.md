@@ -88,6 +88,7 @@ key is how they find it. Without it they assert in debug mode.
 | [Countdown](doc/data_display/countdown.md)        | Time to a moment or since one, counting either way                             |
 | [Button](doc/general/button.md)                   | Pressable button with variant, color, size, shape, loading and danger states   |
 | [Compact](doc/general/compact.md)                 | Joins a run of controls into one: square where they meet, one line at the seam |
+| [Divider](doc/general/divider.md)                 | A line between blocks or words — solid, dashed or dotted, with a title         |
 | [FloatButton](doc/general/float_button.md)        | A button that floats above the page, alone or opening into a fan, column or grid |
 | [Slider](doc/data_entry/slider.md)                | A groove with one handle or two, with marks, steps and a range          |
 | [TimePicker](doc/data_entry/time_picker.md)       | A time of day, typed or picked, with the format deciding the columns    |
@@ -131,9 +132,9 @@ key is how they find it. Without it they assert in debug mode.
 
 See also [theming](doc/theming.md) for the token system.
 
-> **Name clash.** The kit's `Drawer` getter shares a name with Material's
-> `Drawer` widget. When importing both, hide the Material one:
-> `import 'package:flutter/material.dart' hide Drawer;`. See
+> **Name clash.** The kit's `Drawer` getter and `Divider` widget share their
+> names with Material's. When importing both, hide the Material ones:
+> `import 'package:flutter/material.dart' hide Drawer, Divider;`. See
 > [the Drawer docs](doc/feedback/drawer.md#name-collision).
 
 ## At a glance

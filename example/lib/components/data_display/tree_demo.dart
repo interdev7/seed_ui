@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer, Card;
+    hide
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer,
+        Card,
+        Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 import '../group.dart';

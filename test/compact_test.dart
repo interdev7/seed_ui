@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart' hide ThemeData, Radio, RadioGroup;
+import 'package:flutter/material.dart'
+    hide ThemeData, Radio, RadioGroup, Divider;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';

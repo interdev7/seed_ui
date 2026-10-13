@@ -11,7 +11,8 @@ import 'package:flutter/material.dart'
         RadioGroup,
         Switch,
         Tooltip,
-        Drawer;
+        Drawer,
+        Divider;
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';

@@ -1,5 +1,5 @@
 // Material also exports a `Drawer`; hide it so the kit's getter wins.
-import 'package:flutter/material.dart' hide Drawer;
+import 'package:flutter/material.dart' hide Drawer, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 class DrawerDemo extends StatelessWidget {

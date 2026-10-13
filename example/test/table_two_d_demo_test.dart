@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' hide Table, TableRow, ThemeData;
+import 'package:flutter/material.dart' hide Table, TableRow, ThemeData, Divider;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui_example/components/data_display/table_two_d_demo.dart';

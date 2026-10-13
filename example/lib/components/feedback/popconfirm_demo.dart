@@ -1,5 +1,6 @@
+import 'package:flutter/material.dart' as material show Divider;
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer;
+    hide ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer, Divider;
 // This page lays its buttons out with Flutter's own Table, so the kit's is
 // hidden here rather than the other way round.
 import 'package:seed_ui/seed_ui.dart' hide Table;
@@ -81,7 +82,7 @@ class PopconfirmDemo extends StatelessWidget {
               ),
             ],
           ),
-          const Divider(height: 40),
+          const material.Divider(height: 40),
           LayoutBuilder(
             builder: (context, constraints) {
               return SizedBox(

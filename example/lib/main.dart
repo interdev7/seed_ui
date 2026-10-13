@@ -1,6 +1,15 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' as material show Divider;
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+    hide
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer,
+        Divider;
 import 'package:seed_ui/seed_ui.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +21,7 @@ import 'components/data_display/avatar_demo.dart';
 import 'components/data_display/badge_demo.dart';
 import 'components/general/button_demo.dart';
 import 'components/general/compact_demo.dart';
+import 'components/general/divider_demo.dart';
 import 'components/general/float_button_demo.dart';
 import 'components/data_display/card_demo.dart';
 import 'components/data_entry/slider_demo.dart';
@@ -372,7 +382,7 @@ class MainLayout extends StatelessWidget {
                 ],
               ),
             ),
-            Divider(height: 1, color: token.colorBorderSecondary),
+            material.Divider(height: 1, color: token.colorBorderSecondary),
             Expanded(
               child: DefaultTextStyle(
                 style: TextStyle(
@@ -416,6 +426,7 @@ final List<Demo> demos = [
   Demo('countdown', 'Countdown', (_) => const CountdownDemo()),
   Demo('button', 'Button', (_) => const ButtonDemo()),
   Demo('compact', 'Compact', (_) => const CompactDemo()),
+  Demo('divider', 'Divider', (_) => const DividerDemo(), isNew: true),
   Demo('float-button', 'FloatButton', (_) => const FloatButtonDemo()),
   Demo('message', 'message', (_) => const MessageDemo()),
   Demo('notification', 'notification', (_) => const NotificationDemo()),
@@ -464,7 +475,8 @@ class HomePage extends StatelessWidget {
     return ListView.separated(
       padding: EdgeInsets.symmetric(horizontal: token.sizeLG),
       itemCount: demos.length,
-      separatorBuilder: (_, __) => Divider(height: 1, color: token.colorSplit),
+      separatorBuilder: (_, __) =>
+          material.Divider(height: 1, color: token.colorSplit),
       itemBuilder: (context, i) {
         final demo = demos[i];
         return _DemoTile(

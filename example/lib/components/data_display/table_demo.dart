@@ -8,7 +8,8 @@ import 'package:flutter/material.dart'
         RadioGroup,
         Switch,
         Tooltip,
-        Drawer;
+        Drawer,
+        Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 import '../group.dart';

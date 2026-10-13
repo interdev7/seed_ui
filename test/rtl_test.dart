@@ -1,7 +1,16 @@
 import 'dart:ui' show ImageByteFormat;
 
 import 'package:flutter/material.dart'
-    hide Badge, ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+    hide
+        Badge,
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer,
+        Divider;
 import 'package:flutter/rendering.dart'
     show RenderParagraph, RenderRepaintBoundary;
 import 'package:flutter_localizations/flutter_localizations.dart';

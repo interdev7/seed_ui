@@ -8,7 +8,8 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Form,
-        FormField;
+        FormField,
+        Divider;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui/src/components/data_entry/checkbox.dart'

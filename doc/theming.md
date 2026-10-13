@@ -823,6 +823,7 @@ house-style decision rather than the state of one instance:
 | `Countdown` | `type` |
 | `DatePicker` | `variant`, `allowClear`, `showToday`, `size`, `disabled` |
 | `DateRangePicker` | `variant`, `allowClear`, `size`, `disabled` |
+| `Divider` | `variant`, `size`, `titlePlacement`, `plain` |
 | `Dropdown` | `placement`, `arrow`, `closeOnSelect`, `trigger`, `disabled` |
 | `Empty` | `image` |
 | `FloatButton` | `shape`, `color`, `size`, `layout`, `direction`, `trigger`, `labelPlacement`, `disabled`, `dismissible`, `closeOnSelect` |

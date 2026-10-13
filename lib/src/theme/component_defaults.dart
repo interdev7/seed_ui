@@ -36,6 +36,7 @@ import '../components/feedback/popconfirm.dart';
 import '../components/feedback/progress.dart';
 import '../components/feedback/spin.dart';
 import '../components/general/button.dart';
+import '../components/general/divider.dart';
 import '../components/general/float_button.dart';
 import '../components/navigation/dropdown.dart';
 import '../components/navigation/pagination.dart';
@@ -91,6 +92,7 @@ class ComponentDefaults {
     this.tabs,
     this.tree,
     this.datePicker,
+    this.divider,
     this.dropdown,
     this.empty,
     this.floatButton,
@@ -179,6 +181,9 @@ class ComponentDefaults {
 
   /// Applied to every [DatePicker] under this provider.
   final DatePickerDefaults? datePicker;
+
+  /// Applied to every [Divider] under this provider.
+  final DividerDefaults? divider;
 
   /// Applied to every [Dropdown] under this provider.
   final DropdownDefaults? dropdown;
@@ -324,6 +329,9 @@ class ComponentDefaults {
         datePicker: datePicker == null || other.datePicker == null
             ? (other.datePicker ?? datePicker)
             : datePicker!.merge(other.datePicker!),
+        divider: divider == null || other.divider == null
+            ? (other.divider ?? divider)
+            : divider!.merge(other.divider!),
         dropdown: dropdown == null || other.dropdown == null
             ? (other.dropdown ?? dropdown)
             : dropdown!.merge(other.dropdown!),
@@ -396,6 +404,7 @@ class ComponentDefaults {
   T? of<T>() {
     if (T == TableDefaults && table != null) return table as T;
     if (T == ButtonDefaults && button != null) return button as T;
+    if (T == DividerDefaults && divider != null) return divider as T;
     if (T == EmptyDefaults && empty != null) return empty as T;
     if (T == FloatButtonDefaults && floatButton != null) {
       return floatButton as T;

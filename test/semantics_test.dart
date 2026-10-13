@@ -1,7 +1,7 @@
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart'
-    hide ThemeData, Form, Switch, Drawer, Tooltip, Table, TableRow;
+    hide ThemeData, Form, Switch, Drawer, Tooltip, Table, TableRow, Divider;
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';

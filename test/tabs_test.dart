@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer;
+    hide
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer,
+        Divider;
 // The kit hides Material's ThemeData; this test needs it to pick a platform.
 import 'package:flutter/material.dart' as material;
 import 'package:flutter_test/flutter_test.dart';

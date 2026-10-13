@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart'
-    hide Badge, ThemeData, Tooltip, Card, Drawer, Switch;
+    hide Badge, ThemeData, Tooltip, Card, Drawer, Switch, Divider;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui_example/components/general/float_button_demo.dart';

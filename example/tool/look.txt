@@ -6,6 +6,7 @@ date-range-picker light 3388612315
 time-picker light 1832759030
 button light 4075682009
 compact light 627054909
+divider light 1722845757
 float-button light 159050863
 message light 279803762
 notification light 1360681566
@@ -50,6 +51,7 @@ date-range-picker dark 1673032521
 time-picker dark 4106186293
 button dark 3542927699
 compact dark 3919558610
+divider dark 3582787924
 float-button dark 714959175
 message dark 3100600293
 notification dark 1697804977

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart' hide ThemeData, Tooltip, Drawer, Switch;
+import 'package:flutter/material.dart'
+    hide ThemeData, Tooltip, Drawer, Switch, Divider;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui_example/main.dart';

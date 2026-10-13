@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:ui' show ImageByteFormat;
 
 import 'package:flutter/material.dart'
-    hide Checkbox, ThemeData, Tooltip, Badge, Card, Drawer;
+    hide Checkbox, ThemeData, Tooltip, Badge, Card, Drawer, Divider;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';

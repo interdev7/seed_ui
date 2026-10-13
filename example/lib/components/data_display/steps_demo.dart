@@ -8,7 +8,8 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Card,
-        Step;
+        Step,
+        Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 import '../group.dart';

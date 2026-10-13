@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart'
-    hide Badge, ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer;
+    hide Badge, ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer, Divider;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 

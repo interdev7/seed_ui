@@ -1,6 +1,15 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip, Drawer, Card;
+    hide
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Drawer,
+        Card,
+        Divider;
 import 'package:flutter/rendering.dart'
     show ContainerLayer, OpacityLayer, PaintingContext, PaintingContextCallback;
 import 'package:flutter_test/flutter_test.dart';

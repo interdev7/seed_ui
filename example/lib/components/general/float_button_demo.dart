@@ -9,7 +9,8 @@ import 'package:flutter/material.dart'
         Switch,
         Tooltip,
         Drawer,
-        Slider;
+        Slider,
+        Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 import '../group.dart';

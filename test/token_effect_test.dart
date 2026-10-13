@@ -14,7 +14,8 @@ import 'package:flutter/material.dart'
         Switch,
         Table,
         ThemeData,
-        Tooltip;
+        Tooltip,
+        Divider;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
@@ -714,6 +715,39 @@ Widget _empty(EmptyToken? token) => Empty(
       token: token,
     );
 
+/// A divider with a title, between two words so its margins show.
+Widget _divider(
+  DividerToken? token, {
+  SoftSize size = SoftSize.middle,
+  bool plain = false,
+  bool vertical = false,
+}) =>
+    vertical
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('A'),
+              Divider(orientation: DividerOrientation.vertical, token: token),
+              const Text('B'),
+            ],
+          )
+        : SizedBox(
+            width: 300,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Above'),
+                Divider(
+                  size: size,
+                  plain: plain,
+                  token: token,
+                  child: const Text('Title'),
+                ),
+                const Text('Below'),
+              ],
+            ),
+          );
+
 Widget _countdown(CountdownToken? token) => Countdown(
       target: DateTime(2030),
       token: token,
@@ -1078,6 +1112,71 @@ final _probes = <_Probe>[
         token: c ? const CardToken(tabsGap: 40) : null,
         child: const Text('Body'),
       ),
+    ),
+  ),
+  _Probe(
+    'DividerToken.lineColor',
+    (c) => _divider(c ? const DividerToken(lineColor: _loud) : null),
+  ),
+  _Probe(
+    'DividerToken.lineWidth',
+    (c) => _divider(c ? const DividerToken(lineWidth: 6) : null),
+  ),
+  _Probe(
+    'DividerToken.marginSM',
+    (c) => _divider(
+      c ? const DividerToken(marginSM: 30) : null,
+      size: SoftSize.small,
+    ),
+  ),
+  _Probe(
+    'DividerToken.margin',
+    (c) => _divider(c ? const DividerToken(margin: 4) : null),
+  ),
+  _Probe(
+    'DividerToken.marginLG',
+    (c) => _divider(
+      c ? const DividerToken(marginLG: 4) : null,
+      size: SoftSize.large,
+    ),
+  ),
+  _Probe(
+    'DividerToken.verticalMargin',
+    (c) => _divider(
+      c ? const DividerToken(verticalMargin: 30) : null,
+      vertical: true,
+    ),
+  ),
+  _Probe(
+    'DividerToken.verticalHeight',
+    (c) => _divider(
+      c ? const DividerToken(verticalHeight: 40) : null,
+      vertical: true,
+    ),
+  ),
+  _Probe(
+    'DividerToken.titleGap',
+    (c) => _divider(c ? const DividerToken(titleGap: 60) : null),
+  ),
+  _Probe(
+    'DividerToken.titleColor',
+    (c) => _divider(c ? const DividerToken(titleColor: _loud) : null),
+  ),
+  _Probe(
+    'DividerToken.titleFontSize',
+    (c) => _divider(c ? const DividerToken(titleFontSize: 28) : null),
+  ),
+  _Probe(
+    'DividerToken.titleFontWeight',
+    (c) => _divider(
+      c ? const DividerToken(titleFontWeight: FontWeight.w900) : null,
+    ),
+  ),
+  _Probe(
+    'DividerToken.plainTitleFontSize',
+    (c) => _divider(
+      c ? const DividerToken(plainTitleFontSize: 28) : null,
+      plain: true,
     ),
   ),
   _Probe(

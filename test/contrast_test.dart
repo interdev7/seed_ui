@@ -1,7 +1,15 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart'
-    hide Badge, ThemeData, Checkbox, Radio, RadioGroup, Switch, Tooltip;
+    hide
+        Badge,
+        ThemeData,
+        Checkbox,
+        Radio,
+        RadioGroup,
+        Switch,
+        Tooltip,
+        Divider;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 

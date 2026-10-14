@@ -232,6 +232,8 @@ class ColorPicker extends StatefulWidget {
     this.disabledAlpha,
     this.allowClear = false,
     this.canCopy,
+    this.onCopy,
+    this.copyIconBuilder,
     this.presets,
     this.showText = false,
     this.size,
@@ -276,6 +278,20 @@ class ColorPicker extends StatefulWidget {
   /// Whether the panel offers to copy the colour, written as the fields
   /// write it. Defaults to no.
   final bool? canCopy;
+
+  /// Called with the text put on the clipboard, once it is there: to say so
+  /// in a message of your own, to count it.
+  final ValueChanged<String>? onCopy;
+
+  /// Draws the copy button's icon, told whether the colour was just copied.
+  /// The colour comes from an `IconTheme` around it — the tertiary text
+  /// colour, the success colour once copied — so an `Icon` takes it:
+  ///
+  /// ```dart
+  /// copyIconBuilder: (context, copied) =>
+  ///     Icon(copied ? Icons.check : Icons.content_copy),
+  /// ```
+  final Widget Function(BuildContext context, bool copied)? copyIconBuilder;
 
   /// Ready colours offered under the panel.
   final List<ColorPreset>? presets;
@@ -374,6 +390,8 @@ class _ColorPickerState extends State<ColorPicker> {
           disabledAlpha: widget.disabledAlpha,
           allowClear: widget.allowClear,
           canCopy: widget.canCopy,
+          onCopy: widget.onCopy,
+          copyIconBuilder: widget.copyIconBuilder,
           presets: widget.presets,
           token: widget.token,
         ),
@@ -505,6 +523,8 @@ class ColorPickerPanel extends StatefulWidget {
     this.disabledAlpha,
     this.allowClear = false,
     this.canCopy,
+    this.onCopy,
+    this.copyIconBuilder,
     this.presets,
     this.token,
   });
@@ -535,6 +555,20 @@ class ColorPickerPanel extends StatefulWidget {
   /// write it: `#1677FF`, `rgb(22, 119, 255)`, `hsb(215, 91%, 100%)`.
   /// Defaults to no.
   final bool? canCopy;
+
+  /// Called with the text put on the clipboard, once it is there: to say so
+  /// in a message of your own, to count it.
+  final ValueChanged<String>? onCopy;
+
+  /// Draws the copy button's icon, told whether the colour was just copied.
+  /// The colour comes from an `IconTheme` around it — the tertiary text
+  /// colour, the success colour once copied — so an `Icon` takes it:
+  ///
+  /// ```dart
+  /// copyIconBuilder: (context, copied) =>
+  ///     Icon(copied ? Icons.check : Icons.content_copy),
+  /// ```
+  final Widget Function(BuildContext context, bool copied)? copyIconBuilder;
 
   /// Ready colours offered under the panel.
   final List<ColorPreset>? presets;
@@ -851,7 +885,11 @@ class _ColorPickerPanelState extends State<ColorPickerPanel> {
                 ],
                 if (_canCopy && !none) ...[
                   SizedBox(width: t.sizeXXS),
-                  _CopyButton(text: _written(hsv)),
+                  _CopyButton(
+                    text: _written(hsv),
+                    onCopy: widget.onCopy,
+                    iconBuilder: widget.copyIconBuilder,
+                  ),
                 ],
               ],
             ),
@@ -1460,9 +1498,15 @@ class _PresetSwatch extends StatelessWidget {
 
 /// A small button that copies [text], and shows a tick for a moment after.
 class _CopyButton extends StatefulWidget {
-  const _CopyButton({required this.text});
+  const _CopyButton({
+    required this.text,
+    this.onCopy,
+    this.iconBuilder,
+  });
 
   final String text;
+  final ValueChanged<String>? onCopy;
+  final Widget Function(BuildContext context, bool copied)? iconBuilder;
 
   @override
   State<_CopyButton> createState() => _CopyButtonState();
@@ -1482,6 +1526,7 @@ class _CopyButtonState extends State<_CopyButton> {
   Future<void> _copy() async {
     await Clipboard.setData(ClipboardData(text: widget.text));
     if (!mounted) return;
+    widget.onCopy?.call(widget.text);
     setState(() => _copied = true);
     _back?.cancel();
     // Long enough to be seen, short enough to copy again.
@@ -1529,13 +1574,17 @@ class _CopyButtonState extends State<_CopyButton> {
                     : t.colorFillSecondary.withValues(alpha: 0),
                 borderRadius: BorderRadius.circular(t.borderRadiusSM),
               ),
-              child: SizedBox.square(
-                dimension: t.fontSize,
-                child: CustomPaint(
-                  painter: _copied
-                      ? CheckPainter(color: ink)
-                      : _CopyGlyph(ink, t.lineWidth * 1.4),
-                ),
+              child: IconTheme.merge(
+                data: IconThemeData(color: ink, size: t.fontSize),
+                child: widget.iconBuilder?.call(context, _copied) ??
+                    SizedBox.square(
+                      dimension: t.fontSize,
+                      child: CustomPaint(
+                        painter: _copied
+                            ? CheckPainter(color: ink)
+                            : _CopyGlyph(ink, t.lineWidth * 1.4),
+                      ),
+                    ),
               ),
             ),
           ),

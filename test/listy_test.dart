@@ -46,7 +46,7 @@ void main() {
             height: 200,
             items: _rows(500),
             rowKey: (r) => r.id,
-            itemRender: (r, index) => Text(r.name),
+            itemBuilder: (r, index) => Text(r.name),
           ),
         ),
       );
@@ -66,7 +66,7 @@ void main() {
             rowKey: (r) => r.id,
             groupKey: (r) => r.group,
             groupTitle: (key, items) => Text('$key (${items.length})'),
-            itemRender: (r, index) => Text(r.name),
+            itemBuilder: (r, index) => Text(r.name),
           ),
         ),
       );
@@ -86,7 +86,7 @@ void main() {
             rowKey: (r) => r.id,
             groupKey: (r) => r.group,
             groupTitle: (key, items) => Text('G:$key'),
-            itemRender: (r, index) => Text(r.name),
+            itemBuilder: (r, index) => Text(r.name),
           ),
         ),
       );
@@ -111,7 +111,8 @@ void main() {
             controller: controller,
             items: _rows(500),
             rowKey: (r) => r.id,
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -142,7 +143,8 @@ void main() {
             rowKey: (r) => r.id,
             groupKey: (r) => r.group,
             groupTitle: (key, items) => Text('G:$key'),
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -183,7 +185,8 @@ void main() {
             rowKey: (r) => r.id,
             groupKey: (r) => r.group,
             groupTitle: (key, items) => Text('G:$key'),
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -207,7 +210,8 @@ void main() {
             scrollController: scroll,
             items: _rows(400),
             rowKey: (r) => r.id,
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -258,7 +262,7 @@ void main() {
               rowKey: (r) => r.id,
               groupKey: (r) => r.group,
               groupTitle: (key, items) => Text('G:$key'),
-              itemRender: (r, index) =>
+              itemBuilder: (r, index) =>
                   SizedBox(height: 40, child: Text(r.name)),
             ),
           ),
@@ -298,7 +302,8 @@ void main() {
             scrollController: scroll,
             items: _rows(200),
             rowKey: (r) => r.id,
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -320,7 +325,8 @@ void main() {
             items: _rows(100),
             rowKey: (r) => r.id,
             onScroll: (metrics) => seen = metrics,
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -342,7 +348,8 @@ void main() {
             items: _rows(20),
             rowKey: (r) => r.id,
             loadMore: ListyLoadMore(onLoad: () => calls++, threshold: 100),
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -368,7 +375,8 @@ void main() {
             items: _rows(2),
             rowKey: (r) => r.id,
             loadMore: ListyLoadMore(onLoad: () => calls++),
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -390,7 +398,7 @@ void main() {
                 loading: loading,
                 hasMore: hasMore,
               ),
-              itemRender: (r, index) =>
+              itemBuilder: (r, index) =>
                   SizedBox(height: 40, child: Text(r.name)),
             ),
           );
@@ -429,7 +437,8 @@ void main() {
                 );
               },
             ),
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -470,7 +479,8 @@ void main() {
               onRefresh: () async => refreshes++,
               builder: (context, pull) => SizedBox(height: pull.extent),
             ),
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -509,7 +519,7 @@ void main() {
                   return SizedBox(height: pull.extent);
                 },
               ),
-              itemRender: (r, index) =>
+              itemBuilder: (r, index) =>
                   SizedBox(height: 40, child: Text(r.name)),
             ),
           ),
@@ -551,7 +561,8 @@ void main() {
               onRefresh: () async => refreshes++,
               builder: (context, pull) => SizedBox(height: pull.extent),
             ),
-            itemRender: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+            itemBuilder: (r, index) =>
+                SizedBox(height: 40, child: Text(r.name)),
           ),
         ),
       );
@@ -583,7 +594,7 @@ void main() {
             rowKey: (r) => r.id,
             groupKey: (r) => _Section.values[rows.indexOf(r) % 2],
             groupTitle: (section, items) => Text('S:${section.name}'),
-            itemRender: (r, index) => Text(r.name),
+            itemBuilder: (r, index) => Text(r.name),
           ),
         ),
       );
@@ -615,7 +626,7 @@ void main() {
               groupHeaderExtent: 40,
               groupKey: (r) => r.group,
               groupTitle: (key, items) => Text('G:$key'),
-              itemRender: (r, index) => Text(r.name),
+              itemBuilder: (r, index) => Text(r.name),
             ),
           ),
         ),
@@ -666,7 +677,7 @@ void main() {
               itemPadding: EdgeInsets.all(7),
               groupHeaderPadding: EdgeInsets.all(9),
             ),
-            itemRender: (r, index) => Text(r.name),
+            itemBuilder: (r, index) => Text(r.name),
           ),
         ),
       );
@@ -706,7 +717,7 @@ void main() {
       );
     });
 
-    testWidgets('separatorRender goes between rows, never after the last',
+    testWidgets('separatorBuilder goes between rows, never after the last',
         (tester) async {
       await tester.pumpWidget(
         _host(
@@ -714,8 +725,8 @@ void main() {
             height: 400,
             items: _rows(4),
             rowKey: (r) => r.id,
-            itemRender: (r, index) => Text(r.name),
-            separatorRender: (r, index) => Text('sep-$index'),
+            itemBuilder: (r, index) => Text(r.name),
+            separatorBuilder: (r, index) => Text('sep-$index'),
           ),
         ),
       );
@@ -740,8 +751,8 @@ void main() {
             height: 400,
             items: _rows(3),
             rowKey: (r) => r.id,
-            itemRender: (r, index) => Text(r.name),
-            separatorRender: (r, index) => const Text('sep'),
+            itemBuilder: (r, index) => Text(r.name),
+            separatorBuilder: (r, index) => const Text('sep'),
           ),
         ),
       );
@@ -769,7 +780,7 @@ void main() {
             height: 400,
             items: _rows(3),
             rowKey: (r) => r.id,
-            itemRender: (r, index) => Text(r.name),
+            itemBuilder: (r, index) => Text(r.name),
           ),
         ),
       );
@@ -795,8 +806,8 @@ void main() {
             rowKey: (r) => r.id,
             groupKey: (r) => r.group,
             groupTitle: (key, items) => Text('G:$key'),
-            itemRender: (r, index) => Text(r.name),
-            separatorRender: (r, index) => Text('sep-$index'),
+            itemBuilder: (r, index) => Text(r.name),
+            separatorBuilder: (r, index) => Text('sep-$index'),
           ),
         ),
       );
@@ -823,7 +834,7 @@ void main() {
             rowKey: (r) => r.id,
             token:
                 const ListyToken(itemPaddingBlock: 30, itemPaddingInline: 40),
-            itemRender: (r, index) => Text(r.name),
+            itemBuilder: (r, index) => Text(r.name),
           ),
         ),
       );

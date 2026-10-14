@@ -249,16 +249,16 @@ Dropdown(
 )
 ```
 
-## Wrapping the menu — popupRender
+## Wrapping the menu — popupBuilder
 
-`content` replaces the whole popup; `popupRender` instead **wraps** the default
+`content` replaces the whole popup; `popupBuilder` instead **wraps** the default
 menu, so you can keep the built menu and append,
 say, a divider and an input below it. It stays inside the panel chrome:
 
 ```dart
 Dropdown(
   menu: items,
-  popupRender: (context, menu) => Column(
+  popupBuilder: (context, menu) => Column(
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -319,7 +319,7 @@ rather than two.
 
 ### A surface of your own
 
-`popupRender` fills the panel; it does not replace it. Reach for it past what the token can
+`popupBuilder` fills the panel; it does not replace it. Reach for it past what the token can
 say — a gradient, an image, two layers. To put your own surface where the panel
 was, blank the chrome and draw whatever you like inside:
 
@@ -330,7 +330,7 @@ Dropdown(
     borderRadius: 0,
     shadow: [],
   ),
-  popupRender: (context, menu) => Container(
+  popupBuilder: (context, menu) => Container(
     decoration: BoxDecoration(
       color: myBackground,
       borderRadius: BorderRadius.circular(20),
@@ -346,7 +346,7 @@ Dropdown(
 A panel with no rounding is not clipped, so a shadow or a glow drawn in its
 place is not cut off at its edge.
 
-**`popupRender` dresses the panel it is handed, and only that one.** A submenu
+**`popupBuilder` dresses the panel it is handed, and only that one.** A submenu
 opens a panel of its own, which wears the token — so a menu whose chrome has
 been blanked for a surface of its own opens its submenus onto nothing. Blank
 the chrome for a menu without submenus; style a nested one through the token,
@@ -386,13 +386,18 @@ each took a `Tab` would be forty presses.
 the panel takes the focus as it opens, and `onDismiss`, what `Esc` calls —
 for anyone building a panel of their own out of it.
 
+## Renamed
+
+`popupBuilder` was `popupRender` before 0.29.0; the old name still works and
+goes in 1.0.0.
+
 ## Design tokens
 
 A `token` on the dropdown itself overrides these for that menu alone — its
 panel, its rows and its submenus alike; a `ComponentsConfig(dropdown: …)` on a
 `ConfigProvider` does it for every menu under it.
 
-The panel is drawn *around* whatever `popupRender` returns, so a
+The panel is drawn *around* whatever `popupBuilder` returns, so a
 `ConfigProvider` placed inside that builder cannot reach it: by the time it is
 consulted the panel's background, corners and shadow are already settled. Round
 one menu's corners with `token:` on the dropdown.

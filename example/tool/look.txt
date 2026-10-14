@@ -39,9 +39,9 @@ timeline light 69240289
 tour light 28359017
 switch light 2967480937
 upload light 3040490386
-select light 1138985610
+select light 3437630199
 breadcrumb light 1632136348
-dropdown light 129436275
+dropdown light 932627018
 empty light 4257679929
 menu light 82717959
 pagination light 3059001991
@@ -91,9 +91,9 @@ timeline dark 437440801
 tour dark 2805119397
 switch dark 604843588
 upload dark 2259636165
-select dark 3981774201
+select dark 2865531765
 breadcrumb dark 841616013
-dropdown dark 128396860
+dropdown dark 1498964640
 empty dark 2101925004
 menu dark 2908681672
 pagination dark 880421129

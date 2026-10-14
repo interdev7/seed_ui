@@ -9,7 +9,7 @@ Listy(
   height: 320,
   items: users,
   rowKey: (user) => user.id,
-  itemRender: (user, index) => Text(user.name),
+  itemBuilder: (user, index) => Text(user.name),
 )
 ```
 
@@ -32,8 +32,8 @@ when it needs grouped sections. For a short list of drag-to-reorder rows use
 | Property            | Type                                     | Default  | Description                                        |
 | ------------------- | ---------------------------------------- | -------- | -------------------------------------------------- |
 | `items`             | `List<T>`                                | required | The data source                                    |
-| `itemRender`        | `Widget Function(T item, int index)`     | required | Builds a single row                                |
-| `separatorRender`   | `Widget Function(T item, int index)?`    | `null`   | What goes between two rows; null keeps the hairline |
+| `itemBuilder`        | `Widget Function(T item, int index)`     | required | Builds a single row                                |
+| `separatorBuilder`   | `Widget Function(T item, int index)?`    | `null`   | What goes between two rows; null keeps the hairline |
 | `emptyContent`      | `Widget?`                                | `null`   | Shown in place of the rows when there are none      |
 | `rowKey`            | `R Function(T item)?`                    | `null`   | Item identity, needed by `ListyScrollTo.item`      |
 | `groupKey`          | `K Function(T item)?`                    | `null`   | The section an item belongs to                     |
@@ -78,7 +78,7 @@ Listy(
   rowKey: (user) => user.id,
   groupKey: (user) => user.department,
   groupTitle: (department, items) => Text('$department · ${items.length}'),
-  itemRender: (user, index) => Text(user.name),
+  itemBuilder: (user, index) => Text(user.name),
 )
 ```
 
@@ -116,7 +116,7 @@ Listy(
       );
     },
   ),
-  itemRender: (item, index) => Text(item.title),
+  itemBuilder: (item, index) => Text(item.title),
 )
 ```
 
@@ -222,7 +222,7 @@ Listy(
     hasMore: _posts.length < _total,
     threshold: 120,
   ),
-  itemRender: (post, index) => Text(post.title),
+  itemBuilder: (post, index) => Text(post.title),
 )
 ```
 
@@ -293,16 +293,16 @@ For a hairline in another colour, weight or none at all, it is a border —
 styles: const ListyStyles(item: BoxDecoration()),
 ```
 
-For anything a border cannot draw, `separatorRender` builds a widget between
+For anything a border cannot draw, `separatorBuilder` builds a widget between
 the rows. Supplying one takes the default hairline away, so the two are never
 drawn one under the other:
 
 ```dart
 Listy(
   items: contacts,
-  itemRender: (contact, index) => ContactRow(contact),
+  itemBuilder: (contact, index) => ContactRow(contact),
   // Dashed, and inset past the avatar.
-  separatorRender: (contact, index) => Padding(
+  separatorBuilder: (contact, index) => Padding(
     padding: const EdgeInsetsDirectional.only(start: 52),
     child: DashedRule(color: token.colorSplit),
   ),
@@ -319,7 +319,7 @@ hover tint stops at the row and does not wash over it.
 
 The item and its index come through, so the separator can vary — a heavier rule
 before every tenth row, a date between two messages. Per-row *content*, though,
-still belongs in `itemRender`.
+still belongs in `itemBuilder`.
 
 ## When there is nothing
 
@@ -331,7 +331,7 @@ A list with no rows shows a placeholder instead of an empty scroll area:
 ```dart
 Listy(
   items: results,
-  itemRender: (item, index) => ResultRow(item),
+  itemBuilder: (item, index) => ResultRow(item),
   emptyContent: const Empty(description: Text('No results')),
 )
 ```
@@ -397,9 +397,15 @@ Leave `itemHovered` unset and hover feedback survives a custom row look: the
 list tints whatever `item` you gave with `colorFillTertiary`.
 
 Two things `styles` deliberately does not do. It is one look for **all** rows —
-striping, a selected row or any per-row difference belongs in `itemRender`,
+striping, a selected row or any per-row difference belongs in `itemBuilder`,
 which owns the row's content. And a `groupHeader` under `sticky: true` must stay
 opaque, or the rows scrolling beneath will show through it.
+
+## Renamed
+
+`itemBuilder` and `separatorBuilder` were `itemRender` and `separatorRender`
+before 0.29.0; the old names still work and go in 1.0.0. A Listy takes one of
+`itemBuilder` and `itemRender`, not both.
 
 ## Design tokens
 
@@ -462,7 +468,7 @@ ConfigProvider(
         Text('${items.length}'),
       ],
     ),
-    itemRender: (c, index) => ContactRow(c),
+    itemBuilder: (c, index) => ContactRow(c),
   ),
 )
 ```

@@ -396,13 +396,13 @@ void main() {
     expect(find.text('Edit'), findsNothing);
   });
 
-  testWidgets('popupRender wraps the default menu', (tester) async {
+  testWidgets('popupBuilder wraps the default menu', (tester) async {
     await tester.pumpWidget(
       _host(
         Dropdown(
           trigger: const [DropdownTrigger.tap],
           menu: _menu,
-          popupRender: (context, menu) => Column(
+          popupBuilder: (context, menu) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [menu, const Text('Footer')],
           ),
@@ -811,7 +811,7 @@ void main() {
               open: true,
               token: token,
               menu: const [DropdownItem(value: 'a', label: 'A')],
-              popupRender: (context, menu) => DecoratedBox(
+              popupBuilder: (context, menu) => DecoratedBox(
                 decoration: const BoxDecoration(color: Color(0xFFFF00FF)),
                 child: menu,
               ),

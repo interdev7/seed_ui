@@ -283,26 +283,26 @@ void main() {
     expect(value, isEmpty);
   });
 
-  testWidgets('itemRender customises the selected label', (tester) async {
+  testWidgets('itemBuilder customises the selected label', (tester) async {
     await tester.pumpWidget(
       _host(
         Select<String>(
           value: const ['apple'],
           options: _options,
-          itemRender: (option) => Text('★ ${option.filterText}'),
+          itemBuilder: (option) => Text('★ ${option.filterText}'),
         ),
       ),
     );
     expect(find.text('★ Apple'), findsOneWidget);
   });
 
-  testWidgets('optionRender customises the dropdown rows', (tester) async {
+  testWidgets('optionBuilder customises the dropdown rows', (tester) async {
     await tester.pumpWidget(
       _host(
         Select<String>(
           placeholder: 'Pick',
           options: _options,
-          optionRender: (option, selected) => Text('» ${option.filterText}'),
+          optionBuilder: (option, selected) => Text('» ${option.filterText}'),
         ),
       ),
     );

@@ -127,7 +127,7 @@ class AvatarDemo extends StatelessWidget {
               ),
               AvatarGroup(
                 maxCount: 2,
-                popupRender: (context, menu) {
+                popupBuilder: (context, menu) {
                   return Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: const Color(0xFFFF0000)),
@@ -208,7 +208,7 @@ class AvatarDemo extends StatelessWidget {
               AvatarGroup(
                 shape: AvatarShape.square,
                 maxCount: 2,
-                popupRender: (context, menu) {
+                popupBuilder: (context, menu) {
                   return Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: const Color(0xFFFF0000)),

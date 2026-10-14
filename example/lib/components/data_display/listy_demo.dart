@@ -180,7 +180,7 @@ class _ListyDemoState extends State<ListyDemo> {
               height: 260,
               items: _contacts,
               rowKey: (c) => c.id,
-              itemRender: (c, index) => row(c),
+              itemBuilder: (c, index) => row(c),
             ),
           ),
         ),
@@ -195,8 +195,8 @@ class _ListyDemoState extends State<ListyDemo> {
               height: 260,
               items: _contacts,
               rowKey: (c) => c.id,
-              itemRender: (c, index) => row(c),
-              separatorRender: (c, index) => Padding(
+              itemBuilder: (c, index) => row(c),
+              separatorBuilder: (c, index) => Padding(
                 padding: const EdgeInsetsDirectional.only(start: 52),
                 child: _DashedRule(color: t.colorSplit),
               ),
@@ -216,7 +216,7 @@ class _ListyDemoState extends State<ListyDemo> {
                   Listy<String, String, String>(
                     height: 180,
                     items: const [],
-                    itemRender: (item, index) => Text(item),
+                    itemBuilder: (item, index) => Text(item),
                   ),
                 ),
               ),
@@ -226,7 +226,7 @@ class _ListyDemoState extends State<ListyDemo> {
                   Listy<String, String, String>(
                     height: 180,
                     items: const [],
-                    itemRender: (item, index) => Text(item),
+                    itemBuilder: (item, index) => Text(item),
                     emptyContent: const Empty(
                       image: EmptyImage.simple,
                       description: Text('No contacts yet'),
@@ -248,7 +248,7 @@ class _ListyDemoState extends State<ListyDemo> {
               rowKey: (c) => c.id,
               groupKey: (c) => c.role,
               groupTitle: (role, items) => Text('$role · ${items.length}'),
-              itemRender: (c, index) => Text(c.name),
+              itemBuilder: (c, index) => Text(c.name),
             ),
           ),
         ),
@@ -305,7 +305,7 @@ class _ListyDemoState extends State<ListyDemo> {
                   rowKey: (c) => c.id,
                   groupKey: (c) => c.role,
                   groupTitle: (role, items) => Text(role),
-                  itemRender: (c, index) => Text(c.name),
+                  itemBuilder: (c, index) => Text(c.name),
                 ),
               ),
             ],
@@ -408,7 +408,7 @@ class _ListyDemoState extends State<ListyDemo> {
                           )
                         : null,
                   ),
-                  itemRender: (c, index) => Text(c.name),
+                  itemBuilder: (c, index) => Text(c.name),
                 ),
               ),
             ],
@@ -501,7 +501,7 @@ class _ListyDemoState extends State<ListyDemo> {
                   );
                 },
               ),
-              itemRender: (c, index) => Text(c.name),
+              itemBuilder: (c, index) => Text(c.name),
             ),
           ),
         ),
@@ -602,7 +602,7 @@ class _ListyDemoState extends State<ListyDemo> {
                         ),
                       ],
                     ),
-                    itemRender: (c, index) => row(c),
+                    itemBuilder: (c, index) => row(c),
                   ),
                 ),
               ),

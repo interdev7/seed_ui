@@ -291,8 +291,11 @@ class Select<T> extends StatefulWidget {
     this.notFoundContent,
     this.suffixIcon,
     this.menuItemSelectedIcon,
+    this.optionBuilder,
+    @Deprecated('Use optionBuilder. Will be removed in 1.0.0.')
     this.optionRender,
-    this.itemRender,
+    this.itemBuilder,
+    @Deprecated('Use itemBuilder. Will be removed in 1.0.0.') this.itemRender,
     this.focusNode,
     this.token,
   });
@@ -398,10 +401,18 @@ class Select<T> extends StatefulWidget {
 
   /// Custom builder for an option row in the dropdown. `selected` reflects the
   /// current state.
+  final Widget Function(SelectOption<T> option, bool selected)? optionBuilder;
+
+  /// The old name for [optionBuilder].
+  @Deprecated('Use optionBuilder. Will be removed in 1.0.0.')
   final Widget Function(SelectOption<T> option, bool selected)? optionRender;
 
   /// Custom builder for a selected item shown in the box — the single label or
   /// each multiple/tags chip's content. Falls back to the option's label.
+  final Widget Function(SelectOption<T> option)? itemBuilder;
+
+  /// The old name for [itemBuilder].
+  @Deprecated('Use itemBuilder. Will be removed in 1.0.0.')
   final Widget Function(SelectOption<T> option)? itemRender;
 
   /// An external focus node for the field.
@@ -555,11 +566,13 @@ class _SelectState<T> extends State<Select<T>> {
     return null;
   }
 
-  /// The widget shown for a selected [value] in the box — [itemRender] if set,
+  /// The widget shown for a selected [value] in the box — [Select.itemBuilder] if set,
   /// else the option's own display (synthesising one for created tags).
   Widget _displayFor(T value) {
     final option = _optionFor(value) ?? SelectOption<T>(value: value);
-    return widget.itemRender?.call(option) ?? option._display;
+    // ignore: deprecated_member_use_from_same_package
+    final custom = widget.itemBuilder ?? widget.itemRender;
+    return custom?.call(option) ?? option._display;
   }
 
   // --- open / close ---
@@ -1323,7 +1336,9 @@ class _Dropdown<T> extends StatelessWidget {
               own: state.widget.token,
               fontSize: state._fontSize(token),
               selectedIcon: state.widget.menuItemSelectedIcon,
-              custom: state.widget.optionRender,
+              custom: state.widget.optionBuilder ??
+                  // ignore: deprecated_member_use_from_same_package
+                  state.widget.optionRender,
               onHover: o.disabled ? null : () => state._setHighlight(i),
               onTap: o.disabled ? null : () => state._choose(o.value),
             );

@@ -36,7 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   saturation and brightness, so a grey keeps its hue. `onChanged` while a
   handle moves, `onChangeComplete` once it is let go; `allowClear` for no
   colour at all; `disabledAlpha` for opaque colours only; `canCopy` puts the
-  colour on the clipboard as the fields write it. The field is a
+  colour on the clipboard as the fields write it, with `onCopy` and
+  `copyIconBuilder` for what follows and how the button looks. The field is a
   swatch, its hex beside it with `showText`; the panel stands alone too. The
   square and the strips move by the arrow keys and are heard as sliders, in
   all eleven languages. `ColorPickerToken` and `ColorPickerDefaults`
@@ -112,6 +113,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `DropdownTrigger.click` and `FloatButtonTrigger.click`: use `.tap`. The old
   names still work, read as `tap`, and go in 1.0.0.
+- The `…Render` names, for the kit's own `…Builder` ones, as everywhere else
+  in it and in Flutter: `Dropdown.popupRender` and `AvatarGroup.popupRender`
+  (use `popupBuilder`), `Select.optionRender` and `itemRender`
+  (`optionBuilder`, `itemBuilder`), `Listy.itemRender` and `separatorRender`
+  (`itemBuilder`, `separatorBuilder`), `PasswordConfig.iconRender`
+  (`iconBuilder`). The functions they take are unchanged, so moving over is
+  a rename; the old names still work and go in 1.0.0. `Listy` takes exactly
+  one of `itemBuilder` and `itemRender`.
 
 ### Fixed
 

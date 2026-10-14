@@ -73,7 +73,7 @@ void main() {
           height: 200,
           child: Listy<String, String, String>(
             items: const [],
-            itemRender: (item, index) => Text(item),
+            itemBuilder: (item, index) => Text(item),
           ),
         ),
       ),
@@ -90,7 +90,7 @@ void main() {
           child: Listy<String, String, String>(
             items: const [],
             emptyContent: const Text('Nothing here yet'),
-            itemRender: (item, index) => Text(item),
+            itemBuilder: (item, index) => Text(item),
           ),
         ),
         emptyBuilder: (context, slot) => const Text('Global empty'),
@@ -110,7 +110,7 @@ void main() {
               height: 150,
               child: Listy<String, String, String>(
                 items: const [],
-                itemRender: (item, index) => Text(item),
+                itemBuilder: (item, index) => Text(item),
               ),
             ),
             const Select<String>(placeholder: 'Pick', options: []),
@@ -143,7 +143,7 @@ void main() {
             height: 200,
             child: Listy<String, String, String>(
               items: const [],
-              itemRender: (item, index) => Text(item),
+              itemBuilder: (item, index) => Text(item),
               loadMore: ListyLoadMore(
                 onLoad: () {},
                 loading: loading,
@@ -172,7 +172,7 @@ void main() {
           height: 200,
           child: Listy<String, String, String>(
             items: const [],
-            itemRender: (item, index) => Text(item),
+            itemBuilder: (item, index) => Text(item),
             loadMore: ListyLoadMore(
               onLoad: () {},
               hasMore: false,
@@ -205,7 +205,7 @@ void main() {
           height: 200,
           child: Listy<String, String, String>(
             items: const [],
-            itemRender: (item, index) => Text(item),
+            itemBuilder: (item, index) => Text(item),
             header: ListyHeader(
               pinned: true,
               extent: 44,

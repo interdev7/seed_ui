@@ -428,7 +428,8 @@ class AvatarGroup extends StatelessWidget {
     this.maxPopoverTrigger = const [DropdownTrigger.hover],
     this.maxPopoverArrow = true,
     this.showPopover = true,
-    this.popupRender,
+    this.popupBuilder,
+    @Deprecated('Use popupBuilder. Will be removed in 1.0.0.') this.popupRender,
     this.maxPopoverToken,
     this.token,
   });
@@ -465,7 +466,12 @@ class AvatarGroup extends StatelessWidget {
   /// Whether to show the popover when hovering the `+N` avatar.
   final bool showPopover;
 
-  /// A fully custom popup body builder. Receives the built AvatarGroup of hidden avatars.
+  /// A fully custom popup body builder. Receives the built AvatarGroup of
+  /// hidden avatars.
+  final Widget Function(BuildContext context, Widget menu)? popupBuilder;
+
+  /// The old name for [popupBuilder].
+  @Deprecated('Use popupBuilder. Will be removed in 1.0.0.')
   final Widget Function(BuildContext context, Widget menu)? popupRender;
 
   /// Custom token overrides for the group.
@@ -515,7 +521,9 @@ class AvatarGroup extends StatelessWidget {
               children: hiddenAvatars,
             ),
           );
-          return popupRender != null ? popupRender!(context, group) : group;
+          // ignore: deprecated_member_use_from_same_package
+          final custom = popupBuilder ?? popupRender;
+          return custom != null ? custom(context, group) : group;
         }
 
         items.add(

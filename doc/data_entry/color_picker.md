@@ -79,6 +79,20 @@ is see-through — and shows a tick for a moment after. A screen reader hears
 "Copied". It is off unless asked, and there is nothing to copy while the
 colour is none.
 
+`onCopy` is called with the text once it is on the clipboard — to say so in a
+message of your own, or to count it. `copyIconBuilder` draws the button's icon,
+told whether the colour was just copied; the colour comes from an `IconTheme`
+around it, so a plain `Icon` takes it:
+
+```dart
+ColorPicker(
+  canCopy: true,
+  onCopy: (text) => message.success('Copied $text'),
+  copyIconBuilder: (context, copied) =>
+      Icon(copied ? Icons.check : Icons.content_copy),
+)
+```
+
 ## Ready colours
 
 ```dart

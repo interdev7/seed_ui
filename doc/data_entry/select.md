@@ -185,8 +185,8 @@ here itself or watch when the field has it. Left null the field keeps one.
 | --- | --- |
 | `suffixIcon` | Replaces the trailing arrow |
 | `menuItemSelectedIcon` | Replaces the tick beside a selected option |
-| `optionRender` | Custom builder for a dropdown option row: `(option, selected) => Widget` |
-| `itemRender` | Custom builder for a selected item in the box (single label or each tag): `(option) => Widget` |
+| `optionBuilder` | Custom builder for a dropdown option row: `(option, selected) => Widget` |
+| `itemBuilder` | Custom builder for a selected item in the box (single label or each tag): `(option) => Widget` |
 
 ## Testing
 
@@ -227,6 +227,11 @@ Select<String>(value: [_country], readOnly: true, options: countries)
 ```
 
 Unlike `disabled` it keeps its colours, because the value is worth reading; unlike a null `onChanged` it is told apart for a screen reader, which hears it as read-only.
+
+## Renamed
+
+`optionBuilder` and `itemBuilder` were `optionRender` and `itemRender` before
+0.29.0; the old names still work and go in 1.0.0.
 
 ## Design tokens
 

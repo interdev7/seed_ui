@@ -327,6 +327,58 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('onCopy hears what was copied; the icon is yours to draw', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      clipboard(tester);
+      final heard = <String>[];
+      await tester.pumpWidget(
+        _host(
+          ColorPickerPanel(
+            value: _blue,
+            canCopy: true,
+            onCopy: heard.add,
+            copyIconBuilder: (context, copied) =>
+                Icon(copied ? Icons.check : Icons.content_copy),
+          ),
+        ),
+      );
+      Color inkOf(IconData icon) => IconTheme.of(
+            tester.element(find.byIcon(icon)),
+          ).color!;
+      final resting = inkOf(Icons.content_copy);
+
+      await tester.tap(find.bySemanticsLabel('Copy'));
+      await tester.pump();
+      expect(heard, ['#1677FF']);
+      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(inkOf(Icons.check), isNot(resting),
+          reason: 'the colour comes from around it, as a copy succeeds');
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.byIcon(Icons.content_copy), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('the field hands them to its panel', (tester) async {
+      final handle = tester.ensureSemantics();
+      clipboard(tester);
+      final heard = <String>[];
+      await tester.pumpWidget(
+        _host(
+          ColorPicker(defaultValue: _blue, canCopy: true, onCopy: heard.add),
+        ),
+      );
+      await tester.tap(find.byType(ColorPicker));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Copy'));
+      await tester.pump();
+      expect(heard, ['#1677FF']);
+      await tester.pump(const Duration(seconds: 2));
+      handle.dispose();
+    });
+
     testWidgets('a subtree can ask for it; no colour has none to copy', (
       tester,
     ) async {

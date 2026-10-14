@@ -192,7 +192,7 @@ class ListyController {
 /// ```dart
 /// Listy<Post, String>(
 ///   items: _posts,
-///   itemRender: (post, index) => Text(post.title),
+///   itemBuilder: (post, index) => Text(post.title),
 ///   loadMore: ListyLoadMore(
 ///     onLoad: _fetchNextPage,
 ///     loading: _fetching,
@@ -245,7 +245,7 @@ class ListyLoadMore {
 ///
 /// Reach for it to restyle the chrome the list owns: the hairline under a row,
 /// the hover tint, the wash behind a section header. The content itself belongs
-/// to [Listy.itemRender] and [Listy.groupTitle], which is also where per-row
+/// to [Listy.itemBuilder] and [Listy.groupTitle], which is also where per-row
 /// differences (striping, a selected row) go — these are one look for all rows.
 ///
 /// ```dart
@@ -276,7 +276,7 @@ class ListyStyles {
 
   /// A row at rest. Replaces the default hairline separator outright, so an
   /// empty `BoxDecoration()` is how you drop the dividers. For a separator that
-  /// is a widget rather than a border, see [Listy.separatorRender].
+  /// is a widget rather than a border, see [Listy.separatorBuilder].
   final BoxDecoration? item;
 
   /// A row under the pointer. Null tints [item] with `colorFillTertiary`, so
@@ -374,7 +374,7 @@ class _ResolvedListyToken {
 ///   height: 320,
 ///   items: users,
 ///   rowKey: (user) => user.id,
-///   itemRender: (user, index) => Text(user.name),
+///   itemBuilder: (user, index) => Text(user.name),
 ///   sticky: true,
 ///   groupKey: (user) => user.department,
 ///   groupTitle: (department, items) => Text('$department (${items.length})'),
@@ -394,7 +394,10 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
   const Listy({
     super.key,
     required this.items,
-    required this.itemRender,
+    this.itemBuilder,
+    @Deprecated('Use itemBuilder. Will be removed in 1.0.0.') this.itemRender,
+    this.separatorBuilder,
+    @Deprecated('Use separatorBuilder. Will be removed in 1.0.0.')
     this.separatorRender,
     this.emptyContent,
     this.rowKey,
@@ -413,7 +416,11 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
     this.onScroll,
     this.styles,
     this.token,
-  }) : assert(
+  })  : assert(
+          (itemBuilder == null) != (itemRender == null),
+          'a Listy needs an itemBuilder — one, and not the old itemRender too.',
+        ),
+        assert(
           groupTitle == null || groupKey != null,
           'groupTitle needs a groupKey to build a title for.',
         );
@@ -421,8 +428,12 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
   /// The data source.
   final List<T> items;
 
-  /// Builds a single row.
-  final Widget Function(T item, int index) itemRender;
+  /// Builds a single row. Required, unless the old [itemRender] is given.
+  final Widget Function(T item, int index)? itemBuilder;
+
+  /// The old name for [itemBuilder].
+  @Deprecated('Use itemBuilder. Will be removed in 1.0.0.')
+  final Widget Function(T item, int index)? itemRender;
 
   /// Builds what goes between two rows, drawn after [item].
   ///
@@ -432,7 +443,7 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
   /// rule, an inset one, a gap, or anything else a `BoxDecoration` cannot say:
   ///
   /// ```dart
-  /// separatorRender: (item, index) => const SizedBox(height: 8),
+  /// separatorBuilder: (item, index) => const SizedBox(height: 8),
   /// ```
   ///
   /// It runs *between* rows only: never after the last one, and never between
@@ -441,6 +452,10 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
   ///
   /// For a plain hairline in another colour or thickness, `ListyStyles.item`
   /// is the shorter road; reach for this when a decoration will not do.
+  final Widget Function(T item, int index)? separatorBuilder;
+
+  /// The old name for [separatorBuilder].
+  @Deprecated('Use separatorBuilder. Will be removed in 1.0.0.')
   final Widget Function(T item, int index)? separatorRender;
 
   /// Shown in place of the rows when there are none.
@@ -1221,7 +1236,9 @@ class _ListyState<T, K extends Object, R extends Object>
     // that same look with the tint laid over it. A separator of your own also
     // takes the hairline away — otherwise both would be drawn, one under the
     // other.
-    final separator = widget.separatorRender;
+    final separator =
+        // ignore: deprecated_member_use_from_same_package
+        widget.separatorBuilder ?? widget.separatorRender;
     final decoration = styles?.item ??
         (separator != null
             ? const BoxDecoration()
@@ -1244,7 +1261,11 @@ class _ListyState<T, K extends Object, R extends Object>
                 ),
             decoration: decoration,
             hoveredDecoration: hovered,
-            child: widget.itemRender(slot.item as T, slot.itemIndex),
+            // ignore: deprecated_member_use_from_same_package
+            child: (widget.itemBuilder ?? widget.itemRender)!(
+              slot.item as T,
+              slot.itemIndex,
+            ),
           );
 
     // Between rows only: not after the last, and not where a section ends and

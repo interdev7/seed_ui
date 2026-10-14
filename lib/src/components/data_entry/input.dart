@@ -119,7 +119,8 @@ class PasswordConfig {
   /// Creates a [PasswordConfig].
   const PasswordConfig({
     this.visibilityToggle = true,
-    this.iconRender,
+    this.iconBuilder,
+    @Deprecated('Use iconBuilder. Will be removed in 1.0.0.') this.iconRender,
     this.onVisibleChanged,
   });
 
@@ -127,6 +128,10 @@ class PasswordConfig {
   final bool visibilityToggle;
 
   /// Custom toggle glyph. `visible` is whether the text is currently revealed.
+  final Widget Function(bool visible)? iconBuilder;
+
+  /// The old name for [iconBuilder].
+  @Deprecated('Use iconBuilder. Will be removed in 1.0.0.')
   final Widget Function(bool visible)? iconRender;
 
   /// Called when the password's visibility toggles. `visible` is the new state.
@@ -938,7 +943,9 @@ class _SoftInputState extends State<Input> {
           _RevealButton(
             token: token,
             obscured: _obscured,
-            iconRender: password.iconRender,
+            iconBuilder: password.iconBuilder ??
+                // ignore: deprecated_member_use_from_same_package
+                password.iconRender,
             onTap: () {
               setState(() => _obscured = !_obscured);
               password.onVisibleChanged?.call(!_obscured);
@@ -1227,17 +1234,17 @@ class _RevealButton extends StatelessWidget {
     required this.token,
     required this.obscured,
     required this.onTap,
-    this.iconRender,
+    this.iconBuilder,
   });
 
   final Token token;
   final bool obscured;
   final VoidCallback onTap;
-  final Widget Function(bool visible)? iconRender;
+  final Widget Function(bool visible)? iconBuilder;
 
   @override
   Widget build(BuildContext context) {
-    final custom = iconRender?.call(!obscured);
+    final custom = iconBuilder?.call(!obscured);
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(

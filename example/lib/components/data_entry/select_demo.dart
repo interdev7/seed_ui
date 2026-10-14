@@ -147,13 +147,13 @@ class _SelectDemoState extends State<SelectDemo> {
           ),
         ),
         Group(
-          'optionRender (custom dropdown rows)',
+          'optionBuilder (custom dropdown rows)',
           Select<String>(
             value: _single,
             placeholder: 'Fruit with a colour dot',
             options: _fruits,
             onChanged: (v) => setState(() => _single = v),
-            optionRender: (option, selected) => Row(
+            optionBuilder: (option, selected) => Row(
               children: [
                 Container(
                   width: 10,
@@ -170,13 +170,13 @@ class _SelectDemoState extends State<SelectDemo> {
           ),
         ),
         Group(
-          'itemRender (custom selected label)',
+          'itemBuilder (custom selected label)',
           Select<String>(
             value: _single,
             placeholder: 'Selected shows a star',
             options: _fruits,
             onChanged: (v) => setState(() => _single = v),
-            itemRender: (option) => Row(
+            itemBuilder: (option) => Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.star, size: 14, color: Colors.amber),

@@ -110,7 +110,7 @@ Input(placeholder: 'Password', password: PasswordConfig())
 | `PasswordConfig` field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `visibilityToggle` | `bool` | `true` | Whether the reveal toggle is shown |
-| `iconRender` | `Widget Function(bool visible)?` | `null` | Custom toggle glyph; `visible` is whether the text is revealed |
+| `iconBuilder` | `Widget Function(bool visible)?` | `null` | Custom toggle glyph; `visible` is whether the text is revealed |
 | `onVisibleChanged` | `ValueChanged<bool>?` | `null` | Called when visibility toggles; receives the new `visible` state |
 
 ## Character count
@@ -284,6 +284,11 @@ lives elsewhere; a `Form` field does it for you.
 `status: InputStatus.error` also marks the field **invalid**, so a red border is
 not the only way the news arrives. A warning is not an error and is not marked:
 the form still submits on one.
+
+## Renamed
+
+`PasswordConfig.iconBuilder` was `iconRender` before 0.29.0; the old name still
+works and goes in 1.0.0.
 
 ## Design tokens
 

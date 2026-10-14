@@ -345,7 +345,8 @@ class Dropdown<T> extends StatefulWidget {
     this.arrow,
     this.onItemTap,
     this.closeOnSelect,
-    this.popupRender,
+    this.popupBuilder,
+    @Deprecated('Use popupBuilder. Will be removed in 1.0.0.') this.popupRender,
     this.itemBuilder,
     this.barrierColor,
     this.token,
@@ -368,6 +369,10 @@ class Dropdown<T> extends StatefulWidget {
   /// menu and returns the popup body (still inside the panel chrome), e.g. to
   /// append a divider and an input below the menu. Ignored when [content] is
   /// set.
+  final Widget Function(BuildContext context, Widget menu)? popupBuilder;
+
+  /// The old name for [popupBuilder].
+  @Deprecated('Use popupBuilder. Will be removed in 1.0.0.')
   final Widget Function(BuildContext context, Widget menu)? popupRender;
 
   /// Which gestures open the menu.
@@ -618,11 +623,14 @@ class _DropdownState<T> extends State<Dropdown<T>> {
       // all — they had to be set on a `ConfigProvider` instead, which is a
       // long way to go to round one menu's corners.
       token: widget.token,
-      child: widget.popupRender != null
-          ? widget.popupRender!(context, menu)
-          : menu,
+      child: _popupBuilder != null ? _popupBuilder!(context, menu) : menu,
     );
   }
+
+  /// [Dropdown.popupBuilder], or the old name for it.
+  Widget Function(BuildContext, Widget)? get _popupBuilder =>
+      // ignore: deprecated_member_use_from_same_package
+      widget.popupBuilder ?? widget.popupRender;
 
   void _hide() {
     if (!_open) return;

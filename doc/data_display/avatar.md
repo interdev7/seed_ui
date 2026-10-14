@@ -58,7 +58,7 @@ You can configure the popover using:
 - `maxPopoverTrigger`: Which gestures open the popover (e.g., `DropdownTrigger.hover`, `DropdownTrigger.tap`).
 - `maxPopoverArrow`: Whether to draw an arrow pointing to the `+N` avatar.
 - `maxPopoverToken`: Token overrides specific to the dropdown popover.
-- `popupRender`: A custom widget builder that receives the default popup content (the group of hidden avatars) and lets you wrap or modify it.
+- `popupBuilder`: A custom widget builder that receives the default popup content (the group of hidden avatars) and lets you wrap or modify it.
 - `maxStyle`: A custom builder for the `+N` avatar widget itself.
 
 ## Handling Image Errors
@@ -77,6 +77,11 @@ Avatar(
 - `gradient` — a background gradient replacing the flat `backgroundColor`.
 - `border` — an outline around the avatar; `AvatarGroup` injects one to
   separate overlapping avatars.
+
+## Renamed
+
+`popupBuilder` was `popupRender` before 0.29.0; the old name still works and
+goes in 1.0.0.
 
 ## Design tokens
 

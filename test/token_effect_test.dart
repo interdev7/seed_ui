@@ -876,7 +876,7 @@ Widget _listy(ListyToken? token) => SizedBox(
       height: 200,
       child: Listy<String, Object, Object>(
         items: const ['One', 'Two', 'Three'],
-        itemRender: (item, i) => Text(item),
+        itemBuilder: (item, i) => Text(item),
         token: token,
       ),
     );

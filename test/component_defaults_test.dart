@@ -598,7 +598,7 @@ void main() {
                 width: 300,
                 child: Listy<String, String, String>(
                   items: const ['one', 'two'],
-                  itemRender: (item, index) => Text(item),
+                  itemBuilder: (item, index) => Text(item),
                 ),
               ),
             ),

@@ -192,7 +192,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
           ),
         ),
         Group(
-          'popupRender (menu + custom footer)',
+          'popupBuilder (menu + custom footer)',
           Dropdown(
             trigger: const [DropdownTrigger.tap],
             menu: [
@@ -202,7 +202,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
             // A custom popup body has no anchor width to match, so give it an
             // explicit width (such as `width: 300` on the Select) instead
             // of letting the Expanded input stretch across the viewport.
-            popupRender: (context, menu) => SizedBox(
+            popupBuilder: (context, menu) => SizedBox(
               width: 240,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -241,13 +241,13 @@ class _DropdownDemoState extends State<DropdownDemo> {
                 ],
               ),
             ),
-            child: Button(onPressed: () {}, child: const Text('popupRender')),
+            child: Button(onPressed: () {}, child: const Text('popupBuilder')),
           ),
         ),
         Group(
           'A gradient panel (token)',
           // A gradient is a token field, so it washes every panel of the
-          // menu — the submenu under `More` carries it on. A popupRender
+          // menu — the submenu under `More` carries it on. A popupBuilder
           // could not: it dresses the panel it is handed and no other.
           Dropdown(
             trigger: const [DropdownTrigger.tap],
@@ -273,13 +273,13 @@ class _DropdownDemoState extends State<DropdownDemo> {
           ),
         ),
         Group(
-          'popupRender (a layer behind the menu)',
+          'popupBuilder (a layer behind the menu)',
           // Past what the token can say: a second layer, drawn behind the
           // rows. The chrome is blanked first, since the panel is drawn
           // around what this returns, and nothing is clipped at a radius of
           // zero, so the badge hanging outside is not cut off.
           //
-          // A flat menu on purpose: popupRender dresses the panel it is
+          // A flat menu on purpose: popupBuilder dresses the panel it is
           // handed, and a submenu opens a panel of its own, which wears the
           // token — blanked here. Style a nested menu through the token, as
           // the group above does.
@@ -309,7 +309,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
               ),
             ],
             onItemTap: (action) => message.info('Tapped: ${action?.name}'),
-            popupRender: (context, menu) {
+            popupBuilder: (context, menu) {
               final t = context.softToken;
               return Stack(
                 clipBehavior: Clip.none,
@@ -380,7 +380,7 @@ class _DropdownDemoState extends State<DropdownDemo> {
         Group(
           'One look for every menu (ComponentsConfig)',
           // Said once, on the provider, and every menu under it wears it —
-          // no popupRender, no token at the call site. Background, corners,
+          // no popupBuilder, no token at the call site. Background, corners,
           // border and shadow are all the token's, so most house styles
           // never need a builder at all.
           ConfigProvider(

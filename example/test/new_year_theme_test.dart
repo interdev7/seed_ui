@@ -48,7 +48,7 @@ void main() {
                       child: Listy(
                         items: const ['a', 'b'],
                         rowKey: (r) => r,
-                        itemRender: (r, i) => Text(r),
+                        itemBuilder: (r, i) => Text(r),
                       ),
                     ),
                     Pagination(total: 50, onChanged: (_, __) {}),

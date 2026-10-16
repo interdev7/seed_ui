@@ -290,6 +290,112 @@ void main() {
     await mouse.removePointer();
   });
 
+  group('DropdownController', () {
+    Widget menu(DropdownController c,
+            {List<bool>? told, List<String?>? tapped}) =>
+        _host(
+          Dropdown<String>(
+            controller: c,
+            trigger: const [DropdownTrigger.tap],
+            onOpenChanged: told?.add,
+            onItemTap: tapped?.add,
+            menu: const [
+              DropdownItem(value: 'edit', label: 'Edit'),
+              DropdownItem(value: 'delete', label: 'Delete'),
+            ],
+            child: const Text('Open'),
+          ),
+        );
+
+    testWidgets('opens, closes and toggles it from outside', (tester) async {
+      final c = DropdownController();
+      addTearDown(c.dispose);
+      await tester.pumpWidget(menu(c));
+      expect(find.text('Edit'), findsNothing);
+
+      c.open();
+      await tester.pumpAndSettle();
+      expect(find.text('Edit'), findsOneWidget);
+
+      c.close();
+      await tester.pumpAndSettle();
+      expect(find.text('Edit'), findsNothing);
+
+      c.toggle();
+      await tester.pumpAndSettle();
+      expect(find.text('Edit'), findsOneWidget);
+      expect(c.isOpen, isTrue);
+    });
+
+    testWidgets('what closes the menu by itself tells the controller', (
+      tester,
+    ) async {
+      final c = DropdownController();
+      addTearDown(c.dispose);
+      final told = <bool>[];
+      final tapped = <String?>[];
+      await tester.pumpWidget(menu(c, told: told, tapped: tapped));
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      expect(c.isOpen, isTrue, reason: 'a tap on the trigger opens it too');
+
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+      expect(tapped, ['delete']);
+      expect(c.isOpen, isFalse, reason: 'a choice closes it');
+
+      c.open();
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      expect(c.isOpen, isFalse, reason: 'so does a tap away');
+      expect(find.text('Edit'), findsNothing);
+      expect(told, [true, false, false]);
+    });
+
+    testWidgets('a controller born open opens the menu with it', (
+      tester,
+    ) async {
+      final c = DropdownController(open: true);
+      addTearDown(c.dispose);
+      await tester.pumpWidget(menu(c));
+      await tester.pumpAndSettle();
+      expect(find.text('Edit'), findsOneWidget);
+    });
+
+    testWidgets('a new controller is listened to, the old one let go', (
+      tester,
+    ) async {
+      final a = _Watched();
+      final b = DropdownController();
+      addTearDown(a.dispose);
+      addTearDown(b.dispose);
+      await tester.pumpWidget(menu(a));
+      expect(a.listened, isTrue);
+      await tester.pumpWidget(menu(b));
+      expect(a.listened, isFalse, reason: 'let go, not held on to');
+      a.open();
+      await tester.pumpAndSettle();
+      expect(find.text('Edit'), findsNothing);
+      b.open();
+      await tester.pumpAndSettle();
+      expect(find.text('Edit'), findsOneWidget);
+    });
+
+    test('a dropdown takes a controller or open, not both', () {
+      expect(
+        () => Dropdown<String>(
+          controller: DropdownController(),
+          open: true,
+          menu: const [],
+          child: const SizedBox(),
+        ),
+        throwsAssertionError,
+      );
+    });
+  });
+
   testWidgets('a divider asks for the type to be named once', (tester) async {
     // A divider carries no value, and Dart settles a list's element type
     // before the menu's, so a mixed literal has nothing to go on and falls to
@@ -1228,4 +1334,10 @@ void main() {
           moreOrLessEquals(40, epsilon: 0.5));
     });
   });
+}
+
+/// A controller that says whether anything still listens to it.
+class _Watched extends DropdownController {
+  // ignore: invalid_use_of_protected_member
+  bool get listened => hasListeners;
 }

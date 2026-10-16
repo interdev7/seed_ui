@@ -24,6 +24,51 @@ enum DropdownTrigger {
   contextMenu,
 }
 
+/// Opens and closes a [Dropdown] from outside it.
+///
+/// Reach for this when the menu has to answer to something that is not a
+/// tap on its trigger — a keyboard shortcut, a tour step, data that has just
+/// arrived — and the state that would hold `open` lives somewhere else.
+///
+/// ```dart
+/// final menu = DropdownController();
+/// ...
+/// Dropdown(controller: menu, menu: items, child: trigger)
+/// ...
+/// menu.open();
+/// ```
+///
+/// Whatever closes the menu by itself — a tap away, a choice, Escape, the
+/// pointer leaving a hover menu — closes it through the controller, so
+/// [isOpen] is always what is on screen. A dropdown takes either this or
+/// [Dropdown.open], never both.
+class DropdownController extends ChangeNotifier {
+  /// Creates a [DropdownController].
+  DropdownController({bool open = false}) : _open = open;
+
+  bool _open;
+
+  /// Whether the menu is open.
+  bool get isOpen => _open;
+
+  /// Opens the menu.
+  void open() {
+    if (_open) return;
+    _open = true;
+    notifyListeners();
+  }
+
+  /// Closes it.
+  void close() {
+    if (!_open) return;
+    _open = false;
+    notifyListeners();
+  }
+
+  /// Opens a closed menu, closes an open one.
+  void toggle() => _open ? close() : open();
+}
+
 /// Base type for the entries of a [Dropdown] menu: an item, a divider or a
 /// titled group.
 ///
@@ -340,6 +385,7 @@ class Dropdown<T> extends StatefulWidget {
     this.placement,
     this.disabled,
     this.open,
+    this.controller,
     this.onOpenChanged,
     this.onPlacementChanged,
     this.arrow,
@@ -350,9 +396,13 @@ class Dropdown<T> extends StatefulWidget {
     this.itemBuilder,
     this.barrierColor,
     this.token,
-  }) : assert(
+  })  : assert(
           menu != null || content != null,
           'Provide either menu or content.',
+        ),
+        assert(
+          controller == null || open == null,
+          'A Dropdown takes a controller or open, not both.',
         );
 
   /// The trigger the menu anchors to.
@@ -386,6 +436,9 @@ class Dropdown<T> extends StatefulWidget {
 
   /// Drives visibility externally. Null lets the dropdown manage its own state.
   final bool? open;
+
+  /// Opens and closes the menu from outside, in place of [open].
+  final DropdownController? controller;
 
   /// Notified when the menu wants to open or close.
   final ValueChanged<bool>? onOpenChanged;
@@ -501,17 +554,41 @@ class _DropdownState<T> extends State<Dropdown<T>> {
   @override
   void initState() {
     super.initState();
+    widget.controller?.addListener(_obeyController);
     // Honour an initial controlled-open state.
-    if (widget.open ?? false) {
+    if (_toldOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && (widget.open ?? false)) _show();
+        if (mounted && _toldOpen) _show();
       });
     }
+  }
+
+  /// Whether the menu has been told to stand open, by [Dropdown.open] or by
+  /// its controller.
+  bool get _toldOpen => widget.controller?.isOpen ?? widget.open ?? false;
+
+  void _obeyController() {
+    if (!mounted) return;
+    final open = widget.controller!.isOpen;
+    if (open == _open) return;
+    // Told perhaps in the middle of a build — a controller opened from a
+    // build method, or from a listener that runs in one — when an overlay
+    // entry may not go in.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || widget.controller?.isOpen != open) return;
+      open ? _show() : _hide();
+    });
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   @override
   void didUpdateWidget(Dropdown<T> old) {
     super.didUpdateWidget(old);
+    if (widget.controller != old.controller) {
+      old.controller?.removeListener(_obeyController);
+      widget.controller?.addListener(_obeyController);
+      if (widget.controller != null) _obeyController();
+    }
     if (widget.open != null && widget.open != _open) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -531,6 +608,7 @@ class _DropdownState<T> extends State<Dropdown<T>> {
 
   @override
   void dispose() {
+    widget.controller?.removeListener(_obeyController);
     if (_suppressedBrowserMenu) BrowserContextMenu.enableContextMenu();
     _popover.dispose();
     _rev.dispose();
@@ -540,6 +618,13 @@ class _DropdownState<T> extends State<Dropdown<T>> {
   void _requestOpen(bool next) {
     if (_disabled) return;
     if (widget.onOpenChanged != null) widget.onOpenChanged!(next);
+    final controller = widget.controller;
+    if (controller != null) {
+      // Through the controller, so it stays the one account of whether the
+      // menu is open; it answers by opening or closing it.
+      next ? controller.open() : controller.close();
+      return;
+    }
     if (widget.open == null) {
       next ? _show() : _hide();
     }

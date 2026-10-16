@@ -234,6 +234,34 @@ Dropdown(
 )
 ```
 
+While `open` is not null the menu neither opens nor closes by itself: a tap
+away, Escape and a choice only ask, through `onOpenChanged`, and the state
+that holds `open` decides.
+
+### From anywhere — `DropdownController`
+
+When what opens the menu is not in the state that would hold `open` — a
+keyboard shortcut, a tour step, data that has just arrived — hand the
+dropdown a controller instead:
+
+```dart
+final menu = DropdownController();
+
+Dropdown<String>(controller: menu, menu: items, child: trigger)
+
+menu.open();
+menu.close();
+menu.toggle();
+menu.isOpen; // and it notifies, as any ChangeNotifier does
+```
+
+Whatever closes the menu by itself — a tap away, a choice, Escape, the
+pointer leaving a hover menu — closes it through the controller, so `isOpen`
+is always what is on screen, and `onOpenChanged` still hears about it.
+`DropdownController(open: true)` opens the menu as it appears. A dropdown
+takes a controller or `open`, not both. Dispose of the controller with the
+state that made it.
+
 ## Custom body
 
 Instead of `menu`, pass `content` for a fully custom popup (the

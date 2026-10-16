@@ -402,6 +402,7 @@ export 'src/components/navigation/dropdown.dart'
     show
         DropdownDefaults,
         Dropdown,
+        DropdownController,
         DropdownDivider,
         DropdownEntry,
         DropdownGroup,

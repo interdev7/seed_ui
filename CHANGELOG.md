@@ -79,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reader hears what is selected and what is open. A horizontal menu folds
   the items that do not fit into a `…` that opens a menu of them. `MenuToken`
   and `MenuDefaults` configure it.
+- **`DropdownController`** — opens, closes and toggles a `Dropdown` from
+  anywhere, with `isOpen` and change notifications. Whatever closes the menu
+  by itself closes it through the controller, so `isOpen` stays true to the
+  screen. A dropdown takes a `controller` or `open`, not both.
 - **`Dropdown.onPlacementChanged`** — where the menu opened once laid out:
   the placement asked for, or its opposite where the screen had no room.
 - **`DropdownItem.selected`** — marks an item as the current choice, drawn in

@@ -19,6 +19,11 @@ for everyone on 3.22–3.46. `material.dart` is deprecated, not removed.
 The advisory job *Analyze on latest stable* runs the newest Flutter with
 `continue-on-error` and shows the deprecations without blocking.
 
+**pub.dev score.** pub.dev scores the package with its own, current Flutter.
+Once that is 3.47+, the score drops for these imports (static analysis)
+whatever CI says; only this migration brings it back. CI's `pana` job is
+pinned to 3.44.4 too, so it keeps catching everything else.
+
 **When to do it.** Once Flutter 3.47+ is old enough to require — or earlier,
 the moment `material.dart` is announced for removal.
 
@@ -36,8 +41,9 @@ the moment `material.dart` is announced for removal.
 4. Replace `GlobalMaterialLocalizations` / `GlobalCupertinoLocalizations` with
    what the deprecation message names; update `doc/localization.md`, whose
    setup snippet shows them.
-5. Unpin CI: in `ci.yaml` and `release.yaml` set the strict jobs back to the
-   latest stable (drop `flutter-version: 3.44.4`) and remove the advisory job.
+5. Unpin CI: in `ci.yaml` (analyze, example, pana) and `release.yaml` set the
+   jobs back to the latest stable (drop `flutter-version: 3.44.4`) and remove
+   the advisory job.
 6. Release as **0.30.0** — a breaking change for apps on Flutter below 3.47.
    Say so at the top of the CHANGELOG entry, with the minimum Flutter version.
 

@@ -185,4 +185,74 @@ void main() {
     Drawer.destroyAll();
     await _settle(tester);
   });
+
+  testWidgets('a bottom drawer rides on top of the keyboard', (tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_host());
+
+    Drawer.open(
+      const DrawerConfig(
+        placement: DrawerPlacement.bottom,
+        size: 400,
+        child: SizedBox.expand(key: Key('body')),
+      ),
+    );
+    await _settle(tester);
+
+    // The panel ends where the keyboard begins, and keeps its size.
+    final body = tester.getRect(find.byKey(const Key('body')));
+    expect(body.bottom, lessThanOrEqualTo(1200 - 300));
+    expect(body.bottom, greaterThan(1200 - 300 - 40));
+
+    Drawer.destroyAll();
+    await _settle(tester);
+  });
+
+  testWidgets('a bottom drawer taller than the room above the keyboard shrinks',
+      (tester) async {
+    tester.view.physicalSize = const Size(800, 1000);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 600);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_host());
+
+    Drawer.open(
+      const DrawerConfig(
+        placement: DrawerPlacement.bottom,
+        size: 700,
+        child: SizedBox.expand(key: Key('body')),
+      ),
+    );
+    await _settle(tester);
+
+    final body = tester.getRect(find.byKey(const Key('body')));
+    expect(body.top, greaterThanOrEqualTo(0));
+    expect(body.bottom, lessThanOrEqualTo(1000 - 600));
+    expect(tester.takeException(), isNull);
+
+    Drawer.destroyAll();
+    await _settle(tester);
+  });
+
+  testWidgets('a side drawer ignores the keyboard', (tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_host());
+
+    Drawer.open(
+      const DrawerConfig(child: SizedBox.expand(key: Key('body'))),
+    );
+    await _settle(tester);
+
+    final body = tester.getRect(find.byKey(const Key('body')));
+    expect(body.bottom, greaterThan(1200 - 300));
+
+    Drawer.destroyAll();
+    await _settle(tester);
+  });
 }

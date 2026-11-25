@@ -371,14 +371,20 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
   Widget _panel(Token token, _ResolvedDrawerToken r) {
     final config = _config;
     final media = MediaQuery.sizeOf(context);
-    // Cap the sliding extent to the viewport so a large size never overflows.
-    final maxExtent = _isHorizontal ? media.width : media.height;
+    // A bottom drawer rides on top of the on-screen keyboard, so a field
+    // inside it is never hidden behind the keys it is being typed with.
+    final keyboard = config.placement == DrawerPlacement.bottom
+        ? MediaQuery.viewInsetsOf(context).bottom
+        : 0.0;
+    // Cap the sliding extent to the viewport (less the keyboard) so a large
+    // size never overflows.
+    final maxExtent = _isHorizontal ? media.width : media.height - keyboard;
     final extent = config.size.clamp(0.0, maxExtent);
 
     // A panel that has come over the page, named by its own title — the same
     // news a dialog gives. An overlay is not a route the navigator announced,
     // so nobody says it otherwise.
-    return Semantics(
+    final panel = Semantics(
       scopesRoute: true,
       namesRoute: true,
       explicitChildNodes: true,
@@ -410,6 +416,9 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
         ),
       ),
     );
+    return keyboard > 0
+        ? Padding(padding: EdgeInsets.only(bottom: keyboard), child: panel)
+        : panel;
   }
 
   Widget _header(Token token) {

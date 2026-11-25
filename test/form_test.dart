@@ -813,6 +813,32 @@ void main() {
       expect(form.error('email'), 'Enter a valid email address');
     });
 
+    testWidgets('a text field is one line unless told otherwise', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          Form(
+            controller: FormController(),
+            child: Column(
+              children: [
+                FormItem.text(name: 'one', placeholder: 'One line'),
+                FormItem.text(name: 'many', maxLines: 4),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final fields = tester.widgetList<EditableText>(find.byType(EditableText));
+      expect(fields.first.maxLines, 1);
+      expect(fields.last.maxLines, 4);
+      // The same height as a plain Input, not a text area's
+      final one = tester.getSize(find.byType(Input).first).height;
+      await tester.pumpWidget(_host(const Input(placeholder: 'Plain')));
+      expect(tester.getSize(find.byType(Input)).height, one);
+    });
+
     testWidgets('a text field tells the keyboard what it is for', (
       tester,
     ) async {

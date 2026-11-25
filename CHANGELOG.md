@@ -5,6 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.29.1
+
+### Fixed
+
+- **A bottom `Drawer` rides on top of the on-screen keyboard.** It used to stay
+  pinned to the bottom of the screen, so a field inside it ended up behind the
+  keys it was being typed with. It now sits above the keyboard and, when it is
+  taller than the room left, shrinks to fit. Side and top drawers are
+  unchanged.
+- **`FormItem.text` is one line unless told otherwise.** It passed a null
+  `maxLines` on to `Input`, which reads null as "a text area" — so every text
+  field in a form came out as a text area, with its placeholder at the top
+  instead of in the middle. It now defaults to one line, as `Input` does;
+  `maxLines` still makes a text area when you ask for one.
+- **A `DatePicker` with `showTime` fits on a phone.** The hour and minute
+  columns stood beside the days, which together are wider than a phone screen
+  and overflowed off the side. Where they do not fit, they now stand under the
+  days instead.
+- **A calendar's week fits a phone whatever the theme.** A day is as wide as
+  one and a half small controls, so a theme with roomy controls made a week
+  wider than a phone screen. `DatePicker` and `MultiDatePicker` now narrow the
+  days to fit the screen they open on (`DatePanelStyle.fittedTo`); a week that
+  already fits is drawn exactly as before.
+
 ## 0.29.0
 
 ### Added

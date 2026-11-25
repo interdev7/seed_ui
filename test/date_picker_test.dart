@@ -711,6 +711,87 @@ void _showTimeTests() {
       expect(find.text('2026-03-04 14:32'), findsOneWidget);
     });
 
+    testWidgets('on a phone the clock goes under the days', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            showTime: true,
+            format: 'dd.MM.yyyy HH:mm',
+            value: DateTime(2026, 3, 4, 14, 32),
+          ),
+        ),
+      );
+      await _openPanel(tester);
+
+      // Opened without running off the side of the screen
+      expect(tester.takeException(), isNull);
+      // The hour column stands below the row of weekday names, not beside it
+      final grid = tester.getRect(find.text('4').first);
+      final hour = tester.getRect(find.text('14').last);
+      expect(hour.top, greaterThan(grid.bottom));
+    });
+
+    testWidgets('roomy controls on a phone: the week narrows to fit',
+        (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ConfigProvider(
+          // As an app with bigger touch targets sets it
+          theme: ThemeData(
+            token: const SeedToken(controlHeight: 44, fontSize: 15),
+          ),
+          child: MaterialApp(
+            navigatorKey: UiKit.navigatorKey,
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 358,
+                  child: DatePicker(
+                    showTime: true,
+                    format: 'dd.MM.yyyy HH:mm',
+                    value: DateTime(2026, 3, 4, 14, 32),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await _openPanel(tester);
+
+      expect(tester.takeException(), isNull);
+      // Saturday and Sunday are on the screen, not cut off its side
+      final last = tester.getRect(find.text('8').first);
+      expect(last.right, lessThanOrEqualTo(390));
+    });
+
+    testWidgets('on a wide screen the clock stays beside the days',
+        (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _host(
+          DatePicker(
+            showTime: true,
+            format: 'dd.MM.yyyy HH:mm',
+            value: DateTime(2026, 3, 4, 14, 32),
+          ),
+        ),
+      );
+      await _openPanel(tester);
+
+      expect(tester.takeException(), isNull);
+      final day = tester.getRect(find.text('4').first);
+      final hour = tester.getRect(find.text('14').last);
+      expect(hour.left, greaterThan(day.right));
+    });
+
     testWidgets('picking a day hands nothing back until Ok', (tester) async {
       DateTime? chosen;
       await tester.pumpWidget(

@@ -1416,7 +1416,9 @@ class FormItem<T> extends StatefulWidget {
     PasswordConfig? password,
     Widget? prefix,
     Widget? suffix,
-    int? maxLines,
+    // One line, as Input itself defaults to; a null here would have made
+    // every text field a text area (placeholder at the top, taller box).
+    int? maxLines = 1,
     ValueChanged<String>? onSubmitted,
     TextInputType? keyboardType,
     TextCapitalization? textCapitalization,

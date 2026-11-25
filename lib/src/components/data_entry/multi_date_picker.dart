@@ -911,7 +911,13 @@ class _MultiPanel extends StatelessWidget {
     final r = (state.widget.token ??
             ConfigProvider.componentOf<DatePickerToken>(context) ??
             const DatePickerToken())
-        .resolve(t);
+        .resolve(t)
+        // Never wider than the screen it opens on: a week of roomy days
+        // narrows to fit a phone rather than running off its side.
+        .fittedTo(
+          MediaQuery.sizeOf(context).width - t.sizeLG * 2,
+          padding: t.sizeSM * 2,
+        );
 
     return DecoratedBox(
       decoration: BoxDecoration(

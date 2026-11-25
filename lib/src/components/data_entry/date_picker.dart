@@ -250,6 +250,27 @@ class DatePanelStyle {
 
   /// How wide the seven days come to, air and all.
   double get gridWidth => dayPitchWidth * 7;
+
+  /// The same style with days narrow enough for the week to fit in [width]
+  /// (the grid's own side padding, [padding], included).
+  ///
+  /// A theme with roomy controls makes roomy days, and seven of them can come
+  /// out wider than a phone. Narrowed rather than overflowing; a week that
+  /// fits is left exactly as it is.
+  DatePanelStyle fittedTo(double width, {double padding = 0}) {
+    final room = (width - padding) / 7 - crossAxisSpacing;
+    if (room >= cellWidth || room <= 0) return this;
+    return DatePanelStyle(
+      borderRadius: borderRadius,
+      cellWidth: room,
+      cellHeight: cellHeight,
+      headerHeight: headerHeight,
+      presetsWidth: presetsWidth,
+      timeColumnWidth: timeColumnWidth,
+      mainAxisSpacing: mainAxisSpacing,
+      crossAxisSpacing: crossAxisSpacing,
+    );
+  }
 }
 
 /// What a [DatePicker] collects.
@@ -1508,13 +1529,32 @@ class _DatePanel extends StatelessWidget {
     final r = (state.widget.token ??
             ConfigProvider.componentOf<DatePickerToken>(context) ??
             const DatePickerToken())
-        .resolve(t);
+        .resolve(t)
+        // Never wider than the screen it opens on: a week of roomy days
+        // narrows to fit a phone rather than running off its side.
+        .fittedTo(
+          MediaQuery.sizeOf(context).width - t.sizeLG * 2,
+          padding: t.sizeSM * 2,
+        );
 
     final presets = state.widget.presets;
     // The columns stand beside the days and nowhere else: the months of a
     // year and the years of a decade are steps on the way to a day, and an
     // hour picked against them would belong to no date yet.
     final withTime = state.widget.showTime && state._mode == DatePanelMode.day;
+
+    // On a phone the clock does not fit beside the days: the calendar and its
+    // columns together are wider than the screen. Then the columns go under
+    // the days instead of overflowing off the side. This one sum is needed
+    // because the choice has to be made before anything is laid out.
+    final fields = state._timeFields;
+    final columns = [fields.hour, fields.minute, fields.second, fields.meridiem]
+        .where((on) => on)
+        .length;
+    final besideWidth =
+        r.gridWidth + t.sizeSM * 2 + t.lineWidth + columns * r.timeColumnWidth;
+    final timeBelow = withTime &&
+        besideWidth > MediaQuery.sizeOf(context).width - t.sizeLG * 2;
 
     final grid = Padding(
       padding: EdgeInsets.symmetric(
@@ -1549,7 +1589,26 @@ class _DatePanel extends StatelessWidget {
         children: [
           PanelHeader(state: state, token: r),
           Container(height: t.lineWidth, color: t.colorSplit),
-          if (withTime)
+          if (withTime && timeBelow) ...[
+            grid,
+            Container(height: t.lineWidth, color: t.colorSplit),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: t.sizeXS),
+              child: Center(
+                child: TimeColumns(
+                  fields: state._timeFields,
+                  value: state._draftTime,
+                  onChanged: state._pickTime,
+                  cellHeight: r.cellHeight,
+                  columnWidth: r.timeColumnWidth,
+                  // Under the days there is height to spare but not much:
+                  // enough rows to see where you are in the hour.
+                  visibleRows: 4,
+                  disabledTime: state.widget.disabledTime,
+                ),
+              ),
+            ),
+          ] else if (withTime)
             IntrinsicHeight(
               child: Row(
                 mainAxisSize: MainAxisSize.min,

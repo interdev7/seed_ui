@@ -1,9 +1,12 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart'
-    hide Badge, ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer, Divider;
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart'
+    show GlobalCupertinoLocalizations;
+import 'package:flutter_localizations/flutter_localizations.dart'
+    show GlobalWidgetsLocalizations;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
+    hide Badge, ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 /// A popconfirm is the shortest way to a pair of localised buttons on screen.
@@ -60,10 +63,14 @@ void main() {
     });
 
     test('a locale is matched on its language, country and script aside', () {
-      expect(SeedLocalizations.forLocale(const Locale('pt', 'BR')).localeName,
-          'pt');
-      expect(SeedLocalizations.forLocale(const Locale('pt', 'PT')).localeName,
-          'pt');
+      expect(
+        SeedLocalizations.forLocale(const Locale('pt', 'BR')).localeName,
+        'pt',
+      );
+      expect(
+        SeedLocalizations.forLocale(const Locale('pt', 'PT')).localeName,
+        'pt',
+      );
       // Nothing the kit says differs between those, and matching the whole tag
       // would drop both to English over a distinction that does not exist.
       expect(
@@ -83,10 +90,7 @@ void main() {
     test('two languages saying the same words are the same value', () {
       expect(SeedLocalizations.en, const SeedLocalizations());
       expect(SeedLocalizations.en, isNot(SeedLocalizations.ru));
-      expect(
-        SeedLocalizations.en.hashCode,
-        const SeedLocalizations().hashCode,
-      );
+      expect(SeedLocalizations.en.hashCode, const SeedLocalizations().hashCode);
     });
   });
 
@@ -211,18 +215,17 @@ void main() {
     });
 
     test('a language must give exactly ten glyphs', () {
-      expect(
-        () => SeedLocalizations(digits: '012'),
-        throwsAssertionError,
-      );
+      expect(() => SeedLocalizations(digits: '012'), throwsAssertionError);
     });
   });
 
   group('figures on screen', () {
     Widget arabic(Widget child) => ConfigProvider(
-          locale: SeedLocalizations.ar,
-          child: MaterialApp(home: Scaffold(body: Center(child: child))),
-        );
+      locale: SeedLocalizations.ar,
+      child: MaterialApp(
+        home: Scaffold(body: Center(child: child)),
+      ),
+    );
 
     testWidgets('a badge counts in the language it is drawn in', (
       tester,
@@ -253,8 +256,9 @@ void main() {
       expect(find.text('٠١:٠٢'), findsOneWidget);
     });
   });
-  testWidgets('the unit letters follow the language, as the figures do',
-      (tester) async {
+  testWidgets('the unit letters follow the language, as the figures do', (
+    tester,
+  ) async {
     Future<String> shown(SeedLocalizations locale) async {
       await tester.pumpWidget(
         ConfigProvider(
@@ -396,16 +400,16 @@ void main() {
     // the very example the class documents, gave English buttons everywhere
     // else. Read from the source, so the next word added is held to it too.
     test('copyWith passes on every field the constructor takes', () {
-      final source =
-          File('lib/src/l10n/seed_localizations.dart').readAsStringSync();
+      final source = File(
+        'lib/src/l10n/seed_localizations.dart',
+      ).readAsStringSync();
       final ctor = source.substring(
         source.indexOf('  const SeedLocalizations({'),
         source.indexOf('  }) : assert('),
       );
-      final fields = RegExp(r'this\.(\w+)')
-          .allMatches(ctor)
-          .map((m) => m.group(1)!)
-          .toList();
+      final fields = RegExp(
+        r'this\.(\w+)',
+      ).allMatches(ctor).map((m) => m.group(1)!).toList();
       final copy = source.substring(
         source.indexOf('  SeedLocalizations copyWith({'),
       );
@@ -428,12 +432,12 @@ void main() {
 
   group('words the components used to write in English', () {
     Widget inRussian(Widget child) => ConfigProvider(
-          locale: SeedLocalizations.ru,
-          child: MaterialApp(
-            navigatorKey: UiKit.navigatorKey,
-            home: Scaffold(body: Center(child: child)),
-          ),
-        );
+      locale: SeedLocalizations.ru,
+      child: MaterialApp(
+        navigatorKey: UiKit.navigatorKey,
+        home: Scaffold(body: Center(child: child)),
+      ),
+    );
 
     testWidgets('an upload button', (tester) async {
       await tester.pumpWidget(inRussian(Upload<String>(onPick: () async {})));
@@ -448,9 +452,7 @@ void main() {
       expect(find.text('Загрузить'), findsOneWidget);
     });
 
-    testWidgets('a tab the plus adds with no label of its own', (
-      tester,
-    ) async {
+    testWidgets('a tab the plus adds with no label of its own', (tester) async {
       final controller = TabsController(
         items: const [TabItem(key: 'a', label: Text('Первая'))],
       );

@@ -1,20 +1,22 @@
 import 'dart:ui' show Tristate;
 
-import 'package:flutter/material.dart'
-    hide ThemeData, Form, Switch, Drawer, Tooltip, Table, TableRow, Divider;
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
+    hide ThemeData, Form, Switch, Drawer, Tooltip, Table, TableRow, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      theme: ThemeData(),
-      child: MaterialApp(
-        // The kit's own key: a select's menu and a picker's panel are
-        // mounted in the overlay it names.
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(body: Center(child: SizedBox(width: 320, child: child))),
-      ),
-    );
+  theme: ThemeData(),
+  child: MaterialApp(
+    // The kit's own key: a select's menu and a picker's panel are
+    // mounted in the overlay it names.
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(
+      body: Center(child: SizedBox(width: 320, child: child)),
+    ),
+  ),
+);
 
 /// Runs [body] with the semantics tree switched on.
 ///
@@ -41,9 +43,7 @@ void main() {
   group('a text field', () {
     testWidgets('is a text field, and says what it is called', (tester) async {
       await reading(tester, () async {
-        await tester.pumpWidget(
-          _host(const Input(semanticsLabel: 'Email')),
-        );
+        await tester.pumpWidget(_host(const Input(semanticsLabel: 'Email')));
         final node = tester.getSemantics(find.byType(EditableText));
         expect(
           node.flagsCollection.isTextField,
@@ -54,16 +54,16 @@ void main() {
       });
     });
 
-    testWidgets('a placeholder names a field that stands on its own',
-        (tester) async {
+    testWidgets('a placeholder names a field that stands on its own', (
+      tester,
+    ) async {
       await reading(tester, () async {
         await tester.pumpWidget(_host(const Input(placeholder: 'Search')));
         expect(tester.getSemantics(find.byType(EditableText)).label, 'Search');
       });
     });
 
-    testWidgets(
-        'says it is in trouble, so the red border is not the only '
+    testWidgets('says it is in trouble, so the red border is not the only '
         'way the news arrives', (tester) async {
       await reading(tester, () async {
         await tester.pumpWidget(_host(const Input(semanticsLabel: 'Email')));
@@ -122,8 +122,9 @@ void main() {
       return tester.getSemantics(find.byType(EditableText));
     }
 
-    testWidgets('takes its name from the label written beside it',
-        (tester) async {
+    testWidgets('takes its name from the label written beside it', (
+      tester,
+    ) async {
       await reading(tester, () async {
         final form = FormController();
         addTearDown(form.dispose);
@@ -133,8 +134,9 @@ void main() {
       });
     });
 
-    testWidgets('is marked invalid once the rules have refused it',
-        (tester) async {
+    testWidgets('is marked invalid once the rules have refused it', (
+      tester,
+    ) async {
       await reading(tester, () async {
         final form = FormController();
         addTearDown(form.dispose);
@@ -152,8 +154,9 @@ void main() {
       });
     });
 
-    testWidgets('a label built of widgets is left unread rather than guessed',
-        (tester) async {
+    testWidgets('a label built of widgets is left unread rather than guessed', (
+      tester,
+    ) async {
       await reading(tester, () async {
         final form = FormController();
         addTearDown(form.dispose);
@@ -172,8 +175,9 @@ void main() {
 
 void _selectAndPickers() {
   group('a select', () {
-    testWidgets('says what it is, what it is called and what is in it',
-        (tester) async {
+    testWidgets('says what it is, what it is called and what is in it', (
+      tester,
+    ) async {
       await reading(tester, () async {
         await tester.pumpWidget(
           _host(
@@ -206,9 +210,7 @@ void _selectAndPickers() {
           _host(
             Select<String>(
               placeholder: 'Country',
-              options: const [
-                SelectOption(value: 'fr', filterText: 'France'),
-              ],
+              options: const [SelectOption(value: 'fr', filterText: 'France')],
               onChanged: (_) {},
             ),
           ),
@@ -297,20 +299,19 @@ void _selectAndPickers() {
 /// Flutter puts a scope of its own around a route, so the flag alone finds
 /// two; the name is what tells them apart.
 Finder _theWindow(String named) => find.byWidgetPredicate(
-      (w) =>
-          w is Semantics &&
-          (w.properties.scopesRoute ?? false) &&
-          w.properties.label == named,
-    );
+  (w) =>
+      w is Semantics &&
+      (w.properties.scopesRoute ?? false) &&
+      w.properties.label == named,
+);
 
 void _windowsAndTabs() {
   group('a window that has come over the page', () {
-    testWidgets('a modal says it is one, and gives its title as the name',
-        (tester) async {
+    testWidgets('a modal says it is one, and gives its title as the name', (
+      tester,
+    ) async {
       await reading(tester, () async {
-        await tester.pumpWidget(
-          _host(const Text('the page behind')),
-        );
+        await tester.pumpWidget(_host(const Text('the page behind')));
         // ignore: unawaited_futures
         Modal.confirm(title: 'Delete?', content: 'Forever.');
         await tester.pumpAndSettle();
@@ -337,8 +338,9 @@ void _windowsAndTabs() {
   });
 
   group('a tab', () {
-    testWidgets('says it can be pressed, and which one is showing',
-        (tester) async {
+    testWidgets('says it can be pressed, and which one is showing', (
+      tester,
+    ) async {
       await reading(tester, () async {
         await tester.pumpWidget(
           _host(
@@ -362,16 +364,17 @@ void _windowsAndTabs() {
 
 /// The pressable header the words [label] sit in.
 Finder _headerOf(String label) => find.ancestor(
-      of: find.text(label),
-      matching: find.byWidgetPredicate(
-        (w) => w is Semantics && (w.properties.button ?? false),
-      ),
-    );
+  of: find.text(label),
+  matching: find.byWidgetPredicate(
+    (w) => w is Semantics && (w.properties.button ?? false),
+  ),
+);
 
 void _theRest() {
   group('a tree node', () {
-    testWidgets('says whether it is picked and whether its branch is open',
-        (tester) async {
+    testWidgets('says whether it is picked and whether its branch is open', (
+      tester,
+    ) async {
       await reading(tester, () async {
         await tester.pumpWidget(
           _host(
@@ -408,9 +411,15 @@ void _theRest() {
               defaultActiveKeys: ['a'],
               items: [
                 CollapseItem(
-                    key: 'a', label: Text('Open one'), content: Text('x')),
+                  key: 'a',
+                  label: Text('Open one'),
+                  content: Text('x'),
+                ),
                 CollapseItem(
-                    key: 'b', label: Text('Shut one'), content: Text('y')),
+                  key: 'b',
+                  label: Text('Shut one'),
+                  content: Text('y'),
+                ),
               ],
             ),
           ),
@@ -451,8 +460,9 @@ void _theRest() {
   });
 
   group('a table', () {
-    testWidgets('a heading says it is one, and which way it is sorted',
-        (tester) async {
+    testWidgets('a heading says it is one, and which way it is sorted', (
+      tester,
+    ) async {
       await reading(tester, () async {
         await tester.pumpWidget(
           _host(
@@ -471,8 +481,11 @@ void _theRest() {
         );
         final node = tester.getSemantics(find.text('Number'));
         expect(node.flagsCollection.isHeader, isTrue);
-        expect(node.value, isNotEmpty,
-            reason: 'the carets say it in a picture');
+        expect(
+          node.value,
+          isNotEmpty,
+          reason: 'the carets say it in a picture',
+        );
       });
     });
   });
@@ -480,8 +493,9 @@ void _theRest() {
 
 void _lastThree() {
   group('a number field', () {
-    testWidgets('offers a way to step it that is not the arrows',
-        (tester) async {
+    testWidgets('offers a way to step it that is not the arrows', (
+      tester,
+    ) async {
       await reading(tester, () async {
         num? changed;
         await tester.pumpWidget(
@@ -509,8 +523,9 @@ void _lastThree() {
       });
     });
 
-    testWidgets('an empty field is a box to type in, not a stepper',
-        (tester) async {
+    testWidgets('an empty field is a box to type in, not a stepper', (
+      tester,
+    ) async {
       await reading(tester, () async {
         await tester.pumpWidget(
           _host(InputNumber(semanticsLabel: 'Seats', onChanged: (_) {})),
@@ -524,8 +539,9 @@ void _lastThree() {
   });
 
   group('a message', () {
-    testWidgets('is a live region, so its arrival is announced',
-        (tester) async {
+    testWidgets('is a live region, so its arrival is announced', (
+      tester,
+    ) async {
       await reading(tester, () async {
         await tester.pumpWidget(_host(const Text('the page')));
         message.info('Saved');
@@ -551,8 +567,9 @@ void _lastThree() {
   });
 
   group('a popconfirm', () {
-    testWidgets('says a question has come over the page, and names it',
-        (tester) async {
+    testWidgets('says a question has come over the page, and names it', (
+      tester,
+    ) async {
       await reading(tester, () async {
         await tester.pumpWidget(
           _host(

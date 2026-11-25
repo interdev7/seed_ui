@@ -23,8 +23,8 @@ import 'date_picker.dart';
 class DateRange {
   /// Creates a range, putting the two ends in order.
   DateRange(DateTime start, DateTime end)
-      : start = dateOnly(start.isAfter(end) ? end : start),
-        end = dateOnly(start.isAfter(end) ? start : end);
+    : start = dateOnly(start.isAfter(end) ? end : start),
+      end = dateOnly(start.isAfter(end) ? start : end);
 
   /// The day the range opens on.
   final DateTime start;
@@ -60,13 +60,13 @@ class DateRange {
 class DateRangePreset {
   /// A preset standing for a range that is already known.
   const DateRangePreset(this.label, DateRange range)
-      : _range = range,
-        _asked = null;
+    : _range = range,
+      _asked = null;
 
   /// A preset that works its range out when it is taken.
   const DateRangePreset.of(this.label, DateRange Function() range)
-      : _asked = range,
-        _range = null;
+    : _asked = range,
+      _range = null;
 
   /// What the rail calls it.
   final String label;
@@ -707,10 +707,10 @@ class _DateRangePickerState extends State<DateRangePicker>
   // --------------------------------------------------------------------------
 
   double _height(Token t) => _size.resolveHeight(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 
   /// A preset carries a type size of its own; a measurement names only
   /// itself, so the standard one stands.
@@ -761,10 +761,11 @@ class _DateRangePickerState extends State<DateRangePicker>
   Widget build(BuildContext context) {
     final t = context.softToken;
     final words = context.seedLocale;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<DatePickerToken>(context) ??
-            const DatePickerToken())
-        .resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<DatePickerToken>(context) ??
+                const DatePickerToken())
+            .resolve(t);
     _syncAnchor();
 
     final fontSize = _fontSize(t);
@@ -829,7 +830,8 @@ class _DateRangePickerState extends State<DateRangePicker>
     // less — the same rule the single picker follows.
     double share(BoxConstraints room) {
       if (!room.hasBoundedWidth) return halfWidth;
-      final furniture = t.sizeSM * 2 +
+      final furniture =
+          t.sizeSM * 2 +
           t.lineWidth * 2 +
           fontSize * 2 +
           t.sizeXS * 3 +
@@ -841,42 +843,45 @@ class _DateRangePickerState extends State<DateRangePicker>
       return each < halfWidth ? each : halfWidth;
     }
 
-    Widget half(String written, String placeholder, double width,
-            {required bool lit}) =>
-        SizedBox(
-          width: width,
-          child: DecoratedBox(
-            // The half being filled in is marked, so a reader who has put one
-            // end down can see which one the panel is waiting for.
-            decoration: BoxDecoration(
-              color: lit ? t.primary.bg : const Color(0x00000000),
-              borderRadius: BorderRadius.circular(t.borderRadiusSM),
-            ),
-            // Room inside the tint. Without it the mark is drawn hard against
-            // the letters, which reads as a box that is too small for what is
-            // in it rather than as the half being pointed at.
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: _litPad,
-                vertical: _litPad / 2,
-              ),
-              child: Text(
-                written.isEmpty ? placeholder : written,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                // Centred in its half, so the mark between them is as far from
-                // one date as from the other. Pushed to the start, as a single
-                // field's value is, the left date sits away from the mark and
-                // the right one against it — and a mark meaning "from here to
-                // there" stops reading as between them at all.
-                textAlign: TextAlign.center,
-                style: written.isEmpty
-                    ? textStyle.copyWith(color: t.colorTextTertiary)
-                    : textStyle,
-              ),
-            ),
+    Widget half(
+      String written,
+      String placeholder,
+      double width, {
+      required bool lit,
+    }) => SizedBox(
+      width: width,
+      child: DecoratedBox(
+        // The half being filled in is marked, so a reader who has put one
+        // end down can see which one the panel is waiting for.
+        decoration: BoxDecoration(
+          color: lit ? t.primary.bg : const Color(0x00000000),
+          borderRadius: BorderRadius.circular(t.borderRadiusSM),
+        ),
+        // Room inside the tint. Without it the mark is drawn hard against
+        // the letters, which reads as a box that is too small for what is
+        // in it rather than as the half being pointed at.
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: _litPad,
+            vertical: _litPad / 2,
           ),
-        );
+          child: Text(
+            written.isEmpty ? placeholder : written,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            // Centred in its half, so the mark between them is as far from
+            // one date as from the other. Pushed to the start, as a single
+            // field's value is, the left date sits away from the mark and
+            // the right one against it — and a mark meaning "from here to
+            // there" stops reading as between them at all.
+            textAlign: TextAlign.center,
+            style: written.isEmpty
+                ? textStyle.copyWith(color: t.colorTextTertiary)
+                : textStyle,
+          ),
+        ),
+      ),
+    );
 
     final named = _size.explicitWidth;
 
@@ -884,8 +889,8 @@ class _DateRangePickerState extends State<DateRangePicker>
       cursor: _takesHand
           ? SystemMouseCursors.click
           : _enabled
-              ? SystemMouseCursors.basic
-              : SystemMouseCursors.forbidden,
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.forbidden,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
@@ -963,16 +968,17 @@ class _DateRangePickerState extends State<DateRangePicker>
                             child: showClear
                                 ? CustomPaint(
                                     size: Size.square(fontSize),
-                                    painter:
-                                        ClearIconPainter(t.colorTextTertiary),
+                                    painter: ClearIconPainter(
+                                      t.colorTextTertiary,
+                                    ),
                                   )
                                 : widget.suffixIcon ??
-                                    CustomPaint(
-                                      size: Size.square(fontSize),
-                                      painter: CalendarIconPainter(
-                                        statusColor ?? t.colorTextQuaternary,
+                                      CustomPaint(
+                                        size: Size.square(fontSize),
+                                        painter: CalendarIconPainter(
+                                          statusColor ?? t.colorTextQuaternary,
+                                        ),
                                       ),
-                                    ),
                           ),
                         ),
                       ),
@@ -1022,16 +1028,18 @@ class _RangePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (state.widget.token ??
-            ConfigProvider.componentOf<DatePickerToken>(context) ??
-            const DatePickerToken())
-        .resolve(t);
+    final r =
+        (state.widget.token ??
+                ConfigProvider.componentOf<DatePickerToken>(context) ??
+                const DatePickerToken())
+            .resolve(t);
 
     final presets = state.widget.presets;
     final paneWidth = r.gridWidth + t.sizeSM * 2;
     // What the panel would like: two months, the line between them, and the
     // rail where there is one.
-    final wants = paneWidth * 2 +
+    final wants =
+        paneWidth * 2 +
         t.lineWidth +
         (presets.isEmpty ? 0 : r.presetsWidth + t.lineWidth);
     // What a popover can actually give it, which on a phone is the window
@@ -1309,15 +1317,17 @@ class _RangeTileState extends State<_RangeTile> {
   Widget build(BuildContext context) {
     final t = context.softToken;
     final range = widget.preset.range;
-    final blocked = widget.state._isBlocked(range.start) ||
+    final blocked =
+        widget.state._isBlocked(range.start) ||
         widget.state._isBlocked(range.end);
 
     return Semantics(
       button: true,
       enabled: !blocked,
       child: MouseRegion(
-        cursor:
-            blocked ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
+        cursor: blocked
+            ? SystemMouseCursors.forbidden
+            : SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         child: GestureDetector(

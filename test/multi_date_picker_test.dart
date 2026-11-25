@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart' as m;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' as m;
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui/src/components/data_entry/date_picker.dart'
     show DayGrid;
@@ -12,11 +12,11 @@ import 'package:seed_ui/src/utils/value_tag.dart' show ValueTag;
 // 20–31 can each appear twice. The days in the middle appear once, and those
 // are the ones these tests press.
 Widget _host(Widget child) => ConfigProvider(
-      child: m.MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: m.Scaffold(body: Center(child: child)),
-      ),
-    );
+  child: m.MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: m.Scaffold(body: Center(child: child)),
+  ),
+);
 
 Future<void> _openPanel(WidgetTester tester) async {
   await tester.tap(find.byType(MultiDatePicker));
@@ -30,8 +30,9 @@ void main() {
   _responsiveTests();
   _responsiveWidthTests();
   group('collecting several days', () {
-    testWidgets('the panel stays open, so a second day is one more tap',
-        (tester) async {
+    testWidgets('the panel stays open, so a second day is one more tap', (
+      tester,
+    ) async {
       List<DateTime>? held;
       await tester.pumpWidget(
         _host(MultiDatePicker(onChanged: (v) => held = v)),
@@ -61,8 +62,9 @@ void main() {
       expect(held, isEmpty);
     });
 
-    testWidgets('the days come back in order, however they were pressed',
-        (tester) async {
+    testWidgets('the days come back in order, however they were pressed', (
+      tester,
+    ) async {
       List<DateTime>? held;
       await tester.pumpWidget(
         _host(MultiDatePicker(onChanged: (v) => held = v)),
@@ -96,8 +98,9 @@ void main() {
   });
 
   group('what the field shows', () {
-    testWidgets('a tag for each day, each with a cross that removes it',
-        (tester) async {
+    testWidgets('a tag for each day, each with a cross that removes it', (
+      tester,
+    ) async {
       List<DateTime>? held;
       final now = DateTime.now();
       await tester.pumpWidget(
@@ -248,8 +251,9 @@ void _controlledTests() {
       return (box.decoration! as BoxDecoration).color;
     }
 
-    testWidgets('the panel marks the day on the tap that took it',
-        (tester) async {
+    testWidgets('the panel marks the day on the tap that took it', (
+      tester,
+    ) async {
       // The panel lives in the overlay and is redrawn on its own. Redrawn
       // during the tap, it reads a `values` the owner has been handed but
       // not yet rebuilt with — so it marked the list as it stood one tap
@@ -280,14 +284,13 @@ void _controlledTests() {
       expect(fillUnder(tester, '16'), isNot(plain));
     });
 
-    testWidgets('an owner that refuses the change is shown refusing it',
-        (tester) async {
+    testWidgets('an owner that refuses the change is shown refusing it', (
+      tester,
+    ) async {
       // The other half of handing the value over: the panel shows what the
       // owner settled on, not what the tap asked for.
       await tester.pumpWidget(
-        _host(
-          MultiDatePicker(values: const [], onChanged: (_) {}),
-        ),
+        _host(MultiDatePicker(values: const [], onChanged: (_) {})),
       );
       await _openPanel(tester);
       final plain = fillUnder(tester, '19');
@@ -300,8 +303,9 @@ void _controlledTests() {
 
 void _tagDrawingTests() {
   group('tags drawn by the caller', () {
-    testWidgets('a builder is handed the day, its label and the default tag',
-        (tester) async {
+    testWidgets('a builder is handed the day, its label and the default tag', (
+      tester,
+    ) async {
       final now = DateTime.now();
       final seen = <DateTag>[];
       List<DateTime>? held;
@@ -364,8 +368,9 @@ void _tagDrawingTests() {
       expect(seen.single.enabled, isFalse);
     });
 
-    testWidgets('removeIcon replaces the mark and not the target',
-        (tester) async {
+    testWidgets('removeIcon replaces the mark and not the target', (
+      tester,
+    ) async {
       final now = DateTime.now();
       List<DateTime>? held;
       await tester.pumpWidget(
@@ -394,14 +399,18 @@ void _widthTests() {
     // A key per case: pumped twice in one test, the same picker keeps the
     // state it was built with, and `defaultValues` would be the first call's.
     var run = 0;
-    Future<Size> sized(WidgetTester tester, Widget picker,
-        {double room = 800}) async {
+    Future<Size> sized(
+      WidgetTester tester,
+      Widget picker, {
+      double room = 800,
+    }) async {
       await tester.pumpWidget(
         _host(
           SizedBox(
             width: room,
-            child:
-                Align(child: KeyedSubtree(key: ValueKey(run++), child: picker)),
+            child: Align(
+              child: KeyedSubtree(key: ValueKey(run++), child: picker),
+            ),
           ),
         ),
       );
@@ -409,8 +418,9 @@ void _widthTests() {
       return tester.getSize(find.byType(MultiDatePicker));
     }
 
-    testWidgets('a field holding nothing is as wide as its placeholder',
-        (tester) async {
+    testWidgets('a field holding nothing is as wide as its placeholder', (
+      tester,
+    ) async {
       final short = await sized(
         tester,
         const MultiDatePicker(placeholder: 'Days'),
@@ -443,8 +453,9 @@ void _widthTests() {
       expect(three.width, greaterThan(one.width));
     });
 
-    testWidgets('offered less, the tags wrap rather than the field spilling',
-        (tester) async {
+    testWidgets('offered less, the tags wrap rather than the field spilling', (
+      tester,
+    ) async {
       final now = DateTime.now();
       final roomy = await sized(
         tester,
@@ -473,10 +484,7 @@ void _widthTests() {
     testWidgets('told a width, it fills it', (tester) async {
       final told = await sized(
         tester,
-        const SizedBox(
-          width: 420,
-          child: MultiDatePicker(placeholder: 'Days'),
-        ),
+        const SizedBox(width: 420, child: MultiDatePicker(placeholder: 'Days')),
       );
       expect(told.width, 420);
     });
@@ -515,8 +523,12 @@ void _responsiveTests() {
     testWidgets('a wider field names more of them', (tester) async {
       Future<int> hiddenIn(double width) async {
         await tester.pumpWidget(
-          _host(KeyedSubtree(
-              key: ValueKey(width), child: picker(8, width: width))),
+          _host(
+            KeyedSubtree(
+              key: ValueKey(width),
+              child: picker(8, width: width),
+            ),
+          ),
         );
         await tester.pumpAndSettle();
         final counted = find.textContaining('...');
@@ -534,8 +546,12 @@ void _responsiveTests() {
       final one = tester.getSize(find.byType(MultiDatePicker)).height;
 
       await tester.pumpWidget(
-        _host(KeyedSubtree(
-            key: const ValueKey('many'), child: picker(12, width: 300))),
+        _host(
+          KeyedSubtree(
+            key: const ValueKey('many'),
+            child: picker(12, width: 300),
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       final many = tester.getSize(find.byType(MultiDatePicker)).height;
@@ -574,15 +590,15 @@ void _responsiveTests() {
 void _responsiveWidthTests() {
   group('one line, and no width to be told', () {
     Widget loose(Widget child) => _host(
-          SizedBox(
-            width: 700,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [child],
-            ),
-          ),
-        );
+      SizedBox(
+        width: 700,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [child],
+        ),
+      ),
+    );
 
     Widget picker(int days, {Key? key}) {
       final now = DateTime.now();
@@ -595,8 +611,9 @@ void _responsiveWidthTests() {
       );
     }
 
-    testWidgets('given no width it still takes only what it holds',
-        (tester) async {
+    testWidgets('given no width it still takes only what it holds', (
+      tester,
+    ) async {
       await tester.pumpWidget(loose(picker(2)));
       await tester.pumpAndSettle();
       final two = tester.getSize(find.byType(MultiDatePicker)).width;
@@ -612,8 +629,9 @@ void _responsiveWidthTests() {
       expect(five, lessThanOrEqualTo(700));
     });
 
-    testWidgets('and hides what will not fit when the room runs out',
-        (tester) async {
+    testWidgets('and hides what will not fit when the room runs out', (
+      tester,
+    ) async {
       final now = DateTime.now();
       await tester.pumpWidget(
         _host(

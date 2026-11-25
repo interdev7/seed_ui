@@ -29,7 +29,7 @@ enum TimelineItemPosition {
   left,
 
   /// The content sits to the right of the axis.
-  right
+  right,
 }
 
 /// Whether the axis runs down the page or across it.
@@ -38,7 +38,7 @@ enum TimelineOrientation {
   vertical,
 
   /// The axis runs left to right.
-  horizontal
+  horizontal,
 }
 
 /// Variant style for the timeline dots.
@@ -110,28 +110,28 @@ class TimelineToken {
   final double? itemPaddingEnd;
 
   _ResolvedTimelineToken _resolve(Token t) => _ResolvedTimelineToken(
-        tailColor: tailColor ?? t.colorSplit,
-        tailWidth: tailWidth ?? 2,
-        dotBg: dotBg ?? t.colorBgContainer,
-        dotBorderWidth: dotBorderWidth ?? 2,
-        dotSize: dotSize ?? 10,
-        itemPaddingBottom: itemPaddingBottom ?? 20,
-        itemPaddingEnd: itemPaddingEnd ?? 16,
-        railInset: railInset ?? RailInsets.zero,
-        defaultColor: t.primary.base,
-      );
+    tailColor: tailColor ?? t.colorSplit,
+    tailWidth: tailWidth ?? 2,
+    dotBg: dotBg ?? t.colorBgContainer,
+    dotBorderWidth: dotBorderWidth ?? 2,
+    dotSize: dotSize ?? 10,
+    itemPaddingBottom: itemPaddingBottom ?? 20,
+    itemPaddingEnd: itemPaddingEnd ?? 16,
+    railInset: railInset ?? RailInsets.zero,
+    defaultColor: t.primary.base,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TimelineToken merge(TimelineToken other) => TimelineToken(
-        tailColor: other.tailColor ?? tailColor,
-        tailWidth: other.tailWidth ?? tailWidth,
-        dotBg: other.dotBg ?? dotBg,
-        dotBorderWidth: other.dotBorderWidth ?? dotBorderWidth,
-        dotSize: other.dotSize ?? dotSize,
-        railInset: other.railInset ?? railInset,
-        itemPaddingBottom: other.itemPaddingBottom ?? itemPaddingBottom,
-        itemPaddingEnd: other.itemPaddingEnd ?? itemPaddingEnd,
-      );
+    tailColor: other.tailColor ?? tailColor,
+    tailWidth: other.tailWidth ?? tailWidth,
+    dotBg: other.dotBg ?? dotBg,
+    dotBorderWidth: other.dotBorderWidth ?? dotBorderWidth,
+    dotSize: other.dotSize ?? dotSize,
+    railInset: other.railInset ?? railInset,
+    itemPaddingBottom: other.itemPaddingBottom ?? itemPaddingBottom,
+    itemPaddingEnd: other.itemPaddingEnd ?? itemPaddingEnd,
+  );
 }
 
 @immutable
@@ -254,7 +254,7 @@ class TimelineItem extends TimelineEntry {
 /// controller keeps its own state and needs no disposal.
 class TimelineGroupController extends ChangeNotifier {
   /// Creates a [TimelineGroupController].
-  TimelineGroupController({bool expanded = false}) : _expanded = expanded;
+  TimelineGroupController({this._expanded = false});
 
   bool _expanded;
 
@@ -338,10 +338,10 @@ class TimelineDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TimelineDefaults merge(TimelineDefaults other) => TimelineDefaults(
-        mode: other.mode ?? mode,
-        orientation: other.orientation ?? orientation,
-        variant: other.variant ?? variant,
-      );
+    mode: other.mode ?? mode,
+    orientation: other.orientation ?? orientation,
+    variant: other.variant ?? variant,
+  );
 }
 
 /// A vertical list of events.
@@ -410,10 +410,11 @@ class Timeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (token ??
-            ConfigProvider.componentOf<TimelineToken>(context) ??
-            const TimelineToken())
-        ._resolve(t);
+    final r =
+        (token ??
+                ConfigProvider.componentOf<TimelineToken>(context) ??
+                const TimelineToken())
+            ._resolve(t);
 
     // Build the ordered list of nodes, appending a pending one if asked.
     // A group contributes its own children rather than a node of its own; the
@@ -422,15 +423,15 @@ class Timeline extends StatelessWidget {
       for (final entry in items)
         ...switch (entry) {
           TimelineGroupItem(:final items, :final collapsedCount) => [
-              for (var i = 0; i < items.length; i++)
-                _Node(
-                  item: items[i],
-                  dashedTail: items[i].dashed,
-                  // Everything past the visible head shares the group, so the
-                  // run reveals and hides as one.
-                  group: i >= collapsedCount ? entry : null,
-                ),
-            ],
+            for (var i = 0; i < items.length; i++)
+              _Node(
+                item: items[i],
+                dashedTail: items[i].dashed,
+                // Everything past the visible head shares the group, so the
+                // run reveals and hides as one.
+                group: i >= collapsedCount ? entry : null,
+              ),
+          ],
           TimelineItem() => [_Node(item: entry, dashedTail: entry.dashed)],
         },
       if (pending != null)
@@ -752,7 +753,7 @@ class Timeline extends StatelessWidget {
   /// The pieces a vertical row is made of, before anything decides how wide
   /// each column should be.
   ({Widget? leading, Widget axis, Widget? trailing, double? height})
-      _verticalParts(
+  _verticalParts(
     BuildContext context,
     Token t,
     _ResolvedTimelineToken r,
@@ -772,7 +773,8 @@ class Timeline extends StatelessWidget {
       case TimelineMode.right:
         contentOnLeft = true;
       case TimelineMode.alternate:
-        contentOnLeft = (item.position ??
+        contentOnLeft =
+            (item.position ??
                 (index.isEven
                     ? TimelineItemPosition.left
                     : TimelineItemPosition.right)) ==
@@ -916,7 +918,8 @@ class Timeline extends StatelessWidget {
       case TimelineMode.right:
         contentOnTop = true; // content above axis
       case TimelineMode.alternate:
-        contentOnTop = (item.position ??
+        contentOnTop =
+            (item.position ??
                 (index.isEven
                     ? TimelineItemPosition.left
                     : TimelineItemPosition.right)) ==
@@ -978,9 +981,7 @@ class Timeline extends StatelessWidget {
     final children = <Widget>[];
     if (twoSided) {
       children.add(
-        Expanded(
-          child: pad(topChild, top: true) ?? const SizedBox.shrink(),
-        ),
+        Expanded(child: pad(topChild, top: true) ?? const SizedBox.shrink()),
       );
       children.add(axis);
       children.add(
@@ -990,17 +991,13 @@ class Timeline extends StatelessWidget {
       );
     } else if (_modeIn(context) == TimelineMode.right) {
       children.add(
-        Expanded(
-          child: pad(content, top: true) ?? const SizedBox.shrink(),
-        ),
+        Expanded(child: pad(content, top: true) ?? const SizedBox.shrink()),
       );
       children.add(axis);
     } else {
       children.add(axis);
       children.add(
-        Expanded(
-          child: pad(content, top: false) ?? const SizedBox.shrink(),
-        ),
+        Expanded(child: pad(content, top: false) ?? const SizedBox.shrink()),
       );
     }
 
@@ -1058,8 +1055,9 @@ class _TimelineGroupSection extends StatefulWidget {
 
 class _TimelineGroupSectionState extends State<_TimelineGroupSection> {
   /// Used only when the group brought no controller of its own.
-  late final TimelineGroupController _fallback =
-      TimelineGroupController(expanded: widget.group.initiallyExpanded);
+  late final TimelineGroupController _fallback = TimelineGroupController(
+    expanded: widget.group.initiallyExpanded,
+  );
 
   TimelineGroupController get _controller =>
       widget.group.controller ?? _fallback;
@@ -1378,9 +1376,9 @@ class _Node {
   final TimelineGroupItem? group;
 
   _Node copyWith({bool? dashedTail}) => _Node(
-        item: item,
-        pending: pending,
-        dashedTail: dashedTail ?? this.dashedTail,
-        group: group,
-      );
+    item: item,
+    pending: pending,
+    dashedTail: dashedTail ?? this.dashedTail,
+    group: group,
+  );
 }

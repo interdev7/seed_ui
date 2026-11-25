@@ -57,32 +57,32 @@ class SkeletonToken {
   final Duration? motionDuration;
 
   _ResolvedSkeletonToken _resolve(Token t) => _ResolvedSkeletonToken(
-        blockColor: blockColor ?? t.colorFillSecondary,
-        // On a dark page the fills sit close together, and the light needs a
-        // wider step to be seen at all.
-        highlightColor:
-            highlightColor ?? (t.isDark ? t.colorTextQuaternary : t.colorFill),
-        blockRadius: blockRadius ?? t.borderRadiusSM,
-        titleHeight: titleHeight ?? t.fontSizeLG,
-        titleGap: titleGap ?? t.sizeLG,
-        paragraphLineHeight: paragraphLineHeight ?? t.fontSizeLG,
-        paragraphLineGap: paragraphLineGap ?? t.size,
-        avatarGap: avatarGap ?? t.size,
-        motionDuration: motionDuration ?? const Duration(milliseconds: 1400),
-      );
+    blockColor: blockColor ?? t.colorFillSecondary,
+    // On a dark page the fills sit close together, and the light needs a
+    // wider step to be seen at all.
+    highlightColor:
+        highlightColor ?? (t.isDark ? t.colorTextQuaternary : t.colorFill),
+    blockRadius: blockRadius ?? t.borderRadiusSM,
+    titleHeight: titleHeight ?? t.fontSizeLG,
+    titleGap: titleGap ?? t.sizeLG,
+    paragraphLineHeight: paragraphLineHeight ?? t.fontSizeLG,
+    paragraphLineGap: paragraphLineGap ?? t.size,
+    avatarGap: avatarGap ?? t.size,
+    motionDuration: motionDuration ?? const Duration(milliseconds: 1400),
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SkeletonToken merge(SkeletonToken other) => SkeletonToken(
-        blockColor: other.blockColor ?? blockColor,
-        highlightColor: other.highlightColor ?? highlightColor,
-        blockRadius: other.blockRadius ?? blockRadius,
-        titleHeight: other.titleHeight ?? titleHeight,
-        titleGap: other.titleGap ?? titleGap,
-        paragraphLineHeight: other.paragraphLineHeight ?? paragraphLineHeight,
-        paragraphLineGap: other.paragraphLineGap ?? paragraphLineGap,
-        avatarGap: other.avatarGap ?? avatarGap,
-        motionDuration: other.motionDuration ?? motionDuration,
-      );
+    blockColor: other.blockColor ?? blockColor,
+    highlightColor: other.highlightColor ?? highlightColor,
+    blockRadius: other.blockRadius ?? blockRadius,
+    titleHeight: other.titleHeight ?? titleHeight,
+    titleGap: other.titleGap ?? titleGap,
+    paragraphLineHeight: other.paragraphLineHeight ?? paragraphLineHeight,
+    paragraphLineGap: other.paragraphLineGap ?? paragraphLineGap,
+    avatarGap: other.avatarGap ?? avatarGap,
+    motionDuration: other.motionDuration ?? motionDuration,
+  );
 }
 
 @immutable
@@ -124,9 +124,9 @@ class SkeletonDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SkeletonDefaults merge(SkeletonDefaults other) => SkeletonDefaults(
-        active: other.active ?? active,
-        round: other.round ?? round,
-      );
+    active: other.active ?? active,
+    round: other.round ?? round,
+  );
 }
 
 /// The title bar of a [Skeleton].
@@ -164,10 +164,10 @@ double _controlHeight(BuildContext context, ControlSize? size) {
   final t = context.softToken;
   return (size ?? ConfigProvider.componentSizeOf(context) ?? SoftSize.middle)
       .resolve1D(
-    small: t.controlHeightSM,
-    middle: t.controlHeight,
-    large: t.controlHeightLG,
-  );
+        small: t.controlHeightSM,
+        middle: t.controlHeight,
+        large: t.controlHeightLG,
+      );
 }
 
 /// Runs one light for every block beneath it.
@@ -231,16 +231,16 @@ class _ShimmerState extends State<_Shimmer>
 
   @override
   Widget build(BuildContext context) => RepaintBoundary(
-        // The width the light crosses: the whole skeleton, so one band moves
-        // over every block at once instead of each block running its own.
-        child: LayoutBuilder(
-          builder: (context, constraints) => _ShimmerScope(
-            animation: _controller,
-            span: constraints.hasBoundedWidth ? constraints.maxWidth : null,
-            child: widget.child,
-          ),
-        ),
-      );
+    // The width the light crosses: the whole skeleton, so one band moves
+    // over every block at once instead of each block running its own.
+    child: LayoutBuilder(
+      builder: (context, constraints) => _ShimmerScope(
+        animation: _controller,
+        span: constraints.hasBoundedWidth ? constraints.maxWidth : null,
+        child: widget.child,
+      ),
+    ),
+  );
 }
 
 class _ShimmerScope extends InheritedWidget {
@@ -336,11 +336,10 @@ class _BlockPainter extends CustomPainter {
       final half = math.max(across / 4, size.height * 4);
       final travel = rtl ? 1 - light.value : light.value;
       final centre = -half + (across + 2 * half) * travel - from;
-      paint.shader = LinearGradient(
-        colors: [color, highlight, color],
-      ).createShader(
-        Rect.fromLTRB(centre - half, 0, centre + half, size.height),
-      );
+      paint.shader = LinearGradient(colors: [color, highlight, color])
+          .createShader(
+            Rect.fromLTRB(centre - half, 0, centre + half, size.height),
+          );
     }
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect, Radius.circular(radius)),
@@ -459,16 +458,16 @@ class Skeleton extends StatelessWidget {
     final withAvatar = avatarBlock != null;
 
     Widget bar(double height, double widthFactor) => FractionallySizedBox(
-          // A stand-in for a line of text, so it fills from where the reading
-          // would start.
-          alignment: AlignmentDirectional.centerStart,
-          widthFactor: widthFactor.clamp(0.0, 1.0),
-          child: _Block(
-            token: r,
-            height: height,
-            radius: isRound ? height / 2 : r.blockRadius,
-          ),
-        );
+      // A stand-in for a line of text, so it fills from where the reading
+      // would start.
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: widthFactor.clamp(0.0, 1.0),
+      child: _Block(
+        token: r,
+        height: height,
+        radius: isRound ? height / 2 : r.blockRadius,
+      ),
+    );
 
     final title = this.title;
     final paragraph = this.paragraph;
@@ -713,7 +712,9 @@ class SkeletonNode extends StatelessWidget {
       builder: (r) => Stack(
         alignment: Alignment.center,
         children: [
-          Positioned.fill(child: _Block(token: r, radius: r.blockRadius)),
+          Positioned.fill(
+            child: _Block(token: r, radius: r.blockRadius),
+          ),
           child ?? SizedBox.square(dimension: side),
         ],
       ),

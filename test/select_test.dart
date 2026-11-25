@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,13 +10,12 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(body: Center(child: child)),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(body: Center(child: child)),
+);
 
 const _options = [
   SelectOption(value: 'apple', filterText: 'Apple'),
@@ -109,8 +109,9 @@ void main() {
     expect(find.text('Apple'), findsNothing);
   });
 
-  testWidgets('typing filters live and the filtered option is selectable',
-      (tester) async {
+  testWidgets('typing filters live and the filtered option is selectable', (
+    tester,
+  ) async {
     List<String>? seen;
     await tester.pumpWidget(
       _host(
@@ -168,15 +169,13 @@ void main() {
 
   testWidgets('single select shows no tick in the dropdown', (tester) async {
     Finder ticks() => find.byWidgetPredicate(
-          (w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == 'CheckPainter',
-        );
+      (w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == 'CheckPainter',
+    );
 
     await tester.pumpWidget(
-      _host(
-        const Select<String>(placeholder: 'Pick', options: _options),
-      ),
+      _host(const Select<String>(placeholder: 'Pick', options: _options)),
     );
     await tester.tap(find.text('Pick'));
     await tester.pumpAndSettle();
@@ -216,8 +215,9 @@ void main() {
     expect(value, ['apple', 'banana']);
   });
 
-  testWidgets('removing a tag works while the dropdown is open',
-      (tester) async {
+  testWidgets('removing a tag works while the dropdown is open', (
+    tester,
+  ) async {
     List<String> value = const ['apple', 'banana'];
     await tester.pumpWidget(
       _host(
@@ -311,8 +311,9 @@ void main() {
     expect(find.text('» Banana'), findsOneWidget);
   });
 
-  testWidgets('tags mode filters existing options while typing',
-      (tester) async {
+  testWidgets('tags mode filters existing options while typing', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         const Select<String>(
@@ -363,11 +364,11 @@ void main() {
 
   group('size takes a preset or a measurement', () {
     Widget host(Widget child) => ConfigProvider(
-          child: MaterialApp(
-            navigatorKey: UiKit.navigatorKey,
-            home: Scaffold(body: Center(child: child)),
-          ),
-        );
+      child: MaterialApp(
+        navigatorKey: UiKit.navigatorKey,
+        home: Scaffold(body: Center(child: child)),
+      ),
+    );
 
     const options = [SelectOption(value: 1, label: Text('one'))];
 
@@ -386,8 +387,10 @@ void main() {
         return tester.getSize(find.byType(Select<int>)).height;
       }
 
-      expect(await heightOf(SoftSize.small),
-          lessThan(await heightOf(SoftSize.large)));
+      expect(
+        await heightOf(SoftSize.small),
+        lessThan(await heightOf(SoftSize.large)),
+      );
     });
 
     testWidgets('a two-dimensional size names both', (tester) async {
@@ -507,14 +510,18 @@ void main() {
       expect(rowFill(tester, 'Cherry')!.a, 0);
     });
 
-    testWidgets('on the first that can be chosen, where nothing is',
-        (tester) async {
+    testWidgets('on the first that can be chosen, where nothing is', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Select<String>(
             options: [
               SelectOption(
-                  value: 'apple', label: Text('Apple'), disabled: true),
+                value: 'apple',
+                label: Text('Apple'),
+                disabled: true,
+              ),
               SelectOption(value: 'banana', label: Text('Banana')),
             ],
           ),
@@ -530,8 +537,9 @@ void main() {
     });
   });
 
-  testWidgets('stands exactly as tall as every other control of its size',
-      (tester) async {
+  testWidgets('stands exactly as tall as every other control of its size', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         Row(
@@ -575,14 +583,12 @@ void main() {
         ),
       ),
     );
-    expect(
-      tester.getSize(find.byType(Select<String>)).height,
-      greaterThan(40),
-    );
+    expect(tester.getSize(find.byType(Select<String>)).height, greaterThan(40));
   });
 
-  testWidgets('its menu is dressed by the provider it stands in',
-      (tester) async {
+  testWidgets('its menu is dressed by the provider it stands in', (
+    tester,
+  ) async {
     // The menu is mounted in an overlay above the app, so a provider on the
     // screen only reaches it because the popover carries what stood over the
     // control down to the panel.
@@ -619,10 +625,7 @@ void main() {
           )
           .first,
     );
-    expect(
-      (panel.decoration as BoxDecoration).color,
-      const Color(0xFF123456),
-    );
+    expect((panel.decoration as BoxDecoration).color, const Color(0xFF123456));
   });
 }
 
@@ -630,8 +633,11 @@ void _autoWidthTests() {
   group('how wide a select runs', () {
     /// Pumped in the shape of a page: a column that lets its children take
     /// what they need rather than handing them a width.
-    Future<Size> sized(WidgetTester tester, Widget select,
-        {double room = 800}) async {
+    Future<Size> sized(
+      WidgetTester tester,
+      Widget select, {
+      double room = 800,
+    }) async {
       await tester.pumpWidget(
         _host(
           SizedBox(
@@ -648,8 +654,9 @@ void _autoWidthTests() {
       return tester.getSize(find.byType(Select<String>).first);
     }
 
-    testWidgets('it takes what it needs rather than the whole page',
-        (tester) async {
+    testWidgets('it takes what it needs rather than the whole page', (
+      tester,
+    ) async {
       final size = await sized(
         tester,
         const Select<String>(
@@ -663,8 +670,9 @@ void _autoWidthTests() {
       expect(size.width, lessThan(300));
     });
 
-    testWidgets('the widest label sets it, not the one it is holding',
-        (tester) async {
+    testWidgets('the widest label sets it, not the one it is holding', (
+      tester,
+    ) async {
       const options = [
         SelectOption(value: 'a', label: Text('A')),
         SelectOption(value: 'b', label: Text('An option with a long name')),
@@ -675,11 +683,7 @@ void _autoWidthTests() {
       );
       final short = await sized(
         tester,
-        const Select<String>(
-          placeholder: '',
-          options: options,
-          value: ['a'],
-        ),
+        const Select<String>(placeholder: '', options: options, value: ['a']),
       );
 
       // A field that sized itself to the current value would change width
@@ -688,8 +692,9 @@ void _autoWidthTests() {
       expect(short.width, empty.width);
     });
 
-    testWidgets('offered less than it needs, it takes what it was offered',
-        (tester) async {
+    testWidgets('offered less than it needs, it takes what it was offered', (
+      tester,
+    ) async {
       final size = await sized(
         tester,
         const Select<String>(
@@ -738,10 +743,7 @@ void _pickLandsTests() {
         _host(
           const SizedBox(
             width: 260,
-            child: Select<String>(
-              mode: SelectMode.multiple,
-              options: _options,
-            ),
+            child: Select<String>(mode: SelectMode.multiple, options: _options),
           ),
         ),
       );
@@ -759,8 +761,9 @@ void _pickLandsTests() {
       expect(boxFor(tester, 'Apple').duration, Duration.zero);
     });
 
-    testWidgets('and lands again when the pick takes the value out',
-        (tester) async {
+    testWidgets('and lands again when the pick takes the value out', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const SizedBox(
@@ -791,10 +794,7 @@ void _pickLandsTests() {
         _host(
           const SizedBox(
             width: 260,
-            child: Select<String>(
-              mode: SelectMode.multiple,
-              options: _options,
-            ),
+            child: Select<String>(mode: SelectMode.multiple, options: _options),
           ),
         ),
       );
@@ -808,8 +808,9 @@ void _pickLandsTests() {
     });
   });
 
-  testWidgets('a row at rest is its hover colour made clear, not clear black',
-      (tester) async {
+  testWidgets('a row at rest is its hover colour made clear, not clear black', (
+    tester,
+  ) async {
     // Dark, where the hover is a white: a fade from a clear black there runs
     // through grey, and the row flashed as the pointer crossed it.
     await tester.pumpWidget(

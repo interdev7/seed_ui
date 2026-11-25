@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,16 +10,17 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(
-        // The panel renders into the kit's overlay, which needs this key.
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(body: Center(child: SizedBox(width: 320, child: child))),
-      ),
-    );
+  child: MaterialApp(
+    // The panel renders into the kit's overlay, which needs this key.
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(
+      body: Center(child: SizedBox(width: 320, child: child)),
+    ),
+  ),
+);
 
 /// Opens the panel by tapping the field.
 Future<void> _openPanel(WidgetTester tester) async {
@@ -256,7 +258,9 @@ void main() {
         componentDisabled: true,
         child: MaterialApp(
           navigatorKey: UiKit.navigatorKey,
-          home: const Scaffold(body: Center(child: TimePicker(format: 'HH'))),
+          home: const Scaffold(
+            body: Center(child: TimePicker(format: 'HH')),
+          ),
         ),
       ),
     );
@@ -273,7 +277,9 @@ void main() {
         ),
         child: MaterialApp(
           navigatorKey: UiKit.navigatorKey,
-          home: const Scaffold(body: Center(child: TimePicker(format: 'HH'))),
+          home: const Scaffold(
+            body: Center(child: TimePicker(format: 'HH')),
+          ),
         ),
       ),
     );
@@ -287,7 +293,9 @@ void main() {
         locale: SeedLocalizations.ru,
         child: MaterialApp(
           navigatorKey: UiKit.navigatorKey,
-          home: const Scaffold(body: Center(child: TimePicker(format: 'HH'))),
+          home: const Scaffold(
+            body: Center(child: TimePicker(format: 'HH')),
+          ),
         ),
       ),
     );
@@ -323,7 +331,9 @@ void main() {
       reason: 'two columns and a divider, not the whole screen',
     );
     expect(
-        panelWidth, lessThan(tester.getSize(find.byType(MaterialApp)).width));
+      panelWidth,
+      lessThan(tester.getSize(find.byType(MaterialApp)).width),
+    );
   });
 
   testWidgets('picking shows in the panel straight away', (tester) async {
@@ -500,9 +510,7 @@ void main() {
     // Asserted on the style: the test font has symmetric metrics, so the
     // fault is invisible to a measurement here but plain on a real face.
     await tester.pumpWidget(
-      _host(
-        const TimePicker(format: 'HH:mm', value: Duration(hours: 12)),
-      ),
+      _host(const TimePicker(format: 'HH:mm', value: Duration(hours: 12))),
     );
     await tester.pump();
 
@@ -837,8 +845,10 @@ void main() {
       // dictating a width. Treating that as "fill it" stretched every picker
       // across its parent.
       final inWrap = await widthUnder(tester, const Wrap(children: [picker]));
-      final inColumn =
-          await widthUnder(tester, const Column(children: [picker]));
+      final inColumn = await widthUnder(
+        tester,
+        const Column(children: [picker]),
+      );
       final inRow = await widthUnder(
         tester,
         const Row(mainAxisSize: MainAxisSize.min, children: [picker]),
@@ -906,10 +916,7 @@ void main() {
                       width: 200,
                       child: TimePicker(format: 'HH:mm', open: open),
                     ),
-                    GestureDetector(
-                      onTap: toggle,
-                      child: const Text('flip'),
-                    ),
+                    GestureDetector(onTap: toggle, child: const Text('flip')),
                   ],
                 ),
               ),
@@ -917,9 +924,7 @@ void main() {
           ),
         );
 
-    testWidgets('opens without building the overlay mid-build', (
-      tester,
-    ) async {
+    testWidgets('opens without building the overlay mid-build', (tester) async {
       // didUpdateWidget runs inside a build, and mounting the overlay entry
       // marks the Overlay as needing to build — doing it there throws.
       var open = false;

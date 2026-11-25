@@ -1,8 +1,9 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' as m;
-import 'package:flutter/material.dart'
+import 'package:flutter/rendering.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         Table,
         TableRow,
@@ -14,8 +15,7 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/rendering.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' as m;
 import 'package:seed_ui/seed_ui.dart';
 
 class _User {
@@ -34,29 +34,33 @@ List<String> shownNames(WidgetTester tester) => tester
     .toList();
 
 Widget _host(Widget child, {double width = 600}) => ConfigProvider(
-      child: m.MaterialApp(
-        // Menus and panels open in the overlay, so the app has to have one.
-        navigatorKey: UiKit.navigatorKey,
-        home: m.Scaffold(
-          body: Center(child: SizedBox(width: width, child: child)),
-        ),
+  child: m.MaterialApp(
+    // Menus and panels open in the overlay, so the app has to have one.
+    navigatorKey: UiKit.navigatorKey,
+    home: m.Scaffold(
+      body: Center(
+        child: SizedBox(width: width, child: child),
       ),
-    );
+    ),
+  ),
+);
 
 /// The same host, mirrored — everything the table lays out by hand has to be
 /// asked whether it knows which way the page reads.
 Widget _mirrored(Widget child, {double width = 600}) => ConfigProvider(
-      child: m.MaterialApp(
-        // A filter panel opens in the overlay, so the app has to have one.
-        navigatorKey: UiKit.navigatorKey,
-        home: m.Scaffold(
-          body: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Center(child: SizedBox(width: width, child: child)),
-          ),
+  child: m.MaterialApp(
+    // A filter panel opens in the overlay, so the app has to have one.
+    navigatorKey: UiKit.navigatorKey,
+    home: m.Scaffold(
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Center(
+          child: SizedBox(width: width, child: child),
         ),
       ),
-    );
+    ),
+  ),
+);
 
 /// A row with rows under it.
 class _Node {
@@ -110,8 +114,9 @@ void main() {
       expect(_left(tester, '31'), _left(tester, '7'));
     });
 
-    testWidgets('a column with no width takes the room its content needs',
-        (tester) async {
+    testWidgets('a column with no width takes the room its content needs', (
+      tester,
+    ) async {
       // The whole point of saying nothing: the longer name pushes the second
       // column further along than the shorter one would.
       await tester.pumpWidget(
@@ -134,9 +139,7 @@ void main() {
       // Flutter shares slack between every column by default, which inflated
       // a column that had asked for an exact number — 100 became 267.
       await tester.pumpWidget(
-        _host(
-          Table<_User>(columns: [_name(width: 100), _age()], data: _users),
-        ),
+        _host(Table<_User>(columns: [_name(width: 100), _age()], data: _users)),
       );
       final padding = _left(tester, 'Ann');
       expect(_left(tester, '31'), closeTo(100 + padding, 0.5));
@@ -160,23 +163,33 @@ void main() {
       await tester.pumpWidget(
         _host(
           Table<_User>(
-            columns: [_name(), _age(align: TableAlign.end)],
+            columns: [
+              _name(),
+              _age(align: TableAlign.end),
+            ],
             data: _users,
           ),
         ),
       );
       final table = tester.getRect(find.byType(Table<_User>));
       final cell = tester.getRect(find.text('31'));
-      expect(table.right - cell.right, closeTo(_left(tester, 'Ann'), 0.5),
-          reason: 'a padding away from the trailing edge');
+      expect(
+        table.right - cell.right,
+        closeTo(_left(tester, 'Ann'), 0.5),
+        reason: 'a padding away from the trailing edge',
+      );
     });
 
-    testWidgets('a heading follows its column, unless told otherwise',
-        (tester) async {
+    testWidgets('a heading follows its column, unless told otherwise', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
-            columns: [_name(), _age(align: TableAlign.end)],
+            columns: [
+              _name(),
+              _age(align: TableAlign.end),
+            ],
             data: _users,
           ),
         ),
@@ -237,8 +250,9 @@ void main() {
   });
 
   group('a value is enough', () {
-    testWidgets('a column with no builder draws its value as text',
-        (tester) async {
+    testWidgets('a column with no builder draws its value as text', (
+      tester,
+    ) async {
       // Most columns are a word out of a row, and saying so should be the
       // whole of it.
       await tester.pumpWidget(
@@ -274,8 +288,9 @@ void main() {
       expect(find.text('Ann'), findsNothing);
     });
 
-    testWidgets('an absent value draws nothing, not the word null',
-        (tester) async {
+    testWidgets('an absent value draws nothing, not the word null', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -301,11 +316,7 @@ void main() {
     testWidgets('showHeader takes the heading away', (tester) async {
       await tester.pumpWidget(
         _host(
-          Table<_User>(
-            columns: [_name()],
-            data: _users,
-            showHeader: false,
-          ),
+          Table<_User>(columns: [_name()], data: _users, showHeader: false),
         ),
       );
       expect(find.text('Name'), findsNothing);
@@ -340,8 +351,11 @@ void main() {
         _host(Table<_User>(columns: [_name()], data: const [])),
       );
       expect(find.byType(Empty), findsOneWidget);
-      expect(find.text('Name'), findsOneWidget,
-          reason: 'the columns are still worth showing');
+      expect(
+        find.text('Name'),
+        findsOneWidget,
+        reason: 'the columns are still worth showing',
+      );
     });
 
     testWidgets('an empty of your own replaces it', (tester) async {
@@ -358,8 +372,9 @@ void main() {
       expect(find.byType(Empty), findsNothing);
     });
 
-    testWidgets('and so does the provider, through its own slot',
-        (tester) async {
+    testWidgets('and so does the provider, through its own slot', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ConfigProvider(
           emptyBuilder: (context, slot) => Text('none: ${slot.name}'),
@@ -375,9 +390,7 @@ void main() {
 
     testWidgets('loading lays a spinner over it', (tester) async {
       await tester.pumpWidget(
-        _host(
-          Table<_User>(columns: [_name()], data: _users, loading: true),
-        ),
+        _host(Table<_User>(columns: [_name()], data: _users, loading: true)),
       );
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.byType(Spin), findsOneWidget);
@@ -404,19 +417,20 @@ void main() {
     List<int> many(int n) => [for (var i = 0; i < n; i++) i];
 
     Widget rows(TableScroll? scroll, {int n = 30, double box = 400}) => _host(
-          Table<int>(
-            scroll: scroll,
-            columns: [
-              TableColumn<int>(title: const Text('N'), value: (v) => 'row $v'),
-              TableColumn<int>(title: const Text('Sq'), value: (v) => 'sq $v'),
-            ],
-            data: many(n),
-          ),
-          width: box,
-        );
+      Table<int>(
+        scroll: scroll,
+        columns: [
+          TableColumn<int>(title: const Text('N'), value: (v) => 'row $v'),
+          TableColumn<int>(title: const Text('Sq'), value: (v) => 'sq $v'),
+        ],
+        data: many(n),
+      ),
+      width: box,
+    );
 
-    testWidgets('with no scroll the table is as tall as its rows',
-        (tester) async {
+    testWidgets('with no scroll the table is as tall as its rows', (
+      tester,
+    ) async {
       await tester.pumpWidget(rows(null, n: 4));
       final short = tester.getRect(find.byType(Table<int>)).height;
       await tester.pumpWidget(rows(null, n: 8));
@@ -441,10 +455,16 @@ void main() {
       await tester.drag(find.text('row 1'), const Offset(0, -80));
       await tester.pumpAndSettle();
 
-      expect(tester.getRect(find.text('N')).top, heading,
-          reason: 'the heading did not move');
-      expect(tester.getRect(find.text('row 0')).top, closeTo(first - 80, 1),
-          reason: 'the rows did');
+      expect(
+        tester.getRect(find.text('N')).top,
+        heading,
+        reason: 'the heading did not move',
+      );
+      expect(
+        tester.getRect(find.text('row 0')).top,
+        closeTo(first - 80, 1),
+        reason: 'the rows did',
+      );
     });
 
     testWidgets('a width wider than the box scrolls across', (tester) async {
@@ -496,8 +516,9 @@ void main() {
       );
     });
 
-    testWidgets('a scrolling table still fits its columns to their content',
-        (tester) async {
+    testWidgets('a scrolling table still fits its columns to their content', (
+      tester,
+    ) async {
       // It used to share the width equally instead: the heading was a table
       // of its own, and an intrinsic width would have measured the title in
       // one and the cells in the other. One viewport holds both now, and the
@@ -530,12 +551,14 @@ void main() {
       // Laid out at the preset's control height with the cell's padding still
       // on it, the text had nowhere to go and came out cut in half.
       await tester.pumpWidget(rows(null, n: 4));
-      final still = tester.getRect(find.text('row 1')).top -
+      final still =
+          tester.getRect(find.text('row 1')).top -
           tester.getRect(find.text('row 0')).top;
 
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(rows(const TableScroll(y: 200), n: 4));
-      final scrolling = tester.getRect(find.text('row 1')).top -
+      final scrolling =
+          tester.getRect(find.text('row 1')).top -
           tester.getRect(find.text('row 0')).top;
 
       expect(scrolling, closeTo(still, 0.5));
@@ -546,32 +569,33 @@ void main() {
       );
     });
 
-    testWidgets('the widths are measured again only when they would change',
-        (tester) async {
+    testWidgets('the widths are measured again only when they would change', (
+      tester,
+    ) async {
       // Measuring is exact and so proportional to the data: five hundred rows
       // of two columns is a thousand strings, and every rebuild above the
       // table paid for all of them. Measured on fifteen columns, a tap on a
       // row cost a hundred and seventeen milliseconds.
       var built = 0;
       Widget host(List<int> data) => _host(
-            StatefulBuilder(
-              builder: (context, setState) => Table<int>(
-                scroll: const TableScroll(y: 200),
-                onRowTap: (_, __) => setState(() {}),
-                columns: [
-                  TableColumn<int>(
-                    title: const Text('N'),
-                    value: (v) {
-                      built++;
-                      return 'row $v';
-                    },
-                  ),
-                ],
-                data: data,
+        StatefulBuilder(
+          builder: (context, setState) => Table<int>(
+            scroll: const TableScroll(y: 200),
+            onRowTap: (_, __) => setState(() {}),
+            columns: [
+              TableColumn<int>(
+                title: const Text('N'),
+                value: (v) {
+                  built++;
+                  return 'row $v';
+                },
               ),
-            ),
-            width: 400,
-          );
+            ],
+            data: data,
+          ),
+        ),
+        width: 400,
+      );
 
       // A fresh list every build, which is how a `data:` written inline
       // behaves — so the rows are compared, not the list.
@@ -611,8 +635,9 @@ void main() {
       expect(find.byType(RichText).evaluate().length, lessThan(60));
     });
 
-    testWidgets('an empty scrolling table still shows its heading',
-        (tester) async {
+    testWidgets('an empty scrolling table still shows its heading', (
+      tester,
+    ) async {
       await tester.pumpWidget(rows(const TableScroll(y: 200), n: 0));
       expect(find.text('N'), findsOneWidget);
       expect(find.byType(Empty), findsOneWidget);
@@ -653,8 +678,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('what the rows cannot use goes back to the page',
-        (tester) async {
+    testWidgets('what the rows cannot use goes back to the page', (
+      tester,
+    ) async {
       // A scroll view inside another does not chain: reaching its own end it
       // simply stops. Measured before this, a table with a height of its own
       // froze the page for as long as the pointer was over it — thirteen
@@ -744,8 +770,11 @@ void main() {
       final table = tester.getRect(find.byType(Table<int>));
       final start = tester.getRect(find.text('p0')).left;
       final end = tester.getRect(find.text('e0')).left;
-      expect(end - table.left, greaterThan(200),
-          reason: 'the end pane is against the far edge of a 400-wide box');
+      expect(
+        end - table.left,
+        greaterThan(200),
+        reason: 'the end pane is against the far edge of a 400-wide box',
+      );
 
       await tester.drag(find.text('c0r1'), const Offset(-200, 0));
       await tester.pumpAndSettle();
@@ -773,8 +802,9 @@ void main() {
       expect(movedHeading, greaterThan(100), reason: 'and they did move');
     });
 
-    testWidgets('a pinned table scrolls sideways, heading and all',
-        (tester) async {
+    testWidgets('a pinned table scrolls sideways, heading and all', (
+      tester,
+    ) async {
       // The case the gallery caught: with a sticky heading the columns went
       // one way and the heading another — its pane was laid out at the width
       // of the box rather than the table, so its columns came out at the
@@ -807,14 +837,15 @@ void main() {
       expect(headingMoved, cellMoved, reason: 'and the heading went with them');
     });
 
-    testWidgets('a pinned column casts over what has gone behind it',
-        (tester) async {
+    testWidgets('a pinned column casts over what has gone behind it', (
+      tester,
+    ) async {
       // The shade is painted, not built: one viewport owns both axes now, so
       // there is no pane to hang a strip on — the rows are laid out where
       // they are and a gradient goes over them.
       Finder viewport() => find.byWidgetPredicate(
-            (w) => w.runtimeType.toString() == '_RowsViewport',
-          );
+        (w) => w.runtimeType.toString() == '_RowsViewport',
+      );
       // `something` rather than a bare `rect`: the cells paint rectangles of
       // their own, and the shade is only one of them. Matched on the edge it
       // stands at rather than the whole rectangle — the shade is now drawn
@@ -881,8 +912,9 @@ void main() {
       expect(tester.getRect(find.text('e1')).top, second);
     });
 
-    testWidgets('a held column keeps its place until the scroll reaches it',
-        (tester) async {
+    testWidgets('a held column keeps its place until the scroll reaches it', (
+      tester,
+    ) async {
       // Held columns are no longer taken out and stacked at the edge: one
       // keeps its place among the others and stops when the scroll would
       // carry it past its rest — which is what lets a loose column stand
@@ -945,10 +977,16 @@ void main() {
       expect(leftOf('one0'), lessThan(20), reason: 'still at the edge');
       // Measured between the two texts, since each sits a cell's padding in:
       // the second stands exactly the first's hundred pixels along.
-      expect(leftOf('two0') - leftOf('one0'), closeTo(100, 2),
-          reason: 'stacked behind the first, which is a hundred wide');
-      expect(find.text('loose0'), findsNothing,
-          reason: 'gone under them, and no longer built');
+      expect(
+        leftOf('two0') - leftOf('one0'),
+        closeTo(100, 2),
+        reason: 'stacked behind the first, which is a hundred wide',
+      );
+      expect(
+        find.text('loose0'),
+        findsNothing,
+        reason: 'gone under them, and no longer built',
+      );
     });
 
     testWidgets('a held column has a ground of its own', (tester) async {
@@ -958,26 +996,26 @@ void main() {
       await tester.pumpAndSettle();
 
       List<Color> fillsOver(String text) => [
-            ...tester
-                .widgetList<DecoratedBox>(
-                  find.ancestor(
-                    of: find.text(text),
-                    matching: find.byType(DecoratedBox),
-                  ),
-                )
-                .map((d) => d.decoration)
-                .whereType<BoxDecoration>()
-                .map((d) => d.color)
-                .whereType<Color>(),
-            ...tester
-                .widgetList<ColoredBox>(
-                  find.ancestor(
-                    of: find.text(text),
-                    matching: find.byType(ColoredBox),
-                  ),
-                )
-                .map((b) => b.color),
-          ].where((c) => c.a != 0).toList();
+        ...tester
+            .widgetList<DecoratedBox>(
+              find.ancestor(
+                of: find.text(text),
+                matching: find.byType(DecoratedBox),
+              ),
+            )
+            .map((d) => d.decoration)
+            .whereType<BoxDecoration>()
+            .map((d) => d.color)
+            .whereType<Color>(),
+        ...tester
+            .widgetList<ColoredBox>(
+              find.ancestor(
+                of: find.text(text),
+                matching: find.byType(ColoredBox),
+              ),
+            )
+            .map((b) => b.color),
+      ].where((c) => c.a != 0).toList();
 
       expect(fillsOver('p0'), isNotEmpty, reason: 'the held one is opaque');
       expect(fillsOver('p0').first.a, 1.0);
@@ -987,12 +1025,16 @@ void main() {
       // wash, so a held column's heading was see-through and the others could
       // be watched travelling behind it.
       expect(fillsOver('Pin').first.a, 1.0);
-      expect(fillsOver('C0').first.a, lessThan(0.5),
-          reason: 'a loose heading keeps the wash it always had');
+      expect(
+        fillsOver('C0').first.a,
+        lessThan(0.5),
+        reason: 'a loose heading keeps the wash it always had',
+      );
     });
 
-    testWidgets('the shade moves to the column that is holding',
-        (tester) async {
+    testWidgets('the shade moves to the column that is holding', (
+      tester,
+    ) async {
       // Cast from the edge of the columns that are holding, not from where
       // they will all come to rest: a shade drawn at the far side of the band
       // appeared beside a column the scroll had not yet reached.
@@ -1039,9 +1081,7 @@ void main() {
       // Alpha, not colour: a held cell is opaque, a loose one paints nothing,
       // and the shade is a wash over the nothing.
       Future<List<int>> alphaAt(List<int> xs) async {
-        final box = tester.renderObject<RenderRepaintBoundary>(
-          find.byKey(key),
-        );
+        final box = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
         final bytes = await tester.runAsync(() async {
           final image = await box.toImage();
           final data = await image.toByteData();
@@ -1052,8 +1092,8 @@ void main() {
         final origin = tester.getRect(find.byKey(key));
         // Just above the first body glyph: inside the cell's padding, where
         // no glyph reaches.
-        final y =
-            (tester.getRect(find.text('one0')).top - origin.top - 5).round();
+        final y = (tester.getRect(find.text('one0')).top - origin.top - 5)
+            .round();
         return [for (final x in xs) bytes!.getUint8((y * w + x) * 4 + 3)];
       }
 
@@ -1074,11 +1114,17 @@ void main() {
       var seen = await alphaAt([101, 108, 202]);
       expect(seen[0], greaterThan(faint), reason: 'and grows as it is held');
       expect(seen[0], greaterThan(5), reason: 'a wash past the first column');
-      expect(seen[0], lessThan(60),
-          reason: 'the reference casts a narrow edge, not a band');
+      expect(
+        seen[0],
+        lessThan(60),
+        reason: 'the reference casts a narrow edge, not a band',
+      );
       expect(seen[1], lessThan(seen[0]), reason: 'and it fades');
-      expect(seen[2], 255,
-          reason: 'the second is still at its own place, casting nothing');
+      expect(
+        seen[2],
+        255,
+        reason: 'the second is still at its own place, casting nothing',
+      );
 
       // Once the second has stacked, its own shade grows at its own edge —
       // it does not switch on at full strength, and the first column's is
@@ -1092,8 +1138,9 @@ void main() {
       expect(seen[2], lessThan(seen[1]), reason: 'fading from the new edge');
     });
 
-    testWidgets('a held column lights up under the pointer like any other',
-        (tester) async {
+    testWidgets('a held column lights up under the pointer like any other', (
+      tester,
+    ) async {
       // The ground used to be painted inside the cell and the row's fill
       // outside it, so the opaque ground covered the fill: a held column
       // neither lit up under the pointer nor showed that its row was picked.
@@ -1156,7 +1203,7 @@ void main() {
                 // nothing to catch.
                 value: (v) => v == 0
                     ? 'a cell long enough to wrap over several lines indeed '
-                        'and then a good deal more besides'
+                          'and then a good deal more besides'
                     : 's$v',
               ),
             ],
@@ -1181,8 +1228,9 @@ void main() {
       );
     });
 
-    testWidgets('many columns are not squeezed into illegibility',
-        (tester) async {
+    testWidgets('many columns are not squeezed into illegibility', (
+      tester,
+    ) async {
       // Fifteen sharing a declared width came out thirty-seven pixels each.
       // Past a floor the table grows and scrolls instead.
       Future<double> widthOf(int columns) async {
@@ -1205,12 +1253,16 @@ void main() {
       }
 
       expect(await widthOf(5), greaterThan(150), reason: 'room to spare');
-      expect(await widthOf(15), greaterThanOrEqualTo(100),
-          reason: 'and a floor once there is not');
+      expect(
+        await widthOf(15),
+        greaterThanOrEqualTo(100),
+        reason: 'and a floor once there is not',
+      );
     });
 
-    testWidgets('a table is never laid out narrower than its own columns',
-        (tester) async {
+    testWidgets('a table is never laid out narrower than its own columns', (
+      tester,
+    ) async {
       // Fifteen columns at the hundred-pixel floor want fifteen hundred, and
       // the width declared was eleven hundred. Held to the declared one the
       // table overflowed its box and the scroll ran only as far as the box —
@@ -1383,8 +1435,9 @@ void main() {
       );
     });
 
-    testWidgets('an empty pinned table still shows its heading',
-        (tester) async {
+    testWidgets('an empty pinned table still shows its heading', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<int>(
@@ -1409,8 +1462,9 @@ void main() {
   });
 
   group('hovering', () {
-    testWidgets('lights the row under the pointer, and only that one',
-        (tester) async {
+    testWidgets('lights the row under the pointer, and only that one', (
+      tester,
+    ) async {
       // The fill used to live on the row's decoration, which only the whole
       // table can redraw — so every twitch of the pointer rebuilt every row,
       // ninety milliseconds of it at five hundred rows. It lives in the cell
@@ -1443,11 +1497,7 @@ void main() {
     testWidgets('rowHoverable: false lights nothing', (tester) async {
       await tester.pumpWidget(
         _host(
-          Table<_User>(
-            columns: [_name()],
-            data: _users,
-            rowHoverable: false,
-          ),
+          Table<_User>(columns: [_name()], data: _users, rowHoverable: false),
         ),
       );
       final pointer = TestPointer(1, PointerDeviceKind.mouse);
@@ -1489,8 +1539,9 @@ void main() {
       expect(middle, lessThan(large));
     });
 
-    testWidgets('a height of your own is the height of the row',
-        (tester) async {
+    testWidgets('a height of your own is the height of the row', (
+      tester,
+    ) async {
       // The number says how tall the row is, so the padding that would
       // otherwise have decided it stands down — adding to it would mean
       // 48 came out at 52.
@@ -1552,8 +1603,9 @@ void main() {
   group('a house style for the columns', () {
     const people = [_User('Chen', 27), _User('Ann', 45)];
 
-    testWidgets('what a column stays quiet about the table answers for',
-        (tester) async {
+    testWidgets('what a column stays quiet about the table answers for', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -1581,8 +1633,11 @@ void main() {
       final name = tester.getRect(find.text('Chen'));
       final age = tester.getRect(find.text('27'));
       final nameHead = tester.getRect(find.text('Name'));
-      expect(name.right, greaterThan(nameHead.right - 1),
-          reason: 'against the far edge, as the table said');
+      expect(
+        name.right,
+        greaterThan(nameHead.right - 1),
+        reason: 'against the far edge, as the table said',
+      );
       // The centred one is neither against the near edge nor the far one.
       final ageHead = tester.getRect(find.text('Age'));
       expect((age.center.dx - ageHead.center.dx).abs(), lessThan(1));
@@ -1619,12 +1674,15 @@ void main() {
       // A group holds no cells of its own, so what falls to it falls to the
       // leaves under it: two columns of a hundred and twenty apiece.
       final group = tester.getRect(find.text('Who'));
-      expect(group.center.dx,
-          closeTo(tester.getRect(find.byType(Table<_User>)).left + 120, 4));
+      expect(
+        group.center.dx,
+        closeTo(tester.getRect(find.byType(Table<_User>)).left + 120, 4),
+      );
     });
 
-    testWidgets('a table told nothing is the table it always was',
-        (tester) async {
+    testWidgets('a table told nothing is the table it always was', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -1649,11 +1707,7 @@ void main() {
   });
 
   group('sorting', () {
-    const people = [
-      _User('Chen', 27),
-      _User('Ann', 45),
-      _User('Bart', 31),
-    ];
+    const people = [_User('Chen', 27), _User('Ann', 45), _User('Bart', 31)];
 
     List<String> shown(WidgetTester tester) => tester
         .widgetList<Text>(find.byType(Text))
@@ -1668,34 +1722,39 @@ void main() {
       ValueChanged<List<TableSort>>? onSortChanged,
       int Function(_User, _User)? sorter,
       TableScroll? scroll,
-    }) =>
-        _host(
-          Table<_User>(
-            scroll: scroll,
-            sort: sort,
-            defaultSort: defaultSort,
-            onSortChanged: onSortChanged,
-            data: people,
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                sortable: sorter == null,
-                sorter: sorter,
-                value: (u) => u.name,
-              ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                sortable: true,
-                value: (u) => u.age,
-              ),
-            ],
+    }) => _host(
+      Table<_User>(
+        scroll: scroll,
+        sort: sort,
+        defaultSort: defaultSort,
+        onSortChanged: onSortChanged,
+        data: people,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            sortable: sorter == null,
+            sorter: sorter,
+            value: (u) => u.name,
           ),
-        );
+          TableColumn<_User>(
+            title: const Text('Age'),
+            sortable: true,
+            value: (u) => u.age,
+          ),
+        ],
+      ),
+    );
 
     testWidgets('a heading tapped cycles up, down, and back', (tester) async {
       await tester.pumpWidget(table());
-      expect(shown(tester), ['Chen', '27', 'Ann', '45', 'Bart', '31'],
-          reason: 'the order they came in');
+      expect(shown(tester), [
+        'Chen',
+        '27',
+        'Ann',
+        '45',
+        'Bart',
+        '31',
+      ], reason: 'the order they came in');
 
       await tester.tap(find.text('Name'));
       await tester.pumpAndSettle();
@@ -1707,8 +1766,14 @@ void main() {
 
       await tester.tap(find.text('Name'));
       await tester.pumpAndSettle();
-      expect(shown(tester), ['Chen', '27', 'Ann', '45', 'Bart', '31'],
-          reason: 'a third tap gives the rows back as they were');
+      expect(shown(tester), [
+        'Chen',
+        '27',
+        'Ann',
+        '45',
+        'Bart',
+        '31',
+      ], reason: 'a third tap gives the rows back as they were');
     });
 
     testWidgets('a value is compared without being told how', (tester) async {
@@ -1721,8 +1786,9 @@ void main() {
 
     testWidgets('a sorter of your own says how instead', (tester) async {
       // Backwards, which comparing the names themselves never gives.
-      await tester
-          .pumpWidget(table(sorter: (a, b) => b.name.compareTo(a.name)));
+      await tester.pumpWidget(
+        table(sorter: (a, b) => b.name.compareTo(a.name)),
+      );
       await tester.tap(find.text('Name'));
       await tester.pumpAndSettle();
       expect(shown(tester), ['Chen', '27', 'Bart', '31', 'Ann', '45']);
@@ -1735,38 +1801,57 @@ void main() {
       expect(shown(tester), ['Ann', '45', 'Bart', '31', 'Chen', '27']);
     });
 
-    testWidgets('a sort given is the sort shown, and tapping only tells',
-        (tester) async {
+    testWidgets('a sort given is the sort shown, and tapping only tells', (
+      tester,
+    ) async {
       List<TableSort>? told;
-      await tester.pumpWidget(table(
-        sort: const [TableSort(0, TableSortOrder.ascending)],
-        onSortChanged: (next) => told = next,
-      ));
+      await tester.pumpWidget(
+        table(
+          sort: const [TableSort(0, TableSortOrder.ascending)],
+          onSortChanged: (next) => told = next,
+        ),
+      );
       expect(shown(tester), ['Ann', '45', 'Bart', '31', 'Chen', '27']);
 
       await tester.tap(find.text('Name'));
       await tester.pumpAndSettle();
-      expect(told, const [TableSort(0, TableSortOrder.descending)],
-          reason: 'it said what it would have become');
-      expect(shown(tester), ['Ann', '45', 'Bart', '31', 'Chen', '27'],
-          reason: 'and changed nothing itself');
+      expect(told, const [
+        TableSort(0, TableSortOrder.descending),
+      ], reason: 'it said what it would have become');
+      expect(shown(tester), [
+        'Ann',
+        '45',
+        'Bart',
+        '31',
+        'Chen',
+        '27',
+      ], reason: 'and changed nothing itself');
     });
 
-    testWidgets('the carets darken under the hand, and take their time',
-        (tester) async {
+    testWidgets('the carets darken under the hand, and take their time', (
+      tester,
+    ) async {
       // The reference gives the sorter a colour and a transition on it, and
       // darkens it while the heading is hovered. The one in force keeps its
       // own colour: the hand has nothing to add to a column already sorted.
       await tester.pumpWidget(table());
       await tester.pumpAndSettle();
 
-      Color caretColour({required bool up}) => ((tester
-              .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
-                  w is CustomPaint &&
-                  w.painter.runtimeType.toString() == '_CaretPainter'))
-              .elementAt(up ? 0 : 1)
-              .painter!) as dynamic)
-          .color as Color;
+      Color caretColour({required bool up}) =>
+          ((tester
+                          .widgetList<CustomPaint>(
+                            find.byWidgetPredicate(
+                              (w) =>
+                                  w is CustomPaint &&
+                                  w.painter.runtimeType.toString() ==
+                                      '_CaretPainter',
+                            ),
+                          )
+                          .elementAt(up ? 0 : 1)
+                          .painter!)
+                      as dynamic)
+                  .color
+              as Color;
 
       final resting = caretColour(up: true);
 
@@ -1798,13 +1883,21 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      Color caretColour({required bool up}) => ((tester
-              .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
-                  w is CustomPaint &&
-                  w.painter.runtimeType.toString() == '_CaretPainter'))
-              .elementAt(up ? 0 : 1)
-              .painter!) as dynamic)
-          .color as Color;
+      Color caretColour({required bool up}) =>
+          ((tester
+                          .widgetList<CustomPaint>(
+                            find.byWidgetPredicate(
+                              (w) =>
+                                  w is CustomPaint &&
+                                  w.painter.runtimeType.toString() ==
+                                      '_CaretPainter',
+                            ),
+                          )
+                          .elementAt(up ? 0 : 1)
+                          .painter!)
+                      as dynamic)
+                  .color
+              as Color;
 
       final inForce = caretColour(up: true);
 
@@ -1815,12 +1908,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(caretColour(up: true), inForce, reason: 'the hand adds nothing');
-      expect(caretColour(up: false), isNot(inForce),
-          reason: 'while the other one darkens with the rest');
+      expect(
+        caretColour(up: false),
+        isNot(inForce),
+        reason: 'while the other one darkens with the rest',
+      );
     });
 
-    testWidgets('a column that does not sort has no carets and no tap',
-        (tester) async {
+    testWidgets('a column that does not sort has no carets and no tap', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -1835,9 +1932,11 @@ void main() {
         ),
       );
       expect(
-        find.byWidgetPredicate((w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString() == '_CaretPainter'),
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_CaretPainter',
+        ),
         findsNothing,
       );
       await tester.tap(find.text('Name'));
@@ -1845,8 +1944,9 @@ void main() {
       expect(shown(tester), ['Chen', 'Ann', 'Bart'], reason: 'nothing moved');
     });
 
-    testWidgets('the rows a scrolling table shows are the sorted ones',
-        (tester) async {
+    testWidgets('the rows a scrolling table shows are the sorted ones', (
+      tester,
+    ) async {
       // The lazy body reads the same order as the grid: a row's index is its
       // place in what is shown, not in what was handed over.
       await tester.pumpWidget(table(scroll: const TableScroll(y: 200)));
@@ -1888,8 +1988,9 @@ void main() {
       expect(names, [for (var i = 0; i < names.length; i++) 'n$i']);
     });
 
-    testWidgets('a table controlled and then let go keeps no stale sort',
-        (tester) async {
+    testWidgets('a table controlled and then let go keeps no stale sort', (
+      tester,
+    ) async {
       // Four rows whose names and ages do not run the same way, or a tap
       // stored where it should not have been would look like the right answer.
       const four = [
@@ -1899,30 +2000,38 @@ void main() {
         _User('Dee', 50),
       ];
       Widget host({List<TableSort>? sort}) => _host(
-            Table<_User>(
-              data: four,
-              sort: sort,
-              columns: [
-                TableColumn<_User>(
-                  title: const Text('Name'),
-                  sortable: true,
-                  value: (u) => u.name,
-                ),
-                TableColumn<_User>(
-                  title: const Text('Age'),
-                  sortable: true,
-                  value: (u) => u.age,
-                ),
-              ],
+        Table<_User>(
+          data: four,
+          sort: sort,
+          columns: [
+            TableColumn<_User>(
+              title: const Text('Name'),
+              sortable: true,
+              value: (u) => u.name,
             ),
-          );
+            TableColumn<_User>(
+              title: const Text('Age'),
+              sortable: true,
+              value: (u) => u.age,
+            ),
+          ],
+        ),
+      );
 
       // Uncontrolled first, so the table has a sort of its own to come back to.
       await tester.pumpWidget(host());
       await tester.tap(find.text('Age'));
       await tester.pumpAndSettle();
-      expect(shown(tester),
-          ['Chen', '27', 'Bart', '31', 'Ann', '45', 'Dee', '50']);
+      expect(shown(tester), [
+        'Chen',
+        '27',
+        'Bart',
+        '31',
+        'Ann',
+        '45',
+        'Dee',
+        '50',
+      ]);
 
       // Then given one, where a tap may only tell.
       await tester.pumpWidget(
@@ -1930,38 +2039,51 @@ void main() {
       );
       await tester.tap(find.text('Name'));
       await tester.pumpAndSettle();
-      expect(
-          shown(tester), ['Ann', '45', 'Bart', '31', 'Chen', '27', 'Dee', '50'],
-          reason: 'what it was told, and the tap only told');
+      expect(shown(tester), [
+        'Ann',
+        '45',
+        'Bart',
+        '31',
+        'Chen',
+        '27',
+        'Dee',
+        '50',
+      ], reason: 'what it was told, and the tap only told');
 
       // Then let go: back to its own sort, not to what that tap would have
       // made of it.
       await tester.pumpWidget(host());
       await tester.pumpAndSettle();
-      expect(shown(tester),
-          ['Chen', '27', 'Bart', '31', 'Ann', '45', 'Dee', '50']);
+      expect(shown(tester), [
+        'Chen',
+        '27',
+        'Bart',
+        '31',
+        'Ann',
+        '45',
+        'Dee',
+        '50',
+      ]);
     });
 
-    testWidgets('a row with nothing in the column sorts last either way',
-        (tester) async {
+    testWidgets('a row with nothing in the column sorts last either way', (
+      tester,
+    ) async {
       const some = [_User('has', 2), _User('none', -1), _User('also', 1)];
       Widget host(TableSortOrder order) => _host(
-            Table<_User>(
-              data: some,
-              defaultSort: [TableSort(0, order)],
-              columns: [
-                TableColumn<_User>(
-                  title: const Text('Age'),
-                  sortable: true,
-                  value: (u) => u.age == -1 ? null : u.age,
-                ),
-                TableColumn<_User>(
-                  title: const Text('Name'),
-                  value: (u) => u.name,
-                ),
-              ],
+        Table<_User>(
+          data: some,
+          defaultSort: [TableSort(0, order)],
+          columns: [
+            TableColumn<_User>(
+              title: const Text('Age'),
+              sortable: true,
+              value: (u) => u.age == -1 ? null : u.age,
             ),
-          );
+            TableColumn<_User>(title: const Text('Name'), value: (u) => u.name),
+          ],
+        ),
+      );
 
       // Turned round with everything else, a blank cell rose to the top of a
       // descending sort, which is not what a blank cell means.
@@ -1973,8 +2095,9 @@ void main() {
       expect(shown(tester).last, 'none');
     });
 
-    testWidgets('the whole heading answers, not the word in it',
-        (tester) async {
+    testWidgets('the whole heading answers, not the word in it', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       final cell = tester.getRect(
         find
@@ -1985,8 +2108,11 @@ void main() {
             .first,
       );
       final word = tester.getRect(find.text('Name'));
-      expect(cell.width, greaterThan(word.width + 8),
-          reason: 'the padding is part of it, not just the word');
+      expect(
+        cell.width,
+        greaterThan(word.width + 8),
+        reason: 'the padding is part of it, not just the word',
+      );
 
       // And a tap in the padding, clear of the word, still sorts.
       await tester.tapAt(Offset(cell.right - 4, cell.center.dy));
@@ -1994,8 +2120,9 @@ void main() {
       expect(shown(tester), ['Ann', '45', 'Bart', '31', 'Chen', '27']);
     });
 
-    testWidgets('a sortable heading lights up under the pointer',
-        (tester) async {
+    testWidgets('a sortable heading lights up under the pointer', (
+      tester,
+    ) async {
       Color? fillOver(Finder heading) {
         final boxes = find
             .ancestor(of: heading, matching: find.byType(ColoredBox))
@@ -2049,8 +2176,9 @@ void main() {
       expect(fillOver(find.text('Chen')), isNull);
     });
 
-    testWidgets('a picked row keeps its own fill in a sorted column',
-        (tester) async {
+    testWidgets('a picked row keeps its own fill in a sorted column', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -2065,10 +2193,7 @@ void main() {
                 sortable: true,
                 value: (u) => u.name,
               ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                value: (u) => u.age,
-              ),
+              TableColumn<_User>(title: const Text('Age'), value: (u) => u.age),
             ],
           ),
         ),
@@ -2092,19 +2217,21 @@ void main() {
       expect(picked, isNot(sorted));
     });
 
-    testWidgets('a defaultSort marks its column before anybody has touched it',
-        (tester) async {
-      await tester.pumpWidget(
-        table(defaultSort: const [TableSort(1, TableSortOrder.ascending)]),
-      );
+    testWidgets(
+      'a defaultSort marks its column before anybody has touched it',
+      (tester) async {
+        await tester.pumpWidget(
+          table(defaultSort: const [TableSort(1, TableSortOrder.ascending)]),
+        );
 
-      final ages = find
-          .ancestor(of: find.text('27'), matching: find.byType(ColoredBox))
-          .evaluate()
-          .map((e) => (e.widget as ColoredBox).color)
-          .where((c) => c.a != 0);
-      expect(ages, isNotEmpty);
-    });
+        final ages = find
+            .ancestor(of: find.text('27'), matching: find.byType(ColoredBox))
+            .evaluate()
+            .map((e) => (e.widget as ColoredBox).color)
+            .where((c) => c.a != 0);
+        expect(ages, isNotEmpty);
+      },
+    );
 
     testWidgets('the column being sorted by keeps the fill', (tester) async {
       Color? fillOver(Finder heading) {
@@ -2166,8 +2293,9 @@ void main() {
       expect(lit, isEmpty, reason: 'nothing would happen if it were tapped');
     });
 
-    testWidgets('the carets stand at the cell edge, not beside the word',
-        (tester) async {
+    testWidgets('the carets stand at the cell edge, not beside the word', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -2185,9 +2313,11 @@ void main() {
       );
       final carets = tester.getRect(
         find
-            .byWidgetPredicate((w) =>
-                w is CustomPaint &&
-                w.painter.runtimeType.toString() == '_CaretPainter')
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_CaretPainter',
+            )
             .first,
       );
       final word = tester.getRect(find.text('N'));
@@ -2196,8 +2326,9 @@ void main() {
       expect(carets.left - word.right, greaterThan(100));
     });
 
-    testWidgets('columns with a priority sort together, the higher first',
-        (tester) async {
+    testWidgets('columns with a priority sort together, the higher first', (
+      tester,
+    ) async {
       // City first, then age within a city.
       const crowd = [
         _User('b', 2),
@@ -2292,8 +2423,9 @@ void main() {
       expect(told!.single.column, 1);
     });
 
-    testWidgets('a third tap drops one column and leaves the rest',
-        (tester) async {
+    testWidgets('a third tap drops one column and leaves the rest', (
+      tester,
+    ) async {
       List<TableSort>? told;
       await tester.pumpWidget(
         _host(
@@ -2334,8 +2466,9 @@ void main() {
       expect(told!.single.column, 0);
     });
 
-    testWidgets('the order given is put right by the priorities',
-        (tester) async {
+    testWidgets('the order given is put right by the priorities', (
+      tester,
+    ) async {
       // Named the wrong way round on purpose: a priority means one thing
       // everywhere, so the table compares Name first regardless.
       await tester.pumpWidget(
@@ -2413,13 +2546,13 @@ void main() {
 
     // A filter menu opens in the overlay, so the app has to have one.
     Widget host(Widget child) => ConfigProvider(
-          child: m.MaterialApp(
-            navigatorKey: UiKit.navigatorKey,
-            home: m.Scaffold(
-              body: Center(child: SizedBox(width: 600, child: child)),
-            ),
-          ),
-        );
+      child: m.MaterialApp(
+        navigatorKey: UiKit.navigatorKey,
+        home: m.Scaffold(
+          body: Center(child: SizedBox(width: 600, child: child)),
+        ),
+      ),
+    );
 
     Widget table({
       Map<int, List<Object?>>? filters,
@@ -2428,34 +2561,33 @@ void main() {
       bool multiple = true,
       bool Function(Object?, _User)? onFilter,
       List<TableSort>? defaultSort,
-    }) =>
-        host(
-          Table<_User>(
-            data: people,
-            filters: filters,
-            defaultFilters: defaultFilters,
-            onFiltersChanged: onFiltersChanged,
-            defaultSort: defaultSort,
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                value: (u) => u.name,
-                filterMultiple: multiple,
-                onFilter: onFilter,
-                filters: const [
-                  TableFilter('Ann', 'Ann'),
-                  TableFilter('Bart', 'Bart'),
-                ],
-              ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                sortable: true,
-                value: (u) => u.age,
-                filters: const [TableFilter('young', 27)],
-              ),
+    }) => host(
+      Table<_User>(
+        data: people,
+        filters: filters,
+        defaultFilters: defaultFilters,
+        onFiltersChanged: onFiltersChanged,
+        defaultSort: defaultSort,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            value: (u) => u.name,
+            filterMultiple: multiple,
+            onFilter: onFilter,
+            filters: const [
+              TableFilter('Ann', 'Ann'),
+              TableFilter('Bart', 'Bart'),
             ],
           ),
-        );
+          TableColumn<_User>(
+            title: const Text('Age'),
+            sortable: true,
+            value: (u) => u.age,
+            filters: const [TableFilter('young', 27)],
+          ),
+        ],
+      ),
+    );
 
     // The label is in the table as well as in the menu; the menu is above.
     Future<void> choose(WidgetTester tester, String label) async {
@@ -2466,25 +2598,30 @@ void main() {
     Future<void> openMenu(WidgetTester tester, int at) async {
       await tester.tap(
         find
-            .byWidgetPredicate((w) =>
-                w is CustomPaint &&
-                w.painter.runtimeType.toString() == '_FunnelPainter')
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_FunnelPainter',
+            )
             .at(at),
       );
       await tester.pumpAndSettle();
     }
 
     testWidgets(
-        'a column with filters wears a funnel, and one without does not',
-        (tester) async {
-      await tester.pumpWidget(table());
-      expect(
-        find.byWidgetPredicate((w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString() == '_FunnelPainter'),
-        findsNWidgets(2),
-      );
-    });
+      'a column with filters wears a funnel, and one without does not',
+      (tester) async {
+        await tester.pumpWidget(table());
+        expect(
+          find.byWidgetPredicate(
+            (w) =>
+                w is CustomPaint &&
+                w.painter.runtimeType.toString() == '_FunnelPainter',
+          ),
+          findsNWidgets(2),
+        );
+      },
+    );
 
     testWidgets('choosing narrows the rows', (tester) async {
       await tester.pumpWidget(table());
@@ -2506,8 +2643,10 @@ void main() {
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
 
-      expect(names(tester), ['Ann', 'Bart'],
-          reason: 'either, not both at once');
+      expect(names(tester), [
+        'Ann',
+        'Bart',
+      ], reason: 'either, not both at once');
     });
 
     testWidgets('across columns a row has to answer every one', (tester) async {
@@ -2538,9 +2677,11 @@ void main() {
 
     testWidgets('reset gives every row back', (tester) async {
       await tester.pumpWidget(
-        table(defaultFilters: const {
-          0: ['Ann']
-        }),
+        table(
+          defaultFilters: const {
+            0: ['Ann'],
+          },
+        ),
       );
       expect(names(tester), ['Ann']);
 
@@ -2551,8 +2692,9 @@ void main() {
       expect(names(tester), ['Chen', 'Ann', 'Bart', 'Dee']);
     });
 
-    testWidgets('an onFilter of your own says what a choice means',
-        (tester) async {
+    testWidgets('an onFilter of your own says what a choice means', (
+      tester,
+    ) async {
       // Everyone but the one chosen, which no comparison of values would give.
       await tester.pumpWidget(
         table(onFilter: (choice, user) => user.name != choice),
@@ -2565,68 +2707,95 @@ void main() {
       expect(names(tester), ['Chen', 'Bart', 'Dee']);
     });
 
-    testWidgets('filters given are the filters shown, and choosing only tells',
-        (tester) async {
-      Map<int, List<Object?>>? told;
-      await tester.pumpWidget(table(
-        filters: const {
-          0: ['Bart']
-        },
-        onFiltersChanged: (next) => told = next,
-      ));
-      expect(names(tester), ['Bart']);
+    testWidgets(
+      'filters given are the filters shown, and choosing only tells',
+      (tester) async {
+        Map<int, List<Object?>>? told;
+        await tester.pumpWidget(
+          table(
+            filters: const {
+              0: ['Bart'],
+            },
+            onFiltersChanged: (next) => told = next,
+          ),
+        );
+        expect(names(tester), ['Bart']);
 
-      await openMenu(tester, 0);
-      await choose(tester, 'Ann');
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
+        await openMenu(tester, 0);
+        await choose(tester, 'Ann');
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
 
-      expect(told, {
-        0: ['Bart', 'Ann'],
-      });
-      expect(names(tester), ['Bart'], reason: 'and changed nothing itself');
-    });
+        expect(told, {
+          0: ['Bart', 'Ann'],
+        });
+        expect(names(tester), ['Bart'], reason: 'and changed nothing itself');
+      },
+    );
 
     testWidgets('narrowing and sorting are the same table', (tester) async {
-      await tester.pumpWidget(table(
-        defaultFilters: const {
-          1: [27]
-        },
-        defaultSort: const [TableSort(0, TableSortOrder.ascending)],
-      ));
-      expect(names(tester), ['Chen', 'Dee'],
-          reason: 'the twenty-sevens, by name');
+      await tester.pumpWidget(
+        table(
+          defaultFilters: const {
+            1: [27],
+          },
+          defaultSort: const [TableSort(0, TableSortOrder.ascending)],
+        ),
+      );
+      expect(names(tester), [
+        'Chen',
+        'Dee',
+      ], reason: 'the twenty-sevens, by name');
     });
 
-    testWidgets('the funnel of a column being narrowed is marked',
-        (tester) async {
-      Color funnelAt(WidgetTester tester, int at) => (tester
-              .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
-                  w is CustomPaint &&
-                  w.painter.runtimeType.toString() == '_FunnelPainter'))
-              .elementAt(at)
-              .painter! as dynamic)
-          .color as Color;
+    testWidgets('the funnel of a column being narrowed is marked', (
+      tester,
+    ) async {
+      Color funnelAt(WidgetTester tester, int at) =>
+          (tester
+                          .widgetList<CustomPaint>(
+                            find.byWidgetPredicate(
+                              (w) =>
+                                  w is CustomPaint &&
+                                  w.painter.runtimeType.toString() ==
+                                      '_FunnelPainter',
+                            ),
+                          )
+                          .elementAt(at)
+                          .painter!
+                      as dynamic)
+                  .color
+              as Color;
 
-      await tester.pumpWidget(table(defaultFilters: const {
-        0: ['Ann']
-      }));
+      await tester.pumpWidget(
+        table(
+          defaultFilters: const {
+            0: ['Ann'],
+          },
+        ),
+      );
       expect(funnelAt(tester, 0), isNot(funnelAt(tester, 1)));
     });
 
-    testWidgets('a column present with nothing chosen narrows nothing',
-        (tester) async {
+    testWidgets('a column present with nothing chosen narrows nothing', (
+      tester,
+    ) async {
       // A caller may well hand over a map with an empty entry in it — that
       // column is simply not narrowing, and the ones after it still are.
-      await tester.pumpWidget(table(defaultFilters: const {
-        0: [],
-        1: [27],
-      }));
+      await tester.pumpWidget(
+        table(
+          defaultFilters: const {
+            0: [],
+            1: [27],
+          },
+        ),
+      );
       expect(names(tester), ['Chen', 'Dee']);
     });
 
-    testWidgets('the menu is a panel of its own, not the whole screen',
-        (tester) async {
+    testWidgets('the menu is a panel of its own, not the whole screen', (
+      tester,
+    ) async {
       // Dropdown.content is handed straight to the overlay — that is what it
       // is for — so without a panel the menu had no ground of its own and
       // took every pixel the overlay offered it.
@@ -2637,12 +2806,16 @@ void main() {
       final menu = tester.getRect(find.byType(DropdownPanel));
       final screen = tester.getRect(find.byType(m.MaterialApp));
       expect(menu.width, lessThan(screen.width / 2));
-      expect(menu.width, greaterThanOrEqualTo(120),
-          reason: 'a menu narrower than this is one you cannot read');
+      expect(
+        menu.width,
+        greaterThanOrEqualTo(120),
+        reason: 'a menu narrower than this is one you cannot read',
+      );
     });
 
-    testWidgets('the rule under the choices runs the width of the panel',
-        (tester) async {
+    testWidgets('the rule under the choices runs the width of the panel', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       await openMenu(tester, 0);
 
@@ -2650,15 +2823,17 @@ void main() {
       final rule = tester.getRect(
         find.descendant(
           of: find.byType(DropdownPanel),
-          matching: find.byWidgetPredicate((w) =>
-              w is DecoratedBox &&
-              w.decoration is BoxDecoration &&
-              (w.decoration as BoxDecoration).border is Border &&
-              // The rule, not a checkbox: a top side and nothing else.
-              ((w.decoration as BoxDecoration).border! as Border).top !=
-                  BorderSide.none &&
-              ((w.decoration as BoxDecoration).border! as Border).left ==
-                  BorderSide.none),
+          matching: find.byWidgetPredicate(
+            (w) =>
+                w is DecoratedBox &&
+                w.decoration is BoxDecoration &&
+                (w.decoration as BoxDecoration).border is Border &&
+                // The rule, not a checkbox: a top side and nothing else.
+                ((w.decoration as BoxDecoration).border! as Border).top !=
+                    BorderSide.none &&
+                ((w.decoration as BoxDecoration).border! as Border).left ==
+                    BorderSide.none,
+          ),
         ),
       );
       // The rule belongs to the block of buttons and runs across the whole
@@ -2670,12 +2845,16 @@ void main() {
       // sizeXS either side, and sizeXS - lineWidth above and below, so the
       // rule does not add to the height.
       final ok = tester.getRect(find.text('OK'));
-      expect(panel.right - ok.right, greaterThan(8),
-          reason: 'paddingXS plus the button\'s own');
+      expect(
+        panel.right - ok.right,
+        greaterThan(8),
+        reason: 'paddingXS plus the button\'s own',
+      );
     });
 
-    testWidgets('a long list of choices scrolls instead of growing',
-        (tester) async {
+    testWidgets('a long list of choices scrolls instead of growing', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         host(
           Table<_User>(
@@ -2693,19 +2872,25 @@ void main() {
         ),
       );
       await openMenu(tester, 0);
-      expect(tester.getRect(find.byType(DropdownPanel)).height, lessThan(400),
-          reason: 'two hundred and sixty-four and the footer');
+      expect(
+        tester.getRect(find.byType(DropdownPanel)).height,
+        lessThan(400),
+        reason: 'two hundred and sixty-four and the footer',
+      );
       expect(find.byType(SingleChildScrollView), findsWidgets);
     });
 
-    testWidgets('the funnel takes a ground of its own under the hand',
-        (tester) async {
+    testWidgets('the funnel takes a ground of its own under the hand', (
+      tester,
+    ) async {
       Color? funnelFill(WidgetTester tester) {
         final painted = find
             .ancestor(
-              of: find.byWidgetPredicate((w) =>
-                  w is CustomPaint &&
-                  w.painter.runtimeType.toString() == '_FunnelPainter'),
+              of: find.byWidgetPredicate(
+                (w) =>
+                    w is CustomPaint &&
+                    w.painter.runtimeType.toString() == '_FunnelPainter',
+              ),
               matching: find.byType(DecoratedBox),
             )
             .evaluate()
@@ -2716,13 +2901,21 @@ void main() {
         return painted.isEmpty ? null : painted.first;
       }
 
-      Color funnelColour(WidgetTester tester) => ((tester
-              .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
-                  w is CustomPaint &&
-                  w.painter.runtimeType.toString() == '_FunnelPainter'))
-              .first
-              .painter!) as dynamic)
-          .color as Color;
+      Color funnelColour(WidgetTester tester) =>
+          ((tester
+                          .widgetList<CustomPaint>(
+                            find.byWidgetPredicate(
+                              (w) =>
+                                  w is CustomPaint &&
+                                  w.painter.runtimeType.toString() ==
+                                      '_FunnelPainter',
+                            ),
+                          )
+                          .first
+                          .painter!)
+                      as dynamic)
+                  .color
+              as Color;
 
       await tester.pumpWidget(table());
       expect(funnelFill(tester), isNull);
@@ -2731,11 +2924,17 @@ void main() {
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await mouse.addPointer(location: Offset.zero);
       addTearDown(mouse.removePointer);
-      await mouse.moveTo(tester.getCenter(find
-          .byWidgetPredicate((w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == '_FunnelPainter')
-          .first));
+      await mouse.moveTo(
+        tester.getCenter(
+          find
+              .byWidgetPredicate(
+                (w) =>
+                    w is CustomPaint &&
+                    w.painter.runtimeType.toString() == '_FunnelPainter',
+              )
+              .first,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(funnelFill(tester), isNotNull);
@@ -2747,28 +2946,28 @@ void main() {
     Widget searchable({
       bool search = true,
       bool Function(String, TableFilter)? match,
-    }) =>
-        host(
-          Table<_User>(
-            data: people,
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                value: (u) => u.name,
-                filterSearch: search,
-                filterSearchMatch: match,
-                filters: const [
-                  TableFilter('Ann', 'Ann'),
-                  TableFilter('Bart', 'Bart'),
-                  TableFilter('Chen', 'Chen'),
-                ],
-              ),
+    }) => host(
+      Table<_User>(
+        data: people,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            value: (u) => u.name,
+            filterSearch: search,
+            filterSearchMatch: match,
+            filters: const [
+              TableFilter('Ann', 'Ann'),
+              TableFilter('Bart', 'Bart'),
+              TableFilter('Chen', 'Chen'),
             ],
           ),
-        );
+        ],
+      ),
+    );
 
-    testWidgets('a menu is searched only where the column asks',
-        (tester) async {
+    testWidgets('a menu is searched only where the column asks', (
+      tester,
+    ) async {
       await tester.pumpWidget(searchable(search: false));
       await openMenu(tester, 0);
       expect(find.byType(Input), findsNothing);
@@ -2779,8 +2978,9 @@ void main() {
       expect(find.byType(Input), findsOneWidget);
     });
 
-    testWidgets('typing narrows the menu, ignoring case and spaces',
-        (tester) async {
+    testWidgets('typing narrows the menu, ignoring case and spaces', (
+      tester,
+    ) async {
       await tester.pumpWidget(searchable());
       await openMenu(tester, 0);
       expect(find.byType(Checkbox), findsNWidgets(3));
@@ -2812,10 +3012,12 @@ void main() {
     testWidgets('a match of your own says what typing means', (tester) async {
       // Only where the label begins with what was typed, which a substring
       // match would not give: 'Bart' holds an 'a' but does not start with one.
-      await tester.pumpWidget(searchable(
-        search: false,
-        match: (typed, choice) => choice.label.startsWith(typed),
-      ));
+      await tester.pumpWidget(
+        searchable(
+          search: false,
+          match: (typed, choice) => choice.label.startsWith(typed),
+        ),
+      );
       await openMenu(tester, 0);
       await tester.enterText(find.byType(Input), 'A');
       await tester.pumpAndSettle();
@@ -2943,9 +3145,11 @@ void main() {
 
       expect(find.text('off'), findsOneWidget);
       expect(
-        find.byWidgetPredicate((w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString() == '_FunnelPainter'),
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_FunnelPainter',
+        ),
         findsNothing,
       );
 
@@ -2958,8 +3162,9 @@ void main() {
       expect(find.text('on'), findsOneWidget, reason: 'told it is narrowing');
     });
 
-    testWidgets('a panel of your own can open an overlay of its own',
-        (tester) async {
+    testWidgets('a panel of your own can open an overlay of its own', (
+      tester,
+    ) async {
       // A panel is an ordinary widget tree, so a popover inside one has to
       // open over it without the panel taking the tap as an outside one.
       await tester.pumpWidget(
@@ -2999,8 +3204,9 @@ void main() {
       expect(find.text('Why?'), findsOneWidget, reason: 'the panel stays');
     });
 
-    testWidgets('a panel hangs by its right edge, not off past the column',
-        (tester) async {
+    testWidgets('a panel hangs by its right edge, not off past the column', (
+      tester,
+    ) async {
       const key = Key('panel');
       await tester.pumpWidget(
         host(
@@ -3015,11 +3221,8 @@ void main() {
                 title: const Text('Age'),
                 value: (u) => u.age,
                 filterPanel: TableFilterPanel(
-                  builder: (context, panel) => const SizedBox(
-                    key: key,
-                    width: 200,
-                    height: 60,
-                  ),
+                  builder: (context, panel) =>
+                      const SizedBox(key: key, width: 200, height: 60),
                 ),
               ),
             ],
@@ -3027,11 +3230,15 @@ void main() {
         ),
       );
 
-      final mark = tester.getRect(find
-          .byWidgetPredicate((w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == '_FunnelPainter')
-          .first);
+      final mark = tester.getRect(
+        find
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_FunnelPainter',
+            )
+            .first,
+      );
       await openMenu(tester, 0);
       final panel = tester.getRect(find.byKey(key));
 
@@ -3055,11 +3262,8 @@ void main() {
                 value: (u) => u.name,
                 filterPanel: TableFilterPanel(
                   placement: PopoverPlacement.bottomLeft,
-                  builder: (context, panel) => const SizedBox(
-                    key: key,
-                    width: 120,
-                    height: 60,
-                  ),
+                  builder: (context, panel) =>
+                      const SizedBox(key: key, width: 120, height: 60),
                 ),
               ),
             ],
@@ -3067,11 +3271,15 @@ void main() {
         ),
       );
 
-      final mark = tester.getRect(find
-          .byWidgetPredicate((w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == '_FunnelPainter')
-          .first);
+      final mark = tester.getRect(
+        find
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_FunnelPainter',
+            )
+            .first,
+      );
       await openMenu(tester, 0);
       final panel = tester.getRect(find.byKey(key));
 
@@ -3098,18 +3306,23 @@ void main() {
       );
 
       final word = tester.getRect(find.text('Age'));
-      final mark = tester.getRect(find
-          .byWidgetPredicate((w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == '_FunnelPainter')
-          .first);
+      final mark = tester.getRect(
+        find
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_FunnelPainter',
+            )
+            .first,
+      );
       // Four of the funnel's own padding is not enough on its own: the word
       // has to be given a breath of its own as well.
       expect(mark.left - word.right, greaterThanOrEqualTo(8));
     });
 
-    testWidgets('the carets and the funnel keep their distance too',
-        (tester) async {
+    testWidgets('the carets and the funnel keep their distance too', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         host(
           Table<_User>(
@@ -3127,12 +3340,17 @@ void main() {
       );
 
       final carets = tester.getRect(
-          find.byWidgetPredicate((w) => w.runtimeType.toString() == '_Carets'));
-      final funnel = tester.getRect(find
-          .byWidgetPredicate((w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == '_FunnelPainter')
-          .first);
+        find.byWidgetPredicate((w) => w.runtimeType.toString() == '_Carets'),
+      );
+      final funnel = tester.getRect(
+        find
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_FunnelPainter',
+            )
+            .first,
+      );
       // Four of the funnel's own padding again, and four of its own between
       // the two marks.
       expect(funnel.left - carets.right, greaterThanOrEqualTo(8));
@@ -3156,10 +3374,14 @@ void main() {
       // menu does not find the table underneath it.
       const nested = [
         TableFilter('the third', 'Chen'),
-        TableFilter('Either', null, children: [
-          TableFilter('the first', 'Ann'),
-          TableFilter('the second of the pair', 'Bart'),
-        ]),
+        TableFilter(
+          'Either',
+          null,
+          children: [
+            TableFilter('the first', 'Ann'),
+            TableFilter('the second of the pair', 'Bart'),
+          ],
+        ),
       ];
 
       Widget grouped({
@@ -3167,23 +3389,22 @@ void main() {
         bool filterSearch = false,
         bool filterMultiple = true,
         Map<int, List<Object?>>? Function(Map<int, List<Object?>>)? report,
-      }) =>
-          host(
-            Table<_User>(
-              data: people,
-              onFiltersChanged: (next) => report?.call(next),
-              columns: [
-                TableColumn<_User>(
-                  title: const Text('Name'),
-                  value: (u) => u.name,
-                  filters: nested,
-                  filterMode: mode,
-                  filterSearch: filterSearch,
-                  filterMultiple: filterMultiple,
-                ),
-              ],
+      }) => host(
+        Table<_User>(
+          data: people,
+          onFiltersChanged: (next) => report?.call(next),
+          columns: [
+            TableColumn<_User>(
+              title: const Text('Name'),
+              value: (u) => u.name,
+              filters: nested,
+              filterMode: mode,
+              filterSearch: filterSearch,
+              filterMultiple: filterMultiple,
             ),
-          );
+          ],
+        ),
+      );
 
       List<Checkbox> boxes(WidgetTester tester) =>
           tester.widgetList<Checkbox>(find.byType(Checkbox)).toList();
@@ -3225,13 +3446,13 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      testWidgets('a branch is a shorthand for the leaves under it',
-          (tester) async {
+      testWidgets('a branch is a shorthand for the leaves under it', (
+        tester,
+      ) async {
         Map<int, List<Object?>>? told;
-        await tester.pumpWidget(grouped(
-          mode: TableFilterMode.tree,
-          report: (next) => told = next,
-        ));
+        await tester.pumpWidget(
+          grouped(mode: TableFilterMode.tree, report: (next) => told = next),
+        );
         await openMenu(tester, 0);
 
         await tick(tester, 'Either');
@@ -3241,13 +3462,14 @@ void main() {
         // The leaves, never the branch: an onFilter is asked about values the
         // column knows, and 'Either' is not one of them.
         expect(told, {
-          0: ['Ann', 'Bart']
+          0: ['Ann', 'Bart'],
         });
         expect(names(tester), ['Ann', 'Bart']);
       });
 
-      testWidgets('a branch with some of its own stands half-chosen',
-          (tester) async {
+      testWidgets('a branch with some of its own stands half-chosen', (
+        tester,
+      ) async {
         await tester.pumpWidget(grouped(mode: TableFilterMode.tree));
         await openMenu(tester, 0);
 
@@ -3260,15 +3482,19 @@ void main() {
 
         expect(boxFor('Either').checked, isFalse, reason: 'not whole');
         expect(boxFor('Either').indeterminate, isTrue);
-        expect(boxFor('Select all items').indeterminate, isTrue,
-            reason: 'nor is everything');
+        expect(
+          boxFor('Select all items').indeterminate,
+          isTrue,
+          reason: 'nor is everything',
+        );
 
         await tick(tester, 'the second of the pair');
         expect(boxFor('Either').checked, isTrue, reason: 'both of its own');
       });
 
-      testWidgets('a tree offers everything at once, a list does not',
-          (tester) async {
+      testWidgets('a tree offers everything at once, a list does not', (
+        tester,
+      ) async {
         await tester.pumpWidget(grouped(mode: TableFilterMode.tree));
         await openMenu(tester, 0);
         expect(find.text('Select all items'), findsOneWidget);
@@ -3280,8 +3506,9 @@ void main() {
         expect(find.text('Select all items'), findsNothing);
       });
 
-      testWidgets('a list keeps what is under a choice beside it',
-          (tester) async {
+      testWidgets('a list keeps what is under a choice beside it', (
+        tester,
+      ) async {
         await tester.pumpWidget(grouped());
         await openMenu(tester, 0);
 
@@ -3296,15 +3523,21 @@ void main() {
         await mouse.moveTo(tester.getCenter(find.text('Either')));
         await tester.pump(const Duration(milliseconds: 200));
         await tester.pumpAndSettle();
-        expect(find.text('the first'), findsOneWidget,
-            reason: 'opened beside it');
+        expect(
+          find.text('the first'),
+          findsOneWidget,
+          reason: 'opened beside it',
+        );
       });
 
       testWidgets('a tree opens a branch in place', (tester) async {
         await tester.pumpWidget(grouped(mode: TableFilterMode.tree));
         await openMenu(tester, 0);
-        expect(find.text('the first'), findsNothing,
-            reason: 'shut to begin with');
+        expect(
+          find.text('the first'),
+          findsNothing,
+          reason: 'shut to begin with',
+        );
 
         await unfold(tester, 'Either');
         expect(find.text('the first'), findsOneWidget);
@@ -3316,8 +3549,9 @@ void main() {
         expect(leaf.left, greaterThan(branch.left));
       });
 
-      testWidgets('a branch opens the way everything else in the kit opens',
-          (tester) async {
+      testWidgets('a branch opens the way everything else in the kit opens', (
+        tester,
+      ) async {
         await tester.pumpWidget(grouped(mode: TableFilterMode.tree));
         await openMenu(tester, 0);
 
@@ -3345,8 +3579,9 @@ void main() {
         expect(midway, lessThan(height()));
       });
 
-      testWidgets('the panel is as wide as the widest line in it',
-          (tester) async {
+      testWidgets('the panel is as wide as the widest line in it', (
+        tester,
+      ) async {
         // A tree cannot be asked how wide it would like to be, so the panel
         // is told — and what it is told has to cover the deepest label and
         // the line that takes everything, or a row overflows.
@@ -3379,12 +3614,12 @@ void main() {
         );
       });
 
-      testWidgets('a search keeps the branch that leads to what it found',
-          (tester) async {
-        await tester.pumpWidget(grouped(
-          mode: TableFilterMode.tree,
-          filterSearch: true,
-        ));
+      testWidgets('a search keeps the branch that leads to what it found', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          grouped(mode: TableFilterMode.tree, filterSearch: true),
+        );
         await openMenu(tester, 0);
 
         // A word inside the label rather than the whole of it, so the field's
@@ -3396,18 +3631,23 @@ void main() {
         // or the search would hide the very thing it found. Chen goes.
         expect(find.text('Either'), findsOneWidget);
         expect(find.text('the second of the pair'), findsOneWidget);
-        expect(find.text('the first'), findsNothing,
-            reason: 'no match under it');
+        expect(
+          find.text('the first'),
+          findsNothing,
+          reason: 'no match under it',
+        );
         expect(find.text('the third'), findsNothing);
       });
 
       testWidgets('one at a time still means one at a time', (tester) async {
         Map<int, List<Object?>>? told;
-        await tester.pumpWidget(grouped(
-          mode: TableFilterMode.tree,
-          filterMultiple: false,
-          report: (next) => told = next,
-        ));
+        await tester.pumpWidget(
+          grouped(
+            mode: TableFilterMode.tree,
+            filterMultiple: false,
+            report: (next) => told = next,
+          ),
+        );
         await openMenu(tester, 0);
 
         await tick(tester, 'the third');
@@ -3418,7 +3658,7 @@ void main() {
         // The branch replaced the choice before it rather than joining it,
         // and it is still a shorthand for its leaves.
         expect(told, {
-          0: ['Ann', 'Bart']
+          0: ['Ann', 'Bart'],
         });
       });
     });
@@ -3447,11 +3687,7 @@ void main() {
   });
 
   group('selection', () {
-    const people = [
-      _User('Chen', 27),
-      _User('Ann', 45),
-      _User('Bart', 31),
-    ];
+    const people = [_User('Chen', 27), _User('Ann', 45), _User('Bart', 31)];
 
     List<String> names(WidgetTester tester) => tester
         .widgetList<Text>(find.byType(Text))
@@ -3468,34 +3704,34 @@ void main() {
       bool Function(_User)? selectable,
       bool showSelectAll = true,
       Map<int, List<Object?>>? defaultFilters,
-    }) =>
-        _host(
-          Table<_User>(
-            data: people,
-            defaultFilters: defaultFilters,
-            selection: TableSelection<_User>(
-              mode: mode,
-              selected: selected,
-              defaultSelected: defaultSelected,
-              onChanged: onChanged,
-              selectable: selectable,
-              showSelectAll: showSelectAll,
-            ),
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                value: (u) => u.name,
-                filters: const [TableFilter('Ann', 'Ann')],
-              ),
-            ],
+    }) => _host(
+      Table<_User>(
+        data: people,
+        defaultFilters: defaultFilters,
+        selection: TableSelection<_User>(
+          mode: mode,
+          selected: selected,
+          defaultSelected: defaultSelected,
+          onChanged: onChanged,
+          selectable: selectable,
+          showSelectAll: showSelectAll,
+        ),
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            value: (u) => u.name,
+            filters: const [TableFilter('Ann', 'Ann')],
           ),
-        );
+        ],
+      ),
+    );
 
     // The heading's box first, then one per row.
     Finder boxes() => find.byType(Checkbox);
 
-    testWidgets('a column of boxes goes in front of the others',
-        (tester) async {
+    testWidgets('a column of boxes goes in front of the others', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       expect(boxes(), findsNWidgets(4), reason: 'three rows and the heading');
       expect(
@@ -3521,8 +3757,9 @@ void main() {
       expect(told, [people[0]], reason: 'and letting one go removes it');
     });
 
-    testWidgets('the heading takes every row, and gives them back',
-        (tester) async {
+    testWidgets('the heading takes every row, and gives them back', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       await tester.tap(boxes().first);
       await tester.pumpAndSettle();
@@ -3539,8 +3776,9 @@ void main() {
       );
     });
 
-    testWidgets('the heading is part way when some rows are picked',
-        (tester) async {
+    testWidgets('the heading is part way when some rows are picked', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(defaultSelected: const [_User('Ann', 45)]));
       final head = tester.widget<Checkbox>(boxes().first);
       expect(head.checked, isFalse);
@@ -3548,9 +3786,7 @@ void main() {
     });
 
     testWidgets('a row that may not be picked is passed over', (tester) async {
-      await tester.pumpWidget(
-        table(selectable: (u) => u.name != 'Bart'),
-      );
+      await tester.pumpWidget(table(selectable: (u) => u.name != 'Bart'));
       expect(tester.widget<Checkbox>(boxes().at(3)).disabled, isTrue);
 
       // The heading reads as full once every row that *can* be picked is,
@@ -3561,15 +3797,18 @@ void main() {
       expect(tester.widget<Checkbox>(boxes().at(3)).checked, isFalse);
     });
 
-    testWidgets('the heading answers for the rows on show, not all of them',
-        (tester) async {
+    testWidgets('the heading answers for the rows on show, not all of them', (
+      tester,
+    ) async {
       List<_User>? told;
-      await tester.pumpWidget(table(
-        defaultFilters: const {
-          0: ['Ann'],
-        },
-        onChanged: (rows) => told = rows,
-      ));
+      await tester.pumpWidget(
+        table(
+          defaultFilters: const {
+            0: ['Ann'],
+          },
+          onChanged: (rows) => told = rows,
+        ),
+      );
       expect(names(tester), ['Ann']);
 
       await tester.tap(boxes().first);
@@ -3577,16 +3816,19 @@ void main() {
       expect(told, [people[1]], reason: 'a filter narrows what "all" means');
     });
 
-    testWidgets('a filter hides a picked row without un-picking it',
-        (tester) async {
+    testWidgets('a filter hides a picked row without un-picking it', (
+      tester,
+    ) async {
       List<_User>? told;
-      await tester.pumpWidget(table(
-        defaultSelected: const [_User('Chen', 27)],
-        defaultFilters: const {
-          0: ['Ann'],
-        },
-        onChanged: (rows) => told = rows,
-      ));
+      await tester.pumpWidget(
+        table(
+          defaultSelected: const [_User('Chen', 27)],
+          defaultFilters: const {
+            0: ['Ann'],
+          },
+          onChanged: (rows) => told = rows,
+        ),
+      );
       // Chen is picked but filtered away; taking "all" must not drop him.
       await tester.tap(boxes().first);
       await tester.pumpAndSettle();
@@ -3595,10 +3837,9 @@ void main() {
 
     testWidgets('radio picks one row and no more', (tester) async {
       List<_User>? told;
-      await tester.pumpWidget(table(
-        mode: TableSelectionMode.radio,
-        onChanged: (rows) => told = rows,
-      ));
+      await tester.pumpWidget(
+        table(mode: TableSelectionMode.radio, onChanged: (rows) => told = rows),
+      );
       expect(boxes(), findsNothing, reason: 'dots, not boxes');
       expect(find.byType(Radio<bool>), findsNWidgets(3));
 
@@ -3611,26 +3852,33 @@ void main() {
       expect(told, [people[2]], reason: 'the second replaced the first');
     });
 
-    testWidgets('no box at the head where one would mean nothing',
-        (tester) async {
+    testWidgets('no box at the head where one would mean nothing', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(showSelectAll: false));
       expect(boxes(), findsNWidgets(3), reason: 'the rows alone');
     });
 
-    testWidgets('a selection given is the selection shown, and ticking tells',
-        (tester) async {
+    testWidgets('a selection given is the selection shown, and ticking tells', (
+      tester,
+    ) async {
       List<_User>? told;
-      await tester.pumpWidget(table(
-        selected: const [_User('Chen', 27)],
-        onChanged: (rows) => told = rows,
-      ));
+      await tester.pumpWidget(
+        table(
+          selected: const [_User('Chen', 27)],
+          onChanged: (rows) => told = rows,
+        ),
+      );
       expect(tester.widget<Checkbox>(boxes().at(1)).checked, isTrue);
 
       await tester.tap(boxes().at(2));
       await tester.pumpAndSettle();
       expect(told, [people[0], people[1]]);
-      expect(tester.widget<Checkbox>(boxes().at(2)).checked, isFalse,
-          reason: 'and changed nothing itself');
+      expect(
+        tester.widget<Checkbox>(boxes().at(2)).checked,
+        isFalse,
+        reason: 'and changed nothing itself',
+      );
     });
 
     testWidgets('the heading cannot be ticked when no row can', (tester) async {
@@ -3638,8 +3886,9 @@ void main() {
       expect(tester.widget<Checkbox>(boxes().first).disabled, isTrue);
     });
 
-    testWidgets('a table controlled and then let go keeps no stale selection',
-        (tester) async {
+    testWidgets('a table controlled and then let go keeps no stale selection', (
+      tester,
+    ) async {
       // Uncontrolled first, so the table has a selection of its own to come
       // back to; then given one, where ticking may only tell; then let go.
       await tester.pumpWidget(table());
@@ -3653,8 +3902,11 @@ void main() {
 
       await tester.pumpWidget(table());
       await tester.pumpAndSettle();
-      expect(tester.widget<Checkbox>(boxes().at(1)).checked, isTrue,
-          reason: 'its own pick, not what that tick would have made');
+      expect(
+        tester.widget<Checkbox>(boxes().at(1)).checked,
+        isTrue,
+        reason: 'its own pick, not what that tick would have made',
+      );
       expect(tester.widget<Checkbox>(boxes().at(2)).checked, isFalse);
     });
 
@@ -3691,8 +3943,9 @@ void main() {
       expect(fillOfRow(tester, 'Ann'), isNot(picked));
     });
 
-    testWidgets('a picked row is tinted in a scrolling table too',
-        (tester) async {
+    testWidgets('a picked row is tinted in a scrolling table too', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -3744,11 +3997,7 @@ void main() {
   });
 
   group('opening rows', () {
-    const people = [
-      _User('Chen', 27),
-      _User('Ann', 45),
-      _User('Bart', 31),
-    ];
+    const people = [_User('Chen', 27), _User('Ann', 45), _User('Bart', 31)];
 
     Widget table({
       List<_User>? expanded,
@@ -3758,36 +4007,31 @@ void main() {
       bool byRowTap = false,
       bool showColumn = true,
       TableScroll? scroll,
-    }) =>
-        _host(
-          Table<_User>(
-            data: people,
-            scroll: scroll,
-            expandable: TableExpandable<_User>(
-              builder: (_, u, __) => Text('about ${u.name}'),
-              expanded: expanded,
-              defaultExpanded: defaultExpanded,
-              onChanged: onChanged,
-              expandable: expandable,
-              byRowTap: byRowTap,
-              showColumn: showColumn,
-            ),
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                value: (u) => u.name,
-              ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                value: (u) => u.age,
-              ),
-            ],
-          ),
-        );
+    }) => _host(
+      Table<_User>(
+        data: people,
+        scroll: scroll,
+        expandable: TableExpandable<_User>(
+          builder: (_, u, __) => Text('about ${u.name}'),
+          expanded: expanded,
+          defaultExpanded: defaultExpanded,
+          onChanged: onChanged,
+          expandable: expandable,
+          byRowTap: byRowTap,
+          showColumn: showColumn,
+        ),
+        columns: [
+          TableColumn<_User>(title: const Text('Name'), value: (u) => u.name),
+          TableColumn<_User>(title: const Text('Age'), value: (u) => u.age),
+        ],
+      ),
+    );
 
-    Finder chevrons() => find.byWidgetPredicate((w) =>
-        w is CustomPaint &&
-        w.painter.runtimeType.toString() == '_ExpandIconPainter');
+    Finder chevrons() => find.byWidgetPredicate(
+      (w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == '_ExpandIconPainter',
+    );
 
     testWidgets('a chevron opens a row and shuts it again', (tester) async {
       await tester.pumpWidget(table());
@@ -3802,8 +4046,9 @@ void main() {
       expect(find.text('about Ann'), findsNothing);
     });
 
-    testWidgets('shutting one open row leaves another open row alone',
-        (tester) async {
+    testWidgets('shutting one open row leaves another open row alone', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       await tester.tap(chevrons().first);
       await tester.pumpAndSettle();
@@ -3824,8 +4069,11 @@ void main() {
         // One panel shutting is one table shrinking, all the way down. It
         // grew again at the end when the shutting panel handed the one below
         // it its element, and with it an animation that had just finished.
-        expect(now, lessThanOrEqualTo(last + 0.01),
-            reason: 'the table only ever shrank');
+        expect(
+          now,
+          lessThanOrEqualTo(last + 0.01),
+          reason: 'the table only ever shrank',
+        );
         last = now;
       }
       await tester.pumpAndSettle();
@@ -3833,8 +4081,9 @@ void main() {
       expect(find.text('about Ann'), findsOneWidget);
     });
 
-    testWidgets('the mark on a row nobody touched never flickers shut',
-        (tester) async {
+    testWidgets('the mark on a row nobody touched never flickers shut', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       await tester.tap(chevrons().first);
       await tester.pumpAndSettle();
@@ -3845,8 +4094,9 @@ void main() {
       // shrunk away and the mark reads as a minus.
       double openness(int at) =>
           (tester.widgetList<CustomPaint>(chevrons()).elementAt(at).painter!
-                  as dynamic)
-              .open as double;
+                      as dynamic)
+                  .open
+              as double;
       expect(openness(1), 1);
 
       // Letting go of the upper one closes the grid up around the lower, so
@@ -3872,8 +4122,9 @@ void main() {
       expect(openness(0), 1);
     });
 
-    testWidgets('the panel reveals and hides the way the kit reveals things',
-        (tester) async {
+    testWidgets('the panel reveals and hides the way the kit reveals things', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       await tester.tap(chevrons().first);
 
@@ -3900,8 +4151,9 @@ void main() {
       expect(find.text('about Chen'), findsNothing);
     });
 
-    testWidgets('the panel content does not move sideways as it reveals',
-        (tester) async {
+    testWidgets('the panel content does not move sideways as it reveals', (
+      tester,
+    ) async {
       // The reveal passes loose constraints, so a child that hugs its content
       // came out narrow and centred for the length of the animation and then
       // snapped to full width and the leading edge on the last frame:
@@ -3955,10 +4207,10 @@ void main() {
       await tester.pumpAndSettle();
 
       Rect boxOf(String text) => tester.getRect(
-            find
-                .ancestor(of: find.text(text), matching: find.byType(Padding))
-                .first,
-          );
+        find
+            .ancestor(of: find.text(text), matching: find.byType(Padding))
+            .first,
+      );
       expect(boxOf('about Chen').height, greaterThanOrEqualTo(64));
       expect(boxOf('about Chen').height, closeTo(boxOf('Ann').height, 0.5));
     });
@@ -3968,8 +4220,10 @@ void main() {
       // what is drawn, and a painter can hold the right number and still draw
       // the wrong thing.
       Future<int> uprightPixels(WidgetTester tester) async {
-        final painter =
-            tester.widgetList<CustomPaint>(chevrons()).first.painter!;
+        final painter = tester
+            .widgetList<CustomPaint>(chevrons())
+            .first
+            .painter!;
         final recorder = ui.PictureRecorder();
         painter.paint(ui.Canvas(recorder), const Size(20, 20));
         // Rasterising needs the real async world: inside the test's fake one
@@ -3992,16 +4246,20 @@ void main() {
       }
 
       await tester.pumpWidget(table());
-      expect(await uprightPixels(tester), greaterThan(0),
-          reason: 'a plus while the row is shut');
+      expect(
+        await uprightPixels(tester),
+        greaterThan(0),
+        reason: 'a plus while the row is shut',
+      );
 
       await tester.tap(chevrons().first);
       await tester.pumpAndSettle();
       expect(await uprightPixels(tester), 0, reason: 'a minus once it is open');
     });
 
-    testWidgets('the panel spans the whole table, not one column',
-        (tester) async {
+    testWidgets('the panel spans the whole table, not one column', (
+      tester,
+    ) async {
       // Flutter's Table cannot span a row across its columns, so the panel is
       // drawn between two grids rather than inside one.
       await tester.pumpWidget(table(defaultExpanded: const [_User('Ann', 45)]));
@@ -4027,7 +4285,7 @@ void main() {
             expandable: TableExpandable<_User>(
               builder: (_, u, __) => Text('about ${u.name}'),
               defaultExpanded: const [
-                _User('Bartholomew Considine of Galway', 45)
+                _User('Bartholomew Considine of Galway', 45),
               ],
             ),
             columns: [
@@ -4035,10 +4293,7 @@ void main() {
                 title: const Text('Name'),
                 value: (u) => u.name,
               ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                value: (u) => u.age,
-              ),
+              TableColumn<_User>(title: const Text('Age'), value: (u) => u.age),
             ],
           ),
         ),
@@ -4069,16 +4324,18 @@ void main() {
       expect(chevrons(), findsNWidgets(2));
     });
 
-    testWidgets('a tap on the row opens it where the table asks',
-        (tester) async {
+    testWidgets('a tap on the row opens it where the table asks', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(byRowTap: true));
       await tester.tap(find.text('Bart'));
       await tester.pumpAndSettle();
       expect(find.text('about Bart'), findsOneWidget);
     });
 
-    testWidgets('no column of chevrons where none was asked for',
-        (tester) async {
+    testWidgets('no column of chevrons where none was asked for', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(showColumn: false, byRowTap: true));
       expect(chevrons(), findsNothing);
 
@@ -4089,21 +4346,27 @@ void main() {
 
     testWidgets('what is open is reported, and can be told', (tester) async {
       List<_User>? told;
-      await tester.pumpWidget(table(
-        expanded: const [_User('Chen', 27)],
-        onChanged: (rows) => told = rows,
-      ));
+      await tester.pumpWidget(
+        table(
+          expanded: const [_User('Chen', 27)],
+          onChanged: (rows) => told = rows,
+        ),
+      );
       expect(find.text('about Chen'), findsOneWidget);
 
       await tester.tap(chevrons().at(1));
       await tester.pumpAndSettle();
       expect(told, [const _User('Chen', 27), const _User('Ann', 45)]);
-      expect(find.text('about Ann'), findsNothing,
-          reason: 'it said what it would have become, and changed nothing');
+      expect(
+        find.text('about Ann'),
+        findsNothing,
+        reason: 'it said what it would have become, and changed nothing',
+      );
     });
 
-    testWidgets('a table controlled and then let go keeps no stale opening',
-        (tester) async {
+    testWidgets('a table controlled and then let go keeps no stale opening', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       await tester.tap(chevrons().first);
       await tester.pumpAndSettle();
@@ -4115,8 +4378,11 @@ void main() {
 
       await tester.pumpWidget(table());
       await tester.pumpAndSettle();
-      expect(find.text('about Chen'), findsOneWidget,
-          reason: 'its own, not what that tap would have made');
+      expect(
+        find.text('about Chen'),
+        findsOneWidget,
+        reason: 'its own, not what that tap would have made',
+      );
       expect(find.text('about Ann'), findsNothing);
     });
 
@@ -4145,8 +4411,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(RichText).evaluate().length, lessThan(40),
-          reason: 'three hundred rows built six hundred cells before');
+      expect(
+        find.byType(RichText).evaluate().length,
+        lessThan(40),
+        reason: 'three hundred rows built six hundred cells before',
+      );
 
       expect(find.text('about 1'), findsOneWidget);
       final panel = tester.getRect(
@@ -4161,13 +4430,15 @@ void main() {
 
       // And the row after it has been pushed down by exactly that much on
       // top of its own.
-      final gap = tester.getRect(find.text('n2')).top -
+      final gap =
+          tester.getRect(find.text('n2')).top -
           tester.getRect(find.text('n1')).top;
       expect(gap, closeTo(44 + 60, 1));
     });
 
-    testWidgets('without a named height it opens as it always did',
-        (tester) async {
+    testWidgets('without a named height it opens as it always did', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<int>(
@@ -4186,16 +4457,22 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('about 1'), findsOneWidget);
-      expect(find.text('n11'), findsOneWidget,
-          reason: 'every row built, which is the trade for not saying');
+      expect(
+        find.text('n11'),
+        findsOneWidget,
+        reason: 'every row built, which is the trade for not saying',
+      );
     });
 
-    testWidgets('a table with a height of its own scrolls the panels too',
-        (tester) async {
-      await tester.pumpWidget(table(
-        scroll: const TableScroll(y: 150),
-        defaultExpanded: const [_User('Chen', 27)],
-      ));
+    testWidgets('a table with a height of its own scrolls the panels too', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        table(
+          scroll: const TableScroll(y: 150),
+          defaultExpanded: const [_User('Chen', 27)],
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('about Chen'), findsOneWidget);
       expect(
@@ -4210,10 +4487,8 @@ void main() {
     final many = [for (var i = 0; i < 25; i++) _User('n$i', i)];
 
     // The pager's own numbers: the Age column shows numbers too.
-    Finder pageButton(String n) => find.descendant(
-          of: find.byType(Pagination),
-          matching: find.text(n),
-        );
+    Finder pageButton(String n) =>
+        find.descendant(of: find.byType(Pagination), matching: find.text(n));
 
     List<String> shown(WidgetTester tester) => tester
         .widgetList<Text>(find.byType(Text))
@@ -4228,31 +4503,30 @@ void main() {
       Map<int, List<Object?>>? filters,
       List<TableSort>? defaultSort,
       TableSelection<_User>? selection,
-    }) =>
-        _host(
-          Table<_User>(
-            data: many,
-            pagination: pagination,
-            defaultFilters: defaultFilters,
-            filters: filters,
-            defaultSort: defaultSort,
-            selection: selection,
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                value: (u) => u.name,
-                filters: const [TableFilter('early', 'n1')],
-                onFilter: (choice, u) => u.age < 5,
-              ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                sortable: true,
-                value: (u) => u.age,
-              ),
-            ],
+    }) => _host(
+      Table<_User>(
+        data: many,
+        pagination: pagination,
+        defaultFilters: defaultFilters,
+        filters: filters,
+        defaultSort: defaultSort,
+        selection: selection,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            value: (u) => u.name,
+            filters: const [TableFilter('early', 'n1')],
+            onFilter: (choice, u) => u.age < 5,
           ),
-          width: 700,
-        );
+          TableColumn<_User>(
+            title: const Text('Age'),
+            sortable: true,
+            value: (u) => u.age,
+          ),
+        ],
+      ),
+      width: 700,
+    );
 
     testWidgets('only a page of rows is shown', (tester) async {
       await tester.pumpWidget(table());
@@ -4271,31 +4545,36 @@ void main() {
     testWidgets('what it says is what it does', (tester) async {
       int? toldPage;
       int? toldSize;
-      await tester.pumpWidget(table(
-        pagination: TablePagination(
-          defaultPageSize: 10,
-          onChanged: (page, size) {
-            toldPage = page;
-            toldSize = size;
-          },
+      await tester.pumpWidget(
+        table(
+          pagination: TablePagination(
+            defaultPageSize: 10,
+            onChanged: (page, size) {
+              toldPage = page;
+              toldSize = size;
+            },
+          ),
         ),
-      ));
+      );
       await tester.tap(pageButton('2'));
       await tester.pumpAndSettle();
       expect(toldPage, 2);
       expect(toldSize, 10);
     });
 
-    testWidgets('a page given is the page shown, and tapping only tells',
-        (tester) async {
+    testWidgets('a page given is the page shown, and tapping only tells', (
+      tester,
+    ) async {
       int? told;
-      await tester.pumpWidget(table(
-        pagination: TablePagination(
-          page: 2,
-          pageSize: 10,
-          onChanged: (page, _) => told = page,
+      await tester.pumpWidget(
+        table(
+          pagination: TablePagination(
+            page: 2,
+            pageSize: 10,
+            onChanged: (page, _) => told = page,
+          ),
         ),
-      ));
+      );
       expect(shown(tester).first, 'n10');
 
       await tester.tap(pageButton('3'));
@@ -4304,8 +4583,9 @@ void main() {
       expect(shown(tester).first, 'n10', reason: 'and changed nothing itself');
     });
 
-    testWidgets('a table controlled and then let go keeps no stale page',
-        (tester) async {
+    testWidgets('a table controlled and then let go keeps no stale page', (
+      tester,
+    ) async {
       // Uncontrolled first, so the table has a page of its own to come back
       // to; then given one, where tapping may only tell; then let go.
       await tester.pumpWidget(table());
@@ -4330,49 +4610,61 @@ void main() {
 
       await tester.pumpWidget(table());
       await tester.pumpAndSettle();
-      expect(shown(tester).first, 'n10',
-          reason: 'its own page, not what that tap would have made');
+      expect(
+        shown(tester).first,
+        'n10',
+        reason: 'its own page, not what that tap would have made',
+      );
     });
 
-    testWidgets('the page and the page size are controlled apart',
-        (tester) async {
+    testWidgets('the page and the page size are controlled apart', (
+      tester,
+    ) async {
       // Page given, size not: tapping a page may only tell, while the size
       // changer still works on its own.
       int? told;
-      await tester.pumpWidget(table(
-        pagination: TablePagination(
-          page: 1,
-          defaultPageSize: 10,
-          onChanged: (page, _) => told = page,
+      await tester.pumpWidget(
+        table(
+          pagination: TablePagination(
+            page: 1,
+            defaultPageSize: 10,
+            onChanged: (page, _) => told = page,
+          ),
         ),
-      ));
+      );
       await tester.tap(pageButton('3'));
       await tester.pumpAndSettle();
       expect(told, 3);
       expect(shown(tester).first, 'n0', reason: 'the page it was told');
 
       // And letting go of the page hands back the first one, not that tap.
-      await tester.pumpWidget(table(
-        pagination: const TablePagination(defaultPageSize: 10),
-      ));
+      await tester.pumpWidget(
+        table(pagination: const TablePagination(defaultPageSize: 10)),
+      );
       await tester.pumpAndSettle();
-      expect(shown(tester).first, 'n0',
-          reason: 'a page it was told to show is not a page it chose');
+      expect(
+        shown(tester).first,
+        'n0',
+        reason: 'a page it was told to show is not a page it chose',
+      );
     });
 
     testWidgets('paging happens after narrowing and sorting', (tester) async {
-      await tester.pumpWidget(table(
-        defaultFilters: const {
-          0: ['early'],
-        },
-        defaultSort: const [TableSort(1, TableSortOrder.descending)],
-      ));
+      await tester.pumpWidget(
+        table(
+          defaultFilters: const {
+            0: ['early'],
+          },
+          defaultSort: const [TableSort(1, TableSortOrder.descending)],
+        ),
+      );
       // Five rows survive the filter, so one page of them, newest first.
       expect(shown(tester), ['n4', 'n3', 'n2', 'n1', 'n0']);
     });
 
-    testWidgets('narrowing past the page you are on lands on the last one',
-        (tester) async {
+    testWidgets('narrowing past the page you are on lands on the last one', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       await tester.tap(pageButton('3'));
       await tester.pumpAndSettle();
@@ -4380,64 +4672,88 @@ void main() {
 
       // Now only five rows are left: page three does not exist. Controlled
       // filters, since a default is read once and this table already lives.
-      await tester.pumpWidget(table(filters: const {
-        0: ['early'],
-      }));
+      await tester.pumpWidget(
+        table(
+          filters: const {
+            0: ['early'],
+          },
+        ),
+      );
       await tester.pumpAndSettle();
-      expect(shown(tester), ['n0', 'n1', 'n2', 'n3', 'n4'],
-          reason: 'the last page there is, and never an empty one');
+      expect(shown(tester), [
+        'n0',
+        'n1',
+        'n2',
+        'n3',
+        'n4',
+      ], reason: 'the last page there is, and never an empty one');
     });
 
-    testWidgets('the heading box takes the page, not the whole table',
-        (tester) async {
+    testWidgets('the heading box takes the page, not the whole table', (
+      tester,
+    ) async {
       List<_User>? told;
-      await tester.pumpWidget(table(
-        selection: TableSelection<_User>(onChanged: (rows) => told = rows),
-      ));
+      await tester.pumpWidget(
+        table(
+          selection: TableSelection<_User>(onChanged: (rows) => told = rows),
+        ),
+      );
       await tester.tap(find.byType(Checkbox).first);
       await tester.pumpAndSettle();
       expect(told!.length, 10, reason: 'the ten on show, not all twenty-five');
     });
 
-    testWidgets('a pager stands where it is told, against the edge it is told',
-        (tester) async {
-      Future<Rect> pagerAt(List<TablePaginationPosition> where) async {
-        await tester.pumpWidget(const SizedBox());
-        await tester.pumpWidget(table(
-          pagination: TablePagination(defaultPageSize: 5, position: where),
-        ));
-        await tester.pumpAndSettle();
-        return tester.getRect(find.byType(Pagination));
-      }
+    testWidgets(
+      'a pager stands where it is told, against the edge it is told',
+      (tester) async {
+        Future<Rect> pagerAt(List<TablePaginationPosition> where) async {
+          await tester.pumpWidget(const SizedBox());
+          await tester.pumpWidget(
+            table(
+              pagination: TablePagination(defaultPageSize: 5, position: where),
+            ),
+          );
+          await tester.pumpAndSettle();
+          return tester.getRect(find.byType(Pagination));
+        }
 
-      final bottomEnd =
-          await pagerAt(const [TablePaginationPosition.bottomEnd]);
-      final topStart = await pagerAt(const [TablePaginationPosition.topStart]);
-      expect(topStart.center.dy, lessThan(bottomEnd.center.dy));
+        final bottomEnd = await pagerAt(const [
+          TablePaginationPosition.bottomEnd,
+        ]);
+        final topStart = await pagerAt(const [
+          TablePaginationPosition.topStart,
+        ]);
+        expect(topStart.center.dy, lessThan(bottomEnd.center.dy));
 
-      // The alignment is part of the position, so the pager's own content
-      // sits against the edge named — the default being the trailing one,
-      // where a total drawn beside it would otherwise hug the leading edge.
-      final endNumbers = await pagerAt(
-        const [TablePaginationPosition.bottomEnd],
-      );
-      final endOne = tester.getRect(find.descendant(
-        of: find.byType(Pagination),
-        matching: find.text('1'),
-      ));
-      final startNumbers = await pagerAt(
-        const [TablePaginationPosition.bottomStart],
-      );
-      final startOne = tester.getRect(find.descendant(
-        of: find.byType(Pagination),
-        matching: find.text('1'),
-      ));
-      expect(endOne.left, greaterThan(startOne.left));
-      expect(endNumbers.width, closeTo(startNumbers.width, 0.5));
-    });
+        // The alignment is part of the position, so the pager's own content
+        // sits against the edge named — the default being the trailing one,
+        // where a total drawn beside it would otherwise hug the leading edge.
+        final endNumbers = await pagerAt(const [
+          TablePaginationPosition.bottomEnd,
+        ]);
+        final endOne = tester.getRect(
+          find.descendant(
+            of: find.byType(Pagination),
+            matching: find.text('1'),
+          ),
+        );
+        final startNumbers = await pagerAt(const [
+          TablePaginationPosition.bottomStart,
+        ]);
+        final startOne = tester.getRect(
+          find.descendant(
+            of: find.byType(Pagination),
+            matching: find.text('1'),
+          ),
+        );
+        expect(endOne.left, greaterThan(startOne.left));
+        expect(endNumbers.width, closeTo(startNumbers.width, 0.5));
+      },
+    );
 
-    testWidgets('by default the pager is under the table, against the end',
-        (tester) async {
+    testWidgets('by default the pager is under the table, against the end', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       final pager = tester.getRect(find.byType(Pagination));
       final rows = tester.getRect(find.text('n0'));
@@ -4445,26 +4761,28 @@ void main() {
 
       // Against the trailing edge, which is also what keeps a `showTotal`
       // drawn beside it off the leading one.
-      final one = tester.getRect(find.descendant(
-        of: find.byType(Pagination),
-        matching: find.text('1'),
-      ));
+      final one = tester.getRect(
+        find.descendant(of: find.byType(Pagination), matching: find.text('1')),
+      );
       expect(one.center.dx, greaterThan(pager.center.dx));
     });
 
     testWidgets('none pages the rows and draws nothing', (tester) async {
-      await tester.pumpWidget(table(
-        pagination: const TablePagination(
-          defaultPageSize: 10,
-          position: [TablePaginationPosition.none],
+      await tester.pumpWidget(
+        table(
+          pagination: const TablePagination(
+            defaultPageSize: 10,
+            position: [TablePaginationPosition.none],
+          ),
         ),
-      ));
+      );
       expect(find.byType(Pagination), findsNothing);
       expect(shown(tester).length, 10, reason: 'still a page of rows');
     });
 
-    testWidgets('a total the caller names is what the pager counts',
-        (tester) async {
+    testWidgets('a total the caller names is what the pager counts', (
+      tester,
+    ) async {
       // The rows handed over are one page already — taken out by whatever
       // knows the rest — so the table draws them as they came.
       final page = [for (var i = 20; i < 30; i++) _User('n$i', i)];
@@ -4501,25 +4819,22 @@ void main() {
       // And the pager knows there are ten pages, not one — and that it is
       // standing on the third.
       expect(
-        find.descendant(
-          of: find.byType(Pagination),
-          matching: find.text('10'),
-        ),
+        find.descendant(of: find.byType(Pagination), matching: find.text('10')),
         findsOneWidget,
       );
       expect(tester.widget<Pagination>(find.byType(Pagination)).current, 3);
 
-      await tester.tap(find.descendant(
-        of: find.byType(Pagination),
-        matching: find.text('4'),
-      ));
+      await tester.tap(
+        find.descendant(of: find.byType(Pagination), matching: find.text('4')),
+      );
       await tester.pumpAndSettle();
       expect(asked, 1);
       expect(askedFor, 4, reason: 'the caller fetches that page itself');
     });
 
-    testWidgets('the outline goes round the table, not round the pager',
-        (tester) async {
+    testWidgets('the outline goes round the table, not round the pager', (
+      tester,
+    ) async {
       // Drawn inside the frame, the pager pushed the outline below itself and
       // left the last row with nothing under it — the row's own rule is the
       // one the outline stands in for.
@@ -4542,20 +4857,28 @@ void main() {
 
       final outline = tester.getRect(
         find
-            .byWidgetPredicate((w) =>
-                w is DecoratedBox &&
-                w.decoration is BoxDecoration &&
-                (w.decoration as BoxDecoration).borderRadius != null &&
-                (w.decoration as BoxDecoration).border != null)
+            .byWidgetPredicate(
+              (w) =>
+                  w is DecoratedBox &&
+                  w.decoration is BoxDecoration &&
+                  (w.decoration as BoxDecoration).borderRadius != null &&
+                  (w.decoration as BoxDecoration).border != null,
+            )
             .first,
       );
       final pager = tester.getRect(find.byType(Pagination));
       final lastRow = tester.getRect(find.text('n4'));
 
-      expect(outline.bottom, lessThanOrEqualTo(pager.top),
-          reason: 'the pager stands outside the frame');
-      expect(lastRow.bottom, lessThan(outline.bottom),
-          reason: 'and the last row is closed off by it');
+      expect(
+        outline.bottom,
+        lessThanOrEqualTo(pager.top),
+        reason: 'the pager stands outside the frame',
+      );
+      expect(
+        lastRow.bottom,
+        lessThan(outline.bottom),
+        reason: 'and the last row is closed off by it',
+      );
     });
 
     testWidgets('no pagination, no pager', (tester) async {
@@ -4583,22 +4906,26 @@ void main() {
       await tester.pumpWidget(table());
       expect(find.byType(Pagination), findsOneWidget);
       final table_ = tester.getRect(find.byType(Table<_User>));
-      expect(tester.getRect(find.byType(Pagination)).center.dy,
-          greaterThan(table_.center.dy));
+      expect(
+        tester.getRect(find.byType(Pagination)).center.dy,
+        greaterThan(table_.center.dy),
+      );
 
       // Five to a page, or two pagers and ten rows do not fit the surface the
       // test is given — and controlled, since a default is read once and this
       // table already lives.
-      await tester.pumpWidget(table(
-        pagination: const TablePagination(
-          page: 1,
-          pageSize: 5,
-          position: [
-            TablePaginationPosition.topEnd,
-            TablePaginationPosition.bottomEnd,
-          ],
+      await tester.pumpWidget(
+        table(
+          pagination: const TablePagination(
+            page: 1,
+            pageSize: 5,
+            position: [
+              TablePaginationPosition.topEnd,
+              TablePaginationPosition.bottomEnd,
+            ],
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
       expect(find.byType(Pagination), findsNWidgets(2));
     });
@@ -4608,32 +4935,29 @@ void main() {
     const people = [_User('Chen', 27), _User('Ann', 45)];
 
     Widget table({bool bordered = false}) => _host(
-          Table<_User>(
-            bordered: bordered,
-            data: people,
-            columns: [
+      Table<_User>(
+        bordered: bordered,
+        data: people,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Who'),
+            children: [
               TableColumn<_User>(
-                title: const Text('Who'),
-                children: [
-                  TableColumn<_User>(
-                    title: const Text('Name'),
-                    sortable: true,
-                    value: (u) => u.name,
-                  ),
-                  TableColumn<_User>(
-                    title: const Text('Age'),
-                    value: (u) => u.age,
-                  ),
-                ],
+                title: const Text('Name'),
+                sortable: true,
+                value: (u) => u.name,
               ),
-              TableColumn<_User>(
-                title: const Text('Note'),
-                value: (u) => 'about ${u.name}',
-              ),
+              TableColumn<_User>(title: const Text('Age'), value: (u) => u.age),
             ],
           ),
-          width: 700,
-        );
+          TableColumn<_User>(
+            title: const Text('Note'),
+            value: (u) => 'about ${u.name}',
+          ),
+        ],
+      ),
+      width: 700,
+    );
 
     testWidgets('a group heads the columns under it', (tester) async {
       await tester.pumpWidget(table());
@@ -4648,8 +4972,9 @@ void main() {
       expect(group.center.dx, lessThan(age.right));
     });
 
-    testWidgets('a column heading nothing stands the whole depth',
-        (tester) async {
+    testWidgets('a column heading nothing stands the whole depth', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       final who = tester.getRect(find.text('Who')).center.dy;
       final name = tester.getRect(find.text('Name')).center.dy;
@@ -4662,8 +4987,9 @@ void main() {
       expect(note, lessThan(name));
     });
 
-    testWidgets('the cells line up under the heading they belong to',
-        (tester) async {
+    testWidgets('the cells line up under the heading they belong to', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       expect(
         tester.getRect(find.text('Chen')).left,
@@ -4681,8 +5007,10 @@ void main() {
 
       await tester.tap(find.text('Name'));
       await tester.pumpAndSettle();
-      expect(shownNames(tester), ['Ann', 'Chen'],
-          reason: 'the first leaf, not the first column given');
+      expect(shownNames(tester), [
+        'Ann',
+        'Chen',
+      ], reason: 'the first leaf, not the first column given');
     });
 
     testWidgets('a group is not a column to sort or narrow', (tester) async {
@@ -4692,8 +5020,9 @@ void main() {
       expect(shownNames(tester), ['Chen', 'Ann'], reason: 'nothing moved');
     });
 
-    testWidgets('a group nests, and a leaf beside one stands its depth',
-        (tester) async {
+    testWidgets('a group nests, and a leaf beside one stands its depth', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -4744,8 +5073,9 @@ void main() {
       );
     });
 
-    testWidgets('a scrolling table keeps its groups and stays lazy',
-        (tester) async {
+    testWidgets('a scrolling table keeps its groups and stays lazy', (
+      tester,
+    ) async {
       // The heading of a grouped table cannot be a row of the grid — a
       // title reaches across the columns under it — so the viewport is told
       // where every heading cell stands and how much it covers, and only the
@@ -4778,8 +5108,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(RichText).evaluate().length, lessThan(80),
-          reason: 'three hundred rows built twelve hundred cells before');
+      expect(
+        find.byType(RichText).evaluate().length,
+        lessThan(80),
+        reason: 'three hundred rows built twelve hundred cells before',
+      );
 
       // The group stands above what it heads, and across it.
       final who = tester.getRect(find.text('Who'));
@@ -4794,8 +5127,11 @@ void main() {
             .ancestor(of: find.text('Who'), matching: find.byType(DecoratedBox))
             .first,
       );
-      expect(whoCell.right, greaterThan(city.right),
-          reason: 'a title reaching across one column would stop at Name');
+      expect(
+        whoCell.right,
+        greaterThan(city.right),
+        reason: 'a title reaching across one column would stop at Name',
+      );
 
       // Age heads nothing, so it stands the whole depth: its title sits
       // between the two rows rather than on either.
@@ -4815,10 +5151,7 @@ void main() {
           title: const Text('Who'),
           value: (u) => u.name,
           children: [
-            TableColumn<_User>(
-              title: const Text('Name'),
-              value: (u) => u.name,
-            ),
+            TableColumn<_User>(title: const Text('Name'), value: (u) => u.name),
           ],
         ),
         throwsAssertionError,
@@ -4834,53 +5167,52 @@ void main() {
   });
 
   group('a row that adds up', () {
-    const people = [
-      _User('Chen', 27),
-      _User('Ann', 45),
-      _User('Bart', 31),
-    ];
+    const people = [_User('Chen', 27), _User('Ann', 45), _User('Bart', 31)];
 
     Widget table({
       bool onAge = true,
       Map<int, List<Object?>>? defaultFilters,
       TablePagination? pagination,
-    }) =>
-        _host(
-          Table<_User>(
-            data: people,
-            defaultFilters: defaultFilters,
-            pagination: pagination,
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                value: (u) => u.name,
-                filters: const [TableFilter('young', 'young')],
-                onFilter: (choice, u) => u.age < 40,
-                summary: (_, rows) => Text('${rows.length} people'),
-              ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                align: TableAlign.end,
-                value: (u) => u.age,
-                summary: onAge
-                    ? (_, rows) => Text('${rows.fold(0, (n, u) => n + u.age)}')
-                    : null,
-              ),
-            ],
+    }) => _host(
+      Table<_User>(
+        data: people,
+        defaultFilters: defaultFilters,
+        pagination: pagination,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            value: (u) => u.name,
+            filters: const [TableFilter('young', 'young')],
+            onFilter: (choice, u) => u.age < 40,
+            summary: (_, rows) => Text('${rows.length} people'),
           ),
-          width: 700,
+          TableColumn<_User>(
+            title: const Text('Age'),
+            align: TableAlign.end,
+            value: (u) => u.age,
+            summary: onAge
+                ? (_, rows) => Text('${rows.fold(0, (n, u) => n + u.age)}')
+                : null,
+          ),
+        ],
+      ),
+      width: 700,
+    );
+
+    testWidgets(
+      'a column says what it adds up, and it is drawn under the rest',
+      (tester) async {
+        await tester.pumpWidget(table());
+        expect(find.text('3 people'), findsOneWidget);
+        expect(find.text('103'), findsOneWidget);
+
+        final summary = tester.getRect(find.text('103'));
+        expect(
+          summary.center.dy,
+          greaterThan(tester.getRect(find.text('Bart')).center.dy),
         );
-
-    testWidgets('a column says what it adds up, and it is drawn under the rest',
-        (tester) async {
-      await tester.pumpWidget(table());
-      expect(find.text('3 people'), findsOneWidget);
-      expect(find.text('103'), findsOneWidget);
-
-      final summary = tester.getRect(find.text('103'));
-      expect(summary.center.dy,
-          greaterThan(tester.getRect(find.text('Bart')).center.dy));
-    });
+      },
+    );
 
     testWidgets('it lines up with the columns it sums', (tester) async {
       await tester.pumpWidget(table());
@@ -4895,8 +5227,9 @@ void main() {
       );
     });
 
-    testWidgets('it stands on the body\'s own ground, not a tint',
-        (tester) async {
+    testWidgets('it stands on the body\'s own ground, not a tint', (
+      tester,
+    ) async {
       // A fill would make it read as a second heading; the rule above it is
       // what sets it apart. The heading's own fill comes from a TableRow
       // decoration rather than a box, so the two are compared through the
@@ -4938,12 +5271,16 @@ void main() {
 
       expect(fills, isNotEmpty);
       expect(fills.first, token.colorBgContainer);
-      expect(fills.first, isNot(token.colorFillQuaternary),
-          reason: 'not the heading\'s fill');
+      expect(
+        fills.first,
+        isNot(token.colorFillQuaternary),
+        reason: 'not the heading\'s fill',
+      );
     });
 
-    testWidgets('the outline is painted over it, not behind it',
-        (tester) async {
+    testWidgets('the outline is painted over it, not behind it', (
+      tester,
+    ) async {
       // A row with a fill of its own is opaque right to the edge, so a frame
       // drawn behind it is simply painted over: measured at the left edge, a
       // body row showed the rule while the summary beside it came out pure
@@ -4983,8 +5320,8 @@ void main() {
       int redAt(int x, int y) => bytes!.getUint8((y * w + x) * 4);
       int alphaAt(int x, int y) => bytes!.getUint8((y * w + x) * 4 + 3);
 
-      final besideSummary =
-          (tester.getRect(find.text('one')).center.dy - top).round();
+      final besideSummary = (tester.getRect(find.text('one')).center.dy - top)
+          .round();
       final underSummary = box.size.height.round() - 1;
 
       // Opaque there, and darker than the fill behind it: the rule is on top.
@@ -5043,8 +5380,9 @@ void main() {
       expect(ruled, isNotEmpty);
     });
 
-    testWidgets('a column that says nothing leaves its place empty',
-        (tester) async {
+    testWidgets('a column that says nothing leaves its place empty', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(onAge: false));
       expect(find.text('3 people'), findsOneWidget);
       expect(find.text('103'), findsNothing);
@@ -5068,18 +5406,22 @@ void main() {
     });
 
     testWidgets('it adds up the rows on show, not every row', (tester) async {
-      await tester.pumpWidget(table(defaultFilters: const {
-        0: ['young'],
-      }));
+      await tester.pumpWidget(
+        table(
+          defaultFilters: const {
+            0: ['young'],
+          },
+        ),
+      );
       // Chen is 27 and Bart is 31; Ann at 45 was filtered away.
       expect(find.text('2 people'), findsOneWidget);
       expect(find.text('58'), findsOneWidget);
     });
 
     testWidgets('and on a paged table, the page', (tester) async {
-      await tester.pumpWidget(table(
-        pagination: const TablePagination(defaultPageSize: 2),
-      ));
+      await tester.pumpWidget(
+        table(pagination: const TablePagination(defaultPageSize: 2)),
+      );
       expect(find.text('2 people'), findsOneWidget);
       expect(find.text('72'), findsOneWidget, reason: 'Chen and Ann');
     });
@@ -5120,8 +5462,9 @@ void main() {
       expect(find.text('300 rows'), findsOneWidget);
     });
 
-    testWidgets('it holds at the foot while the rows run under it',
-        (tester) async {
+    testWidgets('it holds at the foot while the rows run under it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<int>(
@@ -5180,10 +5523,7 @@ void main() {
           title: const Text('Who'),
           summary: (_, __) => const Text('x'),
           children: [
-            TableColumn<_User>(
-              title: const Text('Name'),
-              value: (u) => u.name,
-            ),
+            TableColumn<_User>(title: const Text('Name'), value: (u) => u.name),
           ],
         ),
         throwsAssertionError,
@@ -5192,46 +5532,40 @@ void main() {
   });
 
   group('cells that span', () {
-    const people = [
-      _User('Chen', 27),
-      _User('Ann', 45),
-      _User('Bart', 31),
-    ];
+    const people = [_User('Chen', 27), _User('Ann', 45), _User('Bart', 31)];
 
     Widget table({
       TableCellSpan Function(BuildContext, _User, int)? onName,
       TableCellSpan Function(BuildContext, _User, int)? onCity,
       bool bordered = false,
-    }) =>
-        _host(
-          Table<_User>(
-            bordered: bordered,
-            data: people,
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                value: (u) => u.name,
-                span: onName,
-              ),
-              TableColumn<_User>(
-                title: const Text('City'),
-                value: (u) => 'city ${u.age}',
-                span: onCity,
-              ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                value: (u) => u.age,
-              ),
-            ],
+    }) => _host(
+      Table<_User>(
+        bordered: bordered,
+        data: people,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            value: (u) => u.name,
+            span: onName,
           ),
-          width: 700,
-        );
+          TableColumn<_User>(
+            title: const Text('City'),
+            value: (u) => 'city ${u.age}',
+            span: onCity,
+          ),
+          TableColumn<_User>(title: const Text('Age'), value: (u) => u.age),
+        ],
+      ),
+      width: 700,
+    );
 
     testWidgets('a cell reaching across covers its neighbour', (tester) async {
-      await tester.pumpWidget(table(
-        onName: (_, u, i) =>
-            i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
-      ));
+      await tester.pumpWidget(
+        table(
+          onName: (_, u, i) =>
+              i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
+        ),
+      );
 
       // The covered cell is not drawn at all — nothing has to say it is.
       expect(find.text('city 27'), findsNothing);
@@ -5251,54 +5585,63 @@ void main() {
       expect(wide.width, greaterThan(narrow.width * 1.5));
     });
 
-    testWidgets('a cell reaching down stands over the rows it covers',
-        (tester) async {
-      await tester.pumpWidget(table(
-        onName: (_, u, i) =>
-            i == 0 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
-      ));
+    testWidgets('a cell reaching down stands over the rows it covers', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        table(
+          onName: (_, u, i) =>
+              i == 0 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
+        ),
+      );
 
       expect(find.text('Chen'), findsOneWidget);
       expect(find.text('Ann'), findsNothing, reason: 'covered from above');
       expect(find.text('Bart'), findsOneWidget);
-      expect(find.text('city 45'), findsOneWidget,
-          reason: 'only the first column was covered');
+      expect(
+        find.text('city 45'),
+        findsOneWidget,
+        reason: 'only the first column was covered',
+      );
 
       // It is as tall as the two rows it covers, rather than sitting in the
       // first of them and leaving a hole in the second.
       Rect boxOf(String text) => tester.getRect(
-            find
-                .ancestor(
-                  of: find.text(text),
-                  matching: find.byType(DecoratedBox),
-                )
-                .first,
-          );
+        find
+            .ancestor(of: find.text(text), matching: find.byType(DecoratedBox))
+            .first,
+      );
       final spanning = boxOf('Chen');
       final below = boxOf('Bart');
       expect(spanning.height, closeTo(below.height * 2, 0.5));
       expect(spanning.bottom, closeTo(below.top, 0.5));
     });
 
-    testWidgets('no rule is drawn through a cell that reaches down',
-        (tester) async {
+    testWidgets('no rule is drawn through a cell that reaches down', (
+      tester,
+    ) async {
       // The rules go on the cells, not on the rows: a row that carried its
       // own drew a line straight through the middle of a merged cell.
-      await tester.pumpWidget(table(
-        onName: (_, u, i) =>
-            i == 0 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
-      ));
+      await tester.pumpWidget(
+        table(
+          onName: (_, u, i) =>
+              i == 0 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
+        ),
+      );
 
-      final border = (tester
-              .widgetList<DecoratedBox>(
-                find.ancestor(
-                  of: find.text('Chen'),
-                  matching: find.byType(DecoratedBox),
-                ),
-              )
-              .first
-              .decoration as BoxDecoration)
-          .border! as BorderDirectional;
+      final border =
+          (tester
+                          .widgetList<DecoratedBox>(
+                            find.ancestor(
+                              of: find.text('Chen'),
+                              matching: find.byType(DecoratedBox),
+                            ),
+                          )
+                          .first
+                          .decoration
+                      as BoxDecoration)
+                  .border!
+              as BorderDirectional;
       // Its own bottom rule sits under the last row it covers — here the row
       // before the last, so it carries one.
       expect(border.bottom, isNot(BorderSide.none));
@@ -5307,8 +5650,9 @@ void main() {
       expect(find.text('Ann'), findsNothing);
     });
 
-    testWidgets('spanning columns alone leaves the rows to their content',
-        (tester) async {
+    testWidgets('spanning columns alone leaves the rows to their content', (
+      tester,
+    ) async {
       // Only a cell reaching down needs a height known before the fact.
       await tester.pumpWidget(
         _host(
@@ -5334,24 +5678,27 @@ void main() {
       );
 
       Rect boxOf(String text) => tester.getRect(
-            find
-                .ancestor(
-                  of: find.text(text),
-                  matching: find.byType(DecoratedBox),
-                )
-                .first,
-          );
-      expect(boxOf('Ann').height, greaterThan(boxOf('Chen').height),
-          reason: 'the taller row is taller');
+        find
+            .ancestor(of: find.text(text), matching: find.byType(DecoratedBox))
+            .first,
+      );
+      expect(
+        boxOf('Ann').height,
+        greaterThan(boxOf('Chen').height),
+        reason: 'the taller row is taller',
+      );
     });
 
-    testWidgets('a span asking for more than there is takes what there is',
-        (tester) async {
-      await tester.pumpWidget(table(
-        onName: (_, u, i) => i == 2
-            ? const TableCellSpan(columns: 9, rows: 9)
-            : const TableCellSpan(),
-      ));
+    testWidgets('a span asking for more than there is takes what there is', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        table(
+          onName: (_, u, i) => i == 2
+              ? const TableCellSpan(columns: 9, rows: 9)
+              : const TableCellSpan(),
+        ),
+      );
       // The last row and every column: nothing beyond the table is reached
       // for, and nothing throws.
       expect(find.text('Bart'), findsOneWidget);
@@ -5359,10 +5706,12 @@ void main() {
     });
 
     testWidgets('the columns still line up with the heading', (tester) async {
-      await tester.pumpWidget(table(
-        onName: (_, u, i) =>
-            i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
-      ));
+      await tester.pumpWidget(
+        table(
+          onName: (_, u, i) =>
+              i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
+        ),
+      );
       expect(
         tester.getRect(find.text('Ann')).left,
         closeTo(tester.getRect(find.text('Name')).left, 0.5),
@@ -5374,11 +5723,13 @@ void main() {
     });
 
     testWidgets('a bordered table rules the spanned cell once', (tester) async {
-      await tester.pumpWidget(table(
-        bordered: true,
-        onName: (_, u, i) =>
-            i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
-      ));
+      await tester.pumpWidget(
+        table(
+          bordered: true,
+          onName: (_, u, i) =>
+              i == 0 ? const TableCellSpan(columns: 2) : const TableCellSpan(),
+        ),
+      );
 
       // The rule stands after the pair, not through the middle of the cell.
       final rules = tester
@@ -5397,16 +5748,19 @@ void main() {
       expect(rules, 1);
 
       // The last row carries no rule under it: the outline stands in for it.
-      final underLast = (tester
-              .widgetList<DecoratedBox>(
-                find.ancestor(
-                  of: find.text('Bart'),
-                  matching: find.byType(DecoratedBox),
-                ),
-              )
-              .first
-              .decoration as BoxDecoration)
-          .border! as BorderDirectional;
+      final underLast =
+          (tester
+                          .widgetList<DecoratedBox>(
+                            find.ancestor(
+                              of: find.text('Bart'),
+                              matching: find.byType(DecoratedBox),
+                            ),
+                          )
+                          .first
+                          .decoration
+                      as BoxDecoration)
+                  .border!
+              as BorderDirectional;
       expect(underLast.bottom, BorderSide.none);
 
       // And the last cell in the row carries none: the outline closes it off.
@@ -5426,8 +5780,9 @@ void main() {
       expect(atEnd, 0);
     });
 
-    testWidgets('two spans in one row do not tread on each other',
-        (tester) async {
+    testWidgets('two spans in one row do not tread on each other', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -5467,8 +5822,9 @@ void main() {
       expect(find.text('c Ann'), findsNothing);
     });
 
-    testWidgets('what lights up is decided by the cell under the pointer',
-        (tester) async {
+    testWidgets('what lights up is decided by the cell under the pointer', (
+      tester,
+    ) async {
       // Two rows, a merged cell standing over both of them in one column:
       //
       //   a  |  bd
@@ -5477,10 +5833,12 @@ void main() {
       // Point at a, and a lights with the cell over it — but not c. Point at
       // the merged cell and everything it covers lights. What lights is the
       // *cell* under the pointer, not the row it happens to sit in.
-      await tester.pumpWidget(table(
-        onName: (_, u, i) =>
-            i == 1 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
-      ));
+      await tester.pumpWidget(
+        table(
+          onName: (_, u, i) =>
+              i == 1 ? const TableCellSpan(rows: 2) : const TableCellSpan(),
+        ),
+      );
       await tester.pumpAndSettle();
 
       bool lit(String text) => tester
@@ -5520,8 +5878,9 @@ void main() {
       expect(lit('city 27'), isFalse, reason: 'and nothing beyond it');
     });
 
-    testWidgets('a grid full of spans loses nothing and draws nothing twice',
-        (tester) async {
+    testWidgets('a grid full of spans loses nothing and draws nothing twice', (
+      tester,
+    ) async {
       // Six rows and five columns, with spans across, down, and both at once.
       // The covered places are worked out by the table, so the way to know it
       // is right is to count: every cell that should be there exactly once,
@@ -5605,12 +5964,7 @@ void main() {
 
       // And nothing has drifted: an unspanned cell still stands under its own
       // heading, however much is merged around it.
-      for (final pair in [
-        ('a1', 'A'),
-        ('b1', 'B'),
-        ('d1', 'D'),
-        ('e1', 'E'),
-      ]) {
+      for (final pair in [('a1', 'A'), ('b1', 'B'), ('d1', 'D'), ('e1', 'E')]) {
         expect(
           tester.getRect(find.text(pair.$1)).left,
           closeTo(tester.getRect(find.text(pair.$2)).left, 0.5),
@@ -5619,8 +5973,9 @@ void main() {
       }
     });
 
-    testWidgets('a scrolling table keeps its spans and stays lazy',
-        (tester) async {
+    testWidgets('a scrolling table keeps its spans and stays lazy', (
+      tester,
+    ) async {
       // The rows of a lazy body are all one height, so a cell reaching down
       // three of them is three times that — known before anything is laid
       // out. What the viewport needs is a plan of where each cell starts,
@@ -5656,27 +6011,31 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(RichText).evaluate().length, lessThan(70),
-          reason: 'three hundred rows built twelve hundred cells before');
+      expect(
+        find.byType(RichText).evaluate().length,
+        lessThan(70),
+        reason: 'three hundred rows built twelve hundred cells before',
+      );
 
       expect(find.text('b0'), findsNothing, reason: 'covered across by a0');
       expect(find.text('b1'), findsOneWidget);
       expect(find.text('c2'), findsNothing, reason: 'covered down by c1');
 
       Rect boxOf(String text) => tester.getRect(
-            find
-                .ancestor(
-                  of: find.text(text),
-                  matching: find.byType(DecoratedBox),
-                )
-                .first,
-          );
-      expect(boxOf('c1').height, closeTo(boxOf('a1').height * 3, 1),
-          reason: 'three rows tall, and the rows are of a height');
+        find
+            .ancestor(of: find.text(text), matching: find.byType(DecoratedBox))
+            .first,
+      );
+      expect(
+        boxOf('c1').height,
+        closeTo(boxOf('a1').height * 3, 1),
+        reason: 'three rows tall, and the rows are of a height',
+      );
     });
 
-    testWidgets('a cell reaching in from above the screen is still drawn',
-        (tester) async {
+    testWidgets('a cell reaching in from above the screen is still drawn', (
+      tester,
+    ) async {
       // The whole reason the plan covers every row rather than the ones on
       // show. The span is deeper than the cache the viewport keeps either
       // side, so nothing but the look-back can find it.
@@ -5712,8 +6071,11 @@ void main() {
       }
 
       expect(find.text('m36'), findsOneWidget, reason: 'we are in its range');
-      expect(find.text('n20'), findsOneWidget,
-          reason: 'and the cell that started at row twenty is still there');
+      expect(
+        find.text('n20'),
+        findsOneWidget,
+        reason: 'and the cell that started at row twenty is still there',
+      );
       expect(find.text('n36'), findsNothing, reason: 'covered by it');
 
       // And only the rows on show are built: the look-back is a walk over
@@ -5732,10 +6094,7 @@ void main() {
           title: const Text('Who'),
           span: (_, __, ___) => const TableCellSpan(),
           children: [
-            TableColumn<_User>(
-              title: const Text('Name'),
-              value: (u) => u.name,
-            ),
+            TableColumn<_User>(title: const Text('Name'), value: (u) => u.name),
           ],
         ),
         throwsAssertionError,
@@ -5747,29 +6106,30 @@ void main() {
     final many = [for (var i = 0; i < 30; i++) _User('n$i', i)];
 
     Widget page({double offsetHeader = 0}) => _host(
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 300, child: Text('above')),
-                Table<_User>(
-                  bordered: true,
-                  sticky: TableSticky(offsetHeader: offsetHeader),
-                  data: many,
-                  columns: [
-                    TableColumn<_User>(
-                      title: const Text('Name'),
-                      value: (u) => u.name,
-                    ),
-                  ],
+      SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 300, child: Text('above')),
+            Table<_User>(
+              bordered: true,
+              sticky: TableSticky(offsetHeader: offsetHeader),
+              data: many,
+              columns: [
+                TableColumn<_User>(
+                  title: const Text('Name'),
+                  value: (u) => u.name,
                 ),
               ],
             ),
-          ),
-          width: 400,
-        );
+          ],
+        ),
+      ),
+      width: 400,
+    );
 
-    testWidgets('it holds at the top once the table has gone past',
-        (tester) async {
+    testWidgets('it holds at the top once the table has gone past', (
+      tester,
+    ) async {
       await tester.pumpWidget(page());
       await tester.pumpAndSettle();
 
@@ -5849,8 +6209,9 @@ void main() {
       expect(fills, isNotEmpty);
     });
 
-    testWidgets('it costs a lazy table nothing, because it never applies',
-        (tester) async {
+    testWidgets('it costs a lazy table nothing, because it never applies', (
+      tester,
+    ) async {
       // A table with a height of its own already keeps its heading, so sticky
       // is ignored there — and must not push it off the lazy body on the way.
       Future<int> cells({required bool sticky}) async {
@@ -5903,36 +6264,34 @@ void main() {
 
   group('a width of its own', () {
     Widget table({TableScroll? scroll, double box = 300}) => _host(
-          Table<_User>(
-            scroll: scroll,
-            data: const [
-              _User('a name long enough to want room', 27),
-              _User('short', 45),
-            ],
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                value: (u) => u.name,
-              ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                value: (u) => u.age,
-              ),
-            ],
-          ),
-          width: box,
-        );
+      Table<_User>(
+        scroll: scroll,
+        data: const [
+          _User('a name long enough to want room', 27),
+          _User('short', 45),
+        ],
+        columns: [
+          TableColumn<_User>(title: const Text('Name'), value: (u) => u.name),
+          TableColumn<_User>(title: const Text('Age'), value: (u) => u.age),
+        ],
+      ),
+      width: box,
+    );
 
-    testWidgets('the columns take what they need, not a share of the box',
-        (tester) async {
+    testWidgets('the columns take what they need, not a share of the box', (
+      tester,
+    ) async {
       // Squeezed into the box, the long name has to wrap or be cut; asked for
       // its own width, it stands out to its full length and the table scrolls.
       await tester.pumpWidget(table(scroll: const TableScroll.toContent()));
       await tester.pumpAndSettle();
 
       final name = tester.getRect(find.text('a name long enough to want room'));
-      expect(name.width, greaterThan(300),
-          reason: 'wider than the box it stands in');
+      expect(
+        name.width,
+        greaterThan(300),
+        reason: 'wider than the box it stands in',
+      );
     });
 
     testWidgets('and it scrolls sideways', (tester) async {
@@ -5953,16 +6312,20 @@ void main() {
       expect(tester.getRect(find.byType(Table<_User>)).width, closeTo(300, 1));
     });
 
-    testWidgets('a scrolling body can take its width from its columns too',
-        (tester) async {
+    testWidgets('a scrolling body can take its width from its columns too', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         table(scroll: const TableScroll.toContent(y: 120)),
       );
       await tester.pumpAndSettle();
       final name = tester.getRect(find.text('a name long enough to want room'));
       expect(name.width, greaterThan(300));
-      expect(tester.getRect(find.byType(Table<_User>)).height, lessThan(220),
-          reason: 'the height it was given, heading and all');
+      expect(
+        tester.getRect(find.byType(Table<_User>)).height,
+        lessThan(220),
+        reason: 'the height it was given, heading and all',
+      );
     });
 
     test('a content width says so through its own constructor', () {
@@ -5976,53 +6339,56 @@ void main() {
     const people = [_User('Chen', 27), _User('Ann', 45)];
 
     /// The box a cell hangs its own rule on, if it has one.
-    Finder ruledBoxes() => find.byWidgetPredicate((w) =>
-        w is DecoratedBox &&
-        w.position == DecorationPosition.foreground &&
-        w.decoration is BoxDecoration &&
-        (w.decoration as BoxDecoration).border is BorderDirectional &&
-        ((w.decoration as BoxDecoration).border! as BorderDirectional).end !=
-            BorderSide.none);
+    Finder ruledBoxes() => find.byWidgetPredicate(
+      (w) =>
+          w is DecoratedBox &&
+          w.position == DecorationPosition.foreground &&
+          w.decoration is BoxDecoration &&
+          (w.decoration as BoxDecoration).border is BorderDirectional &&
+          ((w.decoration as BoxDecoration).border! as BorderDirectional).end !=
+              BorderSide.none,
+    );
 
     Widget table({
       bool draggable = true,
       void Function(int, int)? onReordered,
-    }) =>
-        _host(
-          Table<_User>(
-            data: people,
-            columnsDraggable: draggable,
-            onColumnsReordered: onReordered,
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                sortable: true,
-                value: (u) => u.name,
-              ),
-              TableColumn<_User>(
-                // Sortable too, so a sort pointed at the wrong column sorts
-                // by something and the difference can be seen.
-                title: const Text('Age'),
-                sortable: true,
-                value: (u) => u.age,
-              ),
-              TableColumn<_User>(
-                title: const Text('City'),
-                value: (u) => 'city',
-              ),
-            ],
+    }) => _host(
+      Table<_User>(
+        data: people,
+        columnsDraggable: draggable,
+        onColumnsReordered: onReordered,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            sortable: true,
+            value: (u) => u.name,
           ),
-          width: 700,
-        );
+          TableColumn<_User>(
+            // Sortable too, so a sort pointed at the wrong column sorts
+            // by something and the difference can be seen.
+            title: const Text('Age'),
+            sortable: true,
+            value: (u) => u.age,
+          ),
+          TableColumn<_User>(title: const Text('City'), value: (u) => 'city'),
+        ],
+      ),
+      width: 700,
+    );
 
-    testWidgets('a heading carried onto another takes its place',
-        (tester) async {
+    testWidgets('a heading carried onto another takes its place', (
+      tester,
+    ) async {
       int? from;
       int? to;
-      await tester.pumpWidget(table(onReordered: (a, b) {
-        from = a;
-        to = b;
-      }));
+      await tester.pumpWidget(
+        table(
+          onReordered: (a, b) {
+            from = a;
+            to = b;
+          },
+        ),
+      );
 
       List<String> headings() => tester
           .widgetList<Text>(find.byType(Text))
@@ -6048,8 +6414,9 @@ void main() {
       expect(to, 2);
     });
 
-    testWidgets('the neighbours slide aside while it is carried',
-        (tester) async {
+    testWidgets('the neighbours slide aside while it is carried', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(onReordered: (_, __) {}));
       await tester.pumpAndSettle();
 
@@ -6064,8 +6431,9 @@ void main() {
       // layout, which does not move, and not off the slid cells.
       final atCity = tester.getCenter(find.text('City'));
       final atAge = tester.getCenter(find.text('Age'));
-      final grab =
-          await tester.startGesture(tester.getCenter(find.text('Name')));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(atCity);
       await tester.pumpAndSettle();
@@ -6085,8 +6453,11 @@ void main() {
       final partWay = leftOf('City');
       await tester.pumpAndSettle();
       expect(partWay, isNot(closeTo(leftOf('City'), 0.5)));
-      expect(leftOf('City'), closeTo(cityAtRest, 0.5),
-          reason: 'and it arrives where it started');
+      expect(
+        leftOf('City'),
+        closeTo(cityAtRest, 0.5),
+        reason: 'and it arrives where it started',
+      );
     });
 
     testWidgets('a hand held still leaves the columns still', (tester) async {
@@ -6100,8 +6471,9 @@ void main() {
       double leftOf(String text) => tester.getRect(find.text(text).first).left;
 
       final atCity = tester.getCenter(find.text('City'));
-      final grab =
-          await tester.startGesture(tester.getCenter(find.text('Name')));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(atCity);
       await tester.pumpAndSettle();
@@ -6129,8 +6501,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('letting go settles at once, with no second journey',
-        (tester) async {
+    testWidgets('letting go settles at once, with no second journey', (
+      tester,
+    ) async {
       // By the drop the columns are already standing where they will stand,
       // so committing the order must change nothing. Kept as they were, the
       // cells carried their offsets into the new order and set off again —
@@ -6141,8 +6514,9 @@ void main() {
       double leftOf(String text) => tester.getRect(find.text(text).first).left;
 
       final atCity = tester.getCenter(find.text('City'));
-      final grab =
-          await tester.startGesture(tester.getCenter(find.text('Name')));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(atCity);
       await tester.pumpAndSettle();
@@ -6178,8 +6552,9 @@ void main() {
       expect(lit, isEmpty);
     });
 
-    testWidgets('a hand that wanders off and comes back still moves them',
-        (tester) async {
+    testWidgets('a hand that wanders off and comes back still moves them', (
+      tester,
+    ) async {
       // Leaving the table is not letting go of it. Cleared together with what
       // it was picked up from, there was nothing left to move the neighbours
       // for and only the heading's own fill answered.
@@ -6190,8 +6565,9 @@ void main() {
       final atRest = leftOf('City');
       final atCity = tester.getCenter(find.text('City'));
 
-      final grab =
-          await tester.startGesture(tester.getCenter(find.text('Name')));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(atCity);
       await tester.pumpAndSettle();
@@ -6223,20 +6599,25 @@ void main() {
           .toList();
 
       final onto = tester.getCenter(find.text('City'));
-      final grab =
-          await tester.startGesture(tester.getCenter(find.text('Name')));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pump();
       await grab.cancel();
       await tester.pumpAndSettle();
 
-      expect(headings(), ['Name', 'Age', 'City'],
-          reason: 'the preview was only a preview');
+      expect(headings(), [
+        'Name',
+        'Age',
+        'City',
+      ], reason: 'the preview was only a preview');
     });
 
-    testWidgets('a column of boxes in front does not shift what is dragged',
-        (tester) async {
+    testWidgets('a column of boxes in front does not shift what is dragged', (
+      tester,
+    ) async {
       // The place a column is drawn at and the place it was listed at are two
       // different numbers, and a column of boxes in front makes them differ:
       // dragging by the drawn place moved the column beside the one held.
@@ -6268,8 +6649,9 @@ void main() {
       expect(cells().take(3), ['Name-cell', 'Age-cell', 'City-cell']);
 
       final onto = tester.getCenter(find.text('City'));
-      final grab =
-          await tester.startGesture(tester.getCenter(find.text('Name')));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pump();
@@ -6279,8 +6661,9 @@ void main() {
       expect(cells().take(3), ['Age-cell', 'City-cell', 'Name-cell']);
     });
 
-    testWidgets('a column of boxes in front does not shift what a sort names',
-        (tester) async {
+    testWidgets('a column of boxes in front does not shift what a sort names', (
+      tester,
+    ) async {
       // The same two numbers, on the lazy body: keyed by the drawn place, a
       // tap on the first heading sorted by the second column — which here
       // does not sort at all, so nothing happened.
@@ -6296,10 +6679,7 @@ void main() {
                 sortable: true,
                 value: (u) => u.name,
               ),
-              TableColumn<_User>(
-                title: const Text('Other'),
-                value: (u) => 'z',
-              ),
+              TableColumn<_User>(title: const Text('Other'), value: (u) => 'z'),
             ],
           ),
           width: 700,
@@ -6337,8 +6717,9 @@ void main() {
       expect(told, 0);
     });
 
-    testWidgets('a scrolling table can be rearranged and stays lazy',
-        (tester) async {
+    testWidgets('a scrolling table can be rearranged and stays lazy', (
+      tester,
+    ) async {
       // The viewport lays the columns out, so it is the viewport that is
       // asked where a carried heading would land — and the shift it slides
       // them by goes into the same reckoning that places them.
@@ -6350,10 +6731,7 @@ void main() {
             data: [for (var i = 0; i < 300; i++) i],
             columns: [
               for (final name in ['A', 'B', 'C'])
-                TableColumn<int>(
-                  title: Text(name),
-                  value: (v) => '$name$v',
-                ),
+                TableColumn<int>(title: Text(name), value: (v) => '$name$v'),
             ],
           ),
           width: 700,
@@ -6361,8 +6739,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(RichText).evaluate().length, lessThan(80),
-          reason: 'and it did not cost the lazy body');
+      expect(
+        find.byType(RichText).evaluate().length,
+        lessThan(80),
+        reason: 'and it did not cost the lazy body',
+      );
 
       double leftOf(String text) => tester.getRect(find.text(text)).left;
       final atRest = [leftOf('A0'), leftOf('B0'), leftOf('C0')];
@@ -6393,15 +6774,17 @@ void main() {
       );
     });
 
-    testWidgets('nothing is draggable unless the table says so',
-        (tester) async {
+    testWidgets('nothing is draggable unless the table says so', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(draggable: false));
       expect(find.byType(Draggable<int>), findsNothing);
       expect(find.byType(DragTarget<int>), findsNothing);
     });
 
-    testWidgets('moving a column does not move what a sort names',
-        (tester) async {
+    testWidgets('moving a column does not move what a sort names', (
+      tester,
+    ) async {
       // The order columns are drawn in is not the order they are named in: a
       // sort keeps meaning the column it was given, not the one that ends up
       // standing there.
@@ -6418,16 +6801,19 @@ void main() {
       expect(names(), ['Ann', 'Chen'], reason: 'sorted by name');
 
       final onto = tester.getCenter(find.text('City'));
-      final grab =
-          await tester.startGesture(tester.getCenter(find.text('Name')));
+      final grab = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pump();
       await grab.up();
       await tester.pumpAndSettle();
 
-      expect(names(), ['Ann', 'Chen'],
-          reason: 'still sorted by name, wherever the column now stands');
+      expect(names(), [
+        'Ann',
+        'Chen',
+      ], reason: 'still sorted by name, wherever the column now stands');
 
       // And the mark is still on Name: the sort names a column, not a place.
       Color? fillOver(String text) {
@@ -6519,8 +6905,11 @@ void main() {
       expect(ruledBoxes(), findsWidgets);
       final grids = tester.widgetList<m.Table>(find.byType(m.Table));
       for (final g in grids) {
-        expect(g.border?.verticalInside ?? BorderSide.none, BorderSide.none,
-            reason: 'not drawn by the grid as well');
+        expect(
+          g.border?.verticalInside ?? BorderSide.none,
+          BorderSide.none,
+          reason: 'not drawn by the grid as well',
+        );
       }
 
       // A carried column's rule goes with it: the box the rule hangs on is
@@ -6541,15 +6930,19 @@ void main() {
       final during = ruleOf('45');
       final cell = tester.getRect(find.text('45'));
       expect(during.left, lessThan(before.left), reason: 'Age made room');
-      expect(during.right, greaterThan(cell.right),
-          reason: 'the rule stands at the edge of the cell it followed');
+      expect(
+        during.right,
+        greaterThan(cell.right),
+        reason: 'the rule stands at the edge of the cell it followed',
+      );
 
       await gesture.up();
       await tester.pumpAndSettle();
     });
 
-    testWidgets('carrying the last column does not carry off a rule',
-        (tester) async {
+    testWidgets('carrying the last column does not carry off a rule', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -6637,8 +7030,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('a table nobody can rearrange keeps the grid\'s own rules',
-        (tester) async {
+    testWidgets('a table nobody can rearrange keeps the grid\'s own rules', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -6670,23 +7064,22 @@ void main() {
       bool draggable = true,
       void Function(int, int)? onReordered,
       List<TableSort>? defaultSort,
-    }) =>
-        _host(
-          Table<_User>(
-            data: many,
-            rowsDraggable: draggable,
-            onRowsReordered: onReordered,
-            defaultSort: defaultSort,
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                sortable: true,
-                value: (u) => u.name,
-              ),
-            ],
+    }) => _host(
+      Table<_User>(
+        data: many,
+        rowsDraggable: draggable,
+        onRowsReordered: onReordered,
+        defaultSort: defaultSort,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            sortable: true,
+            value: (u) => u.name,
           ),
-          width: 400,
-        );
+        ],
+      ),
+      width: 400,
+    );
 
     List<String> shown(WidgetTester tester) => tester
         .widgetList<Text>(find.byType(Text))
@@ -6698,17 +7091,19 @@ void main() {
     testWidgets('a row carried onto another takes its place', (tester) async {
       int? from;
       int? to;
-      await tester.pumpWidget(table(onReordered: (a, b) {
-        from = a;
-        to = b;
-      }));
+      await tester.pumpWidget(
+        table(
+          onReordered: (a, b) {
+            from = a;
+            to = b;
+          },
+        ),
+      );
       await tester.pumpAndSettle();
       expect(shown(tester).take(3), ['n0', 'n1', 'n2']);
 
       final onto = tester.getCenter(find.text('n2'));
-      final grab = await tester.startGesture(
-        tester.getCenter(find.text('n0')),
-      );
+      final grab = await tester.startGesture(tester.getCenter(find.text('n0')));
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pumpAndSettle();
@@ -6728,9 +7123,7 @@ void main() {
       final atRest = [topOf('n1'), topOf('n2')];
 
       final onto = tester.getCenter(find.text('n2'));
-      final grab = await tester.startGesture(
-        tester.getCenter(find.text('n0')),
-      );
+      final grab = await tester.startGesture(tester.getCenter(find.text('n0')));
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pumpAndSettle();
@@ -6742,8 +7135,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('a hand that wanders off and comes back still moves them',
-        (tester) async {
+    testWidgets('a hand that wanders off and comes back still moves them', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(onReordered: (_, __) {}));
       await tester.pumpAndSettle();
 
@@ -6751,9 +7145,7 @@ void main() {
       final atRest = topOf('n2');
       final onto = tester.getCenter(find.text('n2'));
 
-      final grab = await tester.startGesture(
-        tester.getCenter(find.text('n0')),
-      );
+      final grab = await tester.startGesture(tester.getCenter(find.text('n0')));
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pumpAndSettle();
@@ -6777,9 +7169,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final onto = tester.getCenter(find.text('n2'));
-      final grab = await tester.startGesture(
-        tester.getCenter(find.text('n0')),
-      );
+      final grab = await tester.startGesture(tester.getCenter(find.text('n0')));
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pumpAndSettle();
@@ -6789,8 +7179,9 @@ void main() {
       expect(shown(tester).take(3), ['n0', 'n1', 'n2']);
     });
 
-    testWidgets('nothing is draggable unless the table says so',
-        (tester) async {
+    testWidgets('nothing is draggable unless the table says so', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(draggable: false));
       await tester.pumpAndSettle();
       expect(find.byType(Draggable<int>), findsNothing);
@@ -6823,8 +7214,9 @@ void main() {
       expect(tapped?.name, 'n1');
     });
 
-    testWidgets('a scrolling table can be rearranged and stays lazy',
-        (tester) async {
+    testWidgets('a scrolling table can be rearranged and stays lazy', (
+      tester,
+    ) async {
       // A lazy body has no row of its own to take hold of, only the cells
       // standing in it — so a cell carries its row, and the viewport is
       // asked which row the finger is over.
@@ -6843,22 +7235,26 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(RichText).evaluate().length, lessThan(60),
-          reason: 'and it did not cost the lazy body');
+      expect(
+        find.byType(RichText).evaluate().length,
+        lessThan(60),
+        reason: 'and it did not cost the lazy body',
+      );
 
       double topOf(String text) => tester.getRect(find.text(text)).top;
       final atRest = [topOf('n0'), topOf('n1'), topOf('n2')];
 
       final onto = tester.getCenter(find.text('n2'));
-      final grab = await tester.startGesture(
-        tester.getCenter(find.text('n0')),
-      );
+      final grab = await tester.startGesture(tester.getCenter(find.text('n0')));
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pumpAndSettle();
 
-      expect(topOf('n0'), closeTo(atRest[2], 1),
-          reason: 'carried to the third');
+      expect(
+        topOf('n0'),
+        closeTo(atRest[2], 1),
+        reason: 'carried to the third',
+      );
       expect(topOf('n1'), closeTo(atRest[0], 1), reason: 'and these closed up');
       expect(topOf('n2'), closeTo(atRest[1], 1));
 
@@ -6880,33 +7276,36 @@ void main() {
       // The order a drag changes is the one the rows came in; sorting a table
       // you can also arrange by hand is asking for two answers to one
       // question, so the sort wins.
-      await tester.pumpWidget(table(
-        onReordered: (_, __) {},
-        defaultSort: const [TableSort(0, TableSortOrder.descending)],
-      ));
+      await tester.pumpWidget(
+        table(
+          onReordered: (_, __) {},
+          defaultSort: const [TableSort(0, TableSortOrder.descending)],
+        ),
+      );
       await tester.pumpAndSettle();
       expect(shown(tester).take(2), ['n4', 'n3']);
 
       final onto = tester.getCenter(find.text('n2'));
-      final grab = await tester.startGesture(
-        tester.getCenter(find.text('n4')),
-      );
+      final grab = await tester.startGesture(tester.getCenter(find.text('n4')));
       await tester.pump(kLongPressTimeout);
       await grab.moveTo(onto);
       await tester.pumpAndSettle();
       await grab.up();
       await tester.pumpAndSettle();
 
-      expect(shown(tester).take(2), ['n4', 'n3'],
-          reason: 'still in the order the sort asks for');
+      expect(shown(tester).take(2), [
+        'n4',
+        'n3',
+      ], reason: 'still in the order the sort asks for');
     });
   });
 
   group('what is wider than this page', () {
     final many = [for (var i = 0; i < 12; i++) _User('n$i', i)];
 
-    testWidgets('the menu takes every row, not the page in front of you',
-        (tester) async {
+    testWidgets('the menu takes every row, not the page in front of you', (
+      tester,
+    ) async {
       List<_User>? picked;
       await tester.pumpWidget(
         _host(
@@ -6932,26 +7331,35 @@ void main() {
       expect(picked!.length, 4);
 
       // The menu beside it takes all twelve, which nothing else can ask for.
-      await tester.tap(find.byWidgetPredicate((w) =>
-          w is CustomPaint &&
-          w.painter.runtimeType.toString() == '_CaretPainter'));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_CaretPainter',
+        ),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Every row'));
       await tester.pumpAndSettle();
       expect(picked!.length, 12);
 
       // Turned round, none of them are picked.
-      await tester.tap(find.byWidgetPredicate((w) =>
-          w is CustomPaint &&
-          w.painter.runtimeType.toString() == '_CaretPainter'));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_CaretPainter',
+        ),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Turn it round'));
       await tester.pumpAndSettle();
       expect(picked, isEmpty);
     });
 
-    testWidgets('the box at the head stays over the boxes below it',
-        (tester) async {
+    testWidgets('the box at the head stays over the boxes below it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -6967,9 +7375,12 @@ void main() {
       // A caret standing in a row with the box would be centred along with
       // it and push the box off the column's middle.
       final boxes = [
-        for (final e in find
-            .byWidgetPredicate((w) => w.runtimeType.toString() == 'CheckboxBox')
-            .evaluate())
+        for (final e
+            in find
+                .byWidgetPredicate(
+                  (w) => w.runtimeType.toString() == 'CheckboxBox',
+                )
+                .evaluate())
           tester.getCenter(find.byWidget(e.widget)).dx,
       ];
       expect(boxes.length, greaterThan(1));
@@ -6989,9 +7400,11 @@ void main() {
         ),
       );
       expect(
-        find.byWidgetPredicate((w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString() == '_CaretPainter'),
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_CaretPainter',
+        ),
         findsNothing,
       );
     });
@@ -7001,16 +7414,16 @@ void main() {
     final many = [for (var i = 0; i < 60; i++) _User('n$i', i)];
 
     Widget table({required bool back}) => _host(
-          Table<_User>(
-            scroll: const TableScroll(y: 200),
-            backToTopOnChange: back,
-            data: many,
-            pagination: const TablePagination(defaultPageSize: 30),
-            // No column of numbers: the pager's own page numbers are the only
-            // digits on screen, so tapping "2" is unambiguous.
-            columns: [_name()],
-          ),
-        );
+      Table<_User>(
+        scroll: const TableScroll(y: 200),
+        backToTopOnChange: back,
+        data: many,
+        pagination: const TablePagination(defaultPageSize: 30),
+        // No column of numbers: the pager's own page numbers are the only
+        // digits on screen, so tapping "2" is unambiguous.
+        columns: [_name()],
+      ),
+    );
 
     /// Whether the first row of the page on show is in view.
     bool topInView(WidgetTester tester, String name) =>
@@ -7027,8 +7440,11 @@ void main() {
 
       await tester.tap(find.text('2'));
       await tester.pumpAndSettle();
-      expect(topInView(tester, 'n30'), isTrue,
-          reason: 'the first row of the new page, not its middle');
+      expect(
+        topInView(tester, 'n30'),
+        isTrue,
+        reason: 'the first row of the new page, not its middle',
+      );
     });
 
     testWidgets('left alone where the table was not asked', (tester) async {
@@ -7040,46 +7456,52 @@ void main() {
 
       await tester.tap(find.text('2'));
       await tester.pumpAndSettle();
-      expect(topInView(tester, 'n30'), isFalse,
-          reason: 'still looking at the middle of it');
+      expect(
+        topInView(tester, 'n30'),
+        isFalse,
+        reason: 'still looking at the middle of it',
+      );
     });
   });
 
   group('a row known by a key of its own', () {
-    testWidgets('rows rebuilt from a fetch keep what was picked and open',
-        (tester) async {
+    testWidgets('rows rebuilt from a fetch keep what was picked and open', (
+      tester,
+    ) async {
       // Two runs of the same rows, as a page fetched twice would hand back:
       // the same people, in objects the table has never seen before. Built in
       // a loop rather than written out, or Dart would hand back the very same
       // constants both times and there would be nothing to recognise.
       List<_User> page() => [
-            for (final who in const [('Chen', 27), ('Ann', 45)])
-              _User(who.$1, who.$2),
-          ];
+        for (final who in const [('Chen', 27), ('Ann', 45)])
+          _User(who.$1, who.$2),
+      ];
 
       List<_User>? picked;
       Widget table({required List<_User> data, bool keyed = true}) => _host(
-            Table<_User>(
-              data: data,
-              rowKey: keyed ? (u) => u.name : null,
-              selection: TableSelection<_User>(
-                onChanged: (rows) => picked = rows,
-              ),
-              expandable: TableExpandable<_User>(
-                builder: (_, u, __) => Text('about ${u.name}'),
-              ),
-              columns: [_name()],
-            ),
-          );
+        Table<_User>(
+          data: data,
+          rowKey: keyed ? (u) => u.name : null,
+          selection: TableSelection<_User>(onChanged: (rows) => picked = rows),
+          expandable: TableExpandable<_User>(
+            builder: (_, u, __) => Text('about ${u.name}'),
+          ),
+          columns: [_name()],
+        ),
+      );
 
       await tester.pumpWidget(table(data: page()));
       await tester.tap(find.byType(Checkbox).at(1));
       await tester.pumpAndSettle();
-      await tester.tap(find
-          .byWidgetPredicate((w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == '_ExpandIconPainter')
-          .first);
+      await tester.tap(
+        find
+            .byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter.runtimeType.toString() == '_ExpandIconPainter',
+            )
+            .first,
+      );
       await tester.pumpAndSettle();
       expect(picked!.length, 1);
       expect(find.text('about Chen'), findsOneWidget);
@@ -7096,8 +7518,9 @@ void main() {
       expect(find.text('about Chen'), findsOneWidget, reason: 'still open');
     });
 
-    testWidgets('a record that is its own key needs nothing said',
-        (tester) async {
+    testWidgets('a record that is its own key needs nothing said', (
+      tester,
+    ) async {
       // The common case: rows the caller keeps, compared as they always were.
       const people = [_User('Chen', 27), _User('Ann', 45)];
       List<_User>? picked;
@@ -7132,39 +7555,37 @@ void main() {
       bool draggable = false,
       void Function(int, double)? onResized,
       double? floor,
-    }) =>
-        _host(
-          Table<_User>(
-            bordered: true,
-            // As wide as its columns, so a width is a width: a table with
-            // room to spare scales its columns up to fill it, and then no
-            // number asked for is the number drawn.
-            scroll: const TableScroll.toContent(),
-            columnsResizable: resizable,
-            columnsDraggable: draggable,
-            onColumnResized: onResized,
-            data: people,
-            columns: [
-              TableColumn<_User>(
-                title: const Text('Name'),
-                width: 200,
-                minWidth: floor,
-                resizable: column,
-                value: (u) => u.name,
-              ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                width: 100,
-                value: (u) => u.age,
-              ),
-            ],
+    }) => _host(
+      Table<_User>(
+        bordered: true,
+        // As wide as its columns, so a width is a width: a table with
+        // room to spare scales its columns up to fill it, and then no
+        // number asked for is the number drawn.
+        scroll: const TableScroll.toContent(),
+        columnsResizable: resizable,
+        columnsDraggable: draggable,
+        onColumnResized: onResized,
+        data: people,
+        columns: [
+          TableColumn<_User>(
+            title: const Text('Name'),
+            width: 200,
+            minWidth: floor,
+            resizable: column,
+            value: (u) => u.name,
           ),
-        );
+          TableColumn<_User>(
+            title: const Text('Age'),
+            width: 100,
+            value: (u) => u.age,
+          ),
+        ],
+      ),
+    );
 
     Finder grips() => find.byWidgetPredicate(
-          (w) =>
-              w is MouseRegion && w.cursor == SystemMouseCursors.resizeColumn,
-        );
+      (w) => w is MouseRegion && w.cursor == SystemMouseCursors.resizeColumn,
+    );
 
     /// How wide the first column stands, measured from the grip that ends it.
     double widthOfFirst(WidgetTester tester) =>
@@ -7173,27 +7594,38 @@ void main() {
         tester.getRect(find.text('Name')).left -
         tester.getRect(find.byType(m.Table).first).left;
 
-    testWidgets('dragging a border widens the column it belongs to',
-        (tester) async {
+    testWidgets('dragging a border widens the column it belongs to', (
+      tester,
+    ) async {
       int? which;
       double? to;
-      await tester.pumpWidget(table(onResized: (c, w) {
-        which = c;
-        to = w;
-      }));
+      await tester.pumpWidget(
+        table(
+          onResized: (c, w) {
+            which = c;
+            to = w;
+          },
+        ),
+      );
 
       final before = widthOfFirst(tester);
       final grip = await tester.startGesture(tester.getCenter(grips().first));
       await tester.pump();
       await grip.moveBy(const Offset(60, 0));
       await tester.pump();
-      expect(widthOfFirst(tester), closeTo(before + 60, 1),
-          reason: 'it follows the hand as it goes');
+      expect(
+        widthOfFirst(tester),
+        closeTo(before + 60, 1),
+        reason: 'it follows the hand as it goes',
+      );
 
       await grip.up();
       await tester.pumpAndSettle();
-      expect(widthOfFirst(tester), closeTo(before + 60, 1),
-          reason: 'and stays where it was let go of');
+      expect(
+        widthOfFirst(tester),
+        closeTo(before + 60, 1),
+        reason: 'and stays where it was let go of',
+      );
       expect(which, 0);
       expect(to, closeTo(before + 60, 1));
     });
@@ -7257,8 +7689,9 @@ void main() {
       expect(to, closeTo(270, 1));
     });
 
-    testWidgets('nothing to take hold of unless the table says so',
-        (tester) async {
+    testWidgets('nothing to take hold of unless the table says so', (
+      tester,
+    ) async {
       await tester.pumpWidget(table(resizable: false));
       expect(grips(), findsNothing);
 
@@ -7271,8 +7704,9 @@ void main() {
       expect(grips(), findsOneWidget, reason: 'the other column only');
     });
 
-    testWidgets('taking hold of a border is not taking hold of the heading',
-        (tester) async {
+    testWidgets('taking hold of a border is not taking hold of the heading', (
+      tester,
+    ) async {
       int? from;
       await tester.pumpWidget(
         _host(
@@ -7322,23 +7756,23 @@ void main() {
     Widget table({
       TableStyle? Function(BuildContext, _User, int)? style,
       TableSelection<_User>? selection,
-    }) =>
-        _host(
-          Table<_User>(
-            data: people,
-            rowStyle: style,
-            selection: selection,
-            columns: [_name(), _age()],
-          ),
-        );
+    }) => _host(
+      Table<_User>(
+        data: people,
+        rowStyle: style,
+        selection: selection,
+        columns: [_name(), _age()],
+      ),
+    );
 
     /// The colours painted behind the cell holding [text], outermost first.
     List<Color> groundsUnder(WidgetTester tester, String text) => [
-          for (final e in find
+      for (final e
+          in find
               .ancestor(of: find.text(text), matching: find.byType(ColoredBox))
               .evaluate())
-            (e.widget as ColoredBox).color,
-        ];
+        (e.widget as ColoredBox).color,
+    ];
 
     testWidgets('a row can be given a ground of its own', (tester) async {
       const marked = Color(0xFFFFEECC);
@@ -7354,8 +7788,9 @@ void main() {
       expect(groundsUnder(tester, 'Chen'), isNot(contains(marked)));
     });
 
-    testWidgets('what the table says about a row is drawn over it',
-        (tester) async {
+    testWidgets('what the table says about a row is drawn over it', (
+      tester,
+    ) async {
       const marked = Color(0xFFFFEECC);
       await tester.pumpWidget(
         table(style: (context, user, index) => const TableStyle(color: marked)),
@@ -7422,46 +7857,50 @@ void main() {
       expect(ground.height, greaterThan(words.height));
     });
 
-    testWidgets('the narrower word wins, and the table still speaks over both',
-        (tester) async {
-      const row = Color(0xFFEEEEFF);
-      const cell = Color(0xFFFFEECC);
-      await tester.pumpWidget(
-        _host(
-          Table<_User>(
-            data: people,
-            rowStyle: (context, user, index) => const TableStyle(
-              color: row,
-              textStyle: TextStyle(fontStyle: FontStyle.italic),
-            ),
-            columns: [
-              _name(),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                value: (u) => u.age,
-                cellStyle: (context, user, index) => const TableStyle(
-                  color: cell,
-                  textStyle: TextStyle(fontWeight: FontWeight.w700),
-                ),
+    testWidgets(
+      'the narrower word wins, and the table still speaks over both',
+      (tester) async {
+        const row = Color(0xFFEEEEFF);
+        const cell = Color(0xFFFFEECC);
+        await tester.pumpWidget(
+          _host(
+            Table<_User>(
+              data: people,
+              rowStyle: (context, user, index) => const TableStyle(
+                color: row,
+                textStyle: TextStyle(fontStyle: FontStyle.italic),
               ),
-            ],
+              columns: [
+                _name(),
+                TableColumn<_User>(
+                  title: const Text('Age'),
+                  value: (u) => u.age,
+                  cellStyle: (context, user, index) => const TableStyle(
+                    color: cell,
+                    textStyle: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
 
-      // Both grounds are there on the dressed cell, the cell's inside the
-      // row's; the other cell has only the row's.
-      final under = groundsUnder(tester, '45');
-      expect(under, containsAll(<Color>[row, cell]));
-      expect(under.indexOf(cell), lessThan(under.indexOf(row)));
-      expect(groundsUnder(tester, 'Ann'), isNot(contains(cell)));
+        // Both grounds are there on the dressed cell, the cell's inside the
+        // row's; the other cell has only the row's.
+        final under = groundsUnder(tester, '45');
+        expect(under, containsAll(<Color>[row, cell]));
+        expect(under.indexOf(cell), lessThan(under.indexOf(row)));
+        expect(groundsUnder(tester, 'Ann'), isNot(contains(cell)));
 
-      // The words take both: the row said italic, the cell said bold.
-      final style =
-          tester.renderObject<RenderParagraph>(find.text('45')).text.style!;
-      expect(style.fontStyle, FontStyle.italic);
-      expect(style.fontWeight, FontWeight.w700);
-    });
+        // The words take both: the row said italic, the cell said bold.
+        final style = tester
+            .renderObject<RenderParagraph>(find.text('45'))
+            .text
+            .style!;
+        expect(style.fontStyle, FontStyle.italic);
+        expect(style.fontWeight, FontWeight.w700);
+      },
+    );
 
     testWidgets('a row can be given words of its own', (tester) async {
       await tester.pumpWidget(
@@ -7485,8 +7924,9 @@ void main() {
   });
 
   group('a fill covers the row it is in', () {
-    testWidgets('a short cell is lit to the full height of its row',
-        (tester) async {
+    testWidgets('a short cell is lit to the full height of its row', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<String>(
@@ -7519,17 +7959,19 @@ void main() {
       // cell that is centred rather than stretched leaves a band of its row
       // bare above and below, which reads as a border nobody asked for.
       final lit = [
-        for (final box in tester
-            .widgetList<ColoredBox>(find.byType(ColoredBox))
-            .where((b) => b.color.a > 0))
+        for (final box
+            in tester
+                .widgetList<ColoredBox>(find.byType(ColoredBox))
+                .where((b) => b.color.a > 0))
           tester.getRect(find.byWidget(box)),
       ];
       expect(lit.length, greaterThanOrEqualTo(2));
       expect(lit.first.top, lit.last.top);
       expect(lit.first.bottom, lit.last.bottom);
       // And the taller cell's words sit inside that stretch.
-      final wrapped = tester
-          .getRect(find.text('a name long enough to wrap over two lines'));
+      final wrapped = tester.getRect(
+        find.text('a name long enough to wrap over two lines'),
+      );
       expect(lit.first.top, lessThanOrEqualTo(wrapped.top));
       expect(lit.first.bottom, greaterThanOrEqualTo(wrapped.bottom));
     });
@@ -7585,8 +8027,9 @@ void main() {
       expect(strip.toSet().length, 2, reason: 'a ground and a line in it');
     });
 
-    testWidgets('a panel told its height centres what is in it',
-        (tester) async {
+    testWidgets('a panel told its height centres what is in it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -7621,14 +8064,12 @@ void main() {
       final text = tester.getRect(words);
       // A height that was named rather than measured is taller than its
       // words; pinned to the top they read as a mistake in the height.
-      expect(
-        text.center.dy - panel.center.dy,
-        moreOrLessEquals(0, epsilon: 1),
-      );
+      expect(text.center.dy - panel.center.dy, moreOrLessEquals(0, epsilon: 1));
     });
 
-    testWidgets('a panel told its height still opens by degrees',
-        (tester) async {
+    testWidgets('a panel told its height still opens by degrees', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -7686,12 +8127,15 @@ void main() {
       expect(back, greaterThan(1));
       expect(back, lessThan(79));
       await tester.pumpAndSettle();
-      expect(tester.getRect(find.text('Ann')).top,
-          moreOrLessEquals(shut, epsilon: 1));
+      expect(
+        tester.getRect(find.text('Ann')).top,
+        moreOrLessEquals(shut, epsilon: 1),
+      );
     });
 
-    testWidgets('a hidden column is not drawn but keeps its place',
-        (tester) async {
+    testWidgets('a hidden column is not drawn but keeps its place', (
+      tester,
+    ) async {
       List<TableSort>? told;
       await tester.pumpWidget(
         _host(
@@ -7730,8 +8174,9 @@ void main() {
       expect(told, [const TableSort(2, TableSortOrder.ascending)]);
     });
 
-    testWidgets('a group with nothing left to head goes as well',
-        (tester) async {
+    testWidgets('a group with nothing left to head goes as well', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -7747,10 +8192,7 @@ void main() {
                   ),
                 ],
               ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                value: (u) => u.age,
-              ),
+              TableColumn<_User>(title: const Text('Age'), value: (u) => u.age),
             ],
           ),
         ),
@@ -7761,29 +8203,27 @@ void main() {
       expect(find.text('Age'), findsOneWidget);
     });
 
-    testWidgets('a floor of its own widens a column that measured narrower',
-        (tester) async {
+    testWidgets('a floor of its own widens a column that measured narrower', (
+      tester,
+    ) async {
       Widget table({double? floor}) => _host(
-            Table<_User>(
-              key: ValueKey(floor),
-              // Nothing stretched to fill the box, so a column is as wide as
-              // what is in it — and a floor is the only thing that can widen
-              // it.
-              scroll: const TableScroll.toContent(),
-              data: const [_User('x', 1)],
-              columns: [
-                TableColumn<_User>(
-                  title: const Text('N'),
-                  minWidth: floor,
-                  value: (u) => u.name,
-                ),
-                TableColumn<_User>(
-                  title: const Text('Age'),
-                  value: (u) => u.age,
-                ),
-              ],
+        Table<_User>(
+          key: ValueKey(floor),
+          // Nothing stretched to fill the box, so a column is as wide as
+          // what is in it — and a floor is the only thing that can widen
+          // it.
+          scroll: const TableScroll.toContent(),
+          data: const [_User('x', 1)],
+          columns: [
+            TableColumn<_User>(
+              title: const Text('N'),
+              minWidth: floor,
+              value: (u) => u.name,
             ),
-          );
+            TableColumn<_User>(title: const Text('Age'), value: (u) => u.age),
+          ],
+        ),
+      );
 
       // Where the second column begins is how wide the first one is.
       await tester.pumpWidget(table());
@@ -7799,8 +8239,9 @@ void main() {
       );
     });
 
-    testWidgets('a column can say which orders its heading goes round',
-        (tester) async {
+    testWidgets('a column can say which orders its heading goes round', (
+      tester,
+    ) async {
       List<TableSort>? told;
       await tester.pumpWidget(
         _host(
@@ -7830,8 +8271,9 @@ void main() {
       expect(told, isEmpty);
     });
 
-    testWidgets('a sort mark of your own takes the carets\' place',
-        (tester) async {
+    testWidgets('a sort mark of your own takes the carets\' place', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_User>(
@@ -7850,9 +8292,11 @@ void main() {
 
       expect(find.text('none'), findsOneWidget);
       expect(
-        find.byWidgetPredicate((w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString() == '_CaretPainter'),
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_CaretPainter',
+        ),
         findsNothing,
         reason: 'ours, not the carets',
       );
@@ -7866,8 +8310,9 @@ void main() {
   group('what a table says out loud', () {
     const people = [_User('Chen', 27), _User('Ann', 45)];
 
-    testWidgets('a heading says it is one, and how it is sorted',
-        (tester) async {
+    testWidgets('a heading says it is one, and how it is sorted', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
         _host(
@@ -7879,10 +8324,7 @@ void main() {
                 sortable: true,
                 value: (u) => u.name,
               ),
-              TableColumn<_User>(
-                title: const Text('Age'),
-                value: (u) => u.age,
-              ),
+              TableColumn<_User>(title: const Text('Age'), value: (u) => u.age),
             ],
           ),
         ),
@@ -7921,31 +8363,34 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('the mark that narrows is its own thing, and says so',
-        (tester) async {
+    testWidgets('the mark that narrows is its own thing, and says so', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
 
       // A fresh key each time: defaultFilters is read when the table is
       // first built, so telling an existing one otherwise says nothing.
       Widget table({Map<int, List<Object?>>? narrowing}) => _host(
-            Table<_User>(
-              key: ValueKey(narrowing),
-              data: people,
-              defaultFilters: narrowing,
-              columns: [
-                TableColumn<_User>(
-                  title: const Text('Name'),
-                  sortable: true,
-                  value: (u) => u.name,
-                  filters: const [TableFilter('Ann', 'Ann')],
-                ),
-              ],
+        Table<_User>(
+          key: ValueKey(narrowing),
+          data: people,
+          defaultFilters: narrowing,
+          columns: [
+            TableColumn<_User>(
+              title: const Text('Name'),
+              sortable: true,
+              value: (u) => u.name,
+              filters: const [TableFilter('Ann', 'Ann')],
             ),
-          );
+          ],
+        ),
+      );
 
-      Finder funnel() => find.byWidgetPredicate((w) =>
-          w is CustomPaint &&
-          w.painter.runtimeType.toString() == '_FunnelPainter');
+      Finder funnel() => find.byWidgetPredicate(
+        (w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == '_FunnelPainter',
+      );
 
       // Named apart from the heading it stands in — a reader has to be able
       // to reach the two separately, since they do different things.
@@ -7959,9 +8404,13 @@ void main() {
         isSemantics(label: 'Name', isHeader: true),
       );
 
-      await tester.pumpWidget(table(narrowing: const {
-        0: ['Ann']
-      }));
+      await tester.pumpWidget(
+        table(
+          narrowing: const {
+            0: ['Ann'],
+          },
+        ),
+      );
       await tester.pumpAndSettle();
       expect(
         tester.getSemantics(funnel()),
@@ -7970,8 +8419,9 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('the mark that opens a row says what it will do',
-        (tester) async {
+    testWidgets('the mark that opens a row says what it will do', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
         _host(
@@ -7986,31 +8436,27 @@ void main() {
       );
 
       Finder mark() => find
-          .byWidgetPredicate((w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == '_ExpandIconPainter')
+          .byWidgetPredicate(
+            (w) =>
+                w is CustomPaint &&
+                w.painter.runtimeType.toString() == '_ExpandIconPainter',
+          )
           .first;
 
       expect(
         tester.getSemantics(mark()),
-        isSemantics(
-          label: 'Expand row',
-          isButton: true,
-          hasTapAction: true,
-        ),
+        isSemantics(label: 'Expand row', isButton: true, hasTapAction: true),
       );
 
       await tester.tap(mark());
       await tester.pumpAndSettle();
-      expect(
-        tester.getSemantics(mark()),
-        isSemantics(label: 'Collapse row'),
-      );
+      expect(tester.getSemantics(mark()), isSemantics(label: 'Collapse row'));
       handle.dispose();
     });
 
-    testWidgets('a box says what it takes and whether it is ticked',
-        (tester) async {
+    testWidgets('a box says what it takes and whether it is ticked', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
         _host(
@@ -8040,10 +8486,7 @@ void main() {
 
       await tester.tap(boxes.at(1));
       await tester.pumpAndSettle();
-      expect(
-        tester.getSemantics(boxes.at(1)),
-        isSemantics(isChecked: true),
-      );
+      expect(tester.getSemantics(boxes.at(1)), isSemantics(isChecked: true));
       // And the one at the head is only partly taken now.
       expect(
         tester.getSemantics(boxes.first),
@@ -8054,8 +8497,9 @@ void main() {
   });
 
   group('the marks a heading carries', () {
-    testWidgets('they are sized against each other, not each on its own',
-        (tester) async {
+    testWidgets('they are sized against each other, not each on its own', (
+      tester,
+    ) async {
       // The mark that opens a row is the size of a checkbox — the reference
       // scales it to the same interactive size — and the carets and the
       // funnel are both the icon size. Asserted as relations rather than as
@@ -8086,9 +8530,11 @@ void main() {
       Size painted(String painter) => tester
           .getRect(
             find
-                .byWidgetPredicate((w) =>
-                    w is CustomPaint &&
-                    w.painter.runtimeType.toString() == painter)
+                .byWidgetPredicate(
+                  (w) =>
+                      w is CustomPaint &&
+                      w.painter.runtimeType.toString() == painter,
+                )
                 .first,
           )
           .size;
@@ -8128,61 +8574,65 @@ void main() {
       _Node('Eve', []),
     ];
 
-    Finder marks() => find.byWidgetPredicate((w) =>
-        w is CustomPaint &&
-        w.painter.runtimeType.toString() == '_ExpandIconPainter');
+    Finder marks() => find.byWidgetPredicate(
+      (w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == '_ExpandIconPainter',
+    );
 
     Widget table({
       double? indentSize,
       List<_Node>? expanded,
       ValueChanged<List<_Node>>? onChanged,
       bool Function(_Node)? expandable,
-    }) =>
-        _host(
-          Table<_Node>(
-            data: tree,
-            expandable: TableExpandable<_Node>(
-              children: (n) => n.kids,
-              indentSize: indentSize,
-              expanded: expanded,
-              onChanged: onChanged,
-              expandable: expandable,
-            ),
-            columns: [
-              TableColumn<_Node>(
-                title: const Text('Name'),
-                value: (n) => n.name,
-              ),
-              TableColumn<_Node>(
-                title: const Text('Under'),
-                value: (n) => n.kids.length,
-              ),
-            ],
+    }) => _host(
+      Table<_Node>(
+        data: tree,
+        expandable: TableExpandable<_Node>(
+          children: (n) => n.kids,
+          indentSize: indentSize,
+          expanded: expanded,
+          onChanged: onChanged,
+          expandable: expandable,
+        ),
+        columns: [
+          TableColumn<_Node>(title: const Text('Name'), value: (n) => n.name),
+          TableColumn<_Node>(
+            title: const Text('Under'),
+            value: (n) => n.kids.length,
           ),
-        );
+        ],
+      ),
+    );
 
     List<String> shown(WidgetTester tester) => [
-          for (final name in ['Ann', 'Bo', 'Cy', 'Dee', 'Eve'])
-            if (find.text(name).evaluate().isNotEmpty) name,
-        ];
+      for (final name in ['Ann', 'Bo', 'Cy', 'Dee', 'Eve'])
+        if (find.text(name).evaluate().isNotEmpty) name,
+    ];
 
-    testWidgets('a row opens into its own rows, not into a panel',
-        (tester) async {
+    testWidgets('a row opens into its own rows, not into a panel', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       expect(shown(tester), ['Ann', 'Eve']);
 
       await tester.tap(marks().first);
       await tester.pumpAndSettle();
-      expect(shown(tester), ['Ann', 'Bo', 'Cy', 'Eve'],
-          reason: 'let in after their parent, before the next row');
+      expect(shown(tester), [
+        'Ann',
+        'Bo',
+        'Cy',
+        'Eve',
+      ], reason: 'let in after their parent, before the next row');
 
       await tester.tap(marks().first);
       await tester.pumpAndSettle();
       expect(shown(tester), ['Ann', 'Eve']);
     });
 
-    testWidgets('rows are let in and out rather than appearing',
-        (tester) async {
+    testWidgets('rows are let in and out rather than appearing', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       double height() => tester.getRect(find.byType(Table<_Node>)).height;
       final shut = height();
@@ -8209,8 +8659,9 @@ void main() {
       expect(height(), shut);
     });
 
-    testWidgets('a row let in beside another arrives shut, not open',
-        (tester) async {
+    testWidgets('a row let in beside another arrives shut, not open', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       await tester.tap(marks().first);
       await tester.pumpAndSettle();
@@ -8231,8 +8682,9 @@ void main() {
       );
     });
 
-    testWidgets('a row let in above another does not steal its reveal',
-        (tester) async {
+    testWidgets('a row let in above another does not steal its reveal', (
+      tester,
+    ) async {
       // Fay stands after Cy, so opening Cy puts Dee where Fay was. Matched by
       // place rather than by row, Dee would inherit Fay's reveal — which has
       // long since finished — and arrive at full height, while Fay animated
@@ -8281,8 +8733,9 @@ void main() {
       );
     });
 
-    testWidgets('only a row with something under it wears a mark',
-        (tester) async {
+    testWidgets('only a row with something under it wears a mark', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       // Ann has children; Eve has none.
       expect(marks(), findsOneWidget);
@@ -8310,8 +8763,9 @@ void main() {
       expect(tester.getRect(find.text('Dee')).left - ann, closeTo(60, 0.5));
     });
 
-    testWidgets('a childless row keeps the space the mark would take',
-        (tester) async {
+    testWidgets('a childless row keeps the space the mark would take', (
+      tester,
+    ) async {
       await tester.pumpWidget(table());
       // Eve wears no mark, and her words still line up with Ann's.
       expect(
@@ -8390,8 +8844,9 @@ void main() {
       expect(marks(), findsNothing);
     });
 
-    testWidgets('a tree is still narrowed and sorted by its top rows',
-        (tester) async {
+    testWidgets('a tree is still narrowed and sorted by its top rows', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Table<_Node>(
@@ -8417,8 +8872,10 @@ void main() {
       // A child follows its parent wherever the parent lands.
       await tester.tap(marks().first);
       await tester.pumpAndSettle();
-      expect(tester.getRect(find.text('Bo')).top,
-          greaterThan(tester.getRect(find.text('Ann')).top));
+      expect(
+        tester.getRect(find.text('Bo')).top,
+        greaterThan(tester.getRect(find.text('Ann')).top),
+      );
     });
 
     group('picked with what is under them', () {
@@ -8427,25 +8884,21 @@ void main() {
         List<_Node>? selected,
         ValueChanged<List<_Node>>? onChanged,
         bool Function(_Node)? selectable,
-      }) =>
-          _host(
-            Table<_Node>(
-              data: tree,
-              selection: TableSelection<_Node>(
-                checkStrictly: checkStrictly,
-                selected: selected,
-                onChanged: onChanged,
-                selectable: selectable,
-              ),
-              expandable: TableExpandable<_Node>(children: (n) => n.kids),
-              columns: [
-                TableColumn<_Node>(
-                  title: const Text('Name'),
-                  value: (n) => n.name,
-                ),
-              ],
-            ),
-          );
+      }) => _host(
+        Table<_Node>(
+          data: tree,
+          selection: TableSelection<_Node>(
+            checkStrictly: checkStrictly,
+            selected: selected,
+            onChanged: onChanged,
+            selectable: selectable,
+          ),
+          expandable: TableExpandable<_Node>(children: (n) => n.kids),
+          columns: [
+            TableColumn<_Node>(title: const Text('Name'), value: (n) => n.name),
+          ],
+        ),
+      );
 
       List<Checkbox> boxes(WidgetTester tester) =>
           tester.widgetList<Checkbox>(find.byType(Checkbox)).toList();
@@ -8460,10 +8913,7 @@ void main() {
         await tester.tap(find.byType(Checkbox).at(1));
         await tester.pumpAndSettle();
         expect(told, isNotNull);
-        expect(
-          told!.map((n) => n.name).toList(),
-          ['Ann', 'Bo', 'Cy', 'Dee'],
-        );
+        expect(told!.map((n) => n.name).toList(), ['Ann', 'Bo', 'Cy', 'Dee']);
       });
 
       testWidgets('letting a branch go lets its own go too', (tester) async {
@@ -8477,8 +8927,9 @@ void main() {
         expect(told, isEmpty);
       });
 
-      testWidgets('a branch with some of its own picked stands half-picked',
-          (tester) async {
+      testWidgets('a branch with some of its own picked stands half-picked', (
+        tester,
+      ) async {
         await tester.pumpWidget(picking());
         // Open Ann, then pick Bo alone.
         await tester.tap(marks().first);
@@ -8503,8 +8954,9 @@ void main() {
         expect(then[1].indeterminate, isFalse);
       });
 
-      testWidgets('a branch whose every row is picked is picked itself',
-          (tester) async {
+      testWidgets('a branch whose every row is picked is picked itself', (
+        tester,
+      ) async {
         List<_Node>? told;
         await tester.pumpWidget(picking(onChanged: (next) => told = next));
         await tester.tap(marks().first);
@@ -8521,8 +8973,9 @@ void main() {
         expect(boxes(tester)[1].indeterminate, isFalse);
       });
 
-      testWidgets('checkStrictly leaves every row to answer for itself',
-          (tester) async {
+      testWidgets('checkStrictly leaves every row to answer for itself', (
+        tester,
+      ) async {
         List<_Node>? told;
         await tester.pumpWidget(
           picking(checkStrictly: true, onChanged: (next) => told = next),
@@ -8562,18 +9015,17 @@ void main() {
   });
 
   group('a page that reads the other way', () {
-    const people = [
-      _User('Chen', 27),
-      _User('Ann', 45),
-      _User('Bart', 31),
-    ];
+    const people = [_User('Chen', 27), _User('Ann', 45), _User('Bart', 31)];
 
-    Finder funnels() => find.byWidgetPredicate((w) =>
-        w is CustomPaint &&
-        w.painter.runtimeType.toString() == '_FunnelPainter');
+    Finder funnels() => find.byWidgetPredicate(
+      (w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == '_FunnelPainter',
+    );
 
-    testWidgets('a heading and its cells sit against the leading edge',
-        (tester) async {
+    testWidgets('a heading and its cells sit against the leading edge', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _mirrored(
           Table<_User>(
@@ -8593,8 +9045,9 @@ void main() {
       expect(chen.right, moreOrLessEquals(name.right, epsilon: 1));
     });
 
-    testWidgets('a heading aligned to the end sits against the left',
-        (tester) async {
+    testWidgets('a heading aligned to the end sits against the left', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _mirrored(
           Table<_User>(
@@ -8612,8 +9065,9 @@ void main() {
       expect(cell.left, moreOrLessEquals(head.left, epsilon: 1));
     });
 
-    testWidgets('the marks stand at the trailing edge of the heading',
-        (tester) async {
+    testWidgets('the marks stand at the trailing edge of the heading', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _mirrored(
           Table<_User>(
@@ -8639,8 +9093,9 @@ void main() {
       expect(word.left - funnel.right, greaterThanOrEqualTo(8));
     });
 
-    testWidgets('a filter panel hangs by the edge the mark stands at',
-        (tester) async {
+    testWidgets('a filter panel hangs by the edge the mark stands at', (
+      tester,
+    ) async {
       const key = Key('panel');
       await tester.pumpWidget(
         _mirrored(
@@ -8671,8 +9126,9 @@ void main() {
       expect(panel.right, greaterThan(mark.right));
     });
 
-    testWidgets('a picked-rows column stands at the leading edge',
-        (tester) async {
+    testWidgets('a picked-rows column stands at the leading edge', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _mirrored(
           Table<_User>(
@@ -8688,8 +9144,9 @@ void main() {
       expect(box.left, greaterThan(name.right), reason: 'right of the words');
     });
 
-    testWidgets('a chevron for a row that opens stands at the leading edge',
-        (tester) async {
+    testWidgets('a chevron for a row that opens stands at the leading edge', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _mirrored(
           Table<_User>(
@@ -8707,8 +9164,9 @@ void main() {
       expect(chevron.center.dx, greaterThan(name.right));
     });
 
-    testWidgets('a table wider than its box starts at the leading edge',
-        (tester) async {
+    testWidgets('a table wider than its box starts at the leading edge', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _mirrored(
           Table<_User>(
@@ -8736,8 +9194,9 @@ void main() {
       expect(tester.getRect(find.text('Note 7')).right, lessThan(box.left));
     });
 
-    testWidgets('a rule falls on the side the next column is on',
-        (tester) async {
+    testWidgets('a rule falls on the side the next column is on', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _mirrored(
           Table<_User>(
@@ -8764,13 +9223,15 @@ void main() {
       // The rule between the group and Age has to be drawn by whichever of
       // them the other stands beside — which swaps with the page.
       final ruled = find
-          .byWidgetPredicate((w) =>
-              w is DecoratedBox &&
-              w.decoration is BoxDecoration &&
-              (w.decoration as BoxDecoration).border is BorderDirectional &&
-              ((w.decoration as BoxDecoration).border! as BorderDirectional)
-                      .end !=
-                  BorderSide.none)
+          .byWidgetPredicate(
+            (w) =>
+                w is DecoratedBox &&
+                w.decoration is BoxDecoration &&
+                (w.decoration as BoxDecoration).border is BorderDirectional &&
+                ((w.decoration as BoxDecoration).border! as BorderDirectional)
+                        .end !=
+                    BorderSide.none,
+          )
           .evaluate();
       expect(ruled, isNotEmpty, reason: 'the group is ruled off from Age');
 
@@ -8780,8 +9241,9 @@ void main() {
       expect(age.right, lessThan(group.left));
     });
 
-    testWidgets('a row in the hand is carried the way it was laid out',
-        (tester) async {
+    testWidgets('a row in the hand is carried the way it was laid out', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _mirrored(
           Table<_User>(
@@ -8799,9 +9261,9 @@ void main() {
         ),
       );
 
-      final gesture = await tester.startGesture(tester.getCenter(
-        find.text('Chen'),
-      ));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Chen')),
+      );
       await tester.pump(kLongPressTimeout);
       await gesture.moveBy(const Offset(0, 40));
       await tester.pump();
@@ -8817,8 +9279,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('a heading without a scroll lands where the hand is too',
-        (tester) async {
+    testWidgets('a heading without a scroll lands where the hand is too', (
+      tester,
+    ) async {
       var moved = '';
       await tester.pumpWidget(
         _mirrored(
@@ -8841,9 +9304,9 @@ void main() {
 
       // Name is the rightmost. Carrying it onto Note means carrying it to
       // the far left, and the table has to read that as the last place.
-      final gesture = await tester.startGesture(tester.getCenter(
-        find.text('Name'),
-      ));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
       await tester.pump(kLongPressTimeout);
       await gesture.moveTo(tester.getCenter(find.text('Note')));
       await tester.pump();
@@ -8865,9 +9328,9 @@ void main() {
       );
 
       final before = tester.getRect(find.text('Age'));
-      final gesture = await tester.startGesture(tester.getCenter(
-        find.text('Name'),
-      ));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Name')),
+      );
       await tester.pump(kLongPressTimeout);
       await gesture.moveTo(tester.getCenter(find.text('Age')));
       await tester.pumpAndSettle();
@@ -8881,8 +9344,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('a column is dropped where the hand is, not where it mirrors',
-        (tester) async {
+    testWidgets('a column is dropped where the hand is, not where it mirrors', (
+      tester,
+    ) async {
       var moved = '';
       await tester.pumpWidget(
         _mirrored(
@@ -8916,14 +9380,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-          moved,
-          'Column 0 moved to 2'
-              .replaceAll('Column ', '')
-              .replaceAll(' moved to ', ' to '));
+        moved,
+        'Column 0 moved to 2'
+            .replaceAll('Column ', '')
+            .replaceAll(' moved to ', ' to '),
+      );
     });
 
-    testWidgets('a held column casts its shade on the side it covers',
-        (tester) async {
+    testWidgets('a held column casts its shade on the side it covers', (
+      tester,
+    ) async {
       final key = GlobalKey();
       await tester.pumpWidget(
         _mirrored(
@@ -8963,8 +9429,8 @@ void main() {
           return data;
         });
         final w = box.size.width.round();
-        final y =
-            (tester.getRect(find.text('one0')).top - origin.top - 5).round();
+        final y = (tester.getRect(find.text('one0')).top - origin.top - 5)
+            .round();
         return bytes!.getUint8((y * w + (x - origin.left).round()) * 4 + 3);
       }
 
@@ -8984,8 +9450,9 @@ void main() {
       expect(held.right, greaterThan(origin.right - 110));
     });
 
-    testWidgets('a held column stays against the edge it was pinned to',
-        (tester) async {
+    testWidgets('a held column stays against the edge it was pinned to', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _mirrored(
           Table<_User>(
@@ -9024,8 +9491,10 @@ void main() {
       await tester.drag(find.text('Chen'), const Offset(300, 0));
       await tester.pumpAndSettle();
 
-      expect(tester.getRect(find.text('Name')).right,
-          moreOrLessEquals(before.right, epsilon: 1));
+      expect(
+        tester.getRect(find.text('Name')).right,
+        moreOrLessEquals(before.right, epsilon: 1),
+      );
       expect(tester.getRect(find.text('Age')).left - box.left, lessThan(40));
     });
   });
@@ -9042,25 +9511,24 @@ void main() {
       double width = 340,
       bool summary = false,
       TableColumnFixed? pin,
-    }) =>
-        _host(
-          Table<int>(
-            data: const [1, 2],
-            columns: [
-              for (var i = 0; i < columns; i++)
-                TableColumn(
-                  fixed: i == 0 ? pin : null,
-                  // A pinned column is laid out apart from the rest, so it
-                  // has to say how wide it is.
-                  width: i == 0 && pin != null ? 120 : null,
-                  title: Text('A heading of some length $i'),
-                  value: (r) => 'a value of some length $r$i',
-                  summary: summary ? (context, rows) => Text('sum $i') : null,
-                ),
-            ],
-          ),
-          width: width,
-        );
+    }) => _host(
+      Table<int>(
+        data: const [1, 2],
+        columns: [
+          for (var i = 0; i < columns; i++)
+            TableColumn(
+              fixed: i == 0 ? pin : null,
+              // A pinned column is laid out apart from the rest, so it
+              // has to say how wide it is.
+              width: i == 0 && pin != null ? 120 : null,
+              title: Text('A heading of some length $i'),
+              value: (r) => 'a value of some length $r$i',
+              summary: summary ? (context, rows) => Text('sum $i') : null,
+            ),
+        ],
+      ),
+      width: width,
+    );
 
     testWidgets('columns give back what they asked above their floor', (
       tester,
@@ -9120,9 +9588,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('a pinned pane scrolls what is left beside it', (
-      tester,
-    ) async {
+    testWidgets('a pinned pane scrolls what is left beside it', (tester) async {
       // No summary here, so this is the other layout entirely: the pinned
       // column is a pane of its own and the rest scroll beside it. That pane
       // was laid out at whatever the row left it, however little that was.

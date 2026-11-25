@@ -3,25 +3,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _wrap(Widget child) => ConfigProvider(
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Align(alignment: Alignment.topLeft, child: child),
-      ),
-    );
+  child: Directionality(
+    textDirection: TextDirection.ltr,
+    child: Align(alignment: Alignment.topLeft, child: child),
+  ),
+);
 
 /// Like [_wrap] but with an [Overlay] ancestor, which `Draggable` requires.
 Widget _app(Widget child) => ConfigProvider(
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Overlay(
-          initialEntries: [
-            OverlayEntry(
-              builder: (_) => Align(alignment: Alignment.topLeft, child: child),
-            ),
-          ],
+  child: Directionality(
+    textDirection: TextDirection.ltr,
+    child: Overlay(
+      initialEntries: [
+        OverlayEntry(
+          builder: (_) => Align(alignment: Alignment.topLeft, child: child),
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
 
 const _nodes = [
   TreeNode(
@@ -37,8 +37,9 @@ const _nodes = [
 void main() {
   testWidgets('the switcher expands and collapses children', (tester) async {
     List<String>? expanded;
-    await tester
-        .pumpWidget(_wrap(Tree(nodes: _nodes, onExpand: (e) => expanded = e)));
+    await tester.pumpWidget(
+      _wrap(Tree(nodes: _nodes, onExpand: (e) => expanded = e)),
+    );
     expect(find.text('child 1'), findsNothing);
 
     final switcher = find.byWidgetPredicate(
@@ -63,8 +64,9 @@ void main() {
   });
 
   testWidgets('defaultExpandAll reveals descendants', (tester) async {
-    await tester
-        .pumpWidget(_wrap(const Tree(nodes: _nodes, defaultExpandAll: true)));
+    await tester.pumpWidget(
+      _wrap(const Tree(nodes: _nodes, defaultExpandAll: true)),
+    );
     expect(find.text('child 1'), findsOneWidget);
     expect(find.text('child 2'), findsOneWidget);
   });
@@ -73,11 +75,7 @@ void main() {
     List<String>? sel;
     await tester.pumpWidget(
       _wrap(
-        Tree(
-          nodes: _nodes,
-          defaultExpandAll: true,
-          onSelect: (s) => sel = s,
-        ),
+        Tree(nodes: _nodes, defaultExpandAll: true, onSelect: (s) => sel = s),
       ),
     );
     await tester.tap(find.text('child 1'));
@@ -127,8 +125,9 @@ void main() {
     expect(half, contains('p'));
   });
 
-  testWidgets('a disabled node still shows a (disabled) checkbox',
-      (tester) async {
+  testWidgets('a disabled node still shows a (disabled) checkbox', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
         const Tree(
@@ -155,14 +154,15 @@ void main() {
     expect(disabled.length, 1);
   });
 
-  testWidgets('autoExpandParent reveals ancestors of expanded keys',
-      (tester) async {
+  testWidgets('autoExpandParent reveals ancestors of expanded keys', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
         const Tree(
           autoExpandParent: true,
           expandedKeys: [
-            'c1'
+            'c1',
           ], // only the child is listed; parent must auto-expand
           nodes: _nodes,
         ),
@@ -171,8 +171,7 @@ void main() {
     expect(find.text('child 1'), findsOneWidget);
   });
 
-  testWidgets(
-      'uncontrolled autoExpandParent seeds ancestors yet stays '
+  testWidgets('uncontrolled autoExpandParent seeds ancestors yet stays '
       'collapsible', (tester) async {
     await tester.pumpWidget(
       _wrap(
@@ -244,8 +243,9 @@ void main() {
       ),
     );
     // Drag the parent onto its own child — must not fire onDrop.
-    final gesture =
-        await tester.startGesture(tester.getCenter(find.text('parent')));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.text('parent')),
+    );
     await tester.pump(const Duration(milliseconds: 20));
     await gesture.moveTo(tester.getCenter(find.text('child 1')));
     await tester.pump();
@@ -272,30 +272,31 @@ void main() {
     expect(checked, ['p']);
   });
 
-  testWidgets('a shut switcher points the way the tree would open',
-      (tester) async {
+  testWidgets('a shut switcher points the way the tree would open', (
+    tester,
+  ) async {
     /// How far round the switcher is turned, in turns.
     double turns(WidgetTester tester) => tester
         .widget<AnimatedRotation>(find.byType(AnimatedRotation).first)
         .turns;
 
     Widget host(TextDirection direction) => ConfigProvider(
-          child: Directionality(
-            textDirection: direction,
-            child: const Align(
-              alignment: Alignment.topLeft,
-              child: Tree(
-                nodes: [
-                  TreeNode(
-                    key: 'p',
-                    title: Text('parent'),
-                    children: [TreeNode(key: 'c', title: Text('child'))],
-                  ),
-                ],
+      child: Directionality(
+        textDirection: direction,
+        child: const Align(
+          alignment: Alignment.topLeft,
+          child: Tree(
+            nodes: [
+              TreeNode(
+                key: 'p',
+                title: Text('parent'),
+                children: [TreeNode(key: 'c', title: Text('child'))],
               ),
-            ),
+            ],
           ),
-        );
+        ),
+      ),
+    );
 
     // The glyph is drawn pointing right, so a page that reads that way leaves
     // it where it is and a mirrored one turns it over.
@@ -342,9 +343,7 @@ class _LoadHarnessState extends State<_LoadHarness> {
         TreeNode(
           key: 'x',
           title: Text('load me'),
-          children: [
-            TreeNode(key: 'x-0', title: Text('loaded child')),
-          ],
+          children: [TreeNode(key: 'x-0', title: Text('loaded child'))],
         ),
       ];
     });

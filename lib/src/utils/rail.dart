@@ -119,11 +119,11 @@ class RailPainter extends CustomPainter {
       // Drawn as a rect rather than a stroked line: a rect's edges are where
       // they are asked to be, so the snapping above actually holds.
       void run(double start, double end) => canvas.drawRect(
-            vertical
-                ? Rect.fromLTRB(near, start, far, end)
-                : Rect.fromLTRB(start, near, end, far),
-            paint,
-          );
+        vertical
+            ? Rect.fromLTRB(near, start, far, end)
+            : Rect.fromLTRB(start, near, end, far),
+        paint,
+      );
 
       if (!segment.dashed) {
         run(from, to);
@@ -180,27 +180,27 @@ class RailInsets {
 
   /// The gaps at the ends of a rail running down the page.
   const RailInsets.vertical({this.top, this.bottom})
-      : left = null,
-        right = null;
+    : left = null,
+      right = null;
 
   /// The gaps at the ends of a rail running across the page.
   const RailInsets.horizontal({this.left, this.right})
-      : top = null,
-        bottom = null;
+    : top = null,
+      bottom = null;
 
   /// The same gap at every end, whichever way the rail runs.
   const RailInsets.all(double value)
-      : top = value,
-        bottom = value,
-        left = value,
-        right = value;
+    : top = value,
+      bottom = value,
+      left = value,
+      right = value;
 
   /// One value per axis.
   const RailInsets.symmetric({double? vertical, double? horizontal})
-      : top = vertical,
-        bottom = vertical,
-        left = horizontal,
-        right = horizontal;
+    : top = vertical,
+      bottom = vertical,
+      left = horizontal,
+      right = horizontal;
 
   /// No gaps at all: the rail runs flush into whatever it meets.
   static const RailInsets zero = RailInsets.all(0);
@@ -242,6 +242,7 @@ class RailInsets {
   int get hashCode => Object.hash(top, bottom, left, right);
 
   @override
-  String toString() => 'RailInsets(top: $top, bottom: $bottom, '
+  String toString() =>
+      'RailInsets(top: $top, bottom: $bottom, '
       'left: $left, right: $right)';
 }

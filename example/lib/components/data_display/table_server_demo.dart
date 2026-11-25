@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart' hide Table, TableRow, ThemeData, Divider;
+import 'package:material_ui/material_ui.dart'
+    hide Table, TableRow, ThemeData, Divider;
 import 'package:http/http.dart' as http;
 import 'package:seed_ui/seed_ui.dart';
 

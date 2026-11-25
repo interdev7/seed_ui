@@ -1,5 +1,7 @@
 import 'dart:math' as math;
-import 'package:flutter/material.dart'
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -10,7 +12,6 @@ import 'package:flutter/material.dart'
         Drawer,
         Card,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui/src/utils/close_cross.dart' show CloseCross;
 
@@ -138,13 +139,13 @@ class _HostState extends State<_Host> {
 }
 
 List<TourStep> _twoSteps(GlobalKey a, GlobalKey b) => [
-      TourStep(
-        target: a,
-        title: const Text('First'),
-        description: const Text('The first thing'),
-      ),
-      TourStep(target: b, title: const Text('Second')),
-    ];
+  TourStep(
+    target: a,
+    title: const Text('First'),
+    description: const Text('The first thing'),
+  ),
+  TourStep(target: b, title: const Text('Second')),
+];
 
 Future<TourController> open(WidgetTester tester, Widget host) async {
   await tester.pumpWidget(host);
@@ -217,12 +218,16 @@ void main() {
   testWidgets('the hole follows the step', (tester) async {
     final controller = await open(tester, const _Host(steps: _twoSteps));
 
-    RRect holeNow() => (tester
-                .widgetList<CustomPaint>(find.byType(CustomPaint))
-                .map((p) => p.painter)
-                .firstWhere((p) => p.runtimeType.toString() == '_MaskPainter')
-            as dynamic)
-        .hole as RRect;
+    RRect holeNow() =>
+        (tester
+                        .widgetList<CustomPaint>(find.byType(CustomPaint))
+                        .map((p) => p.painter)
+                        .firstWhere(
+                          (p) => p.runtimeType.toString() == '_MaskPainter',
+                        )
+                    as dynamic)
+                .hole
+            as RRect;
 
     final first = holeNow();
     controller.next();
@@ -284,7 +289,9 @@ void main() {
       // Measured, not remembered: the cross a modal, a drawer, a notification
       // and an alert all draw.
       await tester.pumpWidget(
-        MaterialApp(home: Center(child: CloseCross(onPressed: () {}))),
+        MaterialApp(
+          home: Center(child: CloseCross(onPressed: () {})),
+        ),
       );
       final shared = span(tester, find.byType(CloseCross));
 
@@ -312,8 +319,9 @@ void main() {
     });
   });
 
-  testWidgets('the close button and a tap on the mask both dismiss it',
-      (tester) async {
+  testWidgets('the close button and a tap on the mask both dismiss it', (
+    tester,
+  ) async {
     var closed = 0;
     final controller = await open(
       tester,
@@ -333,13 +341,11 @@ void main() {
     expect(closed, 2);
   });
 
-  testWidgets('the target stays live through the hole, unless told otherwise',
-      (tester) async {
+  testWidgets('the target stays live through the hole, unless told otherwise', (
+    tester,
+  ) async {
     var taps = 0;
-    await open(
-      tester,
-      _Host(steps: _twoSteps, onTargetTap: () => taps++),
-    );
+    await open(tester, _Host(steps: _twoSteps, onTargetTap: () => taps++));
 
     // The hole leaves the target's own gesture detector exposed.
     await tester.tapAt(const Offset(100, 100));
@@ -359,8 +365,9 @@ void main() {
     expect(taps, 1, reason: 'disabledInteraction blocks the target');
   });
 
-  testWidgets('a step with no target sits in the middle, with no hole',
-      (tester) async {
+  testWidgets('a step with no target sits in the middle, with no hole', (
+    tester,
+  ) async {
     await open(
       tester,
       _Host(
@@ -393,8 +400,9 @@ void main() {
     expect(find.text('First'), findsOneWidget);
   });
 
-  testWidgets('gap sets the room round the target and its corners',
-      (tester) async {
+  testWidgets('gap sets the room round the target and its corners', (
+    tester,
+  ) async {
     await open(
       tester,
       const _Host(
@@ -404,12 +412,16 @@ void main() {
     );
 
     final target = tester.getRect(find.byType(GestureDetector).first);
-    final hole = (tester
-                .widgetList<CustomPaint>(find.byType(CustomPaint))
-                .map((p) => p.painter)
-                .firstWhere((p) => p.runtimeType.toString() == '_MaskPainter')
-            as dynamic)
-        .hole as RRect;
+    final hole =
+        (tester
+                        .widgetList<CustomPaint>(find.byType(CustomPaint))
+                        .map((p) => p.painter)
+                        .firstWhere(
+                          (p) => p.runtimeType.toString() == '_MaskPainter',
+                        )
+                    as dynamic)
+                .hole
+            as RRect;
 
     expect(hole.left, closeTo(target.left - 20, 0.5));
     expect(hole.top, closeTo(target.top - 2, 0.5));
@@ -419,13 +431,14 @@ void main() {
   testWidgets('a primary tour paints its panel in the accent', (tester) async {
     await open(tester, const _Host(steps: _twoSteps, type: TourType.primary));
 
-    final panel =
-        tester.widgetList<Container>(find.byType(Container)).firstWhere(
-              (c) =>
-                  c.decoration is BoxDecoration &&
-                  (c.decoration! as BoxDecoration).borderRadius != null &&
-                  (c.decoration! as BoxDecoration).boxShadow != null,
-            );
+    final panel = tester
+        .widgetList<Container>(find.byType(Container))
+        .firstWhere(
+          (c) =>
+              c.decoration is BoxDecoration &&
+              (c.decoration! as BoxDecoration).borderRadius != null &&
+              (c.decoration! as BoxDecoration).boxShadow != null,
+        );
 
     expect(
       (panel.decoration! as BoxDecoration).color!.toARGB32(),
@@ -508,56 +521,57 @@ void main() {
 
     final short = await widthOf('Short.');
     final long = await widthOf(
-        'A description long enough to need a good deal more room than the '
-        'short one, and then some more on top of that.');
+      'A description long enough to need a good deal more room than the '
+      'short one, and then some more on top of that.',
+    );
 
     expect(short, lessThan(long), reason: 'a small step gets a small panel');
     expect(long, lessThanOrEqualTo(520 + 0.5), reason: '520 is the ceiling');
   });
 
-  testWidgets('a panel crosses to the other axis rather than cover its target',
-      (tester) async {
-    // A phone: a panel this wide fits neither left nor right of the target,
-    // and clamping it into the viewport would lay it over the very thing it
-    // points at.
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'a panel crosses to the other axis rather than cover its target',
+    (tester) async {
+      // A phone: a panel this wide fits neither left nor right of the target,
+      // and clamping it into the viewport would lay it over the very thing it
+      // points at.
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
 
-    await open(
-      tester,
-      _Host(
-        steps: (a, b) => [
-          TourStep(
-            target: a,
-            placement: TourPlacement.rightTop,
-            title: const Text('First'),
-            description: const Text('Click to see other actions.'),
-          ),
-        ],
-      ),
-    );
+      await open(
+        tester,
+        _Host(
+          steps: (a, b) => [
+            TourStep(
+              target: a,
+              placement: TourPlacement.rightTop,
+              title: const Text('First'),
+              description: const Text('Click to see other actions.'),
+            ),
+          ],
+        ),
+      );
 
-    final target = tester.getRect(find.byType(GestureDetector).first);
-    final panel = tester.getRect(
-      find
-          .ancestor(
-            of: find.text('First'),
-            matching: find.byType(Container),
-          )
-          .last,
-    );
+      final target = tester.getRect(find.byType(GestureDetector).first);
+      final panel = tester.getRect(
+        find
+            .ancestor(of: find.text('First'), matching: find.byType(Container))
+            .last,
+      );
 
-    expect(panel.overlaps(target), isFalse);
-    expect(
-      panel.top,
-      greaterThanOrEqualTo(target.bottom),
-      reason: 'no room either side, so it goes below',
-    );
-  });
+      expect(panel.overlaps(target), isFalse);
+      expect(
+        panel.top,
+        greaterThanOrEqualTo(target.bottom),
+        reason: 'no room either side, so it goes below',
+      );
+    },
+  );
 
-  testWidgets('a centred panel keeps clear of the screen edges',
-      (tester) async {
+  testWidgets('a centred panel keeps clear of the screen edges', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -580,10 +594,7 @@ void main() {
 
     final panel = tester.getRect(
       find
-          .ancestor(
-            of: find.text('Welcome'),
-            matching: find.byType(Container),
-          )
+          .ancestor(of: find.text('Welcome'), matching: find.byType(Container))
           .last,
     );
 
@@ -618,8 +629,9 @@ void main() {
   });
 
   group('Step buttons', () {
-    testWidgets('a label and a press hook, on top of the tour\'s own move',
-        (tester) async {
+    testWidgets('a label and a press hook, on top of the tour\'s own move', (
+      tester,
+    ) async {
       var pressed = 0;
       final changes = <int>[];
       await open(
@@ -654,8 +666,9 @@ void main() {
       expect(find.text('Back'), findsOneWidget);
     });
 
-    testWidgets('a disabled button will not let the step be left',
-        (tester) async {
+    testWidgets('a disabled button will not let the step be left', (
+      tester,
+    ) async {
       final changes = <int>[];
       await open(
         tester,
@@ -702,8 +715,9 @@ void main() {
       expect(find.byIcon(Icons.delete), findsOneWidget);
     });
 
-    testWidgets('a button of your own, driven by the tour\'s own action',
-        (tester) async {
+    testWidgets('a button of your own, driven by the tour\'s own action', (
+      tester,
+    ) async {
       var pressed = 0;
       final changes = <int>[];
       await open(
@@ -736,8 +750,9 @@ void main() {
       expect(pressed, 1, reason: 'and the hook still fires');
     });
 
-    testWidgets('a custom button is handed no action while disabled',
-        (tester) async {
+    testWidgets('a custom button is handed no action while disabled', (
+      tester,
+    ) async {
       VoidCallback? handed;
       await open(
         tester,
@@ -746,13 +761,10 @@ void main() {
             TourStep(
               target: a,
               title: const Text('First'),
-              nextButton: TourButton.custom(
-                (context, act) {
-                  handed = act;
-                  return const Text('Waiting');
-                },
-                disabled: true,
-              ),
+              nextButton: TourButton.custom((context, act) {
+                handed = act;
+                return const Text('Waiting');
+              }, disabled: true),
             ),
             TourStep(target: b, title: const Text('Second')),
           ],
@@ -763,8 +775,9 @@ void main() {
     });
   });
 
-  testWidgets('what a caller builds inherits a real text style',
-      (tester) async {
+  testWidgets('what a caller builds inherits a real text style', (
+    tester,
+  ) async {
     // The overlay sits outside any Material ancestor, where Flutter falls back
     // to a 48px debug style with yellow underlines.
     late TextStyle seen;
@@ -788,16 +801,21 @@ void main() {
     expect(seen.decoration, TextDecoration.none);
   });
 
-  testWidgets('the highlight travels between steps rather than jumping',
-      (tester) async {
+  testWidgets('the highlight travels between steps rather than jumping', (
+    tester,
+  ) async {
     final controller = await open(tester, const _Host(steps: _twoSteps));
 
-    RRect hole() => (tester
-                .widgetList<CustomPaint>(find.byType(CustomPaint))
-                .map((p) => p.painter)
-                .firstWhere((p) => p.runtimeType.toString() == '_MaskPainter')
-            as dynamic)
-        .hole as RRect;
+    RRect hole() =>
+        (tester
+                        .widgetList<CustomPaint>(find.byType(CustomPaint))
+                        .map((p) => p.painter)
+                        .firstWhere(
+                          (p) => p.runtimeType.toString() == '_MaskPainter',
+                        )
+                    as dynamic)
+                .hole
+            as RRect;
 
     final from = hole();
     controller.next();
@@ -816,8 +834,9 @@ void main() {
     expect(travelling.top, lessThan(to.top));
   });
 
-  testWidgets('a tour opens on its first step without sliding in',
-      (tester) async {
+  testWidgets('a tour opens on its first step without sliding in', (
+    tester,
+  ) async {
     // Nothing to travel from: the spotlight is on the target from the first
     // frame it is drawn.
     await tester.pumpWidget(const _Host(steps: _twoSteps));
@@ -826,12 +845,16 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    final hole = (tester
-                .widgetList<CustomPaint>(find.byType(CustomPaint))
-                .map((p) => p.painter)
-                .firstWhere((p) => p.runtimeType.toString() == '_MaskPainter')
-            as dynamic)
-        .hole as RRect;
+    final hole =
+        (tester
+                        .widgetList<CustomPaint>(find.byType(CustomPaint))
+                        .map((p) => p.painter)
+                        .firstWhere(
+                          (p) => p.runtimeType.toString() == '_MaskPainter',
+                        )
+                    as dynamic)
+                .hole
+            as RRect;
     final target = tester.getRect(find.byType(GestureDetector).first);
     expect(hole.left, closeTo(target.left - 6, 0.5));
   });
@@ -851,12 +874,16 @@ void main() {
     controller.open();
     await tester.pumpAndSettle();
 
-    RRect hole() => (tester
-                .widgetList<CustomPaint>(find.byType(CustomPaint))
-                .map((p) => p.painter)
-                .firstWhere((p) => p.runtimeType.toString() == '_MaskPainter')
-            as dynamic)
-        .hole as RRect;
+    RRect hole() =>
+        (tester
+                        .widgetList<CustomPaint>(find.byType(CustomPaint))
+                        .map((p) => p.painter)
+                        .firstWhere(
+                          (p) => p.runtimeType.toString() == '_MaskPainter',
+                        )
+                    as dynamic)
+                .hole
+            as RRect;
 
     controller.next();
     await tester.pump();
@@ -872,10 +899,7 @@ void main() {
   testWidgets('a close icon of your own', (tester) async {
     await open(
       tester,
-      const _Host(
-        closeIcon: Icon(Icons.keyboard_arrow_down),
-        steps: _twoSteps,
-      ),
+      const _Host(closeIcon: Icon(Icons.keyboard_arrow_down), steps: _twoSteps),
     );
 
     expect(find.byIcon(Icons.keyboard_arrow_down), findsOneWidget);
@@ -885,8 +909,9 @@ void main() {
     expect(find.text('First'), findsNothing);
   });
 
-  testWidgets('the spotlight opens out of the middle after a welcome step',
-      (tester) async {
+  testWidgets('the spotlight opens out of the middle after a welcome step', (
+    tester,
+  ) async {
     final controller = await open(
       tester,
       _Host(
@@ -926,8 +951,9 @@ void main() {
     expect(hole()!.left, closeTo(target.left - 6, 0.5));
   });
 
-  testWidgets('dismissible: false keeps the tour up, and still eats the tap',
-      (tester) async {
+  testWidgets('dismissible: false keeps the tour up, and still eats the tap', (
+    tester,
+  ) async {
     var closed = 0;
     var behind = 0;
     final controller = await open(
@@ -962,11 +988,7 @@ void main() {
       _Host(
         onClose: () => closed++,
         steps: (a, b) => [
-          TourStep(
-            target: a,
-            title: const Text('First'),
-            dismissible: false,
-          ),
+          TourStep(target: a, title: const Text('First'), dismissible: false),
           TourStep(target: b, title: const Text('Second')),
         ],
       ),
@@ -985,16 +1007,17 @@ void main() {
 
   group('Moving between steps', () {
     Rect panelIn(WidgetTester tester) => tester.getRect(
-          find
-              .ancestor(
-                of: find.byKey(const Key('softTourClose')),
-                matching: find.byType(Container),
-              )
-              .last,
-        );
+      find
+          .ancestor(
+            of: find.byKey(const Key('softTourClose')),
+            matching: find.byType(Container),
+          )
+          .last,
+    );
 
-    testWidgets('one panel travels; it is not swapped for another',
-        (tester) async {
+    testWidgets('one panel travels; it is not swapped for another', (
+      tester,
+    ) async {
       final controller = await open(tester, const _Host(steps: _twoSteps));
 
       final from = panelIn(tester);
@@ -1013,8 +1036,9 @@ void main() {
       expect(travelling.center, isNot(to.center));
     });
 
-    testWidgets('a change of placement does not teleport the panel',
-        (tester) async {
+    testWidgets('a change of placement does not teleport the panel', (
+      tester,
+    ) async {
       // The rule changes in one frame; laying the panel out from the new rule
       // put it at its destination for that frame — the flash — before easing
       // the rest of the way.
@@ -1053,8 +1077,9 @@ void main() {
       expect(panelIn(tester).center, isNot(before.center));
     });
 
-    testWidgets('the journey is smooth, whatever the panel does on the way',
-        (tester) async {
+    testWidgets('the journey is smooth, whatever the panel does on the way', (
+      tester,
+    ) async {
       // The panel resizes for the new text and the layout may change its mind
       // about which side of the target to sit on. Neither is a new journey:
       // treating them as one threw the panel hundreds of pixels in a frame.
@@ -1107,8 +1132,9 @@ void main() {
       );
     });
 
-    testWidgets('a step with no target is travelled to, not swapped in',
-        (tester) async {
+    testWidgets('a step with no target is travelled to, not swapped in', (
+      tester,
+    ) async {
       final controller = await open(
         tester,
         _Host(
@@ -1134,13 +1160,13 @@ void main() {
 
   group('Timing', () {
     Rect panelIn(WidgetTester tester) => tester.getRect(
-          find
-              .ancestor(
-                of: find.byKey(const Key('softTourClose')),
-                matching: find.byType(Container),
-              )
-              .last,
-        );
+      find
+          .ancestor(
+            of: find.byKey(const Key('softTourClose')),
+            matching: find.byType(Container),
+          )
+          .last,
+    );
 
     testWidgets('duration on the widget times the journey', (tester) async {
       final controller = TourController();
@@ -1273,61 +1299,58 @@ void main() {
     }
 
     Widget host(TourController controller, TourPlacement second) => _Host(
-          controller: controller,
-          steps: (a, b) => [
-            TourStep(
-              target: a,
-              title: const Text('First'),
-              placement: TourPlacement.bottom,
-            ),
-            TourStep(
-              target: b,
-              title: const Text('Second'),
-              placement: second,
-            ),
-          ],
-        );
+      controller: controller,
+      steps: (a, b) => [
+        TourStep(
+          target: a,
+          title: const Text('First'),
+          placement: TourPlacement.bottom,
+        ),
+        TourStep(target: b, title: const Text('Second'), placement: second),
+      ],
+    );
 
     testWidgets(
-        'travels with the panel, and turns halfway when it changes side',
-        (tester) async {
-      // A caret cannot change edges gradually. Left alone it jumped from one
-      // edge of the panel to the other in a single frame.
-      final controller = TourController();
-      addTearDown(controller.dispose);
+      'travels with the panel, and turns halfway when it changes side',
+      (tester) async {
+        // A caret cannot change edges gradually. Left alone it jumped from one
+        // edge of the panel to the other in a single frame.
+        final controller = TourController();
+        addTearDown(controller.dispose);
 
-      await tester.pumpWidget(host(controller, TourPlacement.left));
-      controller.open();
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(host(controller, TourPlacement.left));
+        controller.open();
+        await tester.pumpAndSettle();
 
-      final from = caret(tester)!;
-      controller.next();
+        final from = caret(tester)!;
+        controller.next();
 
-      var previous = from.$1;
-      var biggest = 0.0;
-      final sides = <Object>{};
-      for (var i = 0; i < 14; i++) {
-        await tester.pump(const Duration(milliseconds: 25));
-        final now = caret(tester)!;
-        biggest = math.max(biggest, (now.$1 - previous).distance);
-        previous = now.$1;
-        sides.add(now.$2);
-      }
-      await tester.pumpAndSettle();
+        var previous = from.$1;
+        var biggest = 0.0;
+        final sides = <Object>{};
+        for (var i = 0; i < 14; i++) {
+          await tester.pump(const Duration(milliseconds: 25));
+          final now = caret(tester)!;
+          biggest = math.max(biggest, (now.$1 - previous).distance);
+          previous = now.$1;
+          sides.add(now.$2);
+        }
+        await tester.pumpAndSettle();
 
-      final to = caret(tester)!;
-      final total = (to.$1 - from.$1).distance;
-      expect(total, greaterThan(100), reason: 'it did travel');
-      expect(
-        biggest,
-        lessThan(total * 0.35),
-        reason: 'one frame moved $biggest of $total — that is a teleport',
-      );
+        final to = caret(tester)!;
+        final total = (to.$1 - from.$1).distance;
+        expect(total, greaterThan(100), reason: 'it did travel');
+        expect(
+          biggest,
+          lessThan(total * 0.35),
+          reason: 'one frame moved $biggest of $total — that is a teleport',
+        );
 
-      // It did change edges, once.
-      expect(sides.length, 2);
-      expect(to.$2, isNot(from.$2));
-    });
+        // It did change edges, once.
+        expect(sides.length, 2);
+        expect(to.$2, isNot(from.$2));
+      },
+    );
 
     testWidgets('keeps to one side when the steps agree', (tester) async {
       final controller = TourController();
@@ -1362,8 +1385,9 @@ void main() {
       return tester.widget<FadeTransition>(found.first).opacity.value;
     }
 
-    testWidgets('the panel\'s text crosses over rather than being replaced',
-        (tester) async {
+    testWidgets('the panel\'s text crosses over rather than being replaced', (
+      tester,
+    ) async {
       final controller = await open(tester, const _Host(steps: _twoSteps));
 
       controller.next();
@@ -1385,8 +1409,9 @@ void main() {
       expect(opacityOf(tester, 'Second'), 1);
     });
 
-    testWidgets('the panel is the size of the step arriving, not of both',
-        (tester) async {
+    testWidgets('the panel is the size of the step arriving, not of both', (
+      tester,
+    ) async {
       final controller = TourController();
       addTearDown(controller.dispose);
 
@@ -1410,13 +1435,13 @@ void main() {
       await tester.pumpAndSettle();
 
       Rect panel() => tester.getRect(
-            find
-                .ancestor(
-                  of: find.byKey(const Key('softTourClose')),
-                  matching: find.byType(Container),
-                )
-                .last,
-          );
+        find
+            .ancestor(
+              of: find.byKey(const Key('softTourClose')),
+              matching: find.byType(Container),
+            )
+            .last,
+      );
 
       final tall = panel().height;
       controller.next();
@@ -1436,8 +1461,9 @@ void main() {
     });
   });
 
-  testWidgets('a wide step leaving a narrow one does not overflow',
-      (tester) async {
+  testWidgets('a wide step leaving a narrow one does not overflow', (
+    tester,
+  ) async {
     // The outgoing copy was being squeezed into the arriving panel's box: its
     // footer — dots on one side, buttons on the other — did not fit, and the
     // crossing ended in overflow stripes.
@@ -1450,8 +1476,9 @@ void main() {
         steps: (a, b) => [
           TourStep(
             target: a,
-            title:
-                const Text('A step with a long title and a long description'),
+            title: const Text(
+              'A step with a long title and a long description',
+            ),
             description: const Text(
               'Long enough that the panel is wide, with a footer that needs '
               'every pixel of it.',
@@ -1471,8 +1498,9 @@ void main() {
     }
   });
 
-  testWidgets('the card eases into the size the next step wants',
-      (tester) async {
+  testWidgets('the card eases into the size the next step wants', (
+    tester,
+  ) async {
     final controller = TourController();
     addTearDown(controller.dispose);
 
@@ -1495,13 +1523,13 @@ void main() {
     await tester.pumpAndSettle();
 
     Rect panel() => tester.getRect(
-          find
-              .ancestor(
-                of: find.byKey(const Key('softTourClose')),
-                matching: find.byType(Container),
-              )
-              .last,
-        );
+      find
+          .ancestor(
+            of: find.byKey(const Key('softTourClose')),
+            matching: find.byType(Container),
+          )
+          .last,
+    );
 
     final narrow = panel().width;
     controller.next();
@@ -1607,8 +1635,9 @@ void main() {
       expect(target.top, lessThan(600));
     });
 
-    testWidgets('the spotlight follows a page scrolled under it',
-        (tester) async {
+    testWidgets('the spotlight follows a page scrolled under it', (
+      tester,
+    ) async {
       final controller = TourController();
       addTearDown(controller.dispose);
       final scroller = await pump(tester, controller: controller);
@@ -1629,12 +1658,16 @@ void main() {
       );
     });
 
-    testWidgets('scrollIntoView: false leaves the page where it is',
-        (tester) async {
+    testWidgets('scrollIntoView: false leaves the page where it is', (
+      tester,
+    ) async {
       final controller = TourController();
       addTearDown(controller.dispose);
-      final scroller =
-          await pump(tester, scrollIntoView: false, controller: controller);
+      final scroller = await pump(
+        tester,
+        scrollIntoView: false,
+        controller: controller,
+      );
 
       controller.open();
       await tester.pumpAndSettle();
@@ -1646,8 +1679,9 @@ void main() {
   });
 
   group('Painting the mask', () {
-    testWidgets('the hole is cut by a fill rule, not by a path operation',
-        (tester) async {
+    testWidgets('the hole is cut by a fill rule, not by a path operation', (
+      tester,
+    ) async {
       // `Path.combine` needs a renderer that can do path operations, and on
       // the web that is not a given: the mask came out solid, with nothing lit.
       await open(tester, const _Host(steps: _twoSteps));

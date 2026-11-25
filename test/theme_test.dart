@@ -1,6 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -10,8 +12,6 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/services.dart' show SystemUiOverlayStyle;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 void main() {
@@ -43,8 +43,9 @@ void main() {
     );
   });
 
-  testWidgets('a component picks up the theme from the provider',
-      (tester) async {
+  testWidgets('a component picks up the theme from the provider', (
+    tester,
+  ) async {
     Future<Color> bg(bool dark) async {
       await tester.pumpWidget(
         ConfigProvider(
@@ -90,9 +91,7 @@ void main() {
   });
 
   test('a derived token exposes the seed fallback', () {
-    final token = Token.derive(
-      const SeedToken(fontFamilyFallback: ['Inter']),
-    );
+    final token = Token.derive(const SeedToken(fontFamilyFallback: ['Inter']));
     expect(token.fontFamilyFallback, ['Inter']);
   });
 
@@ -103,13 +102,12 @@ void main() {
     expect(custom.fontFamily, isNull);
   });
 
-  testWidgets('a custom fallback reaches a rendered button label',
-      (tester) async {
+  testWidgets('a custom fallback reaches a rendered button label', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ConfigProvider(
-        theme: ThemeData(
-          token: const SeedToken(fontFamilyFallback: ['Inter']),
-        ),
+        theme: ThemeData(token: const SeedToken(fontFamilyFallback: ['Inter'])),
         child: MaterialApp(
           home: Scaffold(
             body: Center(
@@ -122,14 +120,15 @@ void main() {
 
     // The button injects its style through a DefaultTextStyle above the label,
     // so read the resolved style at the Text's location.
-    final style =
-        DefaultTextStyle.of(tester.element(find.text('Tap').hitTestable()))
-            .style;
+    final style = DefaultTextStyle.of(
+      tester.element(find.text('Tap').hitTestable()),
+    ).style;
     expect(style.fontFamilyFallback, ['Inter']);
   });
 
-  testWidgets('ComponentsConfig provides typed component token lookup',
-      (tester) async {
+  testWidgets('ComponentsConfig provides typed component token lookup', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ConfigProvider(
         theme: ThemeData(
@@ -141,10 +140,12 @@ void main() {
         child: MaterialApp(
           home: Builder(
             builder: (context) {
-              final avatarToken =
-                  ConfigProvider.componentOf<AvatarToken>(context);
-              final buttonToken =
-                  ConfigProvider.componentOf<ButtonToken>(context);
+              final avatarToken = ConfigProvider.componentOf<AvatarToken>(
+                context,
+              );
+              final buttonToken = ConfigProvider.componentOf<ButtonToken>(
+                context,
+              );
               expect(avatarToken?.colorTextPlaceholder, Colors.white);
               expect(buttonToken?.controlHeight, 40);
               return const SizedBox();
@@ -169,21 +170,23 @@ void main() {
     // table's columns, handed to the table itself, and has no business in a
     // subtree.
     final asked = <String>{};
-    for (final entity
-        in Directory('lib/src/components').listSync(recursive: true)) {
+    for (final entity in Directory(
+      'lib/src/components',
+    ).listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
-      for (final match in RegExp(r'defaultsOf<(\w+)>')
-          .allMatches(entity.readAsStringSync())) {
+      for (final match in RegExp(
+        r'defaultsOf<(\w+)>',
+      ).allMatches(entity.readAsStringSync())) {
         asked.add(match.group(1)!);
       }
     }
 
-    final config =
-        File('lib/src/theme/component_defaults.dart').readAsStringSync();
-    final reachable = RegExp(r'T == (\w+Defaults)')
-        .allMatches(config)
-        .map((m) => m.group(1)!)
-        .toSet();
+    final config = File(
+      'lib/src/theme/component_defaults.dart',
+    ).readAsStringSync();
+    final reachable = RegExp(
+      r'T == (\w+Defaults)',
+    ).allMatches(config).map((m) => m.group(1)!).toSet();
 
     expect(asked, isNotEmpty);
     expect(
@@ -207,24 +210,25 @@ void main() {
     // The table in doc/theming.md is the only place a caller finds out what
     // can be set for a subtree. It had drifted: eight components missing, and
     // the `size`/`disabled` fields listed in prose that had stopped matching.
-    final config =
-        File('lib/src/theme/component_defaults.dart').readAsStringSync();
-    final slots = RegExp(r'T == (\w+)Defaults')
-        .allMatches(config)
-        .map((m) => m.group(1)!)
-        .toList();
+    final config = File(
+      'lib/src/theme/component_defaults.dart',
+    ).readAsStringSync();
+    final slots = RegExp(
+      r'T == (\w+)Defaults',
+    ).allMatches(config).map((m) => m.group(1)!).toList();
 
     final fields = <String, List<String>>{};
-    for (final entity
-        in Directory('lib/src/components').listSync(recursive: true)) {
+    for (final entity in Directory(
+      'lib/src/components',
+    ).listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
-      for (final match
-          in RegExp(r'class (\w+Defaults) \{(.*?)\n\}', dotAll: true)
-              .allMatches(entity.readAsStringSync())) {
-        fields[match.group(1)!] = RegExp(r'final [\w<>,?. ]+\??\s(\w+);')
-            .allMatches(match.group(2)!)
-            .map((m) => m.group(1)!)
-            .toList();
+      for (final match in RegExp(
+        r'class (\w+Defaults) \{(.*?)\n\}',
+        dotAll: true,
+      ).allMatches(entity.readAsStringSync())) {
+        fields[match.group(1)!] = RegExp(
+          r'final [\w<>,?. ]+\??\s(\w+);',
+        ).allMatches(match.group(2)!).map((m) => m.group(1)!).toList();
       }
     }
 
@@ -234,8 +238,10 @@ void main() {
       // The slot is named for the field on ComponentDefaults; the component
       // it stands for is the same word, but `switch` is not a name in Dart.
       final name = slot == 'SwitchControl' ? 'Switch' : slot;
-      final row = RegExp('^\\| `$name` \\| (.*) \\|\$', multiLine: true)
-          .firstMatch(doc);
+      final row = RegExp(
+        '^\\| `$name` \\| (.*) \\|\$',
+        multiLine: true,
+      ).firstMatch(doc);
       if (row == null) {
         missing.add('$name has no row');
         continue;
@@ -289,7 +295,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'these text styles ignore the theme font — add fontFamily and '
+      reason:
+          'these text styles ignore the theme font — add fontFamily and '
           'fontFamilyFallback from the token',
     );
   });
@@ -303,16 +310,16 @@ void main() {
     for (final entity in Directory('lib/src').listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       final source = entity.readAsStringSync();
-      for (final match
-          in RegExp(r'\nclass (\w+Defaults) \{(.*?)\n\}\n', dotAll: true)
-              .allMatches(source)) {
+      for (final match in RegExp(
+        r'\nclass (\w+Defaults) \{(.*?)\n\}\n',
+        dotAll: true,
+      ).allMatches(source)) {
         final name = match.group(1)!;
         if (name == 'ComponentDefaults') continue;
         final body = match.group(2)!;
-        final fields = RegExp(r'final [\w<>,?\. ]+\? (\w+);')
-            .allMatches(body)
-            .map((m) => m.group(1)!)
-            .toList();
+        final fields = RegExp(
+          r'final [\w<>,?\. ]+\? (\w+);',
+        ).allMatches(body).map((m) => m.group(1)!).toList();
         if (fields.isEmpty) continue;
         if (!body.contains('$name merge($name other)')) {
           missing.add('$name has no merge');
@@ -321,8 +328,9 @@ void main() {
         for (final field in fields) {
           // The formatter wraps a long line wherever it likes, so the pair is
           // matched with whitespace between rather than as one string.
-          final folded =
-              RegExp('$field:\\s*other\\.$field\\s*\\?\\?\\s*$field');
+          final folded = RegExp(
+            '$field:\\s*other\\.$field\\s*\\?\\?\\s*$field',
+          );
           if (!folded.hasMatch(body)) {
             missing.add('$name.merge drops $field');
           }
@@ -345,16 +353,18 @@ void main() {
       ('lib/src/theme/components_config.dart', 'Token'),
     ]) {
       final source = File(path).readAsStringSync();
-      final fold =
-          RegExp(r'merge\(\w+ other\) => \w+\(\n(.*?)\n      \);', dotAll: true)
-              .firstMatch(source)!
-              .group(1)!;
-      final folded =
-          RegExp(r'(\w+):\s').allMatches(fold).map((m) => m.group(1)!).toSet();
-      final slots = RegExp('final \\w+$kind\\? (\\w+);')
-          .allMatches(source)
-          .map((m) => m.group(1)!)
-          .toSet();
+      final fold = RegExp(
+        // Any indent before the closing `);` — the formatter's style changes
+        // with the language version, and with it how deep that line sits.
+        r'merge\(\w+ other\) => \w+\(\n(.*?)\n\s*\);',
+        dotAll: true,
+      ).firstMatch(source)!.group(1)!;
+      final folded = RegExp(
+        r'(\w+):\s',
+      ).allMatches(fold).map((m) => m.group(1)!).toSet();
+      final slots = RegExp(
+        'final \\w+$kind\\? (\\w+);',
+      ).allMatches(source).map((m) => m.group(1)!).toSet();
       expect(
         slots.difference(folded),
         isEmpty,
@@ -384,14 +394,16 @@ void main() {
     for (final entity in Directory('lib/src').listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       final code = _withoutCommentsAndStrings(entity.readAsStringSync());
-      for (final match
-          in RegExp(r'\bclass (_Resolved\w+)\b').allMatches(code)) {
+      for (final match in RegExp(
+        r'\bclass (_Resolved\w+)\b',
+      ).allMatches(code)) {
         final resolved = match.group(1)!;
         final body = _classBody(code, resolved);
         if (body == null) continue;
-        final fields = RegExp(r'^  final [\w<>,?\. ]+? (\w+);', multiLine: true)
-            .allMatches(body)
-            .map((m) => m.group(1)!);
+        final fields = RegExp(
+          r'^  final [\w<>,?\. ]+? (\w+);',
+          multiLine: true,
+        ).allMatches(body).map((m) => m.group(1)!);
 
         // Everything but the public token that builds this one.
         final public = _classSpan(code, resolved.replaceFirst('_Resolved', ''));
@@ -401,14 +413,17 @@ void main() {
 
         for (final field in fields) {
           final mentions = RegExp('\\b$field\\b').allMatches(rest).length;
-          final declared =
-              RegExp('^  final [\\w<>,?. ]+? $field;', multiLine: true)
-                  .allMatches(rest)
-                  .length;
-          final taken =
-              RegExp('required this\\.$field,').allMatches(rest).length;
-          final built =
-              RegExp('^\\s*$field:', multiLine: true).allMatches(rest).length;
+          final declared = RegExp(
+            '^  final [\\w<>,?. ]+? $field;',
+            multiLine: true,
+          ).allMatches(rest).length;
+          final taken = RegExp(
+            'required this\\.$field,',
+          ).allMatches(rest).length;
+          final built = RegExp(
+            '^\\s*$field:',
+            multiLine: true,
+          ).allMatches(rest).length;
           if (mentions - declared - taken - built <= 0) {
             offenders.add('${entity.path}: $resolved.$field');
           }
@@ -418,29 +433,32 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'these token fields are resolved and never drawn with — draw '
+      reason:
+          'these token fields are resolved and never drawn with — draw '
           'with them, or take them out',
     );
   });
 
   test('ComponentsConfig knows every component token', () {
     final declared = <String>{};
-    for (final entity
-        in Directory('lib/src/components').listSync(recursive: true)) {
+    for (final entity in Directory(
+      'lib/src/components',
+    ).listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
-      for (final match
-          in RegExp(r'^class ([A-Za-z]\w*Token) \{', multiLine: true)
-              .allMatches(entity.readAsStringSync())) {
+      for (final match in RegExp(
+        r'^class ([A-Za-z]\w*Token) \{',
+        multiLine: true,
+      ).allMatches(entity.readAsStringSync())) {
         declared.add(match.group(1)!);
       }
     }
 
-    final config =
-        File('lib/src/theme/components_config.dart').readAsStringSync();
-    final wired = RegExp(r'(\w+Token)\?')
-        .allMatches(config)
-        .map((m) => m.group(1)!)
-        .toSet();
+    final config = File(
+      'lib/src/theme/components_config.dart',
+    ).readAsStringSync();
+    final wired = RegExp(
+      r'(\w+Token)\?',
+    ).allMatches(config).map((m) => m.group(1)!).toSet();
 
     expect(declared, isNotEmpty);
     expect(
@@ -520,10 +538,7 @@ void main() {
 
     testWidgets('a dark theme asks for light status-bar icons', (tester) async {
       await tester.pumpWidget(
-        ConfigProvider(
-          theme: ThemeData(dark: true),
-          child: const SizedBox(),
-        ),
+        ConfigProvider(theme: ThemeData(dark: true), child: const SizedBox()),
       );
 
       final style = styleOf(tester);
@@ -535,9 +550,7 @@ void main() {
     });
 
     testWidgets('a light theme asks for dark status-bar icons', (tester) async {
-      await tester.pumpWidget(
-        const ConfigProvider(child: SizedBox()),
-      );
+      await tester.pumpWidget(const ConfigProvider(child: SizedBox()));
 
       final style = styleOf(tester);
       expect(style, isNotNull);
@@ -547,10 +560,7 @@ void main() {
 
     testWidgets('the bar colour is left to the app', (tester) async {
       await tester.pumpWidget(
-        ConfigProvider(
-          theme: ThemeData(dark: true),
-          child: const SizedBox(),
-        ),
+        ConfigProvider(theme: ThemeData(dark: true), child: const SizedBox()),
       );
 
       // Only legibility is claimed; a translucent or coloured bar the app set
@@ -572,10 +582,10 @@ void main() {
   });
   group('providers nest', () {
     Widget button() => Button(
-          size: SoftSize.large,
-          onPressed: () {},
-          child: const Text('Pay'),
-        );
+      size: SoftSize.large,
+      onPressed: () {},
+      child: const Text('Pay'),
+    );
 
     Future<double> heightUnder(WidgetTester tester, Widget tree) async {
       await tester.pumpWidget(tree);
@@ -583,8 +593,7 @@ void main() {
       return tester.getRect(find.byType(Button)).height;
     }
 
-    testWidgets(
-        'an inner provider silent about a component keeps the outer '
+    testWidgets('an inner provider silent about a component keeps the outer '
         "one's token", (tester) async {
       const outer = ComponentsConfig(button: ButtonToken(controlHeightLG: 52));
 
@@ -592,7 +601,9 @@ void main() {
         tester,
         ConfigProvider(
           theme: ThemeData(components: outer),
-          child: MaterialApp(home: Scaffold(body: Center(child: button()))),
+          child: MaterialApp(
+            home: Scaffold(body: Center(child: button())),
+          ),
         ),
       );
 
@@ -647,18 +658,18 @@ void main() {
       tester,
     ) async {
       Widget tree(double height) => ConfigProvider(
-            theme: ThemeData(
-              components: ComponentsConfig(
-                button: ButtonToken(controlHeightLG: height),
-              ),
-            ),
-            child: MaterialApp(
-              home: ConfigProvider(
-                theme: ThemeData(),
-                child: Scaffold(body: Center(child: button())),
-              ),
-            ),
-          );
+        theme: ThemeData(
+          components: ComponentsConfig(
+            button: ButtonToken(controlHeightLG: height),
+          ),
+        ),
+        child: MaterialApp(
+          home: ConfigProvider(
+            theme: ThemeData(),
+            child: Scaffold(body: Center(child: button())),
+          ),
+        ),
+      );
 
       expect(await heightUnder(tester, tree(52)), 52);
       // Depending on every provider consulted, not merely the nearest, is what
@@ -695,8 +706,9 @@ void main() {
       return seen;
     }
 
-    testWidgets('a theme naming only components keeps the palette above it',
-        (tester) async {
+    testWidgets('a theme naming only components keeps the palette above it', (
+      tester,
+    ) async {
       final colour = await under(
         tester,
         ThemeData(token: const SeedToken(colorPrimary: pink)),
@@ -714,8 +726,9 @@ void main() {
       );
     });
 
-    testWidgets('a theme naming only a palette keeps the brightness above it',
-        (tester) async {
+    testWidgets('a theme naming only a palette keeps the brightness above it', (
+      tester,
+    ) async {
       final dark = await under(
         tester,
         ThemeData.dark,
@@ -725,8 +738,9 @@ void main() {
       expect(dark, isTrue, reason: 'the lights were never asked to come on');
     });
 
-    testWidgets('a theme naming only the brightness keeps the palette',
-        (tester) async {
+    testWidgets('a theme naming only the brightness keeps the palette', (
+      tester,
+    ) async {
       final token = await under(
         tester,
         ThemeData(token: const SeedToken(colorPrimary: pink)),
@@ -736,18 +750,20 @@ void main() {
       expect(token.isDark, isTrue);
       expect(
         token.primary.base,
-        isNot(ThemeData(token: const SeedToken(colorPrimary: pink))
-            .token
-            .primary
-            .base),
+        isNot(
+          ThemeData(
+            token: const SeedToken(colorPrimary: pink),
+          ).token.primary.base,
+        ),
         reason: 'the same seed in the dark is a different shade',
       );
       // Derived from the inherited seed rather than the default blue.
       expect(
         token.primary.base,
-        Token.derive(const SeedToken(colorPrimary: pink), dark: true)
-            .primary
-            .base,
+        Token.derive(
+          const SeedToken(colorPrimary: pink),
+          dark: true,
+        ).primary.base,
       );
     });
 
@@ -762,8 +778,9 @@ void main() {
       expect(dark, isFalse, reason: 'ThemeData.raw does not re-derive');
     });
 
-    testWidgets('component tokens from both providers are in scope',
-        (tester) async {
+    testWidgets('component tokens from both providers are in scope', (
+      tester,
+    ) async {
       final tokens = await under(
         tester,
         ThemeData(
@@ -783,8 +800,9 @@ void main() {
       expect(tokens.$2, 30);
     });
 
-    testWidgets('emptyBuilder carries through a provider silent about it',
-        (tester) async {
+    testWidgets('emptyBuilder carries through a provider silent about it', (
+      tester,
+    ) async {
       late EmptyBuilder? seen;
       await tester.pumpWidget(
         ConfigProvider(
@@ -803,8 +821,9 @@ void main() {
       expect(seen, isNotNull);
     });
 
-    testWidgets('the locale carries through, and the nearer one still wins',
-        (tester) async {
+    testWidgets('the locale carries through, and the nearer one still wins', (
+      tester,
+    ) async {
       late String inherited;
       late String nearer;
       await tester.pumpWidget(
@@ -853,30 +872,34 @@ void _refinementTests() {
       // And nothing else moved with it.
       expect(
         theme.token.colorText,
-        Token.derive(const SeedToken(colorPrimary: Color(0xFFEB2F96)))
-            .colorText,
+        Token.derive(
+          const SeedToken(colorPrimary: Color(0xFFEB2F96)),
+        ).colorText,
       );
     });
 
     test('it is told which way the lights are, so one line names both', () {
       Token refineTokens(Token t) => t.copyWith(
-            colorTextQuaternary:
-                t.isDark ? const Color(0xFF4F4F4F) : const Color(0xFFBFBFBF),
-          );
+        colorTextQuaternary: t.isDark
+            ? const Color(0xFF4F4F4F)
+            : const Color(0xFFBFBFBF),
+      );
       expect(
         ThemeData(refineTokens: refineTokens).token.colorTextQuaternary,
         const Color(0xFFBFBFBF),
       );
       expect(
-        ThemeData(dark: true, refineTokens: refineTokens)
-            .token
-            .colorTextQuaternary,
+        ThemeData(
+          dark: true,
+          refineTokens: refineTokens,
+        ).token.colorTextQuaternary,
         const Color(0xFF4F4F4F),
       );
     });
 
-    testWidgets('it survives a nested provider flipping the lights',
-        (tester) async {
+    testWidgets('it survives a nested provider flipping the lights', (
+      tester,
+    ) async {
       late Token inner;
       await tester.pumpWidget(
         ConfigProvider(
@@ -903,8 +926,9 @@ void _refinementTests() {
       );
     });
 
-    testWidgets('a nested refinement wins over the one above it',
-        (tester) async {
+    testWidgets('a nested refinement wins over the one above it', (
+      tester,
+    ) async {
       late Token inner;
       await tester.pumpWidget(
         ConfigProvider(
@@ -918,9 +942,8 @@ void _refinementTests() {
           child: ConfigProvider(
             theme: ThemeData(
               dark: true,
-              refineTokens: (t) => t.copyWith(
-                colorTextQuaternary: const Color(0xFF112233),
-              ),
+              refineTokens: (t) =>
+                  t.copyWith(colorTextQuaternary: const Color(0xFF112233)),
             ),
             child: Builder(
               builder: (context) {
@@ -934,8 +957,9 @@ void _refinementTests() {
       expect(inner.colorTextQuaternary, const Color(0xFF112233));
     });
 
-    testWidgets('a disabled control is written in the ink it names',
-        (tester) async {
+    testWidgets('a disabled control is written in the ink it names', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ConfigProvider(
           theme: ThemeData(

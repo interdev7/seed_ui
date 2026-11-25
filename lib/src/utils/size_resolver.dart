@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import '../theme/design_token.dart';
 
 /// Turns a [ControlSize] — a preset or an explicit measurement — into the
@@ -13,15 +14,14 @@ extension ControlSizeResolver on ControlSize {
     required double small,
     required double middle,
     required double large,
-  }) =>
-      switch (this) {
-        SoftSize.small => small,
-        SoftSize.middle => middle,
-        SoftSize.large => large,
-        ExplicitHeight(:final height) => height,
-        ExplicitWidth(:final width) => width,
-        ExplicitBox(:final width, :final height) => math.max(width, height),
-      };
+  }) => switch (this) {
+    SoftSize.small => small,
+    SoftSize.middle => middle,
+    SoftSize.large => large,
+    ExplicitHeight(:final height) => height,
+    ExplicitWidth(:final width) => width,
+    ExplicitBox(:final width, :final height) => math.max(width, height),
+  };
 
   /// Resolves the control size into a height, using the provided presets.
   ///
@@ -33,12 +33,11 @@ extension ControlSizeResolver on ControlSize {
     required double small,
     required double middle,
     required double large,
-  }) =>
-      switch (this) {
-        ExplicitBox(:final height) => height,
-        ExplicitWidth() => middle,
-        _ => resolve1D(small: small, middle: middle, large: large),
-      };
+  }) => switch (this) {
+    ExplicitBox(:final height) => height,
+    ExplicitWidth() => middle,
+    _ => resolve1D(small: small, middle: middle, large: large),
+  };
 
   /// The preset this size is nearest to.
   ///
@@ -68,8 +67,8 @@ extension ControlSizeResolver on ControlSize {
   /// A preset and a bare height say nothing about width, so a control that
   /// sizes its own is left to do so.
   double? get explicitWidth => switch (this) {
-        ExplicitWidth(:final width) => width,
-        ExplicitBox(:final width) => width,
-        _ => null,
-      };
+    ExplicitWidth(:final width) => width,
+    ExplicitBox(:final width) => width,
+    _ => null,
+  };
 }

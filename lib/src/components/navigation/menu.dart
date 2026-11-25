@@ -193,59 +193,56 @@ class MenuToken {
   final double? collapsedIconSize;
 
   _ResolvedMenuToken _resolve(Token t) => _ResolvedMenuToken(
-        collapsedIconSize: collapsedIconSize ?? t.fontSizeLG,
-        itemColor: itemColor ?? t.colorText,
-        itemHoverBg: itemHoverBg ?? t.colorFillSecondary,
-        itemSelectedColor: itemSelectedColor ?? t.primary.base,
-        itemSelectedBg: itemSelectedBg ?? t.primary.bg,
-        itemDisabledColor: itemDisabledColor ?? t.colorTextQuaternary,
-        dangerItemColor: dangerItemColor ?? t.error.base,
-        dangerItemSelectedBg: dangerItemSelectedBg ?? t.error.bg,
-        groupTitleColor: groupTitleColor ?? t.colorTextTertiary,
-        subMenuItemBg: subMenuItemBg ?? t.colorFillQuaternary,
-        itemHeight: itemHeight ?? t.controlHeightLG,
-        itemBorderRadius: itemBorderRadius ?? t.borderRadiusLG,
-        itemMarginInline: itemMarginInline ?? t.sizeXXS,
-        itemPaddingInline: itemPaddingInline ?? t.size,
-        inlineIndent: inlineIndent ?? t.sizeLG,
-        iconSize: iconSize ?? t.fontSize,
-        iconGap: iconGap ?? t.sizeXS,
-        horizontalItemHeight:
-            horizontalItemHeight ?? t.controlHeightLG + t.sizeXS,
-        horizontalItemPaddingInline: horizontalItemPaddingInline ?? t.sizeMD,
-        horizontalBarHeight: horizontalBarHeight ?? t.lineWidth * 2,
-        collapsedWidth: collapsedWidth ?? t.controlHeightLG * 2,
-        fontSize: fontSize ?? t.fontSize,
-      );
+    collapsedIconSize: collapsedIconSize ?? t.fontSizeLG,
+    itemColor: itemColor ?? t.colorText,
+    itemHoverBg: itemHoverBg ?? t.colorFillSecondary,
+    itemSelectedColor: itemSelectedColor ?? t.primary.base,
+    itemSelectedBg: itemSelectedBg ?? t.primary.bg,
+    itemDisabledColor: itemDisabledColor ?? t.colorTextQuaternary,
+    dangerItemColor: dangerItemColor ?? t.error.base,
+    dangerItemSelectedBg: dangerItemSelectedBg ?? t.error.bg,
+    groupTitleColor: groupTitleColor ?? t.colorTextTertiary,
+    subMenuItemBg: subMenuItemBg ?? t.colorFillQuaternary,
+    itemHeight: itemHeight ?? t.controlHeightLG,
+    itemBorderRadius: itemBorderRadius ?? t.borderRadiusLG,
+    itemMarginInline: itemMarginInline ?? t.sizeXXS,
+    itemPaddingInline: itemPaddingInline ?? t.size,
+    inlineIndent: inlineIndent ?? t.sizeLG,
+    iconSize: iconSize ?? t.fontSize,
+    iconGap: iconGap ?? t.sizeXS,
+    horizontalItemHeight: horizontalItemHeight ?? t.controlHeightLG + t.sizeXS,
+    horizontalItemPaddingInline: horizontalItemPaddingInline ?? t.sizeMD,
+    horizontalBarHeight: horizontalBarHeight ?? t.lineWidth * 2,
+    collapsedWidth: collapsedWidth ?? t.controlHeightLG * 2,
+    fontSize: fontSize ?? t.fontSize,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   MenuToken merge(MenuToken other) => MenuToken(
-        collapsedIconSize: other.collapsedIconSize ?? collapsedIconSize,
-        itemColor: other.itemColor ?? itemColor,
-        itemHoverBg: other.itemHoverBg ?? itemHoverBg,
-        itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
-        itemSelectedBg: other.itemSelectedBg ?? itemSelectedBg,
-        itemDisabledColor: other.itemDisabledColor ?? itemDisabledColor,
-        dangerItemColor: other.dangerItemColor ?? dangerItemColor,
-        dangerItemSelectedBg:
-            other.dangerItemSelectedBg ?? dangerItemSelectedBg,
-        groupTitleColor: other.groupTitleColor ?? groupTitleColor,
-        subMenuItemBg: other.subMenuItemBg ?? subMenuItemBg,
-        itemHeight: other.itemHeight ?? itemHeight,
-        itemBorderRadius: other.itemBorderRadius ?? itemBorderRadius,
-        itemMarginInline: other.itemMarginInline ?? itemMarginInline,
-        itemPaddingInline: other.itemPaddingInline ?? itemPaddingInline,
-        inlineIndent: other.inlineIndent ?? inlineIndent,
-        iconSize: other.iconSize ?? iconSize,
-        iconGap: other.iconGap ?? iconGap,
-        horizontalItemHeight:
-            other.horizontalItemHeight ?? horizontalItemHeight,
-        horizontalItemPaddingInline:
-            other.horizontalItemPaddingInline ?? horizontalItemPaddingInline,
-        horizontalBarHeight: other.horizontalBarHeight ?? horizontalBarHeight,
-        collapsedWidth: other.collapsedWidth ?? collapsedWidth,
-        fontSize: other.fontSize ?? fontSize,
-      );
+    collapsedIconSize: other.collapsedIconSize ?? collapsedIconSize,
+    itemColor: other.itemColor ?? itemColor,
+    itemHoverBg: other.itemHoverBg ?? itemHoverBg,
+    itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
+    itemSelectedBg: other.itemSelectedBg ?? itemSelectedBg,
+    itemDisabledColor: other.itemDisabledColor ?? itemDisabledColor,
+    dangerItemColor: other.dangerItemColor ?? dangerItemColor,
+    dangerItemSelectedBg: other.dangerItemSelectedBg ?? dangerItemSelectedBg,
+    groupTitleColor: other.groupTitleColor ?? groupTitleColor,
+    subMenuItemBg: other.subMenuItemBg ?? subMenuItemBg,
+    itemHeight: other.itemHeight ?? itemHeight,
+    itemBorderRadius: other.itemBorderRadius ?? itemBorderRadius,
+    itemMarginInline: other.itemMarginInline ?? itemMarginInline,
+    itemPaddingInline: other.itemPaddingInline ?? itemPaddingInline,
+    inlineIndent: other.inlineIndent ?? inlineIndent,
+    iconSize: other.iconSize ?? iconSize,
+    iconGap: other.iconGap ?? iconGap,
+    horizontalItemHeight: other.horizontalItemHeight ?? horizontalItemHeight,
+    horizontalItemPaddingInline:
+        other.horizontalItemPaddingInline ?? horizontalItemPaddingInline,
+    horizontalBarHeight: other.horizontalBarHeight ?? horizontalBarHeight,
+    collapsedWidth: other.collapsedWidth ?? collapsedWidth,
+    fontSize: other.fontSize ?? fontSize,
+  );
 }
 
 @immutable
@@ -313,9 +310,9 @@ class MenuDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   MenuDefaults merge(MenuDefaults other) => MenuDefaults(
-        mode: other.mode ?? mode,
-        accordion: other.accordion ?? accordion,
-      );
+    mode: other.mode ?? mode,
+    accordion: other.accordion ?? accordion,
+  );
 }
 
 /// A list of places to go: a sidebar, a top bar, the sections of a settings
@@ -487,10 +484,11 @@ class _MenuState<T> extends State<Menu<T>> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<MenuToken>(context) ??
-            const MenuToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<MenuToken>(context) ??
+                const MenuToken())
+            ._resolve(t);
     final mode = _mode;
     final horizontal = mode == MenuMode.horizontal;
     final collapsed = mode == MenuMode.inline && widget.inlineCollapsed;
@@ -656,30 +654,25 @@ class _Ctx<T> {
 List<DropdownEntry<T>> _asDropdown<T>(
   _MenuState<T> state,
   List<MenuEntry<T>> entries,
-) =>
-    [
-      for (final e in entries)
-        if (e is MenuItem<T>)
-          DropdownItem<T>(
-            value: e.value,
-            label: e.label,
-            icon: e.icon,
-            disabled: e.disabled,
-            danger: e.danger,
-            selected: e.children == null
-                ? e.value != null && e.value == state._selected
-                : state._holdsSelected(e.children!),
-            children:
-                e.children == null ? null : _asDropdown(state, e.children!),
-          )
-        else if (e is MenuGroup<T>)
-          DropdownGroup<T>(
-            label: e.label,
-            children: _asDropdown(state, e.children),
-          )
-        else
-          DropdownDivider<T>(),
-    ];
+) => [
+  for (final e in entries)
+    if (e is MenuItem<T>)
+      DropdownItem<T>(
+        value: e.value,
+        label: e.label,
+        icon: e.icon,
+        disabled: e.disabled,
+        danger: e.danger,
+        selected: e.children == null
+            ? e.value != null && e.value == state._selected
+            : state._holdsSelected(e.children!),
+        children: e.children == null ? null : _asDropdown(state, e.children!),
+      )
+    else if (e is MenuGroup<T>)
+      DropdownGroup<T>(label: e.label, children: _asDropdown(state, e.children))
+    else
+      DropdownDivider<T>(),
+];
 
 /// A row that can be hovered, focused and pressed, drawing its own wash.
 class _Row extends StatefulWidget {
@@ -840,8 +833,8 @@ class _ColumnItem<T> extends StatelessWidget {
     final color = item.disabled
         ? r.itemDisabledColor
         : item.danger
-            ? r.dangerItemColor
-            : (selected ? r.itemSelectedColor : r.itemColor);
+        ? r.dangerItemColor
+        : (selected ? r.itemSelectedColor : r.itemColor);
 
     final rtl = Directionality.maybeOf(context) == TextDirection.rtl;
     // Out to the side the menu reads towards.
@@ -851,45 +844,44 @@ class _ColumnItem<T> extends StatelessWidget {
       bool hovered,
       bool focused, {
       PopoverPlacement placed = PopoverPlacement.rightTop,
-    }) =>
-        Container(
-          height: r.itemHeight,
-          margin: EdgeInsets.symmetric(
-            horizontal: r.itemMarginInline,
-            vertical: t.sizeXXS / 2,
-          ),
-          padding: ctx.collapsed
-              ? null
-              : EdgeInsetsDirectional.only(
-                  start: r.itemPaddingInline + level * r.inlineIndent,
-                  end: r.itemPaddingInline,
+    }) => Container(
+      height: r.itemHeight,
+      margin: EdgeInsets.symmetric(
+        horizontal: r.itemMarginInline,
+        vertical: t.sizeXXS / 2,
+      ),
+      padding: ctx.collapsed
+          ? null
+          : EdgeInsetsDirectional.only(
+              start: r.itemPaddingInline + level * r.inlineIndent,
+              end: r.itemPaddingInline,
+            ),
+      decoration: BoxDecoration(
+        color: selected && !submenu
+            ? (item.danger ? r.dangerItemSelectedBg : r.itemSelectedBg)
+            : (hovered ? r.itemHoverBg : null),
+        borderRadius: BorderRadius.circular(r.itemBorderRadius),
+        boxShadow: _ring(t, focused),
+      ),
+      child: _rowContent(
+        context: context,
+        r: r,
+        item: item,
+        color: color,
+        collapsed: ctx.collapsed,
+        // Pointing where the submenu opens — which is not always where
+        // it was asked to: short of room, it opens on the other side.
+        trailing: submenu && !ctx.collapsed
+            ? RotatedBox(
+                quarterTurns: placed == PopoverPlacement.leftTop ? 2 : 0,
+                child: CustomPaint(
+                  size: Size.square(t.fontSizeSM),
+                  painter: ChevronPainter(color),
                 ),
-          decoration: BoxDecoration(
-            color: selected && !submenu
-                ? (item.danger ? r.dangerItemSelectedBg : r.itemSelectedBg)
-                : (hovered ? r.itemHoverBg : null),
-            borderRadius: BorderRadius.circular(r.itemBorderRadius),
-            boxShadow: _ring(t, focused),
-          ),
-          child: _rowContent(
-            context: context,
-            r: r,
-            item: item,
-            color: color,
-            collapsed: ctx.collapsed,
-            // Pointing where the submenu opens — which is not always where
-            // it was asked to: short of room, it opens on the other side.
-            trailing: submenu && !ctx.collapsed
-                ? RotatedBox(
-                    quarterTurns: placed == PopoverPlacement.leftTop ? 2 : 0,
-                    child: CustomPaint(
-                      size: Size.square(t.fontSizeSM),
-                      painter: ChevronPainter(color),
-                    ),
-                  )
-                : null,
-          ),
-        );
+              )
+            : null,
+      ),
+    );
 
     if (!submenu) {
       final Widget leaf = _Row(
@@ -1006,8 +998,8 @@ class _InlineSubmenu<T> extends StatelessWidget {
     final color = item.disabled
         ? r.itemDisabledColor
         : item.danger
-            ? r.dangerItemColor
-            : (selected ? r.itemSelectedColor : r.itemColor);
+        ? r.dangerItemColor
+        : (selected ? r.itemSelectedColor : r.itemColor);
     final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final duration = still ? Duration.zero : t.motionDurationMid;
     final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
@@ -1020,10 +1012,12 @@ class _InlineSubmenu<T> extends StatelessWidget {
       onKey: (event) {
         if (event is KeyUpEvent) return KeyEventResult.ignored;
         final key = event.logicalKey;
-        final inward =
-            ltr ? LogicalKeyboardKey.arrowRight : LogicalKeyboardKey.arrowLeft;
-        final outward =
-            ltr ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight;
+        final inward = ltr
+            ? LogicalKeyboardKey.arrowRight
+            : LogicalKeyboardKey.arrowLeft;
+        final outward = ltr
+            ? LogicalKeyboardKey.arrowLeft
+            : LogicalKeyboardKey.arrowRight;
         if ((key == inward && !open) || (key == outward && open)) {
           state._toggle(item, siblings);
           return KeyEventResult.handled;
@@ -1133,8 +1127,8 @@ class _HorizontalItem<T> extends StatelessWidget {
       final color = item.disabled
           ? r.itemDisabledColor
           : item.danger
-              ? r.dangerItemColor
-              : (lit ? r.itemSelectedColor : r.itemColor);
+          ? r.dangerItemColor
+          : (lit ? r.itemSelectedColor : r.itemColor);
       return Container(
         padding: EdgeInsets.symmetric(
           horizontal: r.horizontalItemPaddingInline,
@@ -1243,10 +1237,7 @@ class _RenderFoldingRow extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _FoldingParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _FoldingParentData> {
-  _RenderFoldingRow({
-    required this.onFits,
-    required TextDirection textDirection,
-  }) : _textDirection = textDirection;
+  _RenderFoldingRow({required this.onFits, required this._textDirection});
 
   ValueChanged<int?> onFits;
   int? _reported = -1;
@@ -1335,18 +1326,24 @@ class _RenderFoldingRow extends RenderBox
       lastChild?.getMinIntrinsicWidth(height) ?? 0;
 
   @override
-  double computeMinIntrinsicHeight(double width) => getChildrenAsList()
-      .fold(0.0, (most, c) => math.max(most, c.getMinIntrinsicHeight(width)));
+  double computeMinIntrinsicHeight(double width) => getChildrenAsList().fold(
+    0.0,
+    (most, c) => math.max(most, c.getMinIntrinsicHeight(width)),
+  );
 
   @override
-  double computeMaxIntrinsicHeight(double width) => getChildrenAsList()
-      .fold(0.0, (most, c) => math.max(most, c.getMaxIntrinsicHeight(width)));
+  double computeMaxIntrinsicHeight(double width) => getChildrenAsList().fold(
+    0.0,
+    (most, c) => math.max(most, c.getMaxIntrinsicHeight(width)),
+  );
 
   @override
   Size computeDryLayout(BoxConstraints constraints) {
     final height = constraints.maxHeight;
     final children = getChildrenAsList();
-    final total = children.take(children.length - 1).fold<double>(
+    final total = children
+        .take(children.length - 1)
+        .fold<double>(
           0,
           (sum, c) =>
               sum +

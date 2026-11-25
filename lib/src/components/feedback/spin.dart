@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 
 import '../../theme/config_provider.dart';
@@ -15,11 +16,7 @@ import 'progress.dart';
 @immutable
 class SpinDefaults {
   /// Creates a [SpinDefaults].
-  const SpinDefaults({
-    this.size,
-    this.delay,
-    this.position,
-  });
+  const SpinDefaults({this.size, this.delay, this.position});
 
   /// How big the spinner is.
   final ControlSize? size;
@@ -32,10 +29,10 @@ class SpinDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SpinDefaults merge(SpinDefaults other) => SpinDefaults(
-        size: other.size ?? size,
-        delay: other.delay ?? delay,
-        position: other.position ?? position,
-      );
+    size: other.size ?? size,
+    delay: other.delay ?? delay,
+    position: other.position ?? position,
+  );
 }
 
 /// Design tokens for [Spin].
@@ -66,21 +63,21 @@ class SpinToken {
   final double? dotSizeLG;
 
   _ResolvedSpinToken _resolve(Token t) => _ResolvedSpinToken(
-        colorPrimary: colorPrimary ?? t.primary.base,
-        colorBgContainer: colorBgContainer ?? t.colorBgContainer,
-        dotSize: dotSize ?? 20.0,
-        dotSizeSM: dotSizeSM ?? 14.0,
-        dotSizeLG: dotSizeLG ?? 32.0,
-      );
+    colorPrimary: colorPrimary ?? t.primary.base,
+    colorBgContainer: colorBgContainer ?? t.colorBgContainer,
+    dotSize: dotSize ?? 20.0,
+    dotSizeSM: dotSizeSM ?? 14.0,
+    dotSizeLG: dotSizeLG ?? 32.0,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SpinToken merge(SpinToken other) => SpinToken(
-        colorPrimary: other.colorPrimary ?? colorPrimary,
-        colorBgContainer: other.colorBgContainer ?? colorBgContainer,
-        dotSize: other.dotSize ?? dotSize,
-        dotSizeSM: other.dotSizeSM ?? dotSizeSM,
-        dotSizeLG: other.dotSizeLG ?? dotSizeLG,
-      );
+    colorPrimary: other.colorPrimary ?? colorPrimary,
+    colorBgContainer: other.colorBgContainer ?? colorBgContainer,
+    dotSize: other.dotSize ?? dotSize,
+    dotSizeSM: other.dotSizeSM ?? dotSizeSM,
+    dotSizeLG: other.dotSizeLG ?? dotSizeLG,
+  );
 }
 
 @immutable
@@ -131,16 +128,16 @@ enum SpinPosition {
 
   /// This position as a Flutter [Alignment].
   Alignment get alignment => switch (this) {
-        SpinPosition.topLeft => Alignment.topLeft,
-        SpinPosition.topCenter => Alignment.topCenter,
-        SpinPosition.topRight => Alignment.topRight,
-        SpinPosition.centerLeft => Alignment.centerLeft,
-        SpinPosition.center => Alignment.center,
-        SpinPosition.centerRight => Alignment.centerRight,
-        SpinPosition.bottomLeft => Alignment.bottomLeft,
-        SpinPosition.bottomCenter => Alignment.bottomCenter,
-        SpinPosition.bottomRight => Alignment.bottomRight,
-      };
+    SpinPosition.topLeft => Alignment.topLeft,
+    SpinPosition.topCenter => Alignment.topCenter,
+    SpinPosition.topRight => Alignment.topRight,
+    SpinPosition.centerLeft => Alignment.centerLeft,
+    SpinPosition.center => Alignment.center,
+    SpinPosition.centerRight => Alignment.centerRight,
+    SpinPosition.bottomLeft => Alignment.bottomLeft,
+    SpinPosition.bottomCenter => Alignment.bottomCenter,
+    SpinPosition.bottomRight => Alignment.bottomRight,
+  };
 }
 
 /// A spinning loading indicator matching `Spin`.
@@ -333,10 +330,11 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
 
   Widget _buildFullscreenOverlayWidget() {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<SpinToken>(context) ??
-            const SpinToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<SpinToken>(context) ??
+                const SpinToken())
+            ._resolve(token);
 
     final showSpin = widget.spinning && _delaySpinning;
     final dir = Directionality.maybeOf(context) ?? TextDirection.ltr;
@@ -414,13 +412,11 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
     }
 
     if (_size is SoftSize) {
-      return BorderRadius.circular(
-        switch (_size as SoftSize) {
-          SoftSize.small => token.borderRadiusSM,
-          SoftSize.middle => token.borderRadius,
-          SoftSize.large => token.borderRadiusLG,
-        },
-      );
+      return BorderRadius.circular(switch (_size as SoftSize) {
+        SoftSize.small => token.borderRadiusSM,
+        SoftSize.middle => token.borderRadius,
+        SoftSize.large => token.borderRadiusLG,
+      });
     }
     return BorderRadius.circular(token.borderRadiusSM);
   }
@@ -454,10 +450,7 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
       return SizedBox(
         width: size,
         height: size,
-        child: FittedBox(
-          fit: BoxFit.contain,
-          child: customIndicator,
-        ),
+        child: FittedBox(fit: BoxFit.contain, child: customIndicator),
       );
     }
 
@@ -524,10 +517,11 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<SpinToken>(context) ??
-            const SpinToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<SpinToken>(context) ??
+                const SpinToken())
+            ._resolve(token);
 
     final showSpin = widget.spinning && _delaySpinning;
 
@@ -591,10 +585,7 @@ class _SpinState extends State<Spin> with SingleTickerProviderStateMixin {
 
 /// Custom painter rendering the signature 4-dot rotating & scaling animation.
 class _Spin4DotPainter extends CustomPainter {
-  _Spin4DotPainter({
-    required this.progress,
-    required this.color,
-  });
+  _Spin4DotPainter({required this.progress, required this.color});
 
   final double progress;
   final Color color;

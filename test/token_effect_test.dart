@@ -1,7 +1,10 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         Card,
         Checkbox,
@@ -16,9 +19,6 @@ import 'package:flutter/material.dart'
         ThemeData,
         Tooltip,
         Divider;
-import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// Every field of a component's token is a promise: name it, and the
@@ -105,23 +105,23 @@ final _key = GlobalKey();
 Future<void> Function()? _letGo;
 
 Widget _host(Widget child, ComponentsConfig? components) => RepaintBoundary(
-      key: _key,
-      // Outside the app, not around the component: a panel — a `Select`'s
-      // list, a picker's — is drawn in the overlay above the whole app, and
-      // a boundary tucked around the field would photograph everything
-      // except the thing being proved.
-      child: ConfigProvider(
-        theme: components == null ? null : ThemeData(components: components),
-        child: MaterialApp(
-          navigatorKey: UiKit.navigatorKey,
-          home: Scaffold(
-            body: Center(
-              child: Padding(padding: const EdgeInsets.all(8), child: child),
-            ),
-          ),
+  key: _key,
+  // Outside the app, not around the component: a panel — a `Select`'s
+  // list, a picker's — is drawn in the overlay above the whole app, and
+  // a boundary tucked around the field would photograph everything
+  // except the thing being proved.
+  child: ConfigProvider(
+    theme: components == null ? null : ThemeData(components: components),
+    child: MaterialApp(
+      navigatorKey: UiKit.navigatorKey,
+      home: Scaffold(
+        body: Center(
+          child: Padding(padding: const EdgeInsets.all(8), child: child),
         ),
       ),
-    );
+    ),
+  ),
+);
 
 /// A picture, as one number.
 ///
@@ -190,14 +190,27 @@ Future<int> _shot(
 void main() {
   for (final probe in _probes) {
     testWidgets('${probe.field} changes what is drawn', (tester) async {
-      final plain = await _shot(tester, probe.build(false),
-          probe.theme?.call(false), probe.act, probe.hover, probe.hoverAt);
-      final named = await _shot(tester, probe.build(true),
-          probe.theme?.call(true), probe.act, probe.hover, probe.hoverAt);
+      final plain = await _shot(
+        tester,
+        probe.build(false),
+        probe.theme?.call(false),
+        probe.act,
+        probe.hover,
+        probe.hoverAt,
+      );
+      final named = await _shot(
+        tester,
+        probe.build(true),
+        probe.theme?.call(true),
+        probe.act,
+        probe.hover,
+        probe.hoverAt,
+      );
       expect(
         named,
         isNot(plain),
-        reason: '${probe.field} is declared and documented, and naming it '
+        reason:
+            '${probe.field} is declared and documented, and naming it '
             'draws exactly the same picture — the field is read by nothing.',
       );
     });
@@ -213,43 +226,39 @@ const _options = [
   SegmentedOption(value: 'b', label: 'Bbb'),
 ];
 
-Widget _progress(ProgressToken? token,
-        {ProgressType type = ProgressType.line}) =>
-    SizedBox(
-      width: 200,
-      child: Progress(percent: 0.4, type: type, token: token),
-    );
+Widget _progress(
+  ProgressToken? token, {
+  ProgressType type = ProgressType.line,
+}) => SizedBox(
+  width: 200,
+  child: Progress(percent: 0.4, type: type, token: token),
+);
 
 Widget _segmented(SegmentedToken? token) => Segmented<String>(
-      value: 'a',
-      options: _options,
-      onChanged: (_) {},
-      token: token,
-    );
+  value: 'a',
+  options: _options,
+  onChanged: (_) {},
+  token: token,
+);
 
 Widget _number(InputNumberToken? token, {InputNumberMode? mode}) => SizedBox(
-      width: 200,
-      child: InputNumber(
-        value: 3,
-        mode: mode,
-        onChanged: (_) {},
-        token: token,
-      ),
-    );
+  width: 200,
+  child: InputNumber(value: 3, mode: mode, onChanged: (_) {}, token: token),
+);
 
 Widget _select(SelectToken? token, {SoftSize? size}) => SizedBox(
-      width: 220,
-      child: Select<String>(
-        value: const ['a'],
-        size: size,
-        options: const [
-          SelectOption(value: 'a', label: Text('Aaa')),
-          SelectOption(value: 'b', label: Text('Bbb')),
-        ],
-        onChanged: (_) {},
-        token: token,
-      ),
-    );
+  width: 220,
+  child: Select<String>(
+    value: const ['a'],
+    size: size,
+    options: const [
+      SelectOption(value: 'a', label: Text('Aaa')),
+      SelectOption(value: 'b', label: Text('Bbb')),
+    ],
+    onChanged: (_) {},
+    token: token,
+  ),
+);
 
 /// Opens a `Select`'s panel the way a person does. `open: true` on its own
 /// draws no panel: the kit puts one in the overlay when the field is pressed.
@@ -272,11 +281,11 @@ Widget _input(InputToken? token, {SoftSize? size, int maxLines = 1}) =>
     );
 
 Widget _button(ButtonToken? token, {SoftSize? size}) => Button(
-      size: size,
-      onPressed: () {},
-      token: token,
-      child: const Text('Press'),
-    );
+  size: size,
+  onPressed: () {},
+  token: token,
+  child: const Text('Press'),
+);
 
 /// Puts the caret in the field, which is when a focused field shows what it
 /// shows: an accent border, and a ring around it.
@@ -295,19 +304,18 @@ Widget _tabsOf(
   SoftSize? size,
   TabsType type = TabsType.line,
   TabPosition? position,
-}) =>
-    SizedBox(
-      width: 300,
-      height: 160,
-      child: Tabs(
-        items: _tabs,
-        defaultActiveKey: 'one',
-        size: size,
-        type: type,
-        tabPosition: position,
-        token: token,
-      ),
-    );
+}) => SizedBox(
+  width: 300,
+  height: 160,
+  child: Tabs(
+    items: _tabs,
+    defaultActiveKey: 'one',
+    size: size,
+    type: type,
+    tabPosition: position,
+    token: token,
+  ),
+);
 
 const _marks = [
   SliderMark(0, 'nil'),
@@ -319,18 +327,17 @@ Widget _slider(
   SliderToken? token, {
   bool disabled = false,
   bool dots = false,
-}) =>
-    SizedBox(
-      width: 260,
-      child: Slider(
-        value: 40,
-        marks: _marks,
-        dots: dots,
-        disabled: disabled,
-        onChanged: (_) {},
-        token: token,
-      ),
-    );
+}) => SizedBox(
+  width: 260,
+  child: Slider(
+    value: 40,
+    marks: _marks,
+    dots: dots,
+    disabled: disabled,
+    onChanged: (_) {},
+    token: token,
+  ),
+);
 
 /// The rail itself: a slider's box includes the labels under it, so its
 /// centre is below the rail rather than on it.
@@ -351,21 +358,20 @@ Widget _stepsOf(
   StepsType type = StepsType.standard,
   StepsOrientation orientation = StepsOrientation.horizontal,
   double width = 420,
-}) =>
-    SizedBox(
-      // Width only: a run given a height of someone else's choosing spills
-      // past it, and what a probe then photographs is the same clipped strip
-      // whatever the token said.
-      width: width,
-      child: Steps(
-        items: _steps,
-        current: 1,
-        size: size,
-        type: type,
-        orientation: orientation,
-        token: token,
-      ),
-    );
+}) => SizedBox(
+  // Width only: a run given a height of someone else's choosing spills
+  // past it, and what a probe then photographs is the same clipped strip
+  // whatever the token said.
+  width: width,
+  child: Steps(
+    items: _steps,
+    current: 1,
+    size: size,
+    type: type,
+    orientation: orientation,
+    token: token,
+  ),
+);
 
 Widget _card(CardToken? token, {SoftSize? size, List<Widget>? actions}) =>
     SizedBox(
@@ -391,53 +397,50 @@ Widget _upload(
   UploadToken? token, {
   UploadVariant variant = UploadVariant.text,
   bool dragging = false,
-}) =>
-    SizedBox(
-      width: 320,
-      child: Upload(
-        items: _uploads,
-        variant: variant,
-        dragging: dragging,
-        onPick: _noop,
-        token: token,
-      ),
-    );
+}) => SizedBox(
+  width: 320,
+  child: Upload(
+    items: _uploads,
+    variant: variant,
+    dragging: dragging,
+    onPick: _noop,
+    token: token,
+  ),
+);
 
 /// A form with a field that fails, one that only warns, and a help line —
 /// the three things the message colours belong to.
 Widget _form(FormToken? token) => SizedBox(
-      width: 320,
-      child: Form(
-        token: token,
-        child: const Column(
-          children: [
-            FormItem<String>(
-              name: 'must',
-              label: Text('Must'),
-              rules: [FormRule.required(message: 'Needed')],
-              builder: _field,
-            ),
-            FormItem<String>(
-              name: 'ought',
-              label: Text('Ought'),
-              rules: [FormRule.required(message: 'Better', warningOnly: true)],
-              builder: _field,
-            ),
-            FormItem<String>(
-              name: 'helped',
-              label: Text('Helped'),
-              help: 'A word about it',
-              builder: _field,
-            ),
-          ],
+  width: 320,
+  child: Form(
+    token: token,
+    child: const Column(
+      children: [
+        FormItem<String>(
+          name: 'must',
+          label: Text('Must'),
+          rules: [FormRule.required(message: 'Needed')],
+          builder: _field,
         ),
-      ),
-    );
+        FormItem<String>(
+          name: 'ought',
+          label: Text('Ought'),
+          rules: [FormRule.required(message: 'Better', warningOnly: true)],
+          builder: _field,
+        ),
+        FormItem<String>(
+          name: 'helped',
+          label: Text('Helped'),
+          help: 'A word about it',
+          builder: _field,
+        ),
+      ],
+    ),
+  ),
+);
 
-Widget _field(FormFieldHandle<String> field) => Input(
-      value: field.value ?? '',
-      onChanged: field.didChange,
-    );
+Widget _field(FormFieldHandle<String> field) =>
+    Input(value: field.value ?? '', onChanged: field.didChange);
 
 /// Sends the form, which is when a field that fails says so.
 Future<void> _submitForm(WidgetTester tester) async {
@@ -454,11 +457,7 @@ class _Row {
 
 const _rows0 = _Row('Ann', 'Bristol');
 
-const _rows = [
-  _rows0,
-  _Row('Bart', 'Galway'),
-  _Row('Chen', 'Chengdu'),
-];
+const _rows = [_rows0, _Row('Bart', 'Galway'), _Row('Chen', 'Chengdu')];
 
 const _longRows = [
   _Row('Bartholomew Considine the Younger', 'Kirkcudbrightshire'),
@@ -479,53 +478,51 @@ Widget _table(
   bool filterable = false,
   bool pinned = false,
   double width = 420,
-}) =>
-    SizedBox(
-      width: width,
-      child: Table<_Row>(
-        data: long ? _longRows : _rows,
-        bordered: bordered,
-        size: size,
-        sort: sort,
-        selection: selection,
-        expandable: expandable,
-        footer: footer == null ? null : (_, __) => footer,
-        columnsResizable: resizable,
-        // A run wider than the room is what holds a column at the edge: with
-        // nothing to scroll past, nothing is pinned and no shade is drawn.
-        scroll: pinned ? const TableScroll(x: 900, y: 200) : null,
-        token: token,
-        columns: [
-          TableColumn(
-            title: const Text('Name'),
-            sortable: true,
-            // A summary belongs to a column, not to the table.
-            summary: summary ? (_, rows) => const Text('In all') : null,
-            fixed: pinned ? TableColumnFixed.start : null,
-            width: pinned ? 260 : null,
-            filters: filterable
-                ? const [TableFilter('Ann', 'Ann'), TableFilter('Bart', 'Bart')]
-                : null,
-            // The menu grows a search box only where the column asks for one.
-            filterSearch: filterable,
-            value: (r) => r.name,
-          ),
-          TableColumn(
-            title: const Text('City'),
-            width: pinned ? 260 : null,
-            value: (r) => r.city,
-          ),
-        ],
+}) => SizedBox(
+  width: width,
+  child: Table<_Row>(
+    data: long ? _longRows : _rows,
+    bordered: bordered,
+    size: size,
+    sort: sort,
+    selection: selection,
+    expandable: expandable,
+    footer: footer == null ? null : (_, __) => footer,
+    columnsResizable: resizable,
+    // A run wider than the room is what holds a column at the edge: with
+    // nothing to scroll past, nothing is pinned and no shade is drawn.
+    scroll: pinned ? const TableScroll(x: 900, y: 200) : null,
+    token: token,
+    columns: [
+      TableColumn(
+        title: const Text('Name'),
+        sortable: true,
+        // A summary belongs to a column, not to the table.
+        summary: summary ? (_, rows) => const Text('In all') : null,
+        fixed: pinned ? TableColumnFixed.start : null,
+        width: pinned ? 260 : null,
+        filters: filterable
+            ? const [TableFilter('Ann', 'Ann'), TableFilter('Bart', 'Bart')]
+            : null,
+        // The menu grows a search box only where the column asks for one.
+        filterSearch: filterable,
+        value: (r) => r.name,
       ),
-    );
+      TableColumn(
+        title: const Text('City'),
+        width: pinned ? 260 : null,
+        value: (r) => r.city,
+      ),
+    ],
+  ),
+);
 
 /// The funnel in a column heading: a painter rather than a widget of its
 /// own, so it is found by what paints it.
 Finder _funnel() => find.byWidgetPredicate(
-      (w) =>
-          w is CustomPaint &&
-          w.painter.runtimeType.toString().contains('Funnel'),
-    );
+  (w) =>
+      w is CustomPaint && w.painter.runtimeType.toString().contains('Funnel'),
+);
 
 /// Drags the rows sideways, which is when a held column has something to
 /// cast a shade over: at rest against its own end there is nothing behind it.
@@ -545,43 +542,32 @@ Widget _float(
   SoftSize? size,
   Widget? label,
   ButtonShape? shape,
-}) =>
-    FloatButton(
-      icon: const Icon(Icons.add),
-      label: label,
-      size: size,
-      shape: shape,
-      onPressed: () {},
-      token: token,
-    );
+}) => FloatButton(
+  icon: const Icon(Icons.add),
+  label: label,
+  size: size,
+  shape: shape,
+  onPressed: () {},
+  token: token,
+);
 
 Widget _avatar(
   AvatarToken? token, {
   SoftSize? size,
   bool letters = true,
   AvatarShape? shape,
-}) =>
-    Avatar(
-      size: size,
-      shape: shape,
-      token: token,
-      icon: letters ? null : const Icon(Icons.person),
-      child: letters ? const Text('AB') : null,
-    );
+}) => Avatar(
+  size: size,
+  shape: shape,
+  token: token,
+  icon: letters ? null : const Icon(Icons.person),
+  child: letters ? const Text('AB') : null,
+);
 
 Widget _switchOf(SwitchToken? token, {SoftSize? size, bool on = true}) =>
-    Switch(
-      value: on,
-      size: size,
-      onChanged: (_) {},
-      token: token,
-    );
+    Switch(value: on, size: size, onChanged: (_) {}, token: token);
 
-Widget _radio(
-  RadioToken? token, {
-  bool checked = true,
-  ControlSize? size,
-}) =>
+Widget _radio(RadioToken? token, {bool checked = true, ControlSize? size}) =>
     Radio<String>(
       value: 'a',
       groupValue: checked ? 'a' : 'b',
@@ -596,19 +582,19 @@ Widget _radio(
 /// and the same provider stands in both shots so the token is the only
 /// difference between them.
 Widget _radioButtons(RadioToken? token) => ConfigProvider(
-      theme: ThemeData(
-        components: ComponentsConfig(radio: token ?? const RadioToken()),
-      ),
-      child: RadioGroup<String>(
-        value: 'a',
-        optionType: RadioOptionType.button,
-        onChanged: (_) {},
-        options: const [
-          RadioOption(value: 'a', label: Text('Aaa')),
-          RadioOption(value: 'b', label: Text('Bbb')),
-        ],
-      ),
-    );
+  theme: ThemeData(
+    components: ComponentsConfig(radio: token ?? const RadioToken()),
+  ),
+  child: RadioGroup<String>(
+    value: 'a',
+    optionType: RadioOptionType.button,
+    onChanged: (_) {},
+    options: const [
+      RadioOption(value: 'a', label: Text('Aaa')),
+      RadioOption(value: 'b', label: Text('Bbb')),
+    ],
+  ),
+);
 
 Widget _badge(
   BadgeToken? token, {
@@ -616,41 +602,40 @@ Widget _badge(
   int? count = 5,
   bool dot = false,
   BadgeStatus? status,
-}) =>
-    Badge(
-      count: count,
-      dot: dot,
-      status: status,
-      text: status == null ? null : const Text('Running'),
-      size: size,
-      token: token,
-      child: status == null ? const SizedBox(width: 40, height: 40) : null,
-    );
+}) => Badge(
+  count: count,
+  dot: dot,
+  status: status,
+  text: status == null ? null : const Text('Running'),
+  size: size,
+  token: token,
+  child: status == null ? const SizedBox(width: 40, height: 40) : null,
+);
 
 Widget _ribbon(RibbonToken? token) => Ribbon(
-      text: const Text('New'),
-      token: token,
-      child: const SizedBox(width: 120, height: 60),
-    );
+  text: const Text('New'),
+  token: token,
+  child: const SizedBox(width: 120, height: 60),
+);
 
 Widget _dropdown(DropdownToken? token) => Dropdown<String>(
-      open: true,
-      token: token,
-      menu: const [
-        DropdownItem(value: 'a', label: 'Rename'),
-        DropdownItem(value: 'b', label: 'Delete'),
-        DropdownItem(value: 'c', label: 'Sort', selected: true),
-      ],
-      child: const Text('Menu'),
-    );
+  open: true,
+  token: token,
+  menu: const [
+    DropdownItem(value: 'a', label: 'Rename'),
+    DropdownItem(value: 'b', label: 'Delete'),
+    DropdownItem(value: 'c', label: 'Sort', selected: true),
+  ],
+  child: const Text('Menu'),
+);
 
 Widget _popover(PopoverToken? token) => Popover(
-      open: true,
-      title: const Text('A title'),
-      content: const Text('And a line under it.'),
-      token: token,
-      child: const Text('Anchor'),
-    );
+  open: true,
+  title: const Text('A title'),
+  content: const Text('And a line under it.'),
+  token: token,
+  child: const Text('Anchor'),
+);
 
 Widget _timeline(TimelineToken? token, {TimelineOrientation? orientation}) =>
     SizedBox(
@@ -669,18 +654,17 @@ Widget _datePanel(
   DatePickerToken? token, {
   bool withPresets = false,
   bool withTime = false,
-}) =>
-    SizedBox(
-      width: 320,
-      child: DatePicker(
-        value: DateTime(2026, 3, 10),
-        showTime: withTime,
-        presets: withPresets
-            ? [DatePreset('Today', DateTime(2026, 3, 10))]
-            : const [],
-        token: token,
-      ),
-    );
+}) => SizedBox(
+  width: 320,
+  child: DatePicker(
+    value: DateTime(2026, 3, 10),
+    showTime: withTime,
+    presets: withPresets
+        ? [DatePreset('Today', DateTime(2026, 3, 10))]
+        : const [],
+    token: token,
+  ),
+);
 
 /// Lights the first menu row the way a keyboard does.
 Future<void> _highlightFirstItem(WidgetTester tester) async {
@@ -694,51 +678,45 @@ Future<void> _openPicker(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Widget _tag(TagToken? token, {TagVariant? variant}) => Tag(
-      token: token,
-      variant: variant,
-      child: const Text('A tag'),
-    );
+Widget _tag(TagToken? token, {TagVariant? variant}) =>
+    Tag(token: token, variant: variant, child: const Text('A tag'));
 
 Widget _checkbox(
   CheckboxToken? token, {
   bool checked = true,
   ControlSize? size,
-}) =>
-    Checkbox(
-      checked: checked,
-      size: size,
-      onChanged: (_) {},
-      label: const Text('Ticked'),
-      token: token,
-    );
+}) => Checkbox(
+  checked: checked,
+  size: size,
+  onChanged: (_) {},
+  label: const Text('Ticked'),
+  token: token,
+);
 
-Widget _empty(EmptyToken? token) => Empty(
-      description: const Text('Nothing here'),
-      token: token,
-    );
+Widget _empty(EmptyToken? token) =>
+    Empty(description: const Text('Nothing here'), token: token);
 
 /// A see-through blue on a panel with a ready colour under it.
 Widget _colorPanel(ColorPickerToken? token) => ColorPickerPanel(
-      value: const Color(0x801677FF),
-      token: token,
-      allowClear: true,
-      presets: const [
-        ColorPreset(label: 'Brand', colors: [Color(0xFF52C41A)]),
-      ],
-    );
+  value: const Color(0x801677FF),
+  token: token,
+  allowClear: true,
+  presets: const [
+    ColorPreset(label: 'Brand', colors: [Color(0xFF52C41A)]),
+  ],
+);
 
 /// A field with its suggestions open on 'an'.
 Widget _autoComplete(AutoCompleteToken? token) => SizedBox(
-      width: 240,
-      child: AutoComplete(
-        token: token,
-        options: const [
-          AutoCompleteOption(value: 'Ankara'),
-          AutoCompleteOption(value: 'Andorra'),
-        ],
-      ),
-    );
+  width: 240,
+  child: AutoComplete(
+    token: token,
+    options: const [
+      AutoCompleteOption(value: 'Ankara'),
+      AutoCompleteOption(value: 'Andorra'),
+    ],
+  ),
+);
 
 /// Types into the field, so its suggestions open.
 Future<void> _typeAn(WidgetTester tester) async {
@@ -747,12 +725,8 @@ Future<void> _typeAn(WidgetTester tester) async {
 }
 
 /// A four-cell code with two characters in it.
-Widget _otp(InputOtpToken? token, {bool disabled = false}) => InputOtp(
-      length: 4,
-      defaultValue: '12',
-      disabled: disabled,
-      token: token,
-    );
+Widget _otp(InputOtpToken? token, {bool disabled = false}) =>
+    InputOtp(length: 4, defaultValue: '12', disabled: disabled, token: token);
 
 /// Puts the cursor into the code field, so its active cell shows.
 Future<void> _focusOtp(WidgetTester tester) async {
@@ -774,43 +748,42 @@ Widget _menu(
   MenuMode mode = MenuMode.inline,
   bool collapsed = false,
   String selected = 'a',
-}) =>
-    SizedBox(
-      width: mode == MenuMode.horizontal ? 500 : null,
-      child: Menu<String>(
-        token: token,
-        mode: mode,
-        inlineCollapsed: collapsed,
-        selectedValue: selected,
-        defaultOpenValues: const {'sub'},
-        items: const [
-          MenuItem(value: 'a', label: 'Mail', icon: Icon(Icons.mail)),
-          MenuItem(value: 'b', label: 'Off', disabled: true),
-          MenuItem(value: 'c', label: 'Delete', danger: true),
-          MenuGroup(
-            label: 'More',
-            children: [
-              MenuItem(
-                value: 'sub',
-                label: 'Settings',
-                icon: Icon(Icons.settings),
-                children: [MenuItem(value: 'd', label: 'Profile')],
-              ),
-            ],
+}) => SizedBox(
+  width: mode == MenuMode.horizontal ? 500 : null,
+  child: Menu<String>(
+    token: token,
+    mode: mode,
+    inlineCollapsed: collapsed,
+    selectedValue: selected,
+    defaultOpenValues: const {'sub'},
+    items: const [
+      MenuItem(value: 'a', label: 'Mail', icon: Icon(Icons.mail)),
+      MenuItem(value: 'b', label: 'Off', disabled: true),
+      MenuItem(value: 'c', label: 'Delete', danger: true),
+      MenuGroup(
+        label: 'More',
+        children: [
+          MenuItem(
+            value: 'sub',
+            label: 'Settings',
+            icon: Icon(Icons.settings),
+            children: [MenuItem(value: 'd', label: 'Profile')],
           ),
         ],
       ),
-    );
+    ],
+  ),
+);
 
 /// A path of three crumbs, the middle one with an icon.
 Widget _breadcrumb(BreadcrumbToken? token) => Breadcrumb<String>(
-      token: token,
-      items: const [
-        BreadcrumbItem(value: 'a', label: 'Home'),
-        BreadcrumbItem(value: 'b', label: 'Projects', icon: Icon(Icons.folder)),
-        BreadcrumbItem(label: 'Seed'),
-      ],
-    );
+  token: token,
+  items: const [
+    BreadcrumbItem(value: 'a', label: 'Home'),
+    BreadcrumbItem(value: 'b', label: 'Projects', icon: Icon(Icons.folder)),
+    BreadcrumbItem(label: 'Seed'),
+  ],
+);
 
 /// A divider with a title, between two words so its margins show.
 Widget _divider(
@@ -818,83 +791,78 @@ Widget _divider(
   SoftSize size = SoftSize.middle,
   bool plain = false,
   bool vertical = false,
-}) =>
-    vertical
-        ? Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('A'),
-              Divider(orientation: DividerOrientation.vertical, token: token),
-              const Text('B'),
-            ],
-          )
-        : SizedBox(
-            width: 300,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Above'),
-                Divider(
-                  size: size,
-                  plain: plain,
-                  token: token,
-                  child: const Text('Title'),
-                ),
-                const Text('Below'),
-              ],
+}) => vertical
+    ? Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('A'),
+          Divider(orientation: DividerOrientation.vertical, token: token),
+          const Text('B'),
+        ],
+      )
+    : SizedBox(
+        width: 300,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Above'),
+            Divider(
+              size: size,
+              plain: plain,
+              token: token,
+              child: const Text('Title'),
             ),
-          );
+            const Text('Below'),
+          ],
+        ),
+      );
 
-Widget _countdown(CountdownToken? token) => Countdown(
-      target: DateTime(2030),
-      token: token,
-    );
+Widget _countdown(CountdownToken? token) =>
+    Countdown(target: DateTime(2030), token: token);
 
-Widget _spin(SpinToken? token, {SoftSize? size}) => Spin(
-      size: size,
-      token: token,
-    );
+Widget _spin(SpinToken? token, {SoftSize? size}) =>
+    Spin(size: size, token: token);
 
 Widget _result(ResultToken? token) => SizedBox(
-      width: 320,
-      child: Result(
-        title: const Text('All done'),
-        subtitle: const Text('And a line under it'),
-        token: token,
-      ),
-    );
+  width: 320,
+  child: Result(
+    title: const Text('All done'),
+    subtitle: const Text('And a line under it'),
+    token: token,
+  ),
+);
 
 Widget _pagination(PaginationToken? token) => SizedBox(
-      // Room to grow: a pager that overflows draws the same striped edge
-      // whatever the token said.
-      width: 700,
-      child: Pagination(total: 120, current: 2, token: token),
-    );
+  // Room to grow: a pager that overflows draws the same striped edge
+  // whatever the token said.
+  width: 700,
+  child: Pagination(total: 120, current: 2, token: token),
+);
 
 Widget _listy(ListyToken? token) => SizedBox(
-      width: 300,
-      height: 200,
-      child: Listy<String, Object, Object>(
-        items: const ['One', 'Two', 'Three'],
-        itemBuilder: (item, i) => Text(item),
-        token: token,
-      ),
-    );
+  width: 300,
+  height: 200,
+  child: Listy<String, Object, Object>(
+    items: const ['One', 'Two', 'Three'],
+    itemBuilder: (item, i) => Text(item),
+    token: token,
+  ),
+);
 
 Widget _collapse(CollapseToken? token) => SizedBox(
-      width: 320,
-      child: Collapse(
-        defaultActiveKeys: const ['a'],
-        token: token,
-        items: const [
-          CollapseItem(
-            key: 'a',
-            label: Text('A panel'),
-            content: Text('What is inside it'),
-          ),
-        ],
+  width: 320,
+  child: Collapse(
+    defaultActiveKeys: const ['a'],
+    token: token,
+    items: const [
+      CollapseItem(
+        key: 'a',
+        label: Text('A panel'),
+        content: Text('What is inside it'),
       ),
-    );
+    ],
+  ),
+);
 
 Widget _tree(TreeToken? token, {List<String> selected = const ['a']}) =>
     SizedBox(
@@ -914,20 +882,20 @@ Widget _tree(TreeToken? token, {List<String> selected = const ['a']}) =>
     );
 
 Widget _sortable(SortableListToken? token) => SizedBox(
-      width: 300,
-      height: 200,
-      child: SortableList(
-        onReorder: (_, __) {},
-        // The whole row answers, rather than a grip: a test drags where the
-        // text is, and the grip is somewhere else.
-        showHandle: false,
-        token: token,
-        children: const [
-          SizedBox(key: ValueKey('a'), height: 40, child: Text('One')),
-          SizedBox(key: ValueKey('b'), height: 40, child: Text('Two')),
-        ],
-      ),
-    );
+  width: 300,
+  height: 200,
+  child: SortableList(
+    onReorder: (_, __) {},
+    // The whole row answers, rather than a grip: a test drags where the
+    // text is, and the grip is somewhere else.
+    showHandle: false,
+    token: token,
+    children: const [
+      SizedBox(key: ValueKey('a'), height: 40, child: Text('One')),
+      SizedBox(key: ValueKey('b'), height: 40, child: Text('Two')),
+    ],
+  ),
+);
 
 /// Where the spinner's plus sits: the handle at the trailing edge, which is
 /// what wears `handleHoverBg` and `handleActiveBg`.
@@ -965,10 +933,10 @@ Future<void> _liftRow(WidgetTester tester) async {
 }
 
 Widget _tooltip(TooltipToken? token) => Tooltip(
-      message: const Text('A word about it'),
-      token: token,
-      child: const Text('Anchor'),
-    );
+  message: const Text('A word about it'),
+  token: token,
+  child: const Text('Anchor'),
+);
 
 /// Rests the pointer on a tooltip's anchor and waits for it to appear.
 Future<void> _showTooltip(WidgetTester tester) async {
@@ -981,11 +949,7 @@ Future<void> _showTooltip(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Widget _alert(
-  AlertToken? token, {
-  bool described = false,
-  bool icon = false,
-}) =>
+Widget _alert(AlertToken? token, {bool described = false, bool icon = false}) =>
     SizedBox(
       width: 360,
       child: Alert(
@@ -997,19 +961,16 @@ Widget _alert(
     );
 
 Widget _popconfirm(PopconfirmToken? token) => Popconfirm(
-      title: const Text('Sure?'),
-      description: const Text('This cannot be undone'),
-      token: token,
-      child: const Text('Anchor'),
-    );
+  title: const Text('Sure?'),
+  description: const Text('This cannot be undone'),
+  token: token,
+  child: const Text('Anchor'),
+);
 
 Widget _timePanel(TimePickerToken? token) => SizedBox(
-      width: 260,
-      child: TimePicker(
-        value: const Duration(hours: 9, minutes: 30),
-        token: token,
-      ),
-    );
+  width: 260,
+  child: TimePicker(value: const Duration(hours: 9, minutes: 30), token: token),
+);
 
 /// Opens a time picker's panel, which is where its token is drawn.
 Future<void> _openTime(WidgetTester tester) async {
@@ -1028,11 +989,8 @@ Future<void> _pressAnchor(WidgetTester tester) async {
 /// message and a notification are built in the navigator's overlay, which no
 /// provider inside the page is above.
 Widget _raiseButton(void Function() raise) => Builder(
-      builder: (context) => Button(
-        onPressed: raise,
-        child: const Text('Raise'),
-      ),
-    );
+  builder: (context) => Button(onPressed: raise, child: const Text('Raise')),
+);
 
 /// Presses the button and stops while the toast is still on screen: a
 /// message and a notification take themselves away after a few seconds, and
@@ -1063,52 +1021,53 @@ Future<void> _pressRaise(WidgetTester tester) async {
 final _tourTarget = GlobalKey();
 
 Widget _tour(TourToken? token, {TourType type = TourType.normal}) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-            key: _tourTarget,
-            width: 120,
-            height: 40,
-            child: const Text('Here')),
-        Tour(
-          open: true,
-          type: type,
-          token: token,
-          steps: [
-            TourStep(
-              target: _tourTarget,
-              title: const Text('First stop'),
-              description: const Text(
-                'What it is for, at enough length that the card has a width '
-                'to be held to rather than only its own content.',
-              ),
-            ),
-            // A second stop, so the run of indicators exists at all: one stop
-            // has nothing to indicate.
-            TourStep(
-              target: _tourTarget,
-              title: const Text('Second stop'),
-              description: const Text('And what that one is for'),
-            ),
-          ],
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    SizedBox(
+      key: _tourTarget,
+      width: 120,
+      height: 40,
+      child: const Text('Here'),
+    ),
+    Tour(
+      open: true,
+      type: type,
+      token: token,
+      steps: [
+        TourStep(
+          target: _tourTarget,
+          title: const Text('First stop'),
+          description: const Text(
+            'What it is for, at enough length that the card has a width '
+            'to be held to rather than only its own content.',
+          ),
+        ),
+        // A second stop, so the run of indicators exists at all: one stop
+        // has nothing to indicate.
+        TourStep(
+          target: _tourTarget,
+          title: const Text('Second stop'),
+          description: const Text('And what that one is for'),
         ),
       ],
-    );
+    ),
+  ],
+);
 
 /// A run too long for its box, which is when the scroll arrows appear.
 Widget _narrowSegmented(SegmentedToken? token) => SizedBox(
-      width: 140,
-      child: Segmented<String>(
-        value: 'a',
-        options: const [
-          SegmentedOption(value: 'a', label: 'The first one'),
-          SegmentedOption(value: 'b', label: 'The second one'),
-          SegmentedOption(value: 'c', label: 'The third one'),
-        ],
-        onChanged: (_) {},
-        token: token,
-      ),
-    );
+  width: 140,
+  child: Segmented<String>(
+    value: 'a',
+    options: const [
+      SegmentedOption(value: 'a', label: 'The first one'),
+      SegmentedOption(value: 'b', label: 'The second one'),
+      SegmentedOption(value: 'c', label: 'The third one'),
+    ],
+    onChanged: (_) {},
+    token: token,
+  ),
+);
 
 final _probes = <_Probe>[
   _Probe(
@@ -1253,15 +1212,19 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'ColorPickerToken.handleShadow',
-    (c) => _colorPanel(c
-        ? const ColorPickerToken(
-            handleShadow: [BoxShadow(color: _loud, blurRadius: 6)])
-        : null),
+    (c) => _colorPanel(
+      c
+          ? const ColorPickerToken(
+              handleShadow: [BoxShadow(color: _loud, blurRadius: 6)],
+            )
+          : null,
+    ),
   ),
   _Probe(
     'AutoCompleteToken.optionActiveBg',
     (c) => _autoComplete(
-        c ? const AutoCompleteToken(optionActiveBg: _loud) : null),
+      c ? const AutoCompleteToken(optionActiveBg: _loud) : null,
+    ),
     act: _typeAn,
   ),
   _Probe(
@@ -1273,7 +1236,8 @@ final _probes = <_Probe>[
   _Probe(
     'AutoCompleteToken.optionPadding',
     (c) => _autoComplete(
-        c ? const AutoCompleteToken(optionPadding: EdgeInsets.all(20)) : null),
+      c ? const AutoCompleteToken(optionPadding: EdgeInsets.all(20)) : null,
+    ),
     act: _typeAn,
   ),
   _Probe(
@@ -1291,10 +1255,8 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'RateToken.starBg',
-    (c) => Rate(
-      defaultValue: 3,
-      token: c ? const RateToken(starBg: _loud) : null,
-    ),
+    (c) =>
+        Rate(defaultValue: 3, token: c ? const RateToken(starBg: _loud) : null),
   ),
   _Probe(
     'RateToken.gap',
@@ -1334,8 +1296,10 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'InputOtpToken.disabledCellBg',
-    (c) => _otp(c ? const InputOtpToken(disabledCellBg: _loud) : null,
-        disabled: true),
+    (c) => _otp(
+      c ? const InputOtpToken(disabledCellBg: _loud) : null,
+      disabled: true,
+    ),
   ),
   _Probe(
     'InputOtpToken.colorText',
@@ -1381,8 +1345,10 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'MenuToken.dangerItemSelectedBg',
-    (c) => _menu(c ? const MenuToken(dangerItemSelectedBg: _loud) : null,
-        selected: 'c'),
+    (c) => _menu(
+      c ? const MenuToken(dangerItemSelectedBg: _loud) : null,
+      selected: 'c',
+    ),
   ),
   _Probe(
     'MenuToken.groupTitleColor',
@@ -1422,18 +1388,24 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'MenuToken.horizontalItemHeight',
-    (c) => _menu(c ? const MenuToken(horizontalItemHeight: 70) : null,
-        mode: MenuMode.horizontal),
+    (c) => _menu(
+      c ? const MenuToken(horizontalItemHeight: 70) : null,
+      mode: MenuMode.horizontal,
+    ),
   ),
   _Probe(
     'MenuToken.horizontalItemPaddingInline',
-    (c) => _menu(c ? const MenuToken(horizontalItemPaddingInline: 40) : null,
-        mode: MenuMode.horizontal),
+    (c) => _menu(
+      c ? const MenuToken(horizontalItemPaddingInline: 40) : null,
+      mode: MenuMode.horizontal,
+    ),
   ),
   _Probe(
     'MenuToken.horizontalBarHeight',
-    (c) => _menu(c ? const MenuToken(horizontalBarHeight: 8) : null,
-        mode: MenuMode.horizontal),
+    (c) => _menu(
+      c ? const MenuToken(horizontalBarHeight: 8) : null,
+      mode: MenuMode.horizontal,
+    ),
   ),
   _Probe(
     'MenuToken.collapsedWidth',
@@ -1442,8 +1414,10 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'MenuToken.collapsedIconSize',
-    (c) => _menu(c ? const MenuToken(collapsedIconSize: 30) : null,
-        collapsed: true),
+    (c) => _menu(
+      c ? const MenuToken(collapsedIconSize: 30) : null,
+      collapsed: true,
+    ),
   ),
   _Probe(
     'MenuToken.fontSize',
@@ -1564,7 +1538,9 @@ final _probes = <_Probe>[
   _Probe(
     'SkeletonToken.blockRadius',
     (c) => Skeleton(
-        round: false, token: c ? const SkeletonToken(blockRadius: 8) : null),
+      round: false,
+      token: c ? const SkeletonToken(blockRadius: 8) : null,
+    ),
   ),
   _Probe(
     'SkeletonToken.titleHeight',
@@ -1577,7 +1553,8 @@ final _probes = <_Probe>[
   _Probe(
     'SkeletonToken.paragraphLineHeight',
     (c) => Skeleton(
-        token: c ? const SkeletonToken(paragraphLineHeight: 40) : null),
+      token: c ? const SkeletonToken(paragraphLineHeight: 40) : null,
+    ),
   ),
   _Probe(
     'SkeletonToken.paragraphLineGap',
@@ -1587,8 +1564,9 @@ final _probes = <_Probe>[
   _Probe(
     'SkeletonToken.avatarGap',
     (c) => Skeleton(
-        avatar: const SkeletonAvatar(),
-        token: c ? const SkeletonToken(avatarGap: 80) : null),
+      avatar: const SkeletonAvatar(),
+      token: c ? const SkeletonToken(avatarGap: 80) : null,
+    ),
   ),
   _Probe(
     'SkeletonToken.highlightColor',
@@ -1824,10 +1802,7 @@ final _probes = <_Probe>[
     'InputToken.paddingBlock',
     // A field of one line is exactly as tall as the control preset says, so
     // the vertical inset is a textarea's alone.
-    (c) => _input(
-      c ? const InputToken(paddingBlock: 20) : null,
-      maxLines: 3,
-    ),
+    (c) => _input(c ? const InputToken(paddingBlock: 20) : null, maxLines: 3),
   ),
   _Probe(
     'InputToken.borderRadius',
@@ -1958,9 +1933,7 @@ final _probes = <_Probe>[
       color: ButtonColor.primary,
       onPressed: () {},
       token: c
-          ? const ButtonToken(
-              shadow: [BoxShadow(color: _loud, blurRadius: 8)],
-            )
+          ? const ButtonToken(shadow: [BoxShadow(color: _loud, blurRadius: 8)])
           : null,
       child: const Text('Press'),
     ),
@@ -2110,10 +2083,8 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'TabsToken.cardBg',
-    (c) => _tabsOf(
-      c ? const TabsToken(cardBg: _loud) : null,
-      type: TabsType.card,
-    ),
+    (c) =>
+        _tabsOf(c ? const TabsToken(cardBg: _loud) : null, type: TabsType.card),
   ),
   _Probe(
     'TabsToken.cardGutter',
@@ -2258,9 +2229,7 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'StepsToken.railInset',
-    (c) => _stepsOf(
-      c ? const StepsToken(railInset: RailInsets.all(24)) : null,
-    ),
+    (c) => _stepsOf(c ? const StepsToken(railInset: RailInsets.all(24)) : null),
   ),
   _Probe(
     'StepsToken.railLength',
@@ -2310,10 +2279,8 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'StepsToken.dotSize',
-    (c) => _stepsOf(
-      c ? const StepsToken(dotSize: 24) : null,
-      type: StepsType.dot,
-    ),
+    (c) =>
+        _stepsOf(c ? const StepsToken(dotSize: 24) : null, type: StepsType.dot),
   ),
   _Probe(
     'StepsToken.dotCurrentSize',
@@ -2680,10 +2647,7 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'TableToken.summaryBg',
-    (c) => _table(
-      c ? const TableToken(summaryBg: _loud) : null,
-      summary: true,
-    ),
+    (c) => _table(c ? const TableToken(summaryBg: _loud) : null, summary: true),
   ),
   _Probe(
     'TableToken.expandIconSize',
@@ -2921,14 +2885,20 @@ final _probes = <_Probe>[
     'AvatarToken.groupBorderColor',
     (c) => AvatarGroup(
       token: c ? const AvatarToken(groupBorderColor: _loud) : null,
-      children: const [Avatar(child: Text('A')), Avatar(child: Text('B'))],
+      children: const [
+        Avatar(child: Text('A')),
+        Avatar(child: Text('B')),
+      ],
     ),
   ),
   _Probe(
     'AvatarToken.groupOverlapping',
     (c) => AvatarGroup(
       token: c ? const AvatarToken(groupOverlapping: 24) : null,
-      children: const [Avatar(child: Text('A')), Avatar(child: Text('B'))],
+      children: const [
+        Avatar(child: Text('A')),
+        Avatar(child: Text('B')),
+      ],
     ),
   ),
   _Probe(
@@ -2937,10 +2907,7 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'SwitchToken.colorBg',
-    (c) => _switchOf(
-      c ? const SwitchToken(colorBg: _loud) : null,
-      on: false,
-    ),
+    (c) => _switchOf(c ? const SwitchToken(colorBg: _loud) : null, on: false),
   ),
   _Probe(
     'SwitchToken.trackHeight',
@@ -3008,17 +2975,13 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'RadioToken.dotSizeSM',
-    (c) => _radio(
-      c ? const RadioToken(dotSizeSM: 2) : null,
-      size: SoftSize.small,
-    ),
+    (c) =>
+        _radio(c ? const RadioToken(dotSizeSM: 2) : null, size: SoftSize.small),
   ),
   _Probe(
     'RadioToken.dotSizeLG',
-    (c) => _radio(
-      c ? const RadioToken(dotSizeLG: 4) : null,
-      size: SoftSize.large,
-    ),
+    (c) =>
+        _radio(c ? const RadioToken(dotSizeLG: 4) : null, size: SoftSize.large),
   ),
   _Probe(
     'RadioToken.fontSizeSM',
@@ -3058,10 +3021,8 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'RadioToken.colorBorder',
-    (c) => _radio(
-      c ? const RadioToken(colorBorder: _loud) : null,
-      checked: false,
-    ),
+    (c) =>
+        _radio(c ? const RadioToken(colorBorder: _loud) : null, checked: false),
   ),
   _Probe(
     'RadioToken.fontSize',
@@ -3154,9 +3115,8 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'DropdownToken.padding',
-    (c) => _dropdown(
-      c ? const DropdownToken(padding: EdgeInsets.all(28)) : null,
-    ),
+    (c) =>
+        _dropdown(c ? const DropdownToken(padding: EdgeInsets.all(28)) : null),
   ),
   _Probe(
     'DropdownToken.borderRadius',
@@ -3228,9 +3188,7 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'PopoverToken.padding',
-    (c) => _popover(
-      c ? const PopoverToken(padding: EdgeInsets.all(32)) : null,
-    ),
+    (c) => _popover(c ? const PopoverToken(padding: EdgeInsets.all(32)) : null),
   ),
   _Probe(
     'PopoverToken.minWidth',
@@ -3446,17 +3404,13 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'SpinToken.dotSizeSM',
-    (c) => _spin(
-      c ? const SpinToken(dotSizeSM: 50) : null,
-      size: SoftSize.small,
-    ),
+    (c) =>
+        _spin(c ? const SpinToken(dotSizeSM: 50) : null, size: SoftSize.small),
   ),
   _Probe(
     'SpinToken.dotSizeLG',
-    (c) => _spin(
-      c ? const SpinToken(dotSizeLG: 70) : null,
-      size: SoftSize.large,
-    ),
+    (c) =>
+        _spin(c ? const SpinToken(dotSizeLG: 70) : null, size: SoftSize.large),
   ),
   _Probe(
     'ResultToken.titleFontSize',
@@ -3472,15 +3426,11 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'ResultToken.padding',
-    (c) => _result(
-      c ? const ResultToken(padding: EdgeInsets.all(48)) : null,
-    ),
+    (c) => _result(c ? const ResultToken(padding: EdgeInsets.all(48)) : null),
   ),
   _Probe(
     'ResultToken.fontWeight',
-    (c) => _result(
-      c ? const ResultToken(fontWeight: FontWeight.w900) : null,
-    ),
+    (c) => _result(c ? const ResultToken(fontWeight: FontWeight.w900) : null),
   ),
   _Probe(
     'PaginationToken.fontSize',
@@ -3507,7 +3457,8 @@ final _probes = <_Probe>[
   _Probe(
     'CollapseToken.headerPadding',
     (c) => _collapse(
-        c ? const CollapseToken(headerPadding: EdgeInsets.all(36)) : null),
+      c ? const CollapseToken(headerPadding: EdgeInsets.all(36)) : null,
+    ),
   ),
   _Probe(
     'CollapseToken.contentBg',
@@ -3516,7 +3467,8 @@ final _probes = <_Probe>[
   _Probe(
     'CollapseToken.contentPadding',
     (c) => _collapse(
-        c ? const CollapseToken(contentPadding: EdgeInsets.all(40)) : null),
+      c ? const CollapseToken(contentPadding: EdgeInsets.all(40)) : null,
+    ),
   ),
   _Probe(
     'CollapseToken.borderRadius',
@@ -3548,9 +3500,8 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'SortableListToken.backgroundColor',
-    (c) => _sortable(
-      c ? const SortableListToken(backgroundColor: _loud) : null,
-    ),
+    (c) =>
+        _sortable(c ? const SortableListToken(backgroundColor: _loud) : null),
     act: _liftRow,
   ),
   _Probe(
@@ -3586,9 +3537,7 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'TooltipToken.padding',
-    (c) => _tooltip(
-      c ? const TooltipToken(padding: EdgeInsets.all(28)) : null,
-    ),
+    (c) => _tooltip(c ? const TooltipToken(padding: EdgeInsets.all(28)) : null),
     act: _showTooltip,
   ),
   _Probe(
@@ -3626,9 +3575,8 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'PopconfirmToken.colorBgElevated',
-    (c) => _popconfirm(
-      c ? const PopconfirmToken(colorBgElevated: _loud) : null,
-    ),
+    (c) =>
+        _popconfirm(c ? const PopconfirmToken(colorBgElevated: _loud) : null),
     act: _pressAnchor,
   ),
   _Probe(
@@ -3645,16 +3593,13 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'PopconfirmToken.titleFontSize',
-    (c) => _popconfirm(
-      c ? const PopconfirmToken(titleFontSize: 28) : null,
-    ),
+    (c) => _popconfirm(c ? const PopconfirmToken(titleFontSize: 28) : null),
     act: _pressAnchor,
   ),
   _Probe(
     'PopconfirmToken.descriptionFontSize',
-    (c) => _popconfirm(
-      c ? const PopconfirmToken(descriptionFontSize: 24) : null,
-    ),
+    (c) =>
+        _popconfirm(c ? const PopconfirmToken(descriptionFontSize: 24) : null),
     act: _pressAnchor,
   ),
   _Probe(
@@ -3697,92 +3642,135 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'ModalToken.colorBgElevated',
-    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+    (c) => _raiseButton(
+      () => Modal.open(
+        const ModalConfig(
           title: Text('A modal'),
           content: Text('With a line in it'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        modal: c ? const ModalToken(colorBgElevated: _loud) : null),
+      modal: c ? const ModalToken(colorBgElevated: _loud) : null,
+    ),
     act: _pressRaise,
   ),
   _Probe(
     'ModalToken.colorBgMask',
-    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+    (c) => _raiseButton(
+      () => Modal.open(
+        const ModalConfig(
           title: Text('A modal'),
           content: Text('With a line in it'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        modal: c ? const ModalToken(colorBgMask: _loud) : null),
+      modal: c ? const ModalToken(colorBgMask: _loud) : null,
+    ),
     act: _pressRaise,
   ),
   _Probe(
     'ModalToken.padding',
-    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+    (c) => _raiseButton(
+      () => Modal.open(
+        const ModalConfig(
           title: Text('A modal'),
           content: Text('With a line in it'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        modal: c ? const ModalToken(padding: EdgeInsets.all(48)) : null),
+      modal: c ? const ModalToken(padding: EdgeInsets.all(48)) : null,
+    ),
     act: _pressRaise,
   ),
   _Probe(
     'ModalToken.borderRadius',
-    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+    (c) => _raiseButton(
+      () => Modal.open(
+        const ModalConfig(
           title: Text('A modal'),
           content: Text('With a line in it'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) =>
         ComponentsConfig(modal: c ? const ModalToken(borderRadius: 0) : null),
     act: _pressRaise,
   ),
   _Probe(
     'ModalToken.titleFontSize',
-    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+    (c) => _raiseButton(
+      () => Modal.open(
+        const ModalConfig(
           title: Text('A modal'),
           content: Text('With a line in it'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) =>
         ComponentsConfig(modal: c ? const ModalToken(titleFontSize: 32) : null),
     act: _pressRaise,
   ),
   _Probe(
     'ModalToken.contentFontSize',
-    (c) => _raiseButton(() => Modal.open(const ModalConfig(
+    (c) => _raiseButton(
+      () => Modal.open(
+        const ModalConfig(
           title: Text('A modal'),
           content: Text('With a line in it'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        modal: c ? const ModalToken(contentFontSize: 26) : null),
+      modal: c ? const ModalToken(contentFontSize: 26) : null,
+    ),
     act: _pressRaise,
   ),
   _Probe(
     'DrawerToken.colorBgElevated',
-    (c) => _raiseButton(() => Drawer.open(const DrawerConfig(
+    (c) => _raiseButton(
+      () => Drawer.open(
+        const DrawerConfig(
           title: Text('A drawer'),
           child: Text('With a line in it'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        drawer: c ? const DrawerToken(colorBgElevated: _loud) : null),
+      drawer: c ? const DrawerToken(colorBgElevated: _loud) : null,
+    ),
     act: _pressRaise,
   ),
   _Probe(
     'DrawerToken.colorBgMask',
-    (c) => _raiseButton(() => Drawer.open(const DrawerConfig(
+    (c) => _raiseButton(
+      () => Drawer.open(
+        const DrawerConfig(
           title: Text('A drawer'),
           child: Text('With a line in it'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        drawer: c ? const DrawerToken(colorBgMask: _loud) : null),
+      drawer: c ? const DrawerToken(colorBgMask: _loud) : null,
+    ),
     act: _pressRaise,
   ),
   _Probe(
     'DrawerToken.padding',
-    (c) => _raiseButton(() => Drawer.open(const DrawerConfig(
+    (c) => _raiseButton(
+      () => Drawer.open(
+        const DrawerConfig(
           title: Text('A drawer'),
           child: Text('With a line in it'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        drawer: c ? const DrawerToken(padding: EdgeInsets.all(48)) : null),
+      drawer: c ? const DrawerToken(padding: EdgeInsets.all(48)) : null,
+    ),
     act: _pressRaise,
   ),
   _Probe(
@@ -3835,65 +3823,94 @@ final _probes = <_Probe>[
   ),
   _Probe(
     'NotificationToken.colorBgElevated',
-    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+    (c) => _raiseButton(
+      () => notification.open(
+        const NotificationConfig(
           message: Text('A notice'),
           description: Text('And what it says'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        notification:
-            c ? const NotificationToken(colorBgElevated: _loud) : null),
+      notification: c ? const NotificationToken(colorBgElevated: _loud) : null,
+    ),
     act: _pressBriefly,
   ),
   _Probe(
     'NotificationToken.padding',
-    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+    (c) => _raiseButton(
+      () => notification.open(
+        const NotificationConfig(
           message: Text('A notice'),
           description: Text('And what it says'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        notification:
-            c ? const NotificationToken(padding: EdgeInsets.all(40)) : null),
+      notification: c
+          ? const NotificationToken(padding: EdgeInsets.all(40))
+          : null,
+    ),
     act: _pressBriefly,
   ),
   _Probe(
     'NotificationToken.borderRadius',
-    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+    (c) => _raiseButton(
+      () => notification.open(
+        const NotificationConfig(
           message: Text('A notice'),
           description: Text('And what it says'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        notification: c ? const NotificationToken(borderRadius: 0) : null),
+      notification: c ? const NotificationToken(borderRadius: 0) : null,
+    ),
     act: _pressBriefly,
   ),
   _Probe(
     'NotificationToken.titleFontSize',
-    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+    (c) => _raiseButton(
+      () => notification.open(
+        const NotificationConfig(
           message: Text('A notice'),
           description: Text('And what it says'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        notification: c ? const NotificationToken(titleFontSize: 30) : null),
+      notification: c ? const NotificationToken(titleFontSize: 30) : null,
+    ),
     act: _pressBriefly,
   ),
   _Probe(
     'NotificationToken.descriptionFontSize',
-    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+    (c) => _raiseButton(
+      () => notification.open(
+        const NotificationConfig(
           message: Text('A notice'),
           description: Text('And what it says'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        notification:
-            c ? const NotificationToken(descriptionFontSize: 24) : null),
+      notification: c ? const NotificationToken(descriptionFontSize: 24) : null,
+    ),
     act: _pressBriefly,
   ),
   _Probe(
     'NotificationToken.width',
-    (c) => _raiseButton(() => notification.open(const NotificationConfig(
+    (c) => _raiseButton(
+      () => notification.open(
+        const NotificationConfig(
           message: Text('A notice'),
           description: Text('And what it says'),
-        ))),
+        ),
+      ),
+    ),
     theme: (c) => ComponentsConfig(
-        notification: c ? const NotificationToken(width: 500) : null),
+      notification: c ? const NotificationToken(width: 500) : null,
+    ),
     act: _pressBriefly,
   ),
   _Probe(

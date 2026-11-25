@@ -43,11 +43,7 @@ enum RibbonPlacement {
 @immutable
 class BadgeDefaults {
   /// Creates a [BadgeDefaults].
-  const BadgeDefaults({
-    this.size,
-    this.overflowCount,
-    this.showZero,
-  });
+  const BadgeDefaults({this.size, this.overflowCount, this.showZero});
 
   /// Which size badges take, unless one names its own.
   final SoftSize? size;
@@ -60,10 +56,10 @@ class BadgeDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   BadgeDefaults merge(BadgeDefaults other) => BadgeDefaults(
-        size: other.size ?? size,
-        overflowCount: other.overflowCount ?? overflowCount,
-        showZero: other.showZero ?? showZero,
-      );
+    size: other.size ?? size,
+    overflowCount: other.overflowCount ?? overflowCount,
+    showZero: other.showZero ?? showZero,
+  );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -113,27 +109,27 @@ class BadgeToken {
   final Color? ringColor;
 
   _ResolvedBadgeToken _resolve(Token t) => _ResolvedBadgeToken(
-        indicatorHeight: indicatorHeight ?? 20,
-        indicatorHeightSM: indicatorHeightSM ?? 14,
-        dotSize: dotSize ?? 6,
-        statusSize: statusSize ?? 6,
-        fontSize: fontSize ?? t.fontSizeSM,
-        bg: bg ?? t.error.base,
-        textColor: textColor,
-        ringColor: ringColor ?? t.colorBgContainer,
-      );
+    indicatorHeight: indicatorHeight ?? 20,
+    indicatorHeightSM: indicatorHeightSM ?? 14,
+    dotSize: dotSize ?? 6,
+    statusSize: statusSize ?? 6,
+    fontSize: fontSize ?? t.fontSizeSM,
+    bg: bg ?? t.error.base,
+    textColor: textColor,
+    ringColor: ringColor ?? t.colorBgContainer,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   BadgeToken merge(BadgeToken other) => BadgeToken(
-        indicatorHeight: other.indicatorHeight ?? indicatorHeight,
-        indicatorHeightSM: other.indicatorHeightSM ?? indicatorHeightSM,
-        dotSize: other.dotSize ?? dotSize,
-        statusSize: other.statusSize ?? statusSize,
-        fontSize: other.fontSize ?? fontSize,
-        bg: other.bg ?? bg,
-        textColor: other.textColor ?? textColor,
-        ringColor: other.ringColor ?? ringColor,
-      );
+    indicatorHeight: other.indicatorHeight ?? indicatorHeight,
+    indicatorHeightSM: other.indicatorHeightSM ?? indicatorHeightSM,
+    dotSize: other.dotSize ?? dotSize,
+    statusSize: other.statusSize ?? statusSize,
+    fontSize: other.fontSize ?? fontSize,
+    bg: other.bg ?? bg,
+    textColor: other.textColor ?? textColor,
+    ringColor: other.ringColor ?? ringColor,
+  );
 }
 
 @immutable
@@ -256,10 +252,11 @@ class Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (token ??
-            ConfigProvider.componentOf<BadgeToken>(context) ??
-            const BadgeToken())
-        ._resolve(t);
+    final r =
+        (token ??
+                ConfigProvider.componentOf<BadgeToken>(context) ??
+                const BadgeToken())
+            ._resolve(t);
     final d = ConfigProvider.defaultsOf<BadgeDefaults>(context);
     final showZero = this.showZero ?? d?.showZero ?? false;
     final overflowCount = this.overflowCount ?? d?.overflowCount ?? 99;
@@ -286,8 +283,13 @@ class Badge extends StatelessWidget {
             // pop rather than easing politely into place.
             curve: const Cubic(0.12, 0.4, 0.29, 1.46),
             reverseCurve: t.motionEaseInOut,
-            child:
-                _buildIndicator(t, r, context.seedLocale, overflowCount, size),
+            child: _buildIndicator(
+              t,
+              r,
+              context.seedLocale,
+              overflowCount,
+              size,
+            ),
           )
         : null;
 
@@ -338,12 +340,12 @@ class Badge extends StatelessWidget {
   }
 
   static Color _statusColor(Token t, BadgeStatus status) => switch (status) {
-        BadgeStatus.neutral => t.colorTextTertiary,
-        BadgeStatus.success => t.success.base,
-        BadgeStatus.processing => t.primary.base,
-        BadgeStatus.warning => t.warning.base,
-        BadgeStatus.error => t.error.base,
-      };
+    BadgeStatus.neutral => t.colorTextTertiary,
+    BadgeStatus.success => t.success.base,
+    BadgeStatus.processing => t.primary.base,
+    BadgeStatus.warning => t.warning.base,
+    BadgeStatus.error => t.error.base,
+  };
 
   Widget _buildIndicator(
     Token t,
@@ -371,8 +373,9 @@ class Badge extends StatelessWidget {
       );
     }
 
-    final height =
-        size == SoftSize.small ? r.indicatorHeightSM : r.indicatorHeight;
+    final height = size == SoftSize.small
+        ? r.indicatorHeightSM
+        : r.indicatorHeight;
     final style = TextStyle(
       fontFamily: t.fontFamily,
       fontFamilyFallback: t.fontFamilyFallback,
@@ -388,13 +391,15 @@ class Badge extends StatelessWidget {
     // Content stands alone: it is offered without a count as readily as with
     // one, so there may be no number here to render at all.
     final n = count;
-    final text =
-        n == null ? null : (n > overflowCount ? '$overflowCount+' : '$n');
+    final text = n == null
+        ? null
+        : (n > overflowCount ? '$overflowCount+' : '$n');
     // Only a plain integer rolls. Past the overflow the badge says `99+`,
     // which is not a number going anywhere.
     final rolls =
         text != null && text.codeUnits.every((c) => c >= 0x30 && c <= 0x39);
-    final label = content ??
+    final label =
+        content ??
         (rolls
             ? _ScrollNumber(count: n!, text: text, style: style)
             : Text(l.figures(text ?? ''), style: style));
@@ -428,9 +433,7 @@ class Badge extends StatelessWidget {
           // The ring sits outside the pill rather than being a border, which
           // would eat into the height the tokens name and leave the badge
           // shorter than it asked to be.
-          boxShadow: [
-            BoxShadow(color: r.ringColor, spreadRadius: t.lineWidth),
-          ],
+          boxShadow: [BoxShadow(color: r.ringColor, spreadRadius: t.lineWidth)],
         ),
         // Centred with a factor of one rather than through the container's
         // alignment: a container told to align its child takes all the width
@@ -449,10 +452,10 @@ class _Dot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      );
+    width: size,
+    height: size,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  );
 }
 
 /// A dot with a ring that grows out of it and fades, over and over.
@@ -491,7 +494,9 @@ class _ProcessingDotState extends State<_ProcessingDot>
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Positioned.fill(child: _Dot(size: widget.size, color: widget.color)),
+          Positioned.fill(
+            child: _Dot(size: widget.size, color: widget.color),
+          ),
           Positioned.fill(
             child: FadeTransition(
               opacity: Tween<double>(begin: 0.5, end: 0).animate(_c),
@@ -533,19 +538,19 @@ class RibbonToken {
   final Color? textColor;
 
   _ResolvedRibbonToken _resolve(Token t) => _ResolvedRibbonToken(
-        height: height ?? 22,
-        fontSize: fontSize ?? t.fontSize,
-        bg: bg ?? t.primary.base,
-        textColor: textColor,
-      );
+    height: height ?? 22,
+    fontSize: fontSize ?? t.fontSize,
+    bg: bg ?? t.primary.base,
+    textColor: textColor,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   RibbonToken merge(RibbonToken other) => RibbonToken(
-        height: other.height ?? height,
-        fontSize: other.fontSize ?? fontSize,
-        bg: other.bg ?? bg,
-        textColor: other.textColor ?? textColor,
-      );
+    height: other.height ?? height,
+    fontSize: other.fontSize ?? fontSize,
+    bg: other.bg ?? bg,
+    textColor: other.textColor ?? textColor,
+  );
 }
 
 @immutable
@@ -575,9 +580,8 @@ class RibbonDefaults {
   final RibbonPlacement? placement;
 
   /// This one with [other]'s fields laid over it, one field at a time.
-  RibbonDefaults merge(RibbonDefaults other) => RibbonDefaults(
-        placement: other.placement ?? placement,
-      );
+  RibbonDefaults merge(RibbonDefaults other) =>
+      RibbonDefaults(placement: other.placement ?? placement);
 }
 
 /// A label banded across the top corner of what it describes.
@@ -621,10 +625,11 @@ class Ribbon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (token ??
-            ConfigProvider.componentOf<RibbonToken>(context) ??
-            const RibbonToken())
-        ._resolve(t);
+    final r =
+        (token ??
+                ConfigProvider.componentOf<RibbonToken>(context) ??
+                const RibbonToken())
+            ._resolve(t);
     final fill = color ?? r.bg;
     // Which physical side the band runs off. [placement] names a reading end,
     // and the two agree only in a left-to-right layout — so this is worked out
@@ -633,7 +638,8 @@ class Ribbon extends StatelessWidget {
     // physical while the column's own alignment was directional, so they
     // disagreed and the band came apart.
     final resolvedPlacement = _placementIn(context);
-    final onRight = (resolvedPlacement == RibbonPlacement.end) !=
+    final onRight =
+        (resolvedPlacement == RibbonPlacement.end) !=
         (Directionality.of(context) == TextDirection.rtl);
     final corner = Radius.circular(t.borderRadiusSM);
 

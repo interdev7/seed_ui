@@ -11,7 +11,9 @@ library;
 
 import 'dart:async';
 
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -21,14 +23,12 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/services.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host() => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: const Scaffold(body: SizedBox()),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: const Scaffold(body: SizedBox()),
+);
 
 /// See the note in `message_test.dart`: `pumpAndSettle` cannot be used
 /// because a loading [Spinner] never stops animating.
@@ -67,8 +67,9 @@ void main() {
     expect(find.text('Delete?'), findsNothing);
   });
 
-  testWidgets('tapping the mask dismisses, unless maskClosable is false',
-      (tester) async {
+  testWidgets('tapping the mask dismisses, unless maskClosable is false', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
 
     Modal.confirm(title: 'Closable');
@@ -102,8 +103,9 @@ void main() {
     expect(find.text('Press escape'), findsNothing);
   });
 
-  testWidgets('an async onOk holds the modal open until it settles',
-      (tester) async {
+  testWidgets('an async onOk holds the modal open until it settles', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
 
     final gate = Completer<void>();
@@ -165,8 +167,9 @@ void main() {
     await _settle(tester);
   });
 
-  testWidgets('modals stack, and destroyAll clears every layer',
-      (tester) async {
+  testWidgets('modals stack, and destroyAll clears every layer', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
 
     Modal.confirm(title: 'outer');
@@ -236,10 +239,10 @@ void main() {
 
   group('where the cross stands, and what makes room for it', () {
     Finder cross() => find.byWidgetPredicate(
-          (w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == 'CrossPainter',
-        );
+      (w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == 'CrossPainter',
+    );
 
     /// Opens a modal whose body is a box that takes all the width it is given.
     Future<void> open(
@@ -265,7 +268,8 @@ void main() {
         ModalConfig(
           title: title
               ? const Text(
-                  'A title long enough to reach the corner of the card')
+                  'A title long enough to reach the corner of the card',
+                )
               : null,
           content: const SizedBox(
             key: Key('body'),
@@ -292,9 +296,7 @@ void main() {
       expect(bodyWidth(tester), lessThan(whole));
     });
 
-    testWidgets('in the corner the content has the full width', (
-      tester,
-    ) async {
+    testWidgets('in the corner the content has the full width', (tester) async {
       await open(tester, closable: false);
       final whole = bodyWidth(tester);
 
@@ -352,11 +354,13 @@ void main() {
       );
       await _settle(tester);
 
-      await tester.tap(find.byWidgetPredicate(
-        (w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString() == 'CrossPainter',
-      ));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == 'CrossPainter',
+        ),
+      );
       await _settle(tester);
 
       expect(await future, isFalse);

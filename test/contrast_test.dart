@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         Badge,
         ThemeData,
@@ -10,7 +11,6 @@ import 'package:flutter/material.dart'
         Switch,
         Tooltip,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// Words drawn on a fill are held to the contrast a screen asks of them.
@@ -47,9 +47,11 @@ Color _inkOf(WidgetTester tester, String text) {
 }
 
 Widget _host(Widget child, {bool dark = false}) => ConfigProvider(
-      theme: ThemeData(dark: dark),
-      child: MaterialApp(home: Scaffold(body: Center(child: child))),
-    );
+  theme: ThemeData(dark: dark),
+  child: MaterialApp(
+    home: Scaffold(body: Center(child: child)),
+  ),
+);
 
 void main() {
   for (final dark in [false, true]) {
@@ -90,9 +92,7 @@ void main() {
     expect(_inkOf(tester, 'AB'), const Color(0xFF0000FF));
   });
 
-  testWidgets("a badge's count reads on a yellow it was given", (
-    tester,
-  ) async {
+  testWidgets("a badge's count reads on a yellow it was given", (tester) async {
     await tester.pumpWidget(
       _host(
         const Badge(
@@ -112,9 +112,7 @@ void main() {
     expect(_inkOf(tester, '5'), const Color(0xFFFFFFFF));
   });
 
-  testWidgets("a ribbon's words read on a yellow it was given", (
-    tester,
-  ) async {
+  testWidgets("a ribbon's words read on a yellow it was given", (tester) async {
     await tester.pumpWidget(
       _host(
         const Ribbon(
@@ -144,9 +142,7 @@ void main() {
     expect(_contrast(_inkOf(tester, '60%'), _pale), greaterThan(4.5));
   });
 
-  testWidgets("a figure inside the kit's own bar stays white", (
-    tester,
-  ) async {
+  testWidgets("a figure inside the kit's own bar stays white", (tester) async {
     await tester.pumpWidget(
       _host(
         const SizedBox(

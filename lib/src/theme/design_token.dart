@@ -39,7 +39,7 @@ enum SoftSize implements ControlSize {
   middle,
 
   /// The roomy preset, for primary calls to action.
-  large;
+  large,
 }
 
 /// A [ControlSize] naming a width and leaving the height to the presets.
@@ -240,22 +240,22 @@ class ColorGroup {
     required this.textHover,
     required this.text,
     required this.textActive,
-    Color? onBase,
-  }) : _onBase = onBase;
+    this._onBase,
+  });
 
   /// Creates a [ColorGroup] via [ColorGroup.fromPalette].
   factory ColorGroup.fromPalette(List<Color> p) => ColorGroup(
-        bg: p[0],
-        bgHover: _bgHover(p),
-        border: p[2],
-        borderHover: p[3],
-        hover: p[4],
-        base: p[5],
-        active: p[6],
-        textHover: p[4],
-        text: p[5],
-        textActive: p[6],
-      );
+    bg: p[0],
+    bgHover: _bgHover(p),
+    border: p[2],
+    borderHover: p[3],
+    hover: p[4],
+    base: p[5],
+    active: p[6],
+    textHover: p[4],
+    text: p[5],
+    textActive: p[6],
+  );
 
   /// The tinted background a `filled` surface takes on hover.
   ///
@@ -331,18 +331,18 @@ class ColorGroup {
 
   /// This group with [ink] as its [onBase].
   ColorGroup withInk(Color ink) => ColorGroup(
-        bg: bg,
-        bgHover: bgHover,
-        border: border,
-        borderHover: borderHover,
-        hover: hover,
-        base: base,
-        active: active,
-        textHover: textHover,
-        text: text,
-        textActive: textActive,
-        onBase: ink,
-      );
+    bg: bg,
+    bgHover: bgHover,
+    border: border,
+    borderHover: borderHover,
+    hover: hover,
+    base: base,
+    active: active,
+    textHover: textHover,
+    text: text,
+    textActive: textActive,
+    onBase: ink,
+  );
 }
 
 /// The resolved theme values components actually read.
@@ -403,16 +403,16 @@ class Token {
     // its warmth into every derived text and fill.
     final textBase = dark
         ? (seed.colorTextBase.computeLuminance() > 0.5
-            ? seed.colorTextBase
-            : const Color(0xFFFFFFFF))
+              ? seed.colorTextBase
+              : const Color(0xFFFFFFFF))
         : seed.colorTextBase;
 
     /// Moves [c] towards black (negative) or white (positive).
     Color shade(Color c, double amount) => Color.lerp(
-          c,
-          amount < 0 ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
-          amount.abs(),
-        )!;
+      c,
+      amount < 0 ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
+      amount.abs(),
+    )!;
 
     return Token._(
       seed: seed,
@@ -447,8 +447,9 @@ class Token {
       colorBgLayout: tinted
           ? shade(seed.colorBgBase, dark ? -0.30 : -0.04)
           : (dark ? const Color(0xFF000000) : const Color(0xFFF5F5F5)),
-      colorBgSpotlight:
-          dark ? const Color(0xFF424242) : alphaOn(textBase, 0.85),
+      colorBgSpotlight: dark
+          ? const Color(0xFF424242)
+          : alphaOn(textBase, 0.85),
       colorBgMask: alphaOn(const Color(0xFF000000), 0.45),
       // A light overlay on a dark surface reads far fainter than a dark one on
       // a light surface, so the dark theme needs higher alphas to stay visible
@@ -536,34 +537,33 @@ class Token {
     Color? colorFillQuaternary,
     List<BoxShadow>? boxShadow,
     List<BoxShadow>? boxShadowSecondary,
-  }) =>
-      Token._(
-        seed: seed ?? this.seed,
-        isDark: isDark ?? this.isDark,
-        primary: primary ?? this.primary,
-        success: success ?? this.success,
-        warning: warning ?? this.warning,
-        error: error ?? this.error,
-        info: info ?? this.info,
-        colorText: colorText ?? this.colorText,
-        colorTextSecondary: colorTextSecondary ?? this.colorTextSecondary,
-        colorTextTertiary: colorTextTertiary ?? this.colorTextTertiary,
-        colorTextQuaternary: colorTextQuaternary ?? this.colorTextQuaternary,
-        colorBorder: colorBorder ?? this.colorBorder,
-        colorBorderSecondary: colorBorderSecondary ?? this.colorBorderSecondary,
-        colorSplit: colorSplit ?? this.colorSplit,
-        colorBgContainer: colorBgContainer ?? this.colorBgContainer,
-        colorBgElevated: colorBgElevated ?? this.colorBgElevated,
-        colorBgLayout: colorBgLayout ?? this.colorBgLayout,
-        colorBgSpotlight: colorBgSpotlight ?? this.colorBgSpotlight,
-        colorBgMask: colorBgMask ?? this.colorBgMask,
-        colorFill: colorFill ?? this.colorFill,
-        colorFillSecondary: colorFillSecondary ?? this.colorFillSecondary,
-        colorFillTertiary: colorFillTertiary ?? this.colorFillTertiary,
-        colorFillQuaternary: colorFillQuaternary ?? this.colorFillQuaternary,
-        boxShadow: boxShadow ?? this.boxShadow,
-        boxShadowSecondary: boxShadowSecondary ?? this.boxShadowSecondary,
-      );
+  }) => Token._(
+    seed: seed ?? this.seed,
+    isDark: isDark ?? this.isDark,
+    primary: primary ?? this.primary,
+    success: success ?? this.success,
+    warning: warning ?? this.warning,
+    error: error ?? this.error,
+    info: info ?? this.info,
+    colorText: colorText ?? this.colorText,
+    colorTextSecondary: colorTextSecondary ?? this.colorTextSecondary,
+    colorTextTertiary: colorTextTertiary ?? this.colorTextTertiary,
+    colorTextQuaternary: colorTextQuaternary ?? this.colorTextQuaternary,
+    colorBorder: colorBorder ?? this.colorBorder,
+    colorBorderSecondary: colorBorderSecondary ?? this.colorBorderSecondary,
+    colorSplit: colorSplit ?? this.colorSplit,
+    colorBgContainer: colorBgContainer ?? this.colorBgContainer,
+    colorBgElevated: colorBgElevated ?? this.colorBgElevated,
+    colorBgLayout: colorBgLayout ?? this.colorBgLayout,
+    colorBgSpotlight: colorBgSpotlight ?? this.colorBgSpotlight,
+    colorBgMask: colorBgMask ?? this.colorBgMask,
+    colorFill: colorFill ?? this.colorFill,
+    colorFillSecondary: colorFillSecondary ?? this.colorFillSecondary,
+    colorFillTertiary: colorFillTertiary ?? this.colorFillTertiary,
+    colorFillQuaternary: colorFillQuaternary ?? this.colorFillQuaternary,
+    boxShadow: boxShadow ?? this.boxShadow,
+    boxShadowSecondary: boxShadowSecondary ?? this.boxShadowSecondary,
+  );
 
   /// The seed values this token set was derived from.
   final SeedToken seed;

@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart'
+import 'package:flutter/semantics.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         Checkbox,
         Radio,
@@ -12,8 +14,6 @@ import 'package:flutter/material.dart'
         Slider,
         RangeSlider,
         Divider;
-import 'package:flutter/semantics.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// One control, one stop for a screen reader.
@@ -63,12 +63,9 @@ void main() {
     ),
     (
       'a float button',
-      FloatButton(onPressed: () {}, icon: const Icon(Icons.add))
+      FloatButton(onPressed: () {}, icon: const Icon(Icons.add)),
     ),
-    (
-      'a checkbox',
-      Checkbox(onChanged: (_) {}, label: const Text('Remember')),
-    ),
+    ('a checkbox', Checkbox(onChanged: (_) {}, label: const Text('Remember'))),
     (
       'a radio',
       Radio<String>(
@@ -152,7 +149,9 @@ void main() {
     (
       'a date picker',
       SizedBox(
-          width: 200, child: DatePicker(placeholder: 'Day', onChanged: (_) {})),
+        width: 200,
+        child: DatePicker(placeholder: 'Day', onChanged: (_) {}),
+      ),
     ),
     (
       'a slider',
@@ -165,7 +164,10 @@ void main() {
         child: Steps(
           current: 0,
           onChanged: (_) {},
-          items: const [StepItem(title: Text('A')), StepItem(title: Text('B'))],
+          items: const [
+            StepItem(title: Text('A')),
+            StepItem(title: Text('B')),
+          ],
         ),
       ),
     ),
@@ -202,10 +204,7 @@ void main() {
         child: Text('Open'),
       ),
     ),
-    (
-      'an alert',
-      const Alert(message: Text('Saved'), closable: true),
-    ),
+    ('an alert', const Alert(message: Text('Saved'), closable: true)),
   ];
 
   for (final (name, widget) in cases) {

@@ -79,8 +79,6 @@ jobs:
         if: steps.guard.outputs.fresh == 'true'
         with:
           channel: stable
-          # The same Flutter as CI's strict checks (see ci.yaml)
-          flutter-version: 3.44.4
           cache: true
 
       - name: Install dependencies

@@ -85,16 +85,16 @@ enum FloatButtonDirection {
   /// A zero component is the point of the whole type: it says *neither side*,
   /// which four corners could not.
   Offset? get vector => switch (this) {
-        FloatButtonDirection.auto => null,
-        FloatButtonDirection.top => const Offset(0, -1),
-        FloatButtonDirection.topRight => const Offset(1, -1),
-        FloatButtonDirection.right => const Offset(1, 0),
-        FloatButtonDirection.bottomRight => const Offset(1, 1),
-        FloatButtonDirection.bottom => const Offset(0, 1),
-        FloatButtonDirection.bottomLeft => const Offset(-1, 1),
-        FloatButtonDirection.left => const Offset(-1, 0),
-        FloatButtonDirection.topLeft => const Offset(-1, -1),
-      };
+    FloatButtonDirection.auto => null,
+    FloatButtonDirection.top => const Offset(0, -1),
+    FloatButtonDirection.topRight => const Offset(1, -1),
+    FloatButtonDirection.right => const Offset(1, 0),
+    FloatButtonDirection.bottomRight => const Offset(1, 1),
+    FloatButtonDirection.bottom => const Offset(0, 1),
+    FloatButtonDirection.bottomLeft => const Offset(-1, 1),
+    FloatButtonDirection.left => const Offset(-1, 0),
+    FloatButtonDirection.topLeft => const Offset(-1, -1),
+  };
 }
 
 /// What opens a [FloatButtonGroup].
@@ -199,11 +199,11 @@ sealed class FloatButtonLayout {
   /// Snaps a direction to the side it points at most.
   static FloatButtonLabelPlacement _side(Offset d) => d.dx.abs() >= d.dy.abs()
       ? (d.dx < 0
-          ? FloatButtonLabelPlacement.left
-          : FloatButtonLabelPlacement.right)
+            ? FloatButtonLabelPlacement.left
+            : FloatButtonLabelPlacement.right)
       : (d.dy < 0
-          ? FloatButtonLabelPlacement.top
-          : FloatButtonLabelPlacement.bottom);
+            ? FloatButtonLabelPlacement.top
+            : FloatButtonLabelPlacement.bottom);
 }
 
 /// A straight run of items — [FloatButtonLayout.vertical] or
@@ -213,14 +213,12 @@ sealed class FloatButtonLayout {
 /// splitting it in two would mean writing the same arithmetic twice.
 class FloatButtonLine extends FloatButtonLayout {
   /// A column.
-  const FloatButtonLine.vertical({this.gap})
-      : axis = Axis.vertical,
-        super._();
+  const FloatButtonLine.vertical({this.gap}) : axis = Axis.vertical, super._();
 
   /// A row.
   const FloatButtonLine.horizontal({this.gap})
-      : axis = Axis.horizontal,
-        super._();
+    : axis = Axis.horizontal,
+      super._();
 
   /// The axis the run travels along.
   final Axis axis;
@@ -251,12 +249,12 @@ class FloatButtonLine extends FloatButtonLayout {
       // Perpendicular to the run: a label above an item in a column would sit
       // on the item above it.
       axis == Axis.vertical
-          ? (away.dx > 0
-              ? FloatButtonLabelPlacement.right
-              : FloatButtonLabelPlacement.left)
-          : (away.dy > 0
-              ? FloatButtonLabelPlacement.bottom
-              : FloatButtonLabelPlacement.top);
+      ? (away.dx > 0
+            ? FloatButtonLabelPlacement.right
+            : FloatButtonLabelPlacement.left)
+      : (away.dy > 0
+            ? FloatButtonLabelPlacement.bottom
+            : FloatButtonLabelPlacement.top);
 }
 
 /// An arc of items swept around the trigger — [FloatButtonLayout.fan].
@@ -268,8 +266,8 @@ class FloatButtonFan extends FloatButtonLayout {
     this.start,
     this.jitter = 0,
     this.seed = 0,
-  })  : assert(jitter >= 0 && jitter <= 1, 'jitter runs from 0 to 1'),
-        super._();
+  }) : assert(jitter >= 0 && jitter <= 1, 'jitter runs from 0 to 1'),
+       super._();
 
   /// Distance from the trigger's centre to each item's centre. Null derives
   /// one from the item size and the gap.
@@ -342,10 +340,7 @@ class FloatButtonFan extends FloatButtonLayout {
       // by a few degrees does not — and a spoke is the one direction an item
       // can travel without ever nearing its neighbours.
       final reach = jitter * (item.longestSide + gap) * 1.5;
-      r = math.max(
-        _floor(count, item),
-        r + _noise(seed, index, 2) * reach,
-      );
+      r = math.max(_floor(count, item), r + _noise(seed, index, 2) * reach);
     }
     return Offset(math.cos(angle) * r, math.sin(angle) * r);
   }
@@ -367,8 +362,8 @@ class FloatButtonFan extends FloatButtonLayout {
 class FloatButtonGrid extends FloatButtonLayout {
   /// Creates a grid [columns] wide.
   const FloatButtonGrid(this.columns, {this.gap})
-      : assert(columns > 0, 'a grid needs at least one column'),
-        super._();
+    : assert(columns > 0, 'a grid needs at least one column'),
+      super._();
 
   /// How many items stand side by side before the next row starts.
   final int columns;
@@ -428,8 +423,7 @@ class FloatButtonCustom extends FloatButtonLayout {
     Size item,
     Offset away,
     double gap,
-  ) =>
-      FloatButtonLayout._side(place(index, count));
+  ) => FloatButtonLayout._side(place(index, count));
 }
 
 /// Deterministic noise in -1..1 from a seed, an index and a salt.
@@ -535,61 +529,62 @@ class FloatButtonToken {
   final double? liftScale;
 
   _ResolvedFloatButtonToken _resolve(Token t) => _ResolvedFloatButtonToken(
-        liftScale: liftScale ?? 1.08,
-        size: size ?? t.controlHeightLG + t.sizeXS,
-        sizeSM: sizeSM ?? t.controlHeight + t.sizeXS,
-        sizeLG: sizeLG ?? t.controlHeightLG + t.size,
-        gap: gap ?? t.sizeSM,
-        labelGap: labelGap ?? t.sizeXXS,
-        labelTextColor: labelTextColor ?? t.colorText,
-        labelFontSize: labelFontSize ?? t.fontSizeSM,
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-        // A button's own lift, not `boxShadowSecondary` — the three-layer
-        // shadow a popover floats on, whose eight pixels of spread and
-        // twenty-eight of blur around a forty-eight-pixel button read as a
-        // grey smudge the size of the button beside it.
-        shadow: shadow ??
-            [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.5 : 0.12),
-                offset: const Offset(0, 4),
-                blurRadius: 12,
-                spreadRadius: -2,
-              ),
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.4 : 0.1),
-                offset: const Offset(0, 2),
-                blurRadius: 4,
-                spreadRadius: -1,
-              ),
-            ],
-        motionDuration: motionDuration ?? t.motionDurationSlow,
-        curve: curve ?? t.easeOutBack,
-        maskColor: maskColor ?? const Color(0x00000000),
-        progressColor: progressColor ?? t.primary.base,
-        progressTrailColor: progressTrailColor ?? t.colorBorderSecondary,
-        progressWidth: progressWidth ?? t.lineWidth * 2,
-      );
+    liftScale: liftScale ?? 1.08,
+    size: size ?? t.controlHeightLG + t.sizeXS,
+    sizeSM: sizeSM ?? t.controlHeight + t.sizeXS,
+    sizeLG: sizeLG ?? t.controlHeightLG + t.size,
+    gap: gap ?? t.sizeSM,
+    labelGap: labelGap ?? t.sizeXXS,
+    labelTextColor: labelTextColor ?? t.colorText,
+    labelFontSize: labelFontSize ?? t.fontSizeSM,
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+    // A button's own lift, not `boxShadowSecondary` — the three-layer
+    // shadow a popover floats on, whose eight pixels of spread and
+    // twenty-eight of blur around a forty-eight-pixel button read as a
+    // grey smudge the size of the button beside it.
+    shadow:
+        shadow ??
+        [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.5 : 0.12),
+            offset: const Offset(0, 4),
+            blurRadius: 12,
+            spreadRadius: -2,
+          ),
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.4 : 0.1),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
+            spreadRadius: -1,
+          ),
+        ],
+    motionDuration: motionDuration ?? t.motionDurationSlow,
+    curve: curve ?? t.easeOutBack,
+    maskColor: maskColor ?? const Color(0x00000000),
+    progressColor: progressColor ?? t.primary.base,
+    progressTrailColor: progressTrailColor ?? t.colorBorderSecondary,
+    progressWidth: progressWidth ?? t.lineWidth * 2,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   FloatButtonToken merge(FloatButtonToken other) => FloatButtonToken(
-        liftScale: other.liftScale ?? liftScale,
-        size: other.size ?? size,
-        sizeSM: other.sizeSM ?? sizeSM,
-        sizeLG: other.sizeLG ?? sizeLG,
-        gap: other.gap ?? gap,
-        labelGap: other.labelGap ?? labelGap,
-        labelTextColor: other.labelTextColor ?? labelTextColor,
-        labelFontSize: other.labelFontSize ?? labelFontSize,
-        borderRadius: other.borderRadius ?? borderRadius,
-        shadow: other.shadow ?? shadow,
-        motionDuration: other.motionDuration ?? motionDuration,
-        maskColor: other.maskColor ?? maskColor,
-        progressColor: other.progressColor ?? progressColor,
-        progressTrailColor: other.progressTrailColor ?? progressTrailColor,
-        progressWidth: other.progressWidth ?? progressWidth,
-        curve: other.curve ?? curve,
-      );
+    liftScale: other.liftScale ?? liftScale,
+    size: other.size ?? size,
+    sizeSM: other.sizeSM ?? sizeSM,
+    sizeLG: other.sizeLG ?? sizeLG,
+    gap: other.gap ?? gap,
+    labelGap: other.labelGap ?? labelGap,
+    labelTextColor: other.labelTextColor ?? labelTextColor,
+    labelFontSize: other.labelFontSize ?? labelFontSize,
+    borderRadius: other.borderRadius ?? borderRadius,
+    shadow: other.shadow ?? shadow,
+    motionDuration: other.motionDuration ?? motionDuration,
+    maskColor: other.maskColor ?? maskColor,
+    progressColor: other.progressColor ?? progressColor,
+    progressTrailColor: other.progressTrailColor ?? progressTrailColor,
+    progressWidth: other.progressWidth ?? progressWidth,
+    curve: other.curve ?? curve,
+  );
 }
 
 @immutable
@@ -685,17 +680,17 @@ class FloatButtonDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   FloatButtonDefaults merge(FloatButtonDefaults other) => FloatButtonDefaults(
-        shape: other.shape ?? shape,
-        color: other.color ?? color,
-        size: other.size ?? size,
-        layout: other.layout ?? layout,
-        direction: other.direction ?? direction,
-        trigger: other.trigger ?? trigger,
-        labelPlacement: other.labelPlacement ?? labelPlacement,
-        disabled: other.disabled ?? disabled,
-        dismissible: other.dismissible ?? dismissible,
-        closeOnSelect: other.closeOnSelect ?? closeOnSelect,
-      );
+    shape: other.shape ?? shape,
+    color: other.color ?? color,
+    size: other.size ?? size,
+    layout: other.layout ?? layout,
+    direction: other.direction ?? direction,
+    trigger: other.trigger ?? trigger,
+    labelPlacement: other.labelPlacement ?? labelPlacement,
+    disabled: other.disabled ?? disabled,
+    dismissible: other.dismissible ?? dismissible,
+    closeOnSelect: other.closeOnSelect ?? closeOnSelect,
+  );
 }
 
 /// A button that floats above the page — the round action button that sits in
@@ -825,18 +820,20 @@ class FloatButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.softToken;
     final defaults = ConfigProvider.defaultsOf<FloatButtonDefaults>(context);
-    final r = (token ??
-            ConfigProvider.componentOf<FloatButtonToken>(context) ??
-            const FloatButtonToken())
-        ._resolve(t);
+    final r =
+        (token ??
+                ConfigProvider.componentOf<FloatButtonToken>(context) ??
+                const FloatButtonToken())
+            ._resolve(t);
 
     final buttonShape = shape ?? defaults?.shape ?? ButtonShape.circle;
     final diameter =
         (size ?? defaults?.size ?? ConfigProvider.componentSizeOf(context))
-                ?.resolve1D(small: r.sizeSM, middle: r.size, large: r.sizeLG) ??
-            r.size;
-    final radius =
-        buttonShape == ButtonShape.circle ? diameter / 2 : r.borderRadius;
+            ?.resolve1D(small: r.sizeSM, middle: r.size, large: r.sizeLG) ??
+        r.size;
+    final radius = buttonShape == ButtonShape.circle
+        ? diameter / 2
+        : r.borderRadius;
     final named = color ?? defaults?.color;
 
     // Pinned to one number so the shadow behind the button and the button's
@@ -899,7 +896,8 @@ class FloatButton extends StatelessWidget {
 
     if (label != null) {
       button = _Labelled(
-        placement: labelPlacement ??
+        placement:
+            labelPlacement ??
             defaults?.labelPlacement ??
             FloatButtonLabelPlacement.left,
         size: diameter,
@@ -915,8 +913,9 @@ class FloatButton extends StatelessWidget {
       label: semanticsLabel,
       value: done == null
           ? null
-          : context.seedLocale
-              .figures('${(done.clamp(0.0, 1.0) * 100).round()}%'),
+          : context.seedLocale.figures(
+              '${(done.clamp(0.0, 1.0) * 100).round()}%',
+            ),
       child: button,
     );
     if (!draggable && offset == null && defaultOffset == null) return semantic;
@@ -1044,21 +1043,21 @@ class _Labelled extends StatelessWidget {
     // always wider than that.
     final (Alignment from, Offset by) = switch (placement) {
       FloatButtonLabelPlacement.left || FloatButtonLabelPlacement.auto => (
-          Alignment.centerRight,
-          Offset(-(size + token.labelGap), 0)
-        ),
+        Alignment.centerRight,
+        Offset(-(size + token.labelGap), 0),
+      ),
       FloatButtonLabelPlacement.right => (
-          Alignment.centerLeft,
-          Offset(size + token.labelGap, 0),
-        ),
+        Alignment.centerLeft,
+        Offset(size + token.labelGap, 0),
+      ),
       FloatButtonLabelPlacement.top => (
-          Alignment.bottomCenter,
-          Offset(0, -(size + token.labelGap)),
-        ),
+        Alignment.bottomCenter,
+        Offset(0, -(size + token.labelGap)),
+      ),
       FloatButtonLabelPlacement.bottom => (
-          Alignment.topCenter,
-          Offset(0, size + token.labelGap),
-        ),
+        Alignment.topCenter,
+        Offset(0, size + token.labelGap),
+      ),
     };
 
     // The words and the button read as one thing: the caption sits beside
@@ -1160,20 +1159,19 @@ class FloatButtonItem<T> {
 /// like. A wrapper that changes the item's size is worth knowing about: the
 /// layout spaces items by the size in the token, so something much larger will
 /// crowd its neighbours.
-typedef FloatButtonItemBuilder<T> = Widget Function(
-  BuildContext context,
-  FloatButtonItem<T> item,
-  Widget child,
-);
+typedef FloatButtonItemBuilder<T> =
+    Widget Function(
+      BuildContext context,
+      FloatButtonItem<T> item,
+      Widget child,
+    );
 
 /// Draws the caption beside item [item] in place of its plain text.
 ///
 /// Returning null leaves the item with the caption it would have had, so a
 /// builder can dress one item and let the rest alone.
-typedef FloatButtonLabelBuilder<T> = Widget? Function(
-  BuildContext context,
-  FloatButtonItem<T> item,
-);
+typedef FloatButtonLabelBuilder<T> =
+    Widget? Function(BuildContext context, FloatButtonItem<T> item);
 
 /// Opens and closes a [FloatButtonGroup] from outside the build.
 ///
@@ -1193,7 +1191,7 @@ typedef FloatButtonLabelBuilder<T> = Widget? Function(
 /// owners of one truth is a bug that surfaces late.
 class FloatButtonController extends ChangeNotifier {
   /// Creates a [FloatButtonController].
-  FloatButtonController({bool open = false}) : _open = open;
+  FloatButtonController({this._open = false});
 
   bool _open;
 
@@ -1268,10 +1266,10 @@ class FloatButtonGroup<T> extends StatefulWidget {
     this.semanticsLabel,
     this.token,
   }) : assert(
-          controller == null || open == null,
-          'Give a FloatButtonGroup a controller or an open flag, not both: '
-          'two owners of one truth disagree sooner or later.',
-        );
+         controller == null || open == null,
+         'Give a FloatButtonGroup a controller or an open flag, not both: '
+         'two owners of one truth disagree sooner or later.',
+       );
 
   /// The actions, in the order they spread.
   final List<FloatButtonItem<T>> items;
@@ -1546,10 +1544,11 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     }
   }
 
-  _ResolvedFloatButtonToken _resolved() => (widget.token ??
-          ConfigProvider.componentOf<FloatButtonToken>(context) ??
-          const FloatButtonToken())
-      ._resolve(context.softToken);
+  _ResolvedFloatButtonToken _resolved() =>
+      (widget.token ??
+              ConfigProvider.componentOf<FloatButtonToken>(context) ??
+              const FloatButtonToken())
+          ._resolve(context.softToken);
 
   /// The size every item shares — what the layout spaces them by.
   double _itemSize(_ResolvedFloatButtonToken r) =>
@@ -1700,8 +1699,12 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     final named = _direction.vector;
     if (named != null) {
       _away = named;
-      _wrapped =
-          _wrapIfCornered(rect, screen, Size.square(_itemSize(r)), r.gap);
+      _wrapped = _wrapIfCornered(
+        rect,
+        screen,
+        Size.square(_itemSize(r)),
+        r.gap,
+      );
       return;
     }
 
@@ -1731,7 +1734,8 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
     Widget built = FloatButton(
       icon: item.icon,
       size: widget.size,
-      label: widget.labelBuilder?.call(context, item) ??
+      label:
+          widget.labelBuilder?.call(context, item) ??
           (item.label == null ? null : Text(item.label!)),
       labelPlacement: placement,
       color: item.color ?? widget.color,
@@ -1762,11 +1766,11 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
   /// Translucent on top of that, so anything else — hover, a pointer merely
   /// passing over — reaches the page as well.
   Widget _barrier() => Positioned.fill(
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () => _ask(false),
-        ),
-      );
+    child: GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => _ask(false),
+    ),
+  );
 
   /// The page dimmed behind an open group.
   ///
@@ -1780,23 +1784,21 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
   /// though: that one overshoots, and a colour lerped past its end comes back
   /// as a flash of something darker than was asked for.
   Widget _mask(Color color) => Positioned.fill(
-        child: IgnorePointer(
-          child: FadeTransition(
-            opacity: CurvedAnimation(
-              parent: _controller!,
-              curve: Curves.easeOut,
-            ),
-            child: ColoredBox(color: color),
-          ),
-        ),
-      );
+    child: IgnorePointer(
+      child: FadeTransition(
+        opacity: CurvedAnimation(parent: _controller!, curve: Curves.easeOut),
+        child: ColoredBox(color: color),
+      ),
+    ),
+  );
 
   Widget _buildLayer(BuildContext overlayContext) {
     final r = _resolved();
     final layout = _wrapped ?? _layout;
     final count = widget.items.length;
     final item = Size.square(_itemSize(r));
-    final asked = widget.labelPlacement ??
+    final asked =
+        widget.labelPlacement ??
         _defaults?.labelPlacement ??
         FloatButtonLabelPlacement.auto;
 
@@ -1859,7 +1861,8 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
       token: widget.token,
       semanticsLabel: widget.semanticsLabel,
       onPressed: () => _ask(!_isOpen),
-      icon: widget.icon ??
+      icon:
+          widget.icon ??
           Builder(
             // Inside the button, so IconTheme carries the foreground the
             // button settled on. A plus turned an eighth of a turn is a
@@ -1873,8 +1876,9 @@ class _FloatButtonGroupState<T> extends State<FloatButtonGroup<T>>
                   angle: (_controller?.value ?? 0) * math.pi / 4,
                   child: CustomPaint(
                     size: Size.square(size),
-                    painter:
-                        PlusPainter(theme.color ?? const Color(0xFF000000)),
+                    painter: PlusPainter(
+                      theme.color ?? const Color(0xFF000000),
+                    ),
                   ),
                 ),
               );
@@ -2136,7 +2140,8 @@ class _BackTopState extends State<BackTop> {
     }
 
     final button = FloatButton(
-      icon: widget.icon ??
+      icon:
+          widget.icon ??
           Builder(
             // Inside the button, so it takes the foreground and size the
             // button settled on.
@@ -2145,9 +2150,7 @@ class _BackTopState extends State<BackTop> {
               final size = theme.size ?? 16;
               return CustomPaint(
                 size: Size.square(size),
-                painter: _ToTopPainter(
-                  theme.color ?? const Color(0xFF000000),
-                ),
+                painter: _ToTopPainter(theme.color ?? const Color(0xFF000000)),
               );
             },
           ),
@@ -2195,10 +2198,16 @@ class _ToTopPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
     // The bar along the top.
     canvas.drawLine(
-        Offset(w * 0.18, h * 0.16), Offset(w * 0.82, h * 0.16), paint);
+      Offset(w * 0.18, h * 0.16),
+      Offset(w * 0.82, h * 0.16),
+      paint,
+    );
     // The shaft, from the bottom up towards the bar.
     canvas.drawLine(
-        Offset(w * 0.5, h * 0.88), Offset(w * 0.5, h * 0.36), paint);
+      Offset(w * 0.5, h * 0.88),
+      Offset(w * 0.5, h * 0.36),
+      paint,
+    );
     // The head.
     canvas.drawPath(
       Path()
@@ -2295,10 +2304,14 @@ class _DragShiftState extends State<_DragShift> {
     // Kept whole on the screen: a button carried off its edge is a button
     // nobody can reach to bring back.
     final next = Offset(
-      wanted.dx
-          .clamp(-home.left, math.max(-home.left, screen.width - home.right)),
-      wanted.dy
-          .clamp(-home.top, math.max(-home.top, screen.height - home.bottom)),
+      wanted.dx.clamp(
+        -home.left,
+        math.max(-home.left, screen.width - home.right),
+      ),
+      wanted.dy.clamp(
+        -home.top,
+        math.max(-home.top, screen.height - home.bottom),
+      ),
     );
     if (next == _at) return;
     if (widget.offset == null) setState(() => _own = next);
@@ -2312,32 +2325,32 @@ class _DragShiftState extends State<_DragShift> {
     }
     final Widget carried = switch (widget.dragStart) {
       FloatButtonDragStart.immediate => GestureDetector(
-          // The pointer's alone: the button inside is what a reader meets,
-          // and a drag is not something it can be asked for.
-          excludeFromSemantics: true,
-          // Measured from where the finger came down, not from where the
-          // drag was recognised: the button stays under the finger instead
-          // of trailing it by the slop.
-          dragStartBehavior: DragStartBehavior.down,
-          onPanStart: (d) => _start(d.globalPosition),
-          onPanUpdate: (d) => _move(d.globalPosition),
-          onPanEnd: (_) => _end(),
-          onPanCancel: _end,
+        // The pointer's alone: the button inside is what a reader meets,
+        // and a drag is not something it can be asked for.
+        excludeFromSemantics: true,
+        // Measured from where the finger came down, not from where the
+        // drag was recognised: the button stays under the finger instead
+        // of trailing it by the slop.
+        dragStartBehavior: DragStartBehavior.down,
+        onPanStart: (d) => _start(d.globalPosition),
+        onPanUpdate: (d) => _move(d.globalPosition),
+        onPanEnd: (_) => _end(),
+        onPanCancel: _end,
+        child: widget.child,
+      ),
+      FloatButtonDragStart.longPress => GestureDetector(
+        excludeFromSemantics: true,
+        onLongPressStart: _lift,
+        onLongPressMoveUpdate: (d) => _move(d.globalPosition),
+        onLongPressEnd: (_) => _end(),
+        onLongPressCancel: _end,
+        // A little larger while held: the hand can see it has it.
+        child: AnimatedScale(
+          scale: _lifted ? widget.liftScale : 1,
+          duration: context.softToken.motionDurationFast,
           child: widget.child,
         ),
-      FloatButtonDragStart.longPress => GestureDetector(
-          excludeFromSemantics: true,
-          onLongPressStart: _lift,
-          onLongPressMoveUpdate: (d) => _move(d.globalPosition),
-          onLongPressEnd: (_) => _end(),
-          onLongPressCancel: _end,
-          // A little larger while held: the hand can see it has it.
-          child: AnimatedScale(
-            scale: _lifted ? widget.liftScale : 1,
-            duration: context.softToken.motionDurationFast,
-            child: widget.child,
-          ),
-        ),
+      ),
     };
     return Transform.translate(offset: _at, child: carried);
   }

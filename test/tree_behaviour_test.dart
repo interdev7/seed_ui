@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:ui' show ImageByteFormat;
 
-import 'package:flutter/material.dart'
-    hide Checkbox, ThemeData, Tooltip, Badge, Card, Drawer, Divider;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
+    hide Checkbox, ThemeData, Tooltip, Badge, Card, Drawer, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 /// What a tree does, held still while the way it is built changes underneath.
@@ -47,32 +47,31 @@ Tree _tree(
   bool defaultExpandAll = false,
   bool draggable = false,
   ValueChanged<TreeDropDetails>? onDrop,
-}) =>
-    Tree(
-      height: mode == _Mode.lazy ? _window : null,
-      nodes: nodes,
-      checkable: checkable,
-      selectable: selectable,
-      multiple: multiple,
-      checkStrictly: checkStrictly,
-      showLine: showLine,
-      showLeafIcon: showLeafIcon,
-      showIcon: showIcon,
-      blockNode: blockNode,
-      disabled: disabled,
-      loadData: loadData,
-      defaultCheckedKeys: defaultCheckedKeys,
-      onCheck: onCheck,
-      selectedKeys: selectedKeys,
-      defaultSelectedKeys: defaultSelectedKeys,
-      onSelect: onSelect,
-      expandedKeys: expandedKeys,
-      defaultExpandedKeys: defaultExpandedKeys,
-      onExpand: onExpand,
-      defaultExpandAll: defaultExpandAll,
-      draggable: draggable,
-      onDrop: onDrop,
-    );
+}) => Tree(
+  height: mode == _Mode.lazy ? _window : null,
+  nodes: nodes,
+  checkable: checkable,
+  selectable: selectable,
+  multiple: multiple,
+  checkStrictly: checkStrictly,
+  showLine: showLine,
+  showLeafIcon: showLeafIcon,
+  showIcon: showIcon,
+  blockNode: blockNode,
+  disabled: disabled,
+  loadData: loadData,
+  defaultCheckedKeys: defaultCheckedKeys,
+  onCheck: onCheck,
+  selectedKeys: selectedKeys,
+  defaultSelectedKeys: defaultSelectedKeys,
+  onSelect: onSelect,
+  expandedKeys: expandedKeys,
+  defaultExpandedKeys: defaultExpandedKeys,
+  onExpand: onExpand,
+  defaultExpandAll: defaultExpandAll,
+  draggable: draggable,
+  onDrop: onDrop,
+);
 
 /// A page the tree stands at the top of, in a box as tall as the lazy
 /// window, so both modes are measured against the same frame.
@@ -152,11 +151,11 @@ List<String> _rows(WidgetTester tester) {
 }
 
 Finder _switcherOf(String title) => find.descendant(
-      of: find.ancestor(of: find.text(title), matching: find.byType(Row)).last,
-      matching: find.byWidgetPredicate(
-        (w) => w is CustomPaint && w.painter is ChevronPainter,
-      ),
-    );
+  of: find.ancestor(of: find.text(title), matching: find.byType(Row)).last,
+  matching: find.byWidgetPredicate(
+    (w) => w is CustomPaint && w.painter is ChevronPainter,
+  ),
+);
 
 void main() {
   _pixelTests();
@@ -189,8 +188,13 @@ void main() {
         );
         await tester.tap(_switcherOf('Beta'));
         await tester.pumpAndSettle();
-        expect(
-            _rows(tester), ['Alpha', 'Beta', 'Beta one', 'Beta two', 'Gamma']);
+        expect(_rows(tester), [
+          'Alpha',
+          'Beta',
+          'Beta one',
+          'Beta two',
+          'Gamma',
+        ]);
 
         await tester.tap(_switcherOf('Beta'));
         await tester.pumpAndSettle();
@@ -206,8 +210,13 @@ void main() {
           _host(_tree(mode, nodes: _nodes, expandedKeys: ['b'])),
         );
         await tester.pumpAndSettle();
-        expect(
-            _rows(tester), ['Alpha', 'Beta', 'Beta one', 'Beta two', 'Gamma']);
+        expect(_rows(tester), [
+          'Alpha',
+          'Beta',
+          'Beta one',
+          'Beta two',
+          'Gamma',
+        ]);
       });
 
       testWidgets('selecting one, and several', (tester) async {
@@ -375,14 +384,7 @@ void main() {
       testWidgets('a node dragged onto another is reported', (tester) async {
         final drops = <TreeDropDetails>[];
         await tester.pumpWidget(
-          _host(
-            _tree(
-              mode,
-              nodes: _nodes,
-              draggable: true,
-              onDrop: drops.add,
-            ),
-          ),
+          _host(_tree(mode, nodes: _nodes, draggable: true, onDrop: drops.add)),
         );
         final from = tester.getCenter(find.text('Gamma'));
         final to = tester.getCenter(find.text('Alpha'));
@@ -406,8 +408,9 @@ void main() {
 /// The tree as drawn, as a fingerprint of its pixels.
 Future<int> _shot(WidgetTester tester) async {
   final hash = await tester.runAsync(() async {
-    final boundary = tester
-        .renderObject<RenderRepaintBoundary>(find.byKey(const Key('shot')));
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.byKey(const Key('shot')),
+    );
     final image = await boundary.toImage();
     final data = await image.toByteData(format: ImageByteFormat.rawRgba);
     image.dispose();
@@ -426,33 +429,33 @@ void _pixelTests() {
       'open, plain': (m) =>
           _tree(m, nodes: _nodes, defaultExpandedKeys: ['a', 'a1']),
       'with guide lines and leaf marks': (m) => _tree(
-            m,
-            nodes: _nodes,
-            defaultExpandAll: true,
-            showLine: true,
-            showLeafIcon: true,
-          ),
+        m,
+        nodes: _nodes,
+        defaultExpandAll: true,
+        showLine: true,
+        showLeafIcon: true,
+      ),
       'checkable, half-checked': (m) => _tree(
-            m,
-            nodes: _nodes,
-            checkable: true,
-            defaultExpandAll: true,
-            defaultCheckedKeys: ['a1x'],
-          ),
+        m,
+        nodes: _nodes,
+        checkable: true,
+        defaultExpandAll: true,
+        defaultCheckedKeys: ['a1x'],
+      ),
       'selected, with icons': (m) => _tree(
-            m,
-            nodes: _nodes,
-            defaultExpandAll: true,
-            showIcon: true,
-            defaultSelectedKeys: ['a2'],
-          ),
+        m,
+        nodes: _nodes,
+        defaultExpandAll: true,
+        showIcon: true,
+        defaultSelectedKeys: ['a2'],
+      ),
       'block rows': (m) => _tree(
-            m,
-            nodes: _nodes,
-            defaultExpandAll: true,
-            blockNode: true,
-            defaultSelectedKeys: ['b2'],
-          ),
+        m,
+        nodes: _nodes,
+        defaultExpandAll: true,
+        blockNode: true,
+        defaultSelectedKeys: ['b2'],
+      ),
       'disabled': (m) =>
           _tree(m, nodes: _nodes, defaultExpandAll: true, disabled: true),
       'draggable': (m) =>
@@ -467,9 +470,7 @@ void _pixelTests() {
             // A fresh tree each time: one built in the same place would take
             // over the last one's state, open branches and all.
             await tester.pumpWidget(const SizedBox());
-            await tester.pumpWidget(
-              _host(build(mode), direction: direction),
-            );
+            await tester.pumpWidget(_host(build(mode), direction: direction));
             await tester.pumpAndSettle();
             shots[mode] = await _shot(tester);
           }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart'
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -10,6 +10,7 @@ import 'package:flutter/material.dart'
         Card,
         Divider;
 import 'package:seed_ui/seed_ui.dart';
+
 import '../group.dart';
 
 class SpinDemo extends StatefulWidget {

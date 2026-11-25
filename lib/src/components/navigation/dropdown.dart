@@ -44,7 +44,7 @@ enum DropdownTrigger {
 /// [Dropdown.open], never both.
 class DropdownController extends ChangeNotifier {
   /// Creates a [DropdownController].
-  DropdownController({bool open = false}) : _open = open;
+  DropdownController({this._open = false});
 
   bool _open;
 
@@ -88,11 +88,8 @@ sealed class DropdownEntry<T> {
 /// machinery in order to change the look. Its height does not: a builder that
 /// asks for more than `DropdownToken.itemHeight` takes it. [hovered] is the
 /// one thing it could not work out from the item alone.
-typedef DropdownItemBuilder<T> = Widget Function(
-  BuildContext context,
-  DropdownItem<T> item,
-  bool hovered,
-);
+typedef DropdownItemBuilder<T> =
+    Widget Function(BuildContext context, DropdownItem<T> item, bool hovered);
 
 /// A selectable row in a [Dropdown] menu.
 class DropdownItem<T> extends DropdownEntry<T> {
@@ -249,37 +246,37 @@ class DropdownToken {
   final Color? itemSelectedBg;
 
   _ResolvedDropdownToken _resolve(Token t) => _ResolvedDropdownToken(
-        itemSelectedBg: itemSelectedBg ?? t.primary.bg,
-        itemSelectedColor: itemSelectedColor ?? t.primary.base,
-        menuBg: menuBg ?? t.colorBgElevated,
-        gradient: gradient,
-        padding: padding ?? EdgeInsets.all(t.sizeXXS),
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-        border: border,
-        shadow: shadow ?? t.boxShadowSecondary,
-        gap: gap ?? t.sizeXXS,
-        itemHoverBg: itemHoverBg ?? t.colorFillTertiary,
-        itemHeight: itemHeight ?? t.controlHeight,
-        itemPadding: itemPadding ?? EdgeInsets.symmetric(horizontal: t.sizeSM),
-        barrierColor: barrierColor,
-      );
+    itemSelectedBg: itemSelectedBg ?? t.primary.bg,
+    itemSelectedColor: itemSelectedColor ?? t.primary.base,
+    menuBg: menuBg ?? t.colorBgElevated,
+    gradient: gradient,
+    padding: padding ?? EdgeInsets.all(t.sizeXXS),
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+    border: border,
+    shadow: shadow ?? t.boxShadowSecondary,
+    gap: gap ?? t.sizeXXS,
+    itemHoverBg: itemHoverBg ?? t.colorFillTertiary,
+    itemHeight: itemHeight ?? t.controlHeight,
+    itemPadding: itemPadding ?? EdgeInsets.symmetric(horizontal: t.sizeSM),
+    barrierColor: barrierColor,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   DropdownToken merge(DropdownToken other) => DropdownToken(
-        itemSelectedBg: other.itemSelectedBg ?? itemSelectedBg,
-        itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
-        menuBg: other.menuBg ?? menuBg,
-        gradient: other.gradient ?? gradient,
-        padding: other.padding ?? padding,
-        borderRadius: other.borderRadius ?? borderRadius,
-        border: other.border ?? border,
-        shadow: other.shadow ?? shadow,
-        gap: other.gap ?? gap,
-        itemHoverBg: other.itemHoverBg ?? itemHoverBg,
-        itemHeight: other.itemHeight ?? itemHeight,
-        itemPadding: other.itemPadding ?? itemPadding,
-        barrierColor: other.barrierColor ?? barrierColor,
-      );
+    itemSelectedBg: other.itemSelectedBg ?? itemSelectedBg,
+    itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
+    menuBg: other.menuBg ?? menuBg,
+    gradient: other.gradient ?? gradient,
+    padding: other.padding ?? padding,
+    borderRadius: other.borderRadius ?? borderRadius,
+    border: other.border ?? border,
+    shadow: other.shadow ?? shadow,
+    gap: other.gap ?? gap,
+    itemHoverBg: other.itemHoverBg ?? itemHoverBg,
+    itemHeight: other.itemHeight ?? itemHeight,
+    itemPadding: other.itemPadding ?? itemPadding,
+    barrierColor: other.barrierColor ?? barrierColor,
+  );
 }
 
 @immutable
@@ -349,12 +346,12 @@ class DropdownDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   DropdownDefaults merge(DropdownDefaults other) => DropdownDefaults(
-        placement: other.placement ?? placement,
-        arrow: other.arrow ?? arrow,
-        closeOnSelect: other.closeOnSelect ?? closeOnSelect,
-        trigger: other.trigger ?? trigger,
-        disabled: other.disabled ?? disabled,
-      );
+    placement: other.placement ?? placement,
+    arrow: other.arrow ?? arrow,
+    closeOnSelect: other.closeOnSelect ?? closeOnSelect,
+    trigger: other.trigger ?? trigger,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A menu that floats from a trigger.
@@ -396,14 +393,14 @@ class Dropdown<T> extends StatefulWidget {
     this.itemBuilder,
     this.barrierColor,
     this.token,
-  })  : assert(
-          menu != null || content != null,
-          'Provide either menu or content.',
-        ),
-        assert(
-          controller == null || open == null,
-          'A Dropdown takes a controller or open, not both.',
-        );
+  }) : assert(
+         menu != null || content != null,
+         'Provide either menu or content.',
+       ),
+       assert(
+         controller == null || open == null,
+         'A Dropdown takes a controller or open, not both.',
+       );
 
   /// The trigger the menu anchors to.
   final Widget child;
@@ -492,12 +489,13 @@ class _DropdownState<T> extends State<Dropdown<T>> {
   ///
   /// The deprecated `click` is read as [DropdownTrigger.tap].
   List<DropdownTrigger> get _trigger => [
-        for (final t in widget.trigger ??
+    for (final t
+        in widget.trigger ??
             _defaults?.trigger ??
             const [DropdownTrigger.hover])
-          // ignore: deprecated_member_use_from_same_package
-          t == DropdownTrigger.click ? DropdownTrigger.tap : t,
-      ];
+      // ignore: deprecated_member_use_from_same_package
+      t == DropdownTrigger.click ? DropdownTrigger.tap : t,
+  ];
 
   /// Whether this control is disabled: its own word, else the one set
   /// for the subtree, else no.
@@ -637,10 +635,11 @@ class _DropdownState<T> extends State<Dropdown<T>> {
     final anchor = box.localToGlobal(Offset.zero) & box.size;
     setState(() => _open = true);
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<DropdownToken>(context) ??
-            const DropdownToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<DropdownToken>(context) ??
+                const DropdownToken())
+            ._resolve(token);
     _popover.open(
       placement: _placement,
       anchorRect: anchor,
@@ -843,10 +842,11 @@ class DropdownPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (this.token ??
-            ConfigProvider.componentOf<DropdownToken>(context) ??
-            const DropdownToken())
-        ._resolve(token);
+    final r =
+        (this.token ??
+                ConfigProvider.componentOf<DropdownToken>(context) ??
+                const DropdownToken())
+            ._resolve(token);
     return ConstrainedBox(
       constraints: BoxConstraints(minWidth: minWidth),
       child: DecoratedBox(
@@ -984,8 +984,9 @@ class _DropdownMenuListState<T> extends State<DropdownMenuList<T>> {
     final key = event.logicalKey;
     final rows = _rows;
     final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
-    final out =
-        ltr ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight;
+    final out = ltr
+        ? LogicalKeyboardKey.arrowLeft
+        : LogicalKeyboardKey.arrowRight;
 
     if (key == LogicalKeyboardKey.arrowDown) {
       _move(1);
@@ -1023,10 +1024,11 @@ class _DropdownMenuListState<T> extends State<DropdownMenuList<T>> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<DropdownToken>(context) ??
-            const DropdownToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<DropdownToken>(context) ??
+                const DropdownToken())
+            ._resolve(token);
     final rows = _rows;
     // IntrinsicWidth sizes the menu to its widest row, so the rows' Expanded
     // labels do not stretch the panel to the whole viewport width.
@@ -1194,10 +1196,11 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
     // submenu, so none of them shuts while it is.
     final above = _SubmenuHover.maybeOf(context);
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<DropdownToken>(context) ??
-            const DropdownToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<DropdownToken>(context) ??
+                const DropdownToken())
+            ._resolve(token);
     _submenu.open(
       // Out to the side the menu reads towards, so a mirrored layout opens
       // its submenus away from the parent rather than back over it.
@@ -1250,30 +1253,28 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
 
   /// The icon and the words, as the menu draws them when nothing else does.
   Widget _content(Token token, DropdownItem<T> item) => Row(
-        children: [
-          if (item.icon != null) ...[
-            item.icon!,
-            SizedBox(width: token.sizeXS),
-          ],
-          Expanded(
-            child: Text(
-              item.label ?? '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      );
+    children: [
+      if (item.icon != null) ...[item.icon!, SizedBox(width: token.sizeXS)],
+      Expanded(
+        child: Text(
+          item.label ?? '',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
     final item = widget.item;
     final disabled = item.disabled;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<DropdownToken>(context) ??
-            const DropdownToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<DropdownToken>(context) ??
+                const DropdownToken())
+            ._resolve(token);
     final base = item.danger
         ? token.error.base
         : (item.selected ? r.itemSelectedColor : token.colorText);
@@ -1286,10 +1287,10 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
     final bg = chosen
         ? (item.danger ? token.error.bg : r.itemSelectedBg)
         : lit && !disabled
-            ? wash
-            // The hover's own colour, clear rather than clear black: the row
-            // fades between the two, and from black it passed through grey.
-            : wash.withValues(alpha: 0);
+        ? wash
+        // The hover's own colour, clear rather than clear black: the row
+        // fades between the two, and from black it passed through grey.
+        : wash.withValues(alpha: 0);
 
     return MouseRegion(
       cursor: disabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
@@ -1317,15 +1318,15 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
         onTap: disabled
             ? null
             : item._hasChildren
-                ? _toggleSubmenu
-                : () => widget.onSelect(item),
+            ? _toggleSubmenu
+            : () => widget.onSelect(item),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: disabled
               ? null
               : item._hasChildren
-                  ? _toggleSubmenu
-                  : () => widget.onSelect(item),
+              ? _toggleSubmenu
+              : () => widget.onSelect(item),
           child: AnimatedContainer(
             duration: token.motionDurationFast,
             // A least, not a height. A row drawn by `itemBuilder` that asks
@@ -1357,7 +1358,8 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
                         fontFamilyFallback: token.fontFamilyFallback,
                         decoration: TextDecoration.none,
                       ),
-                      child: widget.itemBuilder?.call(context, item, lit) ??
+                      child:
+                          widget.itemBuilder?.call(context, item, lit) ??
                           _content(token, item),
                     ),
                   ),
@@ -1368,7 +1370,8 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
                     size: const Size(8, 12),
                     painter: _CaretPainter(
                       token.colorTextTertiary,
-                      left: (_submenuSide ??
+                      left:
+                          (_submenuSide ??
                               (Directionality.of(context) == TextDirection.rtl
                                   ? PopoverSide.left
                                   : PopoverSide.right)) ==

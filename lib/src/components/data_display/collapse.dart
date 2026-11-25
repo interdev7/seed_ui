@@ -12,7 +12,7 @@ enum CollapseIconPosition {
   start,
 
   /// The expand icon trails the header.
-  end
+  end,
 }
 
 /// What toggles a [CollapseItem].
@@ -62,22 +62,23 @@ class CollapseToken {
   final double? borderRadius;
 
   _ResolvedCollapseToken _resolve(Token t) => _ResolvedCollapseToken(
-        headerBg: headerBg ?? t.colorFillQuaternary,
-        headerPadding: headerPadding ??
-            EdgeInsets.symmetric(vertical: t.sizeSM, horizontal: t.size),
-        contentBg: contentBg ?? t.colorBgContainer,
-        contentPadding: contentPadding ?? EdgeInsets.all(t.size),
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-      );
+    headerBg: headerBg ?? t.colorFillQuaternary,
+    headerPadding:
+        headerPadding ??
+        EdgeInsets.symmetric(vertical: t.sizeSM, horizontal: t.size),
+    contentBg: contentBg ?? t.colorBgContainer,
+    contentPadding: contentPadding ?? EdgeInsets.all(t.size),
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   CollapseToken merge(CollapseToken other) => CollapseToken(
-        headerBg: other.headerBg ?? headerBg,
-        headerPadding: other.headerPadding ?? headerPadding,
-        contentBg: other.contentBg ?? contentBg,
-        contentPadding: other.contentPadding ?? contentPadding,
-        borderRadius: other.borderRadius ?? borderRadius,
-      );
+    headerBg: other.headerBg ?? headerBg,
+    headerPadding: other.headerPadding ?? headerPadding,
+    contentBg: other.contentBg ?? contentBg,
+    contentPadding: other.contentPadding ?? contentPadding,
+    borderRadius: other.borderRadius ?? borderRadius,
+  );
 }
 
 /// Fully resolved [CollapseToken] — every value non-null.
@@ -99,18 +100,17 @@ class _ResolvedCollapseToken {
 
   /// Header padding scaled for the size preset.
   EdgeInsets headerPad(SoftSize s) => switch (s) {
-        SoftSize.small =>
-          headerPadding * 0.67, // ~8/11 — the small preset is tighter.
-        SoftSize.middle => headerPadding,
-        SoftSize.large =>
-          headerPadding + const EdgeInsets.symmetric(vertical: 4),
-      };
+    SoftSize.small =>
+      headerPadding * 0.67, // ~8/11 — the small preset is tighter.
+    SoftSize.middle => headerPadding,
+    SoftSize.large => headerPadding + const EdgeInsets.symmetric(vertical: 4),
+  };
 
   EdgeInsets contentPad(SoftSize s) => switch (s) {
-        SoftSize.small => contentPadding * 0.67,
-        SoftSize.middle => contentPadding,
-        SoftSize.large => contentPadding,
-      };
+    SoftSize.small => contentPadding * 0.67,
+    SoftSize.middle => contentPadding,
+    SoftSize.large => contentPadding,
+  };
 }
 
 /// One panel in a [Collapse] — a [label] header and its [content] body.
@@ -187,13 +187,13 @@ class CollapseDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   CollapseDefaults merge(CollapseDefaults other) => CollapseDefaults(
-        accordion: other.accordion ?? accordion,
-        bordered: other.bordered ?? bordered,
-        ghost: other.ghost ?? ghost,
-        expandIconPosition: other.expandIconPosition ?? expandIconPosition,
-        collapsible: other.collapsible ?? collapsible,
-        size: other.size ?? size,
-      );
+    accordion: other.accordion ?? accordion,
+    bordered: other.bordered ?? bordered,
+    ghost: other.ghost ?? ghost,
+    expandIconPosition: other.expandIconPosition ?? expandIconPosition,
+    collapsible: other.collapsible ?? collapsible,
+    size: other.size ?? size,
+  );
 }
 
 /// A set of collapsible panels.
@@ -327,10 +327,11 @@ class _CollapseState extends State<Collapse> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<CollapseToken>(context) ??
-            const CollapseToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<CollapseToken>(context) ??
+                const CollapseToken())
+            ._resolve(t);
 
     final panels = <Widget>[];
     for (var i = 0; i < widget.items.length; i++) {
@@ -422,8 +423,9 @@ class _Panel extends StatelessWidget {
 
   Widget _icon(BuildContext context) {
     if (expandIcon != null) return expandIcon!(context, active);
-    final color =
-        _disabled ? token.colorTextQuaternary : token.colorTextSecondary;
+    final color = _disabled
+        ? token.colorTextQuaternary
+        : token.colorTextSecondary;
     return AnimatedRotation(
       duration: token.motionDurationMid,
       curve: token.motionEaseInOut,
@@ -444,8 +446,9 @@ class _Panel extends StatelessWidget {
     Widget icon = item.showArrow
         ? Padding(
             padding: EdgeInsets.only(
-              right:
-                  iconPosition == CollapseIconPosition.start ? token.sizeXS : 0,
+              right: iconPosition == CollapseIconPosition.start
+                  ? token.sizeXS
+                  : 0,
               left: iconPosition == CollapseIconPosition.end ? token.sizeXS : 0,
             ),
             child: _icon(context),
@@ -470,10 +473,7 @@ class _Panel extends StatelessWidget {
       children: [
         if (item.showArrow && iconPosition == CollapseIconPosition.start) icon,
         Expanded(child: label),
-        if (item.extra != null) ...[
-          item.extra!,
-          SizedBox(width: token.sizeXS),
-        ],
+        if (item.extra != null) ...[item.extra!, SizedBox(width: token.sizeXS)],
         if (item.showArrow && iconPosition == CollapseIconPosition.end) icon,
       ],
     );
@@ -512,15 +512,12 @@ class _Panel extends StatelessWidget {
     final contentColor = ghost
         ? null
         : bordered
-            ? style.contentBg
-            : style.headerBg;
+        ? style.contentBg
+        : style.headerBg;
 
     final body = Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: contentColor,
-        border: contentBorder,
-      ),
+      decoration: BoxDecoration(color: contentColor, border: contentBorder),
       padding: style.contentPad(size),
       child: DefaultTextStyle(
         style: TextStyle(

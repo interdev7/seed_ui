@@ -60,31 +60,31 @@ class BreadcrumbToken {
   final double? borderRadius;
 
   _ResolvedBreadcrumbToken _resolve(Token t) => _ResolvedBreadcrumbToken(
-        itemColor: itemColor ?? t.colorTextTertiary,
-        lastItemColor: lastItemColor ?? t.colorText,
-        linkHoverColor: linkHoverColor ?? t.colorText,
-        linkHoverBg: linkHoverBg ?? t.colorFillSecondary,
-        separatorColor: separatorColor ?? t.colorTextTertiary,
-        separatorMargin: separatorMargin ?? t.sizeXS,
-        fontSize: fontSize ?? t.fontSize,
-        iconFontSize: iconFontSize ?? t.fontSize,
-        itemPaddingInline: itemPaddingInline ?? t.sizeXXS,
-        borderRadius: borderRadius ?? t.borderRadiusSM,
-      );
+    itemColor: itemColor ?? t.colorTextTertiary,
+    lastItemColor: lastItemColor ?? t.colorText,
+    linkHoverColor: linkHoverColor ?? t.colorText,
+    linkHoverBg: linkHoverBg ?? t.colorFillSecondary,
+    separatorColor: separatorColor ?? t.colorTextTertiary,
+    separatorMargin: separatorMargin ?? t.sizeXS,
+    fontSize: fontSize ?? t.fontSize,
+    iconFontSize: iconFontSize ?? t.fontSize,
+    itemPaddingInline: itemPaddingInline ?? t.sizeXXS,
+    borderRadius: borderRadius ?? t.borderRadiusSM,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   BreadcrumbToken merge(BreadcrumbToken other) => BreadcrumbToken(
-        itemColor: other.itemColor ?? itemColor,
-        lastItemColor: other.lastItemColor ?? lastItemColor,
-        linkHoverColor: other.linkHoverColor ?? linkHoverColor,
-        linkHoverBg: other.linkHoverBg ?? linkHoverBg,
-        separatorColor: other.separatorColor ?? separatorColor,
-        separatorMargin: other.separatorMargin ?? separatorMargin,
-        fontSize: other.fontSize ?? fontSize,
-        iconFontSize: other.iconFontSize ?? iconFontSize,
-        itemPaddingInline: other.itemPaddingInline ?? itemPaddingInline,
-        borderRadius: other.borderRadius ?? borderRadius,
-      );
+    itemColor: other.itemColor ?? itemColor,
+    lastItemColor: other.lastItemColor ?? lastItemColor,
+    linkHoverColor: other.linkHoverColor ?? linkHoverColor,
+    linkHoverBg: other.linkHoverBg ?? linkHoverBg,
+    separatorColor: other.separatorColor ?? separatorColor,
+    separatorMargin: other.separatorMargin ?? separatorMargin,
+    fontSize: other.fontSize ?? fontSize,
+    iconFontSize: other.iconFontSize ?? iconFontSize,
+    itemPaddingInline: other.itemPaddingInline ?? itemPaddingInline,
+    borderRadius: other.borderRadius ?? borderRadius,
+  );
 }
 
 @immutable
@@ -204,10 +204,11 @@ class Breadcrumb<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (token ??
-            ConfigProvider.componentOf<BreadcrumbToken>(context) ??
-            const BreadcrumbToken())
-        ._resolve(t);
+    final r =
+        (token ??
+                ConfigProvider.componentOf<BreadcrumbToken>(context) ??
+                const BreadcrumbToken())
+            ._resolve(t);
 
     final limit = maxItems == null ? null : (maxItems! < 3 ? 3 : maxItems!);
     final fold = limit != null && items.length > limit;
@@ -240,9 +241,7 @@ class Breadcrumb<T> extends StatelessWidget {
 
     final sep = Padding(
       padding: EdgeInsets.symmetric(horizontal: r.separatorMargin),
-      child: ExcludeSemantics(
-        child: separator ?? const Text('/'),
-      ),
+      child: ExcludeSemantics(child: separator ?? const Text('/')),
     );
 
     return DefaultTextStyle.merge(
@@ -272,27 +271,26 @@ class Breadcrumb<T> extends StatelessWidget {
     BuildContext context,
     List<BreadcrumbItem<T>> hidden,
     _ResolvedBreadcrumbToken r,
-  ) =>
-      _Crumb<T>(
-        item: BreadcrumbItem<T>(
-          label: '…',
-          menu: [
-            for (final item in hidden)
-              DropdownItem<T>(
-                value: item.value,
-                label: item.label ?? item.semanticsLabel,
-                icon: item.icon,
-                onTap: item.onTap,
-              ),
-          ],
-        ),
-        current: false,
-        token: r,
-        semanticsLabel: context.seedLocale.showMore,
-        chevron: false,
-        onTap: () {},
-        onMenuItemTap: onItemTap,
-      );
+  ) => _Crumb<T>(
+    item: BreadcrumbItem<T>(
+      label: '…',
+      menu: [
+        for (final item in hidden)
+          DropdownItem<T>(
+            value: item.value,
+            label: item.label ?? item.semanticsLabel,
+            icon: item.icon,
+            onTap: item.onTap,
+          ),
+      ],
+    ),
+    current: false,
+    token: r,
+    semanticsLabel: context.seedLocale.showMore,
+    chevron: false,
+    onTap: () {},
+    onMenuItemTap: onItemTap,
+  );
 }
 
 /// One crumb: a link, the page itself, or a link that opens a menu.

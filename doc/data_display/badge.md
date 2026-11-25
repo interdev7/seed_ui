@@ -10,7 +10,7 @@ Badge(count: 12, child: const Avatar(child: Text('U')))
 `Badge` clashes with Material's own `Badge`. Hide one of them at the import:
 
 ```dart
-import 'package:flutter/material.dart' hide Badge;
+import 'package:material_ui/material_ui.dart' hide Badge;
 ```
 
 ## Counts

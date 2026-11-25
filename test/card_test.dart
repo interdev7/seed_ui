@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _wrap(Widget child) => ConfigProvider(
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Center(child: child),
-      ),
-    );
+  child: Directionality(
+    textDirection: TextDirection.ltr,
+    child: Center(child: child),
+  ),
+);
 
 void main() {
   testWidgets('renders title, extra and body', (tester) async {
@@ -28,12 +28,7 @@ void main() {
 
   testWidgets('loading hides the body content', (tester) async {
     await tester.pumpWidget(
-      _wrap(
-        const Card(
-          loading: true,
-          child: Text('Body'),
-        ),
-      ),
+      _wrap(const Card(loading: true, child: Text('Body'))),
     );
 
     expect(find.text('Body'), findsNothing);

@@ -39,22 +39,23 @@ class ResultToken {
   final FontWeight? fontWeight;
 
   _ResolvedResultToken _resolve(Token t) => _ResolvedResultToken(
-        fontWeight: fontWeight ?? FontWeight.w500,
-        titleFontSize: titleFontSize ?? t.fontSizeXL + 4,
-        subtitleFontSize: subtitleFontSize ?? t.fontSize,
-        iconSize: iconSize ?? 72,
-        padding: padding ??
-            EdgeInsets.symmetric(horizontal: t.sizeLG, vertical: t.sizeXL),
-      );
+    fontWeight: fontWeight ?? FontWeight.w500,
+    titleFontSize: titleFontSize ?? t.fontSizeXL + 4,
+    subtitleFontSize: subtitleFontSize ?? t.fontSize,
+    iconSize: iconSize ?? 72,
+    padding:
+        padding ??
+        EdgeInsets.symmetric(horizontal: t.sizeLG, vertical: t.sizeXL),
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ResultToken merge(ResultToken other) => ResultToken(
-        titleFontSize: other.titleFontSize ?? titleFontSize,
-        subtitleFontSize: other.subtitleFontSize ?? subtitleFontSize,
-        iconSize: other.iconSize ?? iconSize,
-        padding: other.padding ?? padding,
-        fontWeight: other.fontWeight ?? fontWeight,
-      );
+    titleFontSize: other.titleFontSize ?? titleFontSize,
+    subtitleFontSize: other.subtitleFontSize ?? subtitleFontSize,
+    iconSize: other.iconSize ?? iconSize,
+    padding: other.padding ?? padding,
+    fontWeight: other.fontWeight ?? fontWeight,
+  );
 }
 
 @immutable
@@ -128,10 +129,11 @@ class Result extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (this.token ??
-            ConfigProvider.componentOf<ResultToken>(context) ??
-            const ResultToken())
-        ._resolve(token);
+    final r =
+        (this.token ??
+                ConfigProvider.componentOf<ResultToken>(context) ??
+                const ResultToken())
+            ._resolve(token);
     return Container(
       width: double.infinity,
       padding: r.padding,
@@ -171,10 +173,7 @@ class Result extends StatelessWidget {
               child: subtitle!,
             ),
           ],
-          if (child != null) ...[
-            SizedBox(height: token.sizeLG),
-            child!,
-          ],
+          if (child != null) ...[SizedBox(height: token.sizeLG), child!],
           if (extra != null && extra!.isNotEmpty) ...[
             SizedBox(height: token.sizeLG),
             Wrap(
@@ -197,11 +196,11 @@ class _ResultIconPainter extends CustomPainter {
   final Token token;
 
   Color get _color => switch (status) {
-        StatusType.success => token.success.base,
-        StatusType.error => token.error.base,
-        StatusType.warning => token.warning.base,
-        _ => token.info.base,
-      };
+    StatusType.success => token.success.base,
+    StatusType.error => token.error.base,
+    StatusType.warning => token.warning.base,
+    _ => token.info.base,
+  };
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -247,11 +246,9 @@ class _ResultIconPainter extends CustomPainter {
         final barBottom = isInfo ? size.height * 0.7 : size.height * 0.56;
         final dotY = isInfo ? size.height * 0.3 : size.height * 0.72;
         canvas.drawLine(Offset(r, barTop), Offset(r, barBottom), stroke);
-        canvas.drawPoints(
-          PointMode.points,
-          [Offset(r, dotY)],
-          stroke..strokeWidth = size.width * 0.09,
-        );
+        canvas.drawPoints(PointMode.points, [
+          Offset(r, dotY),
+        ], stroke..strokeWidth = size.width * 0.09);
     }
   }
 

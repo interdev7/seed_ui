@@ -1,5 +1,8 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter/rendering.dart'
+    show ContainerLayer, OpacityLayer, PaintingContext, PaintingContextCallback;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -10,21 +13,25 @@ import 'package:flutter/material.dart'
         Drawer,
         Card,
         Divider;
-import 'package:flutter/rendering.dart'
-    show ContainerLayer, OpacityLayer, PaintingContext, PaintingContextCallback;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
+/// The card's own snapshot: the one over the popover's [text]. The app around
+/// it has snapshots of its own — material_ui's page transitions draw the route
+/// through a [SnapshotWidget] — and they are not what these tests are about.
+Finder _cardSnapshot(String text) =>
+    find.ancestor(of: find.text(text), matching: find.byType(SnapshotWidget));
+
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(body: Center(child: child)),
-      ),
-    );
+  child: MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(body: Center(child: child)),
+  ),
+);
 
 void main() {
-  testWidgets('a card with a title and a body, opened by tapping',
-      (tester) async {
+  testWidgets('a card with a title and a body, opened by tapping', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         const Popover(
@@ -50,15 +57,11 @@ void main() {
     expect(find.text('Title'), findsNothing);
   });
 
-  testWidgets('hovering opens it after a pause, and leaving closes it',
-      (tester) async {
+  testWidgets('hovering opens it after a pause, and leaving closes it', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _host(
-        const Popover(
-          content: Text('On hover'),
-          child: Text('trigger'),
-        ),
-      ),
+      _host(const Popover(content: Text('On hover'), child: Text('trigger'))),
     );
     await tester.pumpAndSettle();
 
@@ -79,8 +82,9 @@ void main() {
     expect(find.text('On hover'), findsNothing);
   });
 
-  testWidgets('a click on a hovered trigger reaches what is under it',
-      (tester) async {
+  testWidgets('a click on a hovered trigger reaches what is under it', (
+    tester,
+  ) async {
     var taps = 0;
     await tester.pumpWidget(
       _host(
@@ -312,12 +316,13 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 60));
 
-      expect(find.byType(SnapshotWidget), findsNothing);
+      expect(_cardSnapshot('Plain'), findsNothing);
       expect(find.byType(ScaleTransition), findsWidgets);
     });
 
-    testWidgets('genie draws the card as a sheet while it arrives',
-        (tester) async {
+    testWidgets('genie draws the card as a sheet while it arrives', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Popover(
@@ -335,8 +340,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 60));
 
-      final snapshot =
-          tester.widget<SnapshotWidget>(find.byType(SnapshotWidget));
+      final snapshot = tester.widget<SnapshotWidget>(_cardSnapshot('Poured'));
       expect(
         snapshot.controller.allowSnapshotting,
         isTrue,
@@ -371,8 +375,7 @@ void main() {
       await tester.tap(find.text('trigger'));
       await tester.pumpAndSettle();
 
-      final snapshot =
-          tester.widget<SnapshotWidget>(find.byType(SnapshotWidget));
+      final snapshot = tester.widget<SnapshotWidget>(_cardSnapshot('press me'));
       expect(snapshot.controller.allowSnapshotting, isFalse);
 
       await tester.tap(find.text('press me'));
@@ -380,21 +383,22 @@ void main() {
       expect(pressed, 1);
     });
 
-    testWidgets('closing from a rebuild of the owner is not a crash',
-        (tester) async {
+    testWidgets('closing from a rebuild of the owner is not a crash', (
+      tester,
+    ) async {
       // A controlled popover closes from didUpdateWidget, so the controller
       // reports the change mid-build. Anything the genie does about it then —
       // stop rasterising, hand the shadow back — has to wait for the frame to
       // end rather than mark itself dirty.
       Widget host(bool open) => _host(
-            Popover(
-              open: open,
-              animation: PopoverAnimation.genie,
-              placement: PopoverPlacement.bottom,
-              content: const Text('Poured'),
-              child: const Text('trigger'),
-            ),
-          );
+        Popover(
+          open: open,
+          animation: PopoverAnimation.genie,
+          placement: PopoverPlacement.bottom,
+          content: const Text('Poured'),
+          child: const Text('trigger'),
+        ),
+      );
 
       await tester.pumpWidget(host(true));
       await tester.pumpAndSettle();
@@ -426,7 +430,7 @@ void main() {
       await tester.tap(find.text('trigger'));
 
       SnapshotPainter painterNow() =>
-          tester.widget<SnapshotWidget>(find.byType(SnapshotWidget)).painter;
+          tester.widget<SnapshotWidget>(_cardSnapshot('Poured')).painter;
 
       int shadowsDrawnBy(SnapshotPainter painter) {
         final canvas = _CountingCanvas();
@@ -455,8 +459,9 @@ void main() {
       );
     });
 
-    testWidgets('the pour keeps one painter, however often the layer rebuilds',
-        (tester) async {
+    testWidgets('the pour keeps one painter, however often the layer rebuilds', (
+      tester,
+    ) async {
       // A painter listens to the animation from its constructor, and the
       // framework never disposes a replaced one — it only drops its own
       // listener. Building a fresh painter per frame would leave a listener on
@@ -478,7 +483,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 16));
 
       Object painterNow() =>
-          tester.widget<SnapshotWidget>(find.byType(SnapshotWidget)).painter;
+          tester.widget<SnapshotWidget>(_cardSnapshot('Poured')).painter;
 
       final first = painterNow();
       for (var i = 0; i < 5; i++) {
@@ -489,8 +494,9 @@ void main() {
       expect(painterNow(), same(first));
     });
 
-    testWidgets('a settled card is painted without a layer of its own',
-        (tester) async {
+    testWidgets('a settled card is painted without a layer of its own', (
+      tester,
+    ) async {
       // The painter still runs on every frame once the surface has landed.
       // Painting through an opacity of 255 there leaves a compositing layer
       // under the popover for as long as it is open, for nothing.
@@ -511,7 +517,7 @@ void main() {
       int layersFor({required bool settled}) {
         final context = _RecordingContext(_CountingCanvas());
         tester
-            .widget<SnapshotWidget>(find.byType(SnapshotWidget))
+            .widget<SnapshotWidget>(_cardSnapshot('Poured'))
             .painter
             .paint(
               context,
@@ -530,8 +536,9 @@ void main() {
       expect(layersFor(settled: true), 0);
     });
 
-    testWidgets('the card gives up its own shadow while it is poured',
-        (tester) async {
+    testWidgets('the card gives up its own shadow while it is poured', (
+      tester,
+    ) async {
       // The picture is the card's own size, so a shadow the card draws is
       // cropped to it: what is left is a hard grey band around the sheet, on
       // top of the one the sheet casts. Only one of the two may draw it, and
@@ -549,15 +556,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      List<BoxShadow>? shadowOfCard() => (tester
-              .widgetList<Container>(find.byType(Container))
-              .firstWhere(
-                (c) =>
-                    c.decoration is BoxDecoration &&
-                    (c.decoration! as BoxDecoration).borderRadius != null,
-              )
-              .decoration! as BoxDecoration)
-          .boxShadow;
+      List<BoxShadow>? shadowOfCard() =>
+          (tester
+                      .widgetList<Container>(find.byType(Container))
+                      .firstWhere(
+                        (c) =>
+                            c.decoration is BoxDecoration &&
+                            (c.decoration! as BoxDecoration).borderRadius !=
+                                null,
+                      )
+                      .decoration!
+                  as BoxDecoration)
+              .boxShadow;
 
       await tester.tap(find.text('trigger'));
       await tester.pump();
@@ -597,8 +607,8 @@ void main() {
 
       var elapsed = Duration.zero;
       const step = Duration(milliseconds: 20);
-      while (
-          tester.binding.hasScheduledFrame && elapsed.inMilliseconds < 2000) {
+      while (tester.binding.hasScheduledFrame &&
+          elapsed.inMilliseconds < 2000) {
         await tester.pump(step);
         elapsed += step;
       }
@@ -621,8 +631,8 @@ void main() {
 
       var elapsed = Duration.zero;
       const step = Duration(milliseconds: 20);
-      while (
-          tester.binding.hasScheduledFrame && elapsed.inMilliseconds < 3000) {
+      while (tester.binding.hasScheduledFrame &&
+          elapsed.inMilliseconds < 3000) {
         await tester.pump(step);
         elapsed += step;
       }

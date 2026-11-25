@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter/semantics.dart' show SemanticsAction;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,18 +11,17 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/semantics.dart' show SemanticsAction;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      home: Scaffold(body: Center(child: child)),
-    );
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   _selectionTests();
-  testWidgets('shows the placeholder while empty, hides it once typed',
-      (tester) async {
+  testWidgets('shows the placeholder while empty, hides it once typed', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host(const Input(placeholder: 'Username')));
 
     expect(find.text('Username'), findsOneWidget);
@@ -52,8 +53,9 @@ void main() {
   testWidgets('disabled blocks editing', (tester) async {
     final controller = TextEditingController();
     addTearDown(controller.dispose);
-    await tester
-        .pumpWidget(_host(Input(controller: controller, disabled: true)));
+    await tester.pumpWidget(
+      _host(Input(controller: controller, disabled: true)),
+    );
 
     await tester.enterText(find.byType(Input), 'nope');
     expect(controller.text, isEmpty);
@@ -62,8 +64,9 @@ void main() {
   testWidgets('allowClear empties the field when tapped', (tester) async {
     final controller = TextEditingController();
     addTearDown(controller.dispose);
-    await tester
-        .pumpWidget(_host(Input(controller: controller, allowClear: true)));
+    await tester.pumpWidget(
+      _host(Input(controller: controller, allowClear: true)),
+    );
 
     // The clear button only shows while focused and non-empty.
     await tester.tap(find.byType(Input));
@@ -81,26 +84,28 @@ void main() {
     expect(controller.text, isEmpty);
   });
 
-  testWidgets('obscureText masks the value and toggles with the reveal button',
-      (tester) async {
-    await tester.pumpWidget(_host(const Input(password: PasswordConfig())));
-    await tester.enterText(find.byType(Input), 'secret');
-    await tester.pump();
+  testWidgets(
+    'obscureText masks the value and toggles with the reveal button',
+    (tester) async {
+      await tester.pumpWidget(_host(const Input(password: PasswordConfig())));
+      await tester.enterText(find.byType(Input), 'secret');
+      await tester.pump();
 
-    bool masked() =>
-        tester.widget<EditableText>(find.byType(EditableText)).obscureText;
-    expect(masked(), isTrue);
+      bool masked() =>
+          tester.widget<EditableText>(find.byType(EditableText)).obscureText;
+      expect(masked(), isTrue);
 
-    await tester.tap(
-      find.byWidgetPredicate(
-        (w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString() == '_EyePainter',
-      ),
-    );
-    await tester.pump();
-    expect(masked(), isFalse);
-  });
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_EyePainter',
+        ),
+      );
+      await tester.pump();
+      expect(masked(), isFalse);
+    },
+  );
 
   testWidgets('maxLength caps the input', (tester) async {
     final controller = TextEditingController();
@@ -145,16 +150,15 @@ void main() {
       expect((await boxAt(tester, const ControlSize.height(20))).height, 20);
     });
 
-    testWidgets('a width names the width, the height staying standard',
-        (tester) async {
+    testWidgets('a width names the width, the height staying standard', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const ConfigProvider(
           child: MaterialApp(
             home: Scaffold(
               body: Center(
-                child: Wrap(
-                  children: [Input(size: ControlSize.width(180))],
-                ),
+                child: Wrap(children: [Input(size: ControlSize.width(180))]),
               ),
             ),
           ),
@@ -177,9 +181,7 @@ void main() {
           child: MaterialApp(
             home: Scaffold(
               body: Center(
-                child: Wrap(
-                  children: [Input(size: ControlSize.box(180, 36))],
-                ),
+                child: Wrap(children: [Input(size: ControlSize.box(180, 36))]),
               ),
             ),
           ),
@@ -284,12 +286,11 @@ void _selectionTests() {
       expect(selection.start, 0);
     });
 
-    testWidgets('a revealed password selects like any other field',
-        (tester) async {
+    testWidgets('a revealed password selects like any other field', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _host(
-          const Input(value: 'hunter22', password: PasswordConfig()),
-        ),
+        _host(const Input(value: 'hunter22', password: PasswordConfig())),
       );
       await tester.pumpAndSettle();
 
@@ -319,8 +320,9 @@ void _selectionTests() {
       expect(editable.textEditingValue.selection.isCollapsed, isFalse);
     });
 
-    testWidgets('a tap still puts the caret in and takes focus',
-        (tester) async {
+    testWidgets('a tap still puts the caret in and takes focus', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(const Input(value: 'hunter22')));
       await tester.pumpAndSettle();
       await tester.tap(find.byType(EditableText));
@@ -412,10 +414,9 @@ void _selectionTests() {
       final config = tester.testTextInput.setClientArgs!;
       expect((config['inputType'] as Map)['name'], 'TextInputType.phone');
       expect(config['enableSuggestions'], isTrue);
-      expect(
-        (config['autofill'] as Map)['hints'],
-        [AutofillHints.telephoneNumber],
-      );
+      expect((config['autofill'] as Map)['hints'], [
+        AutofillHints.telephoneNumber,
+      ]);
     });
 
     testWidgets('a number asks for no corrections and no suggestions', (

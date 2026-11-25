@@ -57,15 +57,16 @@ class Expandable extends StatefulWidget {
 
 class _ExpandableState extends State<Expandable>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    value: widget.expanded && !widget.animateOnMount ? 1 : 0,
-    duration: widget.duration ?? _fallbackDuration,
-  )..addStatusListener((_) {
-      // Re-evaluate whether the child should stay mounted once the animation
-      // settles (so a destroyed subtree drops after the close finishes).
-      if (mounted) setState(() {});
-    });
+  late final AnimationController _controller =
+      AnimationController(
+        vsync: this,
+        value: widget.expanded && !widget.animateOnMount ? 1 : 0,
+        duration: widget.duration ?? _fallbackDuration,
+      )..addStatusListener((_) {
+        // Re-evaluate whether the child should stay mounted once the animation
+        // settles (so a destroyed subtree drops after the close finishes).
+        if (mounted) setState(() {});
+      });
 
   // Used only until the first build reads the theme; the real duration is
   // applied in build/didUpdateWidget.

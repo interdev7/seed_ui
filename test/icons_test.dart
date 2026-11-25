@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart' hide ThemeData, Divider;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' hide ThemeData, Divider;
 import 'package:seed_ui/seed_ui.dart';
 // Several icons are internal to the kit — they back a component's chrome
 // rather than being part of the public surface — so they are reached through
@@ -14,28 +14,20 @@ import 'package:seed_ui/src/icons/icons.dart'
         TreeLeafIconPainter;
 
 Widget _host(Widget child) => ConfigProvider(
-      theme: ThemeData(),
-      child: MaterialApp(
-        home: Scaffold(body: child),
-      ),
-    );
+  theme: ThemeData(),
+  child: MaterialApp(home: Scaffold(body: child)),
+);
 
 void main() {
   _clearMarkTests();
   testWidgets('renders Spinner', (tester) async {
-    await tester.pumpWidget(
-      _host(
-        const Spinner(color: Colors.blue, size: 24),
-      ),
-    );
+    await tester.pumpWidget(_host(const Spinner(color: Colors.blue, size: 24)));
     expect(find.byType(Spinner), findsOneWidget);
   });
 
   testWidgets('renders ClearIconPainter', (tester) async {
     await tester.pumpWidget(
-      _host(
-        CustomPaint(painter: ClearIconPainter(Colors.blue)),
-      ),
+      _host(CustomPaint(painter: ClearIconPainter(Colors.blue))),
     );
     expect(
       find.byWidgetPredicate(
@@ -46,19 +38,13 @@ void main() {
   });
 
   testWidgets('renders SearchIcon', (tester) async {
-    await tester.pumpWidget(
-      _host(
-        const SearchIcon(color: Colors.blue),
-      ),
-    );
+    await tester.pumpWidget(_host(const SearchIcon(color: Colors.blue)));
     expect(find.byType(SearchIcon), findsOneWidget);
   });
 
   testWidgets('renders TreeLeafIconPainter', (tester) async {
     await tester.pumpWidget(
-      _host(
-        CustomPaint(painter: TreeLeafIconPainter(Colors.blue)),
-      ),
+      _host(CustomPaint(painter: TreeLeafIconPainter(Colors.blue))),
     );
     expect(
       find.byWidgetPredicate(
@@ -69,19 +55,16 @@ void main() {
   });
 
   testWidgets('renders UserIcon', (tester) async {
-    await tester.pumpWidget(
-      _host(
-        const UserIcon(color: Colors.blue),
-      ),
-    );
+    await tester.pumpWidget(_host(const UserIcon(color: Colors.blue)));
     expect(find.byType(UserIcon), findsOneWidget);
   });
 
   group('Glyph geometry', () {
     const blue = Color(0xFF1677FF);
 
-    testWidgets('a paperclip fills its box and stays inside it',
-        (tester) async {
+    testWidgets('a paperclip fills its box and stays inside it', (
+      tester,
+    ) async {
       _expectFitsBox(PaperclipPainter(blue));
     });
 
@@ -127,8 +110,7 @@ class _PathCanvas implements Canvas {
     double sweepAngle,
     bool useCenter,
     Paint paint,
-  ) =>
-      paths.add(Path()..addArc(rect, startAngle, sweepAngle));
+  ) => paths.add(Path()..addArc(rect, startAngle, sweepAngle));
 
   @override
   dynamic noSuchMethod(Invocation invocation) => null;
@@ -204,8 +186,9 @@ void _clearMarkTests() {
 
     test('the disc keeps to the shorter side', () {
       final canvas = _Recorder();
-      ClearIconPainter(const Color(0xFF000000))
-          .paint(canvas, const Size(16, 32));
+      ClearIconPainter(
+        const Color(0xFF000000),
+      ).paint(canvas, const Size(16, 32));
       // Sixteen wide and thirty-two tall makes a mark sixteen across, not one
       // that spills out of the sides.
       expect(canvas.circles.single.radius, 8);

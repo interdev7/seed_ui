@@ -5,4 +5,4 @@
 // fails the build if this drifts from `pubspec.yaml`.
 
 /// The version of `seed_ui` this gallery was built against.
-const seedUiVersion = '0.29.1';
+const seedUiVersion = '0.30.0';

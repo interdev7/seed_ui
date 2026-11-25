@@ -105,10 +105,10 @@ class TimeColumns extends StatelessWidget {
     final second = draft == null ? null : draft.inSeconds % 60;
 
     Duration compose({int? h, int? m, int? s}) => Duration(
-          hours: h ?? hour ?? 0,
-          minutes: m ?? minute ?? 0,
-          seconds: s ?? second ?? 0,
-        );
+      hours: h ?? hour ?? 0,
+      minutes: m ?? minute ?? 0,
+      seconds: s ?? second ?? 0,
+    );
 
     final columns = <Widget>[
       if (fields.hour)
@@ -120,8 +120,8 @@ class TimeColumns extends StatelessWidget {
           selected: hour,
           label: fields.meridiem
               ? (h) => words.figures(
-                    '${h % 12 == 0 ? 12 : h % 12}'.padLeft(2, '0'),
-                  )
+                  '${h % 12 == 0 ? 12 : h % 12}'.padLeft(2, '0'),
+                )
               : (h) => words.figures('$h'.padLeft(2, '0')),
           // A 12-hour panel splits the day across two columns, so the hour
           // column shows one half at a time.
@@ -224,18 +224,19 @@ class _ColumnState extends State<_Column> {
   late final ScrollController _scroll = ScrollController();
 
   List<int> get _shown => [
-        for (final v in widget.values)
-          if ((widget.keep?.call(v) ?? true) &&
-              !(widget.hideDisabled && widget.disabled.contains(v)))
-            v,
-      ];
+    for (final v in widget.values)
+      if ((widget.keep?.call(v) ?? true) &&
+          !(widget.hideDisabled && widget.disabled.contains(v)))
+        v,
+  ];
 
   @override
   void initState() {
     super.initState();
     // Bring the current value into view once the column has a size to scroll.
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _revealSelected(instant: true));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _revealSelected(instant: true),
+    );
   }
 
   @override

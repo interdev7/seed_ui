@@ -1,6 +1,8 @@
 import 'dart:ui' show Tristate;
 
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart' show LogicalKeyboardKey, SystemChannels;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -10,18 +12,16 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/services.dart' show LogicalKeyboardKey, SystemChannels;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(
-          body: Align(alignment: Alignment.topLeft, child: child),
-        ),
-      ),
-    );
+  child: MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(
+      body: Align(alignment: Alignment.topLeft, child: child),
+    ),
+  ),
+);
 
 const _blue = Color(0xFF1677FF);
 
@@ -53,16 +53,16 @@ class _HeldState extends State<_Held> {
 
   @override
   Widget build(BuildContext context) => ColorPickerPanel(
-        value: _c,
-        disabledAlpha: widget.disabledAlpha,
-        allowClear: widget.allowClear,
-        presets: widget.presets,
-        onChanged: (c) {
-          widget.changed?.add(c);
-          setState(() => _c = c);
-        },
-        onChangeComplete: widget.done?.add,
-      );
+    value: _c,
+    disabledAlpha: widget.disabledAlpha,
+    allowClear: widget.allowClear,
+    presets: widget.presets,
+    onChanged: (c) {
+      widget.changed?.add(c);
+      setState(() => _c = c);
+    },
+    onChangeComplete: widget.done?.add,
+  );
 }
 
 Finder _area() => find.bySemanticsLabel('Saturation and brightness');
@@ -85,7 +85,9 @@ void main() {
     expect(done, isNotEmpty, reason: 'a tap is a change done');
 
     await tester.dragFrom(
-        box.center, Offset(box.width / 2 - 1, box.height / 2 - 1));
+      box.center,
+      Offset(box.width / 2 - 1, box.height / 2 - 1),
+    );
     await tester.pump();
     final dark = HSVColor.fromColor(changed.last!);
     expect(dark.saturation, closeTo(1, 0.02));
@@ -150,9 +152,12 @@ void main() {
   testWidgets('the keys move the handles a step', (tester) async {
     final changed = <Color?>[];
     await tester.pumpWidget(
-      _host(_Held(
+      _host(
+        _Held(
           start: const HSVColor.fromAHSV(1, 200, 0.5, 0.5).toColor(),
-          changed: changed)),
+          changed: changed,
+        ),
+      ),
     );
     await tester.sendKeyEvent(LogicalKeyboardKey.tab); // the square
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
@@ -172,10 +177,7 @@ void main() {
       of: find.byType(Input),
       matching: find.byType(EditableText),
     );
-    expect(
-      tester.widget<EditableText>(hex.first).controller.text,
-      '1677FF',
-    );
+    expect(tester.widget<EditableText>(hex.first).controller.text, '1677FF');
     await tester.enterText(hex.first, 'ff0000');
     await tester.pump();
     expect(changed.last!.toARGB32(), 0x80FF0000);
@@ -268,8 +270,10 @@ void main() {
         },
       );
       addTearDown(
-        () => tester.binding.defaultBinaryMessenger
-            .setMockMethodCallHandler(SystemChannels.platform, null),
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
       );
       return copied;
     }
@@ -294,8 +298,11 @@ void main() {
       expect(copied, ['#1677FF']);
       expect(find.bySemanticsLabel('Copied'), findsOneWidget);
       await tester.pump(const Duration(seconds: 2));
-      expect(find.bySemanticsLabel('Copy'), findsOneWidget,
-          reason: 'back, to copy again');
+      expect(
+        find.bySemanticsLabel('Copy'),
+        findsOneWidget,
+        reason: 'back, to copy again',
+      );
 
       await tester.tap(find.text('RGB'));
       await tester.pumpAndSettle();
@@ -344,17 +351,19 @@ void main() {
           ),
         ),
       );
-      Color inkOf(IconData icon) => IconTheme.of(
-            tester.element(find.byIcon(icon)),
-          ).color!;
+      Color inkOf(IconData icon) =>
+          IconTheme.of(tester.element(find.byIcon(icon))).color!;
       final resting = inkOf(Icons.content_copy);
 
       await tester.tap(find.bySemanticsLabel('Copy'));
       await tester.pump();
       expect(heard, ['#1677FF']);
       expect(find.byIcon(Icons.check), findsOneWidget);
-      expect(inkOf(Icons.check), isNot(resting),
-          reason: 'the colour comes from around it, as a copy succeeds');
+      expect(
+        inkOf(Icons.check),
+        isNot(resting),
+        reason: 'the colour comes from around it, as a copy succeeds',
+      );
 
       await tester.pump(const Duration(seconds: 2));
       expect(find.byIcon(Icons.content_copy), findsOneWidget);
@@ -384,11 +393,11 @@ void main() {
     ) async {
       final handle = tester.ensureSemantics();
       Widget panel(Color? c) => ConfigProvider(
-            defaults: const ComponentDefaults(
-              colorPicker: ColorPickerDefaults(canCopy: true),
-            ),
-            child: _host(ColorPickerPanel(value: c)),
-          );
+        defaults: const ComponentDefaults(
+          colorPicker: ColorPickerDefaults(canCopy: true),
+        ),
+        child: _host(ColorPickerPanel(value: c)),
+      );
       await tester.pumpWidget(panel(_blue));
       expect(find.bySemanticsLabel('Copy'), findsOneWidget);
       await tester.pumpWidget(panel(null));
@@ -459,7 +468,9 @@ void main() {
       await tester.pumpWidget(
         _host(
           const ColorPicker(
-              defaultValue: _blue, semanticsLabel: 'Brand colour'),
+            defaultValue: _blue,
+            semanticsLabel: 'Brand colour',
+          ),
         ),
       );
       final node = tester.getSemantics(find.byType(ColorPicker));

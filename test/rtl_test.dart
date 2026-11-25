@@ -1,6 +1,13 @@
 import 'dart:ui' show ImageByteFormat;
 
-import 'package:flutter/material.dart'
+import 'package:cupertino_ui/cupertino_ui.dart'
+    show GlobalCupertinoLocalizations;
+import 'package:flutter/rendering.dart'
+    show RenderParagraph, RenderRepaintBoundary;
+import 'package:flutter_localizations/flutter_localizations.dart'
+    show GlobalWidgetsLocalizations;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         Badge,
         ThemeData,
@@ -11,18 +18,14 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/rendering.dart'
-    show RenderParagraph, RenderRepaintBoundary;
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child, TextDirection direction) => MaterialApp(
-      home: Directionality(
-        textDirection: direction,
-        child: Scaffold(body: Center(child: child)),
-      ),
-    );
+  home: Directionality(
+    textDirection: direction,
+    child: Scaffold(body: Center(child: child)),
+  ),
+);
 
 /// Every decorated box a widget draws, in tree order.
 Iterable<BoxDecoration> _decorations(WidgetTester tester, Type of) => tester
@@ -142,7 +145,9 @@ void main() {
       final pill = tester.getCenter(
         find
             .descendant(
-                of: find.byType(Badge), matching: find.byType(Container))
+              of: find.byType(Badge),
+              matching: find.byType(Container),
+            )
             .first,
       );
       final corner = Offset(
@@ -160,10 +165,16 @@ void main() {
         // Half of it hangs off, which puts its centre exactly on the corner.
         // Anchoring to the trailing edge but always pushing the overhang
         // rightwards leaves it short of the corner, inside the child.
-        expect(pill.dx, moreOrLessEquals(corner.dx, epsilon: 0.5),
-            reason: '$direction');
-        expect(pill.dy, moreOrLessEquals(corner.dy, epsilon: 0.5),
-            reason: '$direction');
+        expect(
+          pill.dx,
+          moreOrLessEquals(corner.dx, epsilon: 0.5),
+          reason: '$direction',
+        );
+        expect(
+          pill.dy,
+          moreOrLessEquals(corner.dy, epsilon: 0.5),
+          reason: '$direction',
+        );
       }
     });
 
@@ -219,17 +230,26 @@ void main() {
     testWidgets('runs off the end it was given, whichever side that is', (
       tester,
     ) async {
-      final ltrEnd =
-          await ribbon(tester, RibbonPlacement.end, TextDirection.ltr);
+      final ltrEnd = await ribbon(
+        tester,
+        RibbonPlacement.end,
+        TextDirection.ltr,
+      );
       expect(ltrEnd.$1.center.dx, greaterThan(ltrEnd.$2.center.dx));
 
       // The trailing end of a right-to-left layout is its left.
-      final rtlEnd =
-          await ribbon(tester, RibbonPlacement.end, TextDirection.rtl);
+      final rtlEnd = await ribbon(
+        tester,
+        RibbonPlacement.end,
+        TextDirection.rtl,
+      );
       expect(rtlEnd.$1.center.dx, lessThan(rtlEnd.$2.center.dx));
 
-      final rtlStart =
-          await ribbon(tester, RibbonPlacement.start, TextDirection.rtl);
+      final rtlStart = await ribbon(
+        tester,
+        RibbonPlacement.start,
+        TextDirection.rtl,
+      );
       expect(rtlStart.$1.center.dx, greaterThan(rtlStart.$2.center.dx));
     });
 
@@ -399,9 +419,7 @@ void main() {
           _host(
             const SizedBox(
               width: 280,
-              child: Input(
-                search: SearchConfig(enterButtonLabel: Text('Go')),
-              ),
+              child: Input(search: SearchConfig(enterButtonLabel: Text('Go'))),
             ),
             direction,
           ),
@@ -423,9 +441,9 @@ void main() {
   });
   group('a bar of tabs', () {
     List<TabItem> run() => [
-          for (var i = 1; i <= 14; i++)
-            TabItem(key: '$i', label: Text('Section $i'), content: Text('P$i')),
-        ];
+      for (var i = 1; i <= 14; i++)
+        TabItem(key: '$i', label: Text('Section $i'), content: Text('P$i')),
+    ];
 
     /// Scrolls into the middle of the run, taps the tab furthest from the
     /// leading edge, and reports where that tab ended up.
@@ -434,10 +452,7 @@ void main() {
       TextDirection direction,
     ) async {
       await tester.pumpWidget(
-        _host(
-          SizedBox(width: 320, child: Tabs(items: run())),
-          direction,
-        ),
+        _host(SizedBox(width: 320, child: Tabs(items: run())), direction),
       );
       await tester.pumpAndSettle();
 
@@ -501,11 +516,14 @@ void main() {
         await tester.fling(bar, const Offset(-300, 0), 2000);
         await tester.pumpAndSettle();
 
-        final position =
-            tester.widget<SingleChildScrollView>(bar).controller!.position;
+        final position = tester
+            .widget<SingleChildScrollView>(bar)
+            .controller!
+            .position;
         // Either against a tab, or against the end of the run — both are
         // places the bar is allowed to rest.
-        final atEnd = (position.pixels - position.maxScrollExtent).abs() < 1 ||
+        final atEnd =
+            (position.pixels - position.maxScrollExtent).abs() < 1 ||
             position.pixels < 1;
         final onATab = _visibleTabs(
           tester,
@@ -687,8 +705,9 @@ void main() {
 
         // Alternate puts one on each side of the line. Whichever side each
         // lands on, its inner edge should stand the same distance off.
-        final gapFirst =
-            (first.center.dx < axis) ? axis - first.right : first.left - axis;
+        final gapFirst = (first.center.dx < axis)
+            ? axis - first.right
+            : first.left - axis;
         final gapSecond = (second.center.dx < axis)
             ? axis - second.right
             : second.left - axis;
@@ -752,40 +771,40 @@ void main() {
     /// also the only way to reach the panel, which draws into the navigator's
     /// overlay — above anything placed inside `home`.
     Widget tour(TextDirection direction, GlobalKey target) => MaterialApp(
-          locale: Locale(direction == TextDirection.rtl ? 'ar' : 'en'),
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('en'), Locale('ar')],
-          home: Scaffold(
-            body: Stack(
-              children: [
-                Positioned(
-                  left: 60,
-                  top: 200,
-                  child: SizedBox(key: target, width: 120, height: 40),
-                ),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: Tour(
-                    open: true,
-                    steps: [
-                      TourStep(
-                        target: target,
-                        title: const Text('A step with a fairly long title'),
-                        description: const Text('And a description under it.'),
-                      ),
-                      TourStep(target: target, title: const Text('Second')),
-                    ],
-                  ),
-                ),
-              ],
+      locale: Locale(direction == TextDirection.rtl ? 'ar' : 'en'),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en'), Locale('ar')],
+      home: Scaffold(
+        body: Stack(
+          children: [
+            Positioned(
+              left: 60,
+              top: 200,
+              child: SizedBox(key: target, width: 120, height: 40),
             ),
-          ),
-        );
+            Positioned(
+              left: 0,
+              top: 0,
+              child: Tour(
+                open: true,
+                steps: [
+                  TourStep(
+                    target: target,
+                    title: const Text('A step with a fairly long title'),
+                    description: const Text('And a description under it.'),
+                  ),
+                  TourStep(target: target, title: const Text('Second')),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
 
     testWidgets('closes from the trailing corner, clear of the title', (
       tester,
@@ -1031,11 +1050,7 @@ void main() {
       // fill, which is the whole question.
       final filled = ltr.$1;
       expect(ltr.$2, isNot(filled), reason: 'the step ahead is not filled');
-      expect(
-        rtl.$2,
-        filled,
-        reason: 'the run starts where the reading starts',
-      );
+      expect(rtl.$2, filled, reason: 'the run starts where the reading starts');
       expect(rtl.$1, isNot(filled));
     });
   });
@@ -1186,8 +1201,9 @@ void main() {
         for (var x = 0; x < image.width; x++) {
           if (at(x, row) == background) continue;
           if (lastInk >= 0 && x - lastInk > 1) {
-            final from =
-                direction == TextDirection.ltr ? lastInk + 1 : image.width - x;
+            final from = direction == TextDirection.ltr
+                ? lastInk + 1
+                : image.width - x;
             out.add('$from+${x - lastInk - 1}');
           }
           lastInk = x;
@@ -1239,9 +1255,7 @@ void main() {
                         TreeNode(
                           key: 'a2',
                           title: Text('Two'),
-                          children: [
-                            TreeNode(key: 'a2x', title: Text('Deep')),
-                          ],
+                          children: [TreeNode(key: 'a2x', title: Text('Deep'))],
                         ),
                       ],
                     ),
@@ -1279,8 +1293,9 @@ void main() {
 
           final background = at(image.width ~/ 2);
           for (var x = 0; x < image.width; x++) {
-            final lead =
-                direction == TextDirection.ltr ? x : image.width - 1 - x;
+            final lead = direction == TextDirection.ltr
+                ? x
+                : image.width - 1 - x;
             if (at(lead) != background) out.add(x);
           }
           image.dispose();
@@ -1409,10 +1424,14 @@ void main() {
       // Twenty either way round. Placed by side, the gap lands between the
       // first item and the edge behind it in a mirrored row, and the two items
       // come out touching.
-      expect(await gapAfterFirst(TextDirection.ltr),
-          moreOrLessEquals(20, epsilon: 1));
-      expect(await gapAfterFirst(TextDirection.rtl),
-          moreOrLessEquals(20, epsilon: 1));
+      expect(
+        await gapAfterFirst(TextDirection.ltr),
+        moreOrLessEquals(20, epsilon: 1),
+      );
+      expect(
+        await gapAfterFirst(TextDirection.rtl),
+        moreOrLessEquals(20, epsilon: 1),
+      );
     });
 
     testWidgets('a column is spaced below each item, not beside it', (
@@ -1520,10 +1539,14 @@ void main() {
         final rtl = direction == TextDirection.rtl;
 
         // Each extra sits flush against its own edge of the bar.
-        expect(rtl ? start.right : start.left,
-            closeTo(rtl ? bar.right : bar.left, 0.5));
-        expect(rtl ? end.left : end.right,
-            closeTo(rtl ? bar.left : bar.right, 0.5));
+        expect(
+          rtl ? start.right : start.left,
+          closeTo(rtl ? bar.right : bar.left, 0.5),
+        );
+        expect(
+          rtl ? end.left : end.right,
+          closeTo(rtl ? bar.left : bar.right, 0.5),
+        );
       });
     }
 
@@ -1544,8 +1567,11 @@ void main() {
         Modal.open(
           const ModalConfig(
             title: Text('Title'),
-            content:
-                SizedBox(key: Key('body'), width: double.infinity, height: 20),
+            content: SizedBox(
+              key: Key('body'),
+              width: double.infinity,
+              height: 20,
+            ),
             closable: false,
             footer: [
               SizedBox(key: Key('one'), width: 40, height: 20),

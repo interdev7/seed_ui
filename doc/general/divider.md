@@ -8,7 +8,7 @@ const Divider(child: Text('Details'))
 ```
 
 > **Name clash.** Material has a `Divider` too. When importing both, hide
-> Material's: `import 'package:flutter/material.dart' hide Divider;`.
+> Material's: `import 'package:material_ui/material_ui.dart' hide Divider;`.
 
 ## Horizontal
 

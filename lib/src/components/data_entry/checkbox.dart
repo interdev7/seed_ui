@@ -15,10 +15,7 @@ import 'input.dart' show InputStatus;
 @immutable
 class CheckboxDefaults {
   /// Creates a [CheckboxDefaults].
-  const CheckboxDefaults({
-    this.disabled,
-    this.size,
-  });
+  const CheckboxDefaults({this.disabled, this.size});
 
   /// Whether boxes are barred, unless one says otherwise.
   final bool? disabled;
@@ -29,9 +26,9 @@ class CheckboxDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   CheckboxDefaults merge(CheckboxDefaults other) => CheckboxDefaults(
-        disabled: other.disabled ?? disabled,
-        size: other.size ?? size,
-      );
+    disabled: other.disabled ?? disabled,
+    size: other.size ?? size,
+  );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -102,8 +99,11 @@ class CheckboxToken {
       colorPrimary: colorPrimary ?? t.primary.base,
       colorBorder: colorBorder ?? t.colorBorder,
       colorBgContainer: colorBgContainer ?? t.colorBgContainer,
-      fontSize: switch (
-          size.nearestPreset(small: small, middle: middle, large: large)) {
+      fontSize: switch (size.nearestPreset(
+        small: small,
+        middle: middle,
+        large: large,
+      )) {
         SoftSize.small => fontSizeSM ?? t.fontSizeSM,
         SoftSize.middle => fontSize ?? t.fontSize,
         SoftSize.large => fontSizeLG ?? t.fontSizeLG,
@@ -113,17 +113,17 @@ class CheckboxToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   CheckboxToken merge(CheckboxToken other) => CheckboxToken(
-        boxSize: other.boxSize ?? boxSize,
-        boxSizeSM: other.boxSizeSM ?? boxSizeSM,
-        boxSizeLG: other.boxSizeLG ?? boxSizeLG,
-        borderRadius: other.borderRadius ?? borderRadius,
-        colorPrimary: other.colorPrimary ?? colorPrimary,
-        colorBorder: other.colorBorder ?? colorBorder,
-        colorBgContainer: other.colorBgContainer ?? colorBgContainer,
-        fontSize: other.fontSize ?? fontSize,
-        fontSizeSM: other.fontSizeSM ?? fontSizeSM,
-        fontSizeLG: other.fontSizeLG ?? fontSizeLG,
-      );
+    boxSize: other.boxSize ?? boxSize,
+    boxSizeSM: other.boxSizeSM ?? boxSizeSM,
+    boxSizeLG: other.boxSizeLG ?? boxSizeLG,
+    borderRadius: other.borderRadius ?? borderRadius,
+    colorPrimary: other.colorPrimary ?? colorPrimary,
+    colorBorder: other.colorBorder ?? colorBorder,
+    colorBgContainer: other.colorBgContainer ?? colorBgContainer,
+    fontSize: other.fontSize ?? fontSize,
+    fontSizeSM: other.fontSizeSM ?? fontSizeSM,
+    fontSizeLG: other.fontSizeLG ?? fontSizeLG,
+  );
 }
 
 @immutable
@@ -295,10 +295,11 @@ class _SoftCheckboxState extends State<Checkbox> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<CheckboxToken>(context) ??
-            const CheckboxToken())
-        ._resolve(token, _size);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<CheckboxToken>(context) ??
+                const CheckboxToken())
+            ._resolve(token, _size);
     return FocusableActionDetector(
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
@@ -325,8 +326,9 @@ class _SoftCheckboxState extends State<Checkbox> {
         readOnly: widget.readOnly,
         onTap: _takesHand ? _toggle : null,
         child: MouseRegion(
-          cursor:
-              _takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          cursor: _takesHand
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),
           // For the pointer only: the node above announces the control and
@@ -427,7 +429,8 @@ class CheckboxBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final r = componentToken ??
+    final r =
+        componentToken ??
         (ConfigProvider.componentOf<CheckboxToken>(context) ??
                 const CheckboxToken())
             ._resolve(token);
@@ -435,12 +438,12 @@ class CheckboxBox extends StatelessWidget {
     final border = !enabled
         ? token.colorBorder
         : (active || hovered)
-            ? r.colorPrimary
-            : switch (status) {
-                InputStatus.error => token.error.base,
-                InputStatus.warning => token.warning.base,
-                _ => r.colorBorder,
-              };
+        ? r.colorPrimary
+        : switch (status) {
+            InputStatus.error => token.error.base,
+            InputStatus.warning => token.warning.base,
+            _ => r.colorBorder,
+          };
     final fill = value && !indeterminate
         ? (enabled ? r.colorPrimary : token.colorTextQuaternary)
         : (enabled ? r.colorBgContainer : token.colorFillTertiary);
@@ -472,8 +475,9 @@ class CheckboxBox extends StatelessWidget {
           indeterminate: indeterminate,
           // The tick is drawn on the primary fill, so it takes the ink that
           // fill asks for — black on a yellow brand, white on a blue one.
-          color:
-              value && !indeterminate ? inkOn(r.colorPrimary) : r.colorPrimary,
+          color: value && !indeterminate
+              ? inkOn(r.colorPrimary)
+              : r.colorPrimary,
           strokeWidth: 1.8,
         ),
       ),
@@ -507,11 +511,7 @@ class CheckboxOption<T> {
 @immutable
 class CheckboxGroupDefaults {
   /// Creates a [CheckboxGroupDefaults].
-  const CheckboxGroupDefaults({
-    this.direction,
-    this.disabled,
-    this.size,
-  });
+  const CheckboxGroupDefaults({this.direction, this.disabled, this.size});
 
   /// Which way the boxes run.
   final Axis? direction;
@@ -614,8 +614,9 @@ class _CheckboxGroupState<T> extends State<CheckboxGroup<T>> {
   @override
   void initState() {
     super.initState();
-    _internal =
-        widget.defaultValue == null ? null : List<T>.of(widget.defaultValue!);
+    _internal = widget.defaultValue == null
+        ? null
+        : List<T>.of(widget.defaultValue!);
   }
 
   /// What is ticked: the selection handed in, else the one the group has been
@@ -660,7 +661,8 @@ class _CheckboxGroupState<T> extends State<CheckboxGroup<T>> {
           disabled: !_enabled || option.disabled,
           readOnly: widget.readOnly,
           status: widget.status,
-          size: widget.size ??
+          size:
+              widget.size ??
               ConfigProvider.defaultsOf<CheckboxGroupDefaults>(context)?.size,
           onChanged: (checked) => _toggle(option.value, checked),
           label: option.label,

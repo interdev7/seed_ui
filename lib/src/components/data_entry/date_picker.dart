@@ -55,15 +55,13 @@ enum DatePanelMode {
 /// later would otherwise hand back yesterday.
 class DatePreset {
   /// A preset standing for a date that is already known.
-  const DatePreset(this.label, DateTime date)
-      : _date = date,
-        _asked = null;
+  const DatePreset(this.label, DateTime date) : _date = date, _asked = null;
 
   /// A preset that works its date out when it is taken — anything reckoned
   /// from the clock, which is most of them.
   const DatePreset.of(this.label, DateTime Function() date)
-      : _asked = date,
-        _date = null;
+    : _asked = date,
+      _date = null;
 
   /// What the rail calls it.
   final String label;
@@ -106,12 +104,12 @@ class DatePickerDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   DatePickerDefaults merge(DatePickerDefaults other) => DatePickerDefaults(
-        variant: other.variant ?? variant,
-        allowClear: other.allowClear ?? allowClear,
-        showToday: other.showToday ?? showToday,
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-      );
+    variant: other.variant ?? variant,
+    allowClear: other.allowClear ?? allowClear,
+    showToday: other.showToday ?? showToday,
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// Per-component design tokens for [DatePicker].
@@ -170,33 +168,33 @@ class DatePickerToken {
 
   /// Settles every number against the theme.
   DatePanelStyle resolve(Token t) => DatePanelStyle(
-        borderRadius: borderRadius ?? t.borderRadius,
-        cellWidth: cellWidth ?? t.controlHeightSM * 1.5,
-        // A shade taller than the pill inside it, so the weeks have a line
-        // of air between them. The same height and the rows touch: with a
-        // range drawn across them, a month reads as one grey block rather
-        // than six weeks.
-        // The height of a day, not of a day and the air around it: the air
-        // is `mainAxisSpacing`, added on top.
-        cellHeight: cellHeight ?? t.controlHeightSM,
-        headerHeight: headerHeight ?? t.controlHeightLG,
-        presetsWidth: presetsWidth ?? t.controlHeightLG * 3,
-        timeColumnWidth: timeColumnWidth ?? t.controlHeightSM * 2,
-        mainAxisSpacing: mainAxisSpacing ?? t.sizeXXS,
-        crossAxisSpacing: crossAxisSpacing ?? t.sizeXXS,
-      );
+    borderRadius: borderRadius ?? t.borderRadius,
+    cellWidth: cellWidth ?? t.controlHeightSM * 1.5,
+    // A shade taller than the pill inside it, so the weeks have a line
+    // of air between them. The same height and the rows touch: with a
+    // range drawn across them, a month reads as one grey block rather
+    // than six weeks.
+    // The height of a day, not of a day and the air around it: the air
+    // is `mainAxisSpacing`, added on top.
+    cellHeight: cellHeight ?? t.controlHeightSM,
+    headerHeight: headerHeight ?? t.controlHeightLG,
+    presetsWidth: presetsWidth ?? t.controlHeightLG * 3,
+    timeColumnWidth: timeColumnWidth ?? t.controlHeightSM * 2,
+    mainAxisSpacing: mainAxisSpacing ?? t.sizeXXS,
+    crossAxisSpacing: crossAxisSpacing ?? t.sizeXXS,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   DatePickerToken merge(DatePickerToken other) => DatePickerToken(
-        borderRadius: other.borderRadius ?? borderRadius,
-        cellWidth: other.cellWidth ?? cellWidth,
-        cellHeight: other.cellHeight ?? cellHeight,
-        headerHeight: other.headerHeight ?? headerHeight,
-        presetsWidth: other.presetsWidth ?? presetsWidth,
-        timeColumnWidth: other.timeColumnWidth ?? timeColumnWidth,
-        mainAxisSpacing: other.mainAxisSpacing ?? mainAxisSpacing,
-        crossAxisSpacing: other.crossAxisSpacing ?? crossAxisSpacing,
-      );
+    borderRadius: other.borderRadius ?? borderRadius,
+    cellWidth: other.cellWidth ?? cellWidth,
+    cellHeight: other.cellHeight ?? cellHeight,
+    headerHeight: other.headerHeight ?? headerHeight,
+    presetsWidth: other.presetsWidth ?? presetsWidth,
+    timeColumnWidth: other.timeColumnWidth ?? timeColumnWidth,
+    mainAxisSpacing: other.mainAxisSpacing ?? mainAxisSpacing,
+    crossAxisSpacing: other.crossAxisSpacing ?? crossAxisSpacing,
+  );
 }
 
 /// A [DatePickerToken] with every number settled against the theme: what
@@ -352,11 +350,8 @@ class DateCell {
 ///   ],
 /// )
 /// ```
-typedef DateCellBuilder = Widget Function(
-  BuildContext context,
-  DateCell cell,
-  Widget child,
-);
+typedef DateCellBuilder =
+    Widget Function(BuildContext context, DateCell cell, Widget child);
 
 /// What the panel needs of whatever is driving it.
 ///
@@ -739,12 +734,12 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   static const _defaultFormat = 'yyyy-MM-dd';
 
   String get _kindFormat => switch (widget.picker) {
-        DatePickerKind.day => _defaultFormat,
-        DatePickerKind.week => 'yyyy-[W]ww',
-        DatePickerKind.month => 'yyyy-MM',
-        DatePickerKind.quarter => 'yyyy-[Q]Q',
-        DatePickerKind.year => 'yyyy',
-      };
+    DatePickerKind.day => _defaultFormat,
+    DatePickerKind.week => 'yyyy-[W]ww',
+    DatePickerKind.month => 'yyyy-MM',
+    DatePickerKind.quarter => 'yyyy-[Q]Q',
+    DatePickerKind.year => 'yyyy',
+  };
 
   String get _format {
     if (widget.format == _defaultFormat &&
@@ -773,11 +768,11 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   /// business showing days, and one that walked up to the years has to know
   /// where down is.
   DatePanelMode get _floor => switch (widget.picker) {
-        DatePickerKind.day || DatePickerKind.week => DatePanelMode.day,
-        DatePickerKind.month => DatePanelMode.month,
-        DatePickerKind.quarter => DatePanelMode.quarter,
-        DatePickerKind.year => DatePanelMode.year,
-      };
+    DatePickerKind.day || DatePickerKind.week => DatePanelMode.day,
+    DatePickerKind.month => DatePanelMode.month,
+    DatePickerKind.quarter => DatePanelMode.quarter,
+    DatePickerKind.year => DatePanelMode.year,
+  };
 
   /// The clock the draft is carrying, or midnight where there is none.
   Duration get _draftTime {
@@ -993,8 +988,11 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
     // year — beyond that the calendar has nothing to offer and the cursor
     // stays put.
     for (var guard = 0; _isBlocked(next) && guard < 366; guard++) {
-      next = dateOnly(next.add(
-          by.isNegative ? const Duration(days: -1) : const Duration(days: 1)));
+      next = dateOnly(
+        next.add(
+          by.isNegative ? const Duration(days: -1) : const Duration(days: 1),
+        ),
+      );
     }
     if (_isBlocked(next)) return;
     setState(() {
@@ -1074,8 +1072,10 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
     final d = dateOnly(day);
     return switch (widget.picker) {
       DatePickerKind.day => d,
-      DatePickerKind.week =>
-        startOfWeek(d, firstDayOfWeek: context.seedLocale.firstDayOfWeek),
+      DatePickerKind.week => startOfWeek(
+        d,
+        firstDayOfWeek: context.seedLocale.firstDayOfWeek,
+      ),
       DatePickerKind.month => DateTime(d.year, d.month),
       DatePickerKind.quarter => startOfQuarter(d),
       DatePickerKind.year => DateTime(d.year),
@@ -1199,10 +1199,10 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   // --------------------------------------------------------------------------
 
   double _height(Token t) => _size.resolveHeight(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 
   /// A preset carries a type size of its own; a dimension names only
   /// itself, so the standard one stands.
@@ -1271,10 +1271,11 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
   Widget build(BuildContext context) {
     final t = context.softToken;
     final words = context.seedLocale;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<DatePickerToken>(context) ??
-            const DatePickerToken())
-        .resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<DatePickerToken>(context) ??
+                const DatePickerToken())
+            .resolve(t);
     _syncAnchor();
 
     final fontSize = _fontSize(t);
@@ -1369,8 +1370,8 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
       cursor: _takesHand
           ? SystemMouseCursors.click
           : _enabled
-              ? SystemMouseCursors.basic
-              : SystemMouseCursors.forbidden,
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.forbidden,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
@@ -1455,16 +1456,17 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
                             child: showClear
                                 ? CustomPaint(
                                     size: Size.square(fontSize),
-                                    painter:
-                                        ClearIconPainter(t.colorTextTertiary),
+                                    painter: ClearIconPainter(
+                                      t.colorTextTertiary,
+                                    ),
                                   )
                                 : widget.suffixIcon ??
-                                    CustomPaint(
-                                      size: Size.square(fontSize),
-                                      painter: CalendarIconPainter(
-                                        statusColor ?? t.colorTextQuaternary,
+                                      CustomPaint(
+                                        size: Size.square(fontSize),
+                                        painter: CalendarIconPainter(
+                                          statusColor ?? t.colorTextQuaternary,
+                                        ),
                                       ),
-                                    ),
                           ),
                         ),
                       ),
@@ -1485,8 +1487,9 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
       ),
     );
 
-    final sized =
-        named == null ? control : SizedBox(width: named, child: control);
+    final sized = named == null
+        ? control
+        : SizedBox(width: named, child: control);
 
     // What it is, what it is called, what it holds and whether its panel is
     // open. A picker said none of it: a reader met a box with no name and no
@@ -1501,7 +1504,8 @@ class _DatePickerState extends State<DatePicker> implements PanelHost {
       // is the same word here.
       // An empty placeholder is a deliberate one — a field sized by its format
       // alone — and it names nothing, so it falls through too.
-      label: widget.semanticsLabel ??
+      label:
+          widget.semanticsLabel ??
           (widget.placeholder?.trim().isNotEmpty ?? false
               ? widget.placeholder
               : context.seedLocale.selectDate),
@@ -1526,16 +1530,17 @@ class _DatePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.softToken;
     final words = context.seedLocale;
-    final r = (state.widget.token ??
-            ConfigProvider.componentOf<DatePickerToken>(context) ??
-            const DatePickerToken())
-        .resolve(t)
-        // Never wider than the screen it opens on: a week of roomy days
-        // narrows to fit a phone rather than running off its side.
-        .fittedTo(
-          MediaQuery.sizeOf(context).width - t.sizeLG * 2,
-          padding: t.sizeSM * 2,
-        );
+    final r =
+        (state.widget.token ??
+                ConfigProvider.componentOf<DatePickerToken>(context) ??
+                const DatePickerToken())
+            .resolve(t)
+            // Never wider than the screen it opens on: a week of roomy days
+            // narrows to fit a phone rather than running off its side.
+            .fittedTo(
+              MediaQuery.sizeOf(context).width - t.sizeLG * 2,
+              padding: t.sizeSM * 2,
+            );
 
     final presets = state.widget.presets;
     // The columns stand beside the days and nowhere else: the months of a
@@ -1548,19 +1553,20 @@ class _DatePanel extends StatelessWidget {
     // the days instead of overflowing off the side. This one sum is needed
     // because the choice has to be made before anything is laid out.
     final fields = state._timeFields;
-    final columns = [fields.hour, fields.minute, fields.second, fields.meridiem]
-        .where((on) => on)
-        .length;
+    final columns = [
+      fields.hour,
+      fields.minute,
+      fields.second,
+      fields.meridiem,
+    ].where((on) => on).length;
     final besideWidth =
         r.gridWidth + t.sizeSM * 2 + t.lineWidth + columns * r.timeColumnWidth;
-    final timeBelow = withTime &&
+    final timeBelow =
+        withTime &&
         besideWidth > MediaQuery.sizeOf(context).width - t.sizeLG * 2;
 
     final grid = Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: t.sizeSM,
-        vertical: t.sizeXS,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: t.sizeXS),
       child: switch (state._mode) {
         DatePanelMode.day => DayGrid(state: state, token: r),
         DatePanelMode.quarter => QuarterGrid(state: state, token: r),
@@ -1755,8 +1761,9 @@ class _PresetTileState extends State<_PresetTile> {
       button: true,
       enabled: !blocked,
       child: MouseRegion(
-        cursor:
-            blocked ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
+        cursor: blocked
+            ? SystemMouseCursors.forbidden
+            : SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         child: GestureDetector(
@@ -1824,8 +1831,7 @@ class PanelHeader extends StatelessWidget {
       DatePanelMode.day =>
         '${words.shortMonths[cursor.month - 1]} ${words.figures('${cursor.year}')}',
       DatePanelMode.quarter ||
-      DatePanelMode.month =>
-        words.figures('${cursor.year}'),
+      DatePanelMode.month => words.figures('${cursor.year}'),
       DatePanelMode.year =>
         '${words.figures('${cursor.year - cursor.year % 10}')}'
             '–${words.figures('${cursor.year - cursor.year % 10 + 9}')}',
@@ -1835,14 +1841,14 @@ class PanelHeader extends StatelessWidget {
     // so one chevron always moves one page of what is on screen.
     final backward = switch (state.panelMode) {
       DatePanelMode.day => () => state.panelStep(-1),
-      DatePanelMode.quarter || DatePanelMode.month => () =>
-          state.panelStepYears(-1),
+      DatePanelMode.quarter ||
+      DatePanelMode.month => () => state.panelStepYears(-1),
       DatePanelMode.year => () => state.panelStepYears(-10),
     };
     final onward = switch (state.panelMode) {
       DatePanelMode.day => () => state.panelStep(1),
-      DatePanelMode.quarter || DatePanelMode.month => () =>
-          state.panelStepYears(1),
+      DatePanelMode.quarter ||
+      DatePanelMode.month => () => state.panelStepYears(1),
       DatePanelMode.year => () => state.panelStepYears(10),
     };
 
@@ -1850,8 +1856,8 @@ class PanelHeader extends StatelessWidget {
       DatePanelMode.day => () => state.panelSetMode(DatePanelMode.month),
       // A quarter panel has nowhere deeper to be: its header is the year, and
       // the way up from a year is the decade.
-      DatePanelMode.quarter || DatePanelMode.month => () =>
-          state.panelSetMode(DatePanelMode.year),
+      DatePanelMode.quarter ||
+      DatePanelMode.month => () => state.panelSetMode(DatePanelMode.year),
       DatePanelMode.year => null,
     };
 
@@ -1955,7 +1961,8 @@ class DayGrid extends StatelessWidget {
                       within: state.panelWithin(day),
                       cap: state.panelCap(day),
                       onHover: (over) => state.panelHover(over ? day : null),
-                      resting: state.panelKeyed &&
+                      resting:
+                          state.panelKeyed &&
                           state.panelResting != null &&
                           isSameDay(day, state.panelResting!),
                       disabled: state.panelBlocks(day),
@@ -1975,7 +1982,8 @@ class DayGrid extends StatelessWidget {
                         within: state.panelWithin(day),
                         outside: !isSameMonth(day, cursor),
                         disabled: state.panelBlocks(day),
-                        resting: state.panelKeyed &&
+                        resting:
+                            state.panelKeyed &&
                             state.panelResting != null &&
                             isSameDay(day, state.panelResting!),
                       ),
@@ -2029,7 +2037,8 @@ class QuarterGrid extends StatelessWidget {
                       inset: token.crossAxisSpacing,
                       outside: false,
                       today: false,
-                      chosen: chosen != null &&
+                      chosen:
+                          chosen != null &&
                           chosen.year == cursor.year &&
                           quarterOf(chosen) == quarter,
                       disabled: state.panelBlocks(first),
@@ -2081,7 +2090,8 @@ class MonthGrid extends StatelessWidget {
                       inset: token.crossAxisSpacing,
                       outside: false,
                       today: false,
-                      chosen: chosen != null &&
+                      chosen:
+                          chosen != null &&
                           chosen.year == cursor.year &&
                           chosen.month == month,
                       disabled: false,
@@ -2215,8 +2225,9 @@ class _CellState extends State<_Cell> {
     // run of days reads as one stretch rather than a row of separate marks.
     final capped = widget.cap != PanelCap.none;
     final banded = widget.within || capped;
-    final band =
-        banded && !widget.disabled ? t.primary.bg : const Color(0x00000000);
+    final band = banded && !widget.disabled
+        ? t.primary.bg
+        : const Color(0x00000000);
     final round = Radius.circular(t.borderRadiusSM);
     final capStart = widget.cap == PanelCap.start || widget.cap == PanelCap.both
         ? round
@@ -2289,8 +2300,9 @@ class _CellState extends State<_Cell> {
                     // A pick lands at once; only the hover tint eases in. Easing
                     // from the hover grey to the chosen fill shows the grey on the
                     // way, which reads as a flash under the finger.
-                    duration:
-                        widget.chosen ? Duration.zero : t.motionDurationMid,
+                    duration: widget.chosen
+                        ? Duration.zero
+                        : t.motionDurationMid,
                     curve: t.motionEaseInOut,
                     width: widget.width - widget.inset,
                     height: widget.markHeight,
@@ -2301,7 +2313,9 @@ class _CellState extends State<_Cell> {
                       // both today and the chosen one could not be told apart.
                       border: widget.today && !widget.chosen
                           ? Border.all(
-                              color: t.primary.base, width: t.lineWidth)
+                              color: t.primary.base,
+                              width: t.lineWidth,
+                            )
                           : null,
                     ),
                     alignment: Alignment.center,
@@ -2359,8 +2373,9 @@ class _Action extends StatelessWidget {
     );
 
     return MouseRegion(
-      cursor:
-          onTap == null ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      cursor: onTap == null
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,

@@ -36,17 +36,17 @@ class CountdownToken {
   final FontWeight? fontWeight;
 
   _ResolvedCountdownToken _resolve(Token t) => _ResolvedCountdownToken(
-        fontSize: fontSize ?? t.fontSizeXL,
-        color: color ?? t.colorText,
-        fontWeight: fontWeight ?? t.fontWeight,
-      );
+    fontSize: fontSize ?? t.fontSizeXL,
+    color: color ?? t.colorText,
+    fontWeight: fontWeight ?? t.fontWeight,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   CountdownToken merge(CountdownToken other) => CountdownToken(
-        fontSize: other.fontSize ?? fontSize,
-        color: other.color ?? color,
-        fontWeight: other.fontWeight ?? fontWeight,
-      );
+    fontSize: other.fontSize ?? fontSize,
+    color: other.color ?? color,
+    fontWeight: other.fontWeight ?? fontWeight,
+  );
 }
 
 @immutable
@@ -84,8 +84,8 @@ class _ResolvedCountdownToken {
 ///
 /// Dispose of it with the [State] that made it.
 class CountdownController extends ChangeNotifier {
-  /// Creates a [CountdownController] counting against [target].
-  CountdownController({required DateTime target}) : _target = target;
+  /// Creates a [CountdownController] counting against [_target].
+  CountdownController({required this._target});
 
   DateTime _target;
   DateTime? _pausedAt;
@@ -162,9 +162,8 @@ class CountdownDefaults {
   final CountdownType? type;
 
   /// This one with [other]'s fields laid over it, one field at a time.
-  CountdownDefaults merge(CountdownDefaults other) => CountdownDefaults(
-        type: other.type ?? type,
-      );
+  CountdownDefaults merge(CountdownDefaults other) =>
+      CountdownDefaults(type: other.type ?? type);
 }
 
 /// A running count of the time to a moment, or since one.
@@ -196,10 +195,10 @@ class Countdown extends StatefulWidget {
     this.builder,
     this.token,
   }) : assert(
-          (target == null) != (controller == null),
-          'Give either a target or a controller, not both: two moments to '
-          'count against is one too many.',
-        );
+         (target == null) != (controller == null),
+         'Give either a target or a controller, not both: two moments to '
+         'count against is one too many.',
+       );
 
   /// The moment counted towards, or from. Null when a [controller] holds it.
   final DateTime? target;
@@ -460,13 +459,15 @@ class _CountdownState extends State<Countdown>
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<CountdownToken>(context) ??
-            const CountdownToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<CountdownToken>(context) ??
+                const CountdownToken())
+            ._resolve(t);
 
     final shown = context.seedLocale.figures(_shown);
-    final face = widget.builder?.call(context, shown) ??
+    final face =
+        widget.builder?.call(context, shown) ??
         Text(
           shown,
           style: TextStyle(

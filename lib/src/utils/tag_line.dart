@@ -88,10 +88,10 @@ class _TagLineLayout extends MultiChildRenderObjectWidget {
 
   @override
   _RenderTagLine createRenderObject(BuildContext context) => _RenderTagLine(
-        spacing: spacing,
-        onHidden: onHidden,
-        hasTrailing: hasTrailing,
-      );
+    spacing: spacing,
+    onHidden: onHidden,
+    hasTrailing: hasTrailing,
+  );
 
   @override
   void updateRenderObject(BuildContext context, _RenderTagLine renderObject) {
@@ -109,12 +109,10 @@ class _RenderTagLine extends RenderBox
         ContainerRenderObjectMixin<RenderBox, _TagLineParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _TagLineParentData> {
   _RenderTagLine({
-    required double spacing,
-    required ValueChanged<int> onHidden,
-    required bool hasTrailing,
-  })  : _spacing = spacing,
-        _onHidden = onHidden,
-        _hasTrailing = hasTrailing;
+    required this._spacing,
+    required this._onHidden,
+    required this._hasTrailing,
+  });
 
   /// Whether the last child is something that stands after the tags and is
   /// never hidden, rather than a tag itself.
@@ -196,8 +194,10 @@ class _RenderTagLine extends RenderBox
 
     var cursor = 0.0;
     void place(RenderBox c) {
-      (c.parentData as _TagLineParentData).offset =
-          Offset(cursor, (height - c.size.height) / 2);
+      (c.parentData as _TagLineParentData).offset = Offset(
+        cursor,
+        (height - c.size.height) / 2,
+      );
       cursor += c.size.width + _spacing;
       _painted.add(c);
     }

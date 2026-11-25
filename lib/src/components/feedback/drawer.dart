@@ -35,11 +35,7 @@ typedef DrawerHandle = void Function();
 @immutable
 class DrawerToken {
   /// Creates a [DrawerToken].
-  const DrawerToken({
-    this.colorBgMask,
-    this.colorBgElevated,
-    this.padding,
-  });
+  const DrawerToken({this.colorBgMask, this.colorBgElevated, this.padding});
 
   /// Mask backdrop color (`colorBgMask`).
   final Color? colorBgMask;
@@ -51,17 +47,17 @@ class DrawerToken {
   final EdgeInsets? padding;
 
   _ResolvedDrawerToken _resolve(Token t) => _ResolvedDrawerToken(
-        colorBgMask: colorBgMask ?? t.colorBgMask,
-        colorBgElevated: colorBgElevated ?? t.colorBgElevated,
-        padding: padding ?? EdgeInsets.all(t.sizeLG),
-      );
+    colorBgMask: colorBgMask ?? t.colorBgMask,
+    colorBgElevated: colorBgElevated ?? t.colorBgElevated,
+    padding: padding ?? EdgeInsets.all(t.sizeLG),
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   DrawerToken merge(DrawerToken other) => DrawerToken(
-        colorBgMask: other.colorBgMask ?? colorBgMask,
-        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
-        padding: other.padding ?? padding,
-      );
+    colorBgMask: other.colorBgMask ?? colorBgMask,
+    colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+    padding: other.padding ?? padding,
+  );
 }
 
 @immutable
@@ -187,9 +183,7 @@ class _DrawerEntry {
   final GlobalKey<_DrawerScaffoldState> cardKey =
       GlobalKey<_DrawerScaffoldState>();
   OverlayEntry? overlayEntry;
-  late final OverlayPopScope popScope = OverlayPopScope(
-    onPop: dismiss,
-  );
+  late final OverlayPopScope popScope = OverlayPopScope(onPop: dismiss);
   bool _closing = false;
 
   /// Runs the exit animation, then completes the future.
@@ -302,26 +296,27 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
       _config.placement == DrawerPlacement.right;
 
   Offset get _hiddenOffset => switch (_config.placement) {
-        DrawerPlacement.left => const Offset(-1, 0),
-        DrawerPlacement.right => const Offset(1, 0),
-        DrawerPlacement.top => const Offset(0, -1),
-        DrawerPlacement.bottom => const Offset(0, 1),
-      };
+    DrawerPlacement.left => const Offset(-1, 0),
+    DrawerPlacement.right => const Offset(1, 0),
+    DrawerPlacement.top => const Offset(0, -1),
+    DrawerPlacement.bottom => const Offset(0, 1),
+  };
 
   Alignment get _alignment => switch (_config.placement) {
-        DrawerPlacement.left => Alignment.centerLeft,
-        DrawerPlacement.right => Alignment.centerRight,
-        DrawerPlacement.top => Alignment.topCenter,
-        DrawerPlacement.bottom => Alignment.bottomCenter,
-      };
+    DrawerPlacement.left => Alignment.centerLeft,
+    DrawerPlacement.right => Alignment.centerRight,
+    DrawerPlacement.top => Alignment.topCenter,
+    DrawerPlacement.bottom => Alignment.bottomCenter,
+  };
 
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (_config.token ??
-            ConfigProvider.componentOf<DrawerToken>(context) ??
-            const DrawerToken())
-        ._resolve(token);
+    final r =
+        (_config.token ??
+                ConfigProvider.componentOf<DrawerToken>(context) ??
+                const DrawerToken())
+            ._resolve(token);
     final curved = CurvedAnimation(
       parent: _controller,
       curve: token.motionEaseOut,
@@ -358,10 +353,7 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
               end: Offset.zero,
             ).animate(curved),
             // Taps inside the panel must not reach the mask below.
-            child: GestureDetector(
-              onTap: () {},
-              child: _panel(token, r),
-            ),
+            child: GestureDetector(onTap: () {}, child: _panel(token, r)),
           ),
         ),
       ],
@@ -417,7 +409,10 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
       ),
     );
     return keyboard > 0
-        ? Padding(padding: EdgeInsets.only(bottom: keyboard), child: panel)
+        ? Padding(
+            padding: EdgeInsets.only(bottom: keyboard),
+            child: panel,
+          )
         : panel;
   }
 

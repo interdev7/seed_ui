@@ -14,10 +14,7 @@ import '../../utils/size_resolver.dart';
 @immutable
 class SwitchDefaults {
   /// Creates a [SwitchDefaults].
-  const SwitchDefaults({
-    this.size,
-    this.disabled,
-  });
+  const SwitchDefaults({this.size, this.disabled});
 
   /// Which size switches take.
   final ControlSize? size;
@@ -27,9 +24,9 @@ class SwitchDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SwitchDefaults merge(SwitchDefaults other) => SwitchDefaults(
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-      );
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -93,36 +90,36 @@ class SwitchToken {
   final Color? handleBg;
 
   _ResolvedSwitchToken _resolve(Token t) => _ResolvedSwitchToken(
-        handleBg: handleBg ?? const Color(0xFFFFFFFF),
-        trackHeight: trackHeight ?? 22,
-        trackHeightSM: trackHeightSM ?? 16,
-        trackHeightLG: trackHeightLG ?? 28,
-        // Null here means "work it out from the height", which is what keeps
-        // a switch of any height in proportion. A number overrides that for
-        // the preset it belongs to.
-        trackMinWidth: trackMinWidth,
-        trackMinWidthSM: trackMinWidthSM,
-        handleSize: handleSize,
-        handleSizeSM: handleSizeSM,
-        handleShadow: handleShadow,
-        colorPrimary: colorPrimary ?? t.primary.base,
-        colorBg: colorBg ?? t.colorTextQuaternary,
-      );
+    handleBg: handleBg ?? const Color(0xFFFFFFFF),
+    trackHeight: trackHeight ?? 22,
+    trackHeightSM: trackHeightSM ?? 16,
+    trackHeightLG: trackHeightLG ?? 28,
+    // Null here means "work it out from the height", which is what keeps
+    // a switch of any height in proportion. A number overrides that for
+    // the preset it belongs to.
+    trackMinWidth: trackMinWidth,
+    trackMinWidthSM: trackMinWidthSM,
+    handleSize: handleSize,
+    handleSizeSM: handleSizeSM,
+    handleShadow: handleShadow,
+    colorPrimary: colorPrimary ?? t.primary.base,
+    colorBg: colorBg ?? t.colorTextQuaternary,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SwitchToken merge(SwitchToken other) => SwitchToken(
-        handleBg: other.handleBg ?? handleBg,
-        trackHeight: other.trackHeight ?? trackHeight,
-        trackHeightSM: other.trackHeightSM ?? trackHeightSM,
-        trackHeightLG: other.trackHeightLG ?? trackHeightLG,
-        trackMinWidth: other.trackMinWidth ?? trackMinWidth,
-        trackMinWidthSM: other.trackMinWidthSM ?? trackMinWidthSM,
-        handleSize: other.handleSize ?? handleSize,
-        handleSizeSM: other.handleSizeSM ?? handleSizeSM,
-        handleShadow: other.handleShadow ?? handleShadow,
-        colorPrimary: other.colorPrimary ?? colorPrimary,
-        colorBg: other.colorBg ?? colorBg,
-      );
+    handleBg: other.handleBg ?? handleBg,
+    trackHeight: other.trackHeight ?? trackHeight,
+    trackHeightSM: other.trackHeightSM ?? trackHeightSM,
+    trackHeightLG: other.trackHeightLG ?? trackHeightLG,
+    trackMinWidth: other.trackMinWidth ?? trackMinWidth,
+    trackMinWidthSM: other.trackMinWidthSM ?? trackMinWidthSM,
+    handleSize: other.handleSize ?? handleSize,
+    handleSizeSM: other.handleSizeSM ?? handleSizeSM,
+    handleShadow: other.handleShadow ?? handleShadow,
+    colorPrimary: other.colorPrimary ?? colorPrimary,
+    colorBg: other.colorBg ?? colorBg,
+  );
 }
 
 @immutable
@@ -308,10 +305,10 @@ class _SoftSwitchState extends State<Switch> {
   static const double _lengthShare = 2;
 
   double _height(_ResolvedSwitchToken r) => _size.resolveHeight(
-        small: r.trackHeightSM,
-        middle: r.trackHeight,
-        large: r.trackHeightLG,
-      );
+    small: r.trackHeightSM,
+    middle: r.trackHeight,
+    large: r.trackHeightLG,
+  );
 
   double _pad(_ResolvedSwitchToken r) => _height(r) * _padShare;
 
@@ -347,10 +344,11 @@ class _SoftSwitchState extends State<Switch> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<SwitchToken>(context) ??
-            const SwitchToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<SwitchToken>(context) ??
+                const SwitchToken())
+            ._resolve(token);
     final on = _on;
 
     final base = on ? r.colorPrimary : r.colorBg;
@@ -379,8 +377,9 @@ class _SoftSwitchState extends State<Switch> {
         readOnly: widget.readOnly,
         onTap: _takesHand ? _toggle : null,
         child: MouseRegion(
-          cursor:
-              _takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          cursor: _takesHand
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
           // For the pointer only: the node above announces the control and
           // takes a reader's tap. Left in, this one was a second, wordless
           // stop under it.
@@ -388,12 +387,15 @@ class _SoftSwitchState extends State<Switch> {
             behavior: HitTestBehavior.opaque,
             excludeFromSemantics: true,
             onTap: _toggle,
-            onTapDown:
-                _takesHand ? (_) => setState(() => _pressed = true) : null,
-            onTapUp:
-                _takesHand ? (_) => setState(() => _pressed = false) : null,
-            onTapCancel:
-                _takesHand ? () => setState(() => _pressed = false) : null,
+            onTapDown: _takesHand
+                ? (_) => setState(() => _pressed = true)
+                : null,
+            onTapUp: _takesHand
+                ? (_) => setState(() => _pressed = false)
+                : null,
+            onTapCancel: _takesHand
+                ? () => setState(() => _pressed = false)
+                : null,
             child: AnimatedContainer(
               duration: token.motionDurationMid,
               curve: token.motionEaseInOut,
@@ -418,7 +420,13 @@ class _SoftSwitchState extends State<Switch> {
                   if (widget.checkedChild != null ||
                       widget.uncheckedChild != null)
                     _buildLabel(
-                        token, on, thumbSize, _height(r), _pad(r), trackColor),
+                      token,
+                      on,
+                      thumbSize,
+                      _height(r),
+                      _pad(r),
+                      trackColor,
+                    ),
                   AnimatedAlign(
                     duration: token.motionDurationMid,
                     curve: token.motionEaseInOut,
@@ -437,7 +445,8 @@ class _SoftSwitchState extends State<Switch> {
                       decoration: BoxDecoration(
                         color: r.handleBg,
                         borderRadius: BorderRadius.circular(thumbSize),
-                        boxShadow: r.handleShadow ??
+                        boxShadow:
+                            r.handleShadow ??
                             [
                               // Sized to the handle, so a switch at any
                               // height is lifted by the same amount rather
@@ -453,8 +462,9 @@ class _SoftSwitchState extends State<Switch> {
                           ? Center(
                               child: Spinner(
                                 size: thumbSize * 0.85,
-                                color:
-                                    on ? token.primary.base : _offColor(token),
+                                color: on
+                                    ? token.primary.base
+                                    : _offColor(token),
                               ),
                             )
                           : null,
@@ -511,7 +521,8 @@ class _SoftSwitchState extends State<Switch> {
             ),
             child: IconTheme.merge(
               data: IconThemeData(color: ink, size: 12 * scale),
-              child: (on ? widget.checkedChild : widget.uncheckedChild) ??
+              child:
+                  (on ? widget.checkedChild : widget.uncheckedChild) ??
                   const SizedBox.shrink(),
             ),
           ),

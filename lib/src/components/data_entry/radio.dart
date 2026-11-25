@@ -35,10 +35,7 @@ enum RadioButtonStyle {
 @immutable
 class RadioDefaults {
   /// Creates a [RadioDefaults].
-  const RadioDefaults({
-    this.disabled,
-    this.size,
-  });
+  const RadioDefaults({this.disabled, this.size});
 
   /// Whether radios are barred, unless one says otherwise.
   final bool? disabled;
@@ -49,9 +46,9 @@ class RadioDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   RadioDefaults merge(RadioDefaults other) => RadioDefaults(
-        disabled: other.disabled ?? disabled,
-        size: other.size ?? size,
-      );
+    disabled: other.disabled ?? disabled,
+    size: other.size ?? size,
+  );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -130,16 +127,16 @@ class RadioToken {
   /// The numbers for [size]: a preset takes its own, and a measurement is the
   /// radio's diameter — the dot keeping the share of it the standard one has
   /// — with the words of whichever preset it is nearest.
-  _ResolvedRadioToken _resolve(
-    Token t, [
-    ControlSize size = SoftSize.middle,
-  ]) {
+  _ResolvedRadioToken _resolve(Token t, [ControlSize size = SoftSize.middle]) {
     final small = radioSizeSM ?? 14;
     final middle = radioSize ?? 16;
     final large = radioSizeLG ?? 20;
     final outer = size.resolve1D(small: small, middle: middle, large: large);
-    final preset =
-        size.nearestPreset(small: small, middle: middle, large: large);
+    final preset = size.nearestPreset(
+      small: small,
+      middle: middle,
+      large: large,
+    );
     final dot = size is SoftSize
         ? switch (preset) {
             SoftSize.small => dotSizeSM ?? 6,
@@ -147,15 +144,11 @@ class RadioToken {
             SoftSize.large => dotSizeLG ?? 10,
           }
         : outer * (dotSize ?? 8) / middle;
-    return _resolveAt(
-        t,
-        outer,
-        dot,
-        switch (preset) {
-          SoftSize.small => fontSizeSM ?? t.fontSizeSM,
-          SoftSize.middle => fontSize ?? t.fontSize,
-          SoftSize.large => fontSizeLG ?? t.fontSizeLG,
-        });
+    return _resolveAt(t, outer, dot, switch (preset) {
+      SoftSize.small => fontSizeSM ?? t.fontSizeSM,
+      SoftSize.middle => fontSize ?? t.fontSize,
+      SoftSize.large => fontSizeLG ?? t.fontSizeLG,
+    });
   }
 
   _ResolvedRadioToken _resolveAt(
@@ -163,37 +156,36 @@ class RadioToken {
     double outer,
     double dot,
     double words,
-  ) =>
-      _ResolvedRadioToken(
-        radioSize: outer,
-        dotSize: dot,
-        dotColor: dotColor ?? t.primary.base,
-        colorBorder: colorBorder ?? t.colorBorder,
-        colorPrimary: colorPrimary ?? t.primary.base,
-        buttonBg: buttonBg ?? t.colorBgContainer,
-        buttonCheckedBg: buttonCheckedBg ?? t.primary.base,
-        buttonColor: buttonColor ?? t.colorText,
-        fontSize: words,
-      );
+  ) => _ResolvedRadioToken(
+    radioSize: outer,
+    dotSize: dot,
+    dotColor: dotColor ?? t.primary.base,
+    colorBorder: colorBorder ?? t.colorBorder,
+    colorPrimary: colorPrimary ?? t.primary.base,
+    buttonBg: buttonBg ?? t.colorBgContainer,
+    buttonCheckedBg: buttonCheckedBg ?? t.primary.base,
+    buttonColor: buttonColor ?? t.colorText,
+    fontSize: words,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   RadioToken merge(RadioToken other) => RadioToken(
-        radioSize: other.radioSize ?? radioSize,
-        radioSizeSM: other.radioSizeSM ?? radioSizeSM,
-        radioSizeLG: other.radioSizeLG ?? radioSizeLG,
-        dotSize: other.dotSize ?? dotSize,
-        dotSizeSM: other.dotSizeSM ?? dotSizeSM,
-        dotSizeLG: other.dotSizeLG ?? dotSizeLG,
-        dotColor: other.dotColor ?? dotColor,
-        colorBorder: other.colorBorder ?? colorBorder,
-        colorPrimary: other.colorPrimary ?? colorPrimary,
-        buttonBg: other.buttonBg ?? buttonBg,
-        buttonCheckedBg: other.buttonCheckedBg ?? buttonCheckedBg,
-        buttonColor: other.buttonColor ?? buttonColor,
-        fontSize: other.fontSize ?? fontSize,
-        fontSizeSM: other.fontSizeSM ?? fontSizeSM,
-        fontSizeLG: other.fontSizeLG ?? fontSizeLG,
-      );
+    radioSize: other.radioSize ?? radioSize,
+    radioSizeSM: other.radioSizeSM ?? radioSizeSM,
+    radioSizeLG: other.radioSizeLG ?? radioSizeLG,
+    dotSize: other.dotSize ?? dotSize,
+    dotSizeSM: other.dotSizeSM ?? dotSizeSM,
+    dotSizeLG: other.dotSizeLG ?? dotSizeLG,
+    dotColor: other.dotColor ?? dotColor,
+    colorBorder: other.colorBorder ?? colorBorder,
+    colorPrimary: other.colorPrimary ?? colorPrimary,
+    buttonBg: other.buttonBg ?? buttonBg,
+    buttonCheckedBg: other.buttonCheckedBg ?? buttonCheckedBg,
+    buttonColor: other.buttonColor ?? buttonColor,
+    fontSize: other.fontSize ?? fontSize,
+    fontSizeSM: other.fontSizeSM ?? fontSizeSM,
+    fontSizeLG: other.fontSizeLG ?? fontSizeLG,
+  );
 }
 
 @immutable
@@ -346,10 +338,11 @@ class _SoftRadioState<T> extends State<Radio<T>> {
     // The widget's own token first, as every other component reads it: named
     // here it was collected, documented and then never asked for, so a radio
     // could only be restyled through a `ConfigProvider` above it.
-    final r = (widget.token ??
-            ConfigProvider.componentOf<RadioToken>(context) ??
-            const RadioToken())
-        ._resolve(token, _size);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<RadioToken>(context) ??
+                const RadioToken())
+            ._resolve(token, _size);
     return FocusableActionDetector(
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
@@ -375,8 +368,9 @@ class _SoftRadioState<T> extends State<Radio<T>> {
         readOnly: widget.readOnly,
         onTap: _takesHand ? _select : null,
         child: MouseRegion(
-          cursor:
-              _takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          cursor: _takesHand
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),
           // For the pointer only: the node above announces the control and
@@ -470,21 +464,23 @@ class RadioDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final r = componentToken ??
+    final r =
+        componentToken ??
         (ConfigProvider.componentOf<RadioToken>(context) ?? const RadioToken())
             ._resolve(token);
     final border = !enabled
         ? token.colorBorder
         : (selected || hovered)
-            ? r.colorPrimary
-            : switch (status) {
-                InputStatus.error => token.error.base,
-                InputStatus.warning => token.warning.base,
-                _ => r.colorBorder,
-              };
+        ? r.colorPrimary
+        : switch (status) {
+            InputStatus.error => token.error.base,
+            InputStatus.warning => token.warning.base,
+            _ => r.colorBorder,
+          };
 
-    final borderWidth =
-        selected ? ((r.radioSize - r.dotSize) / 2) : token.lineWidth;
+    final borderWidth = selected
+        ? ((r.radioSize - r.dotSize) / 2)
+        : token.lineWidth;
 
     return AnimatedContainer(
       duration: token.motionDurationFast,
@@ -522,11 +518,7 @@ class RadioDot extends StatelessWidget {
 @immutable
 class RadioOption<T> {
   /// Creates a [RadioOption].
-  const RadioOption({
-    required this.value,
-    this.label,
-    this.disabled = false,
-  });
+  const RadioOption({required this.value, this.label, this.disabled = false});
 
   /// The value this option contributes to the group's selection.
   final T value;
@@ -576,12 +568,12 @@ class RadioGroupDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   RadioGroupDefaults merge(RadioGroupDefaults other) => RadioGroupDefaults(
-        direction: other.direction ?? direction,
-        optionType: other.optionType ?? optionType,
-        buttonStyle: other.buttonStyle ?? buttonStyle,
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-      );
+    direction: other.direction ?? direction,
+    optionType: other.optionType ?? optionType,
+    buttonStyle: other.buttonStyle ?? buttonStyle,
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A set of radio buttons selecting one value from a list.
@@ -733,7 +725,8 @@ class _RadioGroupState<T> extends State<RadioGroup<T>> {
           status: widget.status,
           // The same word that sizes the buttons sizes the dots: one name,
           // one meaning. It used to reach only the buttons.
-          size: widget.size ??
+          size:
+              widget.size ??
               ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.size,
           onChanged: _select,
           child: option.label ?? const SizedBox.shrink(),
@@ -752,12 +745,16 @@ class _RadioGroupState<T> extends State<RadioGroup<T>> {
       );
     }
     return Wrap(
-        spacing: widget.spacing, runSpacing: widget.runSpacing, children: dots);
+      spacing: widget.spacing,
+      runSpacing: widget.runSpacing,
+      children: dots,
+    );
   }
 
   Widget _buildButtons(BuildContext context) {
     final token = context.softToken;
-    final resolvedSize = widget.size ??
+    final resolvedSize =
+        widget.size ??
         ConfigProvider.defaultsOf<RadioGroupDefaults>(context)?.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
@@ -788,27 +785,27 @@ class _RadioGroupState<T> extends State<RadioGroup<T>> {
             ._resolve(token);
 
     _RadioButton<T> button(int i, _ButtonRole role) => _RadioButton<T>(
-          option: widget.options[i],
-          role: role,
-          selected: i == selectedIndex,
-          radius: radiusAt(i),
-          // Every button after the first is laid a line back onto the one
-          // before it, so the two borders that meet draw a single divider.
-          overlap: i == 0 ? 0 : token.lineWidth,
-          enabled: _enabled && !widget.options[i].disabled,
-          readOnly: widget.readOnly,
-          style: _buttonStyle,
-          size: resolvedSize,
-          block: widget.block,
-          token: token,
-          resolved: r,
-          onTap: () => _select(widget.options[i].value),
-        );
+      option: widget.options[i],
+      role: role,
+      selected: i == selectedIndex,
+      radius: radiusAt(i),
+      // Every button after the first is laid a line back onto the one
+      // before it, so the two borders that meet draw a single divider.
+      overlap: i == 0 ? 0 : token.lineWidth,
+      enabled: _enabled && !widget.options[i].disabled,
+      readOnly: widget.readOnly,
+      style: _buttonStyle,
+      size: resolvedSize,
+      block: widget.block,
+      token: token,
+      resolved: r,
+      onTap: () => _select(widget.options[i].value),
+    );
 
     Row row(List<Widget> children) => Row(
-          mainAxisSize: widget.block ? MainAxisSize.max : MainAxisSize.min,
-          children: children,
-        );
+      mainAxisSize: widget.block ? MainAxisSize.max : MainAxisSize.min,
+      children: children,
+    );
 
     // Two identical layers, like CSS `margin-left: -1px; z-index: 1`: the base
     // row draws every button with grey dividers; the top row re-draws only the
@@ -910,21 +907,21 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
   bool _hovered = false;
 
   double get _height => widget.size.resolveHeight(
-        small: widget.token.controlHeightSM,
-        middle: widget.token.controlHeight,
-        large: widget.token.controlHeightLG,
-      );
+    small: widget.token.controlHeightSM,
+    middle: widget.token.controlHeight,
+    large: widget.token.controlHeightLG,
+  );
 
   /// Type has no height to take, so it follows the preset the button's own
   /// height is nearest to.
   double get _fontSize => switch (widget.size.nearestPreset(
-        small: widget.token.controlHeightSM,
-        middle: widget.token.controlHeight,
-        large: widget.token.controlHeightLG,
-      )) {
-        SoftSize.large => widget.token.fontSizeLG,
-        _ => widget.token.fontSize,
-      };
+    small: widget.token.controlHeightSM,
+    middle: widget.token.controlHeight,
+    large: widget.token.controlHeightLG,
+  )) {
+    SoftSize.large => widget.token.fontSizeLG,
+    _ => widget.token.fontSize,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -933,8 +930,9 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
     final solid = widget.style == RadioButtonStyle.solid;
     // The fill a taken solid button wears, and the colour its outline and
     // words take — both tokens of this component, not the theme's primary.
-    final accent =
-        widget.enabled ? r.buttonCheckedBg : token.colorTextQuaternary;
+    final accent = widget.enabled
+        ? r.buttonCheckedBg
+        : token.colorTextQuaternary;
     // What an untaken button stands on, taken or not.
     final resting = widget.enabled ? r.buttonBg : token.colorFillTertiary;
     final overlay = widget.role == _ButtonRole.overlay;
@@ -1008,8 +1006,9 @@ class _RadioButtonState<T> extends State<_RadioButton<T>> {
       content = Semantics(
         readOnly: widget.readOnly,
         child: MouseRegion(
-          cursor:
-              takesHand ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          cursor: takesHand
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
           onEnter: (_) {
             if (takesHand) setState(() => _hovered = true);
           },

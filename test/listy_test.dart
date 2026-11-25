@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart' hide Card, ThemeData, Divider;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' hide Card, ThemeData, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      theme: ThemeData.light,
-      child: MaterialApp(home: Scaffold(body: child)),
-    );
+  theme: ThemeData.light,
+  child: MaterialApp(home: Scaffold(body: child)),
+);
 
 enum _Section { first, second }
 
@@ -32,14 +32,15 @@ Future<void> _drive(WidgetTester tester, Future<void> work) async {
 }
 
 List<_Row> _rows(int count) => List.generate(
-      count,
-      (i) => _Row('id-$i', 'Row $i', i.isEven ? 'Even' : 'Odd'),
-    );
+  count,
+  (i) => _Row('id-$i', 'Row $i', i.isEven ? 'Even' : 'Odd'),
+);
 
 void main() {
   group('Listy', () {
-    testWidgets('renders rows and builds only the visible ones',
-        (tester) async {
+    testWidgets('renders rows and builds only the visible ones', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Listy(
@@ -56,8 +57,9 @@ void main() {
       expect(find.text('Row 400'), findsNothing);
     });
 
-    testWidgets('groups items and renders a header per section',
-        (tester) async {
+    testWidgets('groups items and renders a header per section', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Listy(
@@ -75,34 +77,37 @@ void main() {
       expect(find.text('Odd (3)'), findsOneWidget);
     });
 
-    testWidgets('sticky keeps a group header pinned while its section scrolls',
-        (tester) async {
-      await tester.pumpWidget(
-        _host(
-          Listy(
-            height: 200,
-            sticky: true,
-            items: _rows(40),
-            rowKey: (r) => r.id,
-            groupKey: (r) => r.group,
-            groupTitle: (key, items) => Text('G:$key'),
-            itemBuilder: (r, index) => Text(r.name),
+    testWidgets(
+      'sticky keeps a group header pinned while its section scrolls',
+      (tester) async {
+        await tester.pumpWidget(
+          _host(
+            Listy(
+              height: 200,
+              sticky: true,
+              items: _rows(40),
+              rowKey: (r) => r.id,
+              groupKey: (r) => r.group,
+              groupTitle: (key, items) => Text('G:$key'),
+              itemBuilder: (r, index) => Text(r.name),
+            ),
           ),
-        ),
-      );
+        );
 
-      final header = find.text('G:Even');
-      final before = tester.getTopLeft(header).dy;
+        final header = find.text('G:Even');
+        final before = tester.getTopLeft(header).dy;
 
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, -120));
-      await tester.pump();
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -120));
+        await tester.pump();
 
-      expect(header, findsOneWidget);
-      expect(tester.getTopLeft(header).dy, closeTo(before, 0.5));
-    });
+        expect(header, findsOneWidget);
+        expect(tester.getTopLeft(header).dy, closeTo(before, 0.5));
+      },
+    );
 
-    testWidgets('scrollTo reaches an item that was never built',
-        (tester) async {
+    testWidgets('scrollTo reaches an item that was never built', (
+      tester,
+    ) async {
       final controller = ListyController();
       await tester.pumpWidget(
         _host(
@@ -130,8 +135,9 @@ void main() {
       expect(find.text('Row 300'), findsOneWidget);
     });
 
-    testWidgets('scrollTo(align: top) clears the pinned group header',
-        (tester) async {
+    testWidgets('scrollTo(align: top) clears the pinned group header', (
+      tester,
+    ) async {
       final controller = ListyController();
       await tester.pumpWidget(
         _host(
@@ -246,8 +252,9 @@ void main() {
       expect(biggestStep, lessThan(travelled / 4));
     });
 
-    testWidgets('an animated scrollTo lands exactly where a jump would',
-        (tester) async {
+    testWidgets('an animated scrollTo lands exactly where a jump would', (
+      tester,
+    ) async {
       Future<double> land(Duration duration) async {
         final controller = ListyController();
         final scroll = ScrollController();
@@ -338,8 +345,9 @@ void main() {
       expect(seen!.pixels, greaterThan(0));
     });
 
-    testWidgets('loadMore fires once when the end comes within threshold',
-        (tester) async {
+    testWidgets('loadMore fires once when the end comes within threshold', (
+      tester,
+    ) async {
       var calls = 0;
       await tester.pumpWidget(
         _host(
@@ -365,8 +373,9 @@ void main() {
       expect(calls, 1);
     });
 
-    testWidgets('loadMore fires when the rows do not fill the viewport',
-        (tester) async {
+    testWidgets('loadMore fires when the rows do not fill the viewport', (
+      tester,
+    ) async {
       var calls = 0;
       await tester.pumpWidget(
         _host(
@@ -385,23 +394,23 @@ void main() {
       expect(calls, 1);
     });
 
-    testWidgets('loadMore stays quiet while loading and once exhausted',
-        (tester) async {
+    testWidgets('loadMore stays quiet while loading and once exhausted', (
+      tester,
+    ) async {
       var calls = 0;
       Widget build({required bool loading, required bool hasMore}) => _host(
-            Listy(
-              height: 200,
-              items: _rows(20),
-              rowKey: (r) => r.id,
-              loadMore: ListyLoadMore(
-                onLoad: () => calls++,
-                loading: loading,
-                hasMore: hasMore,
-              ),
-              itemBuilder: (r, index) =>
-                  SizedBox(height: 40, child: Text(r.name)),
-            ),
-          );
+        Listy(
+          height: 200,
+          items: _rows(20),
+          rowKey: (r) => r.id,
+          loadMore: ListyLoadMore(
+            onLoad: () => calls++,
+            loading: loading,
+            hasMore: hasMore,
+          ),
+          itemBuilder: (r, index) => SizedBox(height: 40, child: Text(r.name)),
+        ),
+      );
 
       await tester.pumpWidget(build(loading: true, hasMore: true));
       await tester.drag(find.byType(ListView), const Offset(0, -2000));
@@ -416,8 +425,9 @@ void main() {
       expect(find.text('No more items'), findsOneWidget);
     });
 
-    testWidgets('header follows the pull and fires onRefresh on release',
-        (tester) async {
+    testWidgets('header follows the pull and fires onRefresh on release', (
+      tester,
+    ) async {
       var refreshes = 0;
       final seen = <double>[];
       await tester.pumpWidget(
@@ -444,8 +454,9 @@ void main() {
       );
 
       // Drag past the trigger and hold: the header sees the distance.
-      final gesture =
-          await tester.startGesture(tester.getCenter(find.text('Row 0')));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Row 0')),
+      );
       await gesture.moveBy(const Offset(0, 100));
       await tester.pump();
 
@@ -485,8 +496,9 @@ void main() {
         ),
       );
 
-      final gesture =
-          await tester.startGesture(tester.getCenter(find.text('Row 0')));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Row 0')),
+      );
       await gesture.moveBy(const Offset(0, 120));
       await tester.pump();
       await gesture.up();
@@ -496,8 +508,9 @@ void main() {
       expect(refreshes, 1);
     });
 
-    testWidgets('pulling back under the trigger calls the refresh off',
-        (tester) async {
+    testWidgets('pulling back under the trigger calls the refresh off', (
+      tester,
+    ) async {
       for (final physics in <ScrollPhysics?>[
         null,
         const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
@@ -525,8 +538,9 @@ void main() {
           ),
         );
 
-        final gesture =
-            await tester.startGesture(tester.getCenter(find.text('Row 0')));
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('Row 0')),
+        );
         await gesture.moveBy(const Offset(0, 120));
         await tester.pump();
         expect(last?.armed, isTrue, reason: 'physics: $physics');
@@ -567,8 +581,9 @@ void main() {
         ),
       );
 
-      final gesture =
-          await tester.startGesture(tester.getCenter(find.text('Row 0')));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Row 0')),
+      );
       await gesture.moveBy(const Offset(0, 40));
       await tester.pump();
       await gesture.up();
@@ -603,8 +618,9 @@ void main() {
       expect(find.text('S:second'), findsOneWidget);
     });
 
-    testWidgets('a pinned header coexists with sticky group headers',
-        (tester) async {
+    testWidgets('a pinned header coexists with sticky group headers', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           ConfigProvider(
@@ -658,8 +674,9 @@ void main() {
       expect(find.textContaining('G:'), findsWidgets);
     });
 
-    testWidgets('styles replace the row, header and root surfaces',
-        (tester) async {
+    testWidgets('styles replace the row, header and root surfaces', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Listy(
@@ -717,8 +734,9 @@ void main() {
       );
     });
 
-    testWidgets('separatorBuilder goes between rows, never after the last',
-        (tester) async {
+    testWidgets('separatorBuilder goes between rows, never after the last', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Listy(
@@ -743,8 +761,9 @@ void main() {
       );
     });
 
-    testWidgets('a separator of your own takes the default hairline away',
-        (tester) async {
+    testWidgets('a separator of your own takes the default hairline away', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Listy(
@@ -772,8 +791,9 @@ void main() {
       );
     });
 
-    testWidgets('without one, the default hairline is still there',
-        (tester) async {
+    testWidgets('without one, the default hairline is still there', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Listy(
@@ -796,8 +816,9 @@ void main() {
       expect((row.decoration as BoxDecoration).border, isNotNull);
     });
 
-    testWidgets('no separator where a section ends and a header begins',
-        (tester) async {
+    testWidgets('no separator where a section ends and a header begins', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Listy(
@@ -832,8 +853,10 @@ void main() {
             height: 200,
             items: _rows(3),
             rowKey: (r) => r.id,
-            token:
-                const ListyToken(itemPaddingBlock: 30, itemPaddingInline: 40),
+            token: const ListyToken(
+              itemPaddingBlock: 30,
+              itemPaddingInline: 40,
+            ),
             itemBuilder: (r, index) => Text(r.name),
           ),
         ),

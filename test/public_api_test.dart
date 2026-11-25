@@ -46,7 +46,8 @@ void main() {
     expect(
       bare,
       isEmpty,
-      reason: 'lib/seed_ui.dart exports ${bare.join(', ')} without a `show` '
+      reason:
+          'lib/seed_ui.dart exports ${bare.join(', ')} without a `show` '
           'clause, which makes every public member of those libraries part '
           'of the API. Name the exports explicitly.',
     );
@@ -65,7 +66,8 @@ void main() {
     expect(
       actual,
       snapshot.readAsStringSync(),
-      reason: 'The public API changed.\n\n'
+      reason:
+          'The public API changed.\n\n'
           'If that was deliberate, regenerate the snapshot with\n'
           '  rm test/public_api.txt && flutter test test/public_api_test.dart\n'
           'then read the diff, and record any removed name in CHANGELOG.md '
@@ -86,8 +88,9 @@ void main() {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       final lines = entity.readAsStringSync().split('\n');
       for (var i = 0; i < lines.length; i++) {
-        final match =
-            RegExp(r'^  final .*\b(on[A-Z]\w*Change)\b;').firstMatch(lines[i]);
+        final match = RegExp(
+          r'^  final .*\b(on[A-Z]\w*Change)\b;',
+        ).firstMatch(lines[i]);
         if (match == null) continue;
         final name = match.group(1)!;
         if (name == 'onFocusChange' || name.startsWith('_')) continue;
@@ -97,7 +100,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'a callback reporting a change ends in `onChanged`, not '
+      reason:
+          'a callback reporting a change ends in `onChanged`, not '
           '`onChange` — see CONTRIBUTING.md',
     );
   });

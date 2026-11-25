@@ -9,12 +9,12 @@ library;
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart' as m;
 // ignore: implementation_imports
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter/widgets.dart' hide Form, Table, TableRow;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' as m;
 import 'package:seed_ui/seed_ui.dart';
 
 /// The size of one half, in logical pixels, unless a shot names its own.
@@ -164,8 +164,9 @@ Future<void> shoot(
     }))!;
 
     Directory(outDir).createSync(recursive: true);
-    File('$outDir/$name.${dark ? 'dark' : 'light'}.png')
-        .writeAsBytesSync(bytes);
+    File(
+      '$outDir/$name.${dark ? 'dark' : 'light'}.png',
+    ).writeAsBytesSync(bytes);
   }
 
   debugDisableShadows = true;

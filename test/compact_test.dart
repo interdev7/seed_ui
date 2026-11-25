@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
-    hide ThemeData, Radio, RadioGroup, Divider;
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
+    hide ThemeData, Radio, RadioGroup, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child, {TextDirection direction = TextDirection.ltr}) =>
@@ -52,15 +52,18 @@ void main() {
   _raiseTests();
   _addonTests();
   group('CompactSlot.radiusOf', () {
-    testWidgets('hands back every corner where there is no group',
-        (tester) async {
+    testWidgets('hands back every corner where there is no group', (
+      tester,
+    ) async {
       late BorderRadius radius;
       await tester.pumpWidget(
         _host(
           Builder(
             builder: (context) {
-              radius =
-                  CompactSlot.radiusOf(context, 8).resolve(TextDirection.ltr);
+              radius = CompactSlot.radiusOf(
+                context,
+                8,
+              ).resolve(TextDirection.ltr);
               return const SizedBox();
             },
           ),
@@ -69,20 +72,23 @@ void main() {
       expect(radius, BorderRadius.circular(8));
     });
 
-    testWidgets('squares the joined side of each place in a row',
-        (tester) async {
+    testWidgets('squares the joined side of each place in a row', (
+      tester,
+    ) async {
       final seen = <CompactPosition, BorderRadius>{};
       Widget probe(CompactPosition position) => CompactSlot(
-            position: position,
-            direction: Axis.horizontal,
-            child: Builder(
-              builder: (context) {
-                seen[position] =
-                    CompactSlot.radiusOf(context, 8).resolve(TextDirection.ltr);
-                return const SizedBox();
-              },
-            ),
-          );
+        position: position,
+        direction: Axis.horizontal,
+        child: Builder(
+          builder: (context) {
+            seen[position] = CompactSlot.radiusOf(
+              context,
+              8,
+            ).resolve(TextDirection.ltr);
+            return const SizedBox();
+          },
+        ),
+      );
       await tester.pumpWidget(
         _host(
           Column(
@@ -105,8 +111,7 @@ void main() {
       expect(seen[CompactPosition.only], BorderRadius.circular(8));
     });
 
-    testWidgets(
-        'keeps the outer corners outer when the words run the other '
+    testWidgets('keeps the outer corners outer when the words run the other '
         'way', (tester) async {
       late BorderRadius first;
       await tester.pumpWidget(
@@ -116,8 +121,10 @@ void main() {
             direction: Axis.horizontal,
             child: Builder(
               builder: (context) {
-                first =
-                    CompactSlot.radiusOf(context, 8).resolve(TextDirection.rtl);
+                first = CompactSlot.radiusOf(
+                  context,
+                  8,
+                ).resolve(TextDirection.rtl);
                 return const SizedBox();
               },
             ),
@@ -149,8 +156,10 @@ void main() {
                   direction: Axis.vertical,
                   child: Builder(
                     builder: (context) {
-                      seen[position] = CompactSlot.radiusOf(context, 8)
-                          .resolve(TextDirection.ltr);
+                      seen[position] = CompactSlot.radiusOf(
+                        context,
+                        8,
+                      ).resolve(TextDirection.ltr);
                       return const SizedBox();
                     },
                   ),
@@ -175,11 +184,7 @@ void main() {
   group('Compact', () {
     testWidgets('gives a lone child every corner', (tester) async {
       await tester.pumpWidget(
-        _host(
-          const Compact(
-            children: [Button(child: Text('Only'))],
-          ),
-        ),
+        _host(const Compact(children: [Button(child: Text('Only'))])),
       );
       final radius = _radiusOf(tester, 'Only');
       expect(radius.topLeft, isNot(Radius.zero));
@@ -208,15 +213,17 @@ void main() {
       expect(right.topRight, isNot(Radius.zero));
     });
 
-    testWidgets(
-        'the run is narrower than the controls laid side by side, by '
+    testWidgets('the run is narrower than the controls laid side by side, by '
         'one line per seam', (tester) async {
       const label = Text('Same');
       await tester.pumpWidget(
         _host(
           const Row(
             mainAxisSize: MainAxisSize.min,
-            children: [Button(child: label), Button(child: label)],
+            children: [
+              Button(child: label),
+              Button(child: label),
+            ],
           ),
         ),
       );
@@ -224,7 +231,10 @@ void main() {
       await tester.pumpWidget(
         _host(
           const Compact(
-            children: [Button(child: label), Button(child: label)],
+            children: [
+              Button(child: label),
+              Button(child: label),
+            ],
           ),
         ),
       );
@@ -233,8 +243,9 @@ void main() {
       expect(joined, moreOrLessEquals(apart - line, epsilon: 0.01));
     });
 
-    testWidgets('the second control starts where the first ends',
-        (tester) async {
+    testWidgets('the second control starts where the first ends', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Compact(
@@ -266,8 +277,10 @@ void main() {
       );
       expect(
         tester.getTopRight(find.byType(Button).at(1)).dx,
-        moreOrLessEquals(tester.getTopRight(find.byType(Compact)).dx,
-            epsilon: 0.01),
+        moreOrLessEquals(
+          tester.getTopRight(find.byType(Compact)).dx,
+          epsilon: 0.01,
+        ),
       );
     });
 
@@ -292,8 +305,9 @@ void main() {
       expect(one, moreOrLessEquals(two, epsilon: 1));
     });
 
-    testWidgets('a column joins top to bottom, whichever way the words run',
-        (tester) async {
+    testWidgets('a column joins top to bottom, whichever way the words run', (
+      tester,
+    ) async {
       // A column's ends are the top and the bottom either way round: nothing
       // about it is mirrored, and its seam is closed upwards all the same.
       for (final direction in TextDirection.values) {
@@ -350,9 +364,9 @@ void main() {
             )
             .first,
       );
-      final radius = (field.decoration! as BoxDecoration)
-          .borderRadius!
-          .resolve(TextDirection.ltr);
+      final radius = (field.decoration! as BoxDecoration).borderRadius!.resolve(
+        TextDirection.ltr,
+      );
       expect(radius.topLeft, isNot(Radius.zero));
       expect(radius.topRight, Radius.zero);
     });
@@ -429,8 +443,9 @@ void main() {
       );
     });
 
-    testWidgets('joins a run of radio buttons to what follows it',
-        (tester) async {
+    testWidgets('joins a run of radio buttons to what follows it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           SizedBox(
@@ -460,8 +475,9 @@ void main() {
       expect(_radiusOf(tester, 'Apply').topLeft, Radius.zero);
     });
 
-    testWidgets('a run of radio buttons standing alone keeps both its ends',
-        (tester) async {
+    testWidgets('a run of radio buttons standing alone keeps both its ends', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           RadioGroup<String>(
@@ -480,8 +496,9 @@ void main() {
       expect(_radiusOf(tester, 'B').topRight, isNot(Radius.zero));
     });
 
-    testWidgets('a control nested deeper in the run still finds its slot',
-        (tester) async {
+    testWidgets('a control nested deeper in the run still finds its slot', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Compact(
@@ -501,8 +518,9 @@ void main() {
       expect(_radiusOf(tester, 'More').topRight, isNot(Radius.zero));
     });
 
-    testWidgets('a control told it now has a neighbour redraws its corners',
-        (tester) async {
+    testWidgets('a control told it now has a neighbour redraws its corners', (
+      tester,
+    ) async {
       // The same const widgets in both runs, so nothing but the slot has
       // changed: what redraws the corners is the control's dependency on it,
       // not a parent rebuilding the button.
@@ -564,8 +582,9 @@ void main() {
       }
     });
 
-    testWidgets('a run of radio buttons closes its seam either way round',
-        (tester) async {
+    testWidgets('a run of radio buttons closes its seam either way round', (
+      tester,
+    ) async {
       for (final direction in TextDirection.values) {
         await tester.pumpWidget(
           _host(
@@ -617,8 +636,9 @@ void main() {
       expect(tester.getSize(find.byType(Compact)), Size.zero);
     });
 
-    testWidgets('a widget that knows nothing of the group still stands in it',
-        (tester) async {
+    testWidgets('a widget that knows nothing of the group still stands in it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Compact(
@@ -777,8 +797,9 @@ void _addonTests() {
       expect(corners.topEnd, isNot(Radius.zero));
     });
 
-    testWidgets('it is the same shape as the field it is joined to',
-        (tester) async {
+    testWidgets('it is the same shape as the field it is joined to', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           SizedBox(

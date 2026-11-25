@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
@@ -70,20 +70,20 @@ class PaginationToken {
   final double? sizeChangerWidth;
 
   _ResolvedPaginationToken _resolve(Token t) => _ResolvedPaginationToken(
-        sizeChangerWidth: sizeChangerWidth ?? 110,
-        itemActiveColorPrimary: itemActiveColorPrimary ?? t.primary.base,
-        fontSize: fontSize ?? t.fontSize,
-        borderRadius: borderRadius ?? t.borderRadius,
-      );
+    sizeChangerWidth: sizeChangerWidth ?? 110,
+    itemActiveColorPrimary: itemActiveColorPrimary ?? t.primary.base,
+    fontSize: fontSize ?? t.fontSize,
+    borderRadius: borderRadius ?? t.borderRadius,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   PaginationToken merge(PaginationToken other) => PaginationToken(
-        sizeChangerWidth: other.sizeChangerWidth ?? sizeChangerWidth,
-        itemActiveColorPrimary:
-            other.itemActiveColorPrimary ?? itemActiveColorPrimary,
-        fontSize: other.fontSize ?? fontSize,
-        borderRadius: other.borderRadius ?? borderRadius,
-      );
+    sizeChangerWidth: other.sizeChangerWidth ?? sizeChangerWidth,
+    itemActiveColorPrimary:
+        other.itemActiveColorPrimary ?? itemActiveColorPrimary,
+    fontSize: other.fontSize ?? fontSize,
+    borderRadius: other.borderRadius ?? borderRadius,
+  );
 }
 
 @immutable
@@ -146,14 +146,14 @@ class PaginationDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   PaginationDefaults merge(PaginationDefaults other) => PaginationDefaults(
-        showSizeChanger: other.showSizeChanger ?? showSizeChanger,
-        showQuickJumper: other.showQuickJumper ?? showQuickJumper,
-        hideOnSinglePage: other.hideOnSinglePage ?? hideOnSinglePage,
-        showLessItems: other.showLessItems ?? showLessItems,
-        align: other.align ?? align,
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-      );
+    showSizeChanger: other.showSizeChanger ?? showSizeChanger,
+    showQuickJumper: other.showQuickJumper ?? showQuickJumper,
+    hideOnSinglePage: other.hideOnSinglePage ?? hideOnSinglePage,
+    showLessItems: other.showLessItems ?? showLessItems,
+    align: other.align ?? align,
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A pager for splitting a long list across pages.
@@ -349,24 +349,24 @@ class _PaginationState extends State<Pagination> {
   }
 
   double _controlHeight(Token t) => _controlSize.resolveHeight(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 
   /// The preset a height of your own is nearest to: the type comes from it,
   /// since a bare number says nothing about type.
   SoftSize _preset(Token t) => _controlSize.nearestPreset(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 
   double _fontSize(Token t) => switch (_preset(t)) {
-        SoftSize.small => t.fontSizeSM,
-        SoftSize.middle => t.fontSize,
-        SoftSize.large => t.fontSizeLG,
-      };
+    SoftSize.small => t.fontSizeSM,
+    SoftSize.middle => t.fontSize,
+    SoftSize.large => t.fontSizeLG,
+  };
 
   /// The page buttons and ellipsis jumps to show. First and last page are
   /// always present; near an edge up to five consecutive pages show, otherwise
@@ -412,7 +412,8 @@ class _PaginationState extends State<Pagination> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final named = widget.token ??
+    final named =
+        widget.token ??
         ConfigProvider.componentOf<PaginationToken>(context) ??
         const PaginationToken();
     final pt = named._resolve(token);
@@ -691,7 +692,8 @@ class _PaginationState extends State<Pagination> {
           for (final s in widget.pageSizeOptions)
             SelectOption(
               value: s,
-              filterText: '${context.seedLocale.figures('$s')} '
+              filterText:
+                  '${context.seedLocale.figures('$s')} '
                   '${context.seedLocale.perPage}',
             ),
         ],
@@ -806,8 +808,9 @@ class _ArrowState extends State<_Arrow> {
       size: widget.size,
       variant: ButtonVariant.text,
       // Nothing but a chevron on it, so it has no words to be named by.
-      semanticsLabel:
-          widget.direction == _ArrowDir.next ? words.next : words.previous,
+      semanticsLabel: widget.direction == _ArrowDir.next
+          ? words.next
+          : words.previous,
       icon: CustomPaint(
         size: Size(size * 0.65, size * 0.65),
         painter: _ChevronPainter(
@@ -923,8 +926,9 @@ class _EllipsisState extends State<_Ellipsis> {
   Widget build(BuildContext context) {
     final t = widget.token;
     return MouseRegion(
-      cursor:
-          widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      cursor: widget.enabled
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       // Three dots that jump five pages, so the name says which way: the
@@ -982,13 +986,13 @@ class _ChevronPainter extends CustomPainter {
     final h = size.height;
     final path = forward
         ? (Path()
-          ..moveTo(w * 0.35, h * 0.15)
-          ..lineTo(w * 0.7, h * 0.5)
-          ..lineTo(w * 0.35, h * 0.85))
+            ..moveTo(w * 0.35, h * 0.15)
+            ..lineTo(w * 0.7, h * 0.5)
+            ..lineTo(w * 0.35, h * 0.85))
         : (Path()
-          ..moveTo(w * 0.65, h * 0.15)
-          ..lineTo(w * 0.3, h * 0.5)
-          ..lineTo(w * 0.65, h * 0.85));
+            ..moveTo(w * 0.65, h * 0.15)
+            ..lineTo(w * 0.3, h * 0.5)
+            ..lineTo(w * 0.65, h * 0.85));
     canvas.drawPath(path, paint);
   }
 
@@ -1015,13 +1019,13 @@ class _DoubleChevronPainter extends CustomPainter {
     void chevron(double cx) {
       final path = forward
           ? (Path()
-            ..moveTo(cx - 2, h * 0.2)
-            ..lineTo(cx + 2, h * 0.5)
-            ..lineTo(cx - 2, h * 0.8))
+              ..moveTo(cx - 2, h * 0.2)
+              ..lineTo(cx + 2, h * 0.5)
+              ..lineTo(cx - 2, h * 0.8))
           : (Path()
-            ..moveTo(cx + 2, h * 0.2)
-            ..lineTo(cx - 2, h * 0.5)
-            ..lineTo(cx + 2, h * 0.8));
+              ..moveTo(cx + 2, h * 0.2)
+              ..lineTo(cx - 2, h * 0.5)
+              ..lineTo(cx + 2, h * 0.8));
       canvas.drawPath(path, paint);
     }
 

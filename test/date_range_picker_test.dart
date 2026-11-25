@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart' as m;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' as m;
 import 'package:seed_ui/seed_ui.dart';
 // The panel's grids back the pickers' chrome rather than being part of the
 // public surface, so they are reached through the implementation library.
@@ -10,11 +10,11 @@ import 'package:seed_ui/src/components/data_entry/date_picker.dart'
 import 'package:seed_ui/src/icons/icons.dart' show RangeArrowPainter;
 
 Widget _host(Widget child) => ConfigProvider(
-      child: m.MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: m.Scaffold(body: Center(child: child)),
-      ),
-    );
+  child: m.MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: m.Scaffold(body: Center(child: child)),
+  ),
+);
 
 Future<void> _openPanel(WidgetTester tester) async {
   await tester.tap(find.byType(DateRangePicker));
@@ -42,8 +42,10 @@ void main() {
     });
 
     test('the clock is dropped, so two days compare equal', () {
-      final withTime =
-          DateRange(DateTime(2026, 3, 4, 14, 32), DateTime(2026, 3, 9, 1));
+      final withTime = DateRange(
+        DateTime(2026, 3, 4, 14, 32),
+        DateTime(2026, 3, 9, 1),
+      );
       expect(withTime, DateRange(DateTime(2026, 3, 4), DateTime(2026, 3, 9)));
     });
 
@@ -60,11 +62,11 @@ void main() {
   group('picking a range', () {
     testWidgets('the panel shows two months, not one', (tester) async {
       await tester.pumpWidget(
-        _host(DateRangePicker(
-            value: DateRange(
-          DateTime(2026, 3, 4),
-          DateTime(2026, 3, 9),
-        ))),
+        _host(
+          DateRangePicker(
+            value: DateRange(DateTime(2026, 3, 4), DateTime(2026, 3, 9)),
+          ),
+        ),
       );
       await _openPanel(tester);
       // A range that crosses a month is the ordinary case, and turning the
@@ -73,8 +75,9 @@ void main() {
       expect(find.text('Apr 2026'), findsOneWidget);
     });
 
-    testWidgets('nothing is handed back until both ends are in',
-        (tester) async {
+    testWidgets('nothing is handed back until both ends are in', (
+      tester,
+    ) async {
       DateRange? chosen;
       var calls = 0;
       await tester.pumpWidget(
@@ -126,8 +129,9 @@ void main() {
   });
 
   group('what the panel refuses', () {
-    testWidgets('minDays bars the days that would make too short a range',
-        (tester) async {
+    testWidgets('minDays bars the days that would make too short a range', (
+      tester,
+    ) async {
       DateRange? chosen;
       await tester.pumpWidget(
         _host(DateRangePicker(minDays: 5, onChanged: (v) => chosen = v)),
@@ -204,8 +208,9 @@ void main() {
       expect(chosen!.days, 7);
     });
 
-    testWidgets('a preset is asked for its range when it is taken',
-        (tester) async {
+    testWidgets('a preset is asked for its range when it is taken', (
+      tester,
+    ) async {
       var asked = 0;
       DateRange? chosen;
       await tester.pumpWidget(
@@ -352,13 +357,13 @@ void _bandTests() {
       await takeRange(tester);
 
       Rect bandUnder(String day) => tester.getRect(
-            find
-                .ancestor(
-                  of: find.text(day).first,
-                  matching: find.byType(DecoratedBox),
-                )
-                .first,
-          );
+        find
+            .ancestor(
+              of: find.text(day).first,
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
 
       // Two days a week apart, so the same column of the grid. The band under
       // one has to stop before the band under the other begins, or six weeks
@@ -368,8 +373,9 @@ void _bandTests() {
       expect(lower.top, greaterThan(upper.bottom));
     });
 
-    testWidgets('a day inside the band does not flash grey under the pointer',
-        (tester) async {
+    testWidgets('a day inside the band does not flash grey under the pointer', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(const DateRangePicker()));
       await takeRange(tester);
 
@@ -406,8 +412,9 @@ void _narrowTests() {
       addTearDown(tester.view.reset);
     }
 
-    testWidgets('the second month goes under the first, not off the side',
-        (tester) async {
+    testWidgets('the second month goes under the first, not off the side', (
+      tester,
+    ) async {
       phone(tester);
       await tester.pumpWidget(_host(const DateRangePicker()));
       await _openPanel(tester);
@@ -444,8 +451,9 @@ void _narrowTests() {
       expect(second.top, first.top);
     });
 
-    testWidgets('the rail lies along the top rather than down the side',
-        (tester) async {
+    testWidgets('the rail lies along the top rather than down the side', (
+      tester,
+    ) async {
       phone(tester);
       await tester.pumpWidget(
         _host(
@@ -492,8 +500,9 @@ void _litTests() {
       expect(tint.bottom - text.bottom, greaterThan(0));
     });
 
-    testWidgets('the words are not squeezed into an ellipsis by the room',
-        (tester) async {
+    testWidgets('the words are not squeezed into an ellipsis by the room', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(const DateRangePicker()));
       await _openPanel(tester);
       // Offered no width of its own, the field asks for what the words need

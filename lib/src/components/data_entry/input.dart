@@ -1,11 +1,12 @@
-import 'package:flutter/cupertino.dart'
+import 'package:cupertino_ui/cupertino_ui.dart'
     show cupertinoTextSelectionHandleControls;
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/gestures.dart' show TapDragUpDetails;
-import 'package:flutter/material.dart' show materialTextSelectionHandleControls;
 import 'package:flutter/semantics.dart' show SemanticsValidationResult;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart'
+    show materialTextSelectionHandleControls;
 
 import '../../icons/icons.dart';
 import '../../theme/config_provider.dart';
@@ -20,7 +21,7 @@ enum InputStatus {
   warning,
 
   /// A red border — the value is not valid.
-  error
+  error,
 }
 
 /// Arguments passed to [CountConfig.formatter] when rendering a custom
@@ -28,11 +29,7 @@ enum InputStatus {
 @immutable
 class CountArgs {
   /// Creates a [CountArgs].
-  const CountArgs({
-    required this.value,
-    required this.count,
-    this.maxLength,
-  });
+  const CountArgs({required this.value, required this.count, this.maxLength});
 
   /// The current text.
   final String value;
@@ -231,50 +228,49 @@ class InputToken {
   final double? fontSizeLG;
 
   _ResolvedInputToken _resolve(Token t) => _ResolvedInputToken(
-        colorBorder: colorBorder ?? t.colorBorder,
-        activeBorderColor: activeBorderColor ?? t.primary.base,
-        hoverBorderColor: hoverBorderColor ?? t.primary.borderHover,
-        colorBgContainer: colorBgContainer ?? t.colorBgContainer,
-        colorText: colorText ?? t.colorText,
-        colorTextPlaceholder: colorTextPlaceholder ?? t.colorTextTertiary,
-        focusRing: focusRing,
-        paddingInline: paddingInline ?? t.sizeSM,
-        paddingInlineSM: paddingInlineSM ?? t.sizeXS,
-        paddingInlineLG: paddingInlineLG ?? t.size,
-        paddingBlock: paddingBlock ?? 4,
-        paddingBlockSM: paddingBlockSM ?? 1,
-        paddingBlockLG: paddingBlockLG ?? 7,
-        borderRadius: borderRadius ?? t.borderRadius,
-        borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
-        borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
-        fontSize: fontSize ?? t.fontSize,
-        fontSizeSM: fontSizeSM ?? t.fontSizeSM,
-        fontSizeLG: fontSizeLG ?? t.fontSizeLG,
-      );
+    colorBorder: colorBorder ?? t.colorBorder,
+    activeBorderColor: activeBorderColor ?? t.primary.base,
+    hoverBorderColor: hoverBorderColor ?? t.primary.borderHover,
+    colorBgContainer: colorBgContainer ?? t.colorBgContainer,
+    colorText: colorText ?? t.colorText,
+    colorTextPlaceholder: colorTextPlaceholder ?? t.colorTextTertiary,
+    focusRing: focusRing,
+    paddingInline: paddingInline ?? t.sizeSM,
+    paddingInlineSM: paddingInlineSM ?? t.sizeXS,
+    paddingInlineLG: paddingInlineLG ?? t.size,
+    paddingBlock: paddingBlock ?? 4,
+    paddingBlockSM: paddingBlockSM ?? 1,
+    paddingBlockLG: paddingBlockLG ?? 7,
+    borderRadius: borderRadius ?? t.borderRadius,
+    borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
+    borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
+    fontSize: fontSize ?? t.fontSize,
+    fontSizeSM: fontSizeSM ?? t.fontSizeSM,
+    fontSizeLG: fontSizeLG ?? t.fontSizeLG,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   InputToken merge(InputToken other) => InputToken(
-        colorBorder: other.colorBorder ?? colorBorder,
-        activeBorderColor: other.activeBorderColor ?? activeBorderColor,
-        hoverBorderColor: other.hoverBorderColor ?? hoverBorderColor,
-        colorBgContainer: other.colorBgContainer ?? colorBgContainer,
-        colorText: other.colorText ?? colorText,
-        colorTextPlaceholder:
-            other.colorTextPlaceholder ?? colorTextPlaceholder,
-        focusRing: other.focusRing ?? focusRing,
-        paddingInline: other.paddingInline ?? paddingInline,
-        paddingInlineSM: other.paddingInlineSM ?? paddingInlineSM,
-        paddingInlineLG: other.paddingInlineLG ?? paddingInlineLG,
-        paddingBlock: other.paddingBlock ?? paddingBlock,
-        paddingBlockSM: other.paddingBlockSM ?? paddingBlockSM,
-        paddingBlockLG: other.paddingBlockLG ?? paddingBlockLG,
-        borderRadius: other.borderRadius ?? borderRadius,
-        borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
-        borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
-        fontSize: other.fontSize ?? fontSize,
-        fontSizeSM: other.fontSizeSM ?? fontSizeSM,
-        fontSizeLG: other.fontSizeLG ?? fontSizeLG,
-      );
+    colorBorder: other.colorBorder ?? colorBorder,
+    activeBorderColor: other.activeBorderColor ?? activeBorderColor,
+    hoverBorderColor: other.hoverBorderColor ?? hoverBorderColor,
+    colorBgContainer: other.colorBgContainer ?? colorBgContainer,
+    colorText: other.colorText ?? colorText,
+    colorTextPlaceholder: other.colorTextPlaceholder ?? colorTextPlaceholder,
+    focusRing: other.focusRing ?? focusRing,
+    paddingInline: other.paddingInline ?? paddingInline,
+    paddingInlineSM: other.paddingInlineSM ?? paddingInlineSM,
+    paddingInlineLG: other.paddingInlineLG ?? paddingInlineLG,
+    paddingBlock: other.paddingBlock ?? paddingBlock,
+    paddingBlockSM: other.paddingBlockSM ?? paddingBlockSM,
+    paddingBlockLG: other.paddingBlockLG ?? paddingBlockLG,
+    borderRadius: other.borderRadius ?? borderRadius,
+    borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
+    borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
+    fontSize: other.fontSize ?? fontSize,
+    fontSizeSM: other.fontSizeSM ?? fontSizeSM,
+    fontSizeLG: other.fontSizeLG ?? fontSizeLG,
+  );
 }
 
 @immutable
@@ -328,11 +324,7 @@ class _ResolvedInputToken {
 @immutable
 class InputDefaults {
   /// Creates an [InputDefaults].
-  const InputDefaults({
-    this.allowClear,
-    this.size,
-    this.disabled,
-  });
+  const InputDefaults({this.allowClear, this.size, this.disabled});
 
   /// Whether inputs carry a clear button once they hold text.
   final bool? allowClear;
@@ -351,10 +343,10 @@ class InputDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   InputDefaults merge(InputDefaults other) => InputDefaults(
-        allowClear: other.allowClear ?? allowClear,
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-      );
+    allowClear: other.allowClear ?? allowClear,
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A single- or multi-line text field with the kit's styling: a bordered box
@@ -720,10 +712,10 @@ class _SoftInputState extends State<Input> {
   bool get _obscure => widget.password != null && _obscured;
 
   double _height(Token token) => _size.resolveHeight(
-        small: token.controlHeightSM,
-        middle: token.controlHeight,
-        large: token.controlHeightLG,
-      );
+    small: token.controlHeightSM,
+    middle: token.controlHeight,
+    large: token.controlHeightLG,
+  );
 
   double _fontSize(_ResolvedInputToken r) => _size is! SoftSize
       ? r.fontSize
@@ -785,10 +777,11 @@ class _SoftInputState extends State<Input> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<InputToken>(context) ??
-            const InputToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<InputToken>(context) ??
+                const InputToken())
+            ._resolve(token);
     final fontSize = _fontSize(r);
     final showClear = _allowClear && _enabled && _controller.text.isNotEmpty;
     final search = widget.search;
@@ -821,7 +814,8 @@ class _SoftInputState extends State<Input> {
       selectionControls: _selectionControls(),
       maxLines: _obscure ? 1 : widget.maxLines,
       minLines: widget.minLines,
-      keyboardType: widget.keyboardType ??
+      keyboardType:
+          widget.keyboardType ??
           (_multiline ? TextInputType.multiline : TextInputType.text),
       textInputAction: widget.textInputAction,
       textCapitalization: widget.textCapitalization ?? TextCapitalization.none,
@@ -909,8 +903,9 @@ class _SoftInputState extends State<Input> {
     final attached = search != null && search._attached;
 
     final content = Row(
-      crossAxisAlignment:
-          _multiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      crossAxisAlignment: _multiline
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
       children: [
         if (widget.prefix != null && widget.prefixFlush)
           // Flush affix on the leading side; clipped to the box's own corner
@@ -943,7 +938,8 @@ class _SoftInputState extends State<Input> {
           _RevealButton(
             token: token,
             obscured: _obscured,
-            iconBuilder: password.iconBuilder ??
+            iconBuilder:
+                password.iconBuilder ??
                 // ignore: deprecated_member_use_from_same_package
                 password.iconRender,
             onTap: () {
@@ -1041,8 +1037,8 @@ class _SoftInputState extends State<Input> {
   /// The corner an affix sitting *inside* the border has to follow: the box's
   /// own radius less the border it sits within.
   Radius _innerRadius(Token token, _ResolvedInputToken r) => Radius.circular(
-        (_radiusVal(r) - token.lineWidth).clamp(0.0, double.infinity),
-      );
+    (_radiusVal(r) - token.lineWidth).clamp(0.0, double.infinity),
+  );
 
   Widget _box(
     Token token,
@@ -1072,54 +1068,56 @@ class _SoftInputState extends State<Input> {
       // so the placeholder, the name and the editable are read as one thing
       // rather than as a caption standing beside an unnamed box.
       child: Semantics(
-          container: true,
-          // The keyboard, not only the focus: a field somebody has already
-          // been typing into keeps its focus when the keyboard is put away,
-          // and asking again for focus it already has changes nothing.
-          onTap: _enabled ? _takeTheKeyboard : null,
-          child: _selection.buildGestureDetector(
-            behavior: HitTestBehavior.opaque,
-            child: AnimatedContainer(
-              duration: token.motionDurationMid,
-              curve: token.motionEaseInOut,
-              constraints: BoxConstraints(
-                minHeight: _multiline ? _height(token) : 0,
-              ),
-              height: _multiline ? null : _height(token),
-              // Start and end rather than left and right: the inset belongs to
-              // the prefix's side and the suffix's side, which swap over when the
-              // field reads the other way.
-              padding: EdgeInsetsDirectional.fromSTEB(
-                widget.prefixFlush ? 0 : inlinePad,
-                _multiline ? blockPad : 0,
-                widget.suffixFlush ? 0 : inlinePad,
-                _multiline ? blockPad : 0,
-              ),
-              decoration: BoxDecoration(
-                color: _enabled ? r.colorBgContainer : token.colorFillTertiary,
-                // Square where an addon is joined on, rounded at the free end.
-                borderRadius: BorderRadiusDirectional.only(
-                  topStart: corners.topStart,
-                  bottomStart: corners.bottomStart,
-                  topEnd: flatRight ? Radius.zero : corners.topEnd,
-                  bottomEnd: flatRight ? Radius.zero : corners.bottomEnd,
-                ),
-                border: Border.all(
-                  color: _borderColor(token, r),
-                  width: token.lineWidth,
-                ),
-                boxShadow: ring == null
-                    ? null
-                    : [
-                        BoxShadow(
-                            color: ring,
-                            blurRadius: 0,
-                            spreadRadius: token.focusRingWidth)
-                      ],
-              ),
-              child: content,
+        container: true,
+        // The keyboard, not only the focus: a field somebody has already
+        // been typing into keeps its focus when the keyboard is put away,
+        // and asking again for focus it already has changes nothing.
+        onTap: _enabled ? _takeTheKeyboard : null,
+        child: _selection.buildGestureDetector(
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: token.motionDurationMid,
+            curve: token.motionEaseInOut,
+            constraints: BoxConstraints(
+              minHeight: _multiline ? _height(token) : 0,
             ),
-          )),
+            height: _multiline ? null : _height(token),
+            // Start and end rather than left and right: the inset belongs to
+            // the prefix's side and the suffix's side, which swap over when the
+            // field reads the other way.
+            padding: EdgeInsetsDirectional.fromSTEB(
+              widget.prefixFlush ? 0 : inlinePad,
+              _multiline ? blockPad : 0,
+              widget.suffixFlush ? 0 : inlinePad,
+              _multiline ? blockPad : 0,
+            ),
+            decoration: BoxDecoration(
+              color: _enabled ? r.colorBgContainer : token.colorFillTertiary,
+              // Square where an addon is joined on, rounded at the free end.
+              borderRadius: BorderRadiusDirectional.only(
+                topStart: corners.topStart,
+                bottomStart: corners.bottomStart,
+                topEnd: flatRight ? Radius.zero : corners.topEnd,
+                bottomEnd: flatRight ? Radius.zero : corners.bottomEnd,
+              ),
+              border: Border.all(
+                color: _borderColor(token, r),
+                width: token.lineWidth,
+              ),
+              boxShadow: ring == null
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: ring,
+                        blurRadius: 0,
+                        spreadRadius: token.focusRingWidth,
+                      ),
+                    ],
+            ),
+            child: content,
+          ),
+        ),
+      ),
     );
   }
 
@@ -1128,11 +1126,7 @@ class _SoftInputState extends State<Input> {
     final count = config.count(_controller.text);
     if (config.formatter != null) {
       return config.formatter!(
-        CountArgs(
-          value: _controller.text,
-          count: count,
-          maxLength: config.max,
-        ),
+        CountArgs(value: _controller.text, count: count, maxLength: config.max),
       );
     }
     final text = config.max == null ? '$count' : '$count / ${config.max}';
@@ -1249,7 +1243,8 @@ class _RevealButton extends StatelessWidget {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
-        child: custom ??
+        child:
+            custom ??
             CustomPaint(
               size: const Size.square(18),
               painter: _EyePainter(token.colorTextTertiary, obscured: obscured),
@@ -1331,13 +1326,14 @@ class SearchIconButton extends StatelessWidget {
             ),
           )
         : icon ??
-            CustomPaint(
-              size: Size.square(context.softToken.fontSizeLG),
-              painter: _MagnifierPainter(token.colorTextTertiary),
-            );
+              CustomPaint(
+                size: Size.square(context.softToken.fontSizeLG),
+                painter: _MagnifierPainter(token.colorTextTertiary),
+              );
     return MouseRegion(
-      cursor:
-          onTap == null ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      cursor: onTap == null
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
       child: GestureDetector(onTap: onTap, child: glyph),
     );
   }
@@ -1386,8 +1382,8 @@ class _SearchButtonState extends State<_SearchButton> {
     final fill = !enabled
         ? token.colorFillTertiary
         : _hovered
-            ? token.primary.hover
-            : token.primary.base;
+        ? token.primary.hover
+        : token.primary.base;
     // The ink the fill asks for, the button being solid in the brand colour.
     final fg = enabled ? inkOn(fill) : token.colorTextQuaternary;
 
@@ -1398,10 +1394,10 @@ class _SearchButtonState extends State<_SearchButton> {
             child: CustomPaint(painter: _SpinnerPainter(fg)),
           )
         : widget.icon ??
-            CustomPaint(
-              size: Size.square(context.softToken.fontSizeLG),
-              painter: _MagnifierPainter(fg),
-            );
+              CustomPaint(
+                size: Size.square(context.softToken.fontSizeLG),
+                painter: _MagnifierPainter(fg),
+              );
 
     return MouseRegion(
       cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,

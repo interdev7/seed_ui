@@ -28,7 +28,8 @@ class DateFields {
       month: bare.contains('M'),
       day: bare.contains('d'),
       weekday: bare.contains('E'),
-      time: bare.contains('H') ||
+      time:
+          bare.contains('H') ||
           bare.contains('h') ||
           bare.contains('m') ||
           bare.contains('s'),
@@ -142,8 +143,9 @@ List<DateTime> monthGrid(int year, int month, {int firstDayOfWeek = 1}) {
 }
 
 /// The seven weekday numbers a panel heads its columns with, in order.
-List<int> weekdayOrder({int firstDayOfWeek = 1}) =>
-    [for (var i = 0; i < 7; i++) (firstDayOfWeek - 1 + i) % 7 + 1];
+List<int> weekdayOrder({int firstDayOfWeek = 1}) => [
+  for (var i = 0; i < 7; i++) (firstDayOfWeek - 1 + i) % 7 + 1,
+];
 
 /// Writes [date] out according to [format].
 ///
@@ -189,10 +191,7 @@ String formatDate(
         RegExp('w+'),
         (m) => pad(weekOfYear(date), m[0]!.length),
       )
-      .replaceAllMapped(
-        RegExp('Q+'),
-        (m) => pad(quarterOf(date), m[0]!.length),
-      )
+      .replaceAllMapped(RegExp('Q+'), (m) => pad(quarterOf(date), m[0]!.length))
       .replaceAll('A', isPm ? pm.toUpperCase() : am.toUpperCase())
       .replaceAll('a', isPm ? pm.toLowerCase() : am.toLowerCase());
 

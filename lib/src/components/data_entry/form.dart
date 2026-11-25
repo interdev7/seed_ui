@@ -59,10 +59,8 @@ typedef FormValidator = FutureOr<String?> Function(Object? value);
 /// [values] is every value the form holds, by field name, so a rule about two
 /// fields — a confirmation, an end that must follow a start — can be written
 /// where it belongs rather than reached for through a controller held outside.
-typedef FormCrossValidator = FutureOr<String?> Function(
-  Object? value,
-  Map<String, Object?> values,
-);
+typedef FormCrossValidator =
+    FutureOr<String?> Function(Object? value, Map<String, Object?> values);
 
 /// One thing a value has to satisfy.
 ///
@@ -79,47 +77,57 @@ class FormRule {
     this._check, {
     this.message,
     this.warningOnly = false,
-    int count = 0,
-    RegExp? pattern,
-    FormValidator? validator,
-    FormCrossValidator? crossValidator,
-    String? other,
-  })  : _count = count,
-        _pattern = pattern,
-        _validator = validator,
-        _crossValidator = crossValidator,
-        _other = other;
+    this._count = 0,
+    this._pattern,
+    this._validator,
+    this._crossValidator,
+    this._other,
+  });
 
   /// The value has to be there: not null, not an empty string, not an empty
   /// list, and not a false checkbox.
   const FormRule.required({String? message, bool warningOnly = false})
-      : this._(_Check.required, message: message, warningOnly: warningOnly);
+    : this._(_Check.required, message: message, warningOnly: warningOnly);
 
   /// The value has to have at least [count] characters or items, or be at
   /// least that number.
   const FormRule.min(int count, {String? message, bool warningOnly = false})
-      : this._(_Check.min,
-            count: count, message: message, warningOnly: warningOnly);
+    : this._(
+        _Check.min,
+        count: count,
+        message: message,
+        warningOnly: warningOnly,
+      );
 
   /// The value has to have at most [count] characters or items, or be at most
   /// that number.
   const FormRule.max(int count, {String? message, bool warningOnly = false})
-      : this._(_Check.max,
-            count: count, message: message, warningOnly: warningOnly);
+    : this._(
+        _Check.max,
+        count: count,
+        message: message,
+        warningOnly: warningOnly,
+      );
 
   /// The value has to match [pattern].
-  const FormRule.pattern(RegExp pattern,
-      {String? message, bool warningOnly = false})
-      : this._(_Check.pattern,
-            pattern: pattern, message: message, warningOnly: warningOnly);
+  const FormRule.pattern(
+    RegExp pattern, {
+    String? message,
+    bool warningOnly = false,
+  }) : this._(
+         _Check.pattern,
+         pattern: pattern,
+         message: message,
+         warningOnly: warningOnly,
+       );
 
   /// The value has to look like an email address.
   const FormRule.email({String? message, bool warningOnly = false})
-      : this._(_Check.email, message: message, warningOnly: warningOnly);
+    : this._(_Check.email, message: message, warningOnly: warningOnly);
 
   /// The value has to look like a web address.
   const FormRule.url({String? message, bool warningOnly = false})
-      : this._(_Check.url, message: message, warningOnly: warningOnly);
+    : this._(_Check.url, message: message, warningOnly: warningOnly);
 
   /// Anything you like, including something that has to be asked of a server.
   ///
@@ -129,24 +137,40 @@ class FormRule {
   /// The everyday dependent rule — a password confirmed, an email typed
   /// twice. Name the field it must match in [FormItem.dependsOn] too, or the
   /// message will stand until this field is touched again.
-  const FormRule.matches(String other,
-      {String? message, bool warningOnly = false})
-      : this._(_Check.matches,
-            message: message, warningOnly: warningOnly, other: other);
+  const FormRule.matches(
+    String other, {
+    String? message,
+    bool warningOnly = false,
+  }) : this._(
+         _Check.matches,
+         message: message,
+         warningOnly: warningOnly,
+         other: other,
+       );
 
   /// A rule of your own that may read the whole form.
-  const FormRule.against(FormCrossValidator validator,
-      {String? message, bool warningOnly = false})
-      : this._(_Check.against,
-            message: message,
-            warningOnly: warningOnly,
-            crossValidator: validator);
+  const FormRule.against(
+    FormCrossValidator validator, {
+    String? message,
+    bool warningOnly = false,
+  }) : this._(
+         _Check.against,
+         message: message,
+         warningOnly: warningOnly,
+         crossValidator: validator,
+       );
 
   /// A rule of your own: anything that can say what is wrong, or nothing.
-  const FormRule.custom(FormValidator validator,
-      {String? message, bool warningOnly = false})
-      : this._(_Check.custom,
-            validator: validator, message: message, warningOnly: warningOnly);
+  const FormRule.custom(
+    FormValidator validator, {
+    String? message,
+    bool warningOnly = false,
+  }) : this._(
+         _Check.custom,
+         validator: validator,
+         message: message,
+         warningOnly: warningOnly,
+       );
 
   final _Check _check;
   final int _count;
@@ -182,7 +206,8 @@ class FormRule {
   ) {
     switch (_check) {
       case _Check.required:
-        final empty = value == null ||
+        final empty =
+            value == null ||
             (value is String && value.trim().isEmpty) ||
             (value is Iterable && value.isEmpty) ||
             (value is bool && !value);
@@ -208,7 +233,8 @@ class FormRule {
       case _Check.url:
         if (value == null || '$value'.isEmpty) return null;
         final parsed = Uri.tryParse('$value');
-        final ok = parsed != null &&
+        final ok =
+            parsed != null &&
             parsed.hasScheme &&
             parsed.host.isNotEmpty &&
             (parsed.isScheme('http') || parsed.isScheme('https'));
@@ -235,12 +261,12 @@ class FormRule {
   /// list, or the number itself. Null where the value cannot be counted, and
   /// a rule that cannot count says nothing rather than guessing.
   static num? _sizeOf(Object? value) => switch (value) {
-        null => null,
-        final String s => s.length,
-        final Iterable<Object?> l => l.length,
-        final num n => n,
-        _ => null,
-      };
+    null => null,
+    final String s => s.length,
+    final Iterable<Object?> l => l.length,
+    final num n => n,
+    _ => null,
+  };
 
   // Deliberately loose: a pattern strict enough to be interesting rejects
   // addresses that work, and the only test that settles it is sending mail.
@@ -256,7 +282,7 @@ enum _Check {
   url,
   custom,
   matches,
-  against
+  against,
 }
 
 /// What a field is doing and what may be done to it.
@@ -343,8 +369,8 @@ enum FormTrigger {
 class FormController extends ChangeNotifier {
   /// Creates a [FormController].
   FormController({Map<String, Object?>? initialValues})
-      : _initial = {...?initialValues},
-        _values = {...?initialValues};
+    : _initial = {...?initialValues},
+      _values = {...?initialValues};
 
   final Map<String, Object?> _initial;
   final Map<String, Object?> _values;
@@ -415,7 +441,7 @@ class FormController extends ChangeNotifier {
   /// own `onFinish` would.
   void Function(Map<String, Object?> values)? _onFinish;
   void Function(Map<String, Object?> values, Map<String, String> errors)?
-      _onFinishFailed;
+  _onFinishFailed;
 
   /// Every value the form holds, by field name.
   ///
@@ -814,15 +840,13 @@ class Form extends StatefulWidget {
   final void Function(Map<String, Object?> values)? onFinish;
 
   /// Called with the values and the messages when they have not.
-  final void Function(
-    Map<String, Object?> values,
-    Map<String, String> errors,
-  )? onFinishFailed;
+  final void Function(Map<String, Object?> values, Map<String, String> errors)?
+  onFinishFailed;
 
   /// Called whenever any field changes, with the name that changed and every
   /// value the form now holds.
   final void Function(String name, Map<String, Object?> values)?
-      onValuesChanged;
+  onValuesChanged;
 
   /// Per-instance token overrides.
   final FormToken? token;
@@ -868,8 +892,8 @@ class _FormState extends State<Form> {
     };
     controller._onFinish = (values) => widget.onFinish?.call(values);
     controller._revealOnFail = widget.scrollToFirstError;
-    controller._onFinishFailed =
-        (values, errors) => widget.onFinishFailed?.call(values, errors);
+    controller._onFinishFailed = (values, errors) =>
+        widget.onFinishFailed?.call(values, errors);
     // A controller made outside the form is told what to start with here,
     // where the form is the one that knows.
     final start = widget.initialValues;
@@ -892,10 +916,11 @@ class _FormState extends State<Form> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<FormToken>(context) ??
-            const FormToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<FormToken>(context) ??
+                const FormToken())
+            ._resolve(t);
     final d = ConfigProvider.defaultsOf<FormDefaults>(context);
     return _FormScope(
       controller: _controller,
@@ -956,7 +981,7 @@ class _FormScope extends InheritedWidget {
   final bool readOnly;
   final FormTrigger trigger;
   final void Function(String name, Map<String, Object?> values)?
-      onValuesChanged;
+  onValuesChanged;
   final _ResolvedFormToken style;
 
   @override
@@ -1286,8 +1311,8 @@ class _FormListState extends State<FormList> implements _Field {
                           color: widget.help != null
                               ? r.extraColor
                               : (_error != null
-                                  ? r.errorColor
-                                  : r.warningColor),
+                                    ? r.errorColor
+                                    : r.warningColor),
                           fontSize: r.messageFontSize,
                         ),
                       ),
@@ -1426,41 +1451,40 @@ class FormItem<T> extends StatefulWidget {
     bool? enableSuggestions,
     bool? enableIMEPersonalizedLearning,
     Iterable<String>? autofillHints,
-  }) =>
-      FormItem<String>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => Input(
-          value: field.value ?? '',
-          status: field.status,
-          disabled: field.disabled,
-          readOnly: field.readOnly,
-          semanticsLabel: field.semanticsLabel,
-          placeholder: placeholder,
-          password: password,
-          prefix: prefix,
-          suffix: suffix,
-          maxLines: maxLines,
-          onSubmitted: onSubmitted,
-          keyboardType: keyboardType,
-          textCapitalization: textCapitalization,
-          autocorrect: autocorrect,
-          enableSuggestions: enableSuggestions,
-          enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
-          autofillHints: autofillHints,
-          onChanged: field.didChange,
-        ),
-      );
+  }) => FormItem<String>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => Input(
+      value: field.value ?? '',
+      status: field.status,
+      disabled: field.disabled,
+      readOnly: field.readOnly,
+      semanticsLabel: field.semanticsLabel,
+      placeholder: placeholder,
+      password: password,
+      prefix: prefix,
+      suffix: suffix,
+      maxLines: maxLines,
+      onSubmitted: onSubmitted,
+      keyboardType: keyboardType,
+      textCapitalization: textCapitalization,
+      autocorrect: autocorrect,
+      enableSuggestions: enableSuggestions,
+      enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
+      autofillHints: autofillHints,
+      onChanged: field.didChange,
+    ),
+  );
 
   /// A field of numbers, drawn with [InputNumber].
   static FormItem<num> number({
@@ -1481,33 +1505,32 @@ class FormItem<T> extends StatefulWidget {
     num step = 1,
     int? precision,
     String? placeholder,
-  }) =>
-      FormItem<num>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => InputNumber(
-          value: field.value,
-          status: field.status,
-          disabled: field.disabled,
-          readOnly: field.readOnly,
-          min: min,
-          max: max,
-          step: step,
-          precision: precision,
-          placeholder: placeholder,
-          onChanged: field.didChange,
-        ),
-      );
+  }) => FormItem<num>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => InputNumber(
+      value: field.value,
+      status: field.status,
+      disabled: field.disabled,
+      readOnly: field.readOnly,
+      min: min,
+      max: max,
+      step: step,
+      precision: precision,
+      placeholder: placeholder,
+      onChanged: field.didChange,
+    ),
+  );
 
   /// A field that is ticked or not, drawn with [Checkbox].
   static FormItem<bool> check({
@@ -1524,32 +1547,31 @@ class FormItem<T> extends StatefulWidget {
     List<String> dependsOn = const [],
     bool? disabled,
     bool? readOnly,
-  }) =>
-      FormItem<bool>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: Checkbox(
-            checked: field.value ?? false,
-            disabled: field.disabled,
-            readOnly: field.readOnly,
-            status: field.status,
-            label: title,
-            onChanged: field.didChange,
-          ),
-        ),
-      );
+  }) => FormItem<bool>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Checkbox(
+        checked: field.value ?? false,
+        disabled: field.disabled,
+        readOnly: field.readOnly,
+        status: field.status,
+        label: title,
+        onChanged: field.didChange,
+      ),
+    ),
+  );
 
   /// A field that is on or off, drawn with [Switch].
   static FormItem<bool> toggle({
@@ -1567,32 +1589,31 @@ class FormItem<T> extends StatefulWidget {
     bool? readOnly,
     Widget? checkedChild,
     Widget? uncheckedChild,
-  }) =>
-      FormItem<bool>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: Switch(
-            value: field.value ?? false,
-            disabled: field.disabled,
-            readOnly: field.readOnly,
-            checkedChild: checkedChild,
-            uncheckedChild: uncheckedChild,
-            onChanged: field.didChange,
-          ),
-        ),
-      );
+  }) => FormItem<bool>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Switch(
+        value: field.value ?? false,
+        disabled: field.disabled,
+        readOnly: field.readOnly,
+        checkedChild: checkedChild,
+        uncheckedChild: uncheckedChild,
+        onChanged: field.didChange,
+      ),
+    ),
+  );
 
   /// A field holding a date, drawn with [DatePicker].
   static FormItem<DateTime> date({
@@ -1612,33 +1633,32 @@ class FormItem<T> extends StatefulWidget {
     DateTime? maxDate,
     String format = 'yyyy-MM-dd',
     String? placeholder,
-  }) =>
-      FormItem<DateTime>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => DatePicker(
-          semanticsLabel: field.semanticsLabel,
-          value: field.value,
-          status: field.status,
-          disabled: field.disabled,
-          readOnly: field.readOnly,
-          minDate: minDate,
-          maxDate: maxDate,
-          format: format,
-          placeholder: placeholder,
-          onChanged: field.didChange,
-        ),
-      );
+  }) => FormItem<DateTime>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => DatePicker(
+      semanticsLabel: field.semanticsLabel,
+      value: field.value,
+      status: field.status,
+      disabled: field.disabled,
+      readOnly: field.readOnly,
+      minDate: minDate,
+      maxDate: maxDate,
+      format: format,
+      placeholder: placeholder,
+      onChanged: field.didChange,
+    ),
+  );
 
   /// A field holding a time of day, drawn with [TimePicker].
   static FormItem<Duration> time({
@@ -1656,31 +1676,30 @@ class FormItem<T> extends StatefulWidget {
     bool? readOnly,
     String format = 'HH:mm:ss',
     String? placeholder,
-  }) =>
-      FormItem<Duration>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => TimePicker(
-          semanticsLabel: field.semanticsLabel,
-          value: field.value,
-          status: field.status,
-          disabled: field.disabled,
-          readOnly: field.readOnly,
-          format: format,
-          placeholder: placeholder,
-          onChanged: field.didChange,
-        ),
-      );
+  }) => FormItem<Duration>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => TimePicker(
+      semanticsLabel: field.semanticsLabel,
+      value: field.value,
+      status: field.status,
+      disabled: field.disabled,
+      readOnly: field.readOnly,
+      format: format,
+      placeholder: placeholder,
+      onChanged: field.didChange,
+    ),
+  );
 
   /// A field holding one choice, drawn with [Select].
   ///
@@ -1704,33 +1723,32 @@ class FormItem<T> extends StatefulWidget {
     String? placeholder,
     bool showSearch = false,
     bool allowClear = false,
-  }) =>
-      FormItem<V>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => Select<V>(
-          semanticsLabel: field.semanticsLabel,
-          value: [if (field.value != null) field.value as V],
-          status: field.status == null ? null : SelectStatus.error,
-          disabled: field.disabled,
-          readOnly: field.readOnly,
-          options: options,
-          placeholder: placeholder,
-          showSearch: showSearch,
-          allowClear: allowClear,
-          onChanged: (chosen) => field.didChange(chosen.firstOrNull),
-        ),
-      );
+  }) => FormItem<V>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => Select<V>(
+      semanticsLabel: field.semanticsLabel,
+      value: [if (field.value != null) field.value as V],
+      status: field.status == null ? null : SelectStatus.error,
+      disabled: field.disabled,
+      readOnly: field.readOnly,
+      options: options,
+      placeholder: placeholder,
+      showSearch: showSearch,
+      allowClear: allowClear,
+      onChanged: (chosen) => field.didChange(chosen.firstOrNull),
+    ),
+  );
 
   /// A field holding several choices, drawn with [Select].
   static FormItem<List<V>> selectMany<V>({
@@ -1750,34 +1768,33 @@ class FormItem<T> extends StatefulWidget {
     String? placeholder,
     bool showSearch = false,
     bool allowClear = false,
-  }) =>
-      FormItem<List<V>>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => Select<V>(
-          semanticsLabel: field.semanticsLabel,
-          value: field.value ?? const [],
-          status: field.status == null ? null : SelectStatus.error,
-          disabled: field.disabled,
-          readOnly: field.readOnly,
-          mode: SelectMode.multiple,
-          options: options,
-          placeholder: placeholder,
-          showSearch: showSearch,
-          allowClear: allowClear,
-          onChanged: field.didChange,
-        ),
-      );
+  }) => FormItem<List<V>>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => Select<V>(
+      semanticsLabel: field.semanticsLabel,
+      value: field.value ?? const [],
+      status: field.status == null ? null : SelectStatus.error,
+      disabled: field.disabled,
+      readOnly: field.readOnly,
+      mode: SelectMode.multiple,
+      options: options,
+      placeholder: placeholder,
+      showSearch: showSearch,
+      allowClear: allowClear,
+      onChanged: field.didChange,
+    ),
+  );
 
   /// A field holding one of a few choices, drawn with [RadioGroup].
   static FormItem<V> radio<V>({
@@ -1796,34 +1813,33 @@ class FormItem<T> extends StatefulWidget {
     bool? readOnly,
     Axis? direction,
     RadioOptionType? optionType,
-  }) =>
-      FormItem<V>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: RadioGroup<V>(
-            value: field.value,
-            disabled: field.disabled,
-            readOnly: field.readOnly,
-            status: field.status,
-            options: options,
-            direction: direction,
-            optionType: optionType,
-            onChanged: field.didChange,
-          ),
-        ),
-      );
+  }) => FormItem<V>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: RadioGroup<V>(
+        value: field.value,
+        disabled: field.disabled,
+        readOnly: field.readOnly,
+        status: field.status,
+        options: options,
+        direction: direction,
+        optionType: optionType,
+        onChanged: field.didChange,
+      ),
+    ),
+  );
 
   /// A field holding a number chosen by dragging, drawn with [Slider].
   static FormItem<double> slider({
@@ -1843,31 +1859,30 @@ class FormItem<T> extends StatefulWidget {
     double max = 100,
     double step = 1,
     List<SliderMark> marks = const [],
-  }) =>
-      FormItem<double>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => Slider(
-          value: field.value ?? min,
-          disabled: field.disabled,
-          readOnly: field.readOnly,
-          min: min,
-          max: max,
-          step: step,
-          marks: marks,
-          onChanged: field.didChange,
-        ),
-      );
+  }) => FormItem<double>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => Slider(
+      value: field.value ?? min,
+      disabled: field.disabled,
+      readOnly: field.readOnly,
+      min: min,
+      max: max,
+      step: step,
+      marks: marks,
+      onChanged: field.didChange,
+    ),
+  );
 
   /// A field holding a span of days, drawn with [DateRangePicker].
   static FormItem<DateRange> dateRange({
@@ -1886,32 +1901,31 @@ class FormItem<T> extends StatefulWidget {
     DateTime? minDate,
     DateTime? maxDate,
     String format = 'yyyy-MM-dd',
-  }) =>
-      FormItem<DateRange>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => DateRangePicker(
-          semanticsLabel: field.semanticsLabel,
-          value: field.value,
-          status: field.status,
-          disabled: field.disabled,
-          readOnly: field.readOnly,
-          minDate: minDate,
-          maxDate: maxDate,
-          format: format,
-          onChanged: field.didChange,
-        ),
-      );
+  }) => FormItem<DateRange>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => DateRangePicker(
+      semanticsLabel: field.semanticsLabel,
+      value: field.value,
+      status: field.status,
+      disabled: field.disabled,
+      readOnly: field.readOnly,
+      minDate: minDate,
+      maxDate: maxDate,
+      format: format,
+      onChanged: field.didChange,
+    ),
+  );
 
   /// A field holding any number of separate days, drawn with
   /// [MultiDatePicker].
@@ -1935,33 +1949,32 @@ class FormItem<T> extends StatefulWidget {
     DateTime? maxDate,
     String format = 'yyyy-MM-dd',
     String? placeholder,
-  }) =>
-      FormItem<List<DateTime>>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => MultiDatePicker(
-          semanticsLabel: field.semanticsLabel,
-          values: field.value ?? const [],
-          status: field.status,
-          disabled: field.disabled,
-          readOnly: field.readOnly,
-          minDate: minDate,
-          maxDate: maxDate,
-          format: format,
-          placeholder: placeholder,
-          onChanged: field.didChange,
-        ),
-      );
+  }) => FormItem<List<DateTime>>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => MultiDatePicker(
+      semanticsLabel: field.semanticsLabel,
+      values: field.value ?? const [],
+      status: field.status,
+      disabled: field.disabled,
+      readOnly: field.readOnly,
+      minDate: minDate,
+      maxDate: maxDate,
+      format: format,
+      placeholder: placeholder,
+      onChanged: field.didChange,
+    ),
+  );
 
   /// A field holding one of a few choices laid side by side, drawn with
   /// [Segmented].
@@ -1984,32 +1997,31 @@ class FormItem<T> extends StatefulWidget {
     bool? readOnly,
     required List<SegmentedOption<V>> options,
     bool block = false,
-  }) =>
-      FormItem<V>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) => Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: Segmented<V>(
-            value: field.value ?? initialValue,
-            options: options,
-            block: block,
-            disabled: field.disabled,
-            readOnly: field.readOnly,
-            onChanged: field.didChange,
-          ),
-        ),
-      );
+  }) => FormItem<V>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) => Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Segmented<V>(
+        value: field.value ?? initialValue,
+        options: options,
+        block: block,
+        disabled: field.disabled,
+        readOnly: field.readOnly,
+        onChanged: field.didChange,
+      ),
+    ),
+  );
 
   /// A field holding a list of files, drawn with [Upload].
   ///
@@ -2034,38 +2046,37 @@ class FormItem<T> extends StatefulWidget {
     UploadVariant? variant,
     int? maxCount,
     Widget? hint,
-  }) =>
-      FormItem<List<UploadItem<T>>>(
-        key: key,
-        name: name,
-        label: label,
-        rules: rules,
-        initialValue: initialValue,
-        help: help,
-        extra: extra,
-        required: required,
-        trigger: trigger,
-        dependsOn: dependsOn,
-        disabled: disabled,
-        readOnly: readOnly,
-        builder: (field) {
-          final held = field.value ?? const [];
-          return Upload<T>(
-            items: held,
-            variant: variant,
-            maxCount: maxCount,
-            hint: hint,
-            disabled: field.disabled,
-            readOnly: field.readOnly,
-            onPick: () async {
-              final picked = await pick();
-              if (picked.isEmpty) return;
-              field.didChange([...held, ...picked]);
-            },
-            onRemove: (item) => field.didChange([...held]..remove(item)),
-          );
+  }) => FormItem<List<UploadItem<T>>>(
+    key: key,
+    name: name,
+    label: label,
+    rules: rules,
+    initialValue: initialValue,
+    help: help,
+    extra: extra,
+    required: required,
+    trigger: trigger,
+    dependsOn: dependsOn,
+    disabled: disabled,
+    readOnly: readOnly,
+    builder: (field) {
+      final held = field.value ?? const [];
+      return Upload<T>(
+        items: held,
+        variant: variant,
+        maxCount: maxCount,
+        hint: hint,
+        disabled: field.disabled,
+        readOnly: field.readOnly,
+        onPick: () async {
+          final picked = await pick();
+          if (picked.isEmpty) return;
+          field.didChange([...held, ...picked]);
         },
+        onRemove: (item) => field.didChange([...held]..remove(item)),
       );
+    },
+  );
 
   @override
   State<FormItem<T>> createState() => _FormItemState<T>();
@@ -2077,8 +2088,10 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
   /// Stands round the control, so the form can find somewhere to put the
   /// keyboard inside it without the control having to hand over a node of
   /// its own.
-  final FocusNode _anchor =
-      FocusNode(canRequestFocus: false, skipTraversal: true);
+  final FocusNode _anchor = FocusNode(
+    canRequestFocus: false,
+    skipTraversal: true,
+  );
 
   String? _error;
   String? _warning;
@@ -2236,9 +2249,11 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
     // whatever the trigger says: leaving a red border under a value that has
     // just been put right is the form arguing with the reader.
     if (_trigger == FormTrigger.change || _asked) {
-      unawaited(validate().then((_) {
-        if (mounted) scope.controller._announce();
-      }));
+      unawaited(
+        validate().then((_) {
+          if (mounted) scope.controller._announce();
+        }),
+      );
     } else {
       scope.controller._announce();
     }
@@ -2277,8 +2292,9 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
               // an icon and a phrase, a link — has no one string to read
               // out, and guessing at one would put half a label in a
               // reader's ear.
-              semanticsLabel:
-                  widget.label is Text ? (widget.label! as Text).data : null,
+              semanticsLabel: widget.label is Text
+                  ? (widget.label! as Text).data
+                  : null,
             ),
           ),
         );
@@ -2301,8 +2317,8 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
                           color: widget.help != null
                               ? r.extraColor
                               : (_error != null
-                                  ? r.errorColor
-                                  : r.warningColor),
+                                    ? r.errorColor
+                                    : r.warningColor),
                           fontSize: r.messageFontSize,
                         ),
                       ),
@@ -2355,10 +2371,7 @@ class _FormItemState<T> extends State<FormItem<T>> implements _Field {
                     children: [
                       Padding(
                         padding: EdgeInsetsDirectional.only(end: r.labelGap),
-                        child: SizedBox(
-                          width: scope.labelWidth,
-                          child: label,
-                        ),
+                        child: SizedBox(width: scope.labelWidth, child: label),
                       ),
                       // Flexible even where the row shrink-wraps: a `Row`
                       // hands a child that carries no flex an *unbounded*
@@ -2504,16 +2517,16 @@ class FormDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   FormDefaults merge(FormDefaults other) => FormDefaults(
-        layout: other.layout ?? layout,
-        maxWidth: other.maxWidth ?? maxWidth,
-        labelWidth: other.labelWidth ?? labelWidth,
-        labelAlign: other.labelAlign ?? labelAlign,
-        colon: other.colon ?? colon,
-        requiredMark: other.requiredMark ?? requiredMark,
-        trigger: other.trigger ?? trigger,
-        disabled: other.disabled ?? disabled,
-        readOnly: other.readOnly ?? readOnly,
-      );
+    layout: other.layout ?? layout,
+    maxWidth: other.maxWidth ?? maxWidth,
+    labelWidth: other.labelWidth ?? labelWidth,
+    labelAlign: other.labelAlign ?? labelAlign,
+    colon: other.colon ?? colon,
+    requiredMark: other.requiredMark ?? requiredMark,
+    trigger: other.trigger ?? trigger,
+    disabled: other.disabled ?? disabled,
+    readOnly: other.readOnly ?? readOnly,
+  );
 }
 
 /// Every field is an override; a null one falls back to the value derived
@@ -2561,29 +2574,29 @@ class FormToken {
   final double? itemGap;
 
   _ResolvedFormToken _resolve(Token t) => _ResolvedFormToken(
-        labelColor: labelColor ?? t.colorText,
-        labelFontSize: labelFontSize ?? t.fontSize,
-        errorColor: errorColor ?? t.error.base,
-        warningColor: warningColor ?? t.warning.base,
-        extraColor: extraColor ?? t.colorTextTertiary,
-        messageFontSize: messageFontSize ?? t.fontSizeSM,
-        labelGap: labelGap ?? t.sizeXS,
-        messageGap: messageGap ?? t.sizeXXS,
-        itemGap: itemGap ?? t.size,
-      );
+    labelColor: labelColor ?? t.colorText,
+    labelFontSize: labelFontSize ?? t.fontSize,
+    errorColor: errorColor ?? t.error.base,
+    warningColor: warningColor ?? t.warning.base,
+    extraColor: extraColor ?? t.colorTextTertiary,
+    messageFontSize: messageFontSize ?? t.fontSizeSM,
+    labelGap: labelGap ?? t.sizeXS,
+    messageGap: messageGap ?? t.sizeXXS,
+    itemGap: itemGap ?? t.size,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   FormToken merge(FormToken other) => FormToken(
-        labelColor: other.labelColor ?? labelColor,
-        labelFontSize: other.labelFontSize ?? labelFontSize,
-        errorColor: other.errorColor ?? errorColor,
-        warningColor: other.warningColor ?? warningColor,
-        extraColor: other.extraColor ?? extraColor,
-        messageFontSize: other.messageFontSize ?? messageFontSize,
-        labelGap: other.labelGap ?? labelGap,
-        messageGap: other.messageGap ?? messageGap,
-        itemGap: other.itemGap ?? itemGap,
-      );
+    labelColor: other.labelColor ?? labelColor,
+    labelFontSize: other.labelFontSize ?? labelFontSize,
+    errorColor: other.errorColor ?? errorColor,
+    warningColor: other.warningColor ?? warningColor,
+    extraColor: other.extraColor ?? extraColor,
+    messageFontSize: other.messageFontSize ?? messageFontSize,
+    labelGap: other.labelGap ?? labelGap,
+    messageGap: other.messageGap ?? messageGap,
+    itemGap: other.itemGap ?? itemGap,
+  );
 }
 
 @immutable
@@ -2625,16 +2638,16 @@ class _ResolvedFormToken {
 
   @override
   int get hashCode => Object.hash(
-        labelColor,
-        labelFontSize,
-        errorColor,
-        warningColor,
-        extraColor,
-        messageFontSize,
-        labelGap,
-        messageGap,
-        itemGap,
-      );
+    labelColor,
+    labelFontSize,
+    errorColor,
+    warningColor,
+    extraColor,
+    messageFontSize,
+    labelGap,
+    messageGap,
+    itemGap,
+  );
 }
 
 /// Where [context]'s box stands on the screen, or null where it is not laid
@@ -2648,8 +2661,8 @@ Offset? _originOf(BuildContext context) {
 /// Scrolls every scrollable around [context] until it shows, a little below
 /// the top so the label above the field shows with it.
 Future<void> _bringIntoView(BuildContext context) => Scrollable.ensureVisible(
-      context,
-      alignment: 0.1,
-      duration: context.softToken.motionDurationMid,
-      curve: context.softToken.motionEaseInOut,
-    );
+  context,
+  alignment: 0.1,
+  duration: context.softToken.motionDurationMid,
+  curve: context.softToken.motionEaseInOut,
+);

@@ -1,20 +1,20 @@
 import 'package:flutter/foundation.dart'
     show TargetPlatform, debugDefaultTargetPlatformOverride;
-import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' as material;
 import 'package:seed_ui/seed_ui.dart';
 // The glyph a plain row is marked with lives with the other icons, and is
 // internal to the kit rather than part of its surface.
 import 'package:seed_ui/src/icons/icons.dart' show PaperclipPainter;
 
 Widget _wrap(Widget child) => ConfigProvider(
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Center(child: SizedBox(width: 420, child: child)),
-      ),
-    );
+  child: Directionality(
+    textDirection: TextDirection.ltr,
+    child: Center(child: SizedBox(width: 420, child: child)),
+  ),
+);
 
 const _items = [
   UploadItem<String>(name: 'report.pdf', size: 2048),
@@ -52,9 +52,7 @@ void main() {
     testWidgets('a file with no size shows none', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          const Upload<String>(
-            items: [UploadItem<String>(name: 'stream.bin')],
-          ),
+          const Upload<String>(items: [UploadItem<String>(name: 'stream.bin')]),
         ),
       );
 
@@ -70,16 +68,18 @@ void main() {
       expect(find.text('2.0 KB'), findsNothing);
     });
 
-    testWidgets('the extension stands in for a missing thumbnail',
-        (tester) async {
+    testWidgets('the extension stands in for a missing thumbnail', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const Upload<String>(items: _items)));
 
       expect(find.text('PDF'), findsOneWidget);
       expect(find.text('PNG'), findsOneWidget);
     });
 
-    testWidgets('a name with no extension falls back to a placeholder',
-        (tester) async {
+    testWidgets('a name with no extension falls back to a placeholder', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const Upload<String>(items: [UploadItem<String>(name: 'LICENSE')]),
@@ -104,8 +104,9 @@ void main() {
       expect(find.text('PNG'), findsNothing);
     });
 
-    testWidgets('thumbnailBuilder covers every file that brought none',
-        (tester) async {
+    testWidgets('thumbnailBuilder covers every file that brought none', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           Upload<String>(
@@ -121,8 +122,9 @@ void main() {
   });
 
   group('Status', () {
-    testWidgets('an uploading file shows progress, a pending one does not',
-        (tester) async {
+    testWidgets('an uploading file shows progress, a pending one does not', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const Upload<String>(
@@ -218,7 +220,8 @@ void main() {
       UploadItem<String>? tapped;
       await tester.pumpWidget(
         _wrap(
-            Upload<String>(items: _items, onPreview: (item) => tapped = item)),
+          Upload<String>(items: _items, onPreview: (item) => tapped = item),
+        ),
       );
 
       await tester.tap(find.text('report.pdf'));
@@ -235,16 +238,12 @@ void main() {
       expect(find.text('Choose a file'), findsNothing);
     });
 
-    testWidgets('onPick raises the drop zone and runs on a tap',
-        (tester) async {
+    testWidgets('onPick raises the drop zone and runs on a tap', (
+      tester,
+    ) async {
       var picked = 0;
       await tester.pumpWidget(
-        _wrap(
-          Upload<String>(
-            items: const [],
-            onPick: () async => picked++,
-          ),
-        ),
+        _wrap(Upload<String>(items: const [], onPick: () async => picked++)),
       );
 
       expect(find.text('Choose a file'), findsOneWidget);
@@ -273,10 +272,7 @@ void main() {
     testWidgets('a custom trigger replaces the whole zone', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          Upload<String>(
-            onPick: () async {},
-            trigger: const Text('Browse…'),
-          ),
+          Upload<String>(onPick: () async {}, trigger: const Text('Browse…')),
         ),
       );
 
@@ -284,19 +280,16 @@ void main() {
       expect(find.text('Choose a file'), findsNothing);
     });
 
-    testWidgets('maxCount retires the trigger once the list is full',
-        (tester) async {
+    testWidgets('maxCount retires the trigger once the list is full', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(
-          Upload<String>(items: _items, maxCount: 3, onPick: () async {}),
-        ),
+        _wrap(Upload<String>(items: _items, maxCount: 3, onPick: () async {})),
       );
       expect(find.text('Choose a file'), findsOneWidget);
 
       await tester.pumpWidget(
-        _wrap(
-          Upload<String>(items: _items, maxCount: 2, onPick: () async {}),
-        ),
+        _wrap(Upload<String>(items: _items, maxCount: 2, onPick: () async {})),
       );
       expect(find.text('Choose a file'), findsNothing);
     });
@@ -304,12 +297,7 @@ void main() {
     testWidgets('disabled stops the trigger answering', (tester) async {
       var picked = 0;
       await tester.pumpWidget(
-        _wrap(
-          Upload<String>(
-            disabled: true,
-            onPick: () async => picked++,
-          ),
-        ),
+        _wrap(Upload<String>(disabled: true, onPick: () async => picked++)),
       );
 
       await tester.tap(find.text('Choose a file'));
@@ -321,9 +309,7 @@ void main() {
     testWidgets('a drag over the zone tints it', (tester) async {
       Color? fillOf(WidgetTester tester) {
         final box = tester
-            .widgetList<AnimatedContainer>(
-              find.byType(AnimatedContainer),
-            )
+            .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
             .first;
         return (box.decoration! as BoxDecoration).color;
       }
@@ -341,8 +327,9 @@ void main() {
   });
 
   group('Cards', () {
-    testWidgets('every file becomes a tile, with the trigger last',
-        (tester) async {
+    testWidgets('every file becomes a tile, with the trigger last', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           Upload<String>(
@@ -361,12 +348,7 @@ void main() {
 
     testWidgets('the empty state stands in for an empty list', (tester) async {
       await tester.pumpWidget(
-        _wrap(
-          const Upload<String>(
-            items: [],
-            emptyState: Text('Nothing yet'),
-          ),
-        ),
+        _wrap(const Upload<String>(items: [], emptyState: Text('Nothing yet'))),
       );
 
       expect(find.text('Nothing yet'), findsOneWidget);
@@ -375,11 +357,7 @@ void main() {
 
   group('copyWith', () {
     test('replaces only what it is given', () {
-      const item = UploadItem<String>(
-        name: 'a.txt',
-        size: 10,
-        data: 'payload',
-      );
+      const item = UploadItem<String>(name: 'a.txt', size: 10, data: 'payload');
 
       final moved = item.copyWith(
         status: UploadStatus.uploading,
@@ -395,12 +373,11 @@ void main() {
   });
 
   group('Variants', () {
-    testWidgets('text marks a file with a clip, picture with a preview',
-        (tester) async {
+    testWidgets('text marks a file with a clip, picture with a preview', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(
-          const Upload<String>(items: _items, variant: UploadVariant.text),
-        ),
+        _wrap(const Upload<String>(items: _items, variant: UploadVariant.text)),
       );
       expect(find.text('PDF'), findsNothing);
       expect(find.text('report.pdf'), findsOneWidget);
@@ -450,8 +427,9 @@ void main() {
   });
 
   group('Download and preview', () {
-    testWidgets('onDownload raises a button that reports its file',
-        (tester) async {
+    testWidgets('onDownload raises a button that reports its file', (
+      tester,
+    ) async {
       UploadItem<String>? got;
       await tester.pumpWidget(
         _wrap(
@@ -469,9 +447,7 @@ void main() {
 
     testWidgets('no onDownload, no button', (tester) async {
       await tester.pumpWidget(
-        _wrap(
-          const Upload<String>(items: [UploadItem<String>(name: 'a.txt')]),
-        ),
+        _wrap(const Upload<String>(items: [UploadItem<String>(name: 'a.txt')])),
       );
       final without = tester.widgetList(find.byType(CustomPaint)).length;
 
@@ -544,15 +520,11 @@ void main() {
       return tester.getSize(find.byWidget(paint));
     }
 
-    testWidgets('the dash traces the zone, not the prompt inside it',
-        (tester) async {
+    testWidgets('the dash traces the zone, not the prompt inside it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(
-          Upload<String>(
-            onPick: () async {},
-            label: const Text('Pick'),
-          ),
-        ),
+        _wrap(Upload<String>(onPick: () async {}, label: const Text('Pick'))),
       );
 
       // _wrap gives the control a 420px box; the outline should span it
@@ -563,10 +535,7 @@ void main() {
     testWidgets('a tile is outlined round its whole edge', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          Upload<String>(
-            variant: UploadVariant.cards,
-            onPick: () async {},
-          ),
+          Upload<String>(variant: UploadVariant.cards, onPick: () async {}),
         ),
       );
 
@@ -576,8 +545,9 @@ void main() {
       expect(box.width, greaterThan(80));
     });
 
-    testWidgets('a long hint wraps instead of running edge to edge',
-        (tester) async {
+    testWidgets('a long hint wraps instead of running edge to edge', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           Upload<String>(
@@ -601,10 +571,7 @@ void main() {
     testWidgets('a tile carries a word under its plus', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          Upload<String>(
-            variant: UploadVariant.cards,
-            onPick: () async {},
-          ),
+          Upload<String>(variant: UploadVariant.cards, onPick: () async {}),
         ),
       );
 
@@ -670,8 +637,9 @@ void main() {
     });
   });
 
-  testWidgets('a plain row swaps its clip for a spinner in flight',
-      (tester) async {
+  testWidgets('a plain row swaps its clip for a spinner in flight', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
         const Upload<String>(
@@ -692,8 +660,9 @@ void main() {
   });
 
   group('Your own content in a tile', () {
-    testWidgets('trigger replaces what is inside the empty tile',
-        (tester) async {
+    testWidgets('trigger replaces what is inside the empty tile', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           Upload<String>(
@@ -708,15 +677,14 @@ void main() {
       expect(find.text('Upload'), findsNothing);
     });
 
-    testWidgets('thumbnail fills a file tile with whatever you give it',
-        (tester) async {
+    testWidgets('thumbnail fills a file tile with whatever you give it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const Upload<String>(
             variant: UploadVariant.circleCards,
-            items: [
-              UploadItem<String>(name: 'a.png', thumbnail: Text('mine')),
-            ],
+            items: [UploadItem<String>(name: 'a.png', thumbnail: Text('mine'))],
           ),
         ),
       );
@@ -816,10 +784,10 @@ void main() {
 
 /// A whole app: the Tab key is the app's to turn into a move of focus.
 Widget _app(Widget child) => ConfigProvider(
-      child: material.MaterialApp(
-        home: material.Scaffold(body: Center(child: child)),
-      ),
-    );
+  child: material.MaterialApp(
+    home: material.Scaffold(body: Center(child: child)),
+  ),
+);
 
 void _keyboardTests() {
   group('every file can be reached without a pointer', () {
@@ -840,83 +808,90 @@ void _keyboardTests() {
     }
 
     for (final variant in UploadVariant.values) {
-      testWidgets('$variant: preview, remove and the trigger', (tester) async {
-        final semantics = tester.ensureSemantics();
-        var previewed = 0;
-        var removed = 0;
+      testWidgets(
+        '$variant: preview, remove and the trigger',
+        (tester) async {
+          final semantics = tester.ensureSemantics();
+          var previewed = 0;
+          var removed = 0;
+          await tester.pumpWidget(
+            _app(
+              SizedBox(
+                width: 400,
+                child: Upload<String>(
+                  variant: variant,
+                  items: const [
+                    UploadItem(name: 'report.pdf', status: UploadStatus.done),
+                  ],
+                  onPick: () async {},
+                  onPreview: (_) => previewed++,
+                  onRemove: (_) => removed++,
+                ),
+              ),
+            ),
+          );
+
+          final reached = await stops(tester);
+          expect(reached, contains('Preview: report.pdf'));
+          expect(reached, contains('Remove'));
+
+          // And each does what it says from the keyboard.
+          while (FocusManager.instance.primaryFocus?.context == null ||
+              tester
+                      .getSemantics(
+                        find.byElementPredicate(
+                          (e) =>
+                              e == FocusManager.instance.primaryFocus!.context,
+                        ),
+                      )
+                      .label !=
+                  'Preview: report.pdf') {
+            await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+            await tester.pump();
+          }
+          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+          await tester.pump();
+          expect(previewed, 1);
+          expect(removed, 0);
+          semantics.dispose();
+        },
+        // A desktop, where a card's actions stay hidden until asked for.
+        variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+      );
+    }
+
+    testWidgets(
+      "a card's actions show while the keyboard is inside it",
+      (tester) async {
         await tester.pumpWidget(
           _app(
             SizedBox(
               width: 400,
               child: Upload<String>(
-                variant: variant,
+                variant: UploadVariant.cards,
                 items: const [
                   UploadItem(name: 'report.pdf', status: UploadStatus.done),
                 ],
-                onPick: () async {},
-                onPreview: (_) => previewed++,
-                onRemove: (_) => removed++,
+                onRemove: (_) {},
               ),
             ),
           ),
         );
+        double shown() => tester
+            .widget<AnimatedOpacity>(find.byType(AnimatedOpacity).last)
+            .opacity;
+        expect(shown(), 0, reason: 'a wall of tiles stays a wall of pictures');
 
-        final reached = await stops(tester);
-        expect(reached, contains('Preview: report.pdf'));
-        expect(reached, contains('Remove'));
-
-        // And each does what it says from the keyboard.
-        while (FocusManager.instance.primaryFocus?.context == null ||
-            tester
-                    .getSemantics(find.byElementPredicate(
-                      (e) => e == FocusManager.instance.primaryFocus!.context,
-                    ))
-                    .label !=
-                'Preview: report.pdf') {
+        for (var i = 0; i < 4 && shown() == 0; i++) {
           await tester.sendKeyEvent(LogicalKeyboardKey.tab);
           await tester.pump();
         }
-        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pump();
-        expect(previewed, 1);
-        expect(removed, 0);
-        semantics.dispose();
+        expect(shown(), 1);
       },
-          // A desktop, where a card's actions stay hidden until asked for.
-          variant: TargetPlatformVariant.only(TargetPlatform.macOS));
-    }
-
-    testWidgets("a card's actions show while the keyboard is inside it", (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _app(
-          SizedBox(
-            width: 400,
-            child: Upload<String>(
-              variant: UploadVariant.cards,
-              items: const [
-                UploadItem(name: 'report.pdf', status: UploadStatus.done),
-              ],
-              onRemove: (_) {},
-            ),
-          ),
-        ),
-      );
-      double shown() => tester
-          .widget<AnimatedOpacity>(find.byType(AnimatedOpacity).last)
-          .opacity;
-      expect(shown(), 0, reason: 'a wall of tiles stays a wall of pictures');
-
-      for (var i = 0; i < 4 && shown() == 0; i++) {
-        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-        await tester.pump();
-      }
-      expect(shown(), 1);
-    },
-        // A desktop, which has a pointer to hover with: on a touch screen the
-        // actions are never hidden in the first place.
-        variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+      // A desktop, which has a pointer to hover with: on a touch screen the
+      // actions are never hidden in the first place.
+      variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+    );
 
     testWidgets("a card's actions are always there on a touch screen", (
       tester,

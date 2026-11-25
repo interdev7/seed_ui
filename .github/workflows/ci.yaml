@@ -38,12 +38,6 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          # The strict checks run on the version the package is developed on.
-          # A newer stable can deprecate things the package cannot move off
-          # yet (material.dart → material_ui needs Flutter 3.47, while the
-          # package supports 3.22+); the `latest` job below reports those
-          # without blocking. Raise this together with the local Flutter.
-          flutter-version: 3.44.4
           cache: true
 
       - name: Install dependencies
@@ -54,29 +48,6 @@ jobs:
 
       - name: Analyze
         run: flutter analyze --fatal-infos
-
-  # Early warning, never a gate: what the newest stable Flutter says about the
-  # package. A red mark here is a heads-up for the next migration, not a
-  # reason to hold a merge or a release.
-  analyze-latest:
-    name: Analyze on latest stable (advisory)
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      # Infos are what this job is for — print them, do not fail on them.
-      # Errors and warnings would still turn it red.
-      - name: Analyze
-        run: flutter analyze --no-fatal-infos
 
   test:
     name: Test
@@ -113,12 +84,6 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          # The strict checks run on the version the package is developed on.
-          # A newer stable can deprecate things the package cannot move off
-          # yet (material.dart → material_ui needs Flutter 3.47, while the
-          # package supports 3.22+); the `latest` job below reports those
-          # without blocking. Raise this together with the local Flutter.
-          flutter-version: 3.44.4
           cache: true
 
       - name: Install dependencies
@@ -148,9 +113,6 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          # Same pin as the strict checks: on 3.47+ the material.dart
-          # deprecation costs static-analysis points (see ROADMAP.md, 0.30.0).
-          flutter-version: 3.44.4
           cache: true
 
       - name: Install dependencies

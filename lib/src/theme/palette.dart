@@ -43,9 +43,12 @@ _Hsv _toHsv(Color color) {
   return _Hsv(hsl.hue, hsl.saturation, hsl.value);
 }
 
-Color _fromHsv(_Hsv hsv) =>
-    HSVColor.fromAHSV(1, hsv.h % 360, hsv.s.clamp(0, 1), hsv.v.clamp(0, 1))
-        .toColor();
+Color _fromHsv(_Hsv hsv) => HSVColor.fromAHSV(
+  1,
+  hsv.h % 360,
+  hsv.s.clamp(0, 1),
+  hsv.v.clamp(0, 1),
+).toColor();
 
 double _getHue(_Hsv hsv, int i, {required bool light}) {
   // Warm hues rotate one way and cool hues the other, so lighter shades stay
@@ -74,8 +77,9 @@ double _getSaturation(_Hsv hsv, int i, {required bool light}) {
 }
 
 double _getValue(_Hsv hsv, int i, {required bool light}) {
-  final double value =
-      light ? hsv.v + _brightnessStep1 * i : hsv.v - _brightnessStep2 * i;
+  final double value = light
+      ? hsv.v + _brightnessStep1 * i
+      : hsv.v - _brightnessStep2 * i;
   return double.parse(value.clamp(0.0, 1.0).toStringAsFixed(2));
 }
 

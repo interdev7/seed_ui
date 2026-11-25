@@ -17,12 +17,7 @@ import '../data_display/tooltip.dart';
 @immutable
 class RateToken {
   /// Creates a [RateToken].
-  const RateToken({
-    this.starColor,
-    this.starBg,
-    this.gap,
-    this.hoverScale,
-  });
+  const RateToken({this.starColor, this.starBg, this.gap, this.hoverScale});
 
   /// A lit star.
   final Color? starColor;
@@ -37,19 +32,19 @@ class RateToken {
   final double? hoverScale;
 
   _ResolvedRateToken _resolve(Token t) => _ResolvedRateToken(
-        starColor: starColor ?? const Color(0xFFFADB14),
-        starBg: starBg ?? t.colorFillSecondary,
-        gap: gap ?? t.sizeXS,
-        hoverScale: hoverScale ?? 1.1,
-      );
+    starColor: starColor ?? const Color(0xFFFADB14),
+    starBg: starBg ?? t.colorFillSecondary,
+    gap: gap ?? t.sizeXS,
+    hoverScale: hoverScale ?? 1.1,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   RateToken merge(RateToken other) => RateToken(
-        starColor: other.starColor ?? starColor,
-        starBg: other.starBg ?? starBg,
-        gap: other.gap ?? gap,
-        hoverScale: other.hoverScale ?? hoverScale,
-      );
+    starColor: other.starColor ?? starColor,
+    starBg: other.starBg ?? starBg,
+    gap: other.gap ?? gap,
+    hoverScale: other.hoverScale ?? hoverScale,
+  );
 }
 
 @immutable
@@ -81,9 +76,9 @@ class RateDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   RateDefaults merge(RateDefaults other) => RateDefaults(
-        allowHalf: other.allowHalf ?? allowHalf,
-        allowClear: other.allowClear ?? allowClear,
-      );
+    allowHalf: other.allowHalf ?? allowHalf,
+    allowClear: other.allowClear ?? allowClear,
+  );
 }
 
 /// A rating in stars: how a reader marks a film, a meal, an answer.
@@ -226,46 +221,49 @@ class _RateState extends State<Rate> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<RateToken>(context) ??
-            const RateToken())
-        ._resolve(t);
-    final side = (widget.size ??
-            ConfigProvider.componentSizeOf(context) ??
-            SoftSize.middle)
-        .resolve1D(
-      small: t.fontSizeLG,
-      middle: t.fontSizeXL,
-      large: t.controlHeightSM,
-    );
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<RateToken>(context) ??
+                const RateToken())
+            ._resolve(t);
+    final side =
+        (widget.size ??
+                ConfigProvider.componentSizeOf(context) ??
+                SoftSize.middle)
+            .resolve1D(
+              small: t.fontSizeLG,
+              middle: t.fontSizeXL,
+              large: t.controlHeightSM,
+            );
     final rtl = Directionality.maybeOf(context) == TextDirection.rtl;
     final shown = _takes ? (_hover ?? _value) : _value;
     final hoveredIndex = _hover == null ? null : _hover!.ceil() - 1;
     final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
     Widget glyph(int i, Color color) => IconTheme.merge(
-          data: IconThemeData(color: color, size: side),
-          child: DefaultTextStyle.merge(
-            style: TextStyle(
-              color: color,
-              fontSize: side,
-              height: 1,
-              fontFamily: t.fontFamily,
-              fontFamilyFallback: t.fontFamilyFallback,
-              decoration: TextDecoration.none,
-            ),
-            child: SizedBox.square(
-              dimension: side,
-              child: Center(
-                child: widget.character?.call(i) ??
-                    CustomPaint(
-                      size: Size.square(side),
-                      painter: _StarPainter(color),
-                    ),
-              ),
-            ),
+      data: IconThemeData(color: color, size: side),
+      child: DefaultTextStyle.merge(
+        style: TextStyle(
+          color: color,
+          fontSize: side,
+          height: 1,
+          fontFamily: t.fontFamily,
+          fontFamilyFallback: t.fontFamilyFallback,
+          decoration: TextDecoration.none,
+        ),
+        child: SizedBox.square(
+          dimension: side,
+          child: Center(
+            child:
+                widget.character?.call(i) ??
+                CustomPaint(
+                  size: Size.square(side),
+                  painter: _StarPainter(color),
+                ),
           ),
-        );
+        ),
+      ),
+    );
 
     Widget star(int i) {
       // How much of this star is lit: all of it, half, or none.
@@ -325,14 +323,16 @@ class _RateState extends State<Rate> {
 
     final locale = context.seedLocale;
     String say(double v) => locale.figures(
-          '${v == v.roundToDouble() ? v.toInt() : v} / ${widget.count}',
-        );
+      '${v == v.roundToDouble() ? v.toInt() : v} / ${widget.count}',
+    );
     final up = (_value + _step).clamp(0, widget.count.toDouble()).toDouble();
     final down = (_value - _step).clamp(0, widget.count.toDouble()).toDouble();
-    final more =
-        rtl ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight;
-    final less =
-        rtl ? LogicalKeyboardKey.arrowRight : LogicalKeyboardKey.arrowLeft;
+    final more = rtl
+        ? LogicalKeyboardKey.arrowLeft
+        : LogicalKeyboardKey.arrowRight;
+    final less = rtl
+        ? LogicalKeyboardKey.arrowRight
+        : LogicalKeyboardKey.arrowLeft;
 
     return Semantics(
       container: true,
@@ -352,8 +352,9 @@ class _RateState extends State<Rate> {
         onShowFocusHighlight: (v) => setState(() => _focused = v),
         shortcuts: {
           SingleActivator(more): const _RateIntent(1),
-          const SingleActivator(LogicalKeyboardKey.arrowUp):
-              const _RateIntent(1),
+          const SingleActivator(LogicalKeyboardKey.arrowUp): const _RateIntent(
+            1,
+          ),
           SingleActivator(less): const _RateIntent(-1),
           const SingleActivator(LogicalKeyboardKey.arrowDown):
               const _RateIntent(-1),
@@ -422,7 +423,8 @@ class _StarPainter extends CustomPainter {
       final radius = i.isEven ? outer : inner;
       // From the top point, clockwise.
       final angle = -math.pi / 2 + i * math.pi / 5;
-      final p = c +
+      final p =
+          c +
           Offset(
             radius * math.cos(angle),
             radius * math.sin(angle) + outer * 0.06,

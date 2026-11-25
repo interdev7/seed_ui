@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart' show AdaptiveTextSelectionToolbar;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' show AdaptiveTextSelectionToolbar;
 
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
@@ -77,33 +77,33 @@ class InputOtpToken {
   final double? fontSize;
 
   _ResolvedInputOtpToken _resolve(Token t) => _ResolvedInputOtpToken(
-        gap: gap ?? t.sizeXS,
-        cellWidth: cellWidth,
-        colorBorder: colorBorder ?? t.colorBorder,
-        activeBorderColor: activeBorderColor ?? t.primary.base,
-        hoverBorderColor: hoverBorderColor ?? t.primary.borderHover,
-        cellBg: cellBg ?? t.colorBgContainer,
-        disabledCellBg: disabledCellBg ?? t.colorFillTertiary,
-        colorText: colorText ?? t.colorText,
-        caretColor: caretColor ?? t.primary.base,
-        borderRadius: borderRadius ?? t.borderRadius,
-        fontSize: fontSize ?? t.fontSizeLG,
-      );
+    gap: gap ?? t.sizeXS,
+    cellWidth: cellWidth,
+    colorBorder: colorBorder ?? t.colorBorder,
+    activeBorderColor: activeBorderColor ?? t.primary.base,
+    hoverBorderColor: hoverBorderColor ?? t.primary.borderHover,
+    cellBg: cellBg ?? t.colorBgContainer,
+    disabledCellBg: disabledCellBg ?? t.colorFillTertiary,
+    colorText: colorText ?? t.colorText,
+    caretColor: caretColor ?? t.primary.base,
+    borderRadius: borderRadius ?? t.borderRadius,
+    fontSize: fontSize ?? t.fontSizeLG,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   InputOtpToken merge(InputOtpToken other) => InputOtpToken(
-        gap: other.gap ?? gap,
-        cellWidth: other.cellWidth ?? cellWidth,
-        colorBorder: other.colorBorder ?? colorBorder,
-        activeBorderColor: other.activeBorderColor ?? activeBorderColor,
-        hoverBorderColor: other.hoverBorderColor ?? hoverBorderColor,
-        cellBg: other.cellBg ?? cellBg,
-        disabledCellBg: other.disabledCellBg ?? disabledCellBg,
-        colorText: other.colorText ?? colorText,
-        caretColor: other.caretColor ?? caretColor,
-        borderRadius: other.borderRadius ?? borderRadius,
-        fontSize: other.fontSize ?? fontSize,
-      );
+    gap: other.gap ?? gap,
+    cellWidth: other.cellWidth ?? cellWidth,
+    colorBorder: other.colorBorder ?? colorBorder,
+    activeBorderColor: other.activeBorderColor ?? activeBorderColor,
+    hoverBorderColor: other.hoverBorderColor ?? hoverBorderColor,
+    cellBg: other.cellBg ?? cellBg,
+    disabledCellBg: other.disabledCellBg ?? disabledCellBg,
+    colorText: other.colorText ?? colorText,
+    caretColor: other.caretColor ?? caretColor,
+    borderRadius: other.borderRadius ?? borderRadius,
+    fontSize: other.fontSize ?? fontSize,
+  );
 }
 
 @immutable
@@ -229,8 +229,9 @@ class InputOtp extends StatefulWidget {
 
 class _InputOtpState extends State<InputOtp>
     with SingleTickerProviderStateMixin {
-  late final TextEditingController _controller =
-      TextEditingController(text: _clean(widget.value ?? widget.defaultValue));
+  late final TextEditingController _controller = TextEditingController(
+    text: _clean(widget.value ?? widget.defaultValue),
+  );
   FocusNode? _ownFocus;
   FocusNode get _focus => widget.focusNode ?? (_ownFocus ??= FocusNode());
   final _editable = GlobalKey<EditableTextState>();
@@ -290,11 +291,13 @@ class _InputOtpState extends State<InputOtp>
   }
 
   bool _accepts(String c) => switch (widget.characters) {
-        InputOtpCharacters.digits => RegExp(r'^[0-9]$').hasMatch(c),
-        InputOtpCharacters.alphanumeric =>
-          RegExp(r'^[\p{L}\p{N}]$', unicode: true).hasMatch(c),
-        InputOtpCharacters.any => c.trim().isNotEmpty,
-      };
+    InputOtpCharacters.digits => RegExp(r'^[0-9]$').hasMatch(c),
+    InputOtpCharacters.alphanumeric => RegExp(
+      r'^[\p{L}\p{N}]$',
+      unicode: true,
+    ).hasMatch(c),
+    InputOtpCharacters.any => c.trim().isNotEmpty,
+  };
 
   /// The cursor standing at cell [index]: on the character there, so what
   /// is typed next replaces it, or after the last one.
@@ -367,11 +370,13 @@ class _InputOtpState extends State<InputOtp>
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<InputOtpToken>(context) ??
-            const InputOtpToken())
-        ._resolve(t);
-    final size = widget.size ??
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<InputOtpToken>(context) ??
+                const InputOtpToken())
+            ._resolve(t);
+    final size =
+        widget.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
     final height = size.resolveHeight(
@@ -414,11 +419,10 @@ class _InputOtpState extends State<InputOtp>
     }
 
     Color ring() => switch (widget.status) {
-          InputStatus.error => t.error.base,
-          InputStatus.warning => t.warning.base,
-          null => r.activeBorderColor,
-        }
-            .withValues(alpha: 0.12);
+      InputStatus.error => t.error.base,
+      InputStatus.warning => t.warning.base,
+      null => r.activeBorderColor,
+    }.withValues(alpha: 0.12);
 
     Widget cell(int i) {
       final char = i < _text.length ? _text.characters.elementAt(i) : null;
@@ -451,24 +455,22 @@ class _InputOtpState extends State<InputOtp>
           child: shown != null
               ? Text(shown, style: style)
               : active
-                  ? FadeTransition(
-                      // On for the first half of each beat, off for the
-                      // second, as a text cursor blinks.
-                      opacity: _blink.drive(
-                        TweenSequence([
-                          TweenSequenceItem(
-                              tween: ConstantTween(1.0), weight: 1),
-                          TweenSequenceItem(
-                              tween: ConstantTween(0.0), weight: 1),
-                        ]),
-                      ),
-                      child: Container(
-                        width: t.lineWidth,
-                        height: fontSize,
-                        color: r.caretColor,
-                      ),
-                    )
-                  : null,
+              ? FadeTransition(
+                  // On for the first half of each beat, off for the
+                  // second, as a text cursor blinks.
+                  opacity: _blink.drive(
+                    TweenSequence([
+                      TweenSequenceItem(tween: ConstantTween(1.0), weight: 1),
+                      TweenSequenceItem(tween: ConstantTween(0.0), weight: 1),
+                    ]),
+                  ),
+                  child: Container(
+                    width: t.lineWidth,
+                    height: fontSize,
+                    color: r.caretColor,
+                  ),
+                )
+              : null,
         ),
       );
     }
@@ -520,16 +522,17 @@ class _InputOtpState extends State<InputOtp>
           // for a code copied from somewhere else.
           contextMenuBuilder: (context, state) =>
               AdaptiveTextSelectionToolbar.editableText(
-            editableTextState: state,
-          ),
+                editableTextState: state,
+              ),
           rendererIgnoresPointer: true,
         ),
       ),
     );
 
     return MouseRegion(
-      cursor:
-          widget.disabled ? SystemMouseCursors.basic : SystemMouseCursors.text,
+      cursor: widget.disabled
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.text,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: Stack(
@@ -566,8 +569,9 @@ class _OtpFormatter extends TextInputFormatter {
     final text = clean(newValue.text);
     // How far the cursor got, counted in the characters that were kept.
     final typed = newValue.selection.isValid
-        ? clean(newValue.text.substring(0, newValue.selection.extentOffset))
-            .length
+        ? clean(
+            newValue.text.substring(0, newValue.selection.extentOffset),
+          ).length
         : text.length;
     final at = typed.clamp(0, text.length);
     return TextEditingValue(

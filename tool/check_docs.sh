@@ -191,7 +191,7 @@ def named_params(head):
             part = re.sub(r'//.*', '', part).split('=')[0].strip()
             word = re.search(r'(\w+)\s*$', part)
             if word:
-                names.add(word.group(1))
+                names.add(word.group(1).lstrip('_'))  # `this._x` is passed as `x:` (Dart 3.13)
     return names
 
 
@@ -221,7 +221,7 @@ def signature(owner, method):
                     part = re.sub(r'//.*', '', part).split('=')[0].strip()
                     word = re.search(r'(\w+)\s*$', part)
                     if word:
-                        names.add(word.group(1))
+                        names.add(word.group(1).lstrip('_'))  # `this._x` is passed as `x:` (Dart 3.13)
             _signatures[key] = names
             return names
         _signatures[key] = named_params(head)

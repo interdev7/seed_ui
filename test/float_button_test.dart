@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -11,8 +13,6 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/services.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// A group parked in the corner [at], the way a float button is really used.
@@ -46,26 +46,21 @@ FloatButtonGroup<String> _group({
   FloatButtonController? controller,
   FloatButtonToken? token,
   FloatButtonTrigger? trigger,
-}) =>
-    FloatButtonGroup<String>(
-      trigger: trigger,
-      layout: layout,
-      direction: direction,
-      dismissible: dismissible,
-      closeOnSelect: closeOnSelect,
-      open: open,
-      onOpenChanged: onOpenChanged,
-      controller: controller,
-      token: token,
-      items: [
-        for (var i = 0; i < count; i++)
-          FloatButtonItem(
-            value: 'i$i',
-            icon: const UserIcon(),
-            label: label,
-          ),
-      ],
-    );
+}) => FloatButtonGroup<String>(
+  trigger: trigger,
+  layout: layout,
+  direction: direction,
+  dismissible: dismissible,
+  closeOnSelect: closeOnSelect,
+  open: open,
+  onOpenChanged: onOpenChanged,
+  controller: controller,
+  token: token,
+  items: [
+    for (var i = 0; i < count; i++)
+      FloatButtonItem(value: 'i$i', icon: const UserIcon(), label: label),
+  ],
+);
 
 Future<void> _open(WidgetTester tester) async {
   await tester.tap(find.byType(FloatButtonGroup<String>));
@@ -97,7 +92,9 @@ void main() {
       const layout = FloatButtonLayout.vertical();
       expect(layout.offsetFor(0, 3, _item, _upLeft, _gap).dy, lessThan(0));
       expect(
-          layout.offsetFor(0, 3, _item, _downRight, _gap).dy, greaterThan(0));
+        layout.offsetFor(0, 3, _item, _downRight, _gap).dy,
+        greaterThan(0),
+      );
     });
 
     test('a column hangs its labels sideways, never above', () {
@@ -246,9 +243,10 @@ void main() {
       // gap rather than from the arc, and moved items by seven pixels.
       const still = FloatButtonLayout.fan();
       const shaken = FloatButtonLayout.fan(jitter: 1, seed: 3);
-      final moved = (shaken.offsetFor(1, 4, _item, _upLeft, _gap) -
-              still.offsetFor(1, 4, _item, _upLeft, _gap))
-          .distance;
+      final moved =
+          (shaken.offsetFor(1, 4, _item, _upLeft, _gap) -
+                  still.offsetFor(1, 4, _item, _upLeft, _gap))
+              .distance;
       expect(moved, greaterThan(_item.longestSide / 2));
     });
 
@@ -263,7 +261,9 @@ void main() {
     test('a custom layout is asked, not second-guessed', () {
       const layout = FloatButtonLayout.custom(_ladder);
       expect(
-          layout.offsetFor(2, 4, _item, _upLeft, _gap), const Offset(20, 40));
+        layout.offsetFor(2, 4, _item, _upLeft, _gap),
+        const Offset(20, 40),
+      );
       expect(
         layout.labelPlacementFor(2, 4, _item, _upLeft, _gap),
         FloatButtonLabelPlacement.bottom,
@@ -327,27 +327,41 @@ void main() {
           const FloatButtonLayout.grid(2).offsetFor(i, 4, _item, up, _gap).dx,
       };
       expect(xs.length, 2);
-      expect(xs.reduce((a, b) => a + b), closeTo(0, 0.001),
-          reason: 'the two columns straddle the trigger');
+      expect(
+        xs.reduce((a, b) => a + b),
+        closeTo(0, 0.001),
+        reason: 'the two columns straddle the trigger',
+      );
     });
 
     test('a run has no travel across itself, so it takes the usual way', () {
       // Told "up", a row still has to go somewhere sideways.
       const up = Offset(0, -1);
-      final row =
-          const FloatButtonLayout.horizontal().offsetFor(0, 3, _item, up, _gap);
+      final row = const FloatButtonLayout.horizontal().offsetFor(
+        0,
+        3,
+        _item,
+        up,
+        _gap,
+      );
       expect(row.dx, lessThan(0));
       expect(row.dy, 0);
 
       const left = Offset(-1, 0);
-      final column =
-          const FloatButtonLayout.vertical().offsetFor(0, 3, _item, left, _gap);
+      final column = const FloatButtonLayout.vertical().offsetFor(
+        0,
+        3,
+        _item,
+        left,
+        _gap,
+      );
       expect(column.dy, lessThan(0));
       expect(column.dx, 0);
     });
 
-    testWidgets('a group at the foot of the screen fans straight up',
-        (tester) async {
+    testWidgets('a group at the foot of the screen fans straight up', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           _group(layout: const FloatButtonLayout.fan(), count: 4),
@@ -361,14 +375,18 @@ void main() {
         for (var i = 0; i < 4; i++)
           tester.getRect(find.byType(UserIcon).at(i)).center.dx - trigger.dx,
       ];
-      expect(xs.first, closeTo(-xs.last, 1),
-          reason: 'as far one way as the other');
+      expect(
+        xs.first,
+        closeTo(-xs.last, 1),
+        reason: 'as far one way as the other',
+      );
       expect(xs.first, lessThan(0));
       expect(xs.last, greaterThan(0));
     });
 
-    testWidgets('a group in the corner still goes up and to the left',
-        (tester) async {
+    testWidgets('a group in the corner still goes up and to the left', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(_group(layout: const FloatButtonLayout.fan(), count: 4)),
       );
@@ -405,8 +423,9 @@ void main() {
       await tester.pumpWidget(
         ConfigProvider(
           defaults: const ComponentDefaults(
-            floatButton:
-                FloatButtonDefaults(direction: FloatButtonDirection.bottom),
+            floatButton: FloatButtonDefaults(
+              direction: FloatButtonDirection.bottom,
+            ),
           ),
           child: MaterialApp(
             home: Scaffold(
@@ -422,7 +441,9 @@ void main() {
       final trigger = tester.getCenter(find.byType(FloatButtonGroup<String>));
       await _open(tester);
       expect(
-          tester.getCenter(find.byType(UserIcon)).dy, greaterThan(trigger.dy));
+        tester.getCenter(find.byType(UserIcon)).dy,
+        greaterThan(trigger.dy),
+      );
     });
 
     testWidgets('a row with nowhere to run folds into rows', (tester) async {
@@ -480,8 +501,11 @@ void main() {
       final ladder = rows.toList()..sort();
       final step = (ladder[1] - ladder[0]).abs();
       final room = trigger.dy;
-      expect(rows.length * step, lessThanOrEqualTo(room),
-          reason: 'the block fits above the trigger');
+      expect(
+        rows.length * step,
+        lessThanOrEqualTo(room),
+        reason: 'the block fits above the trigger',
+      );
       expect(
         (count / (columns.length - 1)).ceil() * step,
         greaterThan(room),
@@ -532,8 +556,9 @@ void main() {
   });
 
   group('opening and closing', () {
-    testWidgets('a group keeps its items to itself until it is opened',
-        (tester) async {
+    testWidgets('a group keeps its items to itself until it is opened', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(_group()));
       expect(find.byType(UserIcon), findsNothing);
 
@@ -542,8 +567,9 @@ void main() {
       expect(find.byType(UserIcon), findsOneWidget);
     });
 
-    testWidgets('an item reports through both handlers, and folds the group',
-        (tester) async {
+    testWidgets('an item reports through both handlers, and folds the group', (
+      tester,
+    ) async {
       var own = 0;
       final seen = <String?>[];
       await tester.pumpWidget(
@@ -596,8 +622,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('closeOnSelect: false leaves the group standing',
-        (tester) async {
+    testWidgets('closeOnSelect: false leaves the group standing', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(_group(closeOnSelect: false)));
       await _open(tester);
 
@@ -606,8 +633,9 @@ void main() {
       expect(find.byType(UserIcon), findsOneWidget);
     });
 
-    testWidgets('a second tap on the trigger closes it, and it stays shut',
-        (tester) async {
+    testWidgets('a second tap on the trigger closes it, and it stays shut', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(_group()));
       await _open(tester);
 
@@ -626,8 +654,11 @@ void main() {
 
       await tester.tapAt(const Offset(60, 60));
       await tester.pumpAndSettle();
-      expect(find.byType(UserIcon), findsNothing,
-          reason: 'a tap group is shut by open ground; a hover one is not');
+      expect(
+        find.byType(UserIcon),
+        findsNothing,
+        reason: 'a tap group is shut by open ground; a hover one is not',
+      );
     });
 
     testWidgets('a tap on open ground closes the group', (tester) async {
@@ -639,8 +670,9 @@ void main() {
       expect(find.byType(UserIcon), findsNothing);
     });
 
-    testWidgets('dismissible: false ignores a tap on open ground',
-        (tester) async {
+    testWidgets('dismissible: false ignores a tap on open ground', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(_group(dismissible: false)));
       await _open(tester);
 
@@ -720,11 +752,11 @@ void main() {
     const dim = Color(0x80000000);
 
     Finder mask() => find.descendant(
-          of: find.byType(Overlay),
-          matching: find.byWidgetPredicate(
-            (w) => w is ColoredBox && w.color == dim,
-          ),
-        );
+      of: find.byType(Overlay),
+      matching: find.byWidgetPredicate(
+        (w) => w is ColoredBox && w.color == dim,
+      ),
+    );
 
     testWidgets('nothing is drawn behind a group unasked', (tester) async {
       await tester.pumpWidget(_host(_group(count: 2)));
@@ -752,8 +784,9 @@ void main() {
       expect(mask(), findsOneWidget);
     });
 
-    testWidgets('it arrives with the items and leaves with them',
-        (tester) async {
+    testWidgets('it arrives with the items and leaves with them', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(_group(count: 2, token: const FloatButtonToken(maskColor: dim))),
       );
@@ -772,8 +805,9 @@ void main() {
       );
     });
 
-    testWidgets('a mask does not take the taps a barrier was not asked for',
-        (tester) async {
+    testWidgets('a mask does not take the taps a barrier was not asked for', (
+      tester,
+    ) async {
       var closed = 0;
       await tester.pumpWidget(
         _host(
@@ -826,10 +860,8 @@ void main() {
       await tester.pumpWidget(
         _host(
           FloatButtonGroup<String>(
-            itemBuilder: (context, item, child) => ColoredBox(
-              color: const Color(0xFF00FF00),
-              child: child,
-            ),
+            itemBuilder: (context, item, child) =>
+                ColoredBox(color: const Color(0xFF00FF00), child: child),
             items: const [FloatButtonItem(value: 'a', icon: UserIcon())],
           ),
         ),
@@ -845,8 +877,9 @@ void main() {
       );
     });
 
-    testWidgets('labelBuilder draws the caption in place of the plain text',
-        (tester) async {
+    testWidgets('labelBuilder draws the caption in place of the plain text', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           FloatButtonGroup<String>(
@@ -866,8 +899,9 @@ void main() {
       expect(find.text('Edit'), findsOneWidget);
     });
 
-    testWidgets('a builder that returns null leaves the caption alone',
-        (tester) async {
+    testWidgets('a builder that returns null leaves the caption alone', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           FloatButtonGroup<String>(
@@ -887,8 +921,9 @@ void main() {
       expect(find.text('Share'), findsOneWidget);
     });
 
-    testWidgets('an item with no label of its own can still be given one',
-        (tester) async {
+    testWidgets('an item with no label of its own can still be given one', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           FloatButtonGroup<String>(
@@ -902,8 +937,9 @@ void main() {
       expect(find.text('from the builder'), findsOneWidget);
     });
 
-    testWidgets('the screen reader still hears the item\'s own words',
-        (tester) async {
+    testWidgets('the screen reader still hears the item\'s own words', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           FloatButtonGroup<String>(
@@ -923,8 +959,9 @@ void main() {
       );
     });
 
-    testWidgets('a key is fastened to the item, for a Tour to aim at',
-        (tester) async {
+    testWidgets('a key is fastened to the item, for a Tour to aim at', (
+      tester,
+    ) async {
       final key = GlobalKey();
       await tester.pumpWidget(
         _host(
@@ -944,8 +981,9 @@ void main() {
       );
     });
 
-    testWidgets('a label becomes the caption beside the button',
-        (tester) async {
+    testWidgets('a label becomes the caption beside the button', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const FloatButtonGroup<String>(
@@ -1011,8 +1049,9 @@ void main() {
   });
 
   group('on screen', () {
-    testWidgets('a scroll re-aims the group rather than dropping it',
-        (tester) async {
+    testWidgets('a scroll re-aims the group rather than dropping it', (
+      tester,
+    ) async {
       // Closing would be the cheap answer to a stale origin, and the wrong
       // one: a group told it may not be dismissed must not dismiss itself.
       // Driven through a controller, not a drag: an open group covers the
@@ -1110,14 +1149,14 @@ void main() {
       // A caption is a sibling of its button inside the item, not a
       // descendant of it, so pair them through the FloatButton they share.
       Rect buttonOf(String caption) => tester.getRect(
-            find.descendant(
-              of: find.ancestor(
-                of: find.text(caption),
-                matching: find.byType(FloatButton),
-              ),
-              matching: find.byType(Button),
-            ),
-          );
+        find.descendant(
+          of: find.ancestor(
+            of: find.text(caption),
+            matching: find.byType(FloatButton),
+          ),
+          matching: find.byType(Button),
+        ),
+      );
 
       const captions = ['One', 'Two', 'Three', 'Four'];
       for (final caption in captions) {
@@ -1187,11 +1226,7 @@ void main() {
       Future<Size> at(ControlSize? size) async {
         await tester.pumpWidget(
           _host(
-            FloatButton(
-              size: size,
-              icon: const UserIcon(),
-              onPressed: () {},
-            ),
+            FloatButton(size: size, icon: const UserIcon(), onPressed: () {}),
           ),
         );
         await tester.pumpAndSettle();
@@ -1218,8 +1253,9 @@ void main() {
       expect(tester.getSize(find.byType(FloatButton)), const Size(72, 72));
     });
 
-    testWidgets('a group sizes its items alike, and spaces them by it',
-        (tester) async {
+    testWidgets('a group sizes its items alike, and spaces them by it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const FloatButtonGroup<String>(
@@ -1227,7 +1263,9 @@ void main() {
             items: [
               FloatButtonItem(value: 'a', icon: UserIcon()),
               FloatButtonItem(
-                  value: 'b', icon: SearchIcon(color: Color(0xFF000000))),
+                value: 'b',
+                icon: SearchIcon(color: Color(0xFF000000)),
+              ),
             ],
           ),
         ),
@@ -1236,10 +1274,7 @@ void main() {
 
       expect(tester.getSize(find.byType(UserIcon).hitTestable()), isNotNull);
       final first = tester.getRect(
-        find.ancestor(
-          of: find.byType(UserIcon),
-          matching: find.byType(Button),
-        ),
+        find.ancestor(of: find.byType(UserIcon), matching: find.byType(Button)),
       );
       expect(first.size, const Size(72, 72));
 
@@ -1255,8 +1290,9 @@ void main() {
   });
 
   group('the page underneath', () {
-    testWidgets('gets a tap that dismisses, and nothing else with it',
-        (tester) async {
+    testWidgets('gets a tap that dismisses, and nothing else with it', (
+      tester,
+    ) async {
       // One gesture, one thing: the tap puts the menu away and stops there.
       // Pressing what was underneath as well would be two actions at once —
       // and an outside control that toggles would then see the group already
@@ -1296,8 +1332,9 @@ void main() {
       expect(behind, 1);
     });
 
-    testWidgets('a control outside that toggles does not fight the barrier',
-        (tester) async {
+    testWidgets('a control outside that toggles does not fight the barrier', (
+      tester,
+    ) async {
       final fab = FloatButtonController();
       addTearDown(fab.dispose);
       await tester.pumpWidget(
@@ -1362,8 +1399,11 @@ void main() {
 
       await tester.drag(find.byType(ListView), const Offset(0, -80));
       await tester.pumpAndSettle();
-      expect(scroll.offset, closeTo(80, 1),
-          reason: 'the drag reached the list through the barrier');
+      expect(
+        scroll.offset,
+        closeTo(80, 1),
+        reason: 'the drag reached the list through the barrier',
+      );
       expect(
         find.byType(UserIcon),
         findsOneWidget,
@@ -1531,10 +1571,7 @@ void main() {
           Builder(
             builder: (context) {
               token = context.softToken;
-              return FloatButton(
-                color: ButtonColor.primary,
-                onPressed: () {},
-              );
+              return FloatButton(color: ButtonColor.primary, onPressed: () {});
             },
           ),
         ),

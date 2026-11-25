@@ -64,20 +64,20 @@ enum TourPlacement {
   rightBottom;
 
   PopoverPlacement? get _popover => switch (this) {
-        TourPlacement.center => null,
-        TourPlacement.top => PopoverPlacement.top,
-        TourPlacement.topLeft => PopoverPlacement.topLeft,
-        TourPlacement.topRight => PopoverPlacement.topRight,
-        TourPlacement.bottom => PopoverPlacement.bottom,
-        TourPlacement.bottomLeft => PopoverPlacement.bottomLeft,
-        TourPlacement.bottomRight => PopoverPlacement.bottomRight,
-        TourPlacement.left => PopoverPlacement.left,
-        TourPlacement.leftTop => PopoverPlacement.leftTop,
-        TourPlacement.leftBottom => PopoverPlacement.leftBottom,
-        TourPlacement.right => PopoverPlacement.right,
-        TourPlacement.rightTop => PopoverPlacement.rightTop,
-        TourPlacement.rightBottom => PopoverPlacement.rightBottom,
-      };
+    TourPlacement.center => null,
+    TourPlacement.top => PopoverPlacement.top,
+    TourPlacement.topLeft => PopoverPlacement.topLeft,
+    TourPlacement.topRight => PopoverPlacement.topRight,
+    TourPlacement.bottom => PopoverPlacement.bottom,
+    TourPlacement.bottomLeft => PopoverPlacement.bottomLeft,
+    TourPlacement.bottomRight => PopoverPlacement.bottomRight,
+    TourPlacement.left => PopoverPlacement.left,
+    TourPlacement.leftTop => PopoverPlacement.leftTop,
+    TourPlacement.leftBottom => PopoverPlacement.leftBottom,
+    TourPlacement.right => PopoverPlacement.right,
+    TourPlacement.rightTop => PopoverPlacement.rightTop,
+    TourPlacement.rightBottom => PopoverPlacement.rightBottom,
+  };
 }
 
 /// The room the highlight leaves around a target, and how round its corners
@@ -105,14 +105,14 @@ class TourGap {
 
   /// The hole this gap cuts around [target].
   RRect holeFor(Rect target) => RRect.fromRectAndRadius(
-        Rect.fromLTRB(
-          target.left - _x,
-          target.top - _y,
-          target.right + _x,
-          target.bottom + _y,
-        ),
-        Radius.circular(radius),
-      );
+    Rect.fromLTRB(
+      target.left - _x,
+      target.top - _y,
+      target.right + _x,
+      target.bottom + _y,
+    ),
+    Radius.circular(radius),
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -186,14 +186,11 @@ class TourButton {
   ///   ),
   /// )
   /// ```
-  const TourButton.custom(
-    this.builder, {
-    this.onPressed,
-    this.disabled = false,
-  })  : label = null,
-        icon = null,
-        variant = null,
-        color = null;
+  const TourButton.custom(this.builder, {this.onPressed, this.disabled = false})
+    : label = null,
+      icon = null,
+      variant = null,
+      color = null;
 
   /// Replaces the button's text.
   final Widget? label;
@@ -302,7 +299,7 @@ class TourStep {
 /// Dispose it with the widget that owns it.
 class TourController extends ChangeNotifier {
   /// Creates a [TourController].
-  TourController({int current = 0}) : _current = current;
+  TourController({this._current = 0});
 
   int _current;
   bool _open = false;
@@ -403,26 +400,26 @@ class TourToken {
   final Curve? travelCurve;
 
   _ResolvedTourToken _resolve(Token t) => _ResolvedTourToken(
-        width: width ?? 520,
-        closeBtnSize: closeBtnSize ?? t.fontSize * t.lineHeight,
-        indicatorSize: indicatorSize ?? 6,
-        maskColor: maskColor ?? const Color(0x80000000),
-        primaryPrevBtnBg:
-            primaryPrevBtnBg ?? const Color(0xFFFFFFFF).withValues(alpha: 0.15),
-        travelDuration: travelDuration ?? t.motionDurationSlow,
-        travelCurve: travelCurve ?? t.motionEaseInOut,
-      );
+    width: width ?? 520,
+    closeBtnSize: closeBtnSize ?? t.fontSize * t.lineHeight,
+    indicatorSize: indicatorSize ?? 6,
+    maskColor: maskColor ?? const Color(0x80000000),
+    primaryPrevBtnBg:
+        primaryPrevBtnBg ?? const Color(0xFFFFFFFF).withValues(alpha: 0.15),
+    travelDuration: travelDuration ?? t.motionDurationSlow,
+    travelCurve: travelCurve ?? t.motionEaseInOut,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TourToken merge(TourToken other) => TourToken(
-        width: other.width ?? width,
-        closeBtnSize: other.closeBtnSize ?? closeBtnSize,
-        indicatorSize: other.indicatorSize ?? indicatorSize,
-        maskColor: other.maskColor ?? maskColor,
-        primaryPrevBtnBg: other.primaryPrevBtnBg ?? primaryPrevBtnBg,
-        travelDuration: other.travelDuration ?? travelDuration,
-        travelCurve: other.travelCurve ?? travelCurve,
-      );
+    width: other.width ?? width,
+    closeBtnSize: other.closeBtnSize ?? closeBtnSize,
+    indicatorSize: other.indicatorSize ?? indicatorSize,
+    maskColor: other.maskColor ?? maskColor,
+    primaryPrevBtnBg: other.primaryPrevBtnBg ?? primaryPrevBtnBg,
+    travelDuration: other.travelDuration ?? travelDuration,
+    travelCurve: other.travelCurve ?? travelCurve,
+  );
 }
 
 @immutable
@@ -465,10 +462,10 @@ class TourDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TourDefaults merge(TourDefaults other) => TourDefaults(
-        placement: other.placement ?? placement,
-        arrow: other.arrow ?? arrow,
-        closable: other.closable ?? closable,
-      );
+    placement: other.placement ?? placement,
+    arrow: other.arrow ?? arrow,
+    closable: other.closable ?? closable,
+  );
 }
 
 /// A guided walk through a screen.
@@ -594,7 +591,7 @@ class Tour extends StatefulWidget {
 
   /// Replaces the row of step dots.
   final Widget Function(BuildContext context, int current, int total)?
-      indicatorsBuilder;
+  indicatorsBuilder;
 
   /// Replaces the buttons. [actions] is what the tour would have drawn, so a
   /// caller can add to it rather than rebuild it.
@@ -603,7 +600,8 @@ class Tour extends StatefulWidget {
     Widget actions,
     int current,
     int total,
-  )? actionsBuilder;
+  )?
+  actionsBuilder;
 
   /// Per-instance token overrides.
   final TourToken? token;
@@ -665,8 +663,10 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
   final ValueNotifier<Rect?> _anchor = ValueNotifier<Rect?>(null);
 
   bool get _isOpen => widget.open ?? _controller.isOpen;
-  int get _current => (widget.current ?? _controller.current)
-      .clamp(0, widget.steps.isEmpty ? 0 : widget.steps.length - 1);
+  int get _current => (widget.current ?? _controller.current).clamp(
+    0,
+    widget.steps.isEmpty ? 0 : widget.steps.length - 1,
+  );
 
   @override
   void initState() {
@@ -791,7 +791,8 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
     // A margin, so a target hard against an edge still counts as hidden: a
     // spotlight touching the edge of the screen has nowhere to put its panel.
     const margin = 48.0;
-    final visible = at.top >= margin &&
+    final visible =
+        at.top >= margin &&
         at.left >= 0 &&
         at.bottom <= screen.height - margin &&
         at.right <= screen.width;
@@ -837,10 +838,11 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
     _anchor.value = origin & box.size;
   }
 
-  _ResolvedTourToken get _resolvedToken => (widget.token ??
-          ConfigProvider.componentOf<TourToken>(context) ??
-          const TourToken())
-      ._resolve(context.softToken);
+  _ResolvedTourToken get _resolvedToken =>
+      (widget.token ??
+              ConfigProvider.componentOf<TourToken>(context) ??
+              const TourToken())
+          ._resolve(context.softToken);
 
   void _step(int to) {
     if (to == _current) return;
@@ -876,10 +878,11 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
 
   Widget _buildOverlay(BuildContext overlayContext) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<TourToken>(context) ??
-            const TourToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<TourToken>(context) ??
+                const TourToken())
+            ._resolve(t);
 
     final step = widget.steps[_current];
     // Named on the widget where a caller wants it to read as behaviour, on the
@@ -900,7 +903,8 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
         // out of that point on the way to a target and shuts back into it on
         // the way from one, instead of appearing and vanishing outright.
         final screen = MediaQuery.sizeOf(context);
-        final destination = anchor ??
+        final destination =
+            anchor ??
             Rect.fromCenter(
               center: Offset(screen.width / 2, screen.height / 2),
               width: 0,
@@ -921,8 +925,11 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
             placement: placement,
             mask: mask,
             gap: gap,
-            anchor: _spotDrawn =
-                _spotBetween(_spotFrom, destination, travelCurve),
+            anchor: _spotDrawn = _spotBetween(
+              _spotFrom,
+              destination,
+              travelCurve,
+            ),
             destination: destination,
             hasTarget: hasTarget,
             duration: travelDuration,
@@ -992,8 +999,9 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
               hole: hole,
               colour: mask.show ? (mask.color ?? r.maskColor) : null,
               blockTarget: widget.disabledInteraction || !hasTarget,
-              onTapOutside:
-                  (step.dismissible ?? widget.dismissible) ? _close : null,
+              onTapOutside: (step.dismissible ?? widget.dismissible)
+                  ? _close
+                  : null,
             ),
           ),
           // One panel for the whole tour: it travels to the next step and
@@ -1008,7 +1016,8 @@ class _TourState extends State<Tour> with SingleTickerProviderStateMixin {
             // point in the middle of the screen. Same layout, so even that is
             // a journey rather than a swap.
             placement: hasTarget ? placement._popover : null,
-            arrow: hasTarget &&
+            arrow:
+                hasTarget &&
                 placement != TourPlacement.center &&
                 (step.arrow ?? _arrow),
             arrowColour: (step.type ?? widget.type) == TourType.primary
@@ -1101,10 +1110,10 @@ class _TourMask extends StatelessWidget {
     // would stand on the very target the step is showing. The panel's own
     // cross, which is named, is the reader's way out.
     Widget strip() => GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          onTap: onTapOutside,
-        );
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      onTap: onTapOutside,
+    );
     yield Positioned(left: 0, top: 0, right: 0, height: r.top, child: strip());
     yield Positioned(
       left: 0,
@@ -1354,21 +1363,21 @@ class _AnchoredPanelState extends State<_AnchoredPanel>
                 animation: _travel,
                 builder: (context, _) =>
                     ValueListenableBuilder<PopoverArrowGeometry?>(
-                  valueListenable: _arrow,
-                  builder: (context, arrow, _) {
-                    final caret = _caretNow(arrow);
-                    return caret == null
-                        ? const SizedBox.shrink()
-                        : CustomPaint(
-                            key: const Key('softTourArrow'),
-                            painter: PopoverArrowPainter(
-                              caret,
-                              widget.arrowColour,
-                              drawShadow: false,
-                            ),
-                          );
-                  },
-                ),
+                      valueListenable: _arrow,
+                      builder: (context, arrow, _) {
+                        final caret = _caretNow(arrow);
+                        return caret == null
+                            ? const SizedBox.shrink()
+                            : CustomPaint(
+                                key: const Key('softTourArrow'),
+                                painter: PopoverArrowPainter(
+                                  caret,
+                                  widget.arrowColour,
+                                  drawShadow: false,
+                                ),
+                              );
+                      },
+                    ),
               ),
             ),
           ),
@@ -1668,8 +1677,12 @@ class _TourPanel extends StatelessWidget {
                         ),
                       ),
                     Padding(
-                      padding:
-                          EdgeInsets.fromLTRB(t.size, t.sizeXS, t.size, t.size),
+                      padding: EdgeInsets.fromLTRB(
+                        t.size,
+                        t.sizeXS,
+                        t.size,
+                        t.size,
+                      ),
                       // `spaceBetween` rather than a Spacer: a flex child measures
                       // as nothing during the intrinsic pass that sizes the panel,
                       // so the footer would come out too narrow and overflow.
@@ -1697,7 +1710,8 @@ class _TourPanel extends StatelessWidget {
                                 padding: EdgeInsetsDirectional.only(
                                   start: t.size,
                                 ),
-                                child: actionsBuilder?.call(
+                                child:
+                                    actionsBuilder?.call(
                                       context,
                                       actions,
                                       current,
@@ -1751,28 +1765,28 @@ class _TourPanel extends StatelessWidget {
   }
 
   Widget _indicators() => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < total; i++)
-            Padding(
-              padding: EdgeInsetsDirectional.only(
-                end: i == total - 1 ? 0 : t.sizeXXS,
-              ),
-              child: AnimatedContainer(
-                duration: t.motionDurationMid,
-                curve: t.motionEaseInOut,
-                width: r.indicatorSize,
-                height: r.indicatorSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: i == current
-                      ? (_primary ? t.primary.onBase : t.primary.base)
-                      : (_primary ? r.primaryPrevBtnBg : t.colorFill),
-                ),
-              ),
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      for (var i = 0; i < total; i++)
+        Padding(
+          padding: EdgeInsetsDirectional.only(
+            end: i == total - 1 ? 0 : t.sizeXXS,
+          ),
+          child: AnimatedContainer(
+            duration: t.motionDurationMid,
+            curve: t.motionEaseInOut,
+            width: r.indicatorSize,
+            height: r.indicatorSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: i == current
+                  ? (_primary ? t.primary.onBase : t.primary.base)
+                  : (_primary ? r.primaryPrevBtnBg : t.colorFill),
             ),
-        ],
-      );
+          ),
+        ),
+    ],
+  );
 
   Widget _actions(BuildContext context) {
     final prev = step.prevButton;
@@ -1810,11 +1824,13 @@ class _TourPanel extends StatelessWidget {
             variant: next?.variant ?? ButtonVariant.solid,
             // On a primary panel the accent is already the background, so the
             // main button inverts instead of doubling up on it.
-            color: next?.color ??
+            color:
+                next?.color ??
                 (_primary ? ButtonColor.defaultColor : ButtonColor.primary),
             icon: next?.icon,
             onPressed: (next?.disabled ?? false) ? null : onNext,
-            child: next?.label ??
+            child:
+                next?.label ??
                 Text(
                   _isLast ? context.seedLocale.finish : context.seedLocale.next,
                 ),
@@ -1872,8 +1888,10 @@ class _CloseButtonState extends State<_CloseButton> {
             height: widget.size,
             decoration: BoxDecoration(
               color: _hovered
-                  ? Color.alphaBlend(t.colorFillQuaternary, t.colorBgElevated)
-                      .withValues(alpha: 0.2)
+                  ? Color.alphaBlend(
+                      t.colorFillQuaternary,
+                      t.colorBgElevated,
+                    ).withValues(alpha: 0.2)
                   : const Color(0x00000000),
               borderRadius: BorderRadius.circular(t.borderRadiusSM),
             ),

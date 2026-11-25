@@ -67,13 +67,13 @@ class TimePickerDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TimePickerDefaults merge(TimePickerDefaults other) => TimePickerDefaults(
-        variant: other.variant ?? variant,
-        allowClear: other.allowClear ?? allowClear,
-        showNow: other.showNow ?? showNow,
-        needConfirm: other.needConfirm ?? needConfirm,
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-      );
+    variant: other.variant ?? variant,
+    allowClear: other.allowClear ?? allowClear,
+    showNow: other.showNow ?? showNow,
+    needConfirm: other.needConfirm ?? needConfirm,
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// Per-component design tokens for [TimePicker].
@@ -105,19 +105,19 @@ class TimePickerToken {
   final int? visibleRows;
 
   _ResolvedTimePickerToken _resolve(Token t) => _ResolvedTimePickerToken(
-        borderRadius: borderRadius ?? t.borderRadius,
-        cellHeight: cellHeight ?? t.controlHeight - t.sizeXXS,
-        columnWidth: columnWidth ?? t.controlHeightLG * 1.4,
-        visibleRows: visibleRows ?? 8,
-      );
+    borderRadius: borderRadius ?? t.borderRadius,
+    cellHeight: cellHeight ?? t.controlHeight - t.sizeXXS,
+    columnWidth: columnWidth ?? t.controlHeightLG * 1.4,
+    visibleRows: visibleRows ?? 8,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TimePickerToken merge(TimePickerToken other) => TimePickerToken(
-        borderRadius: other.borderRadius ?? borderRadius,
-        cellHeight: other.cellHeight ?? cellHeight,
-        columnWidth: other.columnWidth ?? columnWidth,
-        visibleRows: other.visibleRows ?? visibleRows,
-      );
+    borderRadius: other.borderRadius ?? borderRadius,
+    cellHeight: other.cellHeight ?? cellHeight,
+    columnWidth: other.columnWidth ?? columnWidth,
+    visibleRows: other.visibleRows ?? visibleRows,
+  );
 }
 
 @immutable
@@ -185,12 +185,18 @@ class TimePicker extends StatefulWidget {
     this.onClear,
     this.footerBuilder,
     this.token,
-  })  : assert(hourStep > 0 && 24 % hourStep == 0,
-            'hourStep must divide 24 evenly'),
-        assert(minuteStep > 0 && 60 % minuteStep == 0,
-            'minuteStep must divide 60 evenly'),
-        assert(secondStep > 0 && 60 % secondStep == 0,
-            'secondStep must divide 60 evenly');
+  }) : assert(
+         hourStep > 0 && 24 % hourStep == 0,
+         'hourStep must divide 24 evenly',
+       ),
+       assert(
+         minuteStep > 0 && 60 % minuteStep == 0,
+         'minuteStep must divide 60 evenly',
+       ),
+       assert(
+         secondStep > 0 && 60 % secondStep == 0,
+         'secondStep must divide 60 evenly',
+       );
 
   /// The time shown, as a duration since midnight.
   ///
@@ -578,10 +584,10 @@ class _TimePickerState extends State<TimePicker> {
 
   /// The columns on show, biggest first.
   List<Duration> get _units => [
-        if (_fields.hour) const Duration(hours: 1),
-        if (_fields.minute) const Duration(minutes: 1),
-        if (_fields.second) const Duration(seconds: 1),
-      ];
+    if (_fields.hour) const Duration(hours: 1),
+    if (_fields.minute) const Duration(minutes: 1),
+    if (_fields.second) const Duration(seconds: 1),
+  ];
 
   /// Steps the column the keyboard is on, wrapping within the day.
   ///
@@ -681,10 +687,10 @@ class _TimePickerState extends State<TimePicker> {
   // --------------------------------------------------------------------------
 
   double _height(Token t) => _size.resolveHeight(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 
   /// A preset carries a type size of its own; a dimension names only
   /// itself, so the standard one stands.
@@ -757,10 +763,11 @@ class _TimePickerState extends State<TimePicker> {
   Widget build(BuildContext context) {
     final t = context.softToken;
     final words = context.seedLocale;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<TimePickerToken>(context) ??
-            const TimePickerToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<TimePickerToken>(context) ??
+                const TimePickerToken())
+            ._resolve(t);
     _syncAnchor();
 
     final fontSize = _fontSize(t);
@@ -852,8 +859,8 @@ class _TimePickerState extends State<TimePicker> {
       cursor: _takesHand
           ? SystemMouseCursors.click
           : _enabled
-              ? SystemMouseCursors.basic
-              : SystemMouseCursors.forbidden,
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.forbidden,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
@@ -945,15 +952,17 @@ class _TimePickerState extends State<TimePicker> {
                             child: showClear
                                 ? CustomPaint(
                                     size: Size.square(fontSize),
-                                    painter:
-                                        ClearIconPainter(t.colorTextTertiary),
+                                    painter: ClearIconPainter(
+                                      t.colorTextTertiary,
+                                    ),
                                   )
                                 : widget.suffixIcon ??
-                                    CustomPaint(
-                                      size: Size.square(fontSize),
-                                      painter: _ClockIconPainter(
-                                          statusColor ?? t.colorTextQuaternary),
-                                    ),
+                                      CustomPaint(
+                                        size: Size.square(fontSize),
+                                        painter: _ClockIconPainter(
+                                          statusColor ?? t.colorTextQuaternary,
+                                        ),
+                                      ),
                           ),
                         ),
                       ),
@@ -963,7 +972,8 @@ class _TimePickerState extends State<TimePicker> {
                         CustomPaint(
                           size: Size.square(fontSize),
                           painter: _ClockIconPainter(
-                              statusColor ?? t.colorTextQuaternary),
+                            statusColor ?? t.colorTextQuaternary,
+                          ),
                         ),
                 ],
               );
@@ -973,8 +983,9 @@ class _TimePickerState extends State<TimePicker> {
       ),
     );
 
-    final sized =
-        named == null ? control : SizedBox(width: named, child: control);
+    final sized = named == null
+        ? control
+        : SizedBox(width: named, child: control);
 
     // What it is, what it is called, what it holds and whether its panel is
     // open. A picker said none of it: a reader met a box with no name and no
@@ -1006,10 +1017,11 @@ class _TimePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.softToken;
     final words = context.seedLocale;
-    final r = (state.widget.token ??
-            ConfigProvider.componentOf<TimePickerToken>(context) ??
-            const TimePickerToken())
-        ._resolve(t);
+    final r =
+        (state.widget.token ??
+                ConfigProvider.componentOf<TimePickerToken>(context) ??
+                const TimePickerToken())
+            ._resolve(t);
     return IntrinsicWidth(
       child: DecoratedBox(
         decoration: BoxDecoration(

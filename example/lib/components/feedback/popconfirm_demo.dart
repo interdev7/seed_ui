@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart' as material show Divider;
-import 'package:flutter/material.dart'
+import 'package:material_ui/material_ui.dart' as material show Divider;
+import 'package:material_ui/material_ui.dart'
     hide ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer, Divider;
 // This page lays its buttons out with Flutter's own Table, so the kit's is
 // hidden here rather than the other way round.

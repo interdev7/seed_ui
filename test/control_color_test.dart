@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,22 +9,27 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(home: Scaffold(body: Center(child: child))),
-    );
+  child: MaterialApp(
+    home: Scaffold(body: Center(child: child)),
+  ),
+);
 
 /// The fill of the button showing [label].
 Color _fill(WidgetTester tester, String label) {
-  final decoration = tester
-      .widgetList<DecoratedBox>(
-        find.ancestor(
-            of: find.text(label), matching: find.byType(DecoratedBox)),
-      )
-      .first
-      .decoration as BoxDecoration;
+  final decoration =
+      tester
+              .widgetList<DecoratedBox>(
+                find.ancestor(
+                  of: find.text(label),
+                  matching: find.byType(DecoratedBox),
+                ),
+              )
+              .first
+              .decoration
+          as BoxDecoration;
   return decoration.color!;
 }
 
@@ -188,16 +194,18 @@ void main() {
     });
   });
   group('TagColor', () {
-    Color tagFill(WidgetTester tester) => (tester
-            .widgetList<DecoratedBox>(
-              find.ancestor(
-                of: find.text('Mine'),
-                matching: find.byType(DecoratedBox),
-              ),
-            )
-            .first
-            .decoration as BoxDecoration)
-        .color!;
+    Color tagFill(WidgetTester tester) =>
+        (tester
+                    .widgetList<DecoratedBox>(
+                      find.ancestor(
+                        of: find.text('Mine'),
+                        matching: find.byType(DecoratedBox),
+                      ),
+                    )
+                    .first
+                    .decoration
+                as BoxDecoration)
+            .color!;
 
     testWidgets('one slot now takes both a preset and a colour', (
       tester,

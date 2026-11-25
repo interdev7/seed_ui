@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,7 +10,6 @@ import 'package:flutter/material.dart'
         Drawer,
         Card,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// The weight the text [label] is actually drawn with.
@@ -20,9 +20,11 @@ FontWeight? _weightOf(WidgetTester tester, String label) {
 }
 
 Widget _host(ThemeData? theme, Widget child) => ConfigProvider(
-      theme: theme,
-      child: MaterialApp(home: Scaffold(body: Center(child: child))),
-    );
+  theme: theme,
+  child: MaterialApp(
+    home: Scaffold(body: Center(child: child)),
+  ),
+);
 
 void main() {
   group('the theme carries the weights', () {

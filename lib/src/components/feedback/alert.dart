@@ -39,25 +39,25 @@ class AlertToken {
   final double? fontSize;
 
   _ResolvedAlertToken _resolve(Token t) => _ResolvedAlertToken(
-        withDescriptionIconSize: withDescriptionIconSize ?? 24,
-        withDescriptionPadding: withDescriptionPadding ??
-            EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeSM),
-        padding:
-            padding ?? EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: 8),
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-        fontSize: fontSize ?? t.fontSize,
-      );
+    withDescriptionIconSize: withDescriptionIconSize ?? 24,
+    withDescriptionPadding:
+        withDescriptionPadding ??
+        EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeSM),
+    padding: padding ?? EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: 8),
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+    fontSize: fontSize ?? t.fontSize,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   AlertToken merge(AlertToken other) => AlertToken(
-        withDescriptionIconSize:
-            other.withDescriptionIconSize ?? withDescriptionIconSize,
-        withDescriptionPadding:
-            other.withDescriptionPadding ?? withDescriptionPadding,
-        padding: other.padding ?? padding,
-        borderRadius: other.borderRadius ?? borderRadius,
-        fontSize: other.fontSize ?? fontSize,
-      );
+    withDescriptionIconSize:
+        other.withDescriptionIconSize ?? withDescriptionIconSize,
+    withDescriptionPadding:
+        other.withDescriptionPadding ?? withDescriptionPadding,
+    padding: other.padding ?? padding,
+    borderRadius: other.borderRadius ?? borderRadius,
+    fontSize: other.fontSize ?? fontSize,
+  );
 }
 
 @immutable
@@ -93,9 +93,9 @@ class AlertDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   AlertDefaults merge(AlertDefaults other) => AlertDefaults(
-        showIcon: other.showIcon ?? showIcon,
-        closable: other.closable ?? closable,
-      );
+    showIcon: other.showIcon ?? showIcon,
+    closable: other.closable ?? closable,
+  );
 }
 
 /// An inline banner conveying a status message, shown in the page flow rather
@@ -190,20 +190,21 @@ class _SoftAlertState extends State<Alert> {
   bool _closed = false;
 
   ColorGroup _group(Token token) => switch (widget.type) {
-        StatusType.success => token.success,
-        StatusType.warning => token.warning,
-        StatusType.error => token.error,
-        _ => token.info,
-      };
+    StatusType.success => token.success,
+    StatusType.warning => token.warning,
+    StatusType.error => token.error,
+    _ => token.info,
+  };
 
   @override
   Widget build(BuildContext context) {
     if (_closed) return const SizedBox.shrink();
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<AlertToken>(context) ??
-            const AlertToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<AlertToken>(context) ??
+                const AlertToken())
+            ._resolve(token);
     final group = _group(token);
     final hasDescription = widget.description != null;
 
@@ -212,8 +213,9 @@ class _SoftAlertState extends State<Alert> {
     final decoration = BoxDecoration(
       color: widget.gradient == null ? group.bg : null,
       gradient: widget.gradient,
-      borderRadius:
-          widget.banner ? null : BorderRadius.circular(r.borderRadius),
+      borderRadius: widget.banner
+          ? null
+          : BorderRadius.circular(r.borderRadius),
       border: widget.banner || widget.gradient != null
           ? null
           : Border.all(color: group.border, width: token.lineWidth),

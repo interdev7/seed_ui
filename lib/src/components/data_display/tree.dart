@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart' hide Checkbox;
 import 'package:flutter/services.dart'
     show KeyEvent, KeyUpEvent, LogicalKeyboardKey;
+import 'package:material_ui/material_ui.dart' hide Checkbox;
 
 import '../../icons/icons.dart' show ChevronPainter, HolderPainter, Spinner;
 import '../../theme/config_provider.dart';
@@ -41,21 +41,21 @@ class TreeToken {
   final double? borderRadius;
 
   _ResolvedTreeToken _resolve(Token t) => _ResolvedTreeToken(
-        titleHeight: titleHeight ?? t.controlHeightSM,
-        indentSize: indentSize ?? t.controlHeightSM,
-        nodeHoverBg: nodeHoverBg ?? t.colorFillTertiary,
-        nodeSelectedBg: nodeSelectedBg ?? t.primary.bg,
-        borderRadius: borderRadius ?? t.borderRadiusSM,
-      );
+    titleHeight: titleHeight ?? t.controlHeightSM,
+    indentSize: indentSize ?? t.controlHeightSM,
+    nodeHoverBg: nodeHoverBg ?? t.colorFillTertiary,
+    nodeSelectedBg: nodeSelectedBg ?? t.primary.bg,
+    borderRadius: borderRadius ?? t.borderRadiusSM,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TreeToken merge(TreeToken other) => TreeToken(
-        titleHeight: other.titleHeight ?? titleHeight,
-        indentSize: other.indentSize ?? indentSize,
-        nodeHoverBg: other.nodeHoverBg ?? nodeHoverBg,
-        nodeSelectedBg: other.nodeSelectedBg ?? nodeSelectedBg,
-        borderRadius: other.borderRadius ?? borderRadius,
-      );
+    titleHeight: other.titleHeight ?? titleHeight,
+    indentSize: other.indentSize ?? indentSize,
+    nodeHoverBg: other.nodeHoverBg ?? nodeHoverBg,
+    nodeSelectedBg: other.nodeSelectedBg ?? nodeSelectedBg,
+    borderRadius: other.borderRadius ?? borderRadius,
+  );
 }
 
 @immutable
@@ -142,15 +142,15 @@ class DirectoryNode extends TreeNode {
     super.disabled,
     super.checkable,
   }) : super(
-          // Dynamic icon builder that reacts to the node's expanded state.
-          // The theme's primary, not the default one written down: a folder
-          // drawn in a fixed blue stayed that blue in a dark theme and under
-          // a brand colour of anyone's choosing.
-          iconBuilder: (context, isExpanded) => Icon(
-            isExpanded ? Icons.folder_open : Icons.folder,
-            color: context.softToken.primary.base,
-          ),
-        );
+         // Dynamic icon builder that reacts to the node's expanded state.
+         // The theme's primary, not the default one written down: a folder
+         // drawn in a fixed blue stayed that blue in a dark theme and under
+         // a brand colour of anyone's choosing.
+         iconBuilder: (context, isExpanded) => Icon(
+           isExpanded ? Icons.folder_open : Icons.folder,
+           color: context.softToken.primary.base,
+         ),
+       );
 
   /// The file system path or hierarchical path of the directory.
   final String path;
@@ -171,19 +171,19 @@ class FileNode extends TreeNode {
     super.disabled,
     super.checkable,
   }) : super(
-          // A file is ALWAYS a leaf; it cannot have children or an expander arrow.
-          isLeaf: true,
-          // Static file icon.
-          // The theme's tertiary ink, laid on the surface so a hover behind
-          // the row does not show through it.
-          iconBuilder: (context, _) => Icon(
-            Icons.insert_drive_file_outlined,
-            color: Color.alphaBlend(
-              context.softToken.colorTextTertiary,
-              context.softToken.colorBgContainer,
-            ),
-          ),
-        );
+         // A file is ALWAYS a leaf; it cannot have children or an expander arrow.
+         isLeaf: true,
+         // Static file icon.
+         // The theme's tertiary ink, laid on the surface so a hover behind
+         // the row does not show through it.
+         iconBuilder: (context, _) => Icon(
+           Icons.insert_drive_file_outlined,
+           color: Color.alphaBlend(
+             context.softToken.colorTextTertiary,
+             context.softToken.colorBgContainer,
+           ),
+         ),
+       );
 
   /// The file system path or hierarchical path of the file.
   final String path;
@@ -262,12 +262,12 @@ class TreeDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TreeDefaults merge(TreeDefaults other) => TreeDefaults(
-        showLine: other.showLine ?? showLine,
-        showLeafIcon: other.showLeafIcon ?? showLeafIcon,
-        showIcon: other.showIcon ?? showIcon,
-        blockNode: other.blockNode ?? blockNode,
-        disabled: other.disabled ?? disabled,
-      );
+    showLine: other.showLine ?? showLine,
+    showLeafIcon: other.showLeafIcon ?? showLeafIcon,
+    showIcon: other.showIcon ?? showIcon,
+    blockNode: other.blockNode ?? blockNode,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A hierarchical list.
@@ -607,10 +607,11 @@ class _TreeState extends State<Tree> {
     if (widget.height == null || !_scroll.hasClients) return;
     final at = _visible(_resolveExpanded()).indexWhere((n) => n.key == key);
     if (at < 0) return;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<TreeToken>(context) ??
-            const TreeToken())
-        ._resolve(context.softToken);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<TreeToken>(context) ??
+                const TreeToken())
+            ._resolve(context.softToken);
     final top = at * r.titleHeight;
     final bottom = top + r.titleHeight;
     final position = _scroll.position;
@@ -618,8 +619,10 @@ class _TreeState extends State<Tree> {
       _scroll.jumpTo(top);
     } else if (bottom > position.pixels + position.viewportDimension) {
       _scroll.jumpTo(
-        (bottom - position.viewportDimension)
-            .clamp(0.0, position.maxScrollExtent),
+        (bottom - position.viewportDimension).clamp(
+          0.0,
+          position.maxScrollExtent,
+        ),
       );
     }
   }
@@ -646,10 +649,12 @@ class _TreeState extends State<Tree> {
     if (event is KeyUpEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
     final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
-    final inward =
-        ltr ? LogicalKeyboardKey.arrowRight : LogicalKeyboardKey.arrowLeft;
-    final outward =
-        ltr ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight;
+    final inward = ltr
+        ? LogicalKeyboardKey.arrowRight
+        : LogicalKeyboardKey.arrowLeft;
+    final outward = ltr
+        ? LogicalKeyboardKey.arrowLeft
+        : LogicalKeyboardKey.arrowRight;
 
     if (key == LogicalKeyboardKey.arrowDown) {
       _moveCursor(1);
@@ -888,10 +893,11 @@ class _TreeState extends State<Tree> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<TreeToken>(context) ??
-            const TreeToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<TreeToken>(context) ??
+                const TreeToken())
+            ._resolve(t);
 
     final expanded = _resolveExpanded();
     final selected = _selected.effective(widget.selectedKeys);
@@ -956,8 +962,13 @@ class _TreeState extends State<Tree> {
     Set<String> half,
   ) {
     final items = <_LazyItem>[];
-    void walk(List<TreeNode> nodes, int level, List<bool> ancestorsLast,
-        List<_LazyRow>? into, Set<String> open) {
+    void walk(
+      List<TreeNode> nodes,
+      int level,
+      List<bool> ancestorsLast,
+      List<_LazyRow>? into,
+      Set<String> open,
+    ) {
       for (var i = 0; i < nodes.length; i++) {
         final node = nodes[i];
         final row = _LazyRow(
@@ -979,8 +990,13 @@ class _TreeState extends State<Tree> {
           // The branch is on its way open or shut: its rows as they are when
           // open, drawn inside the reveal, the way the full tree draws them.
           final block = <_LazyRow>[];
-          walk(children, level + 1, [...ancestorsLast, row.isLast], block,
-              {...open, node.key});
+          walk(
+            children,
+            level + 1,
+            [...ancestorsLast, row.isLast],
+            block,
+            {...open, node.key},
+          );
           items.add(_LazyBlock(node.key, moving, block));
         } else if (open.contains(node.key)) {
           walk(children, level + 1, [...ancestorsLast, row.isLast], into, open);
@@ -991,10 +1007,21 @@ class _TreeState extends State<Tree> {
     walk(widget.nodes, 0, const [], null, expanded);
 
     Widget rowOf(_LazyRow row) => KeyedSubtree(
-          key: ValueKey('row:${row.node.key}'),
-          child: _rowFor(t, r, row.node, row.level, row.ancestorsLast,
-              row.isFirst, row.isLast, expanded, selected, checked, half),
-        );
+      key: ValueKey('row:${row.node.key}'),
+      child: _rowFor(
+        t,
+        r,
+        row.node,
+        row.level,
+        row.ancestorsLast,
+        row.isFirst,
+        row.isLast,
+        expanded,
+        selected,
+        checked,
+        half,
+      ),
+    );
 
     return SizedBox(
       height: widget.height,
@@ -1163,14 +1190,16 @@ class _TreeState extends State<Tree> {
       // `checkable: false` hides it. Disabled nodes are excluded from the
       // cascade separately, via [_checkableNode].
       checkable: widget.checkable && (node.checkable ?? true),
-      selectable: !_disabled &&
+      selectable:
+          !_disabled &&
           !node.disabled &&
           (node.selectable ?? widget.selectable),
       selected: selected.contains(node.key),
       checked: checked.contains(node.key),
       halfChecked: half.contains(node.key),
       disabled: _disabled || node.disabled,
-      switcherIcon: node.switcherIcon ??
+      switcherIcon:
+          node.switcherIcon ??
           (widget.switcherIcon == null
               ? null
               : widget.switcherIcon!(context, isExpanded)),
@@ -1315,24 +1344,26 @@ class _NodeRowState extends State<_NodeRow> {
     final titleColor = widget.disabled ? t.colorTextQuaternary : t.colorText;
     final title = DefaultTextStyle(
       style: TextStyle(
-          fontFamily: t.fontFamily,
-          fontFamilyFallback: t.fontFamilyFallback,
-          color: titleColor,
-          fontSize: t.fontSize,
-          height: 1.0),
+        fontFamily: t.fontFamily,
+        fontFamilyFallback: t.fontFamilyFallback,
+        color: titleColor,
+        fontSize: t.fontSize,
+        height: 1.0,
+      ),
       overflow: TextOverflow.ellipsis,
       child: widget.node.title,
     );
 
     final selectedBg = widget.selected ? r.nodeSelectedBg : null;
-    final hoverBg = (_hovered || widget.highlighted) &&
+    final hoverBg =
+        (_hovered || widget.highlighted) &&
             widget.selectable &&
             !widget.selected
         ? r.nodeHoverBg
         : null;
     final activeIcon =
         widget.node.iconBuilder?.call(context, widget.expanded) ??
-            widget.node.icon;
+        widget.node.icon;
 
     Widget titleRegion = Container(
       height: r.titleHeight,
@@ -1436,8 +1467,8 @@ class _NodeRowState extends State<_NodeRow> {
         final pos = y < h / 3
             ? TreeDropPosition.before
             : (y > h * 2 / 3
-                ? TreeDropPosition.after
-                : TreeDropPosition.inside);
+                  ? TreeDropPosition.after
+                  : TreeDropPosition.inside);
         widget.onDropHover(pos);
       },
       onLeave: (_) => widget.onDropLeave(),
@@ -1459,27 +1490,26 @@ class _NodeRowState extends State<_NodeRow> {
 
   /// A floating label shown under the pointer while dragging.
   Widget _feedback(Token t, _ResolvedTreeToken r) => Opacity(
-        opacity: 0.85,
-        child: Container(
-          padding:
-              EdgeInsets.symmetric(horizontal: t.sizeXS, vertical: t.sizeXXS),
-          decoration: BoxDecoration(
-            color: t.colorBgElevated,
-            borderRadius: BorderRadius.circular(r.borderRadius),
-            boxShadow: t.boxShadowSecondary,
-          ),
-          child: DefaultTextStyle(
-            style: TextStyle(
-              fontFamily: t.fontFamily,
-              fontFamilyFallback: t.fontFamilyFallback,
-              color: t.colorText,
-              fontSize: t.fontSize,
-              height: 1.0,
-            ),
-            child: widget.node.title,
-          ),
+    opacity: 0.85,
+    child: Container(
+      padding: EdgeInsets.symmetric(horizontal: t.sizeXS, vertical: t.sizeXXS),
+      decoration: BoxDecoration(
+        color: t.colorBgElevated,
+        borderRadius: BorderRadius.circular(r.borderRadius),
+        boxShadow: t.boxShadowSecondary,
+      ),
+      child: DefaultTextStyle(
+        style: TextStyle(
+          fontFamily: t.fontFamily,
+          fontFamilyFallback: t.fontFamilyFallback,
+          color: t.colorText,
+          fontSize: t.fontSize,
+          height: 1.0,
         ),
-      );
+        child: widget.node.title,
+      ),
+    ),
+  );
 
   /// Overlays the drop indicator: an insert line for before/after, an outline
   /// for inside. The line is indented to where the node would land.
@@ -1534,7 +1564,8 @@ class _NodeRowState extends State<_NodeRow> {
     // A pending lazy load shows a spinner in place of the switcher.
     if (widget.loading) {
       return Center(
-          child: Spinner(size: t.fontSizeSM, color: t.colorTextSecondary));
+        child: Spinner(size: t.fontSizeSM, color: t.colorTextSecondary),
+      );
     }
 
     // Leaves: a small leaf marker when guide lines want one, else nothing.
@@ -1555,15 +1586,16 @@ class _NodeRowState extends State<_NodeRow> {
     // tree turns it over; open, it points down either way, and the quarter
     // turn between the two simply goes the other way about.
     final mirrored = Directionality.of(context) == TextDirection.rtl;
-    final glyph = widget.switcherIcon ??
+    final glyph =
+        widget.switcherIcon ??
         AnimatedRotation(
           duration: t.motionDurationMid,
           curve: t.motionEaseInOut,
           turns: widget.expanded
               ? 0.25
               : mirrored
-                  ? 0.5
-                  : 0.0,
+              ? 0.5
+              : 0.0,
           child: CustomPaint(
             size: Size.square(context.softToken.fontSizeSM),
             painter: ChevronPainter(t.colorTextSecondary, strokeWidth: 1.3),
@@ -1841,7 +1873,9 @@ class _BranchRevealState extends State<_BranchReveal>
   @override
   Widget build(BuildContext context) {
     final animation = CurvedAnimation(
-        parent: _controller, curve: context.softToken.motionEaseInOut);
+      parent: _controller,
+      curve: context.softToken.motionEaseInOut,
+    );
     // As [Expandable] builds it, line for line, so the two reveal alike.
     return LayoutBuilder(
       builder: (context, constraints) => AnimatedBuilder(

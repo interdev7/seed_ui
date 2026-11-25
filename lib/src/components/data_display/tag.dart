@@ -129,21 +129,21 @@ class TagToken {
   final double? borderRadius;
 
   _ResolvedTagToken _resolve(Token t) => _ResolvedTagToken(
-        defaultBg: defaultBg ?? t.colorFillQuaternary,
-        defaultColor: defaultColor ?? t.colorText,
-        fontSize: fontSize ?? t.fontSizeSM,
-        lineHeight: lineHeight ?? 1.5,
-        borderRadius: borderRadius ?? t.borderRadiusSM,
-      );
+    defaultBg: defaultBg ?? t.colorFillQuaternary,
+    defaultColor: defaultColor ?? t.colorText,
+    fontSize: fontSize ?? t.fontSizeSM,
+    lineHeight: lineHeight ?? 1.5,
+    borderRadius: borderRadius ?? t.borderRadiusSM,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TagToken merge(TagToken other) => TagToken(
-        defaultBg: other.defaultBg ?? defaultBg,
-        defaultColor: other.defaultColor ?? defaultColor,
-        fontSize: other.fontSize ?? fontSize,
-        lineHeight: other.lineHeight ?? lineHeight,
-        borderRadius: other.borderRadius ?? borderRadius,
-      );
+    defaultBg: other.defaultBg ?? defaultBg,
+    defaultColor: other.defaultColor ?? defaultColor,
+    fontSize: other.fontSize ?? fontSize,
+    lineHeight: other.lineHeight ?? lineHeight,
+    borderRadius: other.borderRadius ?? borderRadius,
+  );
 }
 
 @immutable
@@ -179,9 +179,9 @@ class TagDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TagDefaults merge(TagDefaults other) => TagDefaults(
-        variant: other.variant ?? variant,
-        closable: other.closable ?? closable,
-      );
+    variant: other.variant ?? variant,
+    closable: other.closable ?? closable,
+  );
 }
 
 /// A small label for categorising or marking content.
@@ -286,20 +286,20 @@ class Tag extends StatelessWidget {
         // Neutral (default) colour.
         return switch (variant) {
           TagVariant.outlined => _TagStyle(
-              bg: transparent,
-              border: t.colorBorder,
-              text: r.defaultColor,
-            ),
+            bg: transparent,
+            border: t.colorBorder,
+            text: r.defaultColor,
+          ),
           TagVariant.filled => _TagStyle(
-              bg: r.defaultBg,
-              border: transparent,
-              text: r.defaultColor,
-            ),
+            bg: r.defaultBg,
+            border: transparent,
+            text: r.defaultColor,
+          ),
           TagVariant.solid => _TagStyle(
-              bg: t.colorTextSecondary,
-              border: transparent,
-              text: inkOn(t.colorTextSecondary),
-            ),
+            bg: t.colorTextSecondary,
+            border: transparent,
+            text: inkOn(t.colorTextSecondary),
+          ),
         };
       }
       tint = g.bg;
@@ -308,23 +308,33 @@ class Tag extends StatelessWidget {
     }
 
     return switch (variant) {
-      TagVariant.outlined =>
-        _TagStyle(bg: transparent, border: outline, text: strong),
-      TagVariant.filled =>
-        _TagStyle(bg: tint, border: transparent, text: strong),
+      TagVariant.outlined => _TagStyle(
+        bg: transparent,
+        border: outline,
+        text: strong,
+      ),
+      TagVariant.filled => _TagStyle(
+        bg: tint,
+        border: transparent,
+        text: strong,
+      ),
       // The ink the fill asks for: a tag in a yellow brand takes black.
-      TagVariant.solid =>
-        _TagStyle(bg: strong, border: transparent, text: inkOn(strong)),
+      TagVariant.solid => _TagStyle(
+        bg: strong,
+        border: transparent,
+        text: inkOn(strong),
+      ),
     };
   }
 
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (this.token ??
-            ConfigProvider.componentOf<TagToken>(context) ??
-            const TagToken())
-        ._resolve(token);
+    final r =
+        (this.token ??
+                ConfigProvider.componentOf<TagToken>(context) ??
+                const TagToken())
+            ._resolve(token);
     final style = _style(context, token, r);
     final fontSize = r.fontSize;
 
@@ -384,7 +394,8 @@ class Tag extends StatelessWidget {
                   // takes the pointer, and a second node for it would be a
                   // wordless button under the named one.
                   excludeFromSemantics: true,
-                  child: closeIcon ??
+                  child:
+                      closeIcon ??
                       CustomPaint(
                         size: Size.square(context.softToken.fontSizeSM),
                         painter: CrossPainter(
@@ -455,8 +466,8 @@ class _CheckableTagState extends State<CheckableTag> {
     final bg = widget.checked
         ? (_hovered && _enabled ? token.primary.hover : token.primary.base)
         : (_hovered && _enabled
-            ? token.colorFillTertiary
-            : const Color(0x00000000));
+              ? token.colorFillTertiary
+              : const Color(0x00000000));
     final fg = widget.checked
         ? inkOn(bg)
         : (_enabled ? token.colorText : token.colorTextQuaternary);
@@ -530,10 +541,7 @@ class CheckableTagOption<T> {
 @immutable
 class CheckableTagGroupDefaults {
   /// Creates a [CheckableTagGroupDefaults].
-  const CheckableTagGroupDefaults({
-    this.multiple,
-    this.disabled,
-  });
+  const CheckableTagGroupDefaults({this.multiple, this.disabled});
 
   /// Whether more than one chip can be chosen.
   final bool? multiple;

@@ -44,11 +44,11 @@ class StatusIconPainter extends CustomPainter {
   final Token token;
 
   Color get _color => switch (type) {
-        StatusType.success => token.success.base,
-        StatusType.error => token.error.base,
-        StatusType.warning => token.warning.base,
-        _ => token.info.base,
-      };
+    StatusType.success => token.success.base,
+    StatusType.error => token.error.base,
+    StatusType.warning => token.warning.base,
+    _ => token.info.base,
+  };
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -90,11 +90,9 @@ class StatusIconPainter extends CustomPainter {
         final barBottom = isInfo ? size.height * 0.72 : size.height * 0.56;
         final dotY = isInfo ? size.height * 0.3 : size.height * 0.72;
         canvas.drawLine(Offset(r, barTop), Offset(r, barBottom), stroke);
-        canvas.drawPoints(
-          PointMode.points,
-          [Offset(r, dotY)],
-          stroke..strokeWidth = math.max(1.8, size.width * 0.13),
-        );
+        canvas.drawPoints(PointMode.points, [
+          Offset(r, dotY),
+        ], stroke..strokeWidth = math.max(1.8, size.width * 0.13));
     }
   }
 
@@ -545,8 +543,11 @@ class UserIconPainter extends CustomPainter {
 /// A fixed-size user silhouette, ready to drop into an avatar.
 class UserIcon extends StatelessWidget {
   /// Creates a [UserIcon].
-  const UserIcon(
-      {super.key, this.color = const Color(0xFFFFFFFF), this.size = 14});
+  const UserIcon({
+    super.key,
+    this.color = const Color(0xFFFFFFFF),
+    this.size = 14,
+  });
 
   /// The fill colour of the silhouette.
   final Color color;
@@ -650,7 +651,10 @@ class DownloadPainter extends CustomPainter {
     final c = size.center(Offset.zero);
     final h = size.height * 0.3;
     canvas.drawLine(
-        Offset(c.dx, c.dy - h), Offset(c.dx, c.dy + h * 0.4), paint);
+      Offset(c.dx, c.dy - h),
+      Offset(c.dx, c.dy + h * 0.4),
+      paint,
+    );
     canvas.drawLine(
       Offset(c.dx - h * 0.5, c.dy - h * 0.1),
       Offset(c.dx, c.dy + h * 0.4),
@@ -725,7 +729,10 @@ class RangeArrowPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     final y = size.height / 2;
     canvas.drawLine(
-        Offset(size.width * 0.1, y), Offset(size.width * 0.9, y), paint);
+      Offset(size.width * 0.1, y),
+      Offset(size.width * 0.9, y),
+      paint,
+    );
     canvas.drawLine(
       Offset(size.width * 0.6, y - size.height * 0.2),
       Offset(size.width * 0.9, y),

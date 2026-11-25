@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,13 +9,12 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host() => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: const Scaffold(body: SizedBox()),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: const Scaffold(body: SizedBox()),
+);
 
 /// See the note in `message_test.dart`: `pumpAndSettle` cannot be used
 /// because [Spinner] never stops animating.
@@ -25,8 +25,9 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('notification.success renders headline and description',
-      (tester) async {
+  testWidgets('notification.success renders headline and description', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
 
     notification.success(
@@ -57,8 +58,9 @@ void main() {
     expect(find.text('Dismiss me'), findsNothing);
   });
 
-  testWidgets('destroy(key) closes only the matching notification',
-      (tester) async {
+  testWidgets('destroy(key) closes only the matching notification', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
 
     notification.open(
@@ -111,8 +113,9 @@ void main() {
     expect(find.text('bottom left'), findsNothing);
   });
 
-  testWidgets('a narrow viewport shrinks the card instead of clipping it',
-      (tester) async {
+  testWidgets('a narrow viewport shrinks the card instead of clipping it', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(320, 800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -130,8 +133,9 @@ void main() {
     await _settle(tester);
   });
 
-  testWidgets('a notification auto-dismisses after its duration',
-      (tester) async {
+  testWidgets('a notification auto-dismisses after its duration', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
 
     notification.warning('fleeting', duration: const Duration(seconds: 1));
@@ -143,8 +147,9 @@ void main() {
     expect(find.text('fleeting'), findsNothing);
   });
 
-  testWidgets('stacks notifications when count exceeds threshold (>3)',
-      (tester) async {
+  testWidgets('stacks notifications when count exceeds threshold (>3)', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
 
     for (int i = 1; i <= 5; i++) {
@@ -162,10 +167,10 @@ void main() {
 
   group('where the cross stands, and what makes room for it', () {
     Finder cross() => find.byWidgetPredicate(
-          (w) =>
-              w is CustomPaint &&
-              w.painter.runtimeType.toString() == 'CrossPainter',
-        );
+      (w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == 'CrossPainter',
+    );
 
     Future<void> open(WidgetTester tester, {ClosePlacement? placement}) async {
       notification.destroy();

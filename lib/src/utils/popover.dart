@@ -78,7 +78,7 @@ enum PopoverSide {
   left,
 
   /// The card sits to the right of its trigger.
-  right
+  right,
 }
 
 /// [placement] moved to [side] — the same alignment along the anchor, on
@@ -103,38 +103,32 @@ PopoverPlacement placementOnSide(PopoverPlacement placement, PopoverSide side) {
 
 extension _PlacementInfo on PopoverPlacement {
   PopoverSide get side => switch (this) {
-        PopoverPlacement.top ||
-        PopoverPlacement.topLeft ||
-        PopoverPlacement.topRight =>
-          PopoverSide.top,
-        PopoverPlacement.bottom ||
-        PopoverPlacement.bottomLeft ||
-        PopoverPlacement.bottomRight =>
-          PopoverSide.bottom,
-        PopoverPlacement.left ||
-        PopoverPlacement.leftTop ||
-        PopoverPlacement.leftBottom =>
-          PopoverSide.left,
-        PopoverPlacement.right ||
-        PopoverPlacement.rightTop ||
-        PopoverPlacement.rightBottom =>
-          PopoverSide.right,
-      };
+    PopoverPlacement.top ||
+    PopoverPlacement.topLeft ||
+    PopoverPlacement.topRight => PopoverSide.top,
+    PopoverPlacement.bottom ||
+    PopoverPlacement.bottomLeft ||
+    PopoverPlacement.bottomRight => PopoverSide.bottom,
+    PopoverPlacement.left ||
+    PopoverPlacement.leftTop ||
+    PopoverPlacement.leftBottom => PopoverSide.left,
+    PopoverPlacement.right ||
+    PopoverPlacement.rightTop ||
+    PopoverPlacement.rightBottom => PopoverSide.right,
+  };
 
   /// Cross-axis alignment: -1 for start, 0 for centre, 1 for end.
   double get align => switch (this) {
-        PopoverPlacement.topLeft ||
-        PopoverPlacement.bottomLeft ||
-        PopoverPlacement.leftTop ||
-        PopoverPlacement.rightTop =>
-          -1,
-        PopoverPlacement.topRight ||
-        PopoverPlacement.bottomRight ||
-        PopoverPlacement.leftBottom ||
-        PopoverPlacement.rightBottom =>
-          1,
-        _ => 0,
-      };
+    PopoverPlacement.topLeft ||
+    PopoverPlacement.bottomLeft ||
+    PopoverPlacement.leftTop ||
+    PopoverPlacement.rightTop => -1,
+    PopoverPlacement.topRight ||
+    PopoverPlacement.bottomRight ||
+    PopoverPlacement.leftBottom ||
+    PopoverPlacement.rightBottom => 1,
+    _ => 0,
+  };
 }
 
 /// Controls one anchored popover: an overlay layer positioned near a target.
@@ -371,7 +365,8 @@ class _SoftPopoverLayerState extends State<_SoftPopoverLayer>
     vsync: this,
     // A fade wants to be quick; a genie is something to watch, and at the pace
     // of a fade it is over before the eye reads the shape at all.
-    duration: widget.duration ??
+    duration:
+        widget.duration ??
         (widget.animation == PopoverAnimation.genie
             ? const Duration(milliseconds: 420)
             : const Duration(milliseconds: 180)),
@@ -403,7 +398,8 @@ class _SoftPopoverLayerState extends State<_SoftPopoverLayer>
       // The genie's timing lives here rather than in its geometry: it leaves
       // the trigger gently, flows, and settles. The fade wants the token's own
       // curve, which is quicker off the mark.
-      curve: widget.curve ??
+      curve:
+          widget.curve ??
           (widget.animation == PopoverAnimation.genie
               ? Curves.easeInOutCubic
               : token.motionEaseOutCirc),
@@ -412,20 +408,19 @@ class _SoftPopoverLayerState extends State<_SoftPopoverLayer>
     final padding = MediaQuery.paddingOf(context);
 
     PopoverLayoutDelegate delegateFor(Rect anchorRect) => PopoverLayoutDelegate(
-          anchor: anchorRect,
-          placement: widget.placement,
-          // Leave room for the caret between the bubble and its anchor.
-          gap:
-              widget.gap + (widget.arrowColor != null ? popoverArrowLength : 0),
-          arrowSink: widget.arrowColor != null ? _arrow : null,
-          onSide: widget.onSide,
-          viewportPadding: EdgeInsets.fromLTRB(
-            8 + padding.left,
-            8 + padding.top,
-            8 + padding.right,
-            8 + padding.bottom,
-          ),
-        );
+      anchor: anchorRect,
+      placement: widget.placement,
+      // Leave room for the caret between the bubble and its anchor.
+      gap: widget.gap + (widget.arrowColor != null ? popoverArrowLength : 0),
+      arrowSink: widget.arrowColor != null ? _arrow : null,
+      onSide: widget.onSide,
+      viewportPadding: EdgeInsets.fromLTRB(
+        8 + padding.left,
+        8 + padding.top,
+        8 + padding.right,
+        8 + padding.bottom,
+      ),
+    );
 
     return Stack(
       children: [
@@ -543,11 +538,11 @@ class _Arrival extends StatelessWidget {
   /// Grows out of the edge nearest the trigger, so the surface reads as coming
   /// from it rather than appearing over it.
   Alignment get _origin => switch (side) {
-        PopoverSide.top => Alignment.bottomCenter,
-        PopoverSide.bottom => Alignment.topCenter,
-        PopoverSide.left => Alignment.centerRight,
-        PopoverSide.right => Alignment.centerLeft,
-      };
+    PopoverSide.top => Alignment.bottomCenter,
+    PopoverSide.bottom => Alignment.topCenter,
+    PopoverSide.left => Alignment.centerRight,
+    PopoverSide.right => Alignment.centerLeft,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -603,8 +598,9 @@ class _Genie extends StatefulWidget {
 
 class _GenieState extends State<_Genie> {
   bool _pouring = true;
-  final SnapshotController _controller =
-      SnapshotController(allowSnapshotting: true);
+  final SnapshotController _controller = SnapshotController(
+    allowSnapshotting: true,
+  );
 
   /// Kept for the life of the pour rather than built in [build].
   ///
@@ -615,11 +611,11 @@ class _GenieState extends State<_Genie> {
   late _GeniePainter _painter = _buildPainter();
 
   _GeniePainter _buildPainter() => _GeniePainter(
-        progress: widget.progress,
-        side: widget.side,
-        anchor: widget.anchor,
-        shadows: widget.shadows,
-      );
+    progress: widget.progress,
+    side: widget.side,
+    anchor: widget.anchor,
+    shadows: widget.shadows,
+  );
 
   @override
   void initState() {
@@ -891,11 +887,7 @@ class GenieMesh {
       }
     }
 
-    return GenieSheet(
-      positions: positions,
-      texture: texture,
-      indices: indices,
-    );
+    return GenieSheet(positions: positions, texture: texture, indices: indices);
   }
 }
 
@@ -961,7 +953,8 @@ class _GeniePainter extends SnapshotPainter {
 
     final vertical = side == PopoverSide.top || side == PopoverSide.bottom;
     // Rows run from the mouth away from it, whichever end that is.
-    final away = (vertical
+    final away =
+        (vertical
                 ? sheet.positions[(rows - 1) * 2].dy - sheet.positions[0].dy
                 : sheet.positions[(rows - 1) * 2].dx - sheet.positions[0].dx) >=
             0
@@ -980,8 +973,8 @@ class _GeniePainter extends SnapshotPainter {
         final along = row == 0
             ? -away * inflate
             : row == rows - 1
-                ? away * inflate
-                : 0.0;
+            ? away * inflate
+            : 0.0;
         return vertical
             ? Offset(p.dx + cross, p.dy + along)
             : Offset(p.dx + along, p.dy + cross);
@@ -1043,8 +1036,9 @@ class _GeniePainter extends SnapshotPainter {
         context.canvas.drawRect(
           (offset & size).shift(shadow.offset).inflate(shadow.spreadRadius),
           Paint()
-            ..color = shadow.color
-                .withValues(alpha: shadow.color.a * progress.value.clamp(0, 1))
+            ..color = shadow.color.withValues(
+              alpha: shadow.color.a * progress.value.clamp(0, 1),
+            )
             ..maskFilter = MaskFilter.blur(BlurStyle.normal, shadow.blurSigma),
         );
       }
@@ -1108,8 +1102,9 @@ class _GeniePainter extends SnapshotPainter {
       )
       // Fades in over the first part of the pour only: a sheet that is still
       // half transparent when it lands looks like a fade, not a genie.
-      ..color = const Color(0xFFFFFFFF)
-          .withValues(alpha: GenieMesh.smooth(t * 2.5).clamp(0.0, 1.0));
+      ..color = const Color(
+        0xFFFFFFFF,
+      ).withValues(alpha: GenieMesh.smooth(t * 2.5).clamp(0.0, 1.0));
 
     context.canvas.drawVertices(
       ui.Vertices(
@@ -1138,11 +1133,7 @@ class _GeniePainter extends SnapshotPainter {
 /// mistake — so the dimming is drawn across the whole barrier, in one piece,
 /// and only the tap-catching is cut away.
 class _HoleBarrier extends StatelessWidget {
-  const _HoleBarrier({
-    required this.hole,
-    required this.onTap,
-    this.color,
-  });
+  const _HoleBarrier({required this.hole, required this.onTap, this.color});
 
   final Rect hole;
   final VoidCallback onTap;
@@ -1155,10 +1146,10 @@ class _HoleBarrier extends StatelessWidget {
   /// buttons round the field — a select, a picker — and a reader has the
   /// field itself, which the hole leaves within reach, and Escape.
   Widget get _strip => GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        excludeFromSemantics: true,
-        onTap: onTap,
-      );
+    behavior: HitTestBehavior.translucent,
+    excludeFromSemantics: true,
+    onTap: onTap,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -1316,8 +1307,9 @@ class PopoverLayoutDelegate extends SingleChildLayoutDelegate {
       final cx = hi < lo
           ? bubble.dx + childSize.width / 2
           : anchor.center.dx.clamp(lo, hi);
-      final edgeY =
-          side == PopoverSide.top ? bubble.dy + childSize.height : bubble.dy;
+      final edgeY = side == PopoverSide.top
+          ? bubble.dy + childSize.height
+          : bubble.dy;
       geometry = PopoverArrowGeometry(Offset(cx, edgeY), side);
     } else {
       final lo = bubble.dy + inset;
@@ -1325,8 +1317,9 @@ class PopoverLayoutDelegate extends SingleChildLayoutDelegate {
       final cy = hi < lo
           ? bubble.dy + childSize.height / 2
           : anchor.center.dy.clamp(lo, hi);
-      final edgeX =
-          side == PopoverSide.left ? bubble.dx + childSize.width : bubble.dx;
+      final edgeX = side == PopoverSide.left
+          ? bubble.dx + childSize.width
+          : bubble.dx;
       geometry = PopoverArrowGeometry(Offset(edgeX, cy), side);
     }
     // Never mutate a notifier synchronously inside layout.
@@ -1362,21 +1355,21 @@ class PopoverLayoutDelegate extends SingleChildLayoutDelegate {
     // lay it over the very thing it points at.
     final flipped = switch (side) {
       PopoverSide.top => (
-          need > roomTop && roomBottom >= need,
-          PopoverSide.bottom
-        ),
+        need > roomTop && roomBottom >= need,
+        PopoverSide.bottom,
+      ),
       PopoverSide.bottom => (
-          need > roomBottom && roomTop >= need,
-          PopoverSide.top
-        ),
+        need > roomBottom && roomTop >= need,
+        PopoverSide.top,
+      ),
       PopoverSide.left => (
-          need > roomLeft && roomRight >= need,
-          PopoverSide.right
-        ),
+        need > roomLeft && roomRight >= need,
+        PopoverSide.right,
+      ),
       PopoverSide.right => (
-          need > roomRight && roomLeft >= need,
-          PopoverSide.left
-        ),
+        need > roomRight && roomLeft >= need,
+        PopoverSide.left,
+      ),
     };
     if (flipped.$1) return flipped.$2;
 

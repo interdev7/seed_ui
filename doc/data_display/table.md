@@ -18,7 +18,7 @@ Table<User>(
 `Table` is Flutter's own as well, so a file that wants both needs to say which:
 
 ```dart
-import 'package:flutter/material.dart' hide Table;   // the kit's
+import 'package:material_ui/material_ui.dart' hide Table;   // the kit's
 import 'package:seed_ui/seed_ui.dart' hide Table;    // Flutter's
 ```
 

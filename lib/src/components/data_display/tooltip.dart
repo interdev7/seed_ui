@@ -70,26 +70,23 @@ class TooltipToken {
   final double? fontSize;
 
   _ResolvedTooltipToken _resolve(Token t) => _ResolvedTooltipToken(
-        colorBg: colorBg ?? t.colorBgSpotlight,
-        colorText:
-            colorText ?? (t.isDark ? t.colorText : const Color(0xFFFFFFFF)),
-        borderRadius: borderRadius ?? t.borderRadiusSM,
-        padding: padding ??
-            EdgeInsets.symmetric(
-              horizontal: t.sizeXS,
-              vertical: t.sizeXXS + 2,
-            ),
-        fontSize: fontSize ?? t.fontSize,
-      );
+    colorBg: colorBg ?? t.colorBgSpotlight,
+    colorText: colorText ?? (t.isDark ? t.colorText : const Color(0xFFFFFFFF)),
+    borderRadius: borderRadius ?? t.borderRadiusSM,
+    padding:
+        padding ??
+        EdgeInsets.symmetric(horizontal: t.sizeXS, vertical: t.sizeXXS + 2),
+    fontSize: fontSize ?? t.fontSize,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TooltipToken merge(TooltipToken other) => TooltipToken(
-        colorBg: other.colorBg ?? colorBg,
-        colorText: other.colorText ?? colorText,
-        borderRadius: other.borderRadius ?? borderRadius,
-        padding: other.padding ?? padding,
-        fontSize: other.fontSize ?? fontSize,
-      );
+    colorBg: other.colorBg ?? colorBg,
+    colorText: other.colorText ?? colorText,
+    borderRadius: other.borderRadius ?? borderRadius,
+    padding: other.padding ?? padding,
+    fontSize: other.fontSize ?? fontSize,
+  );
 }
 
 @immutable
@@ -125,15 +122,15 @@ class TooltipDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TooltipDefaults merge(TooltipDefaults other) => TooltipDefaults(
-        placement: other.placement ?? placement,
-        arrow: other.arrow ?? arrow,
-      );
+    placement: other.placement ?? placement,
+    arrow: other.arrow ?? arrow,
+  );
 }
 
 /// A short text hint that surfaces on hover, tap or long-press.
 ///
 /// Shares its name with Material's `Tooltip`; when importing both, hide one:
-/// `import 'package:flutter/material.dart' hide Tooltip;`.
+/// `import 'package:material_ui/material_ui.dart' hide Tooltip;`.
 class Tooltip extends StatefulWidget {
   /// Creates a [Tooltip].
   const Tooltip({
@@ -290,35 +287,36 @@ class _SoftTooltipState extends State<Tooltip> {
     return switch (widget.trigger) {
       // Hover on a pointer, plus a touch-tap fallback where hover cannot fire.
       TooltipTrigger.hover => MouseRegion(
-          onEnter: (_) => _onEnter(),
-          onExit: (_) => _onExit(),
-          child: Listener(
-            onPointerDown: _onPointerDown,
-            onPointerUp: (e) => _onTapUp(e, touchOnly: true),
-            child: widget.child,
-          ),
-        ),
-      // Any tap or click toggles the tooltip.
-      TooltipTrigger.tap => Listener(
+        onEnter: (_) => _onEnter(),
+        onExit: (_) => _onExit(),
+        child: Listener(
           onPointerDown: _onPointerDown,
-          onPointerUp: (e) => _onTapUp(e, touchOnly: false),
+          onPointerUp: (e) => _onTapUp(e, touchOnly: true),
           child: widget.child,
         ),
+      ),
+      // Any tap or click toggles the tooltip.
+      TooltipTrigger.tap => Listener(
+        onPointerDown: _onPointerDown,
+        onPointerUp: (e) => _onTapUp(e, touchOnly: false),
+        child: widget.child,
+      ),
       // Long-press is a distinct recognizer, so it can share the arena with a
       // wrapped button's tap.
       TooltipTrigger.longPress => GestureDetector(
-          onLongPress: _showTimed,
-          child: widget.child,
-        ),
+        onLongPress: _showTimed,
+        child: widget.child,
+      ),
     };
   }
 
   Widget _buildBubble(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<TooltipToken>(context) ??
-            const TooltipToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<TooltipToken>(context) ??
+                const TooltipToken())
+            ._resolve(token);
     return Container(
       constraints: const BoxConstraints(maxWidth: 250),
       padding: r.padding,

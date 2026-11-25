@@ -1,4 +1,7 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+// The kit hides Material's ThemeData; this test needs it to pick a platform.
+import 'package:material_ui/material_ui.dart' as material;
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,17 +11,14 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-// The kit hides Material's ThemeData; this test needs it to pick a platform.
-import 'package:flutter/material.dart' as material;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 // The add button's glyph lives with the kit's other icons and is internal to
 // it rather than part of the surface.
 import 'package:seed_ui/src/icons/icons.dart' show PlusPainter;
 
 Widget _host(Widget child) => MaterialApp(
-      home: Scaffold(body: Center(child: child)),
-    );
+  home: Scaffold(body: Center(child: child)),
+);
 
 const _items = [
   TabItem(key: 'a', label: Text('Alpha'), content: Text('Panel A')),
@@ -45,9 +45,7 @@ void main() {
   testWidgets('reports onChanged with the new key', (tester) async {
     String? changed;
     await tester.pumpWidget(
-      _host(
-        Tabs(items: _items, onChanged: (k) => changed = k),
-      ),
+      _host(Tabs(items: _items, onChanged: (k) => changed = k)),
     );
     await tester.tap(find.text('Beta'));
     await tester.pumpAndSettle();
@@ -63,11 +61,7 @@ void main() {
   });
 
   testWidgets('controlled activeKey is honoured', (tester) async {
-    await tester.pumpWidget(
-      _host(
-        const Tabs(items: _items, activeKey: 'b'),
-      ),
-    );
+    await tester.pumpWidget(_host(const Tabs(items: _items, activeKey: 'b')));
     expect(find.text('Panel B'), findsOneWidget);
     // Without onChanged the controlled key does not move.
     await tester.tap(find.text('Alpha'));
@@ -108,8 +102,9 @@ void main() {
     expect(events, contains('add:null'));
   });
 
-  testWidgets('controller drives switching and notifies listeners',
-      (tester) async {
+  testWidgets('controller drives switching and notifies listeners', (
+    tester,
+  ) async {
     final controller = TabsController(items: _items);
     var notifications = 0;
     controller.addListener(() => notifications++);
@@ -135,8 +130,9 @@ void main() {
     expect(find.text('Alpha'), findsNothing);
   });
 
-  testWidgets('onCreateTab seeds the new tab; null fields autoincrement',
-      (tester) async {
+  testWidgets('onCreateTab seeds the new tab; null fields autoincrement', (
+    tester,
+  ) async {
     final controller = TabsController(
       items: const [
         TabItem(key: '1', label: Text('Tab 1'), content: Text('One')),
@@ -174,8 +170,9 @@ void main() {
     expect(controller.items.last.key, isNot('news'));
   });
 
-  testWidgets('controller.remove closes a tab and moves the active tab',
-      (tester) async {
+  testWidgets('controller.remove closes a tab and moves the active tab', (
+    tester,
+  ) async {
     final controller = TabsController(items: _items, activeKey: 'b');
     await tester.pumpWidget(_host(Tabs(controller: controller)));
     controller.remove('b');
@@ -186,16 +183,18 @@ void main() {
 
   group('Snapping', () {
     List<TabItem> longRun() => [
-          for (var i = 1; i <= 12; i++)
-            TabItem(
-              key: '$i',
-              label: Text('Section number $i'),
-              content: Text('Panel $i'),
-            ),
-        ];
+      for (var i = 1; i <= 12; i++)
+        TabItem(
+          key: '$i',
+          label: Text('Section number $i'),
+          content: Text('Panel $i'),
+        ),
+    ];
 
-    Future<double> flingAndSettle(WidgetTester tester,
-        {required bool snap}) async {
+    Future<double> flingAndSettle(
+      WidgetTester tester, {
+      required bool snap,
+    }) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -209,7 +208,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.fling(
-          find.text('Section number 1'), const Offset(-140, 0), 600);
+        find.text('Section number 1'),
+        const Offset(-140, 0),
+        600,
+      );
       await tester.pumpAndSettle();
 
       final bar = tester.widget<SingleChildScrollView>(
@@ -218,8 +220,9 @@ void main() {
       return bar.controller!.offset;
     }
 
-    testWidgets('off by default, so a fling stops where it stops',
-        (tester) async {
+    testWidgets('off by default, so a fling stops where it stops', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -298,7 +301,8 @@ void main() {
       // Every tab in this run is the same width, so a boundary is a whole
       // multiple of one. Measure that from the rendered tabs rather than
       // assuming it.
-      final first = tester.getTopLeft(find.text('Section number 2')).dx -
+      final first =
+          tester.getTopLeft(find.text('Section number 2')).dx -
           tester.getTopLeft(find.text('Section number 1')).dx;
       final remainder = settled % first;
       expect(
@@ -339,8 +343,10 @@ void main() {
     await tester.pumpAndSettle();
 
     final bar = find.byType(SingleChildScrollView).first;
-    final position =
-        tester.widget<SingleChildScrollView>(bar).controller!.position;
+    final position = tester
+        .widget<SingleChildScrollView>(bar)
+        .controller!
+        .position;
     // No tab begins at the maximum, so this is the case that used to strand
     // the last tabs off the trailing edge.
     expect(

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,12 +9,11 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      home: Scaffold(body: Center(child: child)),
-    );
+  home: Scaffold(body: Center(child: child)),
+);
 
 const _options = [
   SegmentedOption(value: 'list', label: 'List'),
@@ -27,11 +27,7 @@ void main() {
   testWidgets('renders every segment label', (tester) async {
     await tester.pumpWidget(
       _host(
-        Segmented<String>(
-          value: 'list',
-          options: _options,
-          onChanged: (_) {},
-        ),
+        Segmented<String>(value: 'list', options: _options, onChanged: (_) {}),
       ),
     );
 
@@ -56,8 +52,9 @@ void main() {
     expect(picked, 'grid');
   });
 
-  testWidgets('tapping the already-selected segment does nothing',
-      (tester) async {
+  testWidgets('tapping the already-selected segment does nothing', (
+    tester,
+  ) async {
     var calls = 0;
     await tester.pumpWidget(
       _host(
@@ -75,12 +72,7 @@ void main() {
 
   testWidgets('a null onChanged disables selection', (tester) async {
     await tester.pumpWidget(
-      _host(
-        const Segmented<String>(
-          value: 'list',
-          options: _options,
-        ),
-      ),
+      _host(const Segmented<String>(value: 'list', options: _options)),
     );
     // No handler → tapping is inert; nothing to assert beyond no crash.
     await tester.tap(find.text('Grid'));
@@ -128,11 +120,7 @@ void main() {
   testWidgets('the thumb animates to the selected segment', (tester) async {
     await tester.pumpWidget(
       _host(
-        Segmented<String>(
-          value: 'list',
-          options: _options,
-          onChanged: (_) {},
-        ),
+        Segmented<String>(value: 'list', options: _options, onChanged: (_) {}),
       ),
     );
     // The thumb is measured after the first frame.
@@ -146,11 +134,7 @@ void main() {
     // it is neither at the start nor yet at the end.
     await tester.pumpWidget(
       _host(
-        Segmented<String>(
-          value: 'map',
-          options: _options,
-          onChanged: (_) {},
-        ),
+        Segmented<String>(value: 'map', options: _options, onChanged: (_) {}),
       ),
     );
     await tester.pump();
@@ -199,8 +183,9 @@ void main() {
     expect(find.text('CUSTOM'), findsOneWidget);
   });
 
-  testWidgets('a long label wraps instead of overflowing in a narrow block',
-      (tester) async {
+  testWidgets('a long label wraps instead of overflowing in a narrow block', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         const SizedBox(
@@ -244,8 +229,9 @@ void main() {
     expect(find.text('Comfortable'), findsOneWidget);
   });
 
-  testWidgets('a segmented control is as wide as its options, unless block',
-      (tester) async {
+  testWidgets('a segmented control is as wide as its options, unless block', (
+    tester,
+  ) async {
     // The control is inline-flex: a stretch Column hands down a tight
     // width, and the track must not take it.
     Future<double> widthIn({required bool block}) async {
@@ -351,10 +337,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scrolling must not turn the control greedy when it fits.
-      expect(
-        tester.getSize(find.byType(Segmented<int>)).width,
-        lessThan(900),
-      );
+      expect(tester.getSize(find.byType(Segmented<int>)).width, lessThan(900));
     });
 
     testWidgets('block still fills the width it is given', (tester) async {
@@ -390,28 +373,31 @@ void main() {
 
     for (final dark in [false, true]) {
       testWidgets(
-          'the thumb sits above the track in a ${dark ? 'dark' : 'light'} theme',
-          (tester) async {
-        await tester.pumpWidget(
-          ConfigProvider(
-            theme: ThemeData(dark: dark),
-            child: _host(
-              Segmented<String>(
-                value: 'list',
-                options: _options,
-                onChanged: (_) {},
+        'the thumb sits above the track in a ${dark ? 'dark' : 'light'} theme',
+        (tester) async {
+          await tester.pumpWidget(
+            ConfigProvider(
+              theme: ThemeData(dark: dark),
+              child: _host(
+                Segmented<String>(
+                  value: 'list',
+                  options: _options,
+                  onChanged: (_) {},
+                ),
               ),
             ),
-          ),
-        );
-        await tester.pumpAndSettle();
+          );
+          await tester.pumpAndSettle();
 
-        // "Above" is the same relation in both themes: the elevated surface is
-        // the lighter one. A translucent fill for the track inverted this in
-        // dark, leaving the shadow as the only separation.
-        expect(luminance(thumbOf(tester)),
-            greaterThan(luminance(trackOf(tester))));
-      });
+          // "Above" is the same relation in both themes: the elevated surface is
+          // the lighter one. A translucent fill for the track inverted this in
+          // dark, leaving the shadow as the only separation.
+          expect(
+            luminance(thumbOf(tester)),
+            greaterThan(luminance(trackOf(tester))),
+          );
+        },
+      );
     }
 
     testWidgets('and the gap is wider than a hairline in dark', (tester) async {
@@ -449,8 +435,11 @@ void main() {
             body: Center(
               child: SizedBox(
                 width: 160,
-                child:
-                    Segmented<int>(value: 1, options: long, onChanged: (_) {}),
+                child: Segmented<int>(
+                  value: 1,
+                  options: long,
+                  onChanged: (_) {},
+                ),
               ),
             ),
           ),
@@ -595,36 +584,35 @@ Widget _run({
   ValueChanged<int>? onChanged,
   SegmentedController? controller,
   SegmentedArrowBuilder? arrowBuilder,
-}) =>
-    ConfigProvider(
-      child: MaterialApp(
-        home: Directionality(
-          textDirection: dir,
-          child: Scaffold(
-            body: Center(
-              child: SizedBox(
-                width: width,
-                height: height,
-                child: Segmented<int>(
-                  value: 0,
-                  size: SoftSize.small,
-                  block: block,
-                  direction: direction,
-                  scrollButtons: scrollButtons,
-                  controller: controller,
-                  arrowBuilder: arrowBuilder,
-                  onChanged: onChanged ?? (_) {},
-                  options: [
-                    for (var i = 0; i < _long.length; i++)
-                      SegmentedOption(value: i, label: _long[i]),
-                  ],
-                ),
-              ),
+}) => ConfigProvider(
+  child: MaterialApp(
+    home: Directionality(
+      textDirection: dir,
+      child: Scaffold(
+        body: Center(
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Segmented<int>(
+              value: 0,
+              size: SoftSize.small,
+              block: block,
+              direction: direction,
+              scrollButtons: scrollButtons,
+              controller: controller,
+              arrowBuilder: arrowBuilder,
+              onChanged: onChanged ?? (_) {},
+              options: [
+                for (var i = 0; i < _long.length; i++)
+                  SegmentedOption(value: i, label: _long[i]),
+              ],
             ),
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
 
 int _arrows(String label) => find.bySemanticsLabel(label).evaluate().length;
 
@@ -659,8 +647,9 @@ void _scrollButtonTests() {
       expect(_arrows('Next'), 0);
     });
 
-    testWidgets('only the end with something hidden offers one',
-        (tester) async {
+    testWidgets('only the end with something hidden offers one', (
+      tester,
+    ) async {
       await tester.pumpWidget(_run());
       await tester.pumpAndSettle();
       // At rest the run starts at its beginning, so there is nothing behind.
@@ -668,8 +657,9 @@ void _scrollButtonTests() {
       expect(_arrows('Next'), 1);
     });
 
-    testWidgets('a step brings on exactly the next hidden segment',
-        (tester) async {
+    testWidgets('a step brings on exactly the next hidden segment', (
+      tester,
+    ) async {
       await tester.pumpWidget(_run());
       await tester.pumpAndSettle();
       final before = _readable(tester);
@@ -723,8 +713,9 @@ void _scrollButtonTests() {
       expect(_readable(tester), contains(_long.first));
     });
 
-    testWidgets('a tap on an arrow does not choose the segment beneath it',
-        (tester) async {
+    testWidgets('a tap on an arrow does not choose the segment beneath it', (
+      tester,
+    ) async {
       var chosen = -1;
       await tester.pumpWidget(_run(onChanged: (v) => chosen = v));
       await tester.pumpAndSettle();
@@ -746,8 +737,9 @@ void _scrollButtonTests() {
       expect(_arrows('Next'), 0);
     });
 
-    testWidgets('a column left to grow grows, without complaint',
-        (tester) async {
+    testWidgets('a column left to grow grows, without complaint', (
+      tester,
+    ) async {
       // Inside a page that scrolls, which is where a column usually lives:
       // the height is unbounded, so there is no viewport to scroll inside and
       // wrapping it in one would be an error, not a feature. A Center would
@@ -778,8 +770,9 @@ void _scrollButtonTests() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('a column given a height scrolls, and asks at top and bottom',
-        (tester) async {
+    testWidgets('a column given a height scrolls, and asks at top and bottom', (
+      tester,
+    ) async {
       await tester.pumpWidget(_run(direction: Axis.vertical, height: 90));
       await tester.pumpAndSettle();
       expect(_arrows('Previous'), 0, reason: 'nothing above yet');
@@ -834,8 +827,9 @@ void _scrollButtonTests() {
       expect(_readable(tester), settled);
     });
 
-    testWidgets('a controller tells its listeners when an end runs out',
-        (tester) async {
+    testWidgets('a controller tells its listeners when an end runs out', (
+      tester,
+    ) async {
       final c = SegmentedController();
       addTearDown(c.dispose);
       var told = 0;
@@ -863,8 +857,9 @@ void _scrollButtonTests() {
       expect(() => c.scrollTo(3), returnsNormally);
     });
 
-    testWidgets('arrowBuilder replaces the kit\'s arrows, and still steps',
-        (tester) async {
+    testWidgets('arrowBuilder replaces the kit\'s arrows, and still steps', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _run(
           arrowBuilder: (context, arrow, step) => GestureDetector(
@@ -887,8 +882,9 @@ void _scrollButtonTests() {
       expect(find.text('BACK'), findsOneWidget);
     });
 
-    testWidgets('a step clears an arrow of the caller\'s own size',
-        (tester) async {
+    testWidgets('a step clears an arrow of the caller\'s own size', (
+      tester,
+    ) async {
       // The inset is measured, not assumed, so a wide custom arrow does not
       // land on top of the segment the step just brought on.
       const wide = 60.0;

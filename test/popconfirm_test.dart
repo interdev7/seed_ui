@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -10,19 +11,20 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(body: Center(child: child)),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(body: Center(child: child)),
+);
 
 /// Places the trigger at an arbitrary corner to test viewport clamping.
 Widget _hostAt(Widget child, Alignment alignment) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(body: Align(alignment: alignment, child: child)),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(
+    body: Align(alignment: alignment, child: child),
+  ),
+);
 
 /// See `message_test.dart`: `pumpAndSettle` is unusable with the kit's
 /// perpetual animations. The trailing pump lets the overlay rebuild after the
@@ -51,8 +53,9 @@ void main() {
     expect(find.text('Delete this item?'), findsOneWidget);
   });
 
-  testWidgets('opens even when the trigger has its own gesture handler',
-      (tester) async {
+  testWidgets('opens even when the trigger has its own gesture handler', (
+    tester,
+  ) async {
     // Regression: a Button owns a GestureDetector that wins the arena, so
     // an outer onTap would never fire. The trigger's own tap must still run.
     var triggerTapped = false;
@@ -139,8 +142,9 @@ void main() {
     expect(find.text('Sure?'), findsNothing);
   });
 
-  testWidgets('an async onOk holds the bubble open until it settles',
-      (tester) async {
+  testWidgets('an async onOk holds the bubble open until it settles', (
+    tester,
+  ) async {
     final gate = Completer<void>();
     await tester.pumpWidget(
       _host(
@@ -184,8 +188,9 @@ void main() {
     expect(confirmed, isFalse);
   });
 
-  testWidgets('the bubble stays within the viewport at every corner',
-      (tester) async {
+  testWidgets('the bubble stays within the viewport at every corner', (
+    tester,
+  ) async {
     const alignments = [
       Alignment.topLeft,
       Alignment.topRight,
@@ -242,17 +247,20 @@ void main() {
     }
   });
 
-  testWidgets('right placement stays on screen when neither side has room',
-      (tester) async {
+  testWidgets('right placement stays on screen when neither side has room', (
+    tester,
+  ) async {
     // A wide bubble on a trigger centred horizontally fits on neither side,
     // so the main-axis position must be clamped, not just flipped.
     await tester.pumpWidget(
       _hostAt(
         Popconfirm(
           title: const Text(
-              'A deliberately long confirmation question that is wide'),
-          description:
-              const Text('With a second line of detail to widen the bubble.'),
+            'A deliberately long confirmation question that is wide',
+          ),
+          description: const Text(
+            'With a second line of detail to widen the bubble.',
+          ),
           placement: PopoverPlacement.right,
           onOk: () {},
           child: const Text('trigger'),
@@ -275,8 +283,9 @@ void main() {
     await _settle(tester);
   });
 
-  testWidgets('an arrow is drawn by default and suppressed by arrow: false',
-      (tester) async {
+  testWidgets('an arrow is drawn by default and suppressed by arrow: false', (
+    tester,
+  ) async {
     Finder arrow() => find.byKey(const Key('softPopoverArrow'));
 
     await tester.pumpWidget(
@@ -313,8 +322,9 @@ void main() {
     await _settle(tester);
   });
 
-  testWidgets('scrolling the page dismisses an open popconfirm',
-      (tester) async {
+  testWidgets('scrolling the page dismisses an open popconfirm', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         navigatorKey: UiKit.navigatorKey,

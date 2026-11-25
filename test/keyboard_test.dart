@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,8 +10,6 @@ import 'package:flutter/material.dart'
         Table,
         TableRow,
         Divider;
-import 'package:flutter/services.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(
@@ -18,17 +18,16 @@ Widget _host(
   // Only where the test opens something into the kit's overlay: the key is
   // one global, and a test that leaves an entry in it upsets the next.
   bool overlay = false,
-}) =>
-    ConfigProvider(
-      theme: ThemeData(),
-      child: MaterialApp(
-        navigatorKey: overlay ? UiKit.navigatorKey : null,
-        home: Directionality(
-          textDirection: words,
-          child: Scaffold(body: Center(child: child)),
-        ),
-      ),
-    );
+}) => ConfigProvider(
+  theme: ThemeData(),
+  child: MaterialApp(
+    navigatorKey: overlay ? UiKit.navigatorKey : null,
+    home: Directionality(
+      textDirection: words,
+      child: Scaffold(body: Center(child: child)),
+    ),
+  ),
+);
 
 /// Whether the control under [finder] wears the focus halo.
 bool _haloed(WidgetTester tester, Finder finder) {
@@ -66,8 +65,9 @@ void main() {
   _tableCells();
 
   group('a button', () {
-    testWidgets('is reached by tab and pressed by space and enter',
-        (tester) async {
+    testWidgets('is reached by tab and pressed by space and enter', (
+      tester,
+    ) async {
       var taps = 0;
       await tester.pumpWidget(
         _host(Button(onPressed: () => taps++, child: const Text('Go'))),
@@ -81,8 +81,9 @@ void main() {
       expect(taps, 2, reason: 'enter');
     });
 
-    testWidgets('shows a halo once the keyboard put the focus there',
-        (tester) async {
+    testWidgets('shows a halo once the keyboard put the focus there', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(Button(onPressed: () {}, child: const Text('Go'))),
       );
@@ -95,8 +96,9 @@ void main() {
       expect(_haloed(tester, box), isTrue);
     });
 
-    testWidgets('one that does nothing is not a stop on the way round',
-        (tester) async {
+    testWidgets('one that does nothing is not a stop on the way round', (
+      tester,
+    ) async {
       var taps = 0;
       await tester.pumpWidget(
         _host(
@@ -115,8 +117,9 @@ void main() {
       expect(taps, 1);
     });
 
-    testWidgets('a disabled one cannot be pressed from the keyboard',
-        (tester) async {
+    testWidgets('a disabled one cannot be pressed from the keyboard', (
+      tester,
+    ) async {
       var taps = 0;
       await tester.pumpWidget(
         _host(
@@ -208,10 +211,8 @@ void main() {
       await tester.pumpWidget(
         _host(
           StatefulBuilder(
-            builder: (context, setState) => Switch(
-              value: on,
-              onChanged: (v) => setState(() => on = v),
-            ),
+            builder: (context, setState) =>
+                Switch(value: on, onChanged: (v) => setState(() => on = v)),
           ),
         ),
       );
@@ -235,10 +236,7 @@ void main() {
         Column(
           children: [
             for (final label in ['one', 'two', 'three'])
-              Button(
-                onPressed: () => pressed.add(label),
-                child: Text(label),
-              ),
+              Button(onPressed: () => pressed.add(label), child: Text(label)),
           ],
         ),
       ),
@@ -281,8 +279,9 @@ void main() {
       await _tab(tester);
     }
 
-    testWidgets('is one stop in the tab order, not one per option',
-        (tester) async {
+    testWidgets('is one stop in the tab order, not one per option', (
+      tester,
+    ) async {
       final chosen = <int>[];
       var after = 0;
       await tester.pumpWidget(
@@ -321,8 +320,9 @@ void main() {
       expect(chosen, [1]);
     });
 
-    testWidgets('and stop at the ends rather than wrapping round',
-        (tester) async {
+    testWidgets('and stop at the ends rather than wrapping round', (
+      tester,
+    ) async {
       final chosen = <int>[];
       await pump(tester, chosen, value: 3);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
@@ -371,8 +371,9 @@ void main() {
       expect(chosen, [1]);
     });
 
-    testWidgets('the arrow that steps on is the one the words run towards',
-        (tester) async {
+    testWidgets('the arrow that steps on is the one the words run towards', (
+      tester,
+    ) async {
       final chosen = <int>[];
       await pump(tester, chosen, words: TextDirection.rtl);
       // The run reads right to left, so its next option lies to the left.
@@ -488,8 +489,9 @@ void main() {
       expect(pages, [3, 1]);
     });
 
-    testWidgets('home and end reach the first page and the last',
-        (tester) async {
+    testWidgets('home and end reach the first page and the last', (
+      tester,
+    ) async {
       final pages = await pump(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.end);
       await tester.pumpAndSettle();
@@ -505,8 +507,9 @@ void main() {
       expect(pages, isEmpty, reason: 'there is no page before the first');
     });
 
-    testWidgets('a pager with one page is not a stop on the way round',
-        (tester) async {
+    testWidgets('a pager with one page is not a stop on the way round', (
+      tester,
+    ) async {
       var after = 0;
       await tester.pumpWidget(
         _host(
@@ -565,8 +568,9 @@ void main() {
       expect(find.text('Edit'), findsOneWidget);
     });
 
-    testWidgets('the arrows walk it and enter takes what they land on',
-        (tester) async {
+    testWidgets('the arrows walk it and enter takes what they land on', (
+      tester,
+    ) async {
       final taken = await open(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
@@ -646,9 +650,15 @@ void main() {
           Collapse(
             items: const [
               CollapseItem(
-                  key: 'a', label: Text('First'), content: Text('one')),
+                key: 'a',
+                label: Text('First'),
+                content: Text('one'),
+              ),
               CollapseItem(
-                  key: 'b', label: Text('Second'), content: Text('two')),
+                key: 'b',
+                label: Text('Second'),
+                content: Text('two'),
+              ),
             ],
             onChanged: open.add,
           ),
@@ -726,8 +736,9 @@ void main() {
       ]);
     });
 
-    testWidgets('the inward arrow opens a branch, then steps into it',
-        (tester) async {
+    testWidgets('the inward arrow opens a branch, then steps into it', (
+      tester,
+    ) async {
       final picked = await pump(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
@@ -741,16 +752,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
-      expect(
-          picked,
-          [
-            ['apple'],
-          ],
-          reason: 'the second press stepped down to the first child');
+      expect(picked, [
+        ['apple'],
+      ], reason: 'the second press stepped down to the first child');
     });
 
-    testWidgets('the outward arrow shuts a branch, then steps up to it',
-        (tester) async {
+    testWidgets('the outward arrow shuts a branch, then steps up to it', (
+      tester,
+    ) async {
       final picked = await pump(tester, expanded: ['fruit']);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
@@ -803,32 +812,32 @@ void main() {
       void Function(_Person record, int index)? onRowTap,
       TableSelection<_Person>? selection,
       bool sortable = false,
-    }) =>
-        _host(
-          SizedBox(
-            width: 400,
-            child: Table<_Person>(
-              data: people,
-              onRowTap: onRowTap,
-              selection: selection,
-              columns: [
-                TableColumn<_Person>(
-                  title: const Text('Name'),
-                  value: (p) => p.name,
-                  sortable: sortable,
-                  sorter: sortable ? (a, b) => a.name.compareTo(b.name) : null,
-                ),
-                TableColumn<_Person>(
-                  title: const Text('Age'),
-                  value: (p) => '${p.age}',
-                ),
-              ],
+    }) => _host(
+      SizedBox(
+        width: 400,
+        child: Table<_Person>(
+          data: people,
+          onRowTap: onRowTap,
+          selection: selection,
+          columns: [
+            TableColumn<_Person>(
+              title: const Text('Name'),
+              value: (p) => p.name,
+              sortable: sortable,
+              sorter: sortable ? (a, b) => a.name.compareTo(b.name) : null,
             ),
-          ),
-        );
+            TableColumn<_Person>(
+              title: const Text('Age'),
+              value: (p) => '${p.age}',
+            ),
+          ],
+        ),
+      ),
+    );
 
-    testWidgets('is one stop, and enter opens the row the cursor is on',
-        (tester) async {
+    testWidgets('is one stop, and enter opens the row the cursor is on', (
+      tester,
+    ) async {
       final tapped = <String>[];
       final at = <int>[];
       await tester.pumpWidget(
@@ -852,8 +861,9 @@ void main() {
       expect(at, [1]);
     });
 
-    testWidgets('home and end reach the first row and the last',
-        (tester) async {
+    testWidgets('home and end reach the first row and the last', (
+      tester,
+    ) async {
       final tapped = <String>[];
       await tester.pumpWidget(
         table(onRowTap: (record, _) => tapped.add(record.name)),
@@ -902,8 +912,7 @@ void main() {
       expect(picked.map((p) => p.name), ['Ada']);
     });
 
-    testWidgets(
-        'up out of the first row lands in the head, where the '
+    testWidgets('up out of the first row lands in the head, where the '
         'sorting is', (tester) async {
       await tester.pumpWidget(table(sortable: true));
       await _tab(tester);
@@ -923,8 +932,9 @@ void main() {
       expect(names, ['Ada', 'Alan', 'Grace']);
     });
 
-    testWidgets('a table with nothing to sort keeps the cursor in the rows',
-        (tester) async {
+    testWidgets('a table with nothing to sort keeps the cursor in the rows', (
+      tester,
+    ) async {
       final tapped = <String>[];
       await tester.pumpWidget(
         table(onRowTap: (record, _) => tapped.add(record.name)),
@@ -1006,8 +1016,10 @@ void main() {
     });
 
     testWidgets('a day nobody may take is stepped over', (tester) async {
-      final picked =
-          await pump(tester, blocked: (d) => d.day == 11 && d.month == 3);
+      final picked = await pump(
+        tester,
+        blocked: (d) => d.day == 11 && d.month == 3,
+      );
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
@@ -1064,8 +1076,9 @@ void main() {
       expect(find.text('Now'), findsOneWidget);
     });
 
-    testWidgets('the arrows step the column, sideways changes which',
-        (tester) async {
+    testWidgets('the arrows step the column, sideways changes which', (
+      tester,
+    ) async {
       final picked = await pump(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
@@ -1168,13 +1181,12 @@ void main() {
   });
 
   group('an upload', () {
-    testWidgets('the drop zone is a stop, and space opens the picker',
-        (tester) async {
+    testWidgets('the drop zone is a stop, and space opens the picker', (
+      tester,
+    ) async {
       var picks = 0;
       await tester.pumpWidget(
-        _host(
-          Upload<String>(onPick: () async => picks++),
-        ),
+        _host(Upload<String>(onPick: () async => picks++)),
       );
       await _tab(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
@@ -1204,8 +1216,9 @@ void main() {
   });
 
   group('the small things that answer a press', () {
-    testWidgets('a tag\'s cross is a stop, and space closes it',
-        (tester) async {
+    testWidgets('a tag\'s cross is a stop, and space closes it', (
+      tester,
+    ) async {
       var closed = 0;
       await tester.pumpWidget(
         _host(
@@ -1257,8 +1270,9 @@ void main() {
       expect(closed, 1);
     });
 
-    testWidgets('a cross says what it is, since a glyph says nothing',
-        (tester) async {
+    testWidgets('a cross says what it is, since a glyph says nothing', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Alert(
@@ -1274,40 +1288,35 @@ void main() {
 }
 
 void _tableCells() {
-  const people = [
-    _Person('Ada', 36),
-    _Person('Grace', 45),
-  ];
+  const people = [_Person('Ada', 36), _Person('Grace', 45)];
 
   Widget table({
     void Function(_Person, int)? onRowTap,
     TableSelection<_Person>? selection,
     List<TableFilter>? filters,
-  }) =>
-      _host(
-        overlay: filters != null,
-        SizedBox(
-          width: 400,
-          child: Table<_Person>(
-            data: people,
-            onRowTap: onRowTap,
-            selection: selection,
-            columns: [
-              TableColumn<_Person>(
-                title: const Text('Name'),
-                value: (p) => p.name,
-                filters: filters,
-                onFilter:
-                    filters == null ? null : (value, p) => p.name == value,
-              ),
-              TableColumn<_Person>(
-                title: const Text('Age'),
-                value: (p) => '${p.age}',
-              ),
-            ],
+  }) => _host(
+    overlay: filters != null,
+    SizedBox(
+      width: 400,
+      child: Table<_Person>(
+        data: people,
+        onRowTap: onRowTap,
+        selection: selection,
+        columns: [
+          TableColumn<_Person>(
+            title: const Text('Name'),
+            value: (p) => p.name,
+            filters: filters,
+            onFilter: filters == null ? null : (value, p) => p.name == value,
           ),
-        ),
-      );
+          TableColumn<_Person>(
+            title: const Text('Age'),
+            value: (p) => '${p.age}',
+          ),
+        ],
+      ),
+    ),
+  );
 
   group('a table read across', () {
     testWidgets('the sideways arrows walk the cells of a row', (tester) async {
@@ -1319,8 +1328,9 @@ void _tableCells() {
       // The smallest outlined box: the table wears a ring of its own while it
       // has the focus, and that one never moves.
       Rect outlined() {
-        final boxes =
-            tester.widgetList<DecoratedBox>(find.byType(DecoratedBox)).toList();
+        final boxes = tester
+            .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+            .toList();
         Rect? best;
         for (var i = 0; i < boxes.length; i++) {
           final box = boxes[i];
@@ -1348,8 +1358,7 @@ void _tableCells() {
       expect(second.top, first.top);
     });
 
-    testWidgets(
-        'the box column picks the row, whatever enter would do '
+    testWidgets('the box column picks the row, whatever enter would do '
         'elsewhere', (tester) async {
       var picked = <_Person>[];
       final tapped = <String>[];

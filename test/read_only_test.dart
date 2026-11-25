@@ -1,6 +1,10 @@
 import 'dart:ui' show ImageByteFormat;
 
-import 'package:flutter/material.dart'
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:flutter/semantics.dart' show SemanticsNode;
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -12,10 +16,6 @@ import 'package:flutter/material.dart'
         Form,
         FormField,
         Divider;
-import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
-import 'package:flutter/semantics.dart' show SemanticsNode;
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// A value shown back and not open to change, across every control a form
@@ -28,16 +28,16 @@ import 'package:seed_ui/seed_ui.dart';
 /// not a key, not a screen reader's double-tap.
 
 Widget _host(Widget child) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(
-        body: Center(
-          child: RepaintBoundary(
-            key: const Key('shot'),
-            child: Padding(padding: const EdgeInsets.all(8), child: child),
-          ),
-        ),
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(
+    body: Center(
+      child: RepaintBoundary(
+        key: const Key('shot'),
+        child: Padding(padding: const EdgeInsets.all(8), child: child),
       ),
-    );
+    ),
+  ),
+);
 
 /// The control as it is drawn, as a hash of its pixels.
 Future<int> _shot(WidgetTester tester) async {
@@ -71,10 +71,9 @@ bool _heardAsReadOnly(WidgetTester tester) {
     });
   }
 
-  walk(tester.semantics
-      .find(find.byType(MaterialApp))
-      .owner!
-      .rootSemanticsNode!);
+  walk(
+    tester.semantics.find(find.byType(MaterialApp)).owner!.rootSemanticsNode!,
+  );
   return found;
 }
 

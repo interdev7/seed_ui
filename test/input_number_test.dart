@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,18 +10,16 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      home: Scaffold(body: Center(child: child)),
-    );
+  home: Scaffold(body: Center(child: child)),
+);
 
 Finder _carets() => find.byWidgetPredicate(
-      (w) =>
-          w is CustomPaint &&
-          w.painter.runtimeType.toString() == '_ChevronPainter',
-    );
+  (w) =>
+      w is CustomPaint && w.painter.runtimeType.toString() == '_ChevronPainter',
+);
 
 /// The spinner is hidden until the InputNumber is hovered.
 Future<void> _hover(WidgetTester tester) async {
@@ -32,8 +31,9 @@ Future<void> _hover(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('the stepper is clipped to the input\'s rounded corner',
-      (tester) async {
+  testWidgets('the stepper is clipped to the input\'s rounded corner', (
+    tester,
+  ) async {
     // The spinner sits flush against the right edge, so its hover and pressed
     // fills would otherwise square off the top-right and bottom-right corners
     // and paint outside the border.
@@ -41,8 +41,10 @@ void main() {
       _host(
         ConfigProvider(
           theme: ThemeData.light,
-          child:
-              const SizedBox(width: 200, child: InputNumber(defaultValue: 1)),
+          child: const SizedBox(
+            width: 200,
+            child: InputNumber(defaultValue: 1),
+          ),
         ),
       ),
     );
@@ -60,16 +62,19 @@ void main() {
     expect(radius.topRight.x, lessThan(ThemeData.light.token.borderRadius));
   });
 
-  testWidgets('hovering a stepper lights the chevron, it does not wash the box',
-      (tester) async {
+  testWidgets('hovering a stepper lights the chevron, it does not wash the box', (
+    tester,
+  ) async {
     // A hover is answered on the chevron; the background is only washed
     // while the handle is pressed, and faintly.
     await tester.pumpWidget(
       _host(
         ConfigProvider(
           theme: ThemeData.light,
-          child:
-              const SizedBox(width: 200, child: InputNumber(defaultValue: 1)),
+          child: const SizedBox(
+            width: 200,
+            child: InputNumber(defaultValue: 1),
+          ),
         ),
       ),
     );
@@ -82,7 +87,8 @@ void main() {
 
     Color chevronColour() =>
         (tester.widgetList<CustomPaint>(_carets()).first.painter as dynamic)
-            .color as Color;
+                .color
+            as Color;
     // The button paints its background through `color:`, which Flutter turns
     // into a BoxDecoration — a transparent one means nothing is drawn.
     Color? boxColour() {
@@ -171,9 +177,7 @@ void main() {
   testWidgets('typing a value commits on submit, clamped', (tester) async {
     num? value;
     await tester.pumpWidget(
-      _host(
-        InputNumber(min: 0, max: 100, onChanged: (v) => value = v),
-      ),
+      _host(InputNumber(min: 0, max: 100, onChanged: (v) => value = v)),
     );
     await tester.enterText(find.byType(EditableText), '250');
     await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -181,8 +185,9 @@ void main() {
     expect(value, 100); // clamped
   });
 
-  testWidgets('spinner mode puts a minus and a plus around the value',
-      (tester) async {
+  testWidgets('spinner mode puts a minus and a plus around the value', (
+    tester,
+  ) async {
     num? value = 3;
     await tester.pumpWidget(
       _host(
@@ -230,9 +235,7 @@ void main() {
 
   testWidgets('no controls hides the steppers', (tester) async {
     await tester.pumpWidget(
-      _host(
-        const InputNumber(defaultValue: 1, controls: false),
-      ),
+      _host(const InputNumber(defaultValue: 1, controls: false)),
     );
     expect(
       find.byWidgetPredicate(
@@ -244,8 +247,9 @@ void main() {
     );
   });
 
-  testWidgets('a spinner keeps its own width in a stretching parent',
-      (tester) async {
+  testWidgets('a spinner keeps its own width in a stretching parent', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         const SizedBox(
@@ -427,7 +431,8 @@ void main() {
     );
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await mouse.addPointer(
-        location: tester.getCenter(find.byType(InputNumber)));
+      location: tester.getCenter(find.byType(InputNumber)),
+    );
     await tester.pumpAndSettle();
     final fills = tester
         .widgetList<AnimatedContainer>(

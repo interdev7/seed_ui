@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'dart:ui' show ImageByteFormat;
 
-import 'package:flutter/material.dart'
+import 'package:flutter/rendering.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Badge,
@@ -13,8 +15,6 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/rendering.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// Anchors the boundary the illustration is captured from.
@@ -24,12 +24,13 @@ Widget _host({
   SoftSize? componentSize,
   bool? componentDisabled,
   required Widget child,
-}) =>
-    ConfigProvider(
-      componentSize: componentSize,
-      componentDisabled: componentDisabled,
-      child: MaterialApp(home: Scaffold(body: Center(child: child))),
-    );
+}) => ConfigProvider(
+  componentSize: componentSize,
+  componentDisabled: componentDisabled,
+  child: MaterialApp(
+    home: Scaffold(body: Center(child: child)),
+  ),
+);
 
 Future<double> _buttonHeight(WidgetTester tester, Widget tree) async {
   await tester.pumpWidget(tree);
@@ -56,7 +57,9 @@ void main() {
       );
       final unset = await _buttonHeight(
         tester,
-        _host(child: Button(onPressed: () {}, child: const Text('Pay'))),
+        _host(
+          child: Button(onPressed: () {}, child: const Text('Pay')),
+        ),
       );
 
       expect(small, lessThan(unset));
@@ -114,7 +117,9 @@ void main() {
       );
       final unset = await _buttonHeight(
         tester,
-        _host(child: Button(onPressed: () {}, child: const Text('Pay'))),
+        _host(
+          child: Button(onPressed: () {}, child: const Text('Pay')),
+        ),
       );
       expect(nested, direct);
       expect(
@@ -124,8 +129,9 @@ void main() {
       );
     });
 
-    testWidgets('an enclosing AvatarGroup is nearer than the screen',
-        (tester) async {
+    testWidgets('an enclosing AvatarGroup is nearer than the screen', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           componentSize: SoftSize.small,
@@ -147,9 +153,7 @@ void main() {
 
       // Both halves must be doing something: the loose avatar shrank to the
       // screen's size, the grouped one held the group's.
-      await tester.pumpWidget(
-        _host(child: const Avatar(child: Text('A'))),
-      );
+      await tester.pumpWidget(_host(child: const Avatar(child: Text('A'))));
       final unset = tester.getRect(find.byType(Avatar)).height;
 
       expect(loose, lessThan(unset), reason: 'the screen reached it');
@@ -171,8 +175,9 @@ void main() {
       expect(taps, 0);
     });
 
-    testWidgets('a control can stay live in a disabled subtree',
-        (tester) async {
+    testWidgets('a control can stay live in a disabled subtree', (
+      tester,
+    ) async {
       var taps = 0;
       await tester.pumpWidget(
         _host(
@@ -258,18 +263,18 @@ void main() {
   });
   group('ComponentDefaults', () {
     Widget host(ComponentDefaults? defaults, Widget child) => ConfigProvider(
-          defaults: defaults,
-          child: MaterialApp(home: Scaffold(body: Center(child: child))),
-        );
+      defaults: defaults,
+      child: MaterialApp(
+        home: Scaffold(body: Center(child: child)),
+      ),
+    );
 
     testWidgets('a default reaches every widget that did not say', (
       tester,
     ) async {
       await tester.pumpWidget(
         host(
-          const ComponentDefaults(
-            tag: TagDefaults(closable: true),
-          ),
+          const ComponentDefaults(tag: TagDefaults(closable: true)),
           const Tag(child: Text('beta')),
         ),
       );
@@ -316,8 +321,11 @@ void main() {
         const Empty(image: EmptyImage.standard),
       );
 
-      expect(defaulted, isNot(plain),
-          reason: 'the default changed the drawing');
+      expect(
+        defaulted,
+        isNot(plain),
+        reason: 'the default changed the drawing',
+      );
       expect(
         overridden,
         plain,
@@ -358,8 +366,9 @@ void main() {
     // The stateless widgets were the ones that broke silently: a prop turned
     // nullable still compiles in `prop == Something`, and simply reads false
     // ever after. These check the reading, not the type.
-    testWidgets('a stateless widget reads its default, not a stale null',
-        (tester) async {
+    testWidgets('a stateless widget reads its default, not a stale null', (
+      tester,
+    ) async {
       Future<Axis> axisOf(ComponentDefaults? defaults) async {
         await tester.pumpWidget(
           host(
@@ -420,11 +429,7 @@ void main() {
           timeline: TimelineDefaults(mode: TimelineMode.right),
         ),
       );
-      expect(
-        right.dx,
-        isNot(left.dx),
-        reason: 'the entries changed sides',
-      );
+      expect(right.dx, isNot(left.dx), reason: 'the entries changed sides');
     });
 
     testWidgets('every registered slot answers its own lookup', (tester) async {
@@ -442,18 +447,22 @@ void main() {
           ),
           Builder(
             builder: (context) {
-              ok = ConfigProvider.defaultsOf<AvatarDefaults>(context)?.shape ==
+              ok =
+                  ConfigProvider.defaultsOf<AvatarDefaults>(context)?.shape ==
                       AvatarShape.square &&
-                  ConfigProvider.defaultsOf<RibbonDefaults>(context)
-                          ?.placement ==
+                  ConfigProvider.defaultsOf<RibbonDefaults>(
+                        context,
+                      )?.placement ==
                       RibbonPlacement.start &&
-                  ConfigProvider.defaultsOf<UploadDefaults>(context)
-                          ?.showSize ==
+                  ConfigProvider.defaultsOf<UploadDefaults>(
+                        context,
+                      )?.showSize ==
                       false &&
                   ConfigProvider.defaultsOf<TabsDefaults>(context)?.hideAdd ==
                       true &&
-                  ConfigProvider.defaultsOf<StepsDefaults>(context)
-                          ?.responsive ==
+                  ConfigProvider.defaultsOf<StepsDefaults>(
+                        context,
+                      )?.responsive ==
                       false;
               return const SizedBox();
             },
@@ -463,8 +472,9 @@ void main() {
       expect(ok, isTrue);
     });
 
-    testWidgets('defaults merge slot by slot through nested providers',
-        (tester) async {
+    testWidgets('defaults merge slot by slot through nested providers', (
+      tester,
+    ) async {
       late ButtonDefaults? button;
       late TagDefaults? tag;
       await tester.pumpWidget(
@@ -497,20 +507,13 @@ void main() {
       // each of these is proven through what the widget does, never through
       // the provider that carries it.
 
-      testWidgets('Badge takes its count ceiling and its zero', (
-        tester,
-      ) async {
+      testWidgets('Badge takes its count ceiling and its zero', (tester) async {
         await tester.pumpWidget(
           host(
             const ComponentDefaults(
               badge: BadgeDefaults(overflowCount: 5, showZero: true),
             ),
-            const Column(
-              children: [
-                Badge(count: 9),
-                Badge(count: 0),
-              ],
-            ),
+            const Column(children: [Badge(count: 9), Badge(count: 0)]),
           ),
         );
         await tester.pumpAndSettle();
@@ -772,8 +775,9 @@ void main() {
       expect(seen?.shape, ButtonShape.round);
     });
 
-    testWidgets('the nearer provider wins where both name a component',
-        (tester) async {
+    testWidgets('the nearer provider wins where both name a component', (
+      tester,
+    ) async {
       late ButtonDefaults? seen;
       await tester.pumpWidget(
         ConfigProvider(

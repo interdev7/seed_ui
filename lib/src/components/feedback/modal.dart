@@ -52,23 +52,23 @@ class ModalToken {
   final double? contentFontSize;
 
   _ResolvedModalToken _resolve(Token t) => _ResolvedModalToken(
-        colorBgMask: colorBgMask ?? t.colorBgMask,
-        colorBgElevated: colorBgElevated ?? t.colorBgElevated,
-        padding: padding ?? EdgeInsets.all(t.sizeMD),
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-        titleFontSize: titleFontSize ?? t.fontSizeLG,
-        contentFontSize: contentFontSize ?? t.fontSize,
-      );
+    colorBgMask: colorBgMask ?? t.colorBgMask,
+    colorBgElevated: colorBgElevated ?? t.colorBgElevated,
+    padding: padding ?? EdgeInsets.all(t.sizeMD),
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+    titleFontSize: titleFontSize ?? t.fontSizeLG,
+    contentFontSize: contentFontSize ?? t.fontSize,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ModalToken merge(ModalToken other) => ModalToken(
-        colorBgMask: other.colorBgMask ?? colorBgMask,
-        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
-        padding: other.padding ?? padding,
-        borderRadius: other.borderRadius ?? borderRadius,
-        titleFontSize: other.titleFontSize ?? titleFontSize,
-        contentFontSize: other.contentFontSize ?? contentFontSize,
-      );
+    colorBgMask: other.colorBgMask ?? colorBgMask,
+    colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+    padding: other.padding ?? padding,
+    borderRadius: other.borderRadius ?? borderRadius,
+    titleFontSize: other.titleFontSize ?? titleFontSize,
+    contentFontSize: other.contentFontSize ?? contentFontSize,
+  );
 }
 
 @immutable
@@ -260,23 +260,22 @@ class ModalApi {
     bool maskClosable = true,
     Color? barrierColor,
     StatusType? type = StatusType.warning,
-  }) =>
-      open(
-        ModalConfig(
-          title: title == null ? null : Text(title),
-          content: content == null ? null : Text(content),
-          type: type,
-          okText: okText == null ? null : Text(okText),
-          cancelText: cancelText == null ? null : Text(cancelText),
-          onOk: onOk,
-          onCancel: onCancel,
-          danger: danger,
-          centered: centered,
-          top: top,
-          maskClosable: maskClosable,
-          barrierColor: barrierColor,
-        ),
-      );
+  }) => open(
+    ModalConfig(
+      title: title == null ? null : Text(title),
+      content: content == null ? null : Text(content),
+      type: type,
+      okText: okText == null ? null : Text(okText),
+      cancelText: cancelText == null ? null : Text(cancelText),
+      onOk: onOk,
+      onCancel: onCancel,
+      danger: danger,
+      centered: centered,
+      top: top,
+      maskClosable: maskClosable,
+      barrierColor: barrierColor,
+    ),
+  );
 
   /// An acknowledgement carrying neutral information.
   Future<bool> info({
@@ -286,16 +285,15 @@ class ModalApi {
     bool centered = false,
     double? top,
     Color? barrierColor,
-  }) =>
-      _acknowledge(
-        StatusType.info,
-        title,
-        content,
-        okText,
-        centered,
-        top,
-        barrierColor,
-      );
+  }) => _acknowledge(
+    StatusType.info,
+    title,
+    content,
+    okText,
+    centered,
+    top,
+    barrierColor,
+  );
 
   /// An acknowledgement confirming something succeeded.
   Future<bool> success({
@@ -305,16 +303,15 @@ class ModalApi {
     bool centered = false,
     double? top,
     Color? barrierColor,
-  }) =>
-      _acknowledge(
-        StatusType.success,
-        title,
-        content,
-        okText,
-        centered,
-        top,
-        barrierColor,
-      );
+  }) => _acknowledge(
+    StatusType.success,
+    title,
+    content,
+    okText,
+    centered,
+    top,
+    barrierColor,
+  );
 
   /// An acknowledgement reporting a failure.
   Future<bool> error({
@@ -324,16 +321,15 @@ class ModalApi {
     bool centered = false,
     double? top,
     Color? barrierColor,
-  }) =>
-      _acknowledge(
-        StatusType.error,
-        title,
-        content,
-        okText,
-        centered,
-        top,
-        barrierColor,
-      );
+  }) => _acknowledge(
+    StatusType.error,
+    title,
+    content,
+    okText,
+    centered,
+    top,
+    barrierColor,
+  );
 
   /// An acknowledgement flagging something that needs attention.
   Future<bool> warning({
@@ -343,16 +339,15 @@ class ModalApi {
     bool centered = false,
     double? top,
     Color? barrierColor,
-  }) =>
-      _acknowledge(
-        StatusType.warning,
-        title,
-        content,
-        okText,
-        centered,
-        top,
-        barrierColor,
-      );
+  }) => _acknowledge(
+    StatusType.warning,
+    title,
+    content,
+    okText,
+    centered,
+    top,
+    barrierColor,
+  );
 
   Future<bool> _acknowledge(
     StatusType type,
@@ -362,19 +357,18 @@ class ModalApi {
     bool centered,
     double? top,
     Color? barrierColor,
-  ) =>
-      open(
-        ModalConfig(
-          title: title == null ? null : Text(title),
-          content: content == null ? null : Text(content),
-          type: type,
-          okText: okText == null ? null : Text(okText),
-          showCancel: false,
-          centered: centered,
-          top: top,
-          barrierColor: barrierColor,
-        ),
-      );
+  ) => open(
+    ModalConfig(
+      title: title == null ? null : Text(title),
+      content: content == null ? null : Text(content),
+      type: type,
+      okText: okText == null ? null : Text(okText),
+      showCancel: false,
+      centered: centered,
+      top: top,
+      barrierColor: barrierColor,
+    ),
+  );
 
   /// Opens a fully configured modal.
   Future<bool> open(ModalConfig config) => _open(config);
@@ -546,10 +540,11 @@ class _ModalCardState extends State<_ModalCard>
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (_config.token ??
-            ConfigProvider.componentOf<ModalToken>(context) ??
-            const ModalToken())
-        ._resolve(token);
+    final r =
+        (_config.token ??
+                ConfigProvider.componentOf<ModalToken>(context) ??
+                const ModalToken())
+            ._resolve(token);
     final curved = CurvedAnimation(
       parent: _controller,
       curve: token.motionEaseOutCirc,
@@ -586,10 +581,10 @@ class _ModalCardState extends State<_ModalCard>
                 alignment: _config.centered
                     ? Alignment.center
                     : _config.top != null
-                        // An explicit offset pins the dialog to the top edge;
-                        // padding then pushes it down by that much.
-                        ? Alignment.topCenter
-                        : const Alignment(0, -0.6),
+                    // An explicit offset pins the dialog to the top edge;
+                    // padding then pushes it down by that much.
+                    ? Alignment.topCenter
+                    : const Alignment(0, -0.6),
                 child: Padding(
                   padding: EdgeInsets.only(
                     top: _config.centered ? 0 : (_config.top ?? 0),
@@ -620,9 +615,7 @@ class _ModalCardState extends State<_ModalCard>
     // meets a stack of loose text over a dimmed page and is not told that a
     // window has opened, nor which one — the routes it announces are the
     // ones a Navigator pushed, and this one is an overlay.
-    final close = CloseCross(
-      onPressed: () => widget.entry.dismiss(false),
-    );
+    final close = CloseCross(onPressed: () => widget.entry.dismiss(false));
 
     return Semantics(
       scopesRoute: true,

@@ -1,7 +1,9 @@
 import 'dart:ui' show SemanticsAction;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -11,8 +13,6 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child, {TextDirection direction = TextDirection.ltr}) =>
@@ -38,14 +38,18 @@ double _lit(WidgetTester tester) => tester
 
 /// The box of star [i], first star first.
 Rect _star(WidgetTester tester, int i) {
-  final boxes = tester
-      .widgetList<SizedBox>(
-        find.descendant(of: find.byType(Rate), matching: find.byType(SizedBox)),
-      )
-      .where((b) => b.width != null && b.width == b.height)
-      .map((b) => tester.getRect(find.byWidget(b)))
-      .toList()
-    ..sort((a, b) => a.left.compareTo(b.left));
+  final boxes =
+      tester
+          .widgetList<SizedBox>(
+            find.descendant(
+              of: find.byType(Rate),
+              matching: find.byType(SizedBox),
+            ),
+          )
+          .where((b) => b.width != null && b.width == b.height)
+          .map((b) => tester.getRect(find.byWidget(b)))
+          .toList()
+        ..sort((a, b) => a.left.compareTo(b.left));
   // Each star draws its glyph twice when lit; one box per position.
   final seen = <double>{};
   return boxes.where((b) => seen.add(b.left)).toList()[i];
@@ -61,9 +65,7 @@ void main() {
     expect(_lit(tester), 3);
   });
 
-  testWidgets('the rating given, tapped again, is taken back', (
-    tester,
-  ) async {
+  testWidgets('the rating given, tapped again, is taken back', (tester) async {
     final told = <double>[];
     await tester.pumpWidget(_host(Rate(defaultValue: 3, onChanged: told.add)));
     await tester.tapAt(_star(tester, 2).center);
@@ -89,9 +91,7 @@ void main() {
     tester,
   ) async {
     final told = <double>[];
-    await tester.pumpWidget(
-      _host(Rate(allowHalf: true, onChanged: told.add)),
-    );
+    await tester.pumpWidget(_host(Rate(allowHalf: true, onChanged: told.add)));
     final second = _star(tester, 1);
     await tester.tapAt(second.centerLeft + const Offset(2, 0));
     await tester.pump();
@@ -198,7 +198,8 @@ void main() {
     final told = <double>[];
     await tester.pumpWidget(
       _host(
-          Rate(defaultValue: 3, semanticsLabel: 'Rating', onChanged: told.add)),
+        Rate(defaultValue: 3, semanticsLabel: 'Rating', onChanged: told.add),
+      ),
     );
     final node = tester.getSemantics(find.byType(Rate));
     expect(node.label, 'Rating');

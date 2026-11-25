@@ -72,10 +72,12 @@ class RovingGroup extends StatelessWidget {
     return {
       SingleActivator(back): const _RovingIntent(RovingStep.back),
       SingleActivator(on): const _RovingIntent(RovingStep.on),
-      const SingleActivator(LogicalKeyboardKey.home):
-          const _RovingIntent(RovingStep.first),
-      const SingleActivator(LogicalKeyboardKey.end):
-          const _RovingIntent(RovingStep.last),
+      const SingleActivator(LogicalKeyboardKey.home): const _RovingIntent(
+        RovingStep.first,
+      ),
+      const SingleActivator(LogicalKeyboardKey.end): const _RovingIntent(
+        RovingStep.last,
+      ),
     };
   }
 

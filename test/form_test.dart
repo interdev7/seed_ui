@@ -1,19 +1,21 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart' as m;
 import 'package:flutter/services.dart' show TextCapitalization, TextInputType;
 import 'package:flutter/widgets.dart' hide Form;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' as m;
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child, {double width = 400}) => ConfigProvider(
-      child: m.MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: m.Scaffold(
-          body: Center(child: SizedBox(width: width, child: child)),
-        ),
+  child: m.MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: m.Scaffold(
+      body: Center(
+        child: SizedBox(width: width, child: child),
       ),
-    );
+    ),
+  ),
+);
 
 /// A field holding text, which is what most fields are.
 FormItem<String> _text(
@@ -25,23 +27,22 @@ FormItem<String> _text(
   Widget? extra,
   FormTrigger? trigger,
   bool? disabled,
-}) =>
-    FormItem<String>(
-      name: name,
-      label: label,
-      rules: rules,
-      initialValue: initialValue,
-      help: help,
-      extra: extra,
-      trigger: trigger,
-      disabled: disabled,
-      builder: (field) => Input(
-        value: field.value ?? '',
-        status: field.status,
-        disabled: field.disabled,
-        onChanged: field.didChange,
-      ),
-    );
+}) => FormItem<String>(
+  name: name,
+  label: label,
+  rules: rules,
+  initialValue: initialValue,
+  help: help,
+  extra: extra,
+  trigger: trigger,
+  disabled: disabled,
+  builder: (field) => Input(
+    value: field.value ?? '',
+    status: field.status,
+    disabled: field.disabled,
+    onChanged: field.didChange,
+  ),
+);
 
 void main() {
   _revealTests();
@@ -61,8 +62,9 @@ void main() {
       expect(form.values, {'name': 'Ann'});
     });
 
-    testWidgets('what the form was told to start with is there at once',
-        (tester) async {
+    testWidgets('what the form was told to start with is there at once', (
+      tester,
+    ) async {
       final form = FormController();
       await tester.pumpWidget(
         _host(
@@ -79,27 +81,33 @@ void main() {
       expect(find.text('Ann'), findsOneWidget);
     });
 
-    testWidgets("a field's own starting value fills in where the form is quiet",
-        (tester) async {
-      final form = FormController();
-      await tester.pumpWidget(
-        _host(
-          Form(
-            controller: form,
-            initialValues: const {'a': 'from the form'},
-            child: Column(
-              children: [
-                _text('a', initialValue: 'from the field'),
-                _text('b', initialValue: 'from the field'),
-              ],
+    testWidgets(
+      "a field's own starting value fills in where the form is quiet",
+      (tester) async {
+        final form = FormController();
+        await tester.pumpWidget(
+          _host(
+            Form(
+              controller: form,
+              initialValues: const {'a': 'from the form'},
+              child: Column(
+                children: [
+                  _text('a', initialValue: 'from the field'),
+                  _text('b', initialValue: 'from the field'),
+                ],
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(form.value('a'), 'from the form', reason: 'the form has the say');
-      expect(form.value('b'), 'from the field');
-    });
+        expect(
+          form.value('a'),
+          'from the form',
+          reason: 'the form has the say',
+        );
+        expect(form.value('b'), 'from the field');
+      },
+    );
 
     testWidgets('setting a value from outside reaches the box', (tester) async {
       final form = FormController();
@@ -144,7 +152,12 @@ void main() {
     ) async {
       final form = FormController();
       await tester.pumpWidget(
-        _host(Form(controller: form, child: _text('f', rules: rules))),
+        _host(
+          Form(
+            controller: form,
+            child: _text('f', rules: rules),
+          ),
+        ),
       );
       await tester.enterText(find.byType(Input), typed);
       await tester.pumpAndSettle();
@@ -154,22 +167,32 @@ void main() {
     }
 
     testWidgets('required refuses what is not there', (tester) async {
-      expect(await saidOf(tester, const [FormRule.required()], ''),
-          'This field is required');
       expect(
-          await saidOf(tester, const [FormRule.required()], '   '), isNotNull,
-          reason: 'spaces are not an answer');
+        await saidOf(tester, const [FormRule.required()], ''),
+        'This field is required',
+      );
+      expect(
+        await saidOf(tester, const [FormRule.required()], '   '),
+        isNotNull,
+        reason: 'spaces are not an answer',
+      );
       expect(await saidOf(tester, const [FormRule.required()], 'x'), isNull);
     });
 
     testWidgets('email and url know what they are looking at', (tester) async {
-      expect(await saidOf(tester, const [FormRule.email()], 'nope'),
-          'Enter a valid email address');
-      expect(await saidOf(tester, const [FormRule.email()], 'a@b.co'), isNull);
-      expect(await saidOf(tester, const [FormRule.url()], 'not a url'),
-          'Enter a valid web address');
       expect(
-          await saidOf(tester, const [FormRule.url()], 'https://a.co'), isNull);
+        await saidOf(tester, const [FormRule.email()], 'nope'),
+        'Enter a valid email address',
+      );
+      expect(await saidOf(tester, const [FormRule.email()], 'a@b.co'), isNull);
+      expect(
+        await saidOf(tester, const [FormRule.url()], 'not a url'),
+        'Enter a valid web address',
+      );
+      expect(
+        await saidOf(tester, const [FormRule.url()], 'https://a.co'),
+        isNull,
+      );
 
       // An empty value is the business of `required`, not of these: a field
       // that may be left blank should not be told its blank is a bad address.
@@ -180,18 +203,19 @@ void main() {
       expect(await saidOf(tester, const [FormRule.min(3)], 'ab'), 'At least 3');
       expect(await saidOf(tester, const [FormRule.min(3)], 'abc'), isNull);
       expect(
-          await saidOf(tester, const [FormRule.max(3)], 'abcd'), 'At most 3');
+        await saidOf(tester, const [FormRule.max(3)], 'abcd'),
+        'At most 3',
+      );
       expect(await saidOf(tester, const [FormRule.max(3)], 'abc'), isNull);
     });
 
-    testWidgets('a message of your own takes the place of the kit\'s',
-        (tester) async {
+    testWidgets('a message of your own takes the place of the kit\'s', (
+      tester,
+    ) async {
       expect(
-        await saidOf(
-          tester,
-          const [FormRule.required(message: 'We need this')],
-          '',
-        ),
+        await saidOf(tester, const [
+          FormRule.required(message: 'We need this'),
+        ], ''),
         'We need this',
       );
     });
@@ -200,16 +224,16 @@ void main() {
       // Both of these fail on 'ab': it is too short and it is not an email.
       // A field that lists everything wrong with a value at once reads as
       // scolding, so the first is the one worth reading.
-      final said = await saidOf(
-        tester,
-        const [FormRule.min(5), FormRule.email()],
-        'ab',
-      );
+      final said = await saidOf(tester, const [
+        FormRule.min(5),
+        FormRule.email(),
+      ], 'ab');
       expect(said, 'At least 5');
     });
 
-    testWidgets('a rule that only warns does not stand in the way',
-        (tester) async {
+    testWidgets('a rule that only warns does not stand in the way', (
+      tester,
+    ) async {
       final form = FormController();
       var finished = false;
       await tester.pumpWidget(
@@ -217,9 +241,12 @@ void main() {
           Form(
             controller: form,
             onFinish: (_) => finished = true,
-            child: _text('f', rules: const [
-              FormRule.min(5, warningOnly: true, message: 'Rather short'),
-            ]),
+            child: _text(
+              'f',
+              rules: const [
+                FormRule.min(5, warningOnly: true, message: 'Rather short'),
+              ],
+            ),
           ),
         ),
       );
@@ -240,12 +267,15 @@ void main() {
         _host(
           Form(
             controller: form,
-            child: _text('f', rules: [
-              FormRule.custom((value) async {
-                await Future<void>.delayed(const Duration(milliseconds: 10));
-                return value == 'taken' ? 'That one is spoken for' : null;
-              }),
-            ]),
+            child: _text(
+              'f',
+              rules: [
+                FormRule.custom((value) async {
+                  await Future<void>.delayed(const Duration(milliseconds: 10));
+                  return value == 'taken' ? 'That one is spoken for' : null;
+                }),
+              ],
+            ),
           ),
         ),
       );
@@ -352,8 +382,9 @@ void main() {
       expect(finished, {'f': 'Ann'});
     });
 
-    testWidgets('a form makes a controller of its own where none is given',
-        (tester) async {
+    testWidgets('a form makes a controller of its own where none is given', (
+      tester,
+    ) async {
       Map<String, Object?>? finished;
       await tester.pumpWidget(
         _host(
@@ -406,9 +437,7 @@ void main() {
   group('what submitting does besides validating', () {
     testWidgets('the keyboard goes away', (tester) async {
       final form = FormController();
-      await tester.pumpWidget(
-        _host(Form(controller: form, child: _text('f'))),
-      );
+      await tester.pumpWidget(_host(Form(controller: form, child: _text('f'))));
 
       await tester.tap(find.byType(Input));
       await tester.pumpAndSettle();
@@ -420,19 +449,18 @@ void main() {
 
       await form.submit();
       await tester.pumpAndSettle();
-      expect(typing(), isFalse,
-          reason: 'a form that has been sent is not being typed into');
+      expect(
+        typing(),
+        isFalse,
+        reason: 'a form that has been sent is not being typed into',
+      );
     });
 
     testWidgets('unless the form would rather it stayed', (tester) async {
       final form = FormController();
       await tester.pumpWidget(
         _host(
-          Form(
-            controller: form,
-            unfocusOnSubmit: false,
-            child: _text('f'),
-          ),
+          Form(controller: form, unfocusOnSubmit: false, child: _text('f')),
         ),
       );
 
@@ -458,15 +486,18 @@ void main() {
         _host(
           Form(
             controller: form,
-            child: _text('f', rules: [
-              FormRule.custom((value) async {
-                // The shorter the value, the slower the answer.
-                await Future<void>.delayed(
-                  Duration(milliseconds: 200 - '$value'.length * 20),
-                );
-                return '$value' == 'admin' ? 'That one is spoken for' : null;
-              }),
-            ]),
+            child: _text(
+              'f',
+              rules: [
+                FormRule.custom((value) async {
+                  // The shorter the value, the slower the answer.
+                  await Future<void>.delayed(
+                    Duration(milliseconds: 200 - '$value'.length * 20),
+                  );
+                  return '$value' == 'admin' ? 'That one is spoken for' : null;
+                }),
+              ],
+            ),
           ),
         ),
       );
@@ -478,8 +509,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(form.value('f'), 'admins');
-      expect(form.error('f'), isNull,
-          reason: 'the answer about a value nobody is holding is stale');
+      expect(
+        form.error('f'),
+        isNull,
+        reason: 'the answer about a value nobody is holding is stale',
+      );
     });
   });
 
@@ -494,8 +528,11 @@ void main() {
             controller: form,
             child: Column(
               children: [
-                _text('locked',
-                    disabled: true, rules: const [FormRule.required()]),
+                _text(
+                  'locked',
+                  disabled: true,
+                  rules: const [FormRule.required()],
+                ),
                 _text('open', rules: const [FormRule.required()]),
               ],
             ),
@@ -514,12 +551,15 @@ void main() {
     testWidgets('a message goes when the field is barred', (tester) async {
       final form = FormController();
       Widget table({required bool locked}) => _host(
-            Form(
-              controller: form,
-              child: _text('f',
-                  disabled: locked, rules: const [FormRule.required()]),
-            ),
-          );
+        Form(
+          controller: form,
+          child: _text(
+            'f',
+            disabled: locked,
+            rules: const [FormRule.required()],
+          ),
+        ),
+      );
 
       await tester.pumpWidget(table(locked: false));
       await form.validate();
@@ -535,11 +575,7 @@ void main() {
 
     testWidgets('two fields cannot share a name', (tester) async {
       await tester.pumpWidget(
-        _host(
-          Form(
-            child: Column(children: [_text('same'), _text('same')]),
-          ),
-        ),
+        _host(Form(child: Column(children: [_text('same'), _text('same')]))),
       );
       // Silently, the second would take the first's place: only one would be
       // validated and both would write to the same value. Complained about
@@ -557,9 +593,11 @@ void main() {
           Form(
             child: Column(
               children: [
-                _text('a',
-                    label: const Text('Asked'),
-                    rules: const [FormRule.required()]),
+                _text(
+                  'a',
+                  label: const Text('Asked'),
+                  rules: const [FormRule.required()],
+                ),
                 _text('b', label: const Text('Not asked')),
               ],
             ),
@@ -571,17 +609,20 @@ void main() {
       expect(find.text('*'), findsOneWidget);
     });
 
-    testWidgets('or the other way about, where nearly all are required',
-        (tester) async {
+    testWidgets('or the other way about, where nearly all are required', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Form(
             requiredMark: FormRequiredMark.optional,
             child: Column(
               children: [
-                _text('a',
-                    label: const Text('Asked'),
-                    rules: const [FormRule.required()]),
+                _text(
+                  'a',
+                  label: const Text('Asked'),
+                  rules: const [FormRule.required()],
+                ),
                 _text('b', label: const Text('Not asked')),
               ],
             ),
@@ -593,8 +634,9 @@ void main() {
       expect(find.text('(optional)'), findsOneWidget);
     });
 
-    testWidgets('a label and its mark fit the column they were given',
-        (tester) async {
+    testWidgets('a label and its mark fit the column they were given', (
+      tester,
+    ) async {
       // The word marking a field optional stands beside the label, and in a
       // column narrow enough to be worth naming a width for the two together
       // are easily more than there is room for.
@@ -613,8 +655,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('help stands in place of what the rules would say',
-        (tester) async {
+    testWidgets('help stands in place of what the rules would say', (
+      tester,
+    ) async {
       final form = FormController();
       await tester.pumpWidget(
         _host(
@@ -656,8 +699,9 @@ void main() {
       expect(find.text('This field is required'), findsOneWidget);
     });
 
-    testWidgets('a label stands above or beside, as the form says',
-        (tester) async {
+    testWidgets('a label stands above or beside, as the form says', (
+      tester,
+    ) async {
       Future<Rect> labelAt(FormLayout layout) async {
         await tester.pumpWidget(
           _host(
@@ -682,18 +726,19 @@ void main() {
       expect(beside.top, lessThan(field.bottom));
     });
 
-    testWidgets('a label beside its field is level with the words in it',
-        (tester) async {
+    testWidgets('a label beside its field is level with the words in it', (
+      tester,
+    ) async {
       Future<void> show({String? help}) => tester.pumpWidget(
-            _host(
-              Form(
-                layout: FormLayout.horizontal,
-                labelWidth: 96,
-                initialValues: const {'name': 'Ann'},
-                child: _text('name', label: const Text('Name'), help: help),
-              ),
-            ),
-          );
+        _host(
+          Form(
+            layout: FormLayout.horizontal,
+            labelWidth: 96,
+            initialValues: const {'name': 'Ann'},
+            child: _text('name', label: const Text('Name'), help: help),
+          ),
+        ),
+      );
 
       // Centred against the control, not reckoned from font metrics: an
       // arithmetic guess left the two a pixel or two apart.
@@ -714,8 +759,9 @@ void main() {
       );
     });
 
-    testWidgets('an inline field is given a width to lay itself out in',
-        (tester) async {
+    testWidgets('an inline field is given a width to lay itself out in', (
+      tester,
+    ) async {
       // A `Row` hands a child carrying no flex an unbounded width along its
       // main axis, and a control that fills what it is given cannot lay
       // itself out in infinity — which is a thrown assertion, not a wonky
@@ -743,19 +789,16 @@ void main() {
       expect(box.width, lessThan(200), reason: 'the label took its share');
     });
 
-    testWidgets('a form may bar every field at once, or one alone',
-        (tester) async {
-      await tester.pumpWidget(
-        _host(Form(disabled: true, child: _text('f'))),
-      );
+    testWidgets('a form may bar every field at once, or one alone', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_host(Form(disabled: true, child: _text('f'))));
       expect(tester.widget<Input>(find.byType(Input)).disabled, isTrue);
 
       await tester.pumpWidget(
         _host(
           Form(
-            child: Column(
-              children: [_text('a', disabled: true), _text('b')],
-            ),
+            child: Column(children: [_text('a', disabled: true), _text('b')]),
           ),
         ),
       );
@@ -899,8 +942,9 @@ void main() {
           ),
         ),
       );
-      final picker =
-          tester.widget<DateRangePicker>(find.byType(DateRangePicker));
+      final picker = tester.widget<DateRangePicker>(
+        find.byType(DateRangePicker),
+      );
       expect(picker.value, span);
       expect(picker.readOnly, isTrue);
     });
@@ -952,28 +996,30 @@ void main() {
       expect(form.value('period'), 'week');
     });
 
-    testWidgets('an upload field adds what is picked and drops what is removed',
-        (tester) async {
-      final form = FormController();
-      await tester.pumpWidget(
-        _host(
-          Form(
-            controller: form,
-            child: FormItem.upload<String>(
-              name: 'files',
-              pick: () async => const [
-                UploadItem(name: 'a.pdf', status: UploadStatus.done),
-              ],
+    testWidgets(
+      'an upload field adds what is picked and drops what is removed',
+      (tester) async {
+        final form = FormController();
+        await tester.pumpWidget(
+          _host(
+            Form(
+              controller: form,
+              child: FormItem.upload<String>(
+                name: 'files',
+                pick: () async => const [
+                  UploadItem(name: 'a.pdf', status: UploadStatus.done),
+                ],
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('Choose a file'));
-      await tester.pumpAndSettle();
-      final held = form.value('files')! as List<UploadItem<String>>;
-      expect(held.map((f) => f.name), ['a.pdf']);
-    });
+        await tester.tap(find.text('Choose a file'));
+        await tester.pumpAndSettle();
+        final held = form.value('files')! as List<UploadItem<String>>;
+        expect(held.map((f) => f.name), ['a.pdf']);
+      },
+    );
 
     testWidgets('a number field holds numbers', (tester) async {
       final form = FormController();
@@ -999,8 +1045,9 @@ void main() {
       expect(await form.validate(), isFalse, reason: 'a rule counts the value');
     });
 
-    testWidgets('the ticking and toggling kinds hold a yes or no',
-        (tester) async {
+    testWidgets('the ticking and toggling kinds hold a yes or no', (
+      tester,
+    ) async {
       final form = FormController();
       await tester.pumpWidget(
         _host(
@@ -1095,8 +1142,9 @@ void main() {
       expect(form.value('tags'), const ['a']);
       // The many-kind asks its control for several, where the single one
       // asks for one: the same widget, told a different mode.
-      final selects =
-          tester.widgetList<Select<String>>(find.byType(Select<String>));
+      final selects = tester.widgetList<Select<String>>(
+        find.byType(Select<String>),
+      );
       expect(selects.first.mode, SelectMode.single);
       expect(selects.last.mode, SelectMode.multiple);
     });
@@ -1124,8 +1172,9 @@ void main() {
       expect(form.value('budget'), 40);
     });
 
-    testWidgets("one of a kind still carries the form's own words",
-        (tester) async {
+    testWidgets("one of a kind still carries the form's own words", (
+      tester,
+    ) async {
       // Everything a FormItem can be told, a kind of one can be told too.
       final form = FormController();
       await tester.pumpWidget(
@@ -1166,52 +1215,49 @@ void _listTests() {
       FormController controller, {
       int initialCount = 1,
       List<FormRule> rules = const [],
-    }) =>
-        _host(
-          Form(
-            controller: controller,
-            child: FormList(
-              name: 'passengers',
-              initialCount: initialCount,
-              rules: rules,
-              builder: (context, list) => Column(
-                children: [
-                  for (final row in list.entries)
-                    Row(
-                      key: ValueKey(row.key),
-                      children: [
-                        Expanded(
-                          child: FormItem.text(
-                            name: row.name,
-                            placeholder: 'passenger ${row.index}',
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => list.remove(row),
-                          child: Text('drop ${row.index}'),
-                        ),
-                      ],
+    }) => _host(
+      Form(
+        controller: controller,
+        child: FormList(
+          name: 'passengers',
+          initialCount: initialCount,
+          rules: rules,
+          builder: (context, list) => Column(
+            children: [
+              for (final row in list.entries)
+                Row(
+                  key: ValueKey(row.key),
+                  children: [
+                    Expanded(
+                      child: FormItem.text(
+                        name: row.name,
+                        placeholder: 'passenger ${row.index}',
+                      ),
                     ),
-                  GestureDetector(
-                    onTap: list.add,
-                    child: const Text('add'),
-                  ),
-                  GestureDetector(
-                    onTap: () => list.addAt(0),
-                    child: const Text('add at head'),
-                  ),
-                  GestureDetector(
-                    onTap: () => list.move(0, 1),
-                    child: const Text('move'),
-                  ),
-                ],
+                    GestureDetector(
+                      onTap: () => list.remove(row),
+                      child: Text('drop ${row.index}'),
+                    ),
+                  ],
+                ),
+              GestureDetector(onTap: list.add, child: const Text('add')),
+              GestureDetector(
+                onTap: () => list.addAt(0),
+                child: const Text('add at head'),
               ),
-            ),
+              GestureDetector(
+                onTap: () => list.move(0, 1),
+                child: const Text('move'),
+              ),
+            ],
           ),
-        );
+        ),
+      ),
+    );
 
-    testWidgets('rows are added, filled and handed back in order',
-        (tester) async {
+    testWidgets('rows are added, filled and handed back in order', (
+      tester,
+    ) async {
       final controller = FormController();
       addTearDown(controller.dispose);
       await tester.pumpWidget(passengers(controller));
@@ -1226,8 +1272,9 @@ void _listTests() {
       expect(controller.values['passengers'], ['Ann', 'Bo']);
     });
 
-    testWidgets('taking a row out does not slide the others up',
-        (tester) async {
+    testWidgets('taking a row out does not slide the others up', (
+      tester,
+    ) async {
       // The whole reason a row is known by a key and not by its place. Named
       // after the index, dropping the middle row would renumber the last one
       // into the name the middle row was using — and its value with it.
@@ -1387,14 +1434,16 @@ void _widthTests() {
       return measured;
     }
 
-    testWidgets('a form fills what it is given, unless it is capped',
-        (tester) async {
+    testWidgets('a form fills what it is given, unless it is capped', (
+      tester,
+    ) async {
       expect(await fieldWidth(tester), 700);
       expect(await fieldWidth(tester, maxWidth: 360), 360);
     });
 
-    testWidgets('a capped form stands against the leading edge',
-        (tester) async {
+    testWidgets('a capped form stands against the leading edge', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Form(
@@ -1411,8 +1460,9 @@ void _widthTests() {
       expect(field.left, page.left);
     });
 
-    testWidgets('a window narrower than the cap still gets all of it',
-        (tester) async {
+    testWidgets('a window narrower than the cap still gets all of it', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Form(
@@ -1431,23 +1481,23 @@ void _widthTests() {
 void _dependsOnTests() {
   group('fields that depend on one another', () {
     Widget signup(FormController controller) => _host(
-          Form(
-            controller: controller,
-            child: Column(
-              children: [
-                FormItem.text(name: 'password', label: const Text('Password')),
-                FormItem.text(
-                  name: 'confirm',
-                  label: const Text('Confirm'),
-                  dependsOn: const ['password'],
-                  rules: const [
-                    FormRule.matches('password', message: 'They differ'),
-                  ],
-                ),
+      Form(
+        controller: controller,
+        child: Column(
+          children: [
+            FormItem.text(name: 'password', label: const Text('Password')),
+            FormItem.text(
+              name: 'confirm',
+              label: const Text('Confirm'),
+              dependsOn: const ['password'],
+              rules: const [
+                FormRule.matches('password', message: 'They differ'),
               ],
             ),
-          ),
-        );
+          ],
+        ),
+      ),
+    );
 
     testWidgets('a rule may measure one field against another', (tester) async {
       final controller = FormController();
@@ -1462,8 +1512,9 @@ void _dependsOnTests() {
       expect(find.text('They differ'), findsOneWidget);
     });
 
-    testWidgets('putting the other field right clears the message',
-        (tester) async {
+    testWidgets('putting the other field right clears the message', (
+      tester,
+    ) async {
       // The point of the whole thing: the message stands on the field nobody
       // is touching, so nothing but an echo can take it away.
       final controller = FormController();
@@ -1560,8 +1611,9 @@ void _dependsOnTests() {
       expect(find.text('The end comes first'), findsNothing);
     });
 
-    testWidgets('a comparison that names nothing is complained about',
-        (tester) async {
+    testWidgets('a comparison that names nothing is complained about', (
+      tester,
+    ) async {
       final controller = FormController();
       addTearDown(controller.dispose);
       await tester.pumpWidget(
@@ -1619,36 +1671,36 @@ void _revealTests() {
       required Set<int> required,
       bool reveal = true,
       bool upwards = false,
-    }) =>
-        ConfigProvider(
-          child: m.MaterialApp(
-            navigatorKey: UiKit.navigatorKey,
-            home: m.Scaffold(
-              body: SingleChildScrollView(
-                child: Form(
-                  controller: form,
-                  scrollToFirstError: reveal,
-                  child: Column(
-                    // Built top to bottom, drawn bottom to top: the order the
-                    // fields register in is then not the order on the screen.
-                    verticalDirection:
-                        upwards ? VerticalDirection.up : VerticalDirection.down,
-                    children: [
-                      for (var i = 0; i < 20; i++)
-                        FormItem.text(
-                          name: 'f$i',
-                          label: Text('Field $i'),
-                          rules: [
-                            if (required.contains(i)) const FormRule.required(),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
+    }) => ConfigProvider(
+      child: m.MaterialApp(
+        navigatorKey: UiKit.navigatorKey,
+        home: m.Scaffold(
+          body: SingleChildScrollView(
+            child: Form(
+              controller: form,
+              scrollToFirstError: reveal,
+              child: Column(
+                // Built top to bottom, drawn bottom to top: the order the
+                // fields register in is then not the order on the screen.
+                verticalDirection: upwards
+                    ? VerticalDirection.up
+                    : VerticalDirection.down,
+                children: [
+                  for (var i = 0; i < 20; i++)
+                    FormItem.text(
+                      name: 'f$i',
+                      label: Text('Field $i'),
+                      rules: [
+                        if (required.contains(i)) const FormRule.required(),
+                      ],
+                    ),
+                ],
               ),
             ),
           ),
-        );
+        ),
+      ),
+    );
 
     bool onScreen(WidgetTester tester, String label) {
       final rect = tester.getRect(find.text(label));
@@ -1656,29 +1708,31 @@ void _revealTests() {
       return rect.top >= 0 && rect.bottom <= screen.height;
     }
 
-    testWidgets('a field below the fold is brought up, with the keyboard in it',
-        (tester) async {
-      final form = FormController();
-      await tester.pumpWidget(long(form, required: {15}));
-      expect(onScreen(tester, 'Field 15'), isFalse, reason: 'to begin with');
+    testWidgets(
+      'a field below the fold is brought up, with the keyboard in it',
+      (tester) async {
+        final form = FormController();
+        await tester.pumpWidget(long(form, required: {15}));
+        expect(onScreen(tester, 'Field 15'), isFalse, reason: 'to begin with');
 
-      unawaited(form.submit());
-      await tester.pumpAndSettle();
+        unawaited(form.submit());
+        await tester.pumpAndSettle();
 
-      expect(onScreen(tester, 'Field 15'), isTrue);
-      final focused = FocusManager.instance.primaryFocus!.context!;
-      expect(
-        find.descendant(
-          of: find.ancestor(
-            of: find.text('Field 15'),
-            matching: find.byType(FormItem<String>),
+        expect(onScreen(tester, 'Field 15'), isTrue);
+        final focused = FocusManager.instance.primaryFocus!.context!;
+        expect(
+          find.descendant(
+            of: find.ancestor(
+              of: find.text('Field 15'),
+              matching: find.byType(FormItem<String>),
+            ),
+            matching: find.byElementPredicate((e) => e == focused),
           ),
-          matching: find.byElementPredicate((e) => e == focused),
-        ),
-        findsOneWidget,
-        reason: 'the keyboard is in the field that was refused',
-      );
-    });
+          findsOneWidget,
+          reason: 'the keyboard is in the field that was refused',
+        );
+      },
+    );
 
     testWidgets('of two, the one higher up, not the one added first', (
       tester,

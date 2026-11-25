@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,13 +9,12 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(body: child),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(body: child),
+);
 
 /// Runs an enter or exit animation to completion.
 ///
@@ -29,8 +29,9 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('message.success shows a card and auto-dismisses it',
-      (tester) async {
+  testWidgets('message.success shows a card and auto-dismisses it', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host(const SizedBox()));
 
     message.success('Saved', duration: const Duration(seconds: 1));
@@ -59,9 +60,7 @@ void main() {
     message.config(maxCount: 2);
 
     for (final text in ['first', 'second', 'third']) {
-      message.open(
-        MessageConfig(content: Text(text), duration: Duration.zero),
-      );
+      message.open(MessageConfig(content: Text(text), duration: Duration.zero));
     }
     await _settle(tester);
 
@@ -74,8 +73,9 @@ void main() {
     await _settle(tester);
   });
 
-  testWidgets('Button fires onPressed but stays inert while loading',
-      (tester) async {
+  testWidgets('Button fires onPressed but stays inert while loading', (
+    tester,
+  ) async {
     var taps = 0;
     await tester.pumpWidget(
       _host(
@@ -124,8 +124,9 @@ void main() {
       await reset(tester);
     });
 
-    testWidgets('placement: bottom anchors it to the other edge',
-        (tester) async {
+    testWidgets('placement: bottom anchors it to the other edge', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(const SizedBox()));
 
       message.info(
@@ -217,8 +218,9 @@ void main() {
       await reset(tester);
     });
 
-    testWidgets('a reused key replaces a toast on the other edge too',
-        (tester) async {
+    testWidgets('a reused key replaces a toast on the other edge too', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(const SizedBox()));
 
       message.info('Old', duration: Duration.zero, key: 'k');

@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart'
     show PointerDeviceKind, kLongPressTimeout;
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -10,27 +12,25 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/services.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// A ring of progress round a float button, a button that takes a page back
 /// to its top, and a button a hand can carry out of the way.
 
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(body: child),
-      ),
-    );
+  child: MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(body: child),
+  ),
+);
 
 /// The painter a float button's ring is drawn with, by its type's name: it is
 /// the kit's own, and a test has no business importing it.
 Finder _ring() => find.byWidgetPredicate(
-      (w) =>
-          w is CustomPaint &&
-          w.foregroundPainter.runtimeType.toString() == '_ProgressRingPainter',
-    );
+  (w) =>
+      w is CustomPaint &&
+      w.foregroundPainter.runtimeType.toString() == '_ProgressRingPainter',
+);
 
 void main() {
   group('a ring of progress', () {
@@ -46,11 +46,7 @@ void main() {
         await tester.pumpWidget(
           _host(
             Center(
-              child: FloatButton(
-                shape: shape,
-                progress: 0.4,
-                onPressed: () {},
-              ),
+              child: FloatButton(shape: shape, progress: 0.4, onPressed: () {}),
             ),
           ),
         );
@@ -77,10 +73,7 @@ void main() {
           ),
         ),
       );
-      expect(
-        find.bySemanticsLabel('Upload'),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel('Upload'), findsOneWidget);
       expect(tester.getSemantics(find.bySemanticsLabel('Upload')).value, '25%');
       semantics.dispose();
     });
@@ -90,7 +83,11 @@ void main() {
     ) async {
       for (final wild in [-1.0, 3.0]) {
         await tester.pumpWidget(
-          _host(Center(child: FloatButton(progress: wild, onPressed: () {}))),
+          _host(
+            Center(
+              child: FloatButton(progress: wild, onPressed: () {}),
+            ),
+          ),
         );
         expect(tester.takeException(), isNull);
       }
@@ -105,31 +102,30 @@ void main() {
       bool showProgress = false,
       VoidCallback? onPressed,
       Duration duration = const Duration(milliseconds: 450),
-    }) =>
-        _host(
-          Stack(
+    }) => _host(
+      Stack(
+        children: [
+          ListView(
+            controller: controller,
             children: [
-              ListView(
-                controller: controller,
-                children: [
-                  for (var i = 0; i < 100; i++)
-                    SizedBox(height: 50, child: Text('row $i')),
-                ],
-              ),
-              Positioned(
-                right: 24,
-                bottom: 24,
-                child: BackTop(
-                  controller: controller,
-                  visibilityHeight: visibilityHeight,
-                  showProgress: showProgress,
-                  onPressed: onPressed,
-                  duration: duration,
-                ),
-              ),
+              for (var i = 0; i < 100; i++)
+                SizedBox(height: 50, child: Text('row $i')),
             ],
           ),
-        );
+          Positioned(
+            right: 24,
+            bottom: 24,
+            child: BackTop(
+              controller: controller,
+              visibilityHeight: visibilityHeight,
+              showProgress: showProgress,
+              onPressed: onPressed,
+              duration: duration,
+            ),
+          ),
+        ],
+      ),
+    );
 
     double opacity(WidgetTester tester) => tester
         .widget<AnimatedOpacity>(
@@ -188,8 +184,11 @@ void main() {
       await tester.tap(find.byType(BackTop));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
-      expect(controller.offset, greaterThan(0),
-          reason: 'on its way, not there');
+      expect(
+        controller.offset,
+        greaterThan(0),
+        reason: 'on its way, not there',
+      );
       expect(controller.offset, lessThan(2000));
 
       await tester.pumpAndSettle();
@@ -197,9 +196,7 @@ void main() {
       expect(pressed, 1);
     });
 
-    testWidgets('where motion is turned down, it goes at once', (
-      tester,
-    ) async {
+    testWidgets('where motion is turned down, it goes at once', (tester) async {
       final controller = ScrollController();
       addTearDown(controller.dispose);
       await tester.pumpWidget(
@@ -303,26 +300,25 @@ void main() {
       Offset? offset,
       ValueChanged<Offset>? onOffsetChanged,
       VoidCallback? onPressed,
-    }) =>
-        _host(
-          Stack(
-            children: [
-              Positioned(
-                right: 24,
-                bottom: 24,
-                child: FloatButton(
-                  key: const Key('fab'),
-                  draggable: draggable,
-                  dragStart: dragStart,
-                  token: token,
-                  offset: offset,
-                  onOffsetChanged: onOffsetChanged,
-                  onPressed: onPressed ?? () {},
-                ),
-              ),
-            ],
+    }) => _host(
+      Stack(
+        children: [
+          Positioned(
+            right: 24,
+            bottom: 24,
+            child: FloatButton(
+              key: const Key('fab'),
+              draggable: draggable,
+              dragStart: dragStart,
+              token: token,
+              offset: offset,
+              onOffsetChanged: onOffsetChanged,
+              onPressed: onPressed ?? () {},
+            ),
           ),
-        );
+        ],
+      ),
+    );
 
     Rect at(WidgetTester tester) => tester.getRect(find.byType(Button));
 
@@ -484,8 +480,10 @@ void main() {
           },
         );
         addTearDown(
-          () => tester.binding.defaultBinaryMessenger
-              .setMockMethodCallHandler(SystemChannels.platform, null),
+          () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            SystemChannels.platform,
+            null,
+          ),
         );
         var pressed = 0;
         await tester.pumpWidget(held(onPressed: () => pressed++));
@@ -502,8 +500,9 @@ void main() {
         await hand.moveBy(const Offset(-60, -110));
         await tester.pump();
         expect(
-            ((at(tester).center - before) - const Offset(-120, -200)).distance,
-            lessThan(1));
+          ((at(tester).center - before) - const Offset(-120, -200)).distance,
+          lessThan(1),
+        );
 
         await hand.up();
         await tester.pumpAndSettle();
@@ -531,8 +530,9 @@ void main() {
       expect(at(tester), before);
     });
 
-    testWidgets('a group is shut as it is carried, and opens where it is put',
-        (tester) async {
+    testWidgets('a group is shut as it is carried, and opens where it is put', (
+      tester,
+    ) async {
       var open = false;
       await tester.pumpWidget(
         _host(
@@ -569,8 +569,11 @@ void main() {
       await tester.tap(find.byType(FloatButton).first);
       await tester.pumpAndSettle();
       final item = tester.getCenter(find.byIcon(Icons.edit));
-      expect((item - put).distance, lessThan(150),
-          reason: 'it opens from the trigger, where it now is');
+      expect(
+        (item - put).distance,
+        lessThan(150),
+        reason: 'it opens from the trigger, where it now is',
+      );
     });
   });
 }

@@ -218,41 +218,41 @@ class ButtonToken {
   final FontWeight? fontWeight;
 
   _ResolvedButtonToken _resolve(Token t) => _ResolvedButtonToken(
-        fontWeight: fontWeight ?? t.fontWeight,
-        borderRadius: borderRadius ?? t.borderRadius,
-        borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
-        borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
-        controlHeight: controlHeight ?? t.controlHeight,
-        controlHeightSM: controlHeightSM ?? t.controlHeightSM,
-        controlHeightLG: controlHeightLG ?? t.controlHeightLG,
-        fontSize: fontSize ?? t.fontSize,
-        fontSizeSM: fontSizeSM ?? t.fontSizeSM,
-        fontSizeLG: fontSizeLG ?? t.fontSizeLG,
-        paddingInline: paddingInline ?? t.sizeSM,
-        paddingInlineSM: paddingInlineSM ?? t.sizeXS,
-        paddingInlineLG: paddingInlineLG ?? t.size,
-        iconGap: iconGap ?? t.sizeXS,
-        shadow: shadow,
-      );
+    fontWeight: fontWeight ?? t.fontWeight,
+    borderRadius: borderRadius ?? t.borderRadius,
+    borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
+    borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
+    controlHeight: controlHeight ?? t.controlHeight,
+    controlHeightSM: controlHeightSM ?? t.controlHeightSM,
+    controlHeightLG: controlHeightLG ?? t.controlHeightLG,
+    fontSize: fontSize ?? t.fontSize,
+    fontSizeSM: fontSizeSM ?? t.fontSizeSM,
+    fontSizeLG: fontSizeLG ?? t.fontSizeLG,
+    paddingInline: paddingInline ?? t.sizeSM,
+    paddingInlineSM: paddingInlineSM ?? t.sizeXS,
+    paddingInlineLG: paddingInlineLG ?? t.size,
+    iconGap: iconGap ?? t.sizeXS,
+    shadow: shadow,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ButtonToken merge(ButtonToken other) => ButtonToken(
-        borderRadius: other.borderRadius ?? borderRadius,
-        borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
-        borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
-        controlHeight: other.controlHeight ?? controlHeight,
-        controlHeightSM: other.controlHeightSM ?? controlHeightSM,
-        controlHeightLG: other.controlHeightLG ?? controlHeightLG,
-        fontSize: other.fontSize ?? fontSize,
-        fontSizeSM: other.fontSizeSM ?? fontSizeSM,
-        fontSizeLG: other.fontSizeLG ?? fontSizeLG,
-        paddingInline: other.paddingInline ?? paddingInline,
-        paddingInlineSM: other.paddingInlineSM ?? paddingInlineSM,
-        paddingInlineLG: other.paddingInlineLG ?? paddingInlineLG,
-        iconGap: other.iconGap ?? iconGap,
-        shadow: other.shadow ?? shadow,
-        fontWeight: other.fontWeight ?? fontWeight,
-      );
+    borderRadius: other.borderRadius ?? borderRadius,
+    borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
+    borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
+    controlHeight: other.controlHeight ?? controlHeight,
+    controlHeightSM: other.controlHeightSM ?? controlHeightSM,
+    controlHeightLG: other.controlHeightLG ?? controlHeightLG,
+    fontSize: other.fontSize ?? fontSize,
+    fontSizeSM: other.fontSizeSM ?? fontSizeSM,
+    fontSizeLG: other.fontSizeLG ?? fontSizeLG,
+    paddingInline: other.paddingInline ?? paddingInline,
+    paddingInlineSM: other.paddingInlineSM ?? paddingInlineSM,
+    paddingInlineLG: other.paddingInlineLG ?? paddingInlineLG,
+    iconGap: other.iconGap ?? iconGap,
+    shadow: other.shadow ?? shadow,
+    fontWeight: other.fontWeight ?? fontWeight,
+  );
 }
 
 @immutable
@@ -346,13 +346,13 @@ class ButtonDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ButtonDefaults merge(ButtonDefaults other) => ButtonDefaults(
-        variant: other.variant ?? variant,
-        color: other.color ?? color,
-        shape: other.shape ?? shape,
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-        iconPlacement: other.iconPlacement ?? iconPlacement,
-      );
+    variant: other.variant ?? variant,
+    color: other.color ?? color,
+    shape: other.shape ?? shape,
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+    iconPlacement: other.iconPlacement ?? iconPlacement,
+  );
 }
 
 /// A pressable button with hover, press, loading and disabled states.
@@ -556,16 +556,16 @@ class _SoftButtonState extends State<Button> {
   /// rather than fixed numbers, so a theme that moves its control heights
   /// carries this with it. `Steps` sizes its type the same way.
   SoftSize _preset(_ResolvedButtonToken r) => _size.nearestPreset(
-        small: r.controlHeightSM,
-        middle: r.controlHeight,
-        large: r.controlHeightLG,
-      );
+    small: r.controlHeightSM,
+    middle: r.controlHeight,
+    large: r.controlHeightLG,
+  );
 
   double _fontSize(_ResolvedButtonToken r) => switch (_preset(r)) {
-        SoftSize.small => r.fontSizeSM,
-        SoftSize.middle => r.fontSize,
-        SoftSize.large => r.fontSizeLG,
-      };
+    SoftSize.small => r.fontSizeSM,
+    SoftSize.middle => r.fontSize,
+    SoftSize.large => r.fontSizeLG,
+  };
 
   /// The corners to draw. [CompactSlot] squares the ones that meet a
   /// neighbour, and hands them all back where there is no neighbour — which
@@ -573,18 +573,14 @@ class _SoftButtonState extends State<Button> {
   BorderRadiusDirectional _radius(
     BuildContext context,
     _ResolvedButtonToken r,
-  ) =>
-      CompactSlot.radiusOf(
-        context,
-        switch (_shape) {
-          ButtonShape.circle || ButtonShape.round => _height(r) / 2,
-          ButtonShape.defaultShape => switch (_preset(r)) {
-              SoftSize.small => r.borderRadiusSM,
-              SoftSize.middle => r.borderRadius,
-              SoftSize.large => r.borderRadiusLG,
-            },
-        },
-      );
+  ) => CompactSlot.radiusOf(context, switch (_shape) {
+    ButtonShape.circle || ButtonShape.round => _height(r) / 2,
+    ButtonShape.defaultShape => switch (_preset(r)) {
+      SoftSize.small => r.borderRadiusSM,
+      SoftSize.middle => r.borderRadius,
+      SoftSize.large => r.borderRadiusLG,
+    },
+  });
 
   /// What the focus halo is coloured with: the button's own accent where it
   /// has one, and the theme's primary where it is the plain grey default —
@@ -598,19 +594,19 @@ class _SoftButtonState extends State<Button> {
   /// A colour of your own, shaded into the same set of states a preset has —
   /// so hover, press and disabled behave as they do everywhere else.
   ColorGroup _customGroup(Token token, Color color) => ColorGroup.fromPalette(
-        generate(color, dark: token.isDark, background: token.colorBgContainer),
-      );
+    generate(color, dark: token.isDark, background: token.colorBgContainer),
+  );
 
   /// The palette the button's accents come from. Default colour borrows the
   /// primary for its hover/pressed accents, the way the default
   /// button turns blue on hover.
   ColorGroup _group(Token token) => switch (_color) {
-        ButtonCustomColor(:final color) => _customGroup(token, color),
-        ButtonPreset.primary || ButtonPreset.defaultColor => token.primary,
-        ButtonPreset.danger => token.error,
-        ButtonPreset.success => token.success,
-        ButtonPreset.warning => token.warning,
-      };
+    ButtonCustomColor(:final color) => _customGroup(token, color),
+    ButtonPreset.primary || ButtonPreset.defaultColor => token.primary,
+    ButtonPreset.danger => token.error,
+    ButtonPreset.success => token.success,
+    ButtonPreset.warning => token.warning,
+  };
 
   Color _stateful(ColorGroup g) {
     if (_pressed) return g.active;
@@ -625,7 +621,8 @@ class _SoftButtonState extends State<Button> {
     if (!_enabled) {
       final flat =
           _variant == ButtonVariant.text || _variant == ButtonVariant.link;
-      final noBorder = flat ||
+      final noBorder =
+          flat ||
           _variant == ButtonVariant.solid ||
           _variant == ButtonVariant.filled;
       return _ButtonStyle(
@@ -655,8 +652,9 @@ class _SoftButtonState extends State<Button> {
     switch (_variant) {
       case ButtonVariant.solid:
         final bg = _isDefault
-            ? token.colorText
-                .withValues(alpha: _pressed ? 0.75 : (_hovered ? 0.85 : 1))
+            ? token.colorText.withValues(
+                alpha: _pressed ? 0.75 : (_hovered ? 0.85 : 1),
+              )
             : _stateful(g);
         return _ButtonStyle(
           background: bg,
@@ -686,8 +684,9 @@ class _SoftButtonState extends State<Button> {
         );
       case ButtonVariant.text:
         return _ButtonStyle(
-          background:
-              active ? (_isDefault ? token.colorFillSecondary : g.bg) : null,
+          background: active
+              ? (_isDefault ? token.colorFillSecondary : g.bg)
+              : null,
           border: null,
           foreground: _isDefault ? token.colorText : _stateful(g),
         );
@@ -703,10 +702,11 @@ class _SoftButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<ButtonToken>(context) ??
-            const ButtonToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<ButtonToken>(context) ??
+                const ButtonToken())
+            ._resolve(token);
     final style = _resolveStyle(token);
     final height = _height(r);
     final fontSize = _fontSize(r);
@@ -716,11 +716,11 @@ class _SoftButtonState extends State<Button> {
     final glyph = widget.loading
         ? Spinner(size: fontSize, color: foreground)
         : widget.icon != null
-            ? IconTheme.merge(
-                data: IconThemeData(color: foreground, size: fontSize),
-                child: widget.icon!,
-              )
-            : null;
+        ? IconTheme.merge(
+            data: IconThemeData(color: foreground, size: fontSize),
+            child: widget.icon!,
+          )
+        : null;
 
     final content = DefaultTextStyle(
       style: TextStyle(
@@ -798,8 +798,9 @@ class _SoftButtonState extends State<Button> {
               ]
             : (style.shadow ? r.shadow : null),
         borderRadius: _shape == ButtonShape.circle ? null : _radius(context, r),
-        shape:
-            _shape == ButtonShape.circle ? BoxShape.circle : BoxShape.rectangle,
+        shape: _shape == ButtonShape.circle
+            ? BoxShape.circle
+            : BoxShape.rectangle,
         border: style.border == null || style.dashed
             ? null
             : Border.all(
@@ -852,8 +853,9 @@ class _SoftButtonState extends State<Button> {
         enabled: _enabled,
         label: widget.semanticsLabel,
         onTap: pressable ? widget.onPressed : null,
-        onLongPress:
-            _enabled && widget.onLongPress != null ? widget.onLongPress : null,
+        onLongPress: _enabled && widget.onLongPress != null
+            ? widget.onLongPress
+            : null,
         child: MouseRegion(
           cursor: _enabled
               ? SystemMouseCursors.click
@@ -868,8 +870,9 @@ class _SoftButtonState extends State<Button> {
             excludeFromSemantics: true,
             onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
             onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
-            onTapCancel:
-                _enabled ? () => setState(() => _pressed = false) : null,
+            onTapCancel: _enabled
+                ? () => setState(() => _pressed = false)
+                : null,
             onTap: _enabled && widget.onPressed != null
                 ? () {
                     if (_feedback) Feedback.forTap(context);

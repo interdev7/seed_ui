@@ -1,7 +1,9 @@
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -11,8 +13,6 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child, {bool still = false, double width = 260}) =>
@@ -141,9 +141,8 @@ void main() {
     testWidgets('selectedValue moves the selection when it changes', (
       tester,
     ) async {
-      Widget menu(String v) => _host(
-            Menu<String>(items: _items, selectedValue: v),
-          );
+      Widget menu(String v) =>
+          _host(Menu<String>(items: _items, selectedValue: v));
       await tester.pumpWidget(menu('mail'));
       final lit = _colorOf(tester, 'Mail');
       await tester.pumpWidget(menu('help'));
@@ -170,9 +169,7 @@ void main() {
       );
     });
 
-    testWidgets('accordion shuts the others at the same level', (
-      tester,
-    ) async {
+    testWidgets('accordion shuts the others at the same level', (tester) async {
       const two = <MenuEntry<String>>[
         MenuItem(
           value: 'a',
@@ -249,8 +246,11 @@ void main() {
       );
       final title = tester.getSemantics(find.text('Settings'));
       expect(title.flagsCollection.isExpanded, Tristate.isFalse);
-      expect(find.bySemanticsLabel('Profile'), findsNothing,
-          reason: 'a shut submenu says nothing');
+      expect(
+        find.bySemanticsLabel('Profile'),
+        findsNothing,
+        reason: 'a shut submenu says nothing',
+      );
       handle.dispose();
     });
   });
@@ -324,8 +324,9 @@ void main() {
   });
 
   group('vertical', () {
-    testWidgets('a submenu floats out to the side, and a choice is reported',
-        (tester) async {
+    testWidgets('a submenu floats out to the side, and a choice is reported', (
+      tester,
+    ) async {
       final told = <String>[];
       await tester.pumpWidget(
         _host(
@@ -354,9 +355,7 @@ void main() {
     });
   });
 
-  testWidgets('a pointer can go two submenus deep and choose', (
-    tester,
-  ) async {
+  testWidgets('a pointer can go two submenus deep and choose', (tester) async {
     const deep = <MenuEntry<String>>[
       MenuItem(
         value: 'settings',
@@ -374,11 +373,7 @@ void main() {
     final told = <String>[];
     await tester.pumpWidget(
       _host(
-        Menu<String>(
-          mode: MenuMode.vertical,
-          items: deep,
-          onSelect: told.add,
-        ),
+        Menu<String>(mode: MenuMode.vertical, items: deep, onSelect: told.add),
       ),
     );
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -418,8 +413,11 @@ void main() {
         .style!
         .color!;
     expect(colorOf('Security'), isNot(colorOf('Profile')));
-    expect(colorOf('Security'), colorOf('Settings'),
-        reason: 'the item and its title alike');
+    expect(
+      colorOf('Security'),
+      colorOf('Settings'),
+      reason: 'the item and its title alike',
+    );
   });
 
   testWidgets('a title\'s chevron points where its submenu opened', (
@@ -432,18 +430,17 @@ void main() {
         .widget<RotatedBox>(
           find.descendant(
             of: find
-                .ancestor(
-                  of: find.text('Settings'),
-                  matching: find.byType(Row),
-                )
+                .ancestor(of: find.text('Settings'), matching: find.byType(Row))
                 .first,
             matching: find.byType(RotatedBox),
           ),
         )
         .quarterTurns;
     await tester.pumpWidget(
-      _host(const Menu<String>(mode: MenuMode.vertical, items: _items),
-          width: 330),
+      _host(
+        const Menu<String>(mode: MenuMode.vertical, items: _items),
+        width: 330,
+      ),
     );
     expect(turns(), 0, reason: 'out to the right, as it reads');
     await tester.tap(find.text('Settings'));
@@ -472,10 +469,7 @@ void main() {
                 alignment: Alignment.topCenter,
                 child: SizedBox(
                   width: 240,
-                  child: Menu<String>(
-                    mode: MenuMode.vertical,
-                    items: _items,
-                  ),
+                  child: Menu<String>(mode: MenuMode.vertical, items: _items),
                 ),
               ),
             ),
@@ -539,14 +533,14 @@ void main() {
       ];
 
       Widget bar(double width, {String? selected, List<String>? told}) => _host(
-            Menu<String>(
-              mode: MenuMode.horizontal,
-              items: many,
-              selectedValue: selected,
-              onSelect: told?.add,
-            ),
-            width: width,
-          );
+        Menu<String>(
+          mode: MenuMode.horizontal,
+          items: many,
+          selectedValue: selected,
+          onSelect: told?.add,
+        ),
+        width: width,
+      );
 
       testWidgets('folds what does not fit into a …, and nothing spills', (
         tester,
@@ -570,8 +564,11 @@ void main() {
         await tester.tap(find.text('…'));
         await tester.pumpAndSettle();
         expect(find.text('Five').hitTestable(), findsOneWidget);
-        expect(find.text('One'), findsOneWidget,
-            reason: 'what shows in the bar is not in the menu again');
+        expect(
+          find.text('One'),
+          findsOneWidget,
+          reason: 'what shows in the bar is not in the menu again',
+        );
         await tester.tap(find.text('Five').hitTestable());
         await tester.pumpAndSettle();
         expect(told, ['five']);
@@ -587,9 +584,7 @@ void main() {
         expect(colorOf('…'), isNot(colorOf('One')));
       });
 
-      testWidgets('a bar that fits shows every item and no …', (
-        tester,
-      ) async {
+      testWidgets('a bar that fits shows every item and no …', (tester) async {
         await tester.pumpWidget(bar(220));
         await tester.pump();
         await tester.pumpWidget(bar(800));

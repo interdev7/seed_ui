@@ -79,10 +79,7 @@ class _PressableState extends State<Pressable> {
           position: DecorationPosition.foreground,
           decoration: BoxDecoration(
             border: _focusVisible
-                ? Border.all(
-                    color: token.primary.base,
-                    width: token.lineWidth,
-                  )
+                ? Border.all(color: token.primary.base, width: token.lineWidth)
                 : null,
             borderRadius: widget.radius == null
                 ? null

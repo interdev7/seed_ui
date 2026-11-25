@@ -9,16 +9,16 @@
 @Timeout(Duration(seconds: 10))
 library;
 
-// Material also exports a `Drawer`; hide it so the kit's getter wins.
-import 'package:flutter/material.dart' hide Drawer, Divider;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+// Material also exports a `Drawer`; hide it so the kit's getter wins.
+import 'package:material_ui/material_ui.dart' hide Drawer, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host() => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: const Scaffold(body: SizedBox()),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: const Scaffold(body: SizedBox()),
+);
 
 /// See `message_test.dart`: `pumpAndSettle` cannot be used with the kit's
 /// perpetual animations. The trailing pump lets the overlay rebuild after the
@@ -34,10 +34,7 @@ void main() {
     await tester.pumpWidget(_host());
 
     Drawer.open(
-      const DrawerConfig(
-        title: Text('Filters'),
-        child: Text('body'),
-      ),
+      const DrawerConfig(title: Text('Filters'), child: Text('body')),
     );
     await _settle(tester);
 
@@ -49,13 +46,15 @@ void main() {
     expect(find.text('Filters'), findsNothing);
   });
 
-  testWidgets('open completes its future when the drawer closes',
-      (tester) async {
+  testWidgets('open completes its future when the drawer closes', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
 
     var closed = false;
-    Drawer.open(const DrawerConfig(child: Text('body')))
-        .then((_) => closed = true);
+    Drawer.open(
+      const DrawerConfig(child: Text('body')),
+    ).then((_) => closed = true);
     await _settle(tester);
     expect(closed, isFalse);
 
@@ -64,8 +63,9 @@ void main() {
     expect(closed, isTrue);
   });
 
-  testWidgets('tapping the mask dismisses, unless maskClosable is false',
-      (tester) async {
+  testWidgets('tapping the mask dismisses, unless maskClosable is false', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
 
     // A right-placed drawer leaves the left edge of the screen clear.
@@ -75,12 +75,7 @@ void main() {
     await _settle(tester);
     expect(find.text('closable'), findsNothing);
 
-    Drawer.open(
-      const DrawerConfig(
-        child: Text('sticky'),
-        maskClosable: false,
-      ),
-    );
+    Drawer.open(const DrawerConfig(child: Text('sticky'), maskClosable: false));
     await _settle(tester);
     await tester.tapAt(const Offset(5, 300));
     await _settle(tester);
@@ -94,8 +89,9 @@ void main() {
     await tester.pumpWidget(_host());
 
     var closed = false;
-    Drawer.open(const DrawerConfig(child: Text('body')))
-        .then((_) => closed = true);
+    Drawer.open(
+      const DrawerConfig(child: Text('body')),
+    ).then((_) => closed = true);
     await _settle(tester);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -108,12 +104,7 @@ void main() {
   testWidgets('the close button dismisses the drawer', (tester) async {
     await tester.pumpWidget(_host());
 
-    Drawer.open(
-      const DrawerConfig(
-        title: Text('Panel'),
-        child: Text('body'),
-      ),
-    );
+    Drawer.open(const DrawerConfig(title: Text('Panel'), child: Text('body')));
     await _settle(tester);
 
     await tester.tap(find.byType(CustomPaint).last);
@@ -126,10 +117,7 @@ void main() {
 
     var calls = 0;
     Drawer.open(
-      DrawerConfig(
-        child: const Text('body'),
-        onClose: () => calls++,
-      ),
+      DrawerConfig(child: const Text('body'), onClose: () => calls++),
     );
     await _settle(tester);
 
@@ -152,10 +140,7 @@ void main() {
       await _settle(tester);
 
       final panel = tester.getRect(
-        find.ancestor(
-          of: find.text('p'),
-          matching: find.byType(SafeArea),
-        ),
+        find.ancestor(of: find.text('p'), matching: find.byType(SafeArea)),
       );
       expect(
         check(panel),
@@ -211,31 +196,33 @@ void main() {
     await _settle(tester);
   });
 
-  testWidgets('a bottom drawer taller than the room above the keyboard shrinks',
-      (tester) async {
-    tester.view.physicalSize = const Size(800, 1000);
-    tester.view.devicePixelRatio = 1;
-    tester.view.viewInsets = const FakeViewPadding(bottom: 600);
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(_host());
+  testWidgets(
+    'a bottom drawer taller than the room above the keyboard shrinks',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1;
+      tester.view.viewInsets = const FakeViewPadding(bottom: 600);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_host());
 
-    Drawer.open(
-      const DrawerConfig(
-        placement: DrawerPlacement.bottom,
-        size: 700,
-        child: SizedBox.expand(key: Key('body')),
-      ),
-    );
-    await _settle(tester);
+      Drawer.open(
+        const DrawerConfig(
+          placement: DrawerPlacement.bottom,
+          size: 700,
+          child: SizedBox.expand(key: Key('body')),
+        ),
+      );
+      await _settle(tester);
 
-    final body = tester.getRect(find.byKey(const Key('body')));
-    expect(body.top, greaterThanOrEqualTo(0));
-    expect(body.bottom, lessThanOrEqualTo(1000 - 600));
-    expect(tester.takeException(), isNull);
+      final body = tester.getRect(find.byKey(const Key('body')));
+      expect(body.top, greaterThanOrEqualTo(0));
+      expect(body.bottom, lessThanOrEqualTo(1000 - 600));
+      expect(tester.takeException(), isNull);
 
-    Drawer.destroyAll();
-    await _settle(tester);
-  });
+      Drawer.destroyAll();
+      await _settle(tester);
+    },
+  );
 
   testWidgets('a side drawer ignores the keyboard', (tester) async {
     tester.view.physicalSize = const Size(800, 1200);
@@ -244,9 +231,7 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(_host());
 
-    Drawer.open(
-      const DrawerConfig(child: SizedBox.expand(key: Key('body'))),
-    );
+    Drawer.open(const DrawerConfig(child: SizedBox.expand(key: Key('body'))));
     await _settle(tester);
 
     final body = tester.getRect(find.byKey(const Key('body')));

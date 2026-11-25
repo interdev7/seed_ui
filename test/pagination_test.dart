@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,30 +9,33 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(body: Center(child: child)),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(body: Center(child: child)),
+);
 
 Widget _mirrored(Widget child) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(
-        body: Directionality(
-          textDirection: TextDirection.rtl,
-          child: Center(child: child),
-        ),
-      ),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(
+    body: Directionality(
+      textDirection: TextDirection.rtl,
+      child: Center(child: child),
+    ),
+  ),
+);
 
 /// Whichever way the chevron at [at] is drawn.
 bool _pointsOn(WidgetTester tester, int at) {
   final painters = tester
-      .widgetList<CustomPaint>(find.byWidgetPredicate((w) =>
-          w is CustomPaint &&
-          w.painter.runtimeType.toString() == '_ChevronPainter'))
+      .widgetList<CustomPaint>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              w.painter.runtimeType.toString() == '_ChevronPainter',
+        ),
+      )
       .toList();
   return (painters[at].painter! as dynamic).forward as bool;
 }
@@ -75,8 +79,9 @@ void main() {
     expect(page, 3);
   });
 
-  testWidgets('near the start shows 1..5 with an ellipsis and last',
-      (tester) async {
+  testWidgets('near the start shows 1..5 with an ellipsis and last', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         const Pagination(total: 500, defaultCurrent: 1), // 50 pages
@@ -90,8 +95,9 @@ void main() {
     expect(find.text('6'), findsNothing);
   });
 
-  testWidgets('a middle page shows neighbours with two ellipses',
-      (tester) async {
+  testWidgets('a middle page shows neighbours with two ellipses', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         const Pagination(total: 500, defaultCurrent: 5), // page 5 of 50
@@ -105,16 +111,13 @@ void main() {
     expect(find.text('7'), findsNothing);
   });
 
-  testWidgets('prev is disabled on the first page and next advances',
-      (tester) async {
+  testWidgets('prev is disabled on the first page and next advances', (
+    tester,
+  ) async {
     int? page;
     await tester.pumpWidget(
       _host(
-        Pagination(
-          total: 50,
-          defaultCurrent: 1,
-          onChanged: (p, s) => page = p,
-        ),
+        Pagination(total: 50, defaultCurrent: 1, onChanged: (p, s) => page = p),
       ),
     );
     await tester.tap(find.text('2'));
@@ -185,9 +188,7 @@ void main() {
 
   testWidgets('hideOnSinglePage hides the pager', (tester) async {
     await tester.pumpWidget(
-      _host(
-        const Pagination(total: 5, pageSize: 10, hideOnSinglePage: true),
-      ),
+      _host(const Pagination(total: 5, pageSize: 10, hideOnSinglePage: true)),
     );
     expect(find.text('1'), findsNothing);
   });

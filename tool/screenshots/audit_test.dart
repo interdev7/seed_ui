@@ -20,14 +20,14 @@ import 'harness.dart';
 
 /// A labelled row of specimens.
 Widget _group(String title, List<Widget> children) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontSize: 11)),
-        const SizedBox(height: 6),
-        Wrap(spacing: 12, runSpacing: 12, children: children),
-        const SizedBox(height: 18),
-      ],
-    );
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Text(title, style: const TextStyle(fontSize: 11)),
+    const SizedBox(height: 6),
+    Wrap(spacing: 12, runSpacing: 12, children: children),
+    const SizedBox(height: 18),
+  ],
+);
 
 void main() {
   setUpAll(() => outDir = 'tool/screenshots/audit');
@@ -103,10 +103,7 @@ void main() {
             const SizedBox(width: 260, child: Input(placeholder: 'Name')),
             const SizedBox(
               width: 260,
-              child: Input(
-                placeholder: 'Password',
-                password: PasswordConfig(),
-              ),
+              child: Input(placeholder: 'Password', password: PasswordConfig()),
             ),
             const SizedBox(
               width: 260,
@@ -118,10 +115,7 @@ void main() {
             ),
             const SizedBox(
               width: 260,
-              child: Input(
-                placeholder: 'Notes',
-                count: CountConfig(max: 40),
-              ),
+              child: Input(placeholder: 'Notes', count: CountConfig(max: 40)),
             ),
           ]),
           _group('InputNumber', [
@@ -186,7 +180,9 @@ void main() {
                 items: [
                   StepItem(title: Text('Basket')),
                   StepItem(
-                      title: Text('Pay'), subtitle: Text('card ending 04')),
+                    title: Text('Pay'),
+                    subtitle: Text('card ending 04'),
+                  ),
                   StepItem(title: Text('Collect')),
                 ],
               ),
@@ -287,8 +283,9 @@ void main() {
           ]),
           _group('Countdown and Spinner', [
             Countdown(
-              target:
-                  DateTime.now().add(const Duration(minutes: 9, seconds: 58)),
+              target: DateTime.now().add(
+                const Duration(minutes: 9, seconds: 58),
+              ),
             ),
             const Spinner(size: 20, color: Color(0xFF1677FF)),
           ]),

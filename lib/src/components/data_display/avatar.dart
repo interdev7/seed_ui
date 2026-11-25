@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+
 import '../../theme/config_provider.dart';
 import '../../theme/design_token.dart';
 import '../../theme/palette.dart';
@@ -75,38 +76,37 @@ class AvatarToken {
   final Color? bg;
 
   _ResolvedAvatarToken _resolve(Token t) => _ResolvedAvatarToken(
-        containerSize: containerSize ?? 32,
-        containerSizeSM: containerSizeSM ?? 24,
-        containerSizeLG: containerSizeLG ?? 40,
-        textFontSize: textFontSize ?? 14,
-        textFontSizeSM: textFontSizeSM ?? 14,
-        textFontSizeLG: textFontSizeLG ?? 24,
-        // The theme's own fill laid on the surface, so a dark theme gets a
-        // dark disc — the fixed light grey this was stayed light in both.
-        bg: bg ?? Color.alphaBlend(t.colorFill, t.colorBgContainer),
-        colorTextPlaceholder: colorTextPlaceholder,
-        groupBorderColor: groupBorderColor ?? t.colorBgContainer,
-        groupOverlapping: groupOverlapping ?? -8,
-        borderRadius: borderRadius ?? t.borderRadius,
-        fontFamily: t.fontFamily,
-        fontFamilyFallback: t.fontFamilyFallback,
-      );
+    containerSize: containerSize ?? 32,
+    containerSizeSM: containerSizeSM ?? 24,
+    containerSizeLG: containerSizeLG ?? 40,
+    textFontSize: textFontSize ?? 14,
+    textFontSizeSM: textFontSizeSM ?? 14,
+    textFontSizeLG: textFontSizeLG ?? 24,
+    // The theme's own fill laid on the surface, so a dark theme gets a
+    // dark disc — the fixed light grey this was stayed light in both.
+    bg: bg ?? Color.alphaBlend(t.colorFill, t.colorBgContainer),
+    colorTextPlaceholder: colorTextPlaceholder,
+    groupBorderColor: groupBorderColor ?? t.colorBgContainer,
+    groupOverlapping: groupOverlapping ?? -8,
+    borderRadius: borderRadius ?? t.borderRadius,
+    fontFamily: t.fontFamily,
+    fontFamilyFallback: t.fontFamilyFallback,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   AvatarToken merge(AvatarToken other) => AvatarToken(
-        containerSize: other.containerSize ?? containerSize,
-        containerSizeSM: other.containerSizeSM ?? containerSizeSM,
-        containerSizeLG: other.containerSizeLG ?? containerSizeLG,
-        textFontSize: other.textFontSize ?? textFontSize,
-        textFontSizeSM: other.textFontSizeSM ?? textFontSizeSM,
-        textFontSizeLG: other.textFontSizeLG ?? textFontSizeLG,
-        colorTextPlaceholder:
-            other.colorTextPlaceholder ?? colorTextPlaceholder,
-        groupBorderColor: other.groupBorderColor ?? groupBorderColor,
-        groupOverlapping: other.groupOverlapping ?? groupOverlapping,
-        borderRadius: other.borderRadius ?? borderRadius,
-        bg: other.bg ?? bg,
-      );
+    containerSize: other.containerSize ?? containerSize,
+    containerSizeSM: other.containerSizeSM ?? containerSizeSM,
+    containerSizeLG: other.containerSizeLG ?? containerSizeLG,
+    textFontSize: other.textFontSize ?? textFontSize,
+    textFontSizeSM: other.textFontSizeSM ?? textFontSizeSM,
+    textFontSizeLG: other.textFontSizeLG ?? textFontSizeLG,
+    colorTextPlaceholder: other.colorTextPlaceholder ?? colorTextPlaceholder,
+    groupBorderColor: other.groupBorderColor ?? groupBorderColor,
+    groupOverlapping: other.groupOverlapping ?? groupOverlapping,
+    borderRadius: other.borderRadius ?? borderRadius,
+    bg: other.bg ?? bg,
+  );
 }
 
 @immutable
@@ -175,10 +175,7 @@ class _GroupContext extends InheritedWidget {
 @immutable
 class AvatarDefaults {
   /// Creates an [AvatarDefaults].
-  const AvatarDefaults({
-    this.shape,
-    this.size,
-  });
+  const AvatarDefaults({this.shape, this.size});
 
   /// The shape avatars take.
   final AvatarShape? shape;
@@ -193,10 +190,8 @@ class AvatarDefaults {
   ///
   /// A nested `ConfigProvider` says only what it means to change: naming a
   /// shape next door must not throw away the size named for the whole app.
-  AvatarDefaults merge(AvatarDefaults other) => AvatarDefaults(
-        shape: other.shape ?? shape,
-        size: other.size ?? size,
-      );
+  AvatarDefaults merge(AvatarDefaults other) =>
+      AvatarDefaults(shape: other.shape ?? shape, size: other.size ?? size);
 }
 
 /// A component for representing users or objects.
@@ -256,7 +251,8 @@ class Avatar extends StatelessWidget {
     Token? token,
     Object error,
     StackTrace? stackTrace,
-  )? errorBuilder;
+  )?
+  errorBuilder;
 
   /// Token overrides.
   final AvatarToken? token;
@@ -268,7 +264,8 @@ class Avatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.softToken;
     final group = _GroupContext.maybeOf(context);
-    final rt = group?.token ??
+    final rt =
+        group?.token ??
         (token ??
                 ConfigProvider.componentOf<AvatarToken>(context) ??
                 const AvatarToken())
@@ -276,14 +273,16 @@ class Avatar extends StatelessWidget {
 
     // The enclosing group is nearer than the screen, so it wins over the
     // ambient size; the screen wins over nothing at all.
-    final resolvedSize = group?.size ??
+    final resolvedSize =
+        group?.size ??
         size ??
         ConfigProvider.defaultsOf<AvatarDefaults>(context)?.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
     // Same order as the size above: the enclosing group first, then this
     // avatar, then the subtree, then the kit's own default.
-    final resolvedShape = group?.shape ??
+    final resolvedShape =
+        group?.shape ??
         shape ??
         ConfigProvider.defaultsOf<AvatarDefaults>(context)?.shape ??
         AvatarShape.circle;
@@ -308,7 +307,8 @@ class Avatar extends StatelessWidget {
         backgroundColor ?? (image == null ? rt.bg : const Color(0x00000000));
     // Worked out against what is actually behind the letters: the fill, or
     // the surface where an image leaves the fill clear.
-    final fg = foregroundColor ??
+    final fg =
+        foregroundColor ??
         rt.colorTextPlaceholder ??
         inkOn(Color.alphaBlend(bg, context.softToken.colorBgContainer));
 
@@ -480,10 +480,11 @@ class AvatarGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final rt = (token ??
-            ConfigProvider.componentOf<AvatarToken>(context) ??
-            const AvatarToken())
-        ._resolve(t);
+    final rt =
+        (token ??
+                ConfigProvider.componentOf<AvatarToken>(context) ??
+                const AvatarToken())
+            ._resolve(t);
 
     final showMax = maxCount != null && children.length > maxCount!;
     final renderCount = showMax ? maxCount! : children.length;
@@ -512,8 +513,9 @@ class AvatarGroup extends StatelessWidget {
         Widget popoverContent(BuildContext context) {
           final group = Padding(
             padding: EdgeInsets.symmetric(
-                horizontal: context.softToken.sizeSM,
-                vertical: context.softToken.sizeXS),
+              horizontal: context.softToken.sizeSM,
+              vertical: context.softToken.sizeXS,
+            ),
             child: AvatarGroup(
               size: size,
               shape: shape,
@@ -556,7 +558,8 @@ class AvatarGroup extends StatelessWidget {
       strokeAlign: BorderSide.strokeAlignOutside,
     );
 
-    final resolvedSize = size ??
+    final resolvedSize =
+        size ??
         ConfigProvider.defaultsOf<AvatarDefaults>(context)?.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
@@ -599,10 +602,7 @@ class _OverlappingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (overlap <= 0) {
-      return Wrap(
-        spacing: spacing,
-        children: children,
-      );
+      return Wrap(spacing: spacing, children: children);
     }
 
     return _OverlapRow(

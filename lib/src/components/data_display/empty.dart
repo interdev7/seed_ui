@@ -49,27 +49,29 @@ class EmptyToken {
   final Color? imageShadow;
 
   _ResolvedEmptyToken _resolve(Token t) => _ResolvedEmptyToken(
-        imageShadow: imageShadow ??
-            (t.isDark ? const Color(0xFF303030) : const Color(0xFFF5F5F5)),
-        imageFill: imageFill ??
-            (t.isDark ? const Color(0xFF1F1F1F) : const Color(0xFFFAFAFA)),
-        imageStroke: imageStroke ??
-            (t.isDark ? const Color(0xFF434343) : const Color(0xFFD9D9D9)),
-        imageHeight: imageHeight ?? 41,
-        colorTextDescription: colorTextDescription ?? t.colorTextTertiary,
-        fontSize: fontSize ?? t.fontSize,
-      );
+    imageShadow:
+        imageShadow ??
+        (t.isDark ? const Color(0xFF303030) : const Color(0xFFF5F5F5)),
+    imageFill:
+        imageFill ??
+        (t.isDark ? const Color(0xFF1F1F1F) : const Color(0xFFFAFAFA)),
+    imageStroke:
+        imageStroke ??
+        (t.isDark ? const Color(0xFF434343) : const Color(0xFFD9D9D9)),
+    imageHeight: imageHeight ?? 41,
+    colorTextDescription: colorTextDescription ?? t.colorTextTertiary,
+    fontSize: fontSize ?? t.fontSize,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   EmptyToken merge(EmptyToken other) => EmptyToken(
-        imageShadow: other.imageShadow ?? imageShadow,
-        imageFill: other.imageFill ?? imageFill,
-        imageStroke: other.imageStroke ?? imageStroke,
-        imageHeight: other.imageHeight ?? imageHeight,
-        colorTextDescription:
-            other.colorTextDescription ?? colorTextDescription,
-        fontSize: other.fontSize ?? fontSize,
-      );
+    imageShadow: other.imageShadow ?? imageShadow,
+    imageFill: other.imageFill ?? imageFill,
+    imageStroke: other.imageStroke ?? imageStroke,
+    imageHeight: other.imageHeight ?? imageHeight,
+    colorTextDescription: other.colorTextDescription ?? colorTextDescription,
+    fontSize: other.fontSize ?? fontSize,
+  );
 }
 
 @immutable
@@ -104,9 +106,8 @@ class EmptyDefaults {
   final EmptyImage? image;
 
   /// This one with [other]'s fields laid over it, one field at a time.
-  EmptyDefaults merge(EmptyDefaults other) => EmptyDefaults(
-        image: other.image ?? image,
-      );
+  EmptyDefaults merge(EmptyDefaults other) =>
+      EmptyDefaults(image: other.image ?? image);
 }
 
 /// An empty-state placeholder. Shows an illustration,
@@ -153,15 +154,18 @@ class Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (token ??
-            ConfigProvider.componentOf<EmptyToken>(context) ??
-            const EmptyToken())
-        ._resolve(t);
-    final resolvedImage = image ??
+    final r =
+        (token ??
+                ConfigProvider.componentOf<EmptyToken>(context) ??
+                const EmptyToken())
+            ._resolve(t);
+    final resolvedImage =
+        image ??
         ConfigProvider.defaultsOf<EmptyDefaults>(context)?.image ??
         EmptyImage.standard;
     final simple = resolvedImage == EmptyImage.simple;
-    final art = imageWidget ??
+    final art =
+        imageWidget ??
         CustomPaint(
           size: Size(64, r.imageHeight),
           painter: _EmptyPainter(style: r, simple: simple),
@@ -185,10 +189,7 @@ class Empty extends StatelessWidget {
             textAlign: TextAlign.center,
             child: description ?? Text(context.seedLocale.noData),
           ),
-          if (child != null) ...[
-            SizedBox(height: t.size),
-            child!,
-          ],
+          if (child != null) ...[SizedBox(height: t.size), child!],
         ],
       ),
     );

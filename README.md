@@ -24,15 +24,17 @@ open a drawer.
   [theming](doc/theming.md), including light/dark switching.
 - **Feedback you can call from anywhere.** `message.success('Saved')`
   and `notification.error(...)` need no `BuildContext`.
-- **No Material dependency in the widgets.** Components build on
+- **Built on widgets, not on Material.** Components build on
   `package:flutter/widgets.dart`, so they drop into Material and Cupertino
-  apps alike.
+  apps alike. A few platform pieces — text-selection handles, the native
+  selection toolbar — come from `material_ui` and `cupertino_ui`, the packages
+  Material and Cupertino moved into in Flutter 3.47.
 
 ## Installation
 
 ```yaml
 dependencies:
-  seed_ui: ^0.29.1
+  seed_ui: ^0.30.0
 ```
 
 ## Getting started
@@ -40,7 +42,7 @@ dependencies:
 Two pieces of wiring, both optional-but-recommended:
 
 ```dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 void main() => runApp(const MyApp());
@@ -141,7 +143,7 @@ See also [theming](doc/theming.md) for the token system.
 
 > **Name clash.** The kit's `Drawer` getter and `Divider` widget share their
 > names with Material's. When importing both, hide the Material ones:
-> `import 'package:flutter/material.dart' hide Drawer, Divider;`. See
+> `import 'package:material_ui/material_ui.dart' hide Drawer, Divider;`. See
 > [the Drawer docs](doc/feedback/drawer.md#name-collision).
 
 ## At a glance

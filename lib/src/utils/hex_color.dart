@@ -34,10 +34,10 @@ Color parseHexColor(String value) {
     3 || 4 => digits.split('').map((d) => '$d$d').join(),
     6 || 8 => digits,
     _ => throw FormatException(
-        'A hex colour has 3, 4, 6 or 8 digits; "$value" has '
-        '${digits.length}.',
-        value,
-      ),
+      'A hex colour has 3, 4, 6 or 8 digits; "$value" has '
+      '${digits.length}.',
+      value,
+    ),
   };
 
   // Move the alpha from the end, where CSS puts it, to the front, where

@@ -37,7 +37,9 @@ void main() {
       final byMinute = TimeFields.of('HH:mm');
       expect(
         normalizeTime(
-            const Duration(hours: 9, minutes: 5, seconds: 40), byMinute),
+          const Duration(hours: 9, minutes: 5, seconds: 40),
+          byMinute,
+        ),
         const Duration(hours: 9, minutes: 5),
       );
     });
@@ -96,8 +98,11 @@ void main() {
           const Duration(hours: 14, minutes: 7, seconds: 9),
           TimeFields.of(format),
         );
-        expect(parseTime(formatTime(t, format), format), t,
-            reason: 'round trip failed for $format');
+        expect(
+          parseTime(formatTime(t, format), format),
+          t,
+          reason: 'round trip failed for $format',
+        );
       }
     });
 
@@ -129,7 +134,9 @@ void main() {
     test('midnight round-trips on a 12-hour clock', () {
       const format = 'h:mm a';
       expect(
-          parseTime(formatTime(Duration.zero, format), format), Duration.zero);
+        parseTime(formatTime(Duration.zero, format), format),
+        Duration.zero,
+      );
     });
   });
 }

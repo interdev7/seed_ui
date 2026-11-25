@@ -235,11 +235,11 @@ enum TablePaginationPosition {
 
   /// Which edge it is drawn against.
   MainAxisAlignment get alignment => switch (this) {
-        topStart || bottomStart => MainAxisAlignment.start,
-        topCenter || bottomCenter => MainAxisAlignment.center,
-        topEnd || bottomEnd => MainAxisAlignment.end,
-        none => MainAxisAlignment.end,
-      };
+    topStart || bottomStart => MainAxisAlignment.start,
+    topCenter || bottomCenter => MainAxisAlignment.center,
+    topEnd || bottomEnd => MainAxisAlignment.end,
+    none => MainAxisAlignment.end,
+  };
 }
 
 /// Showing a table's rows a page at a time.
@@ -398,10 +398,10 @@ class TableExpandable<T> {
     this.columnWidth,
     this.fixed,
   }) : assert(
-          builder != null || children != null,
-          'A row that opens has to have something to open into: name a '
-          'builder for a panel, or children for rows.',
-        );
+         builder != null || children != null,
+         'A row that opens has to have something to open into: name a '
+         'builder for a panel, or children for rows.',
+       );
 
   /// What is drawn under an opened row.
   ///
@@ -486,8 +486,8 @@ class TableExpandable<T> {
 class TableCellSpan {
   /// Creates a [TableCellSpan].
   const TableCellSpan({this.columns = 1, this.rows = 1})
-      : assert(columns >= 1, 'A cell covers at least its own column.'),
-        assert(rows >= 1, 'A cell covers at least its own row.');
+    : assert(columns >= 1, 'A cell covers at least its own column.'),
+      assert(rows >= 1, 'A cell covers at least its own row.');
 
   /// How many columns it covers, counting its own.
   final int columns;
@@ -556,7 +556,7 @@ class TableFilterPanel {
 
   /// Draws the panel, handed what is chosen and what it can do about it.
   final Widget Function(BuildContext context, TableFilterControls panel)
-      builder;
+  builder;
 
   /// Where the panel hangs from the mark that opens it.
   ///
@@ -703,8 +703,8 @@ class TableFilter {
 class TableScroll {
   /// Creates a [TableScroll].
   const TableScroll({this.x, this.y})
-      : assert(x == null || x > 0, 'a width to scroll across must be positive'),
-        assert(y == null || y > 0, 'a height to scroll down must be positive');
+    : assert(x == null || x > 0, 'a width to scroll across must be positive'),
+      assert(y == null || y > 0, 'a height to scroll down must be positive');
 
   /// A table as wide as its columns need, scrolling sideways where that is
   /// wider than its box.
@@ -809,14 +809,14 @@ class TableColumnDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TableColumnDefaults merge(TableColumnDefaults other) => TableColumnDefaults(
-        width: other.width ?? width,
-        minWidth: other.minWidth ?? minWidth,
-        flex: other.flex ?? flex,
-        align: other.align ?? align,
-        headerAlign: other.headerAlign ?? headerAlign,
-        fixed: other.fixed ?? fixed,
-        ellipsis: other.ellipsis ?? ellipsis,
-      );
+    width: other.width ?? width,
+    minWidth: other.minWidth ?? minWidth,
+    flex: other.flex ?? flex,
+    align: other.align ?? align,
+    headerAlign: other.headerAlign ?? headerAlign,
+    fixed: other.fixed ?? fixed,
+    ellipsis: other.ellipsis ?? ellipsis,
+  );
 }
 
 /// One column of a [Table].
@@ -858,70 +858,70 @@ class TableColumn<T> {
     this.span,
     this.cellStyle,
     this.resizable,
-  })  : assert(
-          children == null || span == null,
-          'A group heads other columns and has no cell of its own to span.',
-        ),
-        assert(
-          children == null || summary == null,
-          'A group heads other columns and has no cell of its own to sum up. '
-          'Put the summary on one of the columns under it.',
-        ),
-        assert(
-          children == null || children.length != 0,
-          'A group with no columns under it heads nothing. Leave children off '
-          'instead.',
-        ),
-        assert(
-          children == null || (value == null && builder == null),
-          'A group heads other columns; it has no cells of its own, so it '
-          'reads no value and draws no cell.',
-        ),
-        assert(
-          width == null || flex == null,
-          'Give a column a width or a flex, not both: one is a number of '
-          'pixels and the other a share of what is left over.',
-        ),
-        assert(
-          value != null || builder != null || children != null,
-          'A column needs a value to read, a builder to draw with, or columns '
-          'to head.',
-        ),
-        assert(
-          sortPriority == null || sortable || sorter != null,
-          'A priority says how a column takes part in a sort of several, so '
-          'the column has to sort at all.',
-        ),
-        assert(
-          !sortable || value != null || sorter != null,
-          'A sortable column needs a value to compare, or a sorter that says '
-          'how to compare the rows itself.',
-        ),
-        assert(
-          filterPanel == null || value != null || onFilter != null,
-          'A panel of your own still has to say what a choice means: give the '
-          'column a value to match, or an onFilter.',
-        ),
-        assert(
-          filters == null || filters.length != 0,
-          'A column with an empty list of filters offers a menu with nothing '
-          'in it. Leave filters off instead.',
-        ),
-        assert(
-          filters == null || value != null || onFilter != null,
-          'A filtered column needs a value to match, or an onFilter that says '
-          'what a choice means itself.',
-        ),
-        assert(
-          (!filterSearch && filterSearchMatch == null) || filters != null,
-          'Searching a filter menu needs a menu to search: give the column '
-          'filters, or leave the search off.',
-        ),
-        assert(
-          fixed == null || width != null,
-          'A pinned column needs a width: it is laid out apart from the '
-          'columns that scroll, so a share of what is left means nothing.',
-        );
+  }) : assert(
+         children == null || span == null,
+         'A group heads other columns and has no cell of its own to span.',
+       ),
+       assert(
+         children == null || summary == null,
+         'A group heads other columns and has no cell of its own to sum up. '
+         'Put the summary on one of the columns under it.',
+       ),
+       assert(
+         children == null || children.length != 0,
+         'A group with no columns under it heads nothing. Leave children off '
+         'instead.',
+       ),
+       assert(
+         children == null || (value == null && builder == null),
+         'A group heads other columns; it has no cells of its own, so it '
+         'reads no value and draws no cell.',
+       ),
+       assert(
+         width == null || flex == null,
+         'Give a column a width or a flex, not both: one is a number of '
+         'pixels and the other a share of what is left over.',
+       ),
+       assert(
+         value != null || builder != null || children != null,
+         'A column needs a value to read, a builder to draw with, or columns '
+         'to head.',
+       ),
+       assert(
+         sortPriority == null || sortable || sorter != null,
+         'A priority says how a column takes part in a sort of several, so '
+         'the column has to sort at all.',
+       ),
+       assert(
+         !sortable || value != null || sorter != null,
+         'A sortable column needs a value to compare, or a sorter that says '
+         'how to compare the rows itself.',
+       ),
+       assert(
+         filterPanel == null || value != null || onFilter != null,
+         'A panel of your own still has to say what a choice means: give the '
+         'column a value to match, or an onFilter.',
+       ),
+       assert(
+         filters == null || filters.length != 0,
+         'A column with an empty list of filters offers a menu with nothing '
+         'in it. Leave filters off instead.',
+       ),
+       assert(
+         filters == null || value != null || onFilter != null,
+         'A filtered column needs a value to match, or an onFilter that says '
+         'what a choice means itself.',
+       ),
+       assert(
+         (!filterSearch && filterSearchMatch == null) || filters != null,
+         'Searching a filter menu needs a menu to search: give the column '
+         'filters, or leave the search off.',
+       ),
+       assert(
+         fixed == null || width != null,
+         'A pinned column needs a width: it is laid out apart from the '
+         'columns that scroll, so a share of what is left means nothing.',
+       );
 
   /// What this column reads out of a row.
   ///
@@ -1169,7 +1169,7 @@ class TableColumn<T> {
   ///     order.total < 0 ? TableStyle(color: token.error.bg) : null,
   /// ```
   final TableStyle? Function(BuildContext context, T record, int index)?
-      cellStyle;
+  cellStyle;
 
   /// How the choices are laid out: a list, or a tree in one panel.
   ///
@@ -1190,53 +1190,52 @@ class TableColumn<T> {
   /// A copy rather than a lookup at every reading: one place decides, and
   /// everything downstream is handed a column that already knows.
   TableColumn<T> _withDefaults(TableColumnDefaults d) => TableColumn<T>(
-        value: value,
-        builder: builder,
-        title: title,
-        width: width ?? d.width,
-        minWidth: minWidth ?? d.minWidth,
-        flex: flex ?? d.flex,
-        align: align ?? d.align,
-        headerAlign: headerAlign ?? d.headerAlign,
-        fixed: fixed ?? d.fixed,
-        ellipsis: ellipsis || (d.ellipsis ?? false),
-        hidden: hidden,
-        sortable: sortable,
-        sorter: sorter,
-        sortPriority: sortPriority,
-        sortDirections: sortDirections,
-        sortIcon: sortIcon,
-        filters: filters,
-        onFilter: onFilter,
-        filterMultiple: filterMultiple,
-        filterSearch: filterSearch,
-        filterSearchMatch: filterSearchMatch,
-        filterMode: filterMode,
-        filterPanel: filterPanel,
-        filterIcon: filterIcon,
-        // A group holds no cells of its own, so what falls to it falls to its
-        // leaves: a width or an alignment named once reaches all the way down.
-        children:
-            children?.map((c) => c._withDefaults(d)).toList(growable: false),
-        summary: summary,
-        span: span,
-        cellStyle: cellStyle,
-        resizable: resizable,
-      );
+    value: value,
+    builder: builder,
+    title: title,
+    width: width ?? d.width,
+    minWidth: minWidth ?? d.minWidth,
+    flex: flex ?? d.flex,
+    align: align ?? d.align,
+    headerAlign: headerAlign ?? d.headerAlign,
+    fixed: fixed ?? d.fixed,
+    ellipsis: ellipsis || (d.ellipsis ?? false),
+    hidden: hidden,
+    sortable: sortable,
+    sorter: sorter,
+    sortPriority: sortPriority,
+    sortDirections: sortDirections,
+    sortIcon: sortIcon,
+    filters: filters,
+    onFilter: onFilter,
+    filterMultiple: filterMultiple,
+    filterSearch: filterSearch,
+    filterSearchMatch: filterSearchMatch,
+    filterMode: filterMode,
+    filterPanel: filterPanel,
+    filterIcon: filterIcon,
+    // A group holds no cells of its own, so what falls to it falls to its
+    // leaves: a width or an alignment named once reaches all the way down.
+    children: children?.map((c) => c._withDefaults(d)).toList(growable: false),
+    summary: summary,
+    span: span,
+    cellStyle: cellStyle,
+    resizable: resizable,
+  );
 
   /// This column heading a different set of columns.
   TableColumn<T> _withChildren(List<TableColumn<T>> under) => TableColumn<T>(
-        title: title,
-        width: width,
-        minWidth: minWidth,
-        flex: flex,
-        align: align,
-        headerAlign: headerAlign,
-        fixed: fixed,
-        ellipsis: ellipsis,
-        hidden: hidden,
-        children: under,
-      );
+    title: title,
+    width: width,
+    minWidth: minWidth,
+    flex: flex,
+    align: align,
+    headerAlign: headerAlign,
+    fixed: fixed,
+    ellipsis: ellipsis,
+    hidden: hidden,
+    children: under,
+  );
 
   /// Whether this column filters at all.
   bool get filtersRows => filters != null || filterPanel != null;
@@ -1245,8 +1244,9 @@ class TableColumn<T> {
   bool get filterSearches => filterSearch || filterSearchMatch != null;
 
   /// Every choice this column offers, groups opened out.
-  List<TableFilter> get filterLeaves =>
-      [for (final filter in filters ?? const <TableFilter>[]) ...filter.leaves];
+  List<TableFilter> get filterLeaves => [
+    for (final filter in filters ?? const <TableFilter>[]) ...filter.leaves,
+  ];
 
   /// A width in logical pixels.
   ///
@@ -1491,104 +1491,101 @@ class TableToken {
   final Color? filterHoverBg;
 
   _ResolvedTableToken _resolve(Token t) => _ResolvedTableToken(
-        headerBg: headerBg ?? t.colorFillQuaternary,
-        headerColor: headerColor ?? t.colorText,
-        rowHoverBg: rowHoverBg ?? t.colorFillQuaternary,
-        rowSortedBg: rowSortedBg ?? t.colorFillQuaternary,
-        rowSelectedBg: rowSelectedBg ?? t.primary.bg,
-        rowSelectedHoverBg: rowSelectedHoverBg ?? t.primary.bgHover,
-        borderColor: borderColor ?? t.colorSplit,
-        // A step at every preset, on both axes. An earlier pair had the
-        // standard and the roomy one land on the same number, so `large`
-        // and `middle` drew identical rows.
-        cellPaddingBlock: cellPaddingBlock ?? t.sizeSM,
-        cellPaddingBlockSM: cellPaddingBlockSM ?? t.sizeXS,
-        cellPaddingBlockLG: cellPaddingBlockLG ?? t.size,
-        cellPaddingInline: cellPaddingInline ?? t.size,
-        cellPaddingInlineSM: cellPaddingInlineSM ?? t.sizeXS,
-        cellPaddingInlineLG: cellPaddingInlineLG ?? t.sizeMD,
-        footerBg: footerBg ?? t.colorFillQuaternary,
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-        fontSize: fontSize ?? t.fontSize,
-        columnMinWidth: columnMinWidth ?? t.controlHeightLG * 2.5,
-        // Not a `BoxShadow`: a shadow is painted behind the box that casts
-        // it, and the pinned pane's neighbour is drawn after it, so the whole
-        // cast landed under the pane instead of over the rows — a grey smear
-        // showing through columns that are mostly transparent. A strip laid
-        // over the scrolling rows has nothing to show through.
-        // The same shade the reference casts: `colorSplit` at the column's
-        // edge, falling away over about ten pixels. Ours was black at fifteen
-        // per cent over twenty-four — measured, an alpha of 34 fading to
-        // nothing a full twenty-four pixels out, where the reference is a
-        // narrow edge you notice rather than a band you read.
-        dragShadow: dragShadow ?? t.boxShadowSecondary,
-        indentSize: indentSize ?? t.sizeMD,
-        pinnedShadowColor: pinnedShadowColor ?? t.colorSplit,
-        pinnedShadowExtent: pinnedShadowExtent ?? t.sizeSM,
-        headerHoverBg: headerHoverBg ?? t.colorFillSecondary,
-        headerMarkActiveColor: headerMarkActiveColor ?? t.primary.base,
-        headerMarkColor: headerMarkColor ?? t.colorTextQuaternary,
-        headerMarkHoverColor: headerMarkHoverColor ?? t.colorTextTertiary,
-        // A step above the funnel beside it: two small triangles read as
-        // less than one solid shape of the same height, so matching the
-        // numbers made the sorter look the smaller of the two.
-        sortCaretSize: sortCaretSize ?? t.fontSize,
-        filterIconSize: filterIconSize ?? t.sizeSM,
-        filterMenuMaxHeight: filterMenuMaxHeight ?? 264,
-        filterHoverBg: filterHoverBg ?? t.colorFill,
-        resizeHandleWidth: resizeHandleWidth ?? t.sizeXS,
-        resizeLineColor: resizeLineColor ?? t.primary.base,
-        filterSearchWidth: filterSearchWidth ?? 140,
-        selectionColumnWidth: selectionColumnWidth ?? t.controlHeightSM,
-        expandIconSize: expandIconSize ?? t.size,
-        expandedBg: expandedBg ?? t.colorFillQuaternary,
-        summaryBg: summaryBg ?? t.colorBgContainer,
-        pinnedBg: pinnedBg ?? t.colorBgContainer,
-      );
+    headerBg: headerBg ?? t.colorFillQuaternary,
+    headerColor: headerColor ?? t.colorText,
+    rowHoverBg: rowHoverBg ?? t.colorFillQuaternary,
+    rowSortedBg: rowSortedBg ?? t.colorFillQuaternary,
+    rowSelectedBg: rowSelectedBg ?? t.primary.bg,
+    rowSelectedHoverBg: rowSelectedHoverBg ?? t.primary.bgHover,
+    borderColor: borderColor ?? t.colorSplit,
+    // A step at every preset, on both axes. An earlier pair had the
+    // standard and the roomy one land on the same number, so `large`
+    // and `middle` drew identical rows.
+    cellPaddingBlock: cellPaddingBlock ?? t.sizeSM,
+    cellPaddingBlockSM: cellPaddingBlockSM ?? t.sizeXS,
+    cellPaddingBlockLG: cellPaddingBlockLG ?? t.size,
+    cellPaddingInline: cellPaddingInline ?? t.size,
+    cellPaddingInlineSM: cellPaddingInlineSM ?? t.sizeXS,
+    cellPaddingInlineLG: cellPaddingInlineLG ?? t.sizeMD,
+    footerBg: footerBg ?? t.colorFillQuaternary,
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+    fontSize: fontSize ?? t.fontSize,
+    columnMinWidth: columnMinWidth ?? t.controlHeightLG * 2.5,
+    // Not a `BoxShadow`: a shadow is painted behind the box that casts
+    // it, and the pinned pane's neighbour is drawn after it, so the whole
+    // cast landed under the pane instead of over the rows — a grey smear
+    // showing through columns that are mostly transparent. A strip laid
+    // over the scrolling rows has nothing to show through.
+    // The same shade the reference casts: `colorSplit` at the column's
+    // edge, falling away over about ten pixels. Ours was black at fifteen
+    // per cent over twenty-four — measured, an alpha of 34 fading to
+    // nothing a full twenty-four pixels out, where the reference is a
+    // narrow edge you notice rather than a band you read.
+    dragShadow: dragShadow ?? t.boxShadowSecondary,
+    indentSize: indentSize ?? t.sizeMD,
+    pinnedShadowColor: pinnedShadowColor ?? t.colorSplit,
+    pinnedShadowExtent: pinnedShadowExtent ?? t.sizeSM,
+    headerHoverBg: headerHoverBg ?? t.colorFillSecondary,
+    headerMarkActiveColor: headerMarkActiveColor ?? t.primary.base,
+    headerMarkColor: headerMarkColor ?? t.colorTextQuaternary,
+    headerMarkHoverColor: headerMarkHoverColor ?? t.colorTextTertiary,
+    // A step above the funnel beside it: two small triangles read as
+    // less than one solid shape of the same height, so matching the
+    // numbers made the sorter look the smaller of the two.
+    sortCaretSize: sortCaretSize ?? t.fontSize,
+    filterIconSize: filterIconSize ?? t.sizeSM,
+    filterMenuMaxHeight: filterMenuMaxHeight ?? 264,
+    filterHoverBg: filterHoverBg ?? t.colorFill,
+    resizeHandleWidth: resizeHandleWidth ?? t.sizeXS,
+    resizeLineColor: resizeLineColor ?? t.primary.base,
+    filterSearchWidth: filterSearchWidth ?? 140,
+    selectionColumnWidth: selectionColumnWidth ?? t.controlHeightSM,
+    expandIconSize: expandIconSize ?? t.size,
+    expandedBg: expandedBg ?? t.colorFillQuaternary,
+    summaryBg: summaryBg ?? t.colorBgContainer,
+    pinnedBg: pinnedBg ?? t.colorBgContainer,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TableToken merge(TableToken other) => TableToken(
-        headerBg: other.headerBg ?? headerBg,
-        headerColor: other.headerColor ?? headerColor,
-        rowHoverBg: other.rowHoverBg ?? rowHoverBg,
-        rowSortedBg: other.rowSortedBg ?? rowSortedBg,
-        rowSelectedBg: other.rowSelectedBg ?? rowSelectedBg,
-        rowSelectedHoverBg: other.rowSelectedHoverBg ?? rowSelectedHoverBg,
-        borderColor: other.borderColor ?? borderColor,
-        cellPaddingBlock: other.cellPaddingBlock ?? cellPaddingBlock,
-        cellPaddingBlockSM: other.cellPaddingBlockSM ?? cellPaddingBlockSM,
-        cellPaddingBlockLG: other.cellPaddingBlockLG ?? cellPaddingBlockLG,
-        cellPaddingInline: other.cellPaddingInline ?? cellPaddingInline,
-        cellPaddingInlineSM: other.cellPaddingInlineSM ?? cellPaddingInlineSM,
-        cellPaddingInlineLG: other.cellPaddingInlineLG ?? cellPaddingInlineLG,
-        footerBg: other.footerBg ?? footerBg,
-        borderRadius: other.borderRadius ?? borderRadius,
-        fontSize: other.fontSize ?? fontSize,
-        columnMinWidth: other.columnMinWidth ?? columnMinWidth,
-        dragShadow: other.dragShadow ?? dragShadow,
-        indentSize: other.indentSize ?? indentSize,
-        pinnedShadowColor: other.pinnedShadowColor ?? pinnedShadowColor,
-        pinnedShadowExtent: other.pinnedShadowExtent ?? pinnedShadowExtent,
-        headerHoverBg: other.headerHoverBg ?? headerHoverBg,
-        headerMarkActiveColor:
-            other.headerMarkActiveColor ?? headerMarkActiveColor,
-        headerMarkColor: other.headerMarkColor ?? headerMarkColor,
-        headerMarkHoverColor:
-            other.headerMarkHoverColor ?? headerMarkHoverColor,
-        sortCaretSize: other.sortCaretSize ?? sortCaretSize,
-        filterIconSize: other.filterIconSize ?? filterIconSize,
-        filterMenuMaxHeight: other.filterMenuMaxHeight ?? filterMenuMaxHeight,
-        filterSearchWidth: other.filterSearchWidth ?? filterSearchWidth,
-        expandIconSize: other.expandIconSize ?? expandIconSize,
-        expandedBg: other.expandedBg ?? expandedBg,
-        pinnedBg: other.pinnedBg ?? pinnedBg,
-        summaryBg: other.summaryBg ?? summaryBg,
-        selectionColumnWidth:
-            other.selectionColumnWidth ?? selectionColumnWidth,
-        resizeHandleWidth: other.resizeHandleWidth ?? resizeHandleWidth,
-        resizeLineColor: other.resizeLineColor ?? resizeLineColor,
-        filterHoverBg: other.filterHoverBg ?? filterHoverBg,
-      );
+    headerBg: other.headerBg ?? headerBg,
+    headerColor: other.headerColor ?? headerColor,
+    rowHoverBg: other.rowHoverBg ?? rowHoverBg,
+    rowSortedBg: other.rowSortedBg ?? rowSortedBg,
+    rowSelectedBg: other.rowSelectedBg ?? rowSelectedBg,
+    rowSelectedHoverBg: other.rowSelectedHoverBg ?? rowSelectedHoverBg,
+    borderColor: other.borderColor ?? borderColor,
+    cellPaddingBlock: other.cellPaddingBlock ?? cellPaddingBlock,
+    cellPaddingBlockSM: other.cellPaddingBlockSM ?? cellPaddingBlockSM,
+    cellPaddingBlockLG: other.cellPaddingBlockLG ?? cellPaddingBlockLG,
+    cellPaddingInline: other.cellPaddingInline ?? cellPaddingInline,
+    cellPaddingInlineSM: other.cellPaddingInlineSM ?? cellPaddingInlineSM,
+    cellPaddingInlineLG: other.cellPaddingInlineLG ?? cellPaddingInlineLG,
+    footerBg: other.footerBg ?? footerBg,
+    borderRadius: other.borderRadius ?? borderRadius,
+    fontSize: other.fontSize ?? fontSize,
+    columnMinWidth: other.columnMinWidth ?? columnMinWidth,
+    dragShadow: other.dragShadow ?? dragShadow,
+    indentSize: other.indentSize ?? indentSize,
+    pinnedShadowColor: other.pinnedShadowColor ?? pinnedShadowColor,
+    pinnedShadowExtent: other.pinnedShadowExtent ?? pinnedShadowExtent,
+    headerHoverBg: other.headerHoverBg ?? headerHoverBg,
+    headerMarkActiveColor: other.headerMarkActiveColor ?? headerMarkActiveColor,
+    headerMarkColor: other.headerMarkColor ?? headerMarkColor,
+    headerMarkHoverColor: other.headerMarkHoverColor ?? headerMarkHoverColor,
+    sortCaretSize: other.sortCaretSize ?? sortCaretSize,
+    filterIconSize: other.filterIconSize ?? filterIconSize,
+    filterMenuMaxHeight: other.filterMenuMaxHeight ?? filterMenuMaxHeight,
+    filterSearchWidth: other.filterSearchWidth ?? filterSearchWidth,
+    expandIconSize: other.expandIconSize ?? expandIconSize,
+    expandedBg: other.expandedBg ?? expandedBg,
+    pinnedBg: other.pinnedBg ?? pinnedBg,
+    summaryBg: other.summaryBg ?? summaryBg,
+    selectionColumnWidth: other.selectionColumnWidth ?? selectionColumnWidth,
+    resizeHandleWidth: other.resizeHandleWidth ?? resizeHandleWidth,
+    resizeLineColor: other.resizeLineColor ?? resizeLineColor,
+    filterHoverBg: other.filterHoverBg ?? filterHoverBg,
+  );
 }
 
 @immutable
@@ -1700,11 +1697,11 @@ class TableDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TableDefaults merge(TableDefaults other) => TableDefaults(
-        size: other.size ?? size,
-        bordered: other.bordered ?? bordered,
-        showHeader: other.showHeader ?? showHeader,
-        rowHoverable: other.rowHoverable ?? rowHoverable,
-      );
+    size: other.size ?? size,
+    bordered: other.bordered ?? bordered,
+    showHeader: other.showHeader ?? showHeader,
+    rowHoverable: other.rowHoverable ?? rowHoverable,
+  );
 }
 
 /// Rows and columns, with a heading.
@@ -1797,7 +1794,7 @@ class Table<T> extends StatefulWidget {
   /// a tick beside it, a column being sorted by — is drawn over what this
   /// answers, so neither is lost.
   final TableStyle? Function(BuildContext context, T record, int index)?
-      rowStyle;
+  rowStyle;
 
   /// What every column falls back to where it says nothing itself.
   ///
@@ -2258,16 +2255,16 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// The preset a size belongs to, so a height of your own still picks the
   /// padding of the preset it is nearest — as a `Button` does.
   SoftSize _preset(_ResolvedTableToken r, Token t) => _size.nearestPreset(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 
   double _rowHeight(Token t) => _size.resolveHeight(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 
   /// A row height asked for by name, or null where a preset was.
   ///
@@ -2304,21 +2301,20 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   Map<int, TableColumnWidth> _widthsFor(
     List<TableColumn<T>> columns,
     _ResolvedTableToken r,
-  ) =>
-      {
-        for (var i = 0; i < columns.length; i++)
-          // A floor of its own is held over whatever the column would have
-          // been — except an exact width, which is exact.
-          i: switch ((columns[i].minWidth, _gridWidth(columns[i], r))) {
-            // A width a drag has left is the width, floor and all: the drag
-            // was already held above the floor as it went.
-            _ when _ownWidths[_leaves.indexOf(columns[i])] != null =>
-              FixedColumnWidth(_ownWidths[_leaves.indexOf(columns[i])]!),
-            (final floor?, final base) when columns[i].width == null =>
-              MaxColumnWidth(FixedColumnWidth(floor), base),
-            (_, final base) => base,
-          },
-      };
+  ) => {
+    for (var i = 0; i < columns.length; i++)
+      // A floor of its own is held over whatever the column would have
+      // been — except an exact width, which is exact.
+      i: switch ((columns[i].minWidth, _gridWidth(columns[i], r))) {
+        // A width a drag has left is the width, floor and all: the drag
+        // was already held above the floor as it went.
+        _ when _ownWidths[_leaves.indexOf(columns[i])] != null =>
+          FixedColumnWidth(_ownWidths[_leaves.indexOf(columns[i])]!),
+        (final floor?, final base) when columns[i].width == null =>
+          MaxColumnWidth(FixedColumnWidth(floor), base),
+        (_, final base) => base,
+      },
+  };
 
   /// How wide the grid would make a column, before any floor of its own.
   TableColumnWidth _gridWidth(TableColumn<T> column, _ResolvedTableToken r) =>
@@ -2336,9 +2332,9 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
         _ when widget.scroll?.isToContent ?? false =>
           const IntrinsicColumnWidth(),
         _ when _detached || _across != null => MaxColumnWidth(
-            FixedColumnWidth(r.columnMinWidth),
-            const FlexColumnWidth(),
-          ),
+          FixedColumnWidth(r.columnMinWidth),
+          const FlexColumnWidth(),
+        ),
         // flex: 1, and not a bare intrinsic width. Left to itself
         // Flutter shares any slack equally between *every* column, which
         // quietly inflates a column that asked for an exact width — 100
@@ -2357,21 +2353,21 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// those — `indexOf` gives it -1, which is no column at all, so it neither
   /// sorts nor filters and nothing had to be told to skip it.
   List<TableColumn<T>> get _columns => [
-        if (widget.selection != null) _selectionColumn,
-        // A tree carries its mark in the first column, so there is no column
-        // of chevrons to add.
-        if (!_isTree && (widget.expandable?.showColumn ?? false)) _expandColumn,
-        // Drawn in the order a drag has left them, which is not the order
-        // they are named in: [_leaves] keeps that, so a sort and a filter go
-        // on meaning the column they were given.
-        //
-        // A hidden column is left out here and nowhere else, so it keeps its
-        // place among the ones you listed and a sort keyed by that place goes
-        // on meaning what it meant.
-        ..._inOwnOrder
-            .expand((c) => c.leaves)
-            .where((c) => !c.hidden && _hasRoomFor(c)),
-      ];
+    if (widget.selection != null) _selectionColumn,
+    // A tree carries its mark in the first column, so there is no column
+    // of chevrons to add.
+    if (!_isTree && (widget.expandable?.showColumn ?? false)) _expandColumn,
+    // Drawn in the order a drag has left them, which is not the order
+    // they are named in: [_leaves] keeps that, so a sort and a filter go
+    // on meaning the column they were given.
+    //
+    // A hidden column is left out here and nowhere else, so it keeps its
+    // place among the ones you listed and a sort keyed by that place goes
+    // on meaning what it meant.
+    ..._inOwnOrder
+        .expand((c) => c.leaves)
+        .where((c) => !c.hidden && _hasRoomFor(c)),
+  ];
 
   /// Whether the table is wide enough for [column] to be drawn.
   ///
@@ -2383,11 +2379,11 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// The columns as given, with the box and chevron columns in front: the
   /// heading is drawn from this, since a group only exists here.
   List<TableColumn<T>> get _columnTree => [
-        if (widget.selection != null) _selectionColumn,
-        if (!_isTree && (widget.expandable?.showColumn ?? false)) _expandColumn,
-        for (final column in _inOwnOrder)
-          if (_shown(column) case final shown?) shown,
-      ];
+    if (widget.selection != null) _selectionColumn,
+    if (!_isTree && (widget.expandable?.showColumn ?? false)) _expandColumn,
+    for (final column in _inOwnOrder)
+      if (_shown(column) case final shown?) shown,
+  ];
 
   /// A column with its hidden leaves taken out, or nothing where the whole of
   /// it is hidden.
@@ -2439,11 +2435,11 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   final GlobalKey _bodyAnchor = GlobalKey();
 
   List<int> get _rowOrder => [
-        if (_ownRowOrder?.length == widget.data.length)
-          ..._ownRowOrder!
-        else
-          for (var i = 0; i < widget.data.length; i++) i,
-      ];
+    if (_ownRowOrder?.length == widget.data.length)
+      ..._ownRowOrder!
+    else
+      for (var i = 0; i < widget.data.length; i++) i,
+  ];
 
   /// The rows as they stand before anything is narrowed or sorted: the order
   /// they came in, as a drag has left it.
@@ -2532,10 +2528,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     if (held == null) return;
     final leaves = _leaves;
     if (held.named < 0 || held.named >= leaves.length) return;
-    final want = math.max(
-      _floorOf(leaves[held.named], r),
-      held.was + delta,
-    );
+    final want = math.max(_floorOf(leaves[held.named], r), held.was + delta);
     if (_ownWidths[held.named] == want) return;
     setState(() => _ownWidths[held.named] = want);
   }
@@ -2551,11 +2544,11 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// The order the columns are drawn in, as a list of places among the ones
   /// given.
   List<int> get _order => [
-        if (_ownColumnOrder?.length == _asGiven.length)
-          ..._ownColumnOrder!
-        else
-          for (var i = 0; i < _asGiven.length; i++) i,
-      ];
+    if (_ownColumnOrder?.length == _asGiven.length)
+      ..._ownColumnOrder!
+    else
+      for (var i = 0; i < _asGiven.length; i++) i,
+  ];
 
   /// The columns as given, with the table's own answers filled in where one
   /// stayed quiet — and worked out once a build rather than at each reading,
@@ -2805,7 +2798,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// the tree of columns is, and handed to the viewport, which only lays out
   /// what it is told.
   List<({int x, int y, int across, int down, TableColumn<T> column})>
-      _headingPlan(int depth) {
+  _headingPlan(int depth) {
     final plan =
         <({int x, int y, int across, int down, TableColumn<T> column})>[];
     var at = 0;
@@ -2917,30 +2910,30 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// The style a cell's text is drawn in, and so the style it is measured in.
   TextStyle _bodyStyle(_ResolvedTableToken r, Token t) =>
       DefaultTextStyle.of(context).style.copyWith(
-            fontSize: r.fontSize,
-            fontFamily: t.fontFamily,
-            fontFamilyFallback: t.fontFamilyFallback,
-            fontWeight: t.fontWeight,
-          );
+        fontSize: r.fontSize,
+        fontFamily: t.fontFamily,
+        fontFamilyFallback: t.fontFamilyFallback,
+        fontWeight: t.fontWeight,
+      );
 
   /// The height a row will not go under, or null where content decides.
   double? _uniformHeight(Token t) => _exactHeight(t) ?? _askedRowHeight(t);
 
   Alignment _alignment(TableAlign align) => switch (align) {
-        TableAlign.start => AlignmentDirectional.centerStart.resolve(
-            Directionality.of(context),
-          ),
-        TableAlign.center => Alignment.center,
-        TableAlign.end => AlignmentDirectional.centerEnd.resolve(
-            Directionality.of(context),
-          ),
-      };
+    TableAlign.start => AlignmentDirectional.centerStart.resolve(
+      Directionality.of(context),
+    ),
+    TableAlign.center => Alignment.center,
+    TableAlign.end => AlignmentDirectional.centerEnd.resolve(
+      Directionality.of(context),
+    ),
+  };
 
   TextAlign _textAlign(TableAlign align) => switch (align) {
-        TableAlign.start => TextAlign.start,
-        TableAlign.center => TextAlign.center,
-        TableAlign.end => TextAlign.end,
-      };
+    TableAlign.start => TextAlign.start,
+    TableAlign.center => TextAlign.center,
+    TableAlign.end => TextAlign.end,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -2961,10 +2954,11 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
 
   Widget _buildTable(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<TableToken>(context) ??
-            const TableToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<TableToken>(context) ??
+                const TableToken())
+            ._resolve(t);
 
     final rule = BorderSide(color: r.borderColor, width: t.lineWidth);
     // Filled in by the branch that measures the columns, and empty
@@ -2988,31 +2982,26 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     // `cellStyle` covered the line under the row and the rows ran together.
     // Hung on the cell, in front, the line is drawn over whatever the row is
     // wearing — which is what a rule is for.
-    final dressed = widget.rowStyle != null ||
+    final dressed =
+        widget.rowStyle != null ||
         _leaves.any((column) => column.cellStyle != null);
     final ruleRides = _bordered && (widget.columnsDraggable || dressed);
     // The last column carries no rule, and last is where a column *appears*
     // to stand: mid-drag the layout's last column can be sitting in the
     // middle, and it took its blank edge there with it.
-    Widget ruled(
-      Widget cell,
-      int place,
-      int of, {
-      bool bottom = false,
-    }) =>
+    Widget ruled(Widget cell, int place, int of, {bool bottom = false}) =>
         ruleRides
-            ? DecoratedBox(
-                position: DecorationPosition.foreground,
-                decoration: BoxDecoration(
-                  border: BorderDirectional(
-                    end:
-                        _visualColumn(place) == of - 1 ? BorderSide.none : rule,
-                    bottom: bottom ? rule : BorderSide.none,
-                  ),
-                ),
-                child: cell,
-              )
-            : cell;
+        ? DecoratedBox(
+            position: DecorationPosition.foreground,
+            decoration: BoxDecoration(
+              border: BorderDirectional(
+                end: _visualColumn(place) == of - 1 ? BorderSide.none : rule,
+                bottom: bottom ? rule : BorderSide.none,
+              ),
+            ),
+            child: cell,
+          )
+        : cell;
 
     flutter.TableRow headingRow(List<TableColumn<T>> columns) =>
         flutter.TableRow(
@@ -3051,62 +3040,58 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
         );
 
     List<flutter.TableRow> dataRowsOf(List<TableColumn<T>> columns) => [
-          for (var i = 0; i < rows.length; i++)
-            flutter.TableRow(
-              decoration: BoxDecoration(
-                // Every row but the last carries the rule below it, so the
-                // table does not end on a line hanging under nothing. Left to
-                // the cells where they are carrying the rules themselves —
-                // the row's own is painted behind them, and a dressed row
-                // would cover it.
-                border: i == rows.length - 1 || ruleRides
-                    ? null
-                    : Border(bottom: rule),
-              ),
-              children: [
-                for (var x = 0; x < columns.length; x++)
-                  _slid(
-                    _underCursor(
-                      ruled(
-                        _rowCell(i, columns[x], r, t, place: x),
-                        x,
-                        columns.length,
-                        bottom: i != rows.length - 1,
-                      ),
-                      i,
-                      x,
-                      t,
-                    ),
-                    shiftAt(x),
-                    'r${i}c$x',
-                    t,
+      for (var i = 0; i < rows.length; i++)
+        flutter.TableRow(
+          decoration: BoxDecoration(
+            // Every row but the last carries the rule below it, so the
+            // table does not end on a line hanging under nothing. Left to
+            // the cells where they are carrying the rules themselves —
+            // the row's own is painted behind them, and a dressed row
+            // would cover it.
+            border: i == rows.length - 1 || ruleRides
+                ? null
+                : Border(bottom: rule),
+          ),
+          children: [
+            for (var x = 0; x < columns.length; x++)
+              _slid(
+                _underCursor(
+                  ruled(
+                    _rowCell(i, columns[x], r, t, place: x),
+                    x,
+                    columns.length,
+                    bottom: i != rows.length - 1,
                   ),
-              ],
-            ),
-        ];
+                  i,
+                  x,
+                  t,
+                ),
+                shiftAt(x),
+                'r${i}c$x',
+                t,
+              ),
+          ],
+        ),
+    ];
 
     flutter.Table grid(
       List<TableColumn<T>> columns,
       List<flutter.TableRow> of, {
       Map<int, TableColumnWidth>? widths,
-    }) =>
-        flutter.Table(
-          columnWidths: widths ?? _widthsFor(columns, r),
-          // Every cell in a row is *sized* as tall as the tallest, not merely
-          // centred against it. Centred, a fill drawn inside a short cell
-          // stopped at its own height and left a band of the row unpainted
-          // above and below it — a hovered row with one wrapping cell was lit
-          // in the middle and bare at the edges. What is inside a cell is
-          // still centred, since the cell aligns it, so nothing moves.
-          defaultVerticalAlignment: TableCellVerticalAlignment.intrinsicHeight,
-          border: _bordered && !ruleRides
-              ? TableBorder(
-                  verticalInside: rule,
-                  horizontalInside: BorderSide.none,
-                )
-              : null,
-          children: of,
-        );
+    }) => flutter.Table(
+      columnWidths: widths ?? _widthsFor(columns, r),
+      // Every cell in a row is *sized* as tall as the tallest, not merely
+      // centred against it. Centred, a fill drawn inside a short cell
+      // stopped at its own height and left a band of the row unpainted
+      // above and below it — a hovered row with one wrapping cell was lit
+      // in the middle and bare at the edges. What is inside a cell is
+      // still centred, since the cell aligns it, so nothing moves.
+      defaultVerticalAlignment: TableCellVerticalAlignment.intrinsicHeight,
+      border: _bordered && !ruleRides
+          ? TableBorder(verticalInside: rule, horizontalInside: BorderSide.none)
+          : null,
+      children: of,
+    );
 
     /// One band of the table — a heading, a run of rows, or both together.
     /// One band of the table — a heading, a run of rows, or both together.
@@ -3128,8 +3113,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     final middleWidth = _across == null
         ? null
         : _across! -
-            _pinnedWidth(TableColumnFixed.start) -
-            _pinnedWidth(TableColumnFixed.end);
+              _pinnedWidth(TableColumnFixed.start) -
+              _pinnedWidth(TableColumnFixed.end);
 
     /// The columns that scroll, laid out at the width left for them.
     Widget scrolling(_Band which) {
@@ -3178,62 +3163,61 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
       Widget middle, {
       required bool fromStart,
       required bool fromEnd,
-    }) =>
-        AnimatedBuilder(
-          animation: _acrossGeometry,
-          builder: (context, child) {
-            final offset = _acrossOffset.value;
-            // hasContentDimensions as well as hasClients: a position exists
-            // before it has been told how much there is to scroll, and asking
-            // it then throws.
-            final max =
-                _rowsX.hasClients && _rowsX.position.hasContentDimensions
-                    ? _rowsX.position.maxScrollExtent
-                    : 0.0;
+    }) => AnimatedBuilder(
+      animation: _acrossGeometry,
+      builder: (context, child) {
+        final offset = _acrossOffset.value;
+        // hasContentDimensions as well as hasClients: a position exists
+        // before it has been told how much there is to scroll, and asking
+        // it then throws.
+        final max = _rowsX.hasClients && _rowsX.position.hasContentDimensions
+            ? _rowsX.position.maxScrollExtent
+            : 0.0;
 
-            Widget strip({required bool atStart}) => PositionedDirectional(
-                  start: atStart ? 0 : null,
-                  end: atStart ? null : 0,
-                  top: 0,
-                  bottom: 0,
-                  width: r.pinnedShadowExtent,
-                  // Inside the Positioned, not around it: a parent data
-                  // widget has to sit directly under its Stack.
-                  child: IgnorePointer(
-                      child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: atStart
-                            ? AlignmentDirectional.centerStart
-                            : AlignmentDirectional.centerEnd,
-                        end: atStart
-                            ? AlignmentDirectional.centerEnd
-                            : AlignmentDirectional.centerStart,
-                        colors: [
-                          r.pinnedShadowColor,
-                          r.pinnedShadowColor.withAlpha(0),
-                        ],
-                      ),
-                    ),
-                  )),
-                );
-
-            return Stack(
-              children: [
-                child!,
-                // A shade only where a column is standing over rows that have
-                // gone behind it: at rest against its own end there is
-                // nothing there to cast over.
-                if (fromStart && offset > 0.5) strip(atStart: true),
-                if (fromEnd && offset < max - 0.5) strip(atStart: false),
-              ],
-            );
-          },
-          // Listening to the offset rather than rebuilding on it — the pane
-          // is passed through as a child, so it is the shade that is redrawn
-          // and not the columns.
-          child: middle,
+        Widget strip({required bool atStart}) => PositionedDirectional(
+          start: atStart ? 0 : null,
+          end: atStart ? null : 0,
+          top: 0,
+          bottom: 0,
+          width: r.pinnedShadowExtent,
+          // Inside the Positioned, not around it: a parent data
+          // widget has to sit directly under its Stack.
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: atStart
+                      ? AlignmentDirectional.centerStart
+                      : AlignmentDirectional.centerEnd,
+                  end: atStart
+                      ? AlignmentDirectional.centerEnd
+                      : AlignmentDirectional.centerStart,
+                  colors: [
+                    r.pinnedShadowColor,
+                    r.pinnedShadowColor.withAlpha(0),
+                  ],
+                ),
+              ),
+            ),
+          ),
         );
+
+        return Stack(
+          children: [
+            child!,
+            // A shade only where a column is standing over rows that have
+            // gone behind it: at rest against its own end there is
+            // nothing there to cast over.
+            if (fromStart && offset > 0.5) strip(atStart: true),
+            if (fromEnd && offset < max - 0.5) strip(atStart: false),
+          ],
+        );
+      },
+      // Listening to the offset rather than rebuilding on it — the pane
+      // is passed through as a child, so it is the shade that is redrawn
+      // and not the columns.
+      child: middle,
+    );
 
     // The rule between two panes, drawn as the pane's own inner edge rather
     // than as a strip between them: a strip would have to be stretched to the
@@ -3242,36 +3226,36 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     // them there was nothing, so a pinned column ran into its neighbour with
     // no line at all.
     Widget seamed(Widget pane, {required bool atStart}) => DecoratedBox(
-          decoration: BoxDecoration(
-            border: BorderDirectional(
-              end: atStart ? rule : BorderSide.none,
-              start: atStart ? BorderSide.none : rule,
-            ),
-          ),
-          child: pane,
-        );
+      decoration: BoxDecoration(
+        border: BorderDirectional(
+          end: atStart ? rule : BorderSide.none,
+          start: atStart ? BorderSide.none : rule,
+        ),
+      ),
+      child: pane,
+    );
 
     /// A row of panes: pinned, scrolling, pinned.
     Widget panes(_Band which) => Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (startPinned.isNotEmpty)
-              _bordered
-                  ? seamed(band(startPinned, which: which), atStart: true)
-                  : band(startPinned, which: which),
-            Expanded(
-              child: shaded(
-                scrolling(which),
-                fromStart: startPinned.isNotEmpty,
-                fromEnd: endPinned.isNotEmpty,
-              ),
-            ),
-            if (endPinned.isNotEmpty)
-              _bordered
-                  ? seamed(band(endPinned, which: which), atStart: false)
-                  : band(endPinned, which: which),
-          ],
-        );
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (startPinned.isNotEmpty)
+          _bordered
+              ? seamed(band(startPinned, which: which), atStart: true)
+              : band(startPinned, which: which),
+        Expanded(
+          child: shaded(
+            scrolling(which),
+            fromStart: startPinned.isNotEmpty,
+            fromEnd: endPinned.isNotEmpty,
+          ),
+        ),
+        if (endPinned.isNotEmpty)
+          _bordered
+              ? seamed(band(endPinned, which: which), atStart: false)
+              : band(endPinned, which: which),
+      ],
+    );
 
     /// A table whose rows open, drawn as a run of grids with the panels
     /// between them.
@@ -3312,14 +3296,17 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
               ? _dropOnHeading(
                   _hasGroups
                       ? _groupedHeading(
-                          _columnTree, measured.columns, r, t, rule)
+                          _columnTree,
+                          measured.columns,
+                          r,
+                          t,
+                          rule,
+                        )
                       : grid(columns, [headingRow(columns)], widths: widths),
                   measured.columns,
                 )
               : null;
-          final children = <Widget>[
-            if (head != null && !_isSticky) head,
-          ];
+          final children = <Widget>[if (head != null && !_isSticky) head];
 
           // Keyed by the row it belongs to. Without that, closing the upper
           // of two open panels handed the lower one the upper's element the
@@ -3327,33 +3314,31 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
           // had just finished closing, so the lower one shut and opened again
           // under the hand.
           Widget panelFor(int i) => Expandable(
-                key: ValueKey<String>('panel$i'),
-                expanded: _isExpanded(rows[i]),
-                destroyWhenCollapsed: true,
-                // The panel is added at the moment its row opens, so it has
-                // to start shut and grow — otherwise it arrives at full
-                // height with no reveal at all.
-                animateOnMount: true,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: r.expandedBg,
-                    border: Border(bottom: rule),
-                  ),
-                  // Never shorter than a row, and free to be taller. A row
-                  // whose height was named carries no vertical padding — the
-                  // height itself stands in for it — so a panel padded the
-                  // same way collapsed to the height of its text.
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: _uniformHeight(t) ?? 0,
-                    ),
-                    child: Padding(
-                      padding: _cellPadding(r, t),
-                      child: widget.expandable!.builder!(context, rows[i], i),
-                    ),
-                  ),
+            key: ValueKey<String>('panel$i'),
+            expanded: _isExpanded(rows[i]),
+            destroyWhenCollapsed: true,
+            // The panel is added at the moment its row opens, so it has
+            // to start shut and grow — otherwise it arrives at full
+            // height with no reveal at all.
+            animateOnMount: true,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: r.expandedBg,
+                border: Border(bottom: rule),
+              ),
+              // Never shorter than a row, and free to be taller. A row
+              // whose height was named carries no vertical padding — the
+              // height itself stands in for it — so a panel padded the
+              // same way collapsed to the height of its text.
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: _uniformHeight(t) ?? 0),
+                child: Padding(
+                  padding: _cellPadding(r, t),
+                  child: widget.expandable!.builder!(context, rows[i], i),
                 ),
-              );
+              ),
+            ),
+          );
 
           // A tree joins the two: its rows are let in and out one at a time,
           // and a row of a grid cannot grow out of nothing — the grid holds
@@ -3364,8 +3349,14 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
             // a cell of the grid, so there is no grid to run. A body with a
             // cell reaching *down* comes back as one placed block, and there
             // is nowhere between its rows to put a panel.
-            final laid =
-                _spannedRows(columns, measured.columns, rows, r, t, rule);
+            final laid = _spannedRows(
+              columns,
+              measured.columns,
+              rows,
+              r,
+              t,
+              rule,
+            );
             if (laid.length == rows.length) {
               final height = _lazyRowHeight(r, t);
               final rowShifts = _rowShifts(rows.length, height);
@@ -3385,19 +3376,22 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
                 );
                 if (_hasPanel(rows[i])) body.add(panelFor(i));
               }
-              children.add(_dropOnBody(
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: body,
+              children.add(
+                _dropOnBody(
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: body,
+                  ),
+                  height,
+                  rows.length,
                 ),
-                height,
-                rows.length,
-              ));
+              );
             } else {
               for (var i = 0; i < laid.length; i++) {
-                children
-                    .add(_revealed(laid[i], i < rows.length ? rows[i] : null));
+                children.add(
+                  _revealed(laid[i], i < rows.length ? rows[i] : null),
+                );
               }
               for (var i = 0; i < rows.length; i++) {
                 if (_hasPanel(rows[i])) children.add(panelFor(i));
@@ -3447,23 +3441,25 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
           /// it that a sideways scroll could carry off.
           Widget fitted(Widget child) =>
               _across != null || measured.total <= available + 0.5
-                  ? child
-                  : _across1D(
-                      SizedBox(width: measured.total, child: child),
-                      t,
-                      _rowsX,
-                    );
+              ? child
+              : _across1D(
+                  SizedBox(width: measured.total, child: child),
+                  t,
+                  _rowsX,
+                );
 
           if (head == null || !_isSticky) return fitted(laidOut);
-          return fitted(_Sticky(
-            // A ground under it: the heading's own fill is a two per cent
-            // wash, and held over the rows it let them be read straight
-            // through — the same as a column held at an edge.
-            heading: ColoredBox(color: r.pinnedBg, child: head),
-            headingHeight: _headingHeight(r, t),
-            body: laidOut,
-            offset: widget.sticky!.offsetHeader,
-          ));
+          return fitted(
+            _Sticky(
+              // A ground under it: the heading's own fill is a two per cent
+              // wash, and held over the rows it let them be read straight
+              // through — the same as a column held at an edge.
+              heading: ColoredBox(color: r.pinnedBg, child: head),
+              headingHeight: _headingHeight(r, t),
+              body: laidOut,
+              offset: widget.sticky!.offsetHeader,
+            ),
+          );
         },
       );
     }
@@ -3502,12 +3498,11 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
         // `scroll.y` is the height of the rows, not of the table, and the
         // heading stands above them. One viewport now holds both, so the
         // heading's row is added back on rather than eating into the body.
-        height: widget.scroll!.y! +
+        height:
+            widget.scroll!.y! +
             (_showHeader ? _lazyRowHeight(r, t) * _headingDepth : 0) +
             (_hasSummary ? _lazyRowHeight(r, t) : 0),
-        child: _dropRowsOnRows(
-          _dropOnRows(_handOn(_lazyBody(r, t, rule))),
-        ),
+        child: _dropRowsOnRows(_dropOnRows(_handOn(_lazyBody(r, t, rule)))),
       );
     } else if (!_hasPinned) {
       final all = <flutter.TableRow>[
@@ -3575,7 +3570,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
           if (_showHeader) panes(_Band.heading),
           Padding(
             padding: EdgeInsets.symmetric(vertical: t.sizeXL),
-            child: widget.empty ??
+            child:
+                widget.empty ??
                 (ConfigProvider.emptyBuilderOf(context) ?? _defaultEmpty)(
                   context,
                   EmptySlot.table,
@@ -3754,8 +3750,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     final leaves = _leaves;
     int priorityOf(TableSort sort) =>
         sort.column >= 0 && sort.column < leaves.length
-            ? leaves[sort.column].sortPriority ?? 0
-            : 0;
+        ? leaves[sort.column].sortPriority ?? 0
+        : 0;
     return [...of]..sort((a, b) => priorityOf(b).compareTo(priorityOf(a)));
   }
 
@@ -3988,10 +3984,12 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     final key = event.logicalKey;
     final rows = _rows;
     final ltr = Directionality.maybeOf(context) != TextDirection.rtl;
-    final onward =
-        ltr ? LogicalKeyboardKey.arrowRight : LogicalKeyboardKey.arrowLeft;
-    final backward =
-        ltr ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight;
+    final onward = ltr
+        ? LogicalKeyboardKey.arrowRight
+        : LogicalKeyboardKey.arrowLeft;
+    final backward = ltr
+        ? LogicalKeyboardKey.arrowLeft
+        : LogicalKeyboardKey.arrowRight;
     final head = _headCursor.value;
 
     if (key == LogicalKeyboardKey.arrowDown) {
@@ -4106,10 +4104,12 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   void _holdWhileClosing(T record) {
     setState(() => _closing.add(record));
     final over = context.softToken.motionDurationMid;
-    _closers.add(Timer(over, () {
-      if (!mounted) return;
-      setState(() => _closing.remove(record));
-    }));
+    _closers.add(
+      Timer(over, () {
+        if (!mounted) return;
+        setState(() => _closing.remove(record));
+      }),
+    );
   }
 
   /// The rows a panel is drawn for: the ones open, and the ones closing.
@@ -4196,9 +4196,9 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// picked at all. Not every row handed over — a filter narrowing the table
   /// narrows what "all" means, which is what it means everywhere else.
   List<T> get _selectableOnShow => [
-        for (final record in _rows)
-          if (_canSelect(record)) record
-      ];
+    for (final record in _rows)
+      if (_canSelect(record)) record,
+  ];
 
   /// Whether every such row is picked, none of them, or some.
   ({bool all, bool some}) get _selectionState {
@@ -4404,7 +4404,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
       if (entry.key < 0 || entry.key >= leaves.length) continue;
       final column = leaves[entry.key];
       if (!column.filtersRows) continue;
-      final belongs = column.onFilter ??
+      final belongs =
+          column.onFilter ??
           (Object? choice, T record) => column.value?.call(record) == choice;
       kept = [
         for (final record in kept)
@@ -4432,33 +4433,34 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
 
     // Kept beside the row rather than read inside the comparison: a sort asks
     // for the same value again and again.
-    final keyed = [
-      for (var i = 0; i < rows.length; i++)
-        (
-          i,
-          rows[i],
-          [
-            for (final sort in live)
-              leaves[sort.column].sorter == null
-                  ? leaves[sort.column].value!(rows[i])
-                  : null,
-          ],
-        ),
-    ]..sort((a, b) {
-        for (var s = 0; s < live.length; s++) {
-          final sort = live[s];
-          final column = leaves[sort.column];
-          final ascending = sort.order == TableSortOrder.ascending;
-          final sorter = column.sorter;
-          final by = sorter != null
-              ? (ascending ? sorter(a.$2, b.$2) : sorter(b.$2, a.$2))
-              : _compare(a.$3[s], b.$3[s], ascending: ascending);
-          if (by != 0) return by;
-        }
-        // Dart's sort is not stable past a handful of rows, so the index is
-        // what keeps ties in the order they arrived.
-        return a.$1.compareTo(b.$1);
-      });
+    final keyed =
+        [
+          for (var i = 0; i < rows.length; i++)
+            (
+              i,
+              rows[i],
+              [
+                for (final sort in live)
+                  leaves[sort.column].sorter == null
+                      ? leaves[sort.column].value!(rows[i])
+                      : null,
+              ],
+            ),
+        ]..sort((a, b) {
+          for (var s = 0; s < live.length; s++) {
+            final sort = live[s];
+            final column = leaves[sort.column];
+            final ascending = sort.order == TableSortOrder.ascending;
+            final sorter = column.sorter;
+            final by = sorter != null
+                ? (ascending ? sorter(a.$2, b.$2) : sorter(b.$2, a.$2))
+                : _compare(a.$3[s], b.$3[s], ascending: ascending);
+            if (by != 0) return by;
+          }
+          // Dart's sort is not stable past a handful of rows, so the index is
+          // what keeps ties in the order they arrived.
+          return a.$1.compareTo(b.$1);
+        });
 
     return [for (final row in keyed) row.$2];
   }
@@ -4557,22 +4559,24 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     TextStyle style,
     double inlinePadding,
     TextScaler scaler,
-  ) =>
-      Object.hash(
-        available,
-        style,
-        inlinePadding,
-        scaler,
-        Object.hashAll([
-          for (final column in columns) ...[
-            column.width,
-            column.flex,
-            column.fixed,
-            column.ellipsis,
-            switch (column.title) { Text(:final data) => data, _ => null },
-          ],
-        ]),
-      );
+  ) => Object.hash(
+    available,
+    style,
+    inlinePadding,
+    scaler,
+    Object.hashAll([
+      for (final column in columns) ...[
+        column.width,
+        column.flex,
+        column.fixed,
+        column.ellipsis,
+        switch (column.title) {
+          Text(:final data) => data,
+          _ => null,
+        },
+      ],
+    ]),
+  );
 
   /// The columns in the order the lazy body wants them: pinned to the start,
   /// then the ones that travel, then pinned to the end.
@@ -4589,7 +4593,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     bool sorted = false,
   }) {
     final rows = _rows;
-    final picked = widget.selection != null &&
+    final picked =
+        widget.selection != null &&
         index >= 0 &&
         index < rows.length &&
         _isSelected(rows[index]);
@@ -4635,10 +4640,11 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   }
 
   /// The token, resolved wherever it is wanted rather than only in `build`.
-  _ResolvedTableToken get _token => (widget.token ??
-          ConfigProvider.componentOf<TableToken>(context) ??
-          const TableToken())
-      ._resolve(context.softToken);
+  _ResolvedTableToken get _token =>
+      (widget.token ??
+              ConfigProvider.componentOf<TableToken>(context) ??
+              const TableToken())
+          ._resolve(context.softToken);
 
   /// The column of boxes, built as any other column is.
   TableColumn<T> get _selectionColumn {
@@ -4649,7 +4655,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
       // Wide enough for a box *and* the padding the cell will put either
       // side of it: measured against the preset's padding rather than named
       // as a number, since a compact table pads less and a roomy one more.
-      width: selection.columnWidth ??
+      width:
+          selection.columnWidth ??
           _cellPadding(_token, context.softToken).horizontal +
               _token.selectionColumnWidth +
               // A caret beside the box, where there is a menu to open, and
@@ -4661,42 +4668,42 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
       fixed: selection.fixed,
       title:
           selection.mode == TableSelectionMode.radio || !selection.showSelectAll
-              // Nothing at the head: taking every row is not something a column
-              // of dots can mean, and a heading box that does nothing is worse
-              // than none.
-              ? const SizedBox.shrink()
-              : Builder(
-                  builder: (context) {
-                    final state = _selectionState;
-                    final box = Semantics(
-                      // A box with nothing beside it says nothing about what
-                      // it takes, so it is named here.
-                      label: context.seedLocale.selectAll,
-                      child: Checkbox(
-                        checked: state.all,
-                        indeterminate: state.some && !state.all,
-                        disabled: _selectableOnShow.isEmpty,
-                        onChanged: (on) => _toggleAll(on: on),
-                      ),
-                    );
-                    final entries = selection.selections;
-                    if (entries == null || entries.isEmpty) return box;
-                    // As much empty room before the box as the caret takes
-                    // after it, so the row is centred and the box lands on
-                    // the column's middle, where the boxes in the rows below
-                    // it sit — measured, six pixels out without it. Room
-                    // rather than a `Stack` with the caret hanging outside:
-                    // what hangs outside a stack cannot be tapped.
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(width: _caretRoom(_token, context.softToken)),
-                        box,
-                        _selectionsMenu(entries),
-                      ],
-                    );
-                  },
-                ),
+          // Nothing at the head: taking every row is not something a column
+          // of dots can mean, and a heading box that does nothing is worse
+          // than none.
+          ? const SizedBox.shrink()
+          : Builder(
+              builder: (context) {
+                final state = _selectionState;
+                final box = Semantics(
+                  // A box with nothing beside it says nothing about what
+                  // it takes, so it is named here.
+                  label: context.seedLocale.selectAll,
+                  child: Checkbox(
+                    checked: state.all,
+                    indeterminate: state.some && !state.all,
+                    disabled: _selectableOnShow.isEmpty,
+                    onChanged: (on) => _toggleAll(on: on),
+                  ),
+                );
+                final entries = selection.selections;
+                if (entries == null || entries.isEmpty) return box;
+                // As much empty room before the box as the caret takes
+                // after it, so the row is centred and the box lands on
+                // the column's middle, where the boxes in the rows below
+                // it sit — measured, six pixels out without it. Room
+                // rather than a `Stack` with the caret hanging outside:
+                // what hangs outside a stack cannot be tapped.
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(width: _caretRoom(_token, context.softToken)),
+                    box,
+                    _selectionsMenu(entries),
+                  ],
+                );
+              },
+            ),
       builder: (context, record, index) {
         final can = _canSelect(record);
         return Semantics(
@@ -4725,7 +4732,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     return TableColumn<T>(
       align: TableAlign.center,
       headerAlign: TableAlign.center,
-      width: expandable.columnWidth ??
+      width:
+          expandable.columnWidth ??
           _cellPadding(_token, context.softToken).horizontal +
               _token.expandIconSize,
       fixed: expandable.fixed,
@@ -4758,10 +4766,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
                   // itself a plus and then open, on a row nobody had touched.
                   // A change still animates: the builder carries on from the
                   // value it is at, whatever it was told to begin from.
-                  tween: Tween<double>(
-                    begin: open ? 1 : 0,
-                    end: open ? 1 : 0,
-                  ),
+                  tween: Tween<double>(begin: open ? 1 : 0, end: open ? 1 : 0),
                   duration: t.motionDurationMid,
                   curve: t.motionEaseInOut,
                   builder: (context, shut, _) => CustomPaint(
@@ -4801,20 +4806,20 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     List<TableColumn<T>> columns,
     TextStyle style,
     double inlinePadding,
-  ) =>
-      [
-        for (final column in columns)
-          switch (column.title) {
-            Text(:final data?) => _TableWidths.measure(
-                  data,
-                  style,
-                  MediaQuery.textScalerOf(context),
-                  Directionality.of(context),
-                ) +
-                inlinePadding,
-            _ => null,
-          },
-      ];
+  ) => [
+    for (final column in columns)
+      switch (column.title) {
+        Text(:final data?) =>
+          _TableWidths.measure(
+                data,
+                style,
+                MediaQuery.textScalerOf(context),
+                Directionality.of(context),
+              ) +
+              inlinePadding,
+        _ => null,
+      },
+  ];
 
   /// One cell of a body laid out by hand, with the rules it carries.
   ///
@@ -4831,27 +4836,26 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     _ResolvedTableToken r,
     Token t,
     BorderSide rule,
-  ) =>
-      _underCursor(
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: BorderDirectional(
-              end: x + span.across >= columnCount || !_bordered
-                  ? BorderSide.none
-                  : rule,
-              // Under the last row this cell covers, and not under the last
-              // row of the table — there the outline stands in for it.
-              bottom: y + span.down >= rowCount
-                  ? BorderSide.none
-                  : Border(bottom: rule).bottom,
-            ),
-          ),
-          child: _rowCell(y, column, r, t, covering: span.down, place: x),
+  ) => _underCursor(
+    DecoratedBox(
+      decoration: BoxDecoration(
+        border: BorderDirectional(
+          end: x + span.across >= columnCount || !_bordered
+              ? BorderSide.none
+              : rule,
+          // Under the last row this cell covers, and not under the last
+          // row of the table — there the outline stands in for it.
+          bottom: y + span.down >= rowCount
+              ? BorderSide.none
+              : Border(bottom: rule).bottom,
         ),
-        y,
-        x,
-        t,
-      );
+      ),
+      child: _rowCell(y, column, r, t, covering: span.down, place: x),
+    ),
+    y,
+    x,
+    t,
+  );
 
   /// The body drawn by hand, where a cell may cover its neighbours.
   ///
@@ -4879,12 +4883,10 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     // Worked out first, because whether any cell reaches down decides how the
     // whole body is laid out.
     final taken = <int, Set<int>>{};
-    final placed = <(
-      int y,
-      int x,
-      TableColumn<T> column,
-      ({int across, int down}) span
-    )>[];
+    final placed =
+        <
+          (int y, int x, TableColumn<T> column, ({int across, int down}) span)
+        >[];
     var reachesDown = false;
 
     for (var y = 0; y < rows.length; y++) {
@@ -5004,41 +5006,40 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     _ResolvedTableToken r,
     Token t,
     BorderSide rule,
-  ) =>
-      DecoratedBox(
-        decoration: BoxDecoration(
-          color: r.summaryBg,
-          border: Border(top: rule),
-        ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < columns.length; i++)
-                SizedBox(
-                  width: widths[i],
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      border: BorderDirectional(
-                        end: i == columns.length - 1 || !_bordered
-                            ? BorderSide.none
-                            : rule,
-                      ),
-                    ),
-                    child: _cell(
-                      columns[i].summary?.call(context, rows) ??
-                          const SizedBox.shrink(),
-                      columns[i],
-                      columns[i].align ?? TableAlign.start,
-                      r,
-                      t,
-                    ),
+  ) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: r.summaryBg,
+      border: Border(top: rule),
+    ),
+    child: IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < columns.length; i++)
+            SizedBox(
+              width: widths[i],
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: BorderDirectional(
+                    end: i == columns.length - 1 || !_bordered
+                        ? BorderSide.none
+                        : rule,
                   ),
                 ),
-            ],
-          ),
-        ),
-      );
+                child: _cell(
+                  columns[i].summary?.call(context, rows) ??
+                      const SizedBox.shrink(),
+                  columns[i],
+                  columns[i].align ?? TableAlign.start,
+                  r,
+                  t,
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
 
   /// A heading of more than one row, where columns are grouped.
   ///
@@ -5231,8 +5232,9 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
             builder: (context, hovered, _) => _Carets(
               order: _orderOf(index),
               active: r.headerMarkActiveColor,
-              idle:
-                  hovered == index ? r.headerMarkHoverColor : r.headerMarkColor,
+              idle: hovered == index
+                  ? r.headerMarkHoverColor
+                  : r.headerMarkColor,
               size: r.sortCaretSize,
               duration: t.motionDurationMid,
             ),
@@ -5267,7 +5269,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
       // the far end of the heading, so aligning the near edges would throw
       // the panel out past its own column. A mirrored layout swaps which edge
       // that is.
-      placement: column.filterPanel?.placement ??
+      placement:
+          column.filterPanel?.placement ??
           (Directionality.of(context) == TextDirection.rtl
               ? PopoverPlacement.bottomLeft
               : PopoverPlacement.bottomRight),
@@ -5331,8 +5334,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
                                 narrowing
                                     ? r.headerMarkActiveColor
                                     : over
-                                        ? r.headerColor
-                                        : r.headerMarkColor,
+                                    ? r.headerColor
+                                    : r.headerMarkColor,
                               ),
                             ),
                     ),
@@ -5353,16 +5356,15 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
     VoidCallback close,
     _ResolvedTableToken r,
     Token t,
-  ) =>
-      _FilterMenu<T>(
-        column: column,
-        chosen: _filters[index] ?? const [],
-        onApply: (chosen) {
-          _applyFilter(index, chosen);
-          close();
-        },
-        r: r,
-      );
+  ) => _FilterMenu<T>(
+    column: column,
+    chosen: _filters[index] ?? const [],
+    onApply: (chosen) {
+      _applyFilter(index, chosen);
+      close();
+    },
+    r: r,
+  );
 
   /// A heading cell that answers the pointer, where its column sorts.
   ///
@@ -5401,7 +5403,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
         child: ListenableBuilder(
           listenable: Listenable.merge([_hoveredHeading, _headCursor]),
           builder: (context, child) => ColoredBox(
-            color: sorted ||
+            color:
+                sorted ||
                     _hoveredHeading.value == named ||
                     _headCursor.value == named
                 ? r.headerHoverBg
@@ -5889,9 +5892,9 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
       // Only the cell that starts something is built; the places it covers
       // are asked for and given nothing, which is how the grid comes to have
       // the hole a spanning cell fills.
-      final plan = _headingPlan(depth).where(
-        (cell) => cell.x == at.xIndex && cell.y == at.yIndex,
-      );
+      final plan = _headingPlan(
+        depth,
+      ).where((cell) => cell.x == at.xIndex && cell.y == at.yIndex);
       if (plan.isEmpty) return null;
       final headed = plan.first.column;
       if (headed.isGroup) {
@@ -6048,13 +6051,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
       child: ListenableBuilder(
         listenable: Listenable.merge([_hovered, _cursor]),
         builder: (context, child) => ColoredBox(
-          color: ground(
-            _rowFill(
-              index,
-              hovered: _lit(index, covering),
-              r: r,
-            ),
-          ),
+          color: ground(_rowFill(index, hovered: _lit(index, covering), r: r)),
           child: child,
         ),
         child: cell,
@@ -6201,9 +6198,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
               pinning: [for (final c in columns) c.fixed],
               shadeColor: r.pinnedShadowColor,
               shadeExtent: r.pinnedShadowExtent,
-              verticalDetails: ScrollableDetails.vertical(
-                controller: _rowsY,
-              ),
+              verticalDetails: ScrollableDetails.vertical(controller: _rowsY),
               // Leading is the right in a mirrored page, so the rows run the
               // other way and a finger moving right takes the table forwards.
               horizontalDetails: ScrollableDetails.horizontal(
@@ -6216,7 +6211,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
                 // state no cell has.
                 addAutomaticKeepAlives: false,
                 maxXIndex: columns.length - 1,
-                maxYIndex: run.length -
+                maxYIndex:
+                    run.length -
                     1 +
                     (_showHeader ? _headingDepth : 0) +
                     (_hasSummary ? 1 : 0),
@@ -6266,23 +6262,23 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// over it — thirteen drags and the page had not moved a pixel. What the
   /// rows cannot use is passed on.
   Widget _handOn(Widget rows) => NotificationListener<OverscrollNotification>(
-        onNotification: (notification) {
-          if (notification.depth != 0) return false;
-          if (notification.metrics.axis != Axis.vertical) return false;
-          final page = Scrollable.maybeOf(context);
-          if (page == null) return false;
-          final position = page.position;
-          if (position.axis != Axis.vertical) return false;
-          position.moveTo(
-            (position.pixels + notification.overscroll).clamp(
-              position.minScrollExtent,
-              position.maxScrollExtent,
-            ),
-          );
-          return true;
-        },
-        child: rows,
+    onNotification: (notification) {
+      if (notification.depth != 0) return false;
+      if (notification.metrics.axis != Axis.vertical) return false;
+      final page = Scrollable.maybeOf(context);
+      if (page == null) return false;
+      final position = page.position;
+      if (position.axis != Axis.vertical) return false;
+      position.moveTo(
+        (position.pixels + notification.overscroll).clamp(
+          position.minScrollExtent,
+          position.maxScrollExtent,
+        ),
       );
+      return true;
+    },
+    child: rows,
+  );
 
   /// A scroll view that can actually be scrolled sideways.
   ///
@@ -6292,11 +6288,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// child untouched on the horizontal axis, so there is no bar to drag
   /// either. On the web that left a table that scrolls sideways with no way
   /// to do it — the wheel only goes down.
-  Widget _across1D(
-    Widget child,
-    Token t,
-    ScrollController controller,
-  ) =>
+  Widget _across1D(Widget child, Token t, ScrollController controller) =>
       ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(
           dragDevices: {
@@ -6414,27 +6406,29 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
         sorted ? ColoredBox(color: r.rowSortedBg, child: cell) : cell,
       );
     }
-    return grounded(MouseRegion(
-      onEnter: (_) => _hovered.value = (from: index, to: index + covering),
-      onExit: (_) {
-        if (_hovered.value?.from == index) _hovered.value = null;
-      },
-      // Only this row's cells are listening, so a pointer crossing the table
-      // rebuilds two rows rather than all of them.
-      child: ListenableBuilder(
-        listenable: Listenable.merge([_hovered, _cursor]),
-        builder: (context, child) => ColoredBox(
-          color: _rowFill(
-            index,
-            hovered: _lit(index, covering),
-            sorted: sorted,
-            r: r,
+    return grounded(
+      MouseRegion(
+        onEnter: (_) => _hovered.value = (from: index, to: index + covering),
+        onExit: (_) {
+          if (_hovered.value?.from == index) _hovered.value = null;
+        },
+        // Only this row's cells are listening, so a pointer crossing the table
+        // rebuilds two rows rather than all of them.
+        child: ListenableBuilder(
+          listenable: Listenable.merge([_hovered, _cursor]),
+          builder: (context, child) => ColoredBox(
+            color: _rowFill(
+              index,
+              hovered: _lit(index, covering),
+              sorted: sorted,
+              r: r,
+            ),
+            child: child,
           ),
-          child: child,
+          child: cell,
         ),
-        child: cell,
       ),
-    ));
+    );
   }
 
   /// A row of a tree, wrapped in the reveal that lets it in and out.
@@ -6463,12 +6457,7 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
   /// A row with nothing under it keeps the space the mark would have taken,
   /// so the words of a childless row line up with the words of its siblings
   /// rather than sliding back under their marks.
-  Widget _treeMark(
-    T record,
-    Widget content,
-    _ResolvedTableToken r,
-    Token t,
-  ) {
+  Widget _treeMark(T record, Widget content, _ResolvedTableToken r, Token t) {
     final expandable = widget.expandable!;
     final depth = _depths[record] ?? 0;
     final indent = expandable.indentSize ?? r.indentSize;
@@ -6647,8 +6636,9 @@ class _TableWidths {
       // A floor of its own is a floor; the table's is only what a column
       // that cannot be measured falls back to, so it does not widen one that
       // measured narrower than it.
-      natural[i] =
-          column.minWidth == null ? widest : math.max(widest, column.minWidth!);
+      natural[i] = column.minWidth == null
+          ? widest
+          : math.max(widest, column.minWidth!);
     }
 
     // What is left over goes to the flexed columns first — that is what a
@@ -6776,29 +6766,29 @@ class _Carets extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TweenAnimationBuilder<Color?>(
-        tween: ColorTween(end: idle),
-        duration: duration,
-        builder: (context, shade, _) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomPaint(
-              size: Size(size * 0.62, _caret),
-              painter: _CaretPainter(
-                order == TableSortOrder.ascending ? active : shade ?? idle,
-                up: true,
-              ),
-            ),
-            SizedBox(height: size * 0.16),
-            CustomPaint(
-              size: Size(size * 0.62, _caret),
-              painter: _CaretPainter(
-                order == TableSortOrder.descending ? active : shade ?? idle,
-                up: false,
-              ),
-            ),
-          ],
+    tween: ColorTween(end: idle),
+    duration: duration,
+    builder: (context, shade, _) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CustomPaint(
+          size: Size(size * 0.62, _caret),
+          painter: _CaretPainter(
+            order == TableSortOrder.ascending ? active : shade ?? idle,
+            up: true,
+          ),
         ),
-      );
+        SizedBox(height: size * 0.16),
+        CustomPaint(
+          size: Size(size * 0.62, _caret),
+          painter: _CaretPainter(
+            order == TableSortOrder.descending ? active : shade ?? idle,
+            up: false,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// A filter panel of the caller's own, with the working answer kept for it.
@@ -6829,19 +6819,19 @@ class _OwnFilterPanelState extends State<_OwnFilterPanel> {
 
   @override
   Widget build(BuildContext context) => DropdownPanel(
-        child: IntrinsicWidth(
-          child: widget.build(
-            context,
-            TableFilterControls(
-              chosen: _chosen,
-              choose: (next) => setState(() => _chosen = [...next]),
-              apply: () => widget.onApply(_chosen),
-              clear: () => widget.onApply(const []),
-              close: widget.onClose,
-            ),
-          ),
+    child: IntrinsicWidth(
+      child: widget.build(
+        context,
+        TableFilterControls(
+          chosen: _chosen,
+          choose: (next) => setState(() => _chosen = [...next]),
+          apply: () => widget.onApply(_chosen),
+          clear: () => widget.onApply(const []),
+          close: widget.onClose,
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// The menu a funnel opens: the choices, and the two words that end it.
@@ -6894,17 +6884,17 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
   /// A branch that matched itself keeps all of its own; one kept only for a
   /// leaf keeps that leaf.
   List<TableFilter> _shown(List<TableFilter> among) => [
-        for (final choice in among)
-          if (_survives(choice))
-            if (!choice.isGroup || _matches(choice))
-              choice
-            else
-              TableFilter(
-                choice.label,
-                choice.value,
-                children: _shown(choice.children!),
-              ),
-      ];
+    for (final choice in among)
+      if (_survives(choice))
+        if (!choice.isGroup || _matches(choice))
+          choice
+        else
+          TableFilter(
+            choice.label,
+            choice.value,
+            children: _shown(choice.children!),
+          ),
+  ];
 
   /// Whether every leaf under this choice is chosen, and whether any is.
   ({bool all, bool some}) _stateOf(TableFilter choice) {
@@ -6940,10 +6930,7 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
   /// offer above the tree itself.
   Widget _everything(List<TableFilter> shown, Token t) {
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: t.sizeSM,
-        vertical: t.sizeXXS,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: t.sizeXXS),
       child: _box(
         TableFilter(context.seedLocale.selectAll, null, children: shown),
         t,
@@ -6975,7 +6962,8 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
             ),
             SizedBox(width: t.sizeXS),
             Flexible(
-                child: Text(choice.label, overflow: TextOverflow.ellipsis)),
+              child: Text(choice.label, overflow: TextOverflow.ellipsis),
+            ),
           ],
         ),
       ),
@@ -7006,9 +6994,7 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final child in choice.children!) _row(child, r, t),
-          ],
+          children: [for (final child in choice.children!) _row(child, r, t)],
         ),
       ),
       child: Padding(
@@ -7054,7 +7040,8 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
     var widest = 0.0;
     void walk(List<TableFilter> run, int depth) {
       for (final choice in run) {
-        final line = (depth + 2) * t.controlHeightSM +
+        final line =
+            (depth + 2) * t.controlHeightSM +
             t.sizeXS * 2 +
             _TableWidths.measure(choice.label, style, scaler, direction);
         if (line > widest) widest = line;
@@ -7067,7 +7054,8 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
     // The line that takes everything is not a tree row: it is a plain box in
     // the list's own padding, and it carries the longest words in the panel.
     if (widget.column.filterMultiple) {
-      final line = t.sizeSM * 2 +
+      final line =
+          t.sizeSM * 2 +
           _boxWidth(t) +
           _TableWidths.measure(
             context.seedLocale.selectAll,
@@ -7090,19 +7078,18 @@ class _FilterMenuState<T> extends State<_FilterMenu<T>> {
     // allowed to share one.
     final byKey = <String, TableFilter>{};
     List<TreeNode> nodes(List<TableFilter> among, String under) => [
-          for (var i = 0; i < among.length; i++)
-            () {
-              final choice = among[i];
-              final key = under.isEmpty ? '$i' : '$under/$i';
-              byKey[key] = choice;
-              return TreeNode(
-                key: key,
-                title: Text(choice.label, overflow: TextOverflow.ellipsis),
-                children:
-                    choice.isGroup ? nodes(choice.children!, key) : const [],
-              );
-            }(),
-        ];
+      for (var i = 0; i < among.length; i++)
+        () {
+          final choice = among[i];
+          final key = under.isEmpty ? '$i' : '$under/$i';
+          byKey[key] = choice;
+          return TreeNode(
+            key: key,
+            title: Text(choice.label, overflow: TextOverflow.ellipsis),
+            children: choice.isGroup ? nodes(choice.children!, key) : const [],
+          );
+        }(),
+    ];
 
     final roots = nodes(shown, '');
     // Branches as well as leaves: a tree is told what is ticked, not asked to
@@ -7368,29 +7355,30 @@ class _StickyState extends State<_Sticky> {
     final reveal = viewport.getOffsetToReveal(box, 0).offset;
     final past = position.pixels - reveal + widget.offset;
     return past.clamp(
-        0.0, math.max(0.0, box.size.height - widget.headingHeight));
+      0.0,
+      math.max(0.0, box.size.height - widget.headingHeight),
+    );
   }
 
   @override
   Widget build(BuildContext context) => Stack(
+    children: [
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // The heading's place, kept empty: the heading itself is drawn
-              // over everything below.
-              SizedBox(height: widget.headingHeight),
-              widget.body,
-            ],
-          ),
-          Transform.translate(
-            offset: Offset(0, _shift),
-            child:
-                SizedBox(height: widget.headingHeight, child: widget.heading),
-          ),
+          // The heading's place, kept empty: the heading itself is drawn
+          // over everything below.
+          SizedBox(height: widget.headingHeight),
+          widget.body,
         ],
-      );
+      ),
+      Transform.translate(
+        offset: Offset(0, _shift),
+        child: SizedBox(height: widget.headingHeight, child: widget.heading),
+      ),
+    ],
+  );
 }
 
 /// A plus inside a rounded square, which becomes a minus as the row opens.
@@ -7522,12 +7510,12 @@ class _Rows extends TwoDimensionalScrollView {
     required super.verticalDetails,
     required super.horizontalDetails,
   }) // One recognizer per axis, rather than the pan that would follow a
-  // finger diagonally. A pan asks the arena for more movement before it
-  // will claim a drag, so inside a scrolling page the page's own vertical
-  // drag won every time: measured, a hundred and thirty pixels of a
-  // hundred and fifty went to the page and the rows did not move at all.
-  // A trackpad is unaffected — a scroll is a pointer signal, not a drag.
-  : super(diagonalDragBehavior: DiagonalDragBehavior.none);
+    // finger diagonally. A pan asks the arena for more movement before it
+    // will claim a drag, so inside a scrolling page the page's own vertical
+    // drag won every time: measured, a hundred and thirty pixels of a
+    // hundred and fifty went to the page and the rows did not move at all.
+    // A trackpad is unaffected — a scroll is a pointer signal, not a drag.
+    : super(diagonalDragBehavior: DiagonalDragBehavior.none);
 
   final List<double> widths;
   final double rowHeight;
@@ -7570,29 +7558,28 @@ class _Rows extends TwoDimensionalScrollView {
     BuildContext context,
     ViewportOffset verticalOffset,
     ViewportOffset horizontalOffset,
-  ) =>
-      _RowsViewport(
-        widths: widths,
-        rowHeight: rowHeight,
-        headerRows: headerRows,
-        headerPlan: headerPlan,
-        shifts: shifts,
-        rowShifts: rowShifts,
-        bodySpans: bodySpans,
-        deepestSpan: deepestSpan,
-        panelRows: panelRows,
-        panelHeights: panelHeights,
-        footerRows: footerRows,
-        pinning: pinning,
-        shadeColor: shadeColor,
-        shadeExtent: shadeExtent,
-        horizontalOffset: horizontalOffset,
-        horizontalAxisDirection: horizontalDetails.direction,
-        verticalOffset: verticalOffset,
-        verticalAxisDirection: verticalDetails.direction,
-        delegate: delegate as TwoDimensionalChildBuilderDelegate,
-        mainAxis: mainAxis,
-      );
+  ) => _RowsViewport(
+    widths: widths,
+    rowHeight: rowHeight,
+    headerRows: headerRows,
+    headerPlan: headerPlan,
+    shifts: shifts,
+    rowShifts: rowShifts,
+    bodySpans: bodySpans,
+    deepestSpan: deepestSpan,
+    panelRows: panelRows,
+    panelHeights: panelHeights,
+    footerRows: footerRows,
+    pinning: pinning,
+    shadeColor: shadeColor,
+    shadeExtent: shadeExtent,
+    horizontalOffset: horizontalOffset,
+    horizontalAxisDirection: horizontalDetails.direction,
+    verticalOffset: verticalOffset,
+    verticalAxisDirection: verticalDetails.direction,
+    delegate: delegate as TwoDimensionalChildBuilderDelegate,
+    mainAxis: mainAxis,
+  );
 }
 
 class _RowsViewport extends TwoDimensionalViewport {
@@ -7705,20 +7692,20 @@ class _RowsViewport extends TwoDimensionalViewport {
 
 class _RenderRows extends RenderTwoDimensionalViewport {
   _RenderRows({
-    required List<double> widths,
-    required double rowHeight,
-    required int headerRows,
-    required List<({int x, int y, int across, int down})> headerPlan,
-    required List<double> shifts,
-    required List<double> rowShifts,
-    required List<Map<int, ({int across, int down})>> bodySpans,
-    required int deepestSpan,
+    required this._widths,
+    required this._rowHeight,
+    required this._headerRows,
+    required this._headerPlan,
+    required this._shifts,
+    required this._rowShifts,
+    required this._bodySpans,
+    required this._deepestSpan,
     required List<int> panelRows,
     required List<double> panelHeights,
-    required int footerRows,
-    required List<TableColumnFixed?> pinning,
-    required Color shadeColor,
-    required double shadeExtent,
+    required this._footerRows,
+    required this._pinning,
+    required this._shadeColor,
+    required this._shadeExtent,
     required super.horizontalOffset,
     required super.horizontalAxisDirection,
     required super.verticalOffset,
@@ -7726,18 +7713,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     required TwoDimensionalChildBuilderDelegate super.delegate,
     required super.mainAxis,
     required super.childManager,
-  })  : _widths = widths,
-        _rowHeight = rowHeight,
-        _headerRows = headerRows,
-        _headerPlan = headerPlan,
-        _shifts = shifts,
-        _rowShifts = rowShifts,
-        _bodySpans = bodySpans,
-        _deepestSpan = deepestSpan,
-        _footerRows = footerRows,
-        _pinning = pinning,
-        _shadeColor = shadeColor,
-        _shadeExtent = shadeExtent {
+  }) {
     _measureColumns();
     setPanels(panelRows, panelHeights);
   }
@@ -7841,9 +7817,9 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   /// The base class's cache extent, read without the deprecated getter: rows
   /// built one frame before they are wanted are rows nobody waits for.
   double _cache(double mainAxisExtent) => switch (scrollCacheExtent.style) {
-        CacheExtentStyle.pixel => scrollCacheExtent.value,
-        CacheExtentStyle.viewport => scrollCacheExtent.value * mainAxisExtent,
-      };
+    CacheExtentStyle.pixel => scrollCacheExtent.value,
+    CacheExtentStyle.viewport => scrollCacheExtent.value * mainAxisExtent,
+  };
 
   /// Where each column starts, worked out once when the widths change.
   ///
@@ -7941,7 +7917,8 @@ class _RenderRows extends RenderTwoDimensionalViewport {
   List<double> _panelBefore = const [0];
 
   void setPanels(List<int> rows, List<double> heights) {
-    var same = _panelRows.length == rows.length &&
+    var same =
+        _panelRows.length == rows.length &&
         _panelHeights.length == heights.length;
     if (same) {
       for (var i = 0; i < rows.length; i++) {
@@ -8083,9 +8060,9 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       final at = switch (_pinning[i]) {
         TableColumnFixed.start => math.max(natural, _restStart(i)),
         TableColumnFixed.end => math.min(
-            natural,
-            viewportDimension.width - _trail + _restEndBefore(i),
-          ),
+          natural,
+          viewportDimension.width - _trail + _restEndBefore(i),
+        ),
         null => natural,
       };
       if (x >= at && x < at + _widths[i]) return i;
@@ -8136,8 +8113,10 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     _maxAcross = math.max(0.0, total - _lead - _trail - freeWidth);
     horizontalOffset.applyContentDimensions(0, _maxAcross);
 
-    final bodyHeight =
-        math.max(0.0, size.height - _headerHeight - _footerHeight);
+    final bodyHeight = math.max(
+      0.0,
+      size.height - _headerHeight - _footerHeight,
+    );
     verticalOffset.applyContentDimensions(
       0,
       math.max(0, _runOfRows(bodyRows) - bodyHeight),
@@ -8151,10 +8130,7 @@ class _RenderRows extends RenderTwoDimensionalViewport {
     // built while the finger is moving.
     _firstRow = bodyRows == 0
         ? 0
-        : _rowAtOffset(
-            math.max(0, down - _cache(bodyHeight)),
-            bodyRows,
-          );
+        : _rowAtOffset(math.max(0, down - _cache(bodyHeight)), bodyRows);
     _lastRow = bodyRows == 0
         ? -1
         : _rowAtOffset(down + bodyHeight + _cache(bodyHeight), bodyRows);
@@ -8165,8 +8141,10 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       final natural = _startOf(i) - across + _shiftOf(i);
       return switch (_pinning[i]) {
         TableColumnFixed.start => math.max(natural, _restStart(i)),
-        TableColumnFixed.end =>
-          math.min(natural, size.width - _trail + _restEndBefore(i)),
+        TableColumnFixed.end => math.min(
+          natural,
+          size.width - _trail + _restEndBefore(i),
+        ),
         null => natural,
       };
     }
@@ -8230,9 +8208,11 @@ class _RenderRows extends RenderTwoDimensionalViewport {
           if (_pinning[i] == null) {
             final at = placeOf(i);
             var width = 0.0;
-            for (var k = 0;
-                k < start.value.across && i + k < _columnCount;
-                k++) {
+            for (
+              var k = 0;
+              k < start.value.across && i + k < _columnCount;
+              k++
+            ) {
               width += _widths[i + k];
             }
             if (at + width <= -_cache(freeWidth) ||
@@ -8324,31 +8304,28 @@ class _RenderRows extends RenderTwoDimensionalViewport {
       clip.layer = null;
       return;
     }
-    clip.layer = context.pushClipRect(
-      needsCompositing,
-      offset,
-      bounds,
-      (innerContext, innerOffset) {
-        // Column by column, each one's shade laid down before the next
-        // column's cells: a held column that has caught up covers the shade
-        // of the one it came to rest behind, which is what makes the handover
-        // a covering rather than a jump.
-        for (var x = _firstColumn; x <= _lastColumn; x++) {
-          if (_pinning[x] != held) continue;
-          for (var y = fromRow; y <= toRow; y++) {
-            final child = getChildFor(ChildVicinity(xIndex: x, yIndex: y));
-            if (child == null) continue;
-            final data = parentDataOf(child);
-            if (!data.isVisible) continue;
-            innerContext.paintChild(child, innerOffset + data.paintOffset!);
-          }
-          if (held != null) {
-            _castFor(innerContext, innerOffset, x, bounds, held: held);
-          }
+    clip.layer = context.pushClipRect(needsCompositing, offset, bounds, (
+      innerContext,
+      innerOffset,
+    ) {
+      // Column by column, each one's shade laid down before the next
+      // column's cells: a held column that has caught up covers the shade
+      // of the one it came to rest behind, which is what makes the handover
+      // a covering rather than a jump.
+      for (var x = _firstColumn; x <= _lastColumn; x++) {
+        if (_pinning[x] != held) continue;
+        for (var y = fromRow; y <= toRow; y++) {
+          final child = getChildFor(ChildVicinity(xIndex: x, yIndex: y));
+          if (child == null) continue;
+          final data = parentDataOf(child);
+          if (!data.isVisible) continue;
+          innerContext.paintChild(child, innerOffset + data.paintOffset!);
         }
-      },
-      oldLayer: clip.layer,
-    );
+        if (held != null) {
+          _castFor(innerContext, innerOffset, x, bounds, held: held);
+        }
+      }
+    }, oldLayer: clip.layer);
   }
 
   @override

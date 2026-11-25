@@ -100,35 +100,35 @@ class DividerToken {
   final double? plainTitleFontSize;
 
   _ResolvedDividerToken _resolve(Token t) => _ResolvedDividerToken(
-        lineColor: lineColor ?? t.colorSplit,
-        lineWidth: lineWidth ?? t.lineWidth,
-        marginSM: marginSM ?? t.sizeXS,
-        margin: margin ?? t.sizeLG,
-        marginLG: marginLG ?? t.sizeXL,
-        verticalMargin: verticalMargin ?? t.sizeXS,
-        verticalHeight: verticalHeight ?? t.fontSize * 0.9,
-        titleGap: titleGap ?? t.size,
-        titleColor: titleColor ?? t.colorText,
-        titleFontSize: titleFontSize ?? t.fontSizeLG,
-        titleFontWeight: titleFontWeight ?? FontWeight.w500,
-        plainTitleFontSize: plainTitleFontSize ?? t.fontSize,
-      );
+    lineColor: lineColor ?? t.colorSplit,
+    lineWidth: lineWidth ?? t.lineWidth,
+    marginSM: marginSM ?? t.sizeXS,
+    margin: margin ?? t.sizeLG,
+    marginLG: marginLG ?? t.sizeXL,
+    verticalMargin: verticalMargin ?? t.sizeXS,
+    verticalHeight: verticalHeight ?? t.fontSize * 0.9,
+    titleGap: titleGap ?? t.size,
+    titleColor: titleColor ?? t.colorText,
+    titleFontSize: titleFontSize ?? t.fontSizeLG,
+    titleFontWeight: titleFontWeight ?? FontWeight.w500,
+    plainTitleFontSize: plainTitleFontSize ?? t.fontSize,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   DividerToken merge(DividerToken other) => DividerToken(
-        lineColor: other.lineColor ?? lineColor,
-        lineWidth: other.lineWidth ?? lineWidth,
-        marginSM: other.marginSM ?? marginSM,
-        margin: other.margin ?? margin,
-        marginLG: other.marginLG ?? marginLG,
-        verticalMargin: other.verticalMargin ?? verticalMargin,
-        verticalHeight: other.verticalHeight ?? verticalHeight,
-        titleGap: other.titleGap ?? titleGap,
-        titleColor: other.titleColor ?? titleColor,
-        titleFontSize: other.titleFontSize ?? titleFontSize,
-        titleFontWeight: other.titleFontWeight ?? titleFontWeight,
-        plainTitleFontSize: other.plainTitleFontSize ?? plainTitleFontSize,
-      );
+    lineColor: other.lineColor ?? lineColor,
+    lineWidth: other.lineWidth ?? lineWidth,
+    marginSM: other.marginSM ?? marginSM,
+    margin: other.margin ?? margin,
+    marginLG: other.marginLG ?? marginLG,
+    verticalMargin: other.verticalMargin ?? verticalMargin,
+    verticalHeight: other.verticalHeight ?? verticalHeight,
+    titleGap: other.titleGap ?? titleGap,
+    titleColor: other.titleColor ?? titleColor,
+    titleFontSize: other.titleFontSize ?? titleFontSize,
+    titleFontWeight: other.titleFontWeight ?? titleFontWeight,
+    plainTitleFontSize: other.plainTitleFontSize ?? plainTitleFontSize,
+  );
 }
 
 @immutable
@@ -187,11 +187,11 @@ class DividerDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   DividerDefaults merge(DividerDefaults other) => DividerDefaults(
-        variant: other.variant ?? variant,
-        size: other.size ?? size,
-        titlePlacement: other.titlePlacement ?? titlePlacement,
-        plain: other.plain ?? plain,
-      );
+    variant: other.variant ?? variant,
+    size: other.size ?? size,
+    titlePlacement: other.titlePlacement ?? titlePlacement,
+    plain: other.plain ?? plain,
+  );
 }
 
 /// A line that separates content: blocks of a page, or words and buttons in
@@ -253,10 +253,11 @@ class Divider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (token ??
-            ConfigProvider.componentOf<DividerToken>(context) ??
-            const DividerToken())
-        ._resolve(t);
+    final r =
+        (token ??
+                ConfigProvider.componentOf<DividerToken>(context) ??
+                const DividerToken())
+            ._resolve(t);
     final defaults = ConfigProvider.defaultsOf<DividerDefaults>(context);
     final effectiveVariant =
         variant ?? defaults?.variant ?? DividerVariant.solid;
@@ -276,7 +277,8 @@ class Divider extends StatelessWidget {
       );
     }
 
-    final effectiveSize = size ??
+    final effectiveSize =
+        size ??
         defaults?.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
@@ -286,11 +288,11 @@ class Divider extends StatelessWidget {
       SoftSize.large => r.marginLG,
     };
     Widget line() => _Line(
-          axis: Axis.horizontal,
-          variant: effectiveVariant,
-          color: r.lineColor,
-          thickness: r.lineWidth,
-        );
+      axis: Axis.horizontal,
+      variant: effectiveVariant,
+      color: r.lineColor,
+      thickness: r.lineWidth,
+    );
 
     final title = child;
     if (title == null) {
@@ -303,7 +305,8 @@ class Divider extends StatelessWidget {
     }
 
     final isPlain = plain ?? defaults?.plain ?? false;
-    final placement = titlePlacement ??
+    final placement =
+        titlePlacement ??
         defaults?.titlePlacement ??
         DividerTitlePlacement.center;
     final styled = DefaultTextStyle.merge(
@@ -323,8 +326,9 @@ class Divider extends StatelessWidget {
     // named, and a twentieth of the line otherwise; the rest goes after.
     Widget run({int flex = 1}) => Expanded(flex: flex, child: line());
     final fixed = titleMargin;
-    final Widget edge =
-        fixed != null ? SizedBox(width: fixed, child: line()) : run();
+    final Widget edge = fixed != null
+        ? SizedBox(width: fixed, child: line())
+        : run();
     final rest = run(flex: fixed != null ? 1 : 19);
     final (leading, trailing) = switch (placement) {
       DividerTitlePlacement.center => (run(), run()),

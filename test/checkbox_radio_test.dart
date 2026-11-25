@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -10,15 +11,14 @@ import 'package:flutter/material.dart'
         Form,
         FormField,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui/src/components/data_entry/checkbox.dart'
     show CheckboxBox;
 import 'package:seed_ui/src/components/data_entry/radio.dart' show RadioDot;
 
 Widget _host(Widget child) => MaterialApp(
-      home: Scaffold(body: Center(child: child)),
-    );
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   _statusTests();
@@ -58,8 +58,9 @@ void main() {
       expect(calls, 0);
     });
 
-    testWidgets('indeterminate still reports the opposite of value',
-        (tester) async {
+    testWidgets('indeterminate still reports the opposite of value', (
+      tester,
+    ) async {
       bool? seen;
       await tester.pumpWidget(
         _host(
@@ -229,8 +230,9 @@ void main() {
     });
   });
 
-  testWidgets('a run of buttons stands exactly as tall as a button beside it',
-      (tester) async {
+  testWidgets('a run of buttons stands exactly as tall as a button beside it', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         Row(
@@ -257,17 +259,17 @@ void main() {
     // Not merely the same in the layout: a stroke centred on the edge stands
     // half a line outside the box, and the run came out a pixel taller than
     // the button. Every side is drawn inside, as a button draws its own.
-    final decoration = tester
-        .widget<AnimatedContainer>(find.byType(AnimatedContainer).first)
-        .decoration! as BoxDecoration;
-    expect(
-      decoration.border!.top.strokeAlign,
-      BorderSide.strokeAlignInside,
-    );
+    final decoration =
+        tester
+                .widget<AnimatedContainer>(find.byType(AnimatedContainer).first)
+                .decoration!
+            as BoxDecoration;
+    expect(decoration.border!.top.strokeAlign, BorderSide.strokeAlignInside);
   });
 
-  testWidgets('two buttons of a run share one divider, not two',
-      (tester) async {
+  testWidgets('two buttons of a run share one divider, not two', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         RadioGroup<String>(
@@ -327,8 +329,9 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _host(Checkbox(
-            checked: false, label: const Text('x'), onChanged: (_) {})),
+        _host(
+          Checkbox(checked: false, label: const Text('x'), onChanged: (_) {}),
+        ),
       );
       await tester.tap(find.text('x'));
       await tester.pumpAndSettle();
@@ -399,13 +402,12 @@ void main() {
       );
       await tester.tap(find.text('Yearly'));
       await tester.pumpAndSettle();
-      final radios =
-          tester.widgetList<Radio<String>>(find.byType(Radio<String>));
-      expect(
-        radios.map((r) => r.groupValue).toSet(),
-        {'yearly'},
-        reason: 'the group moved itself',
+      final radios = tester.widgetList<Radio<String>>(
+        find.byType(Radio<String>),
       );
+      expect(radios.map((r) => r.groupValue).toSet(), {
+        'yearly',
+      }, reason: 'the group moved itself');
     });
   });
 
@@ -423,11 +425,7 @@ void main() {
               radio: RadioToken(dotColor: dot),
             ),
           ),
-          child: Radio<String>(
-            value: 'a',
-            groupValue: 'a',
-            onChanged: (_) {},
-          ),
+          child: Radio<String>(value: 'a', groupValue: 'a', onChanged: (_) {}),
         ),
       ),
     );
@@ -445,9 +443,7 @@ void main() {
     expect((ring.border! as Border).top.color, dot);
   });
 
-  testWidgets('a button-style run takes its own fills and ink', (
-    tester,
-  ) async {
+  testWidgets('a button-style run takes its own fills and ink', (tester) async {
     const resting = Color(0xFF102030);
     const taken = Color(0xFF405060);
     const ink = Color(0xFF708090);
@@ -521,7 +517,9 @@ void _sizeTests() {
     double wordsOf(WidgetTester tester, String label) => tester
         .widget<RichText>(
           find.descendant(
-              of: find.text(label), matching: find.byType(RichText)),
+            of: find.text(label),
+            matching: find.byType(RichText),
+          ),
         )
         .text
         .style!
@@ -530,12 +528,12 @@ void _sizeTests() {
     Widget box({ControlSize? size}) =>
         Checkbox(size: size, onChanged: (_) {}, label: const Text('Box'));
     Widget dot({ControlSize? size}) => Radio<String>(
-          value: 'a',
-          groupValue: 'a',
-          size: size,
-          onChanged: (_) {},
-          child: const Text('Dot'),
-        );
+      value: 'a',
+      groupValue: 'a',
+      size: size,
+      onChanged: (_) {},
+      child: const Text('Dot'),
+    );
 
     testWidgets('left alone, nothing has moved', (tester) async {
       await tester.pumpWidget(_host(Column(children: [box(), dot()])));
@@ -550,7 +548,14 @@ void _sizeTests() {
     ]) {
       testWidgets('$size sizes a box and a radio alike', (tester) async {
         await tester.pumpWidget(
-          _host(Column(children: [box(size: size), dot(size: size)])),
+          _host(
+            Column(
+              children: [
+                box(size: size),
+                dot(size: size),
+              ],
+            ),
+          ),
         );
         expect(boxOf(tester), side);
         expect(dotOf(tester), side);
@@ -570,10 +575,14 @@ void _sizeTests() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _host(Column(children: [
-          box(size: const ControlSize.height(24)),
-          dot(size: const ControlSize.height(24)),
-        ])),
+        _host(
+          Column(
+            children: [
+              box(size: const ControlSize.height(24)),
+              dot(size: const ControlSize.height(24)),
+            ],
+          ),
+        ),
       );
       final t = tester.element(find.byType(Checkbox)).softToken;
       expect(boxOf(tester), 24);
@@ -630,20 +639,22 @@ void _sizeTests() {
     ) async {
       await tester.pumpWidget(
         _host(
-          Column(children: [
-            Checkbox(
-              size: SoftSize.large,
-              token: const CheckboxToken(boxSizeLG: 28),
-              onChanged: (_) {},
-            ),
-            Radio<String>(
-              value: 'a',
-              groupValue: 'a',
-              size: SoftSize.small,
-              token: const RadioToken(radioSizeSM: 12),
-              onChanged: (_) {},
-            ),
-          ]),
+          Column(
+            children: [
+              Checkbox(
+                size: SoftSize.large,
+                token: const CheckboxToken(boxSizeLG: 28),
+                onChanged: (_) {},
+              ),
+              Radio<String>(
+                value: 'a',
+                groupValue: 'a',
+                size: SoftSize.small,
+                token: const RadioToken(radioSizeSM: 12),
+                onChanged: (_) {},
+              ),
+            ],
+          ),
         ),
       );
       expect(boxOf(tester), 28);
@@ -706,7 +717,9 @@ void _statusTests() {
       final box = tester.widget<AnimatedContainer>(
         find
             .descendant(
-                of: find.byType(type), matching: find.byType(AnimatedContainer))
+              of: find.byType(type),
+              matching: find.byType(AnimatedContainer),
+            )
             .first,
       );
       return ((box.decoration! as BoxDecoration).border! as Border).top.color;
@@ -716,15 +729,19 @@ void _statusTests() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _host(Column(children: [
-          Checkbox(status: InputStatus.error, onChanged: (_) {}),
-          Radio<String>(
-            value: 'a',
-            groupValue: 'b',
-            status: InputStatus.warning,
-            onChanged: (_) {},
+        _host(
+          Column(
+            children: [
+              Checkbox(status: InputStatus.error, onChanged: (_) {}),
+              Radio<String>(
+                value: 'a',
+                groupValue: 'b',
+                status: InputStatus.warning,
+                onChanged: (_) {},
+              ),
+            ],
           ),
-        ])),
+        ),
       );
       final t = tester.element(find.byType(Checkbox)).softToken;
       expect(edgeOf(tester, CheckboxBox), t.error.base);
@@ -752,8 +769,9 @@ void _statusTests() {
         ),
       );
       final t = tester.element(find.byType(CheckboxGroup<String>)).softToken;
-      for (final box
-          in tester.widgetList<CheckboxBox>(find.byType(CheckboxBox))) {
+      for (final box in tester.widgetList<CheckboxBox>(
+        find.byType(CheckboxBox),
+      )) {
         expect(box.status, InputStatus.error);
       }
       expect(edgeOf(tester, CheckboxBox), t.error.base);

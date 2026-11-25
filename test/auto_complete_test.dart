@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,21 +10,19 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(
-          body: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(width: 280, child: child),
-          ),
-        ),
+  child: MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(
+      body: Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(width: 280, child: child),
       ),
-    );
+    ),
+  ),
+);
 
 const _cities = [
   AutoCompleteOption(value: 'Amsterdam'),
@@ -36,16 +36,16 @@ String _text(WidgetTester tester) =>
 
 /// The suggestions on screen, top to bottom.
 List<String> _offered(WidgetTester tester) => [
-      for (final city in ['Amsterdam', 'Ankara', 'Athens', 'Berlin'])
-        if (find
-            .descendant(
-              of: find.byType(DropdownPanel),
-              matching: find.textContaining(city, findRichText: true),
-            )
-            .evaluate()
-            .isNotEmpty)
-          city,
-    ];
+  for (final city in ['Amsterdam', 'Ankara', 'Athens', 'Berlin'])
+    if (find
+        .descendant(
+          of: find.byType(DropdownPanel),
+          matching: find.textContaining(city, findRichText: true),
+        )
+        .evaluate()
+        .isNotEmpty)
+      city,
+];
 
 Future<void> _typeIn(WidgetTester tester, String text) async {
   await tester.enterText(find.byType(EditableText), text);
@@ -53,8 +53,9 @@ Future<void> _typeIn(WidgetTester tester, String text) async {
 }
 
 void main() {
-  testWidgets('focused, it offers everything; typed in, what holds the text',
-      (tester) async {
+  testWidgets('focused, it offers everything; typed in, what holds the text', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host(const AutoComplete(options: _cities)));
     await tester.tap(find.byType(EditableText));
     await tester.pumpAndSettle();
@@ -159,8 +160,11 @@ void main() {
     await _typeIn(tester, 'a'); // Amsterdam reached at once, then Ankara
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.pump();
-    expect(_text(tester), 'Ankara',
-        reason: 'the keys write what they reach into the field');
+    expect(
+      _text(tester),
+      'Ankara',
+      reason: 'the keys write what they reach into the field',
+    );
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.byType(DropdownPanel), findsNothing);

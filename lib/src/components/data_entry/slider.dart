@@ -70,12 +70,13 @@ enum SliderMarkSide {
 /// dot is. Wrap it and the mark keeps every state for nothing; wrap it in a
 /// menu or a popover and the mark becomes something to press. [active] is
 /// whether the handle has reached this mark.
-typedef SliderMarkBuilder = Widget Function(
-  BuildContext context,
-  SliderMark mark,
-  bool active,
-  Widget child,
-);
+typedef SliderMarkBuilder =
+    Widget Function(
+      BuildContext context,
+      SliderMark mark,
+      bool active,
+      Widget child,
+    );
 
 /// A labelled point on a [Slider]'s scale.
 @immutable
@@ -96,14 +97,11 @@ class SliderMark {
   /// Worth having apart from [Slider.dots], which dots every step: a stop
   /// that is not every step, and may be [disabled], has nothing to say but
   /// still has to be there.
-  const SliderMark.dot(
-    this.value, {
-    this.hidden = false,
-    this.disabled = false,
-  })  : label = null,
-        style = null,
-        markBuilder = null,
-        side = SliderMarkSide.after;
+  const SliderMark.dot(this.value, {this.hidden = false, this.disabled = false})
+    : label = null,
+      style = null,
+      markBuilder = null,
+      side = SliderMarkSide.after;
 
   /// Where on the scale it sits. Must lie within the slider's own range.
   final double value;
@@ -156,16 +154,15 @@ class SliderMark {
     SliderMarkSide? side,
     bool? hidden,
     bool? disabled,
-  }) =>
-      SliderMark(
-        value ?? this.value,
-        label ?? this.label,
-        style: style ?? this.style,
-        markBuilder: markBuilder ?? this.markBuilder,
-        side: side ?? this.side,
-        hidden: hidden ?? this.hidden,
-        disabled: disabled ?? this.disabled,
-      );
+  }) => SliderMark(
+    value ?? this.value,
+    label ?? this.label,
+    style: style ?? this.style,
+    markBuilder: markBuilder ?? this.markBuilder,
+    side: side ?? this.side,
+    hidden: hidden ?? this.hidden,
+    disabled: disabled ?? this.disabled,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -179,15 +176,8 @@ class SliderMark {
       other.disabled == disabled;
 
   @override
-  int get hashCode => Object.hash(
-        value,
-        label,
-        style,
-        markBuilder,
-        side,
-        hidden,
-        disabled,
-      );
+  int get hashCode =>
+      Object.hash(value, label, style, markBuilder, side, hidden, disabled);
 }
 
 /// Per-component design tokens for [Slider] and [RangeSlider].
@@ -316,30 +306,28 @@ class SliderToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SliderToken merge(SliderToken other) => SliderToken(
-        dotBg: other.dotBg ?? dotBg,
-        handleBg: other.handleBg ?? handleBg,
-        railSize: other.railSize ?? railSize,
-        handleSize: other.handleSize ?? handleSize,
-        handleSizeHover: other.handleSizeHover ?? handleSizeHover,
-        dotSize: other.dotSize ?? dotSize,
-        handleLineWidth: other.handleLineWidth ?? handleLineWidth,
-        handleLineWidthHover:
-            other.handleLineWidthHover ?? handleLineWidthHover,
-        railBg: other.railBg ?? railBg,
-        railHoverBg: other.railHoverBg ?? railHoverBg,
-        trackBg: other.trackBg ?? trackBg,
-        trackHoverBg: other.trackHoverBg ?? trackHoverBg,
-        handleColor: other.handleColor ?? handleColor,
-        handleActiveColor: other.handleActiveColor ?? handleActiveColor,
-        handleColorDisabled: other.handleColorDisabled ?? handleColorDisabled,
-        trackBgDisabled: other.trackBgDisabled ?? trackBgDisabled,
-        dotBorderColor: other.dotBorderColor ?? dotBorderColor,
-        markColor: other.markColor ?? markColor,
-        markDisabledColor: other.markDisabledColor ?? markDisabledColor,
-        markFontSize: other.markFontSize ?? markFontSize,
-        dotActiveBorderColor:
-            other.dotActiveBorderColor ?? dotActiveBorderColor,
-      );
+    dotBg: other.dotBg ?? dotBg,
+    handleBg: other.handleBg ?? handleBg,
+    railSize: other.railSize ?? railSize,
+    handleSize: other.handleSize ?? handleSize,
+    handleSizeHover: other.handleSizeHover ?? handleSizeHover,
+    dotSize: other.dotSize ?? dotSize,
+    handleLineWidth: other.handleLineWidth ?? handleLineWidth,
+    handleLineWidthHover: other.handleLineWidthHover ?? handleLineWidthHover,
+    railBg: other.railBg ?? railBg,
+    railHoverBg: other.railHoverBg ?? railHoverBg,
+    trackBg: other.trackBg ?? trackBg,
+    trackHoverBg: other.trackHoverBg ?? trackHoverBg,
+    handleColor: other.handleColor ?? handleColor,
+    handleActiveColor: other.handleActiveColor ?? handleActiveColor,
+    handleColorDisabled: other.handleColorDisabled ?? handleColorDisabled,
+    trackBgDisabled: other.trackBgDisabled ?? trackBgDisabled,
+    dotBorderColor: other.dotBorderColor ?? dotBorderColor,
+    markColor: other.markColor ?? markColor,
+    markDisabledColor: other.markDisabledColor ?? markDisabledColor,
+    markFontSize: other.markFontSize ?? markFontSize,
+    dotActiveBorderColor: other.dotActiveBorderColor ?? dotActiveBorderColor,
+  );
 }
 
 @immutable
@@ -403,11 +391,7 @@ class _ResolvedSliderToken {
 @immutable
 class SliderDefaults {
   /// Creates a [SliderDefaults].
-  const SliderDefaults({
-    this.dots,
-    this.included,
-    this.disabled,
-  });
+  const SliderDefaults({this.dots, this.included, this.disabled});
 
   /// Whether the marks are drawn as dots.
   final bool? dots;
@@ -423,10 +407,10 @@ class SliderDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SliderDefaults merge(SliderDefaults other) => SliderDefaults(
-        dots: other.dots ?? dots,
-        included: other.included ?? included,
-        disabled: other.disabled ?? disabled,
-      );
+    dots: other.dots ?? dots,
+    included: other.included ?? included,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A groove with a handle, for choosing a number by dragging.
@@ -539,8 +523,8 @@ class Slider extends StatefulWidget {
     this.semanticsLabel,
     this.controller,
     this.token,
-  })  : assert(min < max, 'min must be less than max'),
-        assert(step == null || step > 0, 'step must be positive');
+  }) : assert(min < max, 'min must be less than max'),
+       assert(step == null || step > 0, 'step must be positive');
 
   /// Where the handle stands. Null leaves the slider to keep its own place
   /// (see [defaultValue]).
@@ -757,8 +741,8 @@ class RangeSlider extends StatefulWidget {
     this.semanticsLabel,
     this.controller,
     this.token,
-  })  : assert(min < max, 'min must be less than max'),
-        assert(step == null || step > 0, 'step must be positive');
+  }) : assert(min < max, 'min must be less than max'),
+       assert(step == null || step > 0, 'step must be positive');
 
   /// Whether the span between the handles may be taken hold of and moved as
   /// one.
@@ -1014,13 +998,13 @@ class MultiRangeSlider extends StatefulWidget {
     this.semanticsLabel,
     this.controller,
     this.token,
-  })  : assert(min < max, 'min must be less than max'),
-        assert(step == null || step > 0, 'step must be positive'),
-        assert(minCount >= 2, 'a range needs two handles at the least'),
-        assert(
-          maxCount == null || maxCount >= minCount,
-          'maxCount must leave room for minCount',
-        );
+  }) : assert(min < max, 'min must be less than max'),
+       assert(step == null || step > 0, 'step must be positive'),
+       assert(minCount >= 2, 'a range needs two handles at the least'),
+       assert(
+         maxCount == null || maxCount >= minCount,
+         'maxCount must leave room for minCount',
+       );
 
   /// Where the handles stand, in order. Null leaves the slider to keep its
   /// own (see [defaultValues]).
@@ -1339,10 +1323,10 @@ class _SliderCoreState extends State<_SliderCore>
   }
 
   void _attachController() => widget.controller?._attach(
-        step: (handle, forward) =>
-            _asController(() => _stepHandle(handle, forward)),
-        moveTo: (handle, value) => _asController(() => _sendTo(handle, value)),
-      );
+    step: (handle, forward) =>
+        _asController(() => _stepHandle(handle, forward)),
+    moveTo: (handle, value) => _asController(() => _sendTo(handle, value)),
+  );
 
   /// Runs a controller's call with the rebuild it brings back marked as one to
   /// glide to.
@@ -1425,7 +1409,7 @@ class _SliderCoreState extends State<_SliderCore>
     if (from.length != to.length) return to;
     final t = Curves.easeInOutCubic.transform(progress);
     return [
-      for (var i = 0; i < to.length; i++) from[i] + (to[i] - from[i]) * t
+      for (var i = 0; i < to.length; i++) from[i] + (to[i] - from[i]) * t,
     ];
   }
 
@@ -1593,10 +1577,11 @@ class _SliderCoreState extends State<_SliderCore>
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<SliderToken>(context) ??
-            const SliderToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<SliderToken>(context) ??
+                const SliderToken())
+            ._resolve(t);
     _reportReach();
 
     final thickness = r.handleSizeHover + r.handleLineWidthHover * 2;
@@ -1764,7 +1749,9 @@ class _SliderCoreState extends State<_SliderCore>
     // Placed where the handle is drawn, so touch exploration lands on it
     // mid-glide; the value it reads out is where it is going.
     final along = _alongFor(
-        _fractionOf(_shown[index]), widget.vertical ? size.height : size.width);
+      _fractionOf(_shown[index]),
+      widget.vertical ? size.height : size.width,
+    );
 
     // The keys run with the scale, so a reversed one swaps which way "more"
     // is — and the announcement has to swap with it, or the reader is told
@@ -1776,8 +1763,9 @@ class _SliderCoreState extends State<_SliderCore>
       left: widget.vertical ? 0 : along,
       top: widget.vertical ? along : 0,
       child: FractionalTranslation(
-        translation:
-            widget.vertical ? const Offset(0, -0.5) : const Offset(-0.5, 0),
+        translation: widget.vertical
+            ? const Offset(0, -0.5)
+            : const Offset(-0.5, 0),
         child: Semantics(
           // Its own node, not an annotation folded into the groove's: an
           // annotation merges with the gesture handler wrapped round the
@@ -1840,9 +1828,9 @@ class _SliderCoreState extends State<_SliderCore>
 
   /// Where the bubble sits along the groove.
   double _bubbleAlong(Size size) => _alongFor(
-        _fractionOf(widget.values[_dragging ?? 0]),
-        widget.vertical ? size.height : size.width,
-      );
+    _fractionOf(widget.values[_dragging ?? 0]),
+    widget.vertical ? size.height : size.width,
+  );
 
   void _dragStart(DragStartDetails details) {
     if (!_takesHand) return;
@@ -1998,8 +1986,10 @@ class _SliderCoreState extends State<_SliderCore>
     final length = widget.vertical ? size.height : size.width;
     final span = widget.max - widget.min;
     final overlap = length <= 0 ? 0.0 : _handleReach * 2 / length * span;
-    final reach =
-        [overlap, (widget.step ?? 0.0001) / 2].reduce((a, b) => a > b ? a : b);
+    final reach = [
+      overlap,
+      (widget.step ?? 0.0001) / 2,
+    ].reduce((a, b) => a > b ? a : b);
     for (var i = 0; i < values.length; i++) {
       if (i == index) continue;
       if ((values[i] - me).abs() <= reach) return true;
@@ -2031,10 +2021,11 @@ class _SliderCoreState extends State<_SliderCore>
 
   /// How far from a handle's middle still counts as the handle.
   double get _handleReach {
-    final r = (widget.token ??
-            ConfigProvider.componentOf<SliderToken>(context) ??
-            const SliderToken())
-        ._resolve(context.softToken);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<SliderToken>(context) ??
+                const SliderToken())
+            ._resolve(context.softToken);
     return r.handleSizeHover / 2 + r.handleLineWidthHover;
   }
 
@@ -2068,8 +2059,10 @@ class _SliderCoreState extends State<_SliderCore>
     final step = widget.step ?? (widget.max - widget.min) / 100;
     final direction = forward ? 1 : -1;
     final next = [...widget.values];
-    next[index] =
-        (next[index] + step * direction).clamp(widget.min, widget.max);
+    next[index] = (next[index] + step * direction).clamp(
+      widget.min,
+      widget.max,
+    );
     widget.onChanged?.call(next);
     widget.onChangeComplete?.call(next);
   }
@@ -2116,12 +2109,10 @@ class _SliderCoreState extends State<_SliderCore>
   /// Which of those dots the handle has reached.
   List<bool> _activeDots() {
     final values = widget.dots && widget.step != null
-        ? [
-            for (var v = widget.min; v <= widget.max; v += widget.step!) v,
-          ]
+        ? [for (var v = widget.min; v <= widget.max; v += widget.step!) v]
         : [
             for (final m in widget.marks)
-              if (!m.hidden) m.value
+              if (!m.hidden) m.value,
           ];
     final shown = _shown;
     final low = widget.fillFromStart
@@ -2143,7 +2134,11 @@ class _SliderCoreState extends State<_SliderCore>
 
   /// One mark's label, styled and then handed to whoever draws it.
   Widget _markLabel(
-      BuildContext context, Token t, _ResolvedSliderToken r, SliderMark mark) {
+    BuildContext context,
+    Token t,
+    _ResolvedSliderToken r,
+    SliderMark mark,
+  ) {
     final base = TextStyle(
       color: mark.disabled ? r.markDisabledColor : r.markColor,
       fontSize: r.markFontSize,
@@ -2193,7 +2188,7 @@ class _SliderCoreState extends State<_SliderCore>
   ) {
     final shown = [
       for (final m in widget.marks)
-        if (!m.hidden) m
+        if (!m.hidden) m,
     ];
     final before = [
       for (final m in shown)
@@ -2222,45 +2217,40 @@ class _SliderCoreState extends State<_SliderCore>
     /// the semantics tree by hand so a screen reader would not read the marks
     /// twice over.
     Widget band(List<SliderMark> marks) => LayoutBuilder(
-          builder: (context, constraints) {
-            final extent =
-                widget.vertical ? constraints.maxHeight : constraints.maxWidth;
-            return Stack(
-              clipBehavior: Clip.none,
-              children: [
-                for (final mark in marks)
-                  Transform.translate(
-                    offset: widget.vertical
-                        ? Offset(0, _alongFor(_fractionOf(mark.value), extent))
-                        : Offset(_alongFor(_fractionOf(mark.value), extent), 0),
-                    child: FractionalTranslation(
-                      // Half its own size back, so a label is centred on the
-                      // point it names rather than starting there.
-                      translation: widget.vertical
-                          ? const Offset(0, -0.5)
-                          : const Offset(-0.5, 0),
-                      child: _markLabel(context, t, r, mark),
-                    ),
-                  ),
-              ],
-            );
-          },
+      builder: (context, constraints) {
+        final extent = widget.vertical
+            ? constraints.maxHeight
+            : constraints.maxWidth;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            for (final mark in marks)
+              Transform.translate(
+                offset: widget.vertical
+                    ? Offset(0, _alongFor(_fractionOf(mark.value), extent))
+                    : Offset(_alongFor(_fractionOf(mark.value), extent), 0),
+                child: FractionalTranslation(
+                  // Half its own size back, so a label is centred on the
+                  // point it names rather than starting there.
+                  translation: widget.vertical
+                      ? const Offset(0, -0.5)
+                      : const Offset(-0.5, 0),
+                  child: _markLabel(context, t, r, mark),
+                ),
+              ),
+          ],
         );
+      },
+    );
 
     if (widget.vertical) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (before.isNotEmpty) ...[
-            band(before),
-            SizedBox(width: t.sizeXS),
-          ],
+          if (before.isNotEmpty) ...[band(before), SizedBox(width: t.sizeXS)],
           SizedBox(width: thickness, child: groove),
-          if (after.isNotEmpty) ...[
-            SizedBox(width: t.sizeXS),
-            band(after),
-          ],
+          if (after.isNotEmpty) ...[SizedBox(width: t.sizeXS), band(after)],
         ],
       );
     }
@@ -2327,8 +2317,9 @@ class _SliderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rail = Paint()
-      ..color =
-          enabled ? (hovered ? token.railHoverBg : token.railBg) : token.railBg
+      ..color = enabled
+          ? (hovered ? token.railHoverBg : token.railBg)
+          : token.railBg
       ..strokeCap = StrokeCap.round
       ..strokeWidth = token.railSize;
 
@@ -2352,8 +2343,9 @@ class _SliderPainter extends CustomPainter {
     }
 
     if (included) {
-      final low =
-          fillFromStart ? 0.0 : fractions.reduce((a, b) => a < b ? a : b);
+      final low = fillFromStart
+          ? 0.0
+          : fractions.reduce((a, b) => a < b ? a : b);
       final high = fillFromStart
           ? fractions.first
           : fractions.reduce((a, b) => a > b ? a : b);
@@ -2370,11 +2362,7 @@ class _SliderPainter extends CustomPainter {
       final centre = _at(dotFractions[i], size);
       final on = i < activeDots.length && activeDots[i];
       canvas
-        ..drawCircle(
-          centre,
-          token.dotSize / 2,
-          Paint()..color = token.dotBg,
-        )
+        ..drawCircle(centre, token.dotSize / 2, Paint()..color = token.dotBg)
         ..drawCircle(
           centre,
           token.dotSize / 2,
@@ -2393,8 +2381,8 @@ class _SliderPainter extends CustomPainter {
       var colour = !enabled
           ? token.handleColorDisabled
           : (dragging == i || hovered
-              ? token.handleActiveColor
-              : token.handleColor);
+                ? token.handleActiveColor
+                : token.handleColor);
       // On its way out: drawn faint, so a handle about to be let go of says
       // so before the finger lifts rather than after.
       final leaving = dropping && dragging == i;
@@ -2402,11 +2390,7 @@ class _SliderPainter extends CustomPainter {
       canvas
         // The ring is drawn outside the disc, the way a focus shadow sits,
         // so the handle keeps the diameter its token names.
-        ..drawCircle(
-          centre,
-          diameter / 2 + ring,
-          Paint()..color = colour,
-        )
+        ..drawCircle(centre, diameter / 2 + ring, Paint()..color = colour)
         ..drawCircle(
           centre,
           diameter / 2,
@@ -2462,7 +2446,8 @@ class _Bubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolved = ConfigProvider.componentOf<TooltipToken>(context) ??
+    final resolved =
+        ConfigProvider.componentOf<TooltipToken>(context) ??
         const TooltipToken();
     return Padding(
       padding: EdgeInsets.only(bottom: token.sizeXXS),

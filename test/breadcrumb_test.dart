@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,18 +11,16 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(
-          body: Align(alignment: Alignment.topLeft, child: child),
-        ),
-      ),
-    );
+  child: MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(
+      body: Align(alignment: Alignment.topLeft, child: child),
+    ),
+  ),
+);
 
 const _path = [
   BreadcrumbItem(value: 'home', label: 'Home'),
@@ -32,9 +32,7 @@ Color _colorOf(WidgetTester tester, String text) =>
     tester.widget<Text>(find.text(text)).style!.color!;
 
 void main() {
-  testWidgets('crumbs in order, a separator between each two', (
-    tester,
-  ) async {
+  testWidgets('crumbs in order, a separator between each two', (tester) async {
     await tester.pumpWidget(_host(const Breadcrumb<String>(items: _path)));
     expect(find.text('/'), findsNWidgets(2));
     final home = tester.getCenter(find.text('Home')).dx;
@@ -144,30 +142,27 @@ void main() {
         ),
       ),
     );
-    expect(
-      find.bySemanticsLabel('Home'),
-      findsOneWidget,
-    );
+    expect(find.bySemanticsLabel('Home'), findsOneWidget);
     handle.dispose();
   });
 
   group('a crumb with a menu', () {
     Widget menu(List<String?> told) => _host(
-          Breadcrumb<String>(
-            items: const [
-              BreadcrumbItem(value: 'home', label: 'Home'),
-              BreadcrumbItem(
-                value: 'seed',
-                label: 'Seed',
-                menu: [
-                  DropdownItem(value: 'atlas', label: 'Atlas'),
-                  DropdownItem(value: 'orbit', label: 'Orbit'),
-                ],
-              ),
+      Breadcrumb<String>(
+        items: const [
+          BreadcrumbItem(value: 'home', label: 'Home'),
+          BreadcrumbItem(
+            value: 'seed',
+            label: 'Seed',
+            menu: [
+              DropdownItem(value: 'atlas', label: 'Atlas'),
+              DropdownItem(value: 'orbit', label: 'Orbit'),
             ],
-            onItemTap: told.add,
           ),
-        );
+        ],
+        onItemTap: told.add,
+      ),
+    );
 
     testWidgets('a tap opens it, and a choice is reported', (tester) async {
       final told = <String?>[];

@@ -90,39 +90,39 @@ class CardToken {
   final double? tabsGap;
 
   _ResolvedCardToken _resolve(Token t) => _ResolvedCardToken(
-        tabsGap: tabsGap ?? 10,
-        headerBg: headerBg ?? const Color(0x00000005),
-        headerFontSize: headerFontSize ?? t.fontSizeLG,
-        headerFontSizeSM: headerFontSizeSM ?? t.fontSize,
-        headerHeight: headerHeight ?? 56,
-        headerHeightSM: headerHeightSM ?? 38,
-        headerPadding: headerPadding ?? t.sizeLG,
-        headerPaddingSM: headerPaddingSM ?? t.sizeSM,
-        bodyPadding: bodyPadding ?? EdgeInsets.all(t.sizeLG),
-        bodyPaddingSM: bodyPaddingSM ?? EdgeInsets.all(t.sizeSM),
-        actionsBg: actionsBg ?? t.colorBgContainer,
-        actionsLiMargin: actionsLiMargin ?? t.sizeSM,
-        extraColor: extraColor ?? t.colorText,
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-      );
+    tabsGap: tabsGap ?? 10,
+    headerBg: headerBg ?? const Color(0x00000005),
+    headerFontSize: headerFontSize ?? t.fontSizeLG,
+    headerFontSizeSM: headerFontSizeSM ?? t.fontSize,
+    headerHeight: headerHeight ?? 56,
+    headerHeightSM: headerHeightSM ?? 38,
+    headerPadding: headerPadding ?? t.sizeLG,
+    headerPaddingSM: headerPaddingSM ?? t.sizeSM,
+    bodyPadding: bodyPadding ?? EdgeInsets.all(t.sizeLG),
+    bodyPaddingSM: bodyPaddingSM ?? EdgeInsets.all(t.sizeSM),
+    actionsBg: actionsBg ?? t.colorBgContainer,
+    actionsLiMargin: actionsLiMargin ?? t.sizeSM,
+    extraColor: extraColor ?? t.colorText,
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   CardToken merge(CardToken other) => CardToken(
-        tabsGap: other.tabsGap ?? tabsGap,
-        headerBg: other.headerBg ?? headerBg,
-        headerFontSize: other.headerFontSize ?? headerFontSize,
-        headerFontSizeSM: other.headerFontSizeSM ?? headerFontSizeSM,
-        headerHeight: other.headerHeight ?? headerHeight,
-        headerHeightSM: other.headerHeightSM ?? headerHeightSM,
-        headerPadding: other.headerPadding ?? headerPadding,
-        headerPaddingSM: other.headerPaddingSM ?? headerPaddingSM,
-        bodyPadding: other.bodyPadding ?? bodyPadding,
-        bodyPaddingSM: other.bodyPaddingSM ?? bodyPaddingSM,
-        actionsBg: other.actionsBg ?? actionsBg,
-        actionsLiMargin: other.actionsLiMargin ?? actionsLiMargin,
-        extraColor: other.extraColor ?? extraColor,
-        borderRadius: other.borderRadius ?? borderRadius,
-      );
+    tabsGap: other.tabsGap ?? tabsGap,
+    headerBg: other.headerBg ?? headerBg,
+    headerFontSize: other.headerFontSize ?? headerFontSize,
+    headerFontSizeSM: other.headerFontSizeSM ?? headerFontSizeSM,
+    headerHeight: other.headerHeight ?? headerHeight,
+    headerHeightSM: other.headerHeightSM ?? headerHeightSM,
+    headerPadding: other.headerPadding ?? headerPadding,
+    headerPaddingSM: other.headerPaddingSM ?? headerPaddingSM,
+    bodyPadding: other.bodyPadding ?? bodyPadding,
+    bodyPaddingSM: other.bodyPaddingSM ?? bodyPaddingSM,
+    actionsBg: other.actionsBg ?? actionsBg,
+    actionsLiMargin: other.actionsLiMargin ?? actionsLiMargin,
+    extraColor: other.extraColor ?? extraColor,
+    borderRadius: other.borderRadius ?? borderRadius,
+  );
 }
 
 /// Fully resolved [CardToken] — every value non-null.
@@ -187,12 +187,7 @@ class CardTab {
 @immutable
 class CardDefaults {
   /// Creates a [CardDefaults].
-  const CardDefaults({
-    this.hoverable,
-    this.variant,
-    this.type,
-    this.size,
-  });
+  const CardDefaults({this.hoverable, this.variant, this.type, this.size});
 
   /// Whether cards lift under the pointer.
   final bool? hoverable;
@@ -211,11 +206,11 @@ class CardDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   CardDefaults merge(CardDefaults other) => CardDefaults(
-        hoverable: other.hoverable ?? hoverable,
-        variant: other.variant ?? variant,
-        type: other.type ?? type,
-        size: other.size ?? size,
-      );
+    hoverable: other.hoverable ?? hoverable,
+    variant: other.variant ?? variant,
+    type: other.type ?? type,
+    size: other.size ?? size,
+  );
 }
 
 /// A content container.
@@ -342,10 +337,11 @@ class _CardState extends State<Card> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<CardToken>(context) ??
-            const CardToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<CardToken>(context) ??
+                const CardToken())
+            ._resolve(t);
 
     final radius = BorderRadius.circular(r.borderRadius);
     final hasHeader =
@@ -430,10 +426,11 @@ class _CardState extends State<Card> {
         ? null
         : DefaultTextStyle(
             style: TextStyle(
-                fontFamily: t.fontFamily,
-                fontFamilyFallback: t.fontFamilyFallback,
-                color: r.extraColor,
-                fontSize: t.fontSize),
+              fontFamily: t.fontFamily,
+              fontFamilyFallback: t.fontFamilyFallback,
+              color: r.extraColor,
+              fontSize: t.fontSize,
+            ),
             child: widget.extra!,
           );
 
@@ -469,8 +466,10 @@ class _CardState extends State<Card> {
       final withTitle = title != null;
       var barExtra = widget.tabBarExtraContent;
       if (!withTitle && extra != null) {
-        barExtra =
-            TabBarExtra(left: barExtra?.left, right: barExtra?.right ?? extra);
+        barExtra = TabBarExtra(
+          left: barExtra?.left,
+          right: barExtra?.right ?? extra,
+        );
       }
       final tabsBar = Padding(
         padding: EdgeInsets.symmetric(horizontal: pad),
@@ -508,10 +507,7 @@ class _CardState extends State<Card> {
         // divider under the header. Otherwise the kit draws the head border with
         // colorBorderSecondary, matching the card's own edge.
         border: Border(
-          bottom: BorderSide(
-            color: t.colorBorderSecondary,
-            width: t.lineWidth,
-          ),
+          bottom: BorderSide(color: t.colorBorderSecondary, width: t.lineWidth),
         ),
       ),
       child: header,
@@ -562,10 +558,11 @@ class _CardState extends State<Card> {
             child: Center(
               child: DefaultTextStyle(
                 style: TextStyle(
-                    fontFamily: t.fontFamily,
-                    fontFamilyFallback: t.fontFamilyFallback,
-                    color: t.colorTextSecondary,
-                    fontSize: t.fontSize),
+                  fontFamily: t.fontFamily,
+                  fontFamilyFallback: t.fontFamilyFallback,
+                  color: t.colorTextSecondary,
+                  fontSize: t.fontSize,
+                ),
                 child: IconTheme.merge(
                   data: IconThemeData(color: t.colorTextSecondary),
                   child: items[i],
@@ -584,8 +581,10 @@ class _CardState extends State<Card> {
         ),
       ),
       child: IntrinsicHeight(
-        child:
-            Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: row),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: row,
+        ),
       ),
     );
   }
@@ -696,18 +695,18 @@ class _Skeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bar(double widthFactor) => FractionallySizedBox(
-          // A stand-in for a line of text, so it fills from where the reading
-          // would start.
-          alignment: AlignmentDirectional.centerStart,
-          widthFactor: widthFactor,
-          child: Container(
-            height: t.fontSize,
-            decoration: BoxDecoration(
-              color: t.colorFillSecondary,
-              borderRadius: BorderRadius.circular(t.borderRadiusSM),
-            ),
-          ),
-        );
+      // A stand-in for a line of text, so it fills from where the reading
+      // would start.
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: widthFactor,
+      child: Container(
+        height: t.fontSize,
+        decoration: BoxDecoration(
+          color: t.colorFillSecondary,
+          borderRadius: BorderRadius.circular(t.borderRadiusSM),
+        ),
+      ),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

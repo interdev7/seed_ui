@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -10,13 +11,12 @@ import 'package:flutter/material.dart'
         Drawer,
         Step,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      theme: ThemeData.light,
-      child: MaterialApp(home: Scaffold(body: child)),
-    );
+  theme: ThemeData.light,
+  child: MaterialApp(home: Scaffold(body: child)),
+);
 
 const _items = [
   StepItem(title: Text('Cart'), content: Text('3 items')),
@@ -26,15 +26,15 @@ const _items = [
 
 /// Every box the run paints an edge with, in paint order.
 List<BoxDecoration> _decorations(WidgetTester tester) => [
-      ...tester
-          .widgetList<Container>(find.byType(Container))
-          .map((c) => c.decoration)
-          .whereType<BoxDecoration>(),
-      ...tester
-          .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
-          .map((c) => c.decoration)
-          .whereType<BoxDecoration>(),
-    ];
+  ...tester
+      .widgetList<Container>(find.byType(Container))
+      .map((c) => c.decoration)
+      .whereType<BoxDecoration>(),
+  ...tester
+      .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+      .map((c) => c.decoration)
+      .whereType<BoxDecoration>(),
+];
 
 /// How close a path comes to a point, walked along its own metrics.
 double _nearest(Path path, Offset probe) {
@@ -112,8 +112,9 @@ class _LineCanvas implements Canvas {
 
 void main() {
   group('Steps', () {
-    testWidgets('numbers the steps and marks the ones behind as finished',
-        (tester) async {
+    testWidgets('numbers the steps and marks the ones behind as finished', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(const Steps(current: 1, items: _items)));
 
       // Step 1 is done, so it shows a tick rather than its number; step 3 has
@@ -136,10 +137,7 @@ void main() {
     testWidgets('the rail behind the current step is accented', (tester) async {
       await tester.pumpWidget(
         _host(
-          const SizedBox(
-            width: 600,
-            child: Steps(current: 1, items: _items),
-          ),
+          const SizedBox(width: 600, child: Steps(current: 1, items: _items)),
         ),
       );
 
@@ -157,8 +155,9 @@ void main() {
       expect(colours, contains(t.colorSplit), reason: 'still ahead');
     });
 
-    testWidgets('the rail is a separator: it never touches a marker',
-        (tester) async {
+    testWidgets('the rail is a separator: it never touches a marker', (
+      tester,
+    ) async {
       // The rail is drawn with a gap at both ends, so it reads as a
       // separator between steps rather than a stalk growing out of a circle.
       for (final type in [StepsType.standard, StepsType.dot]) {
@@ -185,7 +184,8 @@ void main() {
 
           expect(painters, isNotEmpty, reason: '$type / $orientation');
           for (final rail in painters) {
-            final gapped = rail.startInset > 0 ||
+            final gapped =
+                rail.startInset > 0 ||
                 rail.endInset > 0 ||
                 rail.segments.every((s) => s.start > 0);
             expect(
@@ -198,8 +198,9 @@ void main() {
       }
     });
 
-    testWidgets('tapping a step reports it, unless it is disabled',
-        (tester) async {
+    testWidgets('tapping a step reports it, unless it is disabled', (
+      tester,
+    ) async {
       final taps = <int>[];
       await tester.pumpWidget(
         _host(
@@ -222,52 +223,59 @@ void main() {
       expect(taps, [1]);
     });
 
-    testWidgets('hovering a step lifts its marker and text, and eases into it',
-        (tester) async {
-      await tester.pumpWidget(
-        _host(
-          SizedBox(
-            width: 700,
-            child: Steps(current: 0, onChanged: (_) {}, items: _items),
+    testWidgets(
+      'hovering a step lifts its marker and text, and eases into it',
+      (tester) async {
+        await tester.pumpWidget(
+          _host(
+            SizedBox(
+              width: 700,
+              child: Steps(current: 0, onChanged: (_) {}, items: _items),
+            ),
           ),
-        ),
-      );
+        );
 
-      BoxDecoration markerOf(String number) => tester
-          .widget<AnimatedContainer>(
-            find
-                .ancestor(
-                  of: find.text(number),
-                  matching: find.byType(AnimatedContainer),
-                )
-                .first,
-          )
-          .decoration! as BoxDecoration;
+        BoxDecoration markerOf(String number) =>
+            tester
+                    .widget<AnimatedContainer>(
+                      find
+                          .ancestor(
+                            of: find.text(number),
+                            matching: find.byType(AnimatedContainer),
+                          )
+                          .first,
+                    )
+                    .decoration!
+                as BoxDecoration;
 
-      final resting = markerOf('2').color;
+        final resting = markerOf('2').color;
 
-      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
-      await gesture.addPointer(location: Offset.zero);
-      addTearDown(gesture.removePointer);
-      await gesture.moveTo(tester.getCenter(find.text('Payment')));
-      await tester.pumpAndSettle();
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.addPointer(location: Offset.zero);
+        addTearDown(gesture.removePointer);
+        await gesture.moveTo(tester.getCenter(find.text('Payment')));
+        await tester.pumpAndSettle();
 
-      // The marker answers the hover too, not just the text.
-      expect(markerOf('2').color, isNot(resting));
-      expect(markerOf('2').color, ThemeData.light.token.primary.bgHover);
+        // The marker answers the hover too, not just the text.
+        expect(markerOf('2').color, isNot(resting));
+        expect(markerOf('2').color, ThemeData.light.token.primary.bgHover);
 
-      // And the text is animated rather than switched.
-      expect(
-        find.ancestor(
-          of: find.text('Payment'),
-          matching: find.byType(AnimatedDefaultTextStyle),
-        ),
-        findsWidgets,
-      );
-    });
+        // And the text is animated rather than switched.
+        expect(
+          find.ancestor(
+            of: find.text('Payment'),
+            matching: find.byType(AnimatedDefaultTextStyle),
+          ),
+          findsWidgets,
+        );
+      },
+    );
 
-    testWidgets('a marker never flashes on its way to the hover tint',
-        (tester) async {
+    testWidgets('a marker never flashes on its way to the hover tint', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           SizedBox(
@@ -278,26 +286,30 @@ void main() {
       );
 
       double luminance() {
-        final decoration = tester
-            .widget<AnimatedContainer>(
-              find
-                  .ancestor(
-                    of: find.text('2'),
-                    matching: find.byType(AnimatedContainer),
-                  )
-                  .first,
-            )
-            .decoration! as BoxDecoration;
+        final decoration =
+            tester
+                    .widget<AnimatedContainer>(
+                      find
+                          .ancestor(
+                            of: find.text('2'),
+                            matching: find.byType(AnimatedContainer),
+                          )
+                          .first,
+                    )
+                    .decoration!
+                as BoxDecoration;
         // Read the value actually on screen, not the target.
-        final painted = tester
-            .widgetList<DecoratedBox>(
-              find.ancestor(
-                of: find.text('2'),
-                matching: find.byType(DecoratedBox),
-              ),
-            )
-            .first
-            .decoration as BoxDecoration;
+        final painted =
+            tester
+                    .widgetList<DecoratedBox>(
+                      find.ancestor(
+                        of: find.text('2'),
+                        matching: find.byType(DecoratedBox),
+                      ),
+                    )
+                    .first
+                    .decoration
+                as BoxDecoration;
         expect(decoration.shape, BoxShape.circle);
         return Color.alphaBlend(
           painted.color ?? const Color(0x00000000),
@@ -335,16 +347,18 @@ void main() {
         ),
       );
 
-      BoxDecoration marker() => tester
-          .widget<AnimatedContainer>(
-            find
-                .ancestor(
-                  of: find.text('2'),
-                  matching: find.byType(AnimatedContainer),
-                )
-                .first,
-          )
-          .decoration! as BoxDecoration;
+      BoxDecoration marker() =>
+          tester
+                  .widget<AnimatedContainer>(
+                    find
+                        .ancestor(
+                          of: find.text('2'),
+                          matching: find.byType(AnimatedContainer),
+                        )
+                        .first,
+                  )
+                  .decoration!
+              as BoxDecoration;
 
       final resting = marker().color;
 
@@ -359,8 +373,9 @@ void main() {
       expect(marker().color, resting);
     });
 
-    testWidgets('a vertical step is only hit where it is drawn',
-        (tester) async {
+    testWidgets('a vertical step is only hit where it is drawn', (
+      tester,
+    ) async {
       final taps = <int>[];
       await tester.pumpWidget(
         _host(
@@ -389,16 +404,11 @@ void main() {
       expect(taps, [1]);
     });
 
-    testWidgets('an uncontrolled run keeps its own current step',
-        (tester) async {
+    testWidgets('an uncontrolled run keeps its own current step', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _host(
-          Steps(
-            defaultCurrent: 0,
-            onChanged: (_) {},
-            items: _items,
-          ),
-        ),
+        _host(Steps(defaultCurrent: 0, onChanged: (_) {}, items: _items)),
       );
 
       expect(find.text('1'), findsOneWidget);
@@ -413,8 +423,9 @@ void main() {
       final controller = StepsController();
       addTearDown(controller.dispose);
 
-      await tester
-          .pumpWidget(_host(Steps(controller: controller, items: _items)));
+      await tester.pumpWidget(
+        _host(Steps(controller: controller, items: _items)),
+      );
 
       controller.previous();
       await tester.pump();
@@ -428,16 +439,11 @@ void main() {
       expect(controller.current, 2, reason: 'cannot go past the last');
     });
 
-    testWidgets('status: error stops the run at the current step',
-        (tester) async {
+    testWidgets('status: error stops the run at the current step', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _host(
-          const Steps(
-            current: 1,
-            status: StepStatus.error,
-            items: _items,
-          ),
-        ),
+        _host(const Steps(current: 1, status: StepStatus.error, items: _items)),
       );
 
       final t = ThemeData.light.token;
@@ -462,8 +468,9 @@ void main() {
       expect(_decorations(tester).map((d) => d.color), contains(t.error.base));
     });
 
-    testWidgets('a panel strip strokes every line exactly once',
-        (tester) async {
+    testWidgets('a panel strip strokes every line exactly once', (
+      tester,
+    ) async {
       // Each panel *and* the arrow between them is stroked, so an
       // outlined run doubles its seams. Ours paints the strip in one pass, so
       // the count is checkable: one outline plus one chevron per seam.
@@ -542,8 +549,9 @@ void main() {
       expect(second.contains(Offset(seam + 4, 4)), isTrue);
     });
 
-    testWidgets('the selected panel owns the seam in front of it',
-        (tester) async {
+    testWidgets('the selected panel owns the seam in front of it', (
+      tester,
+    ) async {
       // The join is drawn once, so it has to pick a colour. The selected panel
       // wins: its outline is the one the eye follows, and without this its
       // leading point would keep the previous step's grey.
@@ -587,8 +595,9 @@ void main() {
       expect(argb((await seamColours(0))[1]), argb(t.colorBorder));
     });
 
-    testWidgets('the first panel rounds its corners the way its fill does',
-        (tester) async {
+    testWidgets('the first panel rounds its corners the way its fill does', (
+      tester,
+    ) async {
       // Two arcs join any two points; the one centred *on* the corner bulges
       // outward and reads as a kink. The outline has to sweep the same way the
       // fill does.
@@ -630,8 +639,9 @@ void main() {
       }
     });
 
-    testWidgets('a panel strip shares the room, or scrolls when there is none',
-        (tester) async {
+    testWidgets('a panel strip shares the room, or scrolls when there is none', (
+      tester,
+    ) async {
       // Room to spare: the panels split it.
       await tester.pumpWidget(
         _host(
@@ -736,8 +746,9 @@ void main() {
       expect(find.text('Payment'), findsOneWidget);
     });
 
-    testWidgets('a horizontal rail starts at the title, not at the content',
-        (tester) async {
+    testWidgets('a horizontal rail starts at the title, not at the content', (
+      tester,
+    ) async {
       // The rail goes in the header row, beside the title. A long
       // description then flows underneath instead of shoving the line towards
       // the next step.
@@ -781,17 +792,15 @@ void main() {
       expect(rail.width, greaterThan(20));
     });
 
-    testWidgets('a marker, its title and the rail share one axis',
-        (tester) async {
+    testWidgets('a marker, its title and the rail share one axis', (
+      tester,
+    ) async {
       // The header row is `align-items: center`, so a 32px circle and
       // a 25px line of type meet on the same centre line — and the rail, which
       // lives in that row, lands on it too.
       await tester.pumpWidget(
         _host(
-          const SizedBox(
-            width: 800,
-            child: Steps(current: 1, items: _items),
-          ),
+          const SizedBox(width: 800, child: Steps(current: 1, items: _items)),
         ),
       );
 
@@ -816,8 +825,9 @@ void main() {
       expect(rail.center.dy, closeTo(marker.center.dy, 0.5));
     });
 
-    testWidgets('a vertical step lines its marker up with its title too',
-        (tester) async {
+    testWidgets('a vertical step lines its marker up with its title too', (
+      tester,
+    ) async {
       // The vertical heading band is as tall as the taller of the
       // marker and the title line, with the marker centred in it — so the two
       // share an axis whatever the type size is.
@@ -853,8 +863,9 @@ void main() {
       }
     });
 
-    testWidgets('an inline run has no gaps at all: every dot meets its rails',
-        (tester) async {
+    testWidgets('an inline run has no gaps at all: every dot meets its rails', (
+      tester,
+    ) async {
       // The marker slot used to be as wide as the *current* dot, so every other
       // dot sat centred in it with a pixel of air on each side — visible at the
       // ends of a run, where only one rail hides it.
@@ -884,8 +895,10 @@ void main() {
         final box = tester.getRect(rails.at(i));
         final painter =
             tester.widget<CustomPaint>(rails.at(i)).painter as RailPainter;
-        marks
-            .add((box.left + painter.startInset, box.right - painter.endInset));
+        marks.add((
+          box.left + painter.startInset,
+          box.right - painter.endInset,
+        ));
       }
       final dots = find.byType(AnimatedContainer);
       for (var i = 0; i < dots.evaluate().length; i++) {
@@ -904,8 +917,9 @@ void main() {
       }
     });
 
-    testWidgets('the run between two dots is one line, not two with a void',
-        (tester) async {
+    testWidgets('the run between two dots is one line, not two with a void', (
+      tester,
+    ) async {
       // A dot run draws the stretch between two markers as two halves, one per
       // step. Only the ends that meet a marker may keep the gap — an inner one
       // would leave a hole in the middle of the line.
@@ -927,8 +941,10 @@ void main() {
         final box = tester.getRect(rails.at(i));
         final painter =
             tester.widget<CustomPaint>(rails.at(i)).painter as RailPainter;
-        drawn
-            .add((box.left + painter.startInset, box.right - painter.endInset));
+        drawn.add((
+          box.left + painter.startInset,
+          box.right - painter.endInset,
+        ));
       }
 
       expect(
@@ -946,8 +962,9 @@ void main() {
       }
     });
 
-    testWidgets('inline steps keep their rails and drop their content',
-        (tester) async {
+    testWidgets('inline steps keep their rails and drop their content', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const SizedBox(
@@ -970,10 +987,7 @@ void main() {
     testWidgets('a narrow horizontal run stands up', (tester) async {
       await tester.pumpWidget(
         _host(
-          const SizedBox(
-            width: 300,
-            child: Steps(current: 0, items: _items),
-          ),
+          const SizedBox(width: 300, child: Steps(current: 0, items: _items)),
         ),
       );
 
@@ -1020,8 +1034,9 @@ void main() {
     List<Color?> fills(WidgetTester tester) =>
         _decorations(tester).map((d) => d.color).toList();
 
-    testWidgets('a pale accent gets dark ink, not the white a blue one wears',
-        (tester) async {
+    testWidgets('a pale accent gets dark ink, not the white a blue one wears', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Steps(
@@ -1060,7 +1075,8 @@ void main() {
       expect(
         fills(tester),
         isNot(contains(const Color(0xFF52C41A))),
-        reason: 'the step in play failed, so nothing is in the accent but '
+        reason:
+            'the step in play failed, so nothing is in the accent but '
             'the one behind it, which is pale',
       );
     });
@@ -1096,7 +1112,8 @@ void main() {
         expect(
           arms,
           greaterThan(6),
-          reason: 'a fixed seven-pixel margin met itself in the middle and '
+          reason:
+              'a fixed seven-pixel margin met itself in the middle and '
               'left a pixel, or turned the cross inside out',
         );
         reaches.add(arms);
@@ -1108,8 +1125,9 @@ void main() {
   });
 
   group('Progress ring', () {
-    testWidgets('the ring is the kit\'s own Progress, wrapping the marker',
-        (tester) async {
+    testWidgets('the ring is the kit\'s own Progress, wrapping the marker', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const SizedBox(
@@ -1152,7 +1170,7 @@ void main() {
               ),
               items: [
                 StepItem(title: Text('One')),
-                StepItem(title: Text('Two'))
+                StepItem(title: Text('Two')),
               ],
             ),
           ),
@@ -1168,12 +1186,13 @@ void main() {
       expect(ring.child, isNotNull);
     });
 
-    testWidgets('a line progress is refused: a ring goes round a marker',
-        (tester) async {
+    testWidgets('a line progress is refused: a ring goes round a marker', (
+      tester,
+    ) async {
       final errors = <String>[];
       final previous = FlutterError.onError;
-      FlutterError.onError =
-          (details) => errors.add(details.exceptionAsString());
+      FlutterError.onError = (details) =>
+          errors.add(details.exceptionAsString());
       await tester.pumpWidget(
         _host(
           const SizedBox(
@@ -1203,7 +1222,7 @@ void main() {
               progress: Progress(percent: 0.25, type: ProgressType.circle),
               items: [
                 StepItem(title: Text('One')),
-                StepItem(title: Text('Two'))
+                StepItem(title: Text('Two')),
               ],
             ),
           ),
@@ -1263,8 +1282,9 @@ void main() {
     });
   });
 
-  testWidgets('panelMinWidth is a floor: it bites only when room runs out',
-      (tester) async {
+  testWidgets('panelMinWidth is a floor: it bites only when room runs out', (
+    tester,
+  ) async {
     Future<(int, double)> run(double width, double floor) async {
       await tester.pumpWidget(
         _host(
@@ -1287,7 +1307,8 @@ void main() {
       // The pitch between two panels is the width each one got. Measured
       // between the second and third: the first has no arrow notched into its
       // start, so its neighbour's text sits an arrow further along.
-      final pitch = tester.getRect(find.text('Payment')).left -
+      final pitch =
+          tester.getRect(find.text('Payment')).left -
           tester.getRect(find.text('Delivery')).left;
       return (_scrolls(tester) ? 1 : 0, pitch);
     }
@@ -1303,8 +1324,9 @@ void main() {
     expect(tightPitch, closeTo(260, 1));
   });
 
-  testWidgets('size reaches the panels: a small run is tighter',
-      (tester) async {
+  testWidgets('size reaches the panels: a small run is tighter', (
+    tester,
+  ) async {
     Future<double> textLeft(SoftSize size) async {
       await tester.pumpWidget(
         _host(
@@ -1331,8 +1353,9 @@ void main() {
     expect(small, lessThan(middle), reason: 'small padding: $small vs $middle');
   });
 
-  testWidgets('a horizontal run keeps one axis when a title wraps',
-      (tester) async {
+  testWidgets('a horizontal run keeps one axis when a title wraps', (
+    tester,
+  ) async {
     // Squeezed — a phone with `responsive: false` — the titles wrap to
     // different numbers of lines. Centring each marker on its own title turned
     // the run into a staircase; the header band keeps them all on one axis.
@@ -1361,8 +1384,9 @@ void main() {
     ];
     expect(tops.toSet().length, 1, reason: 'markers at $tops');
 
-    final rails = find
-        .byWidgetPredicate((w) => w is CustomPaint && w.painter is RailPainter);
+    final rails = find.byWidgetPredicate(
+      (w) => w is CustomPaint && w.painter is RailPainter,
+    );
     final railTops = [
       for (var i = 0; i < rails.evaluate().length; i++)
         tester.getRect(rails.at(i)).top,
@@ -1378,24 +1402,25 @@ void main() {
 
   group('Width floor', () {
     Widget run(double width, {StepsToken? token}) => _host(
-          SizedBox(
-            width: width,
-            child: Steps(
-              size: SoftSize.small,
-              responsive: false,
-              current: 1,
-              token: token,
-              items: const [
-                StepItem(title: Text('Account'), icon: Icon(Icons.person)),
-                StepItem(title: Text('Card'), icon: Icon(Icons.credit_card)),
-                StepItem(title: Text('Ship'), icon: Icon(Icons.local_shipping)),
-              ],
-            ),
-          ),
-        );
+      SizedBox(
+        width: width,
+        child: Steps(
+          size: SoftSize.small,
+          responsive: false,
+          current: 1,
+          token: token,
+          items: const [
+            StepItem(title: Text('Account'), icon: Icon(Icons.person)),
+            StepItem(title: Text('Card'), icon: Icon(Icons.credit_card)),
+            StepItem(title: Text('Ship'), icon: Icon(Icons.local_shipping)),
+          ],
+        ),
+      ),
+    );
 
-    testWidgets('a narrowing run stacks first and scrolls only when it must',
-        (tester) async {
+    testWidgets('a narrowing run stacks first and scrolls only when it must', (
+      tester,
+    ) async {
       Rect marker() => tester.getRect(find.byType(AnimatedContainer).first);
       Rect title() => tester.getRect(find.text('Account'));
 
@@ -1421,16 +1446,18 @@ void main() {
     });
 
     testWidgets('itemMinWidth sets the floor', (tester) async {
-      await tester
-          .pumpWidget(run(900, token: const StepsToken(itemMinWidth: 400)));
+      await tester.pumpWidget(
+        run(900, token: const StepsToken(itemMinWidth: 400)),
+      );
       expect(
         find.byType(SingleChildScrollView),
         findsOneWidget,
         reason: '3 × 400 does not fit 900',
       );
 
-      await tester
-          .pumpWidget(run(360, token: const StepsToken(itemMinWidth: 80)));
+      await tester.pumpWidget(
+        run(360, token: const StepsToken(itemMinWidth: 80)),
+      );
       expect(
         find.byType(SingleChildScrollView),
         findsNothing,
@@ -1438,25 +1465,26 @@ void main() {
       );
     });
 
-    testWidgets('a navigation run scrolls when its blocks will not fit',
-        (tester) async {
+    testWidgets('a navigation run scrolls when its blocks will not fit', (
+      tester,
+    ) async {
       Future<void> pump(double width) => tester.pumpWidget(
-            _host(
-              SizedBox(
-                width: width,
-                child: Steps(
-                  type: StepsType.navigation,
-                  current: 1,
-                  onChanged: (_) {},
-                  items: const [
-                    StepItem(title: Text('Details'), subtitle: Text('00:02')),
-                    StepItem(title: Text('Review'), subtitle: Text('00:05')),
-                    StepItem(title: Text('Publish')),
-                  ],
-                ),
-              ),
+        _host(
+          SizedBox(
+            width: width,
+            child: Steps(
+              type: StepsType.navigation,
+              current: 1,
+              onChanged: (_) {},
+              items: const [
+                StepItem(title: Text('Details'), subtitle: Text('00:02')),
+                StepItem(title: Text('Review'), subtitle: Text('00:05')),
+                StepItem(title: Text('Publish')),
+              ],
             ),
-          );
+          ),
+        ),
+      );
 
       // The default test surface is 800 wide, which is narrower than this run
       // wants; give it a window a desktop would have.
@@ -1477,8 +1505,9 @@ void main() {
       expect(tester.getRect(find.text('Details')).width, greaterThan(0));
     });
 
-    testWidgets('inline keeps its miniature shape and never scrolls',
-        (tester) async {
+    testWidgets('inline keeps its miniature shape and never scrolls', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const SizedBox(
@@ -1527,8 +1556,9 @@ void main() {
       expect((await markerOf(tester, SoftSize.large)).width, 40);
     });
 
-    testWidgets('a number is the marker diameter, and the type follows it',
-        (tester) async {
+    testWidgets('a number is the marker diameter, and the type follows it', (
+      tester,
+    ) async {
       expect((await markerOf(tester, const ControlSize.height(48))).width, 48);
 
       // The type keeps up with the circle beside it: a 48px marker takes the
@@ -1564,7 +1594,8 @@ void main() {
               type: type,
               current: 1,
               token: StepsToken(railLength: length),
-              items: items ??
+              items:
+                  items ??
                   const [
                     StepItem(title: Text('Cart')),
                     StepItem(title: Text('Delivery')),
@@ -1606,54 +1637,67 @@ void main() {
       expect(free.map((r) => r.width).toSet().length, greaterThan(1));
     });
 
-    testWidgets('a named length is the line you see, in both orientations',
-        (tester) async {
+    testWidgets('a named length is the line you see, in both orientations', (
+      tester,
+    ) async {
       for (final length in [40.0, 120.0]) {
-        final across =
-            await rails(tester, StepsOrientation.horizontal, length: length);
+        final across = await rails(
+          tester,
+          StepsOrientation.horizontal,
+          length: length,
+        );
         expect(across.map((r) => r.width), everyElement(closeTo(length, 0.5)));
 
-        final down =
-            await rails(tester, StepsOrientation.vertical, length: length);
+        final down = await rails(
+          tester,
+          StepsOrientation.vertical,
+          length: length,
+        );
         expect(down.map((r) => r.height), everyElement(closeTo(length, 0.5)));
       }
     });
 
-    testWidgets('a rail always reaches the next marker, however wide the text',
-        (tester) async {
-      // Content wider than the header: the step grows, and the rail is the
-      // part that gives — a line stopping short of a marker is a broken line.
-      const wide = [
-        StepItem(title: Text('Cart'), content: Text('3 items · 4 200 ₽')),
-        StepItem(title: Text('Delivery'), content: Text('Pick a date')),
-        StepItem(title: Text('Payment'), content: Text('Card or on delivery')),
-      ];
-      final drawn = await rails(
-        tester,
-        StepsOrientation.horizontal,
-        length: 40,
-        items: wide,
-      );
-
-      final markers = find.byType(AnimatedContainer);
-      final lefts = [
-        for (var i = 0; i < markers.evaluate().length; i++)
-          tester.getRect(markers.at(i)).left,
-      ]..sort();
-
-      for (var i = 0; i < drawn.length; i++) {
-        expect(
-          drawn[i].width,
-          greaterThanOrEqualTo(40 - 0.5),
-          reason: 'never shorter than it was told to be',
+    testWidgets(
+      'a rail always reaches the next marker, however wide the text',
+      (tester) async {
+        // Content wider than the header: the step grows, and the rail is the
+        // part that gives — a line stopping short of a marker is a broken line.
+        const wide = [
+          StepItem(title: Text('Cart'), content: Text('3 items · 4 200 ₽')),
+          StepItem(title: Text('Delivery'), content: Text('Pick a date')),
+          StepItem(
+            title: Text('Payment'),
+            content: Text('Card or on delivery'),
+          ),
+        ];
+        final drawn = await rails(
+          tester,
+          StepsOrientation.horizontal,
+          length: 40,
+          items: wide,
         );
-        // It ends one inset short of the marker it runs towards.
-        expect(drawn[i].right, closeTo(lefts[i + 1] - 16, 1));
-      }
-    });
 
-    testWidgets('a vertical rail reaches down to the next marker',
-        (tester) async {
+        final markers = find.byType(AnimatedContainer);
+        final lefts = [
+          for (var i = 0; i < markers.evaluate().length; i++)
+            tester.getRect(markers.at(i)).left,
+        ]..sort();
+
+        for (var i = 0; i < drawn.length; i++) {
+          expect(
+            drawn[i].width,
+            greaterThanOrEqualTo(40 - 0.5),
+            reason: 'never shorter than it was told to be',
+          );
+          // It ends one inset short of the marker it runs towards.
+          expect(drawn[i].right, closeTo(lefts[i + 1] - 16, 1));
+        }
+      },
+    );
+
+    testWidgets('a vertical rail reaches down to the next marker', (
+      tester,
+    ) async {
       final drawn = await rails(tester, StepsOrientation.vertical, length: 40);
       final markers = find.byType(AnimatedContainer);
       final tops = [
@@ -1666,8 +1710,9 @@ void main() {
       }
     });
 
-    testWidgets('a dot run splits the length between its two halves',
-        (tester) async {
+    testWidgets('a dot run splits the length between its two halves', (
+      tester,
+    ) async {
       final halves = await rails(
         tester,
         StepsOrientation.horizontal,
@@ -1686,16 +1731,18 @@ void main() {
       }
     });
 
-    testWidgets('fixed rails make the run scroll rather than squeeze',
-        (tester) async {
+    testWidgets('fixed rails make the run scroll rather than squeeze', (
+      tester,
+    ) async {
       await rails(tester, StepsOrientation.horizontal, length: 400);
       expect(find.byType(SingleChildScrollView), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });
 
-  testWidgets('a caller who names a placement keeps it, however narrow',
-      (tester) async {
+  testWidgets('a caller who names a placement keeps it, however narrow', (
+    tester,
+  ) async {
     // The run only decides for itself where nobody has decided for it.
     await tester.pumpWidget(
       _host(
@@ -1721,24 +1768,25 @@ void main() {
 
   group('Vertical panels', () {
     Widget stretched(List<StepItem> items) => _host(
-          SizedBox(
-            width: 700,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Steps(
-                  type: StepsType.panel,
-                  orientation: StepsOrientation.vertical,
-                  current: 1,
-                  items: items,
-                ),
-              ],
+      SizedBox(
+        width: 700,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Steps(
+              type: StepsType.panel,
+              orientation: StepsOrientation.vertical,
+              current: 1,
+              items: items,
             ),
-          ),
-        );
+          ],
+        ),
+      ),
+    );
 
-    testWidgets('are as wide as the widest of them, not as the page',
-        (tester) async {
+    testWidgets('are as wide as the widest of them, not as the page', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         stretched(const [
           StepItem(title: Text('Cart'), content: Text('3 items')),
@@ -1755,9 +1803,11 @@ void main() {
       );
 
       // And they are all the same width, as they are across the page.
-      final lefts = ['Cart', 'Delivery', 'Payment']
-          .map((s) => tester.getRect(find.text(s)).left)
-          .toSet();
+      final lefts = [
+        'Cart',
+        'Delivery',
+        'Payment',
+      ].map((s) => tester.getRect(find.text(s)).left).toSet();
       expect(lefts.length, 1);
     });
 
@@ -1832,16 +1882,19 @@ void main() {
 
       // And the panels are equal to each other: the
       // longest one sets the width for all.
-      final lefts = ['Cart', 'Delivery', 'Payment']
-          .map((s) => tester.getRect(find.text(s)).left)
-          .toList();
+      final lefts = [
+        'Cart',
+        'Delivery',
+        'Payment',
+      ].map((s) => tester.getRect(find.text(s)).left).toList();
       // The first panel has no arrow notched into its start, so its
       // neighbour's text sits one arrow further along than the next pair's.
       expect(lefts[1] - lefts[0], closeTo((lefts[2] - lefts[1]) + 16, 1));
     });
 
-    testWidgets('a named width is kept, whatever room there is',
-        (tester) async {
+    testWidgets('a named width is kept, whatever room there is', (
+      tester,
+    ) async {
       for (final orientation in StepsOrientation.values) {
         final across = await strip(
           tester,
@@ -1910,8 +1963,9 @@ void main() {
       return _blockRects(tester).first;
     }
 
-    testWidgets('the presets scale a block, marker and type together',
-        (tester) async {
+    testWidgets('the presets scale a block, marker and type together', (
+      tester,
+    ) async {
       final small = await block(tester, size: SoftSize.small);
       final middle = await block(tester);
       final large = await block(tester, size: SoftSize.large);
@@ -1925,8 +1979,9 @@ void main() {
       expect((await block(tester, height: 80)).height, closeTo(80, 0.5));
     });
 
-    testWidgets('left alone, blocks take their size from their text',
-        (tester) async {
+    testWidgets('left alone, blocks take their size from their text', (
+      tester,
+    ) async {
       // Equal to each other, and wide enough for the longest of them.
       await block(tester);
       final widths = _blockRects(tester).map((r) => r.width).toList();
@@ -2003,7 +2058,8 @@ void main() {
               current: current,
               responsive: false,
               onChanged: onChanged,
-              items: items ??
+              items:
+                  items ??
                   [
                     for (var i = 1; i <= total; i++)
                       StepItem(title: Text('Step $i')),
@@ -2019,23 +2075,30 @@ void main() {
       ];
     }
 
-    testWidgets('folds a long run, keeping the first, the last and the current',
-        (tester) async {
-      // The priority: current's neighbours first, then one in
-      // from each end.
-      expect(
-        await shown(tester, total: 7, current: 0, maxCount: 5),
-        ['1', '2', '6', '7'],
-      );
-      expect(
-        await shown(tester, total: 7, current: 3, maxCount: 5),
-        ['1', '4', '7'],
-      );
-      expect(
-        await shown(tester, total: 7, current: 6, maxCount: 5),
-        ['1', '2', '6', '7'],
-      );
-    });
+    testWidgets(
+      'folds a long run, keeping the first, the last and the current',
+      (tester) async {
+        // The priority: current's neighbours first, then one in
+        // from each end.
+        expect(await shown(tester, total: 7, current: 0, maxCount: 5), [
+          '1',
+          '2',
+          '6',
+          '7',
+        ]);
+        expect(await shown(tester, total: 7, current: 3, maxCount: 5), [
+          '1',
+          '4',
+          '7',
+        ]);
+        expect(await shown(tester, total: 7, current: 6, maxCount: 5), [
+          '1',
+          '2',
+          '6',
+          '7',
+        ]);
+      },
+    );
 
     testWidgets('is ignored where it has nothing to fold', (tester) async {
       // Fits already.
@@ -2068,8 +2131,9 @@ void main() {
       expect(tapped, 3);
     });
 
-    testWidgets('an ellipsis stands for the hidden steps and is inert',
-        (tester) async {
+    testWidgets('an ellipsis stands for the hidden steps and is inert', (
+      tester,
+    ) async {
       var tapped = -1;
       await shown(
         tester,
@@ -2169,8 +2233,9 @@ void main() {
       ];
     }
 
-    testWidgets('the narrower the run, the fewer steps it keeps',
-        (tester) async {
+    testWidgets('the narrower the run, the fewer steps it keeps', (
+      tester,
+    ) async {
       final roomy = await run(tester, width: 1200);
       final tight = await run(tester, width: 700);
 
@@ -2184,8 +2249,9 @@ void main() {
       }
     });
 
-    testWidgets('folding is instead of scrolling, not as well as',
-        (tester) async {
+    testWidgets('folding is instead of scrolling, not as well as', (
+      tester,
+    ) async {
       await run(tester, width: 700, overflow: StepsOverflow.scroll);
       expect(find.byType(SingleChildScrollView), findsOneWidget);
 
@@ -2198,8 +2264,9 @@ void main() {
       expect(shown, ['1', '4', '9']);
     });
 
-    testWidgets('a vertical run folds by the height it is given',
-        (tester) async {
+    testWidgets('a vertical run folds by the height it is given', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           SizedBox(
@@ -2226,8 +2293,9 @@ void main() {
     });
   });
 
-  testWidgets('a rail keeps its length by giving up its gaps first',
-      (tester) async {
+  testWidgets('a rail keeps its length by giving up its gaps first', (
+    tester,
+  ) async {
     // A line squeezed to a stub reads as a speck, not a connection, so the
     // room at its ends goes first.
     const painter = RailPainter(
@@ -2288,8 +2356,9 @@ void main() {
       );
     }
 
-    testWidgets('a marker wears its step\'s number, not its place on screen',
-        (tester) async {
+    testWidgets('a marker wears its step\'s number, not its place on screen', (
+      tester,
+    ) async {
       await pump(tester);
 
       // The last step is Step 9 and its circle says 9 — numbering by position
@@ -2309,8 +2378,9 @@ void main() {
       );
     });
 
-    testWidgets('an ellipsis in a dot run gets room to read as one',
-        (tester) async {
+    testWidgets('an ellipsis in a dot run gets room to read as one', (
+      tester,
+    ) async {
       await pump(tester, type: StepsType.dot);
 
       final glyph = tester.getRect(
@@ -2410,7 +2480,10 @@ void main() {
     /// The width of the painted strip, which is what the floor decides once
     /// the panels have run out of room to share.
     Future<double> strip(
-        WidgetTester tester, double width, double floor) async {
+      WidgetTester tester,
+      double width,
+      double floor,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -2462,10 +2535,7 @@ void main() {
       // Given room to share, the panels are past every floor on their own and
       // it has nothing to raise. A demo that shows the setting here looks
       // broken while behaving correctly.
-      expect(
-        await strip(tester, 900, 260),
-        await strip(tester, 900, 100),
-      );
+      expect(await strip(tester, 900, 260), await strip(tester, 900, 100));
     });
   });
 }

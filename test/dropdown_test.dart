@@ -1,7 +1,13 @@
 import 'dart:ui' show Tristate;
 
+import 'package:cupertino_ui/cupertino_ui.dart'
+    show GlobalCupertinoLocalizations;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter/semantics.dart' show SemanticsNode;
+import 'package:flutter_localizations/flutter_localizations.dart'
+    show GlobalWidgetsLocalizations;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -11,15 +17,12 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/semantics.dart' show SemanticsNode;
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(body: Center(child: child)),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(body: Center(child: child)),
+);
 
 const List<DropdownEntry<String>> _menu = [
   DropdownItem(value: 'edit', label: 'Edit'),
@@ -157,15 +160,17 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    Color washOf(String text) => (tester
-            .widget<AnimatedContainer>(
-              find.ancestor(
-                of: find.text(text),
-                matching: find.byType(AnimatedContainer),
-              ),
-            )
-            .decoration! as BoxDecoration)
-        .color!;
+    Color washOf(String text) =>
+        (tester
+                    .widget<AnimatedContainer>(
+                      find.ancestor(
+                        of: find.text(text),
+                        matching: find.byType(AnimatedContainer),
+                      ),
+                    )
+                    .decoration!
+                as BoxDecoration)
+            .color!;
     final chosen = washOf('Logs');
 
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -291,21 +296,23 @@ void main() {
   });
 
   group('DropdownController', () {
-    Widget menu(DropdownController c,
-            {List<bool>? told, List<String?>? tapped}) =>
-        _host(
-          Dropdown<String>(
-            controller: c,
-            trigger: const [DropdownTrigger.tap],
-            onOpenChanged: told?.add,
-            onItemTap: tapped?.add,
-            menu: const [
-              DropdownItem(value: 'edit', label: 'Edit'),
-              DropdownItem(value: 'delete', label: 'Delete'),
-            ],
-            child: const Text('Open'),
-          ),
-        );
+    Widget menu(
+      DropdownController c, {
+      List<bool>? told,
+      List<String?>? tapped,
+    }) => _host(
+      Dropdown<String>(
+        controller: c,
+        trigger: const [DropdownTrigger.tap],
+        onOpenChanged: told?.add,
+        onItemTap: tapped?.add,
+        menu: const [
+          DropdownItem(value: 'edit', label: 'Edit'),
+          DropdownItem(value: 'delete', label: 'Delete'),
+        ],
+        child: const Text('Open'),
+      ),
+    );
 
     testWidgets('opens, closes and toggles it from outside', (tester) async {
       final c = DropdownController();
@@ -435,8 +442,9 @@ void main() {
     expect(parent.children!.first, isA<DropdownItem<_Action>>());
   });
 
-  testWidgets('click trigger opens the menu and reports the tapped key',
-      (tester) async {
+  testWidgets('click trigger opens the menu and reports the tapped key', (
+    tester,
+  ) async {
     Object? tapped;
     await tester.pumpWidget(
       _host(
@@ -524,18 +532,17 @@ void main() {
     expect(find.text('Footer'), findsOneWidget);
   });
 
-  testWidgets('menu updates live while open, without reopening',
-      (tester) async {
+  testWidgets('menu updates live while open, without reopening', (
+    tester,
+  ) async {
     Widget build(List<String> items) => _host(
-          Dropdown(
-            trigger: const [],
-            open: true,
-            menu: [
-              for (final i in items) DropdownItem(value: i, label: i),
-            ],
-            child: const Text('Open'),
-          ),
-        );
+      Dropdown(
+        trigger: const [],
+        open: true,
+        menu: [for (final i in items) DropdownItem(value: i, label: i)],
+        child: const Text('Open'),
+      ),
+    );
 
     await tester.pumpWidget(build(['One']));
     await tester.pumpAndSettle();
@@ -588,33 +595,33 @@ void main() {
     /// Wrapping `home` in a Directionality would not reach the menu: it is
     /// drawn in the navigator's overlay, above anything inside `home`.
     Widget host(TextDirection direction) => MaterialApp(
-          navigatorKey: UiKit.navigatorKey,
-          locale: Locale(direction == TextDirection.rtl ? 'ar' : 'en'),
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('en'), Locale('ar')],
-          home: Scaffold(
-            body: Center(
-              // Keyed by direction: without it the same element is reused between
-              // runs and carries its open state across.
-              child: Dropdown(
-                key: ValueKey(direction),
-                trigger: const [DropdownTrigger.tap],
-                menu: const [
-                  DropdownItem(
-                    value: 'more',
-                    label: 'More',
-                    children: [DropdownItem(value: 'help', label: 'Help')],
-                  ),
-                ],
-                child: const Text('open'),
+      navigatorKey: UiKit.navigatorKey,
+      locale: Locale(direction == TextDirection.rtl ? 'ar' : 'en'),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en'), Locale('ar')],
+      home: Scaffold(
+        body: Center(
+          // Keyed by direction: without it the same element is reused between
+          // runs and carries its open state across.
+          child: Dropdown(
+            key: ValueKey(direction),
+            trigger: const [DropdownTrigger.tap],
+            menu: const [
+              DropdownItem(
+                value: 'more',
+                label: 'More',
+                children: [DropdownItem(value: 'help', label: 'Help')],
               ),
-            ),
+            ],
+            child: const Text('open'),
           ),
-        );
+        ),
+      ),
+    );
 
     testWidgets('opens on a tap, since a touch screen cannot hover', (
       tester,
@@ -651,10 +658,7 @@ void main() {
     testWidgets('opens to the right when the menu reads that way', (
       tester,
     ) async {
-      expect(
-        await submenuVsParent(tester, TextDirection.ltr),
-        greaterThan(0),
-      );
+      expect(await submenuVsParent(tester, TextDirection.ltr), greaterThan(0));
     });
 
     testWidgets('and to the left when it reads the other', (tester) async {
@@ -665,8 +669,9 @@ void main() {
   });
 
   group('drawing a row yourself', () {
-    testWidgets('the builder draws every row, submenus included',
-        (tester) async {
+    testWidgets('the builder draws every row, submenus included', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Dropdown<String>(
@@ -693,8 +698,9 @@ void main() {
       expect(find.text('<Help>'), findsOneWidget);
     });
 
-    testWidgets('the builder is told the pointer is over the row',
-        (tester) async {
+    testWidgets('the builder is told the pointer is over the row', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Dropdown<String>(
@@ -746,8 +752,9 @@ void main() {
       );
     });
 
-    testWidgets('without a builder the menu draws the words it was given',
-        (tester) async {
+    testWidgets('without a builder the menu draws the words it was given', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Dropdown<String>(
@@ -805,16 +812,18 @@ void main() {
           ),
         );
 
-    BoxDecoration panel(WidgetTester tester) => tester
-        .widget<DecoratedBox>(
-          find
-              .descendant(
-                of: find.byType(DropdownPanel),
-                matching: find.byType(DecoratedBox),
-              )
-              .first,
-        )
-        .decoration as BoxDecoration;
+    BoxDecoration panel(WidgetTester tester) =>
+        tester
+                .widget<DecoratedBox>(
+                  find
+                      .descendant(
+                        of: find.byType(DropdownPanel),
+                        matching: find.byType(DecoratedBox),
+                      )
+                      .first,
+                )
+                .decoration
+            as BoxDecoration;
 
     testWidgets('rounds the panel it belongs to', (tester) async {
       await open(tester, null);
@@ -842,10 +851,7 @@ void main() {
           matching: find.byType(Padding),
         ),
       );
-      expect(
-        padding.map((p) => p.padding),
-        contains(const EdgeInsets.all(17)),
-      );
+      expect(padding.map((p) => p.padding), contains(const EdgeInsets.all(17)));
     });
 
     testWidgets('paints the hovered row the colour it names', (tester) async {
@@ -864,10 +870,7 @@ void main() {
             )
             .first,
       );
-      expect(
-        (row.decoration! as BoxDecoration).color,
-        const Color(0xFF0000FF),
-      );
+      expect((row.decoration! as BoxDecoration).color, const Color(0xFF0000FF));
     });
 
     testWidgets('reaches a submenu as well', (tester) async {
@@ -926,19 +929,22 @@ void main() {
           ),
         );
 
-    BoxDecoration panel(WidgetTester tester) => tester
-        .widget<DecoratedBox>(
-          find
-              .descendant(
-                of: find.byType(DropdownPanel),
-                matching: find.byType(DecoratedBox),
-              )
-              .first,
-        )
-        .decoration as BoxDecoration;
+    BoxDecoration panel(WidgetTester tester) =>
+        tester
+                .widget<DecoratedBox>(
+                  find
+                      .descendant(
+                        of: find.byType(DropdownPanel),
+                        matching: find.byType(DecoratedBox),
+                      )
+                      .first,
+                )
+                .decoration
+            as BoxDecoration;
 
-    testWidgets('the chrome casts nothing when told to cast nothing',
-        (tester) async {
+    testWidgets('the chrome casts nothing when told to cast nothing', (
+      tester,
+    ) async {
       await open(tester, null);
       await tester.pumpAndSettle();
       expect(panel(tester).boxShadow, isNotEmpty);
@@ -951,8 +957,9 @@ void main() {
       expect((blanked.borderRadius! as BorderRadius).topLeft.x, 0);
     });
 
-    testWidgets('a blanked panel does not clip what was drawn in its place',
-        (tester) async {
+    testWidgets('a blanked panel does not clip what was drawn in its place', (
+      tester,
+    ) async {
       await open(tester, blank);
       await tester.pumpAndSettle();
       expect(
@@ -990,8 +997,9 @@ void main() {
       ),
     );
 
-    testWidgets('a panel wears what the provider dressed it in',
-        (tester) async {
+    testWidgets('a panel wears what the provider dressed it in', (
+      tester,
+    ) async {
       // The provider sits *inside* the app, below the overlay the menu is
       // mounted in: what a screen says about its own menus has to reach them.
       await tester.pumpWidget(
@@ -1013,23 +1021,24 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final d = tester
-          .widget<DecoratedBox>(
-            find
-                .descendant(
-                  of: find.byType(DropdownPanel),
-                  matching: find.byType(DecoratedBox),
-                )
-                .first,
-          )
-          .decoration as BoxDecoration;
+      final d =
+          tester
+                  .widget<DecoratedBox>(
+                    find
+                        .descendant(
+                          of: find.byType(DropdownPanel),
+                          matching: find.byType(DecoratedBox),
+                        )
+                        .first,
+                  )
+                  .decoration
+              as BoxDecoration;
       expect(d.color, const Color(0xFFEFF6FF));
       expect((d.borderRadius! as BorderRadius).topLeft.x, 20);
       expect(
-          d.border,
-          const Border.fromBorderSide(
-            BorderSide(color: Color(0xFF93C5FD)),
-          ));
+        d.border,
+        const Border.fromBorderSide(BorderSide(color: Color(0xFF93C5FD))),
+      );
       expect(d.boxShadow, isNotEmpty);
     });
 
@@ -1045,25 +1054,27 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final d = tester
-          .widget<DecoratedBox>(
-            find
-                .descendant(
-                  of: find.byType(DropdownPanel),
-                  matching: find.byType(DecoratedBox),
-                )
-                .first,
-          )
-          .decoration as BoxDecoration;
+      final d =
+          tester
+                  .widget<DecoratedBox>(
+                    find
+                        .descendant(
+                          of: find.byType(DropdownPanel),
+                          matching: find.byType(DecoratedBox),
+                        )
+                        .first,
+                  )
+                  .decoration
+              as BoxDecoration;
       expect(d.border, isNull);
     });
   });
 
   group('a submenu', () {
     Widget tree(Widget child) => MaterialApp(
-          navigatorKey: UiKit.navigatorKey,
-          home: Scaffold(body: Center(child: child)),
-        );
+      navigatorKey: UiKit.navigatorKey,
+      home: Scaffold(body: Center(child: child)),
+    );
 
     const nested = [
       DropdownItem(
@@ -1082,21 +1093,24 @@ void main() {
     List<BoxDecoration> panels(WidgetTester tester) => tester
         .widgetList<DropdownPanel>(find.byType(DropdownPanel))
         .map(
-          (p) => tester
-              .widget<DecoratedBox>(
-                find
-                    .descendant(
-                      of: find.byWidget(p),
-                      matching: find.byType(DecoratedBox),
-                    )
-                    .first,
-              )
-              .decoration as BoxDecoration,
+          (p) =>
+              tester
+                      .widget<DecoratedBox>(
+                        find
+                            .descendant(
+                              of: find.byWidget(p),
+                              matching: find.byType(DecoratedBox),
+                            )
+                            .first,
+                      )
+                      .decoration
+                  as BoxDecoration,
         )
         .toList();
 
-    testWidgets('is dressed by the provider its parent stood in',
-        (tester) async {
+    testWidgets('is dressed by the provider its parent stood in', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         tree(
           ConfigProvider(
@@ -1124,8 +1138,9 @@ void main() {
       );
     });
 
-    testWidgets('stands off the panel it came from, not the row inside it',
-        (tester) async {
+    testWidgets('stands off the panel it came from, not the row inside it', (
+      tester,
+    ) async {
       // A row is inset from the panel by its padding. Counted from the row, a
       // gap is that much smaller than it reads, and a padding wider than the
       // gap drops the submenu on top of the menu it came from.
@@ -1183,8 +1198,9 @@ void main() {
       expect(sub.left, greaterThanOrEqualTo(parent.right));
     });
 
-    testWidgets('the menu itself stands off its trigger by the same word',
-        (tester) async {
+    testWidgets('the menu itself stands off its trigger by the same word', (
+      tester,
+    ) async {
       Future<double> distance(double gap) async {
         await tester.pumpWidget(const SizedBox());
         await tester.pumpWidget(
@@ -1203,13 +1219,16 @@ void main() {
             tester.getRect(find.text('Open')).bottom;
       }
 
-      expect(await distance(40) - await distance(0),
-          moreOrLessEquals(40, epsilon: 0.5));
+      expect(
+        await distance(40) - await distance(0),
+        moreOrLessEquals(40, epsilon: 0.5),
+      );
     });
   });
 
-  testWidgets('a gradient in the token washes every panel of the menu',
-      (tester) async {
+  testWidgets('a gradient in the token washes every panel of the menu', (
+    tester,
+  ) async {
     const wash = LinearGradient(colors: [Color(0xFF112233), Color(0xFF445566)]);
     await tester.pumpWidget(
       MaterialApp(
@@ -1245,17 +1264,19 @@ void main() {
     final washes = tester
         .widgetList<DropdownPanel>(find.byType(DropdownPanel))
         .map(
-          (p) => (tester
-                  .widget<DecoratedBox>(
-                    find
-                        .descendant(
-                          of: find.byWidget(p),
-                          matching: find.byType(DecoratedBox),
-                        )
-                        .first,
-                  )
-                  .decoration as BoxDecoration)
-              .gradient,
+          (p) =>
+              (tester
+                          .widget<DecoratedBox>(
+                            find
+                                .descendant(
+                                  of: find.byWidget(p),
+                                  matching: find.byType(DecoratedBox),
+                                )
+                                .first,
+                          )
+                          .decoration
+                      as BoxDecoration)
+                  .gradient,
         )
         .toList();
     expect(washes.length, 2);
@@ -1263,8 +1284,11 @@ void main() {
   });
 
   group('a row drawn by the caller', () {
-    Future<void> open(WidgetTester tester,
-        {DropdownToken? token, DropdownItemBuilder<String>? builder}) async {
+    Future<void> open(
+      WidgetTester tester, {
+      DropdownToken? token,
+      DropdownItemBuilder<String>? builder,
+    }) async {
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(
         _host(
@@ -1292,24 +1316,27 @@ void main() {
         )
         .height;
 
-    testWidgets('a taller row than the kit draws takes the height it asks for',
-        (tester) async {
-      await open(tester);
-      final plain = rowHeight(tester);
+    testWidgets(
+      'a taller row than the kit draws takes the height it asks for',
+      (tester) async {
+        await open(tester);
+        final plain = rowHeight(tester);
 
-      await open(
-        tester,
-        builder: (context, item, hovered) =>
-            SizedBox(height: 52, child: Text(item.label ?? '')),
-      );
-      // The kit's height is a least, not a height: drawing a row inside a box
-      // the caller cannot resize is not drawing it yourself.
-      expect(plain, lessThan(52));
-      expect(rowHeight(tester), greaterThanOrEqualTo(52));
-    });
+        await open(
+          tester,
+          builder: (context, item, hovered) =>
+              SizedBox(height: 52, child: Text(item.label ?? '')),
+        );
+        // The kit's height is a least, not a height: drawing a row inside a box
+        // the caller cannot resize is not drawing it yourself.
+        expect(plain, lessThan(52));
+        expect(rowHeight(tester), greaterThanOrEqualTo(52));
+      },
+    );
 
-    testWidgets('a shorter one keeps the least the token names',
-        (tester) async {
+    testWidgets('a shorter one keeps the least the token names', (
+      tester,
+    ) async {
       await open(
         tester,
         token: const DropdownToken(itemHeight: 60),
@@ -1322,16 +1349,20 @@ void main() {
     });
 
     testWidgets('the row is inset by what the token names', (tester) async {
-      await open(tester,
-          token: const DropdownToken(itemPadding: EdgeInsets.zero));
+      await open(
+        tester,
+        token: const DropdownToken(itemPadding: EdgeInsets.zero),
+      );
       final flush = tester.getRect(find.text('A')).left;
 
       await open(
         tester,
         token: const DropdownToken(itemPadding: EdgeInsets.only(left: 40)),
       );
-      expect(tester.getRect(find.text('A')).left - flush,
-          moreOrLessEquals(40, epsilon: 0.5));
+      expect(
+        tester.getRect(find.text('A')).left - flush,
+        moreOrLessEquals(40, epsilon: 0.5),
+      );
     });
   });
 }

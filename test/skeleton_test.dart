@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart'
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,15 +10,9 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
-Widget _host(
-  Widget child, {
-  ComponentDefaults? defaults,
-  bool still = false,
-}) =>
+Widget _host(Widget child, {ComponentDefaults? defaults, bool still = false}) =>
     ConfigProvider(
       defaults: defaults,
       child: MaterialApp(
@@ -66,9 +62,7 @@ void main() {
     testWidgets('beside an avatar: a wider title and two lines', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _host(const Skeleton(avatar: SkeletonAvatar())),
-      );
+      await tester.pumpWidget(_host(const Skeleton(avatar: SkeletonAvatar())));
       final blocks = _blocks(tester);
       expect(blocks, hasLength(4));
       final avatar = blocks.first;
@@ -98,9 +92,7 @@ void main() {
       tester,
     ) async {
       final handle = tester.ensureSemantics();
-      await tester.pumpWidget(
-        _host(const Skeleton(avatar: SkeletonAvatar())),
-      );
+      await tester.pumpWidget(_host(const Skeleton(avatar: SkeletonAvatar())));
       expect(find.bySemanticsLabel('Loading'), findsOneWidget);
       handle.dispose();
     });
@@ -119,8 +111,11 @@ void main() {
       ]) {
         await tester.pumpWidget(_host(widget));
         await tester.pump(const Duration(milliseconds: 100));
-        expect(tester.binding.transientCallbackCount, greaterThan(0),
-            reason: '$widget');
+        expect(
+          tester.binding.transientCallbackCount,
+          greaterThan(0),
+          reason: '$widget',
+        );
         await tester.pumpWidget(const SizedBox());
       }
     });
@@ -178,9 +173,7 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('where motion is turned down, it stays still', (
-      tester,
-    ) async {
+    testWidgets('where motion is turned down, it stays still', (tester) async {
       await tester.pumpWidget(_host(const Skeleton(active: true), still: true));
       await tester.pump(const Duration(milliseconds: 100));
       expect(tester.binding.transientCallbackCount, 0);
@@ -221,9 +214,7 @@ void main() {
     });
 
     testWidgets('block takes the width', (tester) async {
-      await tester.pumpWidget(
-        _host(const SkeletonInput(block: true)),
-      );
+      await tester.pumpWidget(_host(const SkeletonInput(block: true)));
       expect(_blocks(tester).single.width, 400);
     });
 

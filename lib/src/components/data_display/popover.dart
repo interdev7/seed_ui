@@ -62,26 +62,26 @@ class PopoverToken {
   final double? maxWidth;
 
   _ResolvedPopoverToken _resolve(Token t) => _ResolvedPopoverToken(
-        colorBg: colorBg ?? t.colorBgElevated,
-        titleColor: titleColor ?? t.colorText,
-        contentColor: contentColor ?? t.colorText,
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-        padding: padding ??
-            EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeSM),
-        minWidth: minWidth ?? 177,
-        maxWidth: maxWidth ?? 360,
-      );
+    colorBg: colorBg ?? t.colorBgElevated,
+    titleColor: titleColor ?? t.colorText,
+    contentColor: contentColor ?? t.colorText,
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+    padding:
+        padding ?? EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeSM),
+    minWidth: minWidth ?? 177,
+    maxWidth: maxWidth ?? 360,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   PopoverToken merge(PopoverToken other) => PopoverToken(
-        colorBg: other.colorBg ?? colorBg,
-        titleColor: other.titleColor ?? titleColor,
-        contentColor: other.contentColor ?? contentColor,
-        borderRadius: other.borderRadius ?? borderRadius,
-        padding: other.padding ?? padding,
-        minWidth: other.minWidth ?? minWidth,
-        maxWidth: other.maxWidth ?? maxWidth,
-      );
+    colorBg: other.colorBg ?? colorBg,
+    titleColor: other.titleColor ?? titleColor,
+    contentColor: other.contentColor ?? contentColor,
+    borderRadius: other.borderRadius ?? borderRadius,
+    padding: other.padding ?? padding,
+    minWidth: other.minWidth ?? minWidth,
+    maxWidth: other.maxWidth ?? maxWidth,
+  );
 }
 
 @immutable
@@ -111,12 +111,13 @@ class _ResolvedPopoverToken {
 @immutable
 class PopoverDefaults {
   /// Creates a [PopoverDefaults].
-  const PopoverDefaults(
-      {this.placement,
-      this.trigger,
-      this.arrow,
-      this.animation,
-      this.dismissOnOutsideTap});
+  const PopoverDefaults({
+    this.placement,
+    this.trigger,
+    this.arrow,
+    this.animation,
+    this.dismissOnOutsideTap,
+  });
 
   /// Where popovers sit against their anchor.
   final PopoverPlacement? placement;
@@ -135,12 +136,12 @@ class PopoverDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   PopoverDefaults merge(PopoverDefaults other) => PopoverDefaults(
-        placement: other.placement ?? placement,
-        trigger: other.trigger ?? trigger,
-        arrow: other.arrow ?? arrow,
-        animation: other.animation ?? animation,
-        dismissOnOutsideTap: other.dismissOnOutsideTap ?? dismissOnOutsideTap,
-      );
+    placement: other.placement ?? placement,
+    trigger: other.trigger ?? trigger,
+    arrow: other.arrow ?? arrow,
+    animation: other.animation ?? animation,
+    dismissOnOutsideTap: other.dismissOnOutsideTap ?? dismissOnOutsideTap,
+  );
 }
 
 /// A floating card with a title and a body.
@@ -316,10 +317,11 @@ class _PopoverState extends State<Popover> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<PopoverToken>(context) ??
-            const PopoverToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<PopoverToken>(context) ??
+                const PopoverToken())
+            ._resolve(t);
     final background = widget.color ?? r.colorBg;
 
     Widget trigger = widget.child;
@@ -345,8 +347,9 @@ class _PopoverState extends State<Popover> {
       trigger = GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: _trigger == PopoverTrigger.tap ? () => _set(!_isOpen) : null,
-        onLongPress:
-            _trigger == PopoverTrigger.longPress ? () => _set(!_isOpen) : null,
+        onLongPress: _trigger == PopoverTrigger.longPress
+            ? () => _set(!_isOpen)
+            : null,
         child: trigger,
       );
     }
@@ -390,8 +393,9 @@ class _PopoverState extends State<Popover> {
         borderRadius: BorderRadius.circular(r.borderRadius),
         // While the genie pours, the sheet casts this shadow instead: drawn
         // here it would be cropped to the picture and read as a grey band.
-        boxShadow:
-            PopoverSurface.shadowIsCast(context) ? null : t.boxShadowSecondary,
+        boxShadow: PopoverSurface.shadowIsCast(context)
+            ? null
+            : t.boxShadowSecondary,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

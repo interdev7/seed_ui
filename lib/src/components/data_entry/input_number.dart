@@ -61,30 +61,29 @@ class InputNumberToken {
   final Color? handleBorderColor;
 
   _ResolvedInputNumberToken _resolve(Token t) => _ResolvedInputNumberToken(
-        controlWidth: controlWidth ?? 22,
-        // Two buttons plus room for four digits between them.
-        spinnerWidth:
-            spinnerWidth ?? (controlWidth ?? 22) * 2 + t.size * 2 + 64,
-        handleWidth: handleWidth ?? 22,
-        handleBg: handleBg ?? t.colorBgContainer,
-        // The kit washes the handle only while it is pressed, and faintly.
-        handleActiveBg: handleActiveBg ?? t.colorFillQuaternary,
-        handleHoverBg: handleHoverBg ?? const Color(0x00000000),
-        handleHoverColor: handleHoverColor ?? t.primary.base,
-        handleBorderColor: handleBorderColor ?? t.colorBorderSecondary,
-      );
+    controlWidth: controlWidth ?? 22,
+    // Two buttons plus room for four digits between them.
+    spinnerWidth: spinnerWidth ?? (controlWidth ?? 22) * 2 + t.size * 2 + 64,
+    handleWidth: handleWidth ?? 22,
+    handleBg: handleBg ?? t.colorBgContainer,
+    // The kit washes the handle only while it is pressed, and faintly.
+    handleActiveBg: handleActiveBg ?? t.colorFillQuaternary,
+    handleHoverBg: handleHoverBg ?? const Color(0x00000000),
+    handleHoverColor: handleHoverColor ?? t.primary.base,
+    handleBorderColor: handleBorderColor ?? t.colorBorderSecondary,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   InputNumberToken merge(InputNumberToken other) => InputNumberToken(
-        controlWidth: other.controlWidth ?? controlWidth,
-        spinnerWidth: other.spinnerWidth ?? spinnerWidth,
-        handleWidth: other.handleWidth ?? handleWidth,
-        handleBg: other.handleBg ?? handleBg,
-        handleActiveBg: other.handleActiveBg ?? handleActiveBg,
-        handleHoverBg: other.handleHoverBg ?? handleHoverBg,
-        handleHoverColor: other.handleHoverColor ?? handleHoverColor,
-        handleBorderColor: other.handleBorderColor ?? handleBorderColor,
-      );
+    controlWidth: other.controlWidth ?? controlWidth,
+    spinnerWidth: other.spinnerWidth ?? spinnerWidth,
+    handleWidth: other.handleWidth ?? handleWidth,
+    handleBg: other.handleBg ?? handleBg,
+    handleActiveBg: other.handleActiveBg ?? handleActiveBg,
+    handleHoverBg: other.handleHoverBg ?? handleHoverBg,
+    handleHoverColor: other.handleHoverColor ?? handleHoverColor,
+    handleBorderColor: other.handleBorderColor ?? handleBorderColor,
+  );
 }
 
 @immutable
@@ -147,12 +146,12 @@ class InputNumberDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   InputNumberDefaults merge(InputNumberDefaults other) => InputNumberDefaults(
-        controls: other.controls ?? controls,
-        keyboard: other.keyboard ?? keyboard,
-        mode: other.mode ?? mode,
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-      );
+    controls: other.controls ?? controls,
+    keyboard: other.keyboard ?? keyboard,
+    mode: other.mode ?? mode,
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A numeric input with stepper buttons.
@@ -390,8 +389,9 @@ class _InputNumberState extends State<InputNumber> {
       _controller.text = '';
       return;
     }
-    final parsed =
-        widget.parser != null ? widget.parser!(trimmed) : num.tryParse(trimmed);
+    final parsed = widget.parser != null
+        ? widget.parser!(trimmed)
+        : num.tryParse(trimmed);
     if (parsed == null) {
       _controller.text = _format(_current); // revert invalid input
       return;
@@ -407,8 +407,9 @@ class _InputNumberState extends State<InputNumber> {
     final next = _clamp(base + widget.step * direction);
     _emit(next);
     _controller.text = _format(next);
-    _controller.selection =
-        TextSelection.collapsed(offset: _controller.text.length);
+    _controller.selection = TextSelection.collapsed(
+      offset: _controller.text.length,
+    );
   }
 
   bool get _canStepUp =>
@@ -434,10 +435,11 @@ class _InputNumberState extends State<InputNumber> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<InputNumberToken>(context) ??
-            const InputNumberToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<InputNumberToken>(context) ??
+                const InputNumberToken())
+            ._resolve(token);
     final spinner = _controls && _mode == InputNumberMode.spinner;
 
     final field = MouseRegion(
@@ -455,8 +457,10 @@ class _InputNumberState extends State<InputNumber> {
         disabled: _disabled,
         readOnly: widget.readOnly,
         placeholder: widget.placeholder,
-        keyboardType:
-            const TextInputType.numberWithOptions(decimal: true, signed: true),
+        keyboardType: const TextInputType.numberWithOptions(
+          decimal: true,
+          signed: true,
+        ),
         // A number is never what a keyboard has a better idea about.
         autocorrect: false,
         enableSuggestions: false,
@@ -491,17 +495,17 @@ class _InputNumberState extends State<InputNumber> {
                 trailing: true,
               )
             : _controls
-                ? _Spinner(
-                    token: token,
-                    componentToken: r,
-                    height: _controlHeight(token),
-                    visible: _spinnerVisible,
-                    upEnabled: _canStepUp,
-                    downEnabled: _canStepDown,
-                    onUp: () => _step(1),
-                    onDown: () => _step(-1),
-                  )
-                : widget.suffix,
+            ? _Spinner(
+                token: token,
+                componentToken: r,
+                height: _controlHeight(token),
+                visible: _spinnerVisible,
+                upEnabled: _canStepUp,
+                downEnabled: _canStepDown,
+                onUp: () => _step(1),
+                onDown: () => _step(-1),
+              )
+            : widget.suffix,
       ),
     );
 
@@ -517,18 +521,18 @@ class _InputNumberState extends State<InputNumber> {
     final base = _current ?? widget.min ?? 0;
 
     Widget spoken(Widget child) => Semantics(
-          label: widget.semanticsLabel,
-          value: held,
-          increasedValue: steppable && _canStepUp
-              ? _format(_clamp(base + widget.step))
-              : null,
-          decreasedValue: steppable && _canStepDown
-              ? _format(_clamp(base - widget.step))
-              : null,
-          onIncrease: steppable && _canStepUp ? () => _step(1) : null,
-          onDecrease: steppable && _canStepDown ? () => _step(-1) : null,
-          child: child,
-        );
+      label: widget.semanticsLabel,
+      value: held,
+      increasedValue: steppable && _canStepUp
+          ? _format(_clamp(base + widget.step))
+          : null,
+      decreasedValue: steppable && _canStepDown
+          ? _format(_clamp(base - widget.step))
+          : null,
+      onIncrease: steppable && _canStepUp ? () => _step(1) : null,
+      onDecrease: steppable && _canStepDown ? () => _step(-1) : null,
+      child: child,
+    );
 
     if (!spinner) return spoken(field);
 
@@ -552,10 +556,10 @@ class _InputNumberState extends State<InputNumber> {
   }
 
   double _controlHeight(Token t) => _size.resolveHeight(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 }
 
 /// The vertical up/down spinner shown at the right of an [InputNumber]: two
@@ -724,8 +728,9 @@ class _StepButtonState extends State<_StepButton> {
     // pointer, and a second way in reads as two more unnamed buttons.
     return ExcludeSemantics(
       child: MouseRegion(
-        cursor:
-            active ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+        cursor: active
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.forbidden,
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() {
           _hovered = false;
@@ -756,8 +761,8 @@ class _StepButtonState extends State<_StepButton> {
                       _pressed
                           ? r.handleActiveBg
                           : _hovered
-                              ? r.handleHoverBg
-                              : const Color(0x00000000),
+                          ? r.handleHoverBg
+                          : const Color(0x00000000),
                       r.handleBg,
                     )
                   : r.handleBg,
@@ -770,7 +775,9 @@ class _StepButtonState extends State<_StepButton> {
                 end: widget.trailing
                     ? BorderSide.none
                     : BorderSide(
-                        color: r.handleBorderColor, width: t.lineWidth),
+                        color: r.handleBorderColor,
+                        width: t.lineWidth,
+                      ),
               ),
             ),
             child: CustomPaint(
@@ -833,7 +840,7 @@ enum SpinDirection {
   up,
 
   /// The handle that decrements the value.
-  down
+  down,
 }
 
 /// One increment/decrement control of an [InputNumber] spinner: on hover the
@@ -911,14 +918,12 @@ class _SpinButtonState extends State<SpinButton> {
     final bg = _pressed && _active
         ? widget.pressedColor
         : _hovered && _active
-            ? widget.hoverColor
-            // The wash it eases to, made clear, not a clear black: from
-            // black the fade passed through grey. The hover wash where there
-            // is one; the kit's own is clear, and only a press shows.
-            : (widget.hoverColor.a > 0
-                    ? widget.hoverColor
-                    : widget.pressedColor)
-                .withValues(alpha: 0);
+        ? widget.hoverColor
+        // The wash it eases to, made clear, not a clear black: from
+        // black the fade passed through grey. The hover wash where there
+        // is one; the kit's own is clear, and only a press shows.
+        : (widget.hoverColor.a > 0 ? widget.hoverColor : widget.pressedColor)
+              .withValues(alpha: 0);
 
     return MouseRegion(
       cursor: _active ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
@@ -959,8 +964,8 @@ class _SpinButtonState extends State<SpinButton> {
               !_active
                   ? widget.iconColor.withValues(alpha: 0.4)
                   : (_hovered
-                      ? (widget.iconHoverColor ?? widget.iconColor)
-                      : widget.iconColor),
+                        ? (widget.iconHoverColor ?? widget.iconColor)
+                        : widget.iconColor),
               up: widget.direction == SpinDirection.up,
             ),
           ),
@@ -989,13 +994,13 @@ class _ChevronPainter extends CustomPainter {
     // A compact chevron centred in the box.
     final path = up
         ? (Path()
-          ..moveTo(w * 0.3, h * 0.58)
-          ..lineTo(w * 0.5, h * 0.42)
-          ..lineTo(w * 0.7, h * 0.58))
+            ..moveTo(w * 0.3, h * 0.58)
+            ..lineTo(w * 0.5, h * 0.42)
+            ..lineTo(w * 0.7, h * 0.58))
         : (Path()
-          ..moveTo(w * 0.3, h * 0.42)
-          ..lineTo(w * 0.5, h * 0.58)
-          ..lineTo(w * 0.7, h * 0.42));
+            ..moveTo(w * 0.3, h * 0.42)
+            ..lineTo(w * 0.5, h * 0.58)
+            ..lineTo(w * 0.7, h * 0.42));
     canvas.drawPath(path, paint);
   }
 

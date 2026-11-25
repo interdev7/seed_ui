@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _wrap(Widget child) => ConfigProvider(
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Center(child: child),
-      ),
-    );
+  child: Directionality(
+    textDirection: TextDirection.ltr,
+    child: Center(child: child),
+  ),
+);
 
 void main() {
   testWidgets('renders each item content in order', (tester) async {
@@ -31,9 +31,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         const Timeline(
-          items: [
-            TimelineItem(dot: Text('★'), content: Text('Starred')),
-          ],
+          items: [TimelineItem(dot: Text('★'), content: Text('Starred'))],
         ),
       ),
     );
@@ -109,9 +107,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         const Timeline(
-          items: [
-            TimelineItem(content: Text('Faded'), contentOpacity: 0.45),
-          ],
+          items: [TimelineItem(content: Text('Faded'), contentOpacity: 0.45)],
         ),
       ),
     );
@@ -147,8 +143,9 @@ void main() {
           ),
         );
 
-    testWidgets('by default the thread runs unbroken through the dots',
-        (tester) async {
+    testWidgets('by default the thread runs unbroken through the dots', (
+      tester,
+    ) async {
       await pump(tester);
       // The middle node's two runs meet at the dot's centre.
       final middle = painters(tester)[1].segments;
@@ -165,8 +162,9 @@ void main() {
       );
     });
 
-    testWidgets('an inset wider than the run above the dot does not invert',
-        (tester) async {
+    testWidgets('an inset wider than the run above the dot does not invert', (
+      tester,
+    ) async {
       await pump(tester, inset: 40);
       for (final painter in painters(tester)) {
         for (final segment in painter.segments) {
@@ -212,8 +210,9 @@ void main() {
     });
   });
 
-  testWidgets('titleSpan sets the distance from the dot to the content',
-      (tester) async {
+  testWidgets('titleSpan sets the distance from the dot to the content', (
+    tester,
+  ) async {
     Future<double> contentLeft(double? span) async {
       await tester.pumpWidget(
         _wrap(
@@ -308,8 +307,9 @@ void main() {
   });
 
   group('TimelineGroupItem', () {
-    testWidgets('the run past collapsedCount is folded to nothing',
-        (tester) async {
+    testWidgets('the run past collapsedCount is folded to nothing', (
+      tester,
+    ) async {
       final controller = TimelineGroupController();
       addTearDown(controller.dispose);
 
@@ -412,9 +412,7 @@ void main() {
               TimelineGroupItem(
                 controller: controller,
                 collapsedCount: 0,
-                items: const [
-                  TimelineItem(content: Text('Only')),
-                ],
+                items: const [TimelineItem(content: Text('Only'))],
               ),
             ],
           ),
@@ -439,8 +437,9 @@ void main() {
       );
     });
 
-    testWidgets('groups fold along the axis on a horizontal run',
-        (tester) async {
+    testWidgets('groups fold along the axis on a horizontal run', (
+      tester,
+    ) async {
       final controller = TimelineGroupController();
       addTearDown(controller.dispose);
 
@@ -471,8 +470,9 @@ void main() {
   });
 
   group('Orientation and order', () {
-    testWidgets('a horizontal run lays its nodes left to right',
-        (tester) async {
+    testWidgets('a horizontal run lays its nodes left to right', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const Timeline(
@@ -522,9 +522,7 @@ void main() {
           const Timeline(
             reverse: true,
             pending: Text('Working…'),
-            items: [
-              TimelineItem(content: Text('Done')),
-            ],
+            items: [TimelineItem(content: Text('Done'))],
           ),
         ),
       );
@@ -535,8 +533,9 @@ void main() {
       );
     });
 
-    testWidgets('a horizontal run shows labels on the far side',
-        (tester) async {
+    testWidgets('a horizontal run shows labels on the far side', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const Timeline(
@@ -559,9 +558,16 @@ void main() {
   });
 
   group('the width a label column takes', () {
-    Widget run(List<TimelineItem> items,
-            {TimelineMode? mode, double w = 600}) =>
-        _wrap(SizedBox(width: w, child: Timeline(mode: mode, items: items)));
+    Widget run(
+      List<TimelineItem> items, {
+      TimelineMode? mode,
+      double w = 600,
+    }) => _wrap(
+      SizedBox(
+        width: w,
+        child: Timeline(mode: mode, items: items),
+      ),
+    );
 
     testWidgets('is its own, not half the row', (tester) async {
       await tester.pumpWidget(
@@ -579,8 +585,9 @@ void main() {
       );
     });
 
-    testWidgets('is the same in every row, so the axis is one straight line',
-        (tester) async {
+    testWidgets('is the same in every row, so the axis is one straight line', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         run(const [
           TimelineItem(label: Text('9'), content: Text('One')),
@@ -600,9 +607,7 @@ void main() {
 
     testWidgets('is the widest label\'s', (tester) async {
       await tester.pumpWidget(
-        run(const [
-          TimelineItem(label: Text('9'), content: Text('One')),
-        ]),
+        run(const [TimelineItem(label: Text('9'), content: Text('One'))]),
       );
       final narrow = tester.getRect(find.text('One')).left;
 
@@ -624,13 +629,10 @@ void main() {
 
     testWidgets('is half the row where the content alternates', (tester) async {
       await tester.pumpWidget(
-        run(
-          mode: TimelineMode.alternate,
-          const [
-            TimelineItem(content: Text('One')),
-            TimelineItem(content: Text('Two')),
-          ],
-        ),
+        run(mode: TimelineMode.alternate, const [
+          TimelineItem(content: Text('One')),
+          TimelineItem(content: Text('Two')),
+        ]),
       );
       // Alternate means the content takes both sides by turns, so neither
       // side may be the narrower.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart'
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -34,7 +34,10 @@ void main() {
     await _settle(tester);
     await tester.tap(find.text('Button').first);
     await _settle(tester);
-    expect(find.text('Button'), findsWidgets, reason: 'the demo opened');
+    // A variant name only the Button demo shows: the list tile's 'Button' is
+    // still in the tree behind the demo, and while the page transition runs
+    // it is even on screen — it proves nothing about the demo.
+    expect(find.text('solid'), findsWidgets, reason: 'the demo opened');
 
     final context = tester.element(find.byType(Navigator).last);
     expect(

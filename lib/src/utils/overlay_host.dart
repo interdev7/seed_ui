@@ -162,7 +162,7 @@ abstract class OverlayItem {
 class OverlayPopScope implements PopEntry<dynamic> {
   /// Creates an [OverlayPopScope].
   OverlayPopScope({required this.onPop})
-      : canPopNotifier = ValueNotifier<bool>(false);
+    : canPopNotifier = ValueNotifier<bool>(false);
 
   /// Called when a system back gesture should dismiss the topmost entry.
   final VoidCallback onPop;

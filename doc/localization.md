@@ -13,6 +13,12 @@ Register the delegate and the kit follows the app's locale, changing with it at
 runtime:
 
 ```dart
+import 'package:cupertino_ui/cupertino_ui.dart' show GlobalCupertinoLocalizations;
+import 'package:flutter_localizations/flutter_localizations.dart'
+    show GlobalWidgetsLocalizations;
+import 'package:material_ui/material_ui.dart';
+import 'package:seed_ui/seed_ui.dart' hide ThemeData, Divider;
+
 MaterialApp(
   localizationsDelegates: const [
     SeedLocalizations.delegate,
@@ -28,7 +34,12 @@ That is the whole of the integration, and it is why the kit works with `intl`,
 `easy_localization`, `slang` and anything else **without depending on any of
 them**. Those packages all end up doing one thing: setting the app's `Locale`.
 The delegate reads that, so it never needs to know which one is in use, and
-`seed_ui` keeps a `pubspec.yaml` with no dependencies in it.
+none of them is among `seed_ui`'s dependencies.
+
+Since Flutter 3.47 the Material and Cupertino delegates come from
+`material_ui` and `cupertino_ui`; `flutter_localizations` still supplies
+`GlobalWidgetsLocalizations`. Import only that one from it (`show`), or the
+other two are found twice.
 
 `easy_localization`, for instance, needs nothing special — its
 `EasyLocalization` widget supplies the locale and delegates, and the kit's

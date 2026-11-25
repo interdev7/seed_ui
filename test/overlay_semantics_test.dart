@@ -2,7 +2,9 @@
 // them here would wait for a close the test never asks for.
 // ignore_for_file: unawaited_futures
 
-import 'package:flutter/material.dart'
+import 'package:flutter/semantics.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -12,8 +14,6 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter/semantics.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// What opens over a page, held to the rule the demo's gate holds pages to:
@@ -24,9 +24,9 @@ import 'package:seed_ui/seed_ui.dart';
 /// named, and the gate could not see it because it was never open.
 
 Widget _host(Widget body) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(body: Center(child: body)),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(body: Center(child: body)),
+);
 
 /// Lets an overlay arrive without waiting for one that never settles.
 Future<void> _settle(WidgetTester tester) async {
@@ -56,8 +56,10 @@ List<String> _unnamed(WidgetTester tester) {
   void walk(SemanticsNode node) {
     final data = node.getSemanticsData();
     if (data.hasAction(SemanticsAction.tap) && !worded(node)) {
-      out.add('${node.rect.width.round()}x${node.rect.height.round()} '
-          'at ${node.rect.topLeft}');
+      out.add(
+        '${node.rect.width.round()}x${node.rect.height.round()} '
+        'at ${node.rect.topLeft}',
+      );
     }
     node.visitChildren((child) {
       walk(child);
@@ -65,10 +67,9 @@ List<String> _unnamed(WidgetTester tester) {
     });
   }
 
-  walk(tester.semantics
-      .find(find.byType(MaterialApp))
-      .owner!
-      .rootSemanticsNode!);
+  walk(
+    tester.semantics.find(find.byType(MaterialApp)).owner!.rootSemanticsNode!,
+  );
   return out;
 }
 
@@ -214,10 +215,7 @@ void main() {
   testWidgets("a range picker's panel", (tester) async {
     await heldToIt(
       tester,
-      SizedBox(
-        width: 320,
-        child: DateRangePicker(onChanged: (_) {}),
-      ),
+      SizedBox(width: 320, child: DateRangePicker(onChanged: (_) {})),
       open: () => tester.tap(find.byType(DateRangePicker)),
     );
   });

@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,18 +10,19 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 import 'package:seed_ui/src/components/data_entry/date_picker.dart'
     show DayGrid;
 
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(
-        // The panel renders into the kit's overlay, which needs this key.
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(body: Center(child: SizedBox(width: 320, child: child))),
-      ),
-    );
+  child: MaterialApp(
+    // The panel renders into the kit's overlay, which needs this key.
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(
+      body: Center(child: SizedBox(width: 320, child: child)),
+    ),
+  ),
+);
 
 Future<void> _openPanel(WidgetTester tester) async {
   await tester.tap(find.byType(DatePicker));
@@ -41,9 +43,7 @@ void main() {
     await tester.pumpWidget(_host(const DatePicker()));
     expect(find.text('Select date'), findsOneWidget);
 
-    await tester.pumpWidget(
-      _host(DatePicker(value: DateTime(2026, 3, 4))),
-    );
+    await tester.pumpWidget(_host(DatePicker(value: DateTime(2026, 3, 4))));
     await tester.pump();
     expect(find.text('Select date'), findsNothing);
     expect(_fieldText(tester), '2026-03-04');
@@ -58,9 +58,7 @@ void main() {
   });
 
   testWidgets('the panel opens on the month of the value', (tester) async {
-    await tester.pumpWidget(
-      _host(DatePicker(value: DateTime(2026, 3, 4))),
-    );
+    await tester.pumpWidget(_host(DatePicker(value: DateTime(2026, 3, 4))));
     await _openPanel(tester);
     expect(find.text('Mar 2026'), findsOneWidget);
   });
@@ -69,10 +67,7 @@ void main() {
     DateTime? chosen;
     await tester.pumpWidget(
       _host(
-        DatePicker(
-          value: DateTime(2026, 3, 4),
-          onChanged: (v) => chosen = v,
-        ),
+        DatePicker(value: DateTime(2026, 3, 4), onChanged: (v) => chosen = v),
       ),
     );
     await _openPanel(tester);
@@ -225,9 +220,7 @@ void main() {
 
   testWidgets('typing a date is read back', (tester) async {
     DateTime? chosen;
-    await tester.pumpWidget(
-      _host(DatePicker(onChanged: (v) => chosen = v)),
-    );
+    await tester.pumpWidget(_host(DatePicker(onChanged: (v) => chosen = v)));
     await tester.enterText(find.byType(EditableText), '2026-07-19');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
@@ -238,12 +231,7 @@ void main() {
   testWidgets('an impossible date leaves the value alone', (tester) async {
     var calls = 0;
     await tester.pumpWidget(
-      _host(
-        DatePicker(
-          value: DateTime(2026, 3, 4),
-          onChanged: (_) => calls++,
-        ),
-      ),
+      _host(DatePicker(value: DateTime(2026, 3, 4), onChanged: (_) => calls++)),
     );
     await tester.pump();
 
@@ -545,14 +533,8 @@ void main() {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: 200,
-                      child: DatePicker(open: open),
-                    ),
-                    GestureDetector(
-                      onTap: toggle,
-                      child: const Text('flip'),
-                    ),
+                    SizedBox(width: 200, child: DatePicker(open: open)),
+                    GestureDetector(onTap: toggle, child: const Text('flip')),
                   ],
                 ),
               ),
@@ -560,9 +542,7 @@ void main() {
           ),
         );
 
-    testWidgets('opens without building the overlay mid-build', (
-      tester,
-    ) async {
+    testWidgets('opens without building the overlay mid-build', (tester) async {
       // didUpdateWidget runs inside a build, and mounting the overlay entry
       // marks the Overlay as needing to build — doing it there throws.
       var open = false;
@@ -630,8 +610,9 @@ void _presetTests() {
       expect(find.byType(SingleChildScrollView), findsNothing);
     });
 
-    testWidgets('a preset is asked for its date when it is taken',
-        (tester) async {
+    testWidgets('a preset is asked for its date when it is taken', (
+      tester,
+    ) async {
       var asked = 0;
       DateTime? chosen;
       await tester.pumpWidget(
@@ -659,8 +640,9 @@ void _presetTests() {
       expect(chosen, DateTime(2026, 9, atFirstDraw + 1));
     });
 
-    testWidgets('a preset landing on a blocked day does nothing',
-        (tester) async {
+    testWidgets('a preset landing on a blocked day does nothing', (
+      tester,
+    ) async {
       DateTime? chosen;
       await tester.pumpWidget(
         _host(
@@ -697,8 +679,9 @@ void _showTimeTests() {
       expect(find.text('2026-03-04 14:32:05'), findsOneWidget);
     });
 
-    testWidgets('a format that names its own time is left alone',
-        (tester) async {
+    testWidgets('a format that names its own time is left alone', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           DatePicker(
@@ -734,8 +717,9 @@ void _showTimeTests() {
       expect(hour.top, greaterThan(grid.bottom));
     });
 
-    testWidgets('roomy controls on a phone: the week narrows to fit',
-        (tester) async {
+    testWidgets('roomy controls on a phone: the week narrows to fit', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -770,8 +754,9 @@ void _showTimeTests() {
       expect(last.right, lessThanOrEqualTo(390));
     });
 
-    testWidgets('on a wide screen the clock stays beside the days',
-        (tester) async {
+    testWidgets('on a wide screen the clock stays beside the days', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -819,8 +804,9 @@ void _showTimeTests() {
       expect(chosen, DateTime(2026, 3, 15, 14, 32, 5));
     });
 
-    testWidgets('a day picked twice keeps the hour chosen in between',
-        (tester) async {
+    testWidgets('a day picked twice keeps the hour chosen in between', (
+      tester,
+    ) async {
       DateTime? chosen;
       await tester.pumpWidget(
         _host(
@@ -882,10 +868,7 @@ void _showTimeTests() {
       await _openPanel(tester);
       final rect = tester.getRect(
         find
-            .ancestor(
-              of: find.text('OK'),
-              matching: find.byType(DecoratedBox),
-            )
+            .ancestor(of: find.text('OK'), matching: find.byType(DecoratedBox))
             .last,
       );
       await tester.tap(find.text('OK'));
@@ -893,8 +876,9 @@ void _showTimeTests() {
       return rect.width;
     }
 
-    testWidgets('the panel measures itself rather than taking the screen',
-        (tester) async {
+    testWidgets('the panel measures itself rather than taking the screen', (
+      tester,
+    ) async {
       final one = await panelWidth(
         tester,
         DatePicker(
@@ -930,8 +914,9 @@ void _showTimeTests() {
       expect(two - one, greaterThan(0));
     });
 
-    testWidgets('a wider token widens the panel, with nothing told to',
-        (tester) async {
+    testWidgets('a wider token widens the panel, with nothing told to', (
+      tester,
+    ) async {
       final standard = await panelWidth(
         tester,
         DatePicker(showTime: true, value: DateTime(2026, 3, 4)),
@@ -949,8 +934,9 @@ void _showTimeTests() {
       expect(wider - standard, 3 * (80 - 48));
     });
 
-    testWidgets('a footer wider than the calendar is not cut off',
-        (tester) async {
+    testWidgets('a footer wider than the calendar is not cut off', (
+      tester,
+    ) async {
       final plain = await panelWidth(
         tester,
         DatePicker(showTime: true, value: DateTime(2026, 3, 4)),
@@ -1012,9 +998,7 @@ void _clearRaceTests() {
     }
 
     testWidgets('is bigger than the glyph drawn in it', (tester) async {
-      await tester.pumpWidget(
-        _host(DatePicker(value: DateTime(2026, 3, 4))),
-      );
+      await tester.pumpWidget(_host(DatePicker(value: DateTime(2026, 3, 4))));
       await tester.pumpAndSettle();
 
       final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -1136,8 +1120,9 @@ void _kindTests() {
       expect(chosen, DateTime(2026, 3, 9));
     });
 
-    testWidgets('a week picker marks the whole row, not one day',
-        (tester) async {
+    testWidgets('a week picker marks the whole row, not one day', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           DatePicker(
@@ -1171,10 +1156,7 @@ void _kindTests() {
     testWidgets('a week is written as a week', (tester) async {
       await tester.pumpWidget(
         _host(
-          DatePicker(
-            picker: DatePickerKind.week,
-            value: DateTime(2026, 3, 9),
-          ),
+          DatePicker(picker: DatePickerKind.week, value: DateTime(2026, 3, 9)),
         ),
       );
       // A week written yyyy-MM-dd would name a day and mean seven of them.
@@ -1255,8 +1237,9 @@ void _kindTests() {
   });
 
   group('a cell drawn by the caller', () {
-    testWidgets('is handed the day, what the panel knows and its own mark',
-        (tester) async {
+    testWidgets('is handed the day, what the panel knows and its own mark', (
+      tester,
+    ) async {
       final seen = <DateCell>[];
       await tester.pumpWidget(
         _host(
@@ -1315,13 +1298,13 @@ void _spacingTests() {
   group('the air in the grid', () {
     /// The mark drawn inside the cell holding [day].
     Rect markUnder(WidgetTester tester, String day) => tester.getRect(
-          find
-              .ancestor(
-                of: find.text(day),
-                matching: find.byType(AnimatedContainer),
-              )
-              .first,
-        );
+      find
+          .ancestor(
+            of: find.text(day),
+            matching: find.byType(AnimatedContainer),
+          )
+          .first,
+    );
 
     Future<double> gapBetweenWeeks(WidgetTester tester, double gap) async {
       await tester.pumpWidget(
@@ -1339,8 +1322,9 @@ void _spacingTests() {
       return lower.top - upper.bottom;
     }
 
-    testWidgets('mainAxisSpacing is the gap between one week and the next',
-        (tester) async {
+    testWidgets('mainAxisSpacing is the gap between one week and the next', (
+      tester,
+    ) async {
       expect(
         await gapBetweenWeeks(tester, 4),
         moreOrLessEquals(4, epsilon: 0.5),
@@ -1399,8 +1383,9 @@ void _spacingTests() {
       return right.left - left.right;
     }
 
-    testWidgets('crossAxisSpacing is the gap between one day and the next',
-        (tester) async {
+    testWidgets('crossAxisSpacing is the gap between one day and the next', (
+      tester,
+    ) async {
       expect(await gapBetweenDays(tester, 4), moreOrLessEquals(4, epsilon: .5));
     });
 
@@ -1439,8 +1424,9 @@ void _spacingTests() {
           matching: find.byType(DecoratedBox),
         );
         for (final element in boxes.evaluate()) {
-          final rect =
-              tester.getRect(find.byElementPredicate((e) => e == element));
+          final rect = tester.getRect(
+            find.byElementPredicate((e) => e == element),
+          );
           if ((rect.width - cell).abs() < 0.5) return rect;
         }
         fail('no box the width of a cell stands behind $day');

@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _wrap(Widget child) => ConfigProvider(
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Center(child: child),
-      ),
-    );
+  child: Directionality(
+    textDirection: TextDirection.ltr,
+    child: Center(child: child),
+  ),
+);
 
 const _items = [
   CollapseItem(key: '1', label: Text('Header 1'), content: Text('Body 1')),
@@ -15,8 +15,9 @@ const _items = [
 ];
 
 void main() {
-  testWidgets('defaultActiveKeys opens a panel; tapping toggles it',
-      (tester) async {
+  testWidgets('defaultActiveKeys opens a panel; tapping toggles it', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
         const Collapse(
@@ -44,9 +45,7 @@ void main() {
   testWidgets('onChanged reports the open keys', (tester) async {
     List<String>? changed;
     await tester.pumpWidget(
-      _wrap(
-        Collapse(items: _items, onChanged: (k) => changed = k),
-      ),
+      _wrap(Collapse(items: _items, onChanged: (k) => changed = k)),
     );
     await tester.tap(find.text('Header 2'));
     await tester.pumpAndSettle();
@@ -91,10 +90,12 @@ void main() {
     expect(find.text('Body 1'), findsNothing);
   });
 
-  testWidgets('controlled activeKeys ignores taps without onChanged',
-      (tester) async {
-    await tester
-        .pumpWidget(_wrap(const Collapse(items: _items, activeKeys: ['1'])));
+  testWidgets('controlled activeKeys ignores taps without onChanged', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(const Collapse(items: _items, activeKeys: ['1'])),
+    );
     expect(find.text('Body 1'), findsOneWidget);
     await tester.tap(find.text('Header 1'));
     await tester.pumpAndSettle();

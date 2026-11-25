@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,16 +9,15 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child, {EmptyBuilder? emptyBuilder}) => ConfigProvider(
-      emptyBuilder: emptyBuilder,
-      child: MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(body: Center(child: child)),
-      ),
-    );
+  emptyBuilder: emptyBuilder,
+  child: MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(body: Center(child: child)),
+  ),
+);
 
 void main() {
   testWidgets('Empty shows the default description', (tester) async {
@@ -27,17 +27,16 @@ void main() {
 
   testWidgets('a Select with no options falls back to Empty', (tester) async {
     await tester.pumpWidget(
-      _host(
-        const Select<String>(placeholder: 'Pick', options: []),
-      ),
+      _host(const Select<String>(placeholder: 'Pick', options: [])),
     );
     await tester.tap(find.text('Pick'));
     await tester.pumpAndSettle();
     expect(find.text('No data'), findsOneWidget);
   });
 
-  testWidgets('ConfigProvider.emptyBuilder overrides the default',
-      (tester) async {
+  testWidgets('ConfigProvider.emptyBuilder overrides the default', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         const Select<String>(placeholder: 'Pick', options: []),
@@ -81,8 +80,9 @@ void main() {
     expect(find.text('No data'), findsOneWidget);
   });
 
-  testWidgets('emptyContent wins over emptyBuilder for a Listy',
-      (tester) async {
+  testWidgets('emptyContent wins over emptyBuilder for a Listy', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         SizedBox(
@@ -136,22 +136,23 @@ void main() {
     );
   });
 
-  testWidgets('a list still fetching its first page is not empty yet',
-      (tester) async {
+  testWidgets('a list still fetching its first page is not empty yet', (
+    tester,
+  ) async {
     Widget listy({required bool loading, required bool hasMore}) => _host(
-          SizedBox(
-            height: 200,
-            child: Listy<String, String, String>(
-              items: const [],
-              itemBuilder: (item, index) => Text(item),
-              loadMore: ListyLoadMore(
-                onLoad: () {},
-                loading: loading,
-                hasMore: hasMore,
-              ),
-            ),
+      SizedBox(
+        height: 200,
+        child: Listy<String, String, String>(
+          items: const [],
+          itemBuilder: (item, index) => Text(item),
+          loadMore: ListyLoadMore(
+            onLoad: () {},
+            loading: loading,
+            hasMore: hasMore,
           ),
-        );
+        ),
+      ),
+    );
 
     await tester.pumpWidget(listy(loading: true, hasMore: true));
     expect(find.text('No data'), findsNothing, reason: 'a page is in flight');
@@ -173,10 +174,7 @@ void main() {
           child: Listy<String, String, String>(
             items: const [],
             itemBuilder: (item, index) => Text(item),
-            loadMore: ListyLoadMore(
-              onLoad: () {},
-              hasMore: false,
-            ),
+            loadMore: ListyLoadMore(onLoad: () {}, hasMore: false),
           ),
         ),
       ),

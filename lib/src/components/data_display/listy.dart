@@ -72,11 +72,11 @@ class ListyHeader {
     this.triggerExtent = 72,
     this.pinned = false,
     this.extent,
-  })  : assert(triggerExtent > 0, 'triggerExtent must be positive'),
-        assert(
-          !pinned || extent != null,
-          'A pinned header needs an extent — it has to reserve its space.',
-        );
+  }) : assert(triggerExtent > 0, 'triggerExtent must be positive'),
+       assert(
+         !pinned || extent != null,
+         'A pinned header needs an extent — it has to reserve its space.',
+       );
 
   /// Builds the header from the current pull.
   final Widget Function(BuildContext context, ListyPull pull) builder;
@@ -103,28 +103,28 @@ class ListyHeader {
 class ListyScrollTo {
   /// Scrolls to an absolute pixel offset.
   const ListyScrollTo.offset(double this.pixels)
-      : itemKey = null,
-        groupKey = null,
-        align = ListyScrollAlign.top,
-        offset = 0;
+    : itemKey = null,
+      groupKey = null,
+      align = ListyScrollAlign.top,
+      offset = 0;
 
   /// Scrolls to the item whose [Listy.rowKey] matches [key].
   const ListyScrollTo.item(
     Object key, {
     this.align = ListyScrollAlign.auto,
     this.offset = 0,
-  })  : itemKey = key,
-        groupKey = null,
-        pixels = null;
+  }) : itemKey = key,
+       groupKey = null,
+       pixels = null;
 
   /// Scrolls to a group's header.
   const ListyScrollTo.group(
     Object key, {
     this.align = ListyScrollAlign.auto,
     this.offset = 0,
-  })  : groupKey = key,
-        itemKey = null,
-        pixels = null;
+  }) : groupKey = key,
+       itemKey = null,
+       pixels = null;
 
   /// Absolute offset, when built with [ListyScrollTo.offset].
   final double? pixels;
@@ -302,11 +302,7 @@ class ListyStyles {
 @immutable
 class ListyDefaults {
   /// Creates a [ListyDefaults].
-  const ListyDefaults({
-    this.sticky,
-    this.padding,
-    this.physics,
-  });
+  const ListyDefaults({this.sticky, this.padding, this.physics});
 
   /// Whether a group header stays while its group scrolls.
   final bool? sticky;
@@ -319,10 +315,10 @@ class ListyDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ListyDefaults merge(ListyDefaults other) => ListyDefaults(
-        sticky: other.sticky ?? sticky,
-        padding: other.padding ?? padding,
-        physics: other.physics ?? physics,
-      );
+    sticky: other.sticky ?? sticky,
+    padding: other.padding ?? padding,
+    physics: other.physics ?? physics,
+  );
 }
 
 /// Every field is an override; a null one falls back to the value derived from
@@ -332,10 +328,7 @@ class ListyDefaults {
 @immutable
 class ListyToken {
   /// Creates a [ListyToken].
-  const ListyToken({
-    this.itemPaddingBlock,
-    this.itemPaddingInline,
-  });
+  const ListyToken({this.itemPaddingBlock, this.itemPaddingInline});
 
   /// Vertical padding of a list item (`itemPaddingBlock`).
   final double? itemPaddingBlock;
@@ -344,15 +337,15 @@ class ListyToken {
   final double? itemPaddingInline;
 
   _ResolvedListyToken _resolve(Token t) => _ResolvedListyToken(
-        itemPaddingBlock: itemPaddingBlock ?? t.sizeSM,
-        itemPaddingInline: itemPaddingInline ?? t.size,
-      );
+    itemPaddingBlock: itemPaddingBlock ?? t.sizeSM,
+    itemPaddingInline: itemPaddingInline ?? t.size,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ListyToken merge(ListyToken other) => ListyToken(
-        itemPaddingBlock: other.itemPaddingBlock ?? itemPaddingBlock,
-        itemPaddingInline: other.itemPaddingInline ?? itemPaddingInline,
-      );
+    itemPaddingBlock: other.itemPaddingBlock ?? itemPaddingBlock,
+    itemPaddingInline: other.itemPaddingInline ?? itemPaddingInline,
+  );
 }
 
 @immutable
@@ -416,14 +409,14 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
     this.onScroll,
     this.styles,
     this.token,
-  })  : assert(
-          (itemBuilder == null) != (itemRender == null),
-          'a Listy needs an itemBuilder — one, and not the old itemRender too.',
-        ),
-        assert(
-          groupTitle == null || groupKey != null,
-          'groupTitle needs a groupKey to build a title for.',
-        );
+  }) : assert(
+         (itemBuilder == null) != (itemRender == null),
+         'a Listy needs an itemBuilder — one, and not the old itemRender too.',
+       ),
+       assert(
+         groupTitle == null || groupKey != null,
+         'groupTitle needs a groupKey to build a title for.',
+       );
 
   /// The data source.
   final List<T> items;
@@ -545,12 +538,12 @@ class Listy<T, G extends Object, R extends Object> extends StatefulWidget {
 @immutable
 class _Slot<T, K> {
   const _Slot.header(this.groupKey, this.groupItems)
-      : item = null,
-        itemIndex = -1;
+    : item = null,
+      itemIndex = -1;
 
   const _Slot.item(this.item, this.itemIndex)
-      : groupKey = null,
-        groupItems = null;
+    : groupKey = null,
+      groupItems = null;
 
   final K? groupKey;
   final List<T>? groupItems;
@@ -806,8 +799,9 @@ class _ListyState<T, K extends Object, R extends Object>
     }
 
     final key = target.itemKey ?? target.groupKey;
-    final index =
-        target.itemKey != null ? _itemIndex[key] : _groupIndex[key as Object];
+    final index = target.itemKey != null
+        ? _itemIndex[key]
+        : _groupIndex[key as Object];
     assert(
       index != null,
       'Listy.scrollTo: no ${target.itemKey != null ? 'item' : 'group'} for key '
@@ -925,14 +919,11 @@ class _ListyState<T, K extends Object, R extends Object>
       ListyScrollAlign.bottom => bottom,
       // Least movement that reveals it, and no movement when it already is.
       ListyScrollAlign.auto => position.pixels.clamp(
-          bottom < top ? bottom : top,
-          bottom < top ? top : bottom,
-        ),
+        bottom < top ? bottom : top,
+        bottom < top ? top : bottom,
+      ),
     };
-    return target.clamp(
-      position.minScrollExtent,
-      position.maxScrollExtent,
-    );
+    return target.clamp(position.minScrollExtent, position.maxScrollExtent);
   }
 
   /// Rough offset of a slot that has not been built, from the average extent of
@@ -958,8 +949,10 @@ class _ListyState<T, K extends Object, R extends Object>
 
   Future<void> _moveTo(double offset, Duration duration, Curve curve) {
     final position = _scroll.position;
-    final clamped =
-        offset.clamp(position.minScrollExtent, position.maxScrollExtent);
+    final clamped = offset.clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
     if (duration == Duration.zero) {
       _scroll.jumpTo(clamped);
       return Future<void>.value();
@@ -974,10 +967,11 @@ class _ListyState<T, K extends Object, R extends Object>
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<ListyToken>(context) ??
-            const ListyToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<ListyToken>(context) ??
+                const ListyToken())
+            ._resolve(t);
 
     _flatten();
     _slotKeys.removeWhere((index, _) => index >= _slots.length);
@@ -1041,9 +1035,8 @@ class _ListyState<T, K extends Object, R extends Object>
           : const AlwaysScrollableScrollPhysics());
 
   /// The defaults set for the subtree.
-  ListyDefaults? get _defaults => ConfigProvider.defaultsOf<ListyDefaults>(
-        context,
-      );
+  ListyDefaults? get _defaults =>
+      ConfigProvider.defaultsOf<ListyDefaults>(context);
 
   /// Whether a group header stays while its group scrolls.
   bool get _sticky => widget.sticky ?? _defaults?.sticky ?? false;
@@ -1053,9 +1046,9 @@ class _ListyState<T, K extends Object, R extends Object>
 
   /// The header, rebuilt on its own as the pull changes.
   Widget _headerWidget() => ValueListenableBuilder<ListyPull>(
-        valueListenable: _pull,
-        builder: (context, pull, _) => widget.header!.builder(context, pull),
-      );
+    valueListenable: _pull,
+    builder: (context, pull, _) => widget.header!.builder(context, pull),
+  );
 
   Widget _buildScrollView(Token t, _ResolvedListyToken r) {
     if (_showsEmpty) {
@@ -1065,7 +1058,8 @@ class _ListyState<T, K extends Object, R extends Object>
         SliverFillRemaining(
           hasScrollBody: false,
           child: Center(
-            child: widget.emptyContent ??
+            child:
+                widget.emptyContent ??
                 ConfigProvider.emptyFor(context, EmptySlot.listy),
           ),
         ),
@@ -1101,7 +1095,8 @@ class _ListyState<T, K extends Object, R extends Object>
       return _assemble(t, r, sections);
     }
 
-    final headerExtent = widget.groupHeaderExtent ??
+    final headerExtent =
+        widget.groupHeaderExtent ??
         (t.fontSize * t.lineHeight + t.sizeXS * 2).roundToDouble();
 
     var index = 0;
@@ -1213,12 +1208,12 @@ class _ListyState<T, K extends Object, R extends Object>
   }
 
   Widget _defaultFooter(_ResolvedListyToken r, Widget child) => Padding(
-        padding: EdgeInsets.symmetric(
-          vertical: r.itemPaddingBlock,
-          horizontal: r.itemPaddingInline,
-        ),
-        child: Center(child: child),
-      );
+    padding: EdgeInsets.symmetric(
+      vertical: r.itemPaddingBlock,
+      horizontal: r.itemPaddingInline,
+    ),
+    child: Center(child: child),
+  );
 
   /// Whether the slot after [index] is another row of the same section — the
   /// only place a separator belongs.
@@ -1239,7 +1234,8 @@ class _ListyState<T, K extends Object, R extends Object>
     final separator =
         // ignore: deprecated_member_use_from_same_package
         widget.separatorBuilder ?? widget.separatorRender;
-    final decoration = styles?.item ??
+    final decoration =
+        styles?.item ??
         (separator != null
             ? const BoxDecoration()
             : BoxDecoration(
@@ -1254,7 +1250,8 @@ class _ListyState<T, K extends Object, R extends Object>
         ? _groupHeader(t, r, slot)
         : _ListyItem(
             token: t,
-            padding: styles?.itemPadding ??
+            padding:
+                styles?.itemPadding ??
                 EdgeInsets.symmetric(
                   vertical: r.itemPaddingBlock,
                   horizontal: r.itemPaddingInline,
@@ -1285,7 +1282,8 @@ class _ListyState<T, K extends Object, R extends Object>
     return Container(
       width: double.infinity,
       alignment: AlignmentDirectional.centerStart,
-      padding: widget.styles?.groupHeaderPadding ??
+      padding:
+          widget.styles?.groupHeaderPadding ??
           EdgeInsets.symmetric(
             vertical: t.sizeXS,
             horizontal: r.itemPaddingInline,
@@ -1293,7 +1291,8 @@ class _ListyState<T, K extends Object, R extends Object>
       // A tint over an opaque base, as the kit layers colorFillAlter on
       // colorBgContainer — a pinned header must never let the rows scrolling
       // beneath it show through.
-      decoration: widget.styles?.groupHeader ??
+      decoration:
+          widget.styles?.groupHeader ??
           BoxDecoration(
             color: Color.alphaBlend(t.colorFillQuaternary, t.colorBgContainer),
           ),
@@ -1308,7 +1307,8 @@ class _ListyState<T, K extends Object, R extends Object>
           leadingDistribution: TextLeadingDistribution.even,
           decoration: TextDecoration.none,
         ),
-        child: widget.groupTitle?.call(slot.groupKey as K, slot.groupItems!) ??
+        child:
+            widget.groupTitle?.call(slot.groupKey as K, slot.groupItems!) ??
             Text('${slot.groupKey}'),
       ),
     );

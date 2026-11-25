@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,12 +9,11 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      home: Scaffold(body: Center(child: child)),
-    );
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   group('Alert', () {
@@ -84,8 +84,9 @@ void main() {
     });
 
     testWidgets('showInfo: false hides the label', (tester) async {
-      await tester
-          .pumpWidget(_host(const Progress(percent: 0.42, showInfo: false)));
+      await tester.pumpWidget(
+        _host(const Progress(percent: 0.42, showInfo: false)),
+      );
       expect(find.text('42%'), findsNothing);
     });
 
@@ -103,8 +104,9 @@ void main() {
       expect(find.text('100%'), findsNothing);
     });
 
-    testWidgets('supports dashboard type, gradient, steps, and custom format',
-        (tester) async {
+    testWidgets('supports dashboard type, gradient, steps, and custom format', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           Progress(
@@ -168,8 +170,9 @@ void main() {
       expect(find.text('40%'), findsOneWidget);
     });
 
-    testWidgets('triggers onDone callback exactly once when complete',
-        (tester) async {
+    testWidgets('triggers onDone callback exactly once when complete', (
+      tester,
+    ) async {
       int doneCount = 0;
       await tester.pumpWidget(
         _host(
@@ -199,33 +202,29 @@ void main() {
       expect(doneCount, equals(1));
     });
 
-    testWidgets('triggers onProgressChanged when percent updates',
-        (tester) async {
+    testWidgets('triggers onProgressChanged when percent updates', (
+      tester,
+    ) async {
       double? changedPercent;
       await tester.pumpWidget(
         _host(
-          Progress(
-            percent: 0.2,
-            onProgressChanged: (p) => changedPercent = p,
-          ),
+          Progress(percent: 0.2, onProgressChanged: (p) => changedPercent = p),
         ),
       );
       await tester.pumpAndSettle();
 
       await tester.pumpWidget(
         _host(
-          Progress(
-            percent: 0.7,
-            onProgressChanged: (p) => changedPercent = p,
-          ),
+          Progress(percent: 0.7, onProgressChanged: (p) => changedPercent = p),
         ),
       );
       await tester.pumpAndSettle();
       expect(changedPercent, equals(0.7));
     });
 
-    testWidgets('triggers onStepChanged when active step updates',
-        (tester) async {
+    testWidgets('triggers onStepChanged when active step updates', (
+      tester,
+    ) async {
       int? currentStep;
       int? totalSteps;
       await tester.pumpWidget(
@@ -264,15 +263,17 @@ void main() {
       expect(totalSteps, equals(5));
     });
 
-    testWidgets('supports percentPosition for inner and outer info placement',
-        (tester) async {
+    testWidgets('supports percentPosition for inner and outer info placement', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Progress(
             percent: 0.5,
             strokeWidth: 20,
-            percentPosition:
-                PercentPosition.inner(align: PercentInfoAlign.center),
+            percentPosition: PercentPosition.inner(
+              align: PercentInfoAlign.center,
+            ),
           ),
         ),
       );
@@ -283,8 +284,9 @@ void main() {
         _host(
           const Progress(
             percent: 0.6,
-            percentPosition:
-                PercentPosition.outer(align: PercentInfoAlign.start),
+            percentPosition: PercentPosition.outer(
+              align: PercentInfoAlign.start,
+            ),
           ),
         ),
       );
@@ -296,12 +298,14 @@ void main() {
       expect(() => Progress(percent: 1.5), throwsAssertionError);
     });
 
-    testWidgets('a width is the bar\'s length, the thickness standard',
-        (tester) async {
+    testWidgets('a width is the bar\'s length, the thickness standard', (
+      tester,
+    ) async {
       Future<Size> barAt(ControlSize? size) async {
         await tester.pumpWidget(
           _host(
-              SizedBox(width: 400, child: Progress(percent: 0.5, size: size))),
+            SizedBox(width: 400, child: Progress(percent: 0.5, size: size)),
+          ),
         );
         await tester.pumpAndSettle();
         // Progress itself still fills the room it is offered; the bar drawn

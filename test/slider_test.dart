@@ -1,4 +1,8 @@
-import 'package:flutter/material.dart'
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         Slider,
         RangeSlider,
@@ -8,10 +12,6 @@ import 'package:flutter/material.dart'
         Switch,
         Tooltip,
         Divider;
-import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
-import 'package:flutter/semantics.dart';
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child, [TextDirection direction = TextDirection.ltr]) =>
@@ -55,8 +55,9 @@ void main() {
       );
 
       final groove = tester.getRect(find.byType(Slider));
-      await tester
-          .tapAt(Offset(groove.left + groove.width / 4, groove.center.dy));
+      await tester.tapAt(
+        Offset(groove.left + groove.width / 4, groove.center.dy),
+      );
       await tester.pumpAndSettle();
 
       // A quarter along a nought-to-hundred scale.
@@ -88,10 +89,7 @@ void main() {
           Slider(
             value: 0,
             step: null,
-            marks: const [
-              SliderMark(20, 'twenty'),
-              SliderMark(80, 'eighty'),
-            ],
+            marks: const [SliderMark(20, 'twenty'), SliderMark(80, 'eighty')],
             onChanged: (v) => changed = v,
           ),
         ),
@@ -133,10 +131,7 @@ void main() {
         _host(
           const Slider(
             value: 0,
-            marks: [
-              SliderMark(0, 'none'),
-              SliderMark(100, 'all'),
-            ],
+            marks: [SliderMark(0, 'none'), SliderMark(100, 'all')],
           ),
         ),
       );
@@ -157,9 +152,7 @@ void main() {
     testWidgets('reverse turns the scale round', (tester) async {
       double? changed;
       await tester.pumpWidget(
-        _host(
-          Slider(value: 0, reverse: true, onChanged: (v) => changed = v),
-        ),
+        _host(Slider(value: 0, reverse: true, onChanged: (v) => changed = v)),
       );
       final groove = tester.getRect(find.byType(Slider));
       await tester.tapAt(
@@ -216,10 +209,7 @@ void main() {
       (double, double)? changed;
       await tester.pumpWidget(
         _host(
-          RangeSlider(
-            values: const (20, 80),
-            onChanged: (v) => changed = v,
-          ),
+          RangeSlider(values: const (20, 80), onChanged: (v) => changed = v),
         ),
       );
 
@@ -243,10 +233,7 @@ void main() {
       (double, double)? changed;
       await tester.pumpWidget(
         _host(
-          RangeSlider(
-            values: const (40, 60),
-            onChanged: (v) => changed = v,
-          ),
+          RangeSlider(values: const (40, 60), onChanged: (v) => changed = v),
         ),
       );
 
@@ -273,13 +260,11 @@ void main() {
     ) async {
       SliderToken? seen;
       Widget under(SliderToken? instance) => ConfigProvider(
-            theme: ThemeData(
-              components: const ComponentsConfig(
-                slider: SliderToken(railSize: 9),
-              ),
-            ),
-            child: _host(Slider(value: 10, token: instance)),
-          );
+        theme: ThemeData(
+          components: const ComponentsConfig(slider: SliderToken(railSize: 9)),
+        ),
+        child: _host(Slider(value: 10, token: instance)),
+      );
 
       await tester.pumpWidget(under(null));
       seen = ConfigProvider.componentOf<SliderToken>(
@@ -362,9 +347,7 @@ void main() {
     testWidgets('shows the value while a handle is moving, and not before', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _host(Slider(value: 30, onChanged: (_) {})),
-      );
+      await tester.pumpWidget(_host(Slider(value: 30, onChanged: (_) {})));
       await tester.pumpAndSettle();
       expect(find.text('30'), findsNothing, reason: 'nothing is being moved');
 
@@ -531,8 +514,9 @@ void main() {
 
 void _trackTests() {
   group('a span you can take hold of', () {
-    testWidgets('dragging between the handles moves them together',
-        (tester) async {
+    testWidgets('dragging between the handles moves them together', (
+      tester,
+    ) async {
       var pair = (20.0, 60.0);
       await tester.pumpWidget(
         _host(
@@ -558,8 +542,9 @@ void _trackTests() {
       expect(pair.$1, greaterThan(20));
     });
 
-    testWidgets('pushed against an end it stops without shrinking',
-        (tester) async {
+    testWidgets('pushed against an end it stops without shrinking', (
+      tester,
+    ) async {
       var pair = (20.0, 60.0);
       await tester.pumpWidget(
         _host(
@@ -585,8 +570,9 @@ void _trackTests() {
       expect(pair, (60.0, 100.0));
     });
 
-    testWidgets('a press that pauses before moving takes nothing with it',
-        (tester) async {
+    testWidgets('a press that pauses before moving takes nothing with it', (
+      tester,
+    ) async {
       var pair = (30.0, 70.0);
       await tester.pumpWidget(
         _host(
@@ -677,8 +663,9 @@ void _trackTests() {
       expect(values[1], greaterThan(50));
     });
 
-    testWidgets('and the span still moves when nothing is under the press',
-        (tester) async {
+    testWidgets('and the span still moves when nothing is under the press', (
+      tester,
+    ) async {
       var values = [20.0, 80.0];
       await tester.pumpWidget(
         _host(
@@ -757,8 +744,9 @@ void _editableTests() {
       expect(values.last, closeTo(80, 2));
     });
 
-    testWidgets('a handle dragged onto its neighbour is let go of',
-        (tester) async {
+    testWidgets('a handle dragged onto its neighbour is let go of', (
+      tester,
+    ) async {
       var values = [20.0, 50.0, 80.0];
       await tester.pumpWidget(
         _host(
@@ -784,8 +772,9 @@ void _editableTests() {
       expect(values, [20.0, 80.0]);
     });
 
-    testWidgets('near enough counts as met, not only exactly on it',
-        (tester) async {
+    testWidgets('near enough counts as met, not only exactly on it', (
+      tester,
+    ) async {
       var values = [20.0, 50.0, 80.0];
       await tester.pumpWidget(
         _host(
@@ -813,8 +802,9 @@ void _editableTests() {
       expect(values, hasLength(2));
     });
 
-    testWidgets('brought onto a neighbour and off again, it stays',
-        (tester) async {
+    testWidgets('brought onto a neighbour and off again, it stays', (
+      tester,
+    ) async {
       var values = [20.0, 50.0, 80.0];
       await tester.pumpWidget(
         _host(
@@ -969,8 +959,9 @@ void _editableTests() {
 
 void _markTests() {
   group('what a mark may say', () {
-    testWidgets('a hidden mark keeps its place and is not drawn',
-        (tester) async {
+    testWidgets('a hidden mark keeps its place and is not drawn', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Slider(
@@ -989,8 +980,9 @@ void _markTests() {
       expect(find.text('half'), findsNothing);
     });
 
-    testWidgets('a disabled mark is no stop where the marks are the stops',
-        (tester) async {
+    testWidgets('a disabled mark is no stop where the marks are the stops', (
+      tester,
+    ) async {
       double? settled;
       await tester.pumpWidget(
         _host(
@@ -1039,8 +1031,9 @@ void _markTests() {
       expect(over.bottom, lessThanOrEqualTo(under.top));
     });
 
-    testWidgets('a builder is handed the label the slider would have drawn',
-        (tester) async {
+    testWidgets('a builder is handed the label the slider would have drawn', (
+      tester,
+    ) async {
       final seen = <(double, bool)>[];
       await tester.pumpWidget(
         _host(
@@ -1073,8 +1066,9 @@ void _markTests() {
       expect(find.text('✓'), findsOneWidget);
     });
 
-    testWidgets('a mark with no words is a stop and nothing else',
-        (tester) async {
+    testWidgets('a mark with no words is a stop and nothing else', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
           const Slider(
@@ -1105,17 +1099,18 @@ void _markTargetTests() {
   // A menu and a popover need somewhere to render, which is the kit's own
   // overlay.
   Widget hosted(Widget child) => ConfigProvider(
-        child: MaterialApp(
-          navigatorKey: UiKit.navigatorKey,
-          home: Scaffold(
-            body: Center(child: SizedBox(width: 400, child: child)),
-          ),
-        ),
-      );
+    child: MaterialApp(
+      navigatorKey: UiKit.navigatorKey,
+      home: Scaffold(
+        body: Center(child: SizedBox(width: 400, child: child)),
+      ),
+    ),
+  );
 
   group('a mark you can press', () {
-    testWidgets('a menu hangs on a mark and opens where it stands',
-        (tester) async {
+    testWidgets('a menu hangs on a mark and opens where it stands', (
+      tester,
+    ) async {
       var picked = '';
       await tester.pumpWidget(
         hosted(
@@ -1148,8 +1143,9 @@ void _markTargetTests() {
       expect(picked, 'free');
     });
 
-    testWidgets('a mark with no words is pressed where its dot is',
-        (tester) async {
+    testWidgets('a mark with no words is pressed where its dot is', (
+      tester,
+    ) async {
       var pressed = 0;
       double? moved;
       await tester.pumpWidget(
@@ -1210,8 +1206,9 @@ void _markTargetTests() {
       // A mark's own target lives in the band beside the rail, never over it,
       // so pressing the rail still moves the handle wherever the marks are.
       final slider = tester.getRect(find.byType(Slider));
-      await tester
-          .tapAt(Offset(slider.left + slider.width * 0.6, slider.top + 8));
+      await tester.tapAt(
+        Offset(slider.left + slider.width * 0.6, slider.top + 8),
+      );
       await tester.pumpAndSettle();
       expect(moved, isNotNull);
 
@@ -1222,8 +1219,9 @@ void _markTargetTests() {
       expect(moved, isNull);
     });
 
-    testWidgets('a label taller than a small control is pressable all over',
-        (tester) async {
+    testWidgets('a label taller than a small control is pressable all over', (
+      tester,
+    ) async {
       var pressed = 0;
       await tester.pumpWidget(
         hosted(
@@ -1383,8 +1381,9 @@ void _zoneBoundsSnapTests() {
       expect(settled, 33);
     });
 
-    testWidgets('a mark the handle may not rest on is no magnet either',
-        (tester) async {
+    testWidgets('a mark the handle may not rest on is no magnet either', (
+      tester,
+    ) async {
       double? settled;
       await tester.pumpWidget(
         _host(
@@ -1438,7 +1437,8 @@ void _zoneBoundsSnapTests() {
       expect(
         seen.last,
         60,
-        reason: 'one step on from 50 — had the tap been forgotten it would '
+        reason:
+            'one step on from 50 — had the tap been forgotten it would '
             'have stepped from where it started and said 10',
       );
     });
@@ -1452,8 +1452,11 @@ void _zoneBoundsSnapTests() {
       await tester.tapAt(groove.center);
       await tester.pumpAndSettle();
       await press(tester, LogicalKeyboardKey.arrowRight);
-      expect(seen.last, 10,
-          reason: 'still stepping from the value it is held at');
+      expect(
+        seen.last,
+        10,
+        reason: 'still stepping from the value it is held at',
+      );
     });
 
     testWidgets('with nobody listening it still moves', (tester) async {
@@ -1481,8 +1484,9 @@ void _zoneBoundsSnapTests() {
       );
       final groove = _groove(tester);
       // A quarter along is nearer the low handle at 20 than the high at 80.
-      await tester
-          .tapAt(Offset(groove.left + groove.width * 0.25, groove.center.dy));
+      await tester.tapAt(
+        Offset(groove.left + groove.width * 0.25, groove.center.dy),
+      );
       await tester.pumpAndSettle();
       expect(seen.single.$2, 80, reason: 'the high handle stayed where it was');
       expect(seen.single.$1, 30, reason: 'and the low one came to the tap');
@@ -1578,9 +1582,7 @@ void _zoneBoundsSnapTests() {
     ) async {
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(
-        _host(
-          Slider(value: 40, step: 10, reverse: true, onChanged: (_) {}),
-        ),
+        _host(Slider(value: 40, step: 10, reverse: true, onChanged: (_) {})),
       );
       await tester.pumpAndSettle();
 
@@ -1729,8 +1731,9 @@ void _markAndControllerTests() {
       expect(moved, (10.0, 80.0));
     });
 
-    testWidgets('a mark obeys the steps like any other journey',
-        (tester) async {
+    testWidgets('a mark obeys the steps like any other journey', (
+      tester,
+    ) async {
       double? moved;
       await tester.pumpWidget(
         _host(
@@ -1848,8 +1851,9 @@ void _markAndControllerTests() {
 }
 
 void _wordlessMarkTests() {
-  testWidgets('a mark with no words is named by the number it stands on',
-      (tester) async {
+  testWidgets('a mark with no words is named by the number it stands on', (
+    tester,
+  ) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(
       _host(
@@ -1872,8 +1876,8 @@ void _wordlessMarkTests() {
 
 /// The handle's own semantics node, which stands where the handle is drawn.
 Finder _handleNode() => find.byWidgetPredicate(
-      (w) => w is Semantics && (w.properties.slider ?? false),
-    );
+  (w) => w is Semantics && (w.properties.slider ?? false),
+);
 
 /// How far along the groove the first handle is drawn, from 0 to 1.
 double _drawnAt(WidgetTester tester) {
@@ -1888,26 +1892,26 @@ void _readOnlyTests() {
       ValueChanged<double> onChanged, {
       SliderController? controller,
       List<SliderMark> marks = const [],
-    }) =>
-        _host(
-          StatefulBuilder(
-            builder: (context, setState) {
-              return _Owned(
-                onChanged: onChanged,
-                controller: controller,
-                marks: marks,
-              );
-            },
-          ),
-        );
+    }) => _host(
+      StatefulBuilder(
+        builder: (context, setState) {
+          return _Owned(
+            onChanged: onChanged,
+            controller: controller,
+            marks: marks,
+          );
+        },
+      ),
+    );
 
     testWidgets('a hand moves nothing: not a drag, not a tap', (tester) async {
       final moved = <double>[];
       await tester.pumpWidget(held(moved.add));
 
       final groove = _groove(tester);
-      await tester
-          .tapAt(Offset(groove.left + groove.width * 0.8, groove.center.dy));
+      await tester.tapAt(
+        Offset(groove.left + groove.width * 0.8, groove.center.dy),
+      );
       await tester.dragFrom(
         Offset(groove.left + groove.width * 0.5, groove.center.dy),
         Offset(groove.width * 0.3, 0),
@@ -1996,8 +2000,9 @@ void _readOnlyTests() {
       }
 
       final live = await shot(Slider(value: 50, onChanged: (_) {}));
-      final shown =
-          await shot(Slider(value: 50, readOnly: true, onChanged: (_) {}));
+      final shown = await shot(
+        Slider(value: 50, readOnly: true, onChanged: (_) {}),
+      );
       final greyed = await shot(
         Slider(value: 50, disabled: true, onChanged: (_) {}),
       );
@@ -2010,11 +2015,7 @@ void _readOnlyTests() {
       final moved = <(double, double)>[];
       await tester.pumpWidget(
         _host(
-          RangeSlider(
-            values: (20, 60),
-            readOnly: true,
-            onChanged: moved.add,
-          ),
+          RangeSlider(values: (20, 60), readOnly: true, onChanged: moved.add),
         ),
       );
       final groove = _groove(tester);
@@ -2051,16 +2052,16 @@ class _OwnedState extends State<_Owned> {
 
   @override
   Widget build(BuildContext context) => Slider(
-        value: _value,
-        step: 10,
-        readOnly: true,
-        marks: widget.marks,
-        controller: widget.controller,
-        onChanged: (v) {
-          widget.onChanged(v);
-          setState(() => _value = v);
-        },
-      );
+    value: _value,
+    step: 10,
+    readOnly: true,
+    marks: widget.marks,
+    controller: widget.controller,
+    onChanged: (v) {
+      widget.onChanged(v);
+      setState(() => _value = v);
+    },
+  );
 }
 
 void _glideTests() {
@@ -2156,7 +2157,8 @@ void _glideTests() {
       expect(
         _drawnAt(tester),
         closeTo(0.7, 0.02),
-        reason: 'a handle trailing the finger feels like one that did not '
+        reason:
+            'a handle trailing the finger feels like one that did not '
             'hear',
       );
     });
@@ -2181,9 +2183,7 @@ void _glideTests() {
       expect(_drawnAt(tester), closeTo(0.3, 0.02));
     });
 
-    testWidgets('the owner setting the value moves it at once', (
-      tester,
-    ) async {
+    testWidgets('the owner setting the value moves it at once', (tester) async {
       var value = 0.0;
       late StateSetter set;
       await tester.pumpWidget(

@@ -14,7 +14,7 @@
 // component ships with is written anyway. The cross on an `Upload` row, the
 // arrows on a `Pagination` and the crosses that empty the four pickers were
 // all found this way.
-import 'package:flutter/material.dart' as m;
+import 'package:material_ui/material_ui.dart' as m;
 import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -46,23 +46,23 @@ class PopconfirmToken {
   final Color? barrierColor;
 
   _ResolvedPopconfirmToken _resolve(Token t) => _ResolvedPopconfirmToken(
-        colorBgElevated: colorBgElevated ?? t.colorBgElevated,
-        padding: padding ?? EdgeInsets.all(t.sizeSM),
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-        titleFontSize: titleFontSize ?? t.fontSize,
-        descriptionFontSize: descriptionFontSize ?? t.fontSize,
-        barrierColor: barrierColor,
-      );
+    colorBgElevated: colorBgElevated ?? t.colorBgElevated,
+    padding: padding ?? EdgeInsets.all(t.sizeSM),
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+    titleFontSize: titleFontSize ?? t.fontSize,
+    descriptionFontSize: descriptionFontSize ?? t.fontSize,
+    barrierColor: barrierColor,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   PopconfirmToken merge(PopconfirmToken other) => PopconfirmToken(
-        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
-        padding: other.padding ?? padding,
-        borderRadius: other.borderRadius ?? borderRadius,
-        titleFontSize: other.titleFontSize ?? titleFontSize,
-        descriptionFontSize: other.descriptionFontSize ?? descriptionFontSize,
-        barrierColor: other.barrierColor ?? barrierColor,
-      );
+    colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+    padding: other.padding ?? padding,
+    borderRadius: other.borderRadius ?? borderRadius,
+    titleFontSize: other.titleFontSize ?? titleFontSize,
+    descriptionFontSize: other.descriptionFontSize ?? descriptionFontSize,
+    barrierColor: other.barrierColor ?? barrierColor,
+  );
 }
 
 @immutable
@@ -103,10 +103,10 @@ class PopconfirmDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   PopconfirmDefaults merge(PopconfirmDefaults other) => PopconfirmDefaults(
-        placement: other.placement ?? placement,
-        arrow: other.arrow ?? arrow,
-        showCancel: other.showCancel ?? showCancel,
-      );
+    placement: other.placement ?? placement,
+    arrow: other.arrow ?? arrow,
+    showCancel: other.showCancel ?? showCancel,
+  );
 }
 
 /// A lightweight confirmation bubble anchored to its trigger.
@@ -251,10 +251,11 @@ class _SoftPopconfirmState extends State<Popconfirm> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<PopconfirmToken>(context) ??
-            const PopconfirmToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<PopconfirmToken>(context) ??
+                const PopconfirmToken())
+            ._resolve(token);
 
     return PopoverLayer(
       placement: _placement,
@@ -284,10 +285,11 @@ class _SoftPopconfirmState extends State<Popconfirm> {
 
   Widget _buildBubble(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<PopconfirmToken>(context) ??
-            const PopconfirmToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<PopconfirmToken>(context) ??
+                const PopconfirmToken())
+            ._resolve(token);
 
     // A question that has come over the page, named by the question itself:
     // the same news a modal gives, since to a reader the two are the same
@@ -365,8 +367,9 @@ class _SoftPopconfirmState extends State<Popconfirm> {
                 Button(
                   size: SoftSize.small,
                   variant: ButtonVariant.solid,
-                  color:
-                      widget.danger ? ButtonColor.danger : ButtonColor.primary,
+                  color: widget.danger
+                      ? ButtonColor.danger
+                      : ButtonColor.primary,
                   loading: _confirming,
                   onPressed: _confirm,
                   child: widget.okText ?? Text(context.seedLocale.ok),

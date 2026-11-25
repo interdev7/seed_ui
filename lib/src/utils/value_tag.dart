@@ -85,7 +85,8 @@ class ValueTag extends StatelessWidget {
                 child: SizedBox(
                   width: 14,
                   height: 14,
-                  child: removeIcon ??
+                  child:
+                      removeIcon ??
                       CustomPaint(
                         painter: CrossPainter(
                           token.colorTextTertiary,

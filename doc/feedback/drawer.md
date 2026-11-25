@@ -26,7 +26,7 @@ Flutter's Material library also exports a `Drawer` (the widget inside a
 `Scaffold`). If you import both, hide the Material one so this getter resolves:
 
 ```dart
-import 'package:flutter/material.dart' hide Drawer;
+import 'package:material_ui/material_ui.dart' hide Drawer;
 import 'package:seed_ui/seed_ui.dart';
 ```
 

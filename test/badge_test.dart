@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart'
-    hide Badge, ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer, Divider;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
+    hide Badge, ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
-Widget _host(Widget child) =>
-    MaterialApp(home: Scaffold(body: Center(child: child)));
+Widget _host(Widget child) => MaterialApp(
+  home: Scaffold(body: Center(child: child)),
+);
 
 /// The pill and the dot are the only boxes the badge decorates, so finding a
 /// decorated box under the badge is enough to say whether it drew one.
 Iterable<BoxDecoration> _decorations(WidgetTester tester) => tester
-    .widgetList<Container>(find.descendant(
-      of: find.byType(Badge),
-      matching: find.byType(Container),
-    ))
+    .widgetList<Container>(
+      find.descendant(of: find.byType(Badge), matching: find.byType(Container)),
+    )
     .map((c) => c.decoration)
     .whereType<BoxDecoration>();
 
@@ -30,8 +30,9 @@ void main() {
     testWidgets('a count of zero is left out, and shown when asked for', (
       tester,
     ) async {
-      await tester
-          .pumpWidget(_host(const Badge(count: 0, child: Icon(Icons.mail))));
+      await tester.pumpWidget(
+        _host(const Badge(count: 0, child: Icon(Icons.mail))),
+      );
       expect(find.text('0'), findsNothing);
 
       await tester.pumpWidget(
@@ -198,11 +199,13 @@ void main() {
       // The pill is measured, not the ScaleTransition: a transform leaves the
       // box it wraps the size it always was, and only the painted rect shrinks.
       Rect pill() => tester.getRect(
-            find
-                .descendant(
-                    of: find.byType(Badge), matching: find.byType(Container))
-                .first,
-          );
+        find
+            .descendant(
+              of: find.byType(Badge),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
 
       await tester.pumpWidget(
         _host(const Badge(count: 1, child: Icon(Icons.mail))),
@@ -232,7 +235,9 @@ void main() {
       );
       expect(find.text('7'), findsNothing);
       expect(
-          _decorations(tester).any((d) => d.shape == BoxShape.circle), isTrue);
+        _decorations(tester).any((d) => d.shape == BoxShape.circle),
+        isTrue,
+      );
     });
 
     testWidgets('without a child the badge is the whole widget', (
@@ -263,8 +268,9 @@ void main() {
       );
       expect(find.text('Live'), findsOneWidget);
 
-      final dot =
-          _decorations(tester).firstWhere((d) => d.shape == BoxShape.circle);
+      final dot = _decorations(
+        tester,
+      ).firstWhere((d) => d.shape == BoxShape.circle);
       expect(dot.color, isNotNull);
       // A status dot sits flush in a line of text: no ring around it.
       expect(dot.border, isNull);
@@ -310,8 +316,9 @@ void main() {
       await tester.pumpAndSettle();
       final tall = tester.getSize(find.byType(Badge)).height;
 
-      await tester
-          .pumpWidget(_host(const Badge(count: 8, size: SoftSize.small)));
+      await tester.pumpWidget(
+        _host(const Badge(count: 8, size: SoftSize.small)),
+      );
       // The pill animates its size now, so this is the size it settles at.
       await tester.pumpAndSettle();
       expect(tester.getSize(find.byType(Badge)).height, lessThan(tall));
@@ -335,12 +342,13 @@ void main() {
       const fromInstance = Color(0xFFFA8C16);
 
       Widget under(BadgeToken? instance) => ConfigProvider(
-            theme: ThemeData(
-              components:
-                  const ComponentsConfig(badge: BadgeToken(bg: fromProvider)),
-            ),
-            child: _host(Badge(count: 1, token: instance)),
-          );
+        theme: ThemeData(
+          components: const ComponentsConfig(
+            badge: BadgeToken(bg: fromProvider),
+          ),
+        ),
+        child: _host(Badge(count: 1, token: instance)),
+      );
 
       await tester.pumpWidget(under(null));
       await tester.pumpAndSettle();
@@ -415,32 +423,35 @@ void main() {
       const fromInstance = Color(0xFFFA8C16);
 
       Color bandColour() => tester
-          .widgetList<Container>(find.descendant(
-            of: find.byType(Ribbon),
-            matching: find.byType(Container),
-          ))
+          .widgetList<Container>(
+            find.descendant(
+              of: find.byType(Ribbon),
+              matching: find.byType(Container),
+            ),
+          )
           .map((c) => c.decoration)
           .whereType<BoxDecoration>()
           .first
           .color!;
 
       Widget under(RibbonToken? instance) => ConfigProvider(
-            theme: ThemeData(
-              components:
-                  const ComponentsConfig(ribbon: RibbonToken(bg: fromProvider)),
+        theme: ThemeData(
+          components: const ComponentsConfig(
+            ribbon: RibbonToken(bg: fromProvider),
+          ),
+        ),
+        child: _host(
+          SizedBox(
+            width: 200,
+            height: 100,
+            child: Ribbon(
+              token: instance,
+              text: const Text('x'),
+              child: const SizedBox.expand(),
             ),
-            child: _host(
-              SizedBox(
-                width: 200,
-                height: 100,
-                child: Ribbon(
-                  token: instance,
-                  text: const Text('x'),
-                  child: const SizedBox.expand(),
-                ),
-              ),
-            ),
-          );
+          ),
+        ),
+      );
 
       await tester.pumpWidget(under(null));
       expect(bandColour(), fromProvider);

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,19 +9,18 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child, {bool still = false}) => ConfigProvider(
-      child: MaterialApp(
-        home: MediaQuery(
-          data: MediaQueryData(disableAnimations: still),
-          child: Scaffold(
-            body: Align(alignment: Alignment.topLeft, child: child),
-          ),
-        ),
+  child: MaterialApp(
+    home: MediaQuery(
+      data: MediaQueryData(disableAnimations: still),
+      child: Scaffold(
+        body: Align(alignment: Alignment.topLeft, child: child),
       ),
-    );
+    ),
+  ),
+);
 
 EditableText _field(WidgetTester tester) =>
     tester.widget<EditableText>(find.byType(EditableText));
@@ -57,9 +57,7 @@ void main() {
     final changed = <String>[];
     final done = <String>[];
     await tester.pumpWidget(
-      _host(
-        InputOtp(length: 4, onChanged: changed.add, onCompleted: done.add),
-      ),
+      _host(InputOtp(length: 4, onChanged: changed.add, onCompleted: done.add)),
     );
     await tester.tap(find.byType(InputOtp));
     await tester.pump();
@@ -121,7 +119,8 @@ void main() {
     expect(
       _cells(tester, 6),
       ['1', '2', '9', '8', '5', '6'],
-      reason: 'the cursor moves on to the next and replaces it too, '
+      reason:
+          'the cursor moves on to the next and replaces it too, '
           'rather than pushing the rest along',
     );
   });
@@ -178,9 +177,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _host(
-        InputOtp(separator: (i) => i == 2 ? const Text('-') : null),
-      ),
+      _host(InputOtp(separator: (i) => i == 2 ? const Text('-') : null)),
     );
     final dash = tester.getCenter(find.text('-')).dx;
     final boxes = tester
@@ -197,8 +194,11 @@ void main() {
     expect(dash, greaterThan(boxes[2].right));
     expect(dash, lessThan(boxes[3].left));
     final style = DefaultTextStyle.of(tester.element(find.text('-'))).style;
-    expect(style.decoration, TextDecoration.none,
-        reason: 'dressed as the field, not as the page around it');
+    expect(
+      style.decoration,
+      TextDecoration.none,
+      reason: 'dressed as the field, not as the page around it',
+    );
     expect(style.fontSize, 16);
   });
 
@@ -232,18 +232,17 @@ void main() {
     }
   });
 
-  testWidgets('the platform is asked for a keypad and the code from a message',
-      (tester) async {
-    await tester.pumpWidget(_host(const InputOtp()));
-    await tester.tap(find.byType(InputOtp));
-    await tester.pump();
-    final config = tester.testTextInput.setClientArgs!;
-    expect((config['inputType'] as Map)['name'], 'TextInputType.number');
-    expect(
-      (config['autofill'] as Map)['hints'],
-      [AutofillHints.oneTimeCode],
-    );
-  });
+  testWidgets(
+    'the platform is asked for a keypad and the code from a message',
+    (tester) async {
+      await tester.pumpWidget(_host(const InputOtp()));
+      await tester.tap(find.byType(InputOtp));
+      await tester.pump();
+      final config = tester.testTextInput.setClientArgs!;
+      expect((config['inputType'] as Map)['name'], 'TextInputType.number');
+      expect((config['autofill'] as Map)['hints'], [AutofillHints.oneTimeCode]);
+    },
+  );
 
   testWidgets('a reader meets one field, named', (tester) async {
     final handle = tester.ensureSemantics();

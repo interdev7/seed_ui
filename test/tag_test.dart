@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,12 +9,13 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(home: Scaffold(body: Center(child: child))),
-    );
+  child: MaterialApp(
+    home: Scaffold(body: Center(child: child)),
+  ),
+);
 
 void main() {
   testWidgets('renders its label', (tester) async {
@@ -53,9 +55,7 @@ void main() {
 
   testWidgets('a disabled CheckableTag does not toggle', (tester) async {
     await tester.pumpWidget(
-      _host(
-        const CheckableTag(checked: false, child: Text('Books')),
-      ),
+      _host(const CheckableTag(checked: false, child: Text('Books'))),
     );
     await tester.tap(find.text('Books'));
     // No onChanged: nothing to assert beyond no crash; the tap is inert.
@@ -89,8 +89,9 @@ void main() {
     expect(value, ['b']);
   });
 
-  testWidgets('CheckableTagGroup single replaces the selection',
-      (tester) async {
+  testWidgets('CheckableTagGroup single replaces the selection', (
+    tester,
+  ) async {
     List<String> value = const ['a'];
     await tester.pumpWidget(
       _host(
@@ -166,9 +167,7 @@ void main() {
         .firstWhere((d) => d.color != null);
     expect(box.color, fill);
     expect(
-      DefaultTextStyle.of(
-        tester.element(find.text('beta')),
-      ).style.color,
+      DefaultTextStyle.of(tester.element(find.text('beta'))).style.color,
       ink,
     );
   });

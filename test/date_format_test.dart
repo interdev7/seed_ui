@@ -55,14 +55,8 @@ void main() {
 
     test('addMonths clamps rather than skipping a month', () {
       // The 31st plus one month is the end of February, not the 3rd of March.
-      expect(
-        addMonths(DateTime(2026, 1, 31), 1),
-        DateTime(2026, 2, 28),
-      );
-      expect(
-        addMonths(DateTime(2026, 5, 31), -1),
-        DateTime(2026, 4, 30),
-      );
+      expect(addMonths(DateTime(2026, 1, 31), 1), DateTime(2026, 2, 28));
+      expect(addMonths(DateTime(2026, 5, 31), -1), DateTime(2026, 4, 30));
     });
 
     test('addMonths crosses the year in both directions', () {
@@ -141,14 +135,24 @@ void main() {
 
     test('weekdayOrder heads the columns in the same order', () {
       expect(weekdayOrder(), [1, 2, 3, 4, 5, 6, 7]);
-      expect(
-        weekdayOrder(firstDayOfWeek: DateTime.sunday),
-        [7, 1, 2, 3, 4, 5, 6],
-      );
-      expect(
-        weekdayOrder(firstDayOfWeek: DateTime.saturday),
-        [6, 7, 1, 2, 3, 4, 5],
-      );
+      expect(weekdayOrder(firstDayOfWeek: DateTime.sunday), [
+        7,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+      ]);
+      expect(weekdayOrder(firstDayOfWeek: DateTime.saturday), [
+        6,
+        7,
+        1,
+        2,
+        3,
+        4,
+        5,
+      ]);
     });
   });
 
@@ -165,20 +169,24 @@ void main() {
       expect(formatDate(date, 'd MMM yyyy'), '4 Mar 2026');
       expect(formatDate(date, 'EEE'), 'Wed');
       expect(
-        formatDate(date, 'MMM', months: const [
-          'янв',
-          'фев',
-          'мар',
-          'апр',
-          'май',
-          'июн',
-          'июл',
-          'авг',
-          'сен',
-          'окт',
-          'ноя',
-          'дек',
-        ]),
+        formatDate(
+          date,
+          'MMM',
+          months: const [
+            'янв',
+            'фев',
+            'мар',
+            'апр',
+            'май',
+            'июн',
+            'июл',
+            'авг',
+            'сен',
+            'окт',
+            'ноя',
+            'дек',
+          ],
+        ),
         'мар',
       );
     });

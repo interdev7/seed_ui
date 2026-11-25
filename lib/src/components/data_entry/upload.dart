@@ -58,9 +58,9 @@ class UploadItem<T> {
     this.thumbnail,
     this.data,
   }) : assert(
-          progress >= 0 && progress <= 1,
-          'progress must be between 0 and 1',
-        );
+         progress >= 0 && progress <= 1,
+         'progress must be between 0 and 1',
+       );
 
   /// Identifies this file across rebuilds.
   ///
@@ -114,17 +114,16 @@ class UploadItem<T> {
     Widget? error,
     Widget? thumbnail,
     T? data,
-  }) =>
-      UploadItem<T>(
-        name: name ?? this.name,
-        id: id ?? this.id,
-        size: size ?? this.size,
-        status: status ?? this.status,
-        progress: progress ?? this.progress,
-        error: error ?? this.error,
-        thumbnail: thumbnail ?? this.thumbnail,
-        data: data ?? this.data,
-      );
+  }) => UploadItem<T>(
+    name: name ?? this.name,
+    id: id ?? this.id,
+    size: size ?? this.size,
+    status: status ?? this.status,
+    progress: progress ?? this.progress,
+    error: error ?? this.error,
+    thumbnail: thumbnail ?? this.thumbnail,
+    data: data ?? this.data,
+  );
 }
 
 /// Per-component design tokens for [Upload].
@@ -184,34 +183,34 @@ class UploadToken {
   final double? gap;
 
   _ResolvedUploadToken _resolve(Token t) => _ResolvedUploadToken(
-        dropzoneBorderColor: dropzoneBorderColor ?? t.colorBorder,
-        dropzoneActiveBorderColor: dropzoneActiveBorderColor ?? t.primary.base,
-        dropzoneBg: dropzoneBg ?? t.colorFillQuaternary,
-        dropzoneActiveBg: dropzoneActiveBg ?? t.primary.bg,
-        dropzoneRadius: dropzoneRadius ?? t.borderRadiusLG,
-        dropzonePadding: dropzonePadding ?? EdgeInsets.all(t.sizeLG),
-        itemRadius: itemRadius ?? t.borderRadiusSM,
-        itemHoverBg: itemHoverBg ?? t.colorFillQuaternary,
-        thumbnailSize: thumbnailSize ?? 40,
-        cardSize: cardSize ?? 104,
-        gap: gap ?? t.sizeXS,
-      );
+    dropzoneBorderColor: dropzoneBorderColor ?? t.colorBorder,
+    dropzoneActiveBorderColor: dropzoneActiveBorderColor ?? t.primary.base,
+    dropzoneBg: dropzoneBg ?? t.colorFillQuaternary,
+    dropzoneActiveBg: dropzoneActiveBg ?? t.primary.bg,
+    dropzoneRadius: dropzoneRadius ?? t.borderRadiusLG,
+    dropzonePadding: dropzonePadding ?? EdgeInsets.all(t.sizeLG),
+    itemRadius: itemRadius ?? t.borderRadiusSM,
+    itemHoverBg: itemHoverBg ?? t.colorFillQuaternary,
+    thumbnailSize: thumbnailSize ?? 40,
+    cardSize: cardSize ?? 104,
+    gap: gap ?? t.sizeXS,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   UploadToken merge(UploadToken other) => UploadToken(
-        dropzoneBorderColor: other.dropzoneBorderColor ?? dropzoneBorderColor,
-        dropzoneActiveBorderColor:
-            other.dropzoneActiveBorderColor ?? dropzoneActiveBorderColor,
-        dropzoneBg: other.dropzoneBg ?? dropzoneBg,
-        dropzoneActiveBg: other.dropzoneActiveBg ?? dropzoneActiveBg,
-        dropzoneRadius: other.dropzoneRadius ?? dropzoneRadius,
-        dropzonePadding: other.dropzonePadding ?? dropzonePadding,
-        itemRadius: other.itemRadius ?? itemRadius,
-        itemHoverBg: other.itemHoverBg ?? itemHoverBg,
-        thumbnailSize: other.thumbnailSize ?? thumbnailSize,
-        cardSize: other.cardSize ?? cardSize,
-        gap: other.gap ?? gap,
-      );
+    dropzoneBorderColor: other.dropzoneBorderColor ?? dropzoneBorderColor,
+    dropzoneActiveBorderColor:
+        other.dropzoneActiveBorderColor ?? dropzoneActiveBorderColor,
+    dropzoneBg: other.dropzoneBg ?? dropzoneBg,
+    dropzoneActiveBg: other.dropzoneActiveBg ?? dropzoneActiveBg,
+    dropzoneRadius: other.dropzoneRadius ?? dropzoneRadius,
+    dropzonePadding: other.dropzonePadding ?? dropzonePadding,
+    itemRadius: other.itemRadius ?? itemRadius,
+    itemHoverBg: other.itemHoverBg ?? itemHoverBg,
+    thumbnailSize: other.thumbnailSize ?? thumbnailSize,
+    cardSize: other.cardSize ?? cardSize,
+    gap: other.gap ?? gap,
+  );
 }
 
 @immutable
@@ -300,12 +299,12 @@ class UploadDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   UploadDefaults merge(UploadDefaults other) => UploadDefaults(
-        variant: other.variant ?? variant,
-        showRemove: other.showRemove ?? showRemove,
-        showRetry: other.showRetry ?? showRetry,
-        showSize: other.showSize ?? showSize,
-        disabled: other.disabled ?? disabled,
-      );
+    variant: other.variant ?? variant,
+    showRemove: other.showRemove ?? showRemove,
+    showRetry: other.showRetry ?? showRetry,
+    showSize: other.showSize ?? showSize,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A file list with a picker trigger, progress per file, and retry and remove
@@ -500,10 +499,11 @@ class Upload<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (token ??
-            ConfigProvider.componentOf<UploadToken>(context) ??
-            const UploadToken())
-        ._resolve(t);
+    final r =
+        (token ??
+                ConfigProvider.componentOf<UploadToken>(context) ??
+                const UploadToken())
+            ._resolve(t);
 
     return switch (_variantIn(context)) {
       UploadVariant.cards || UploadVariant.circleCards => _cards(context, t, r),
@@ -517,7 +517,8 @@ class Upload<T> extends StatelessWidget {
         remove: !readOnly && _showRemoveIn(context) && onRemove != null
             ? () => onRemove!(item)
             : null,
-        retry: !readOnly &&
+        retry:
+            !readOnly &&
                 _showRetryIn(context) &&
                 onRetry != null &&
                 item.status == UploadStatus.error
@@ -587,9 +588,10 @@ class Upload<T> extends StatelessWidget {
   }
 
   /// The bar for [item], from the caller's template or a plain default.
-  Widget _progressFor(UploadItem<T> item, Token t) => (progress ??
-          Progress(percent: 0, showInfo: false, strokeWidth: t.sizeXXS))
-      .copyWith(percent: item.progress);
+  Widget _progressFor(UploadItem<T> item, Token t) =>
+      (progress ??
+              Progress(percent: 0, showInfo: false, strokeWidth: t.sizeXXS))
+          .copyWith(percent: item.progress);
 
   /// What sits before the name in a row.
   ///
@@ -628,11 +630,7 @@ class Upload<T> extends StatelessWidget {
   /// with a spinner would hide the very thing being uploaded. Only where
   /// there is none does a file in flight get a spinner instead of its
   /// extension.
-  Widget _thumbnailFor(
-    UploadItem<T> item,
-    Token t,
-    _ResolvedUploadToken r,
-  ) {
+  Widget _thumbnailFor(UploadItem<T> item, Token t, _ResolvedUploadToken r) {
     final supplied = item.thumbnail ?? thumbnailBuilder?.call(item);
     if (supplied != null) return supplied;
     if (item.status == UploadStatus.uploading) {
@@ -760,7 +758,8 @@ class _DropzoneState extends State<_Dropzone> {
         ? r.dropzoneActiveBorderColor
         : (active ? t.primary.borderHover : r.dropzoneBorderColor);
 
-    final content = widget.trigger ??
+    final content =
+        widget.trigger ??
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -776,8 +775,9 @@ class _DropzoneState extends State<_Dropzone> {
             DefaultTextStyle(
               textAlign: TextAlign.center,
               maxLines: widget.compact ? 1 : null,
-              overflow:
-                  widget.compact ? TextOverflow.ellipsis : TextOverflow.clip,
+              overflow: widget.compact
+                  ? TextOverflow.ellipsis
+                  : TextOverflow.clip,
               style: TextStyle(
                 color: widget.disabled ? t.colorTextQuaternary : t.colorText,
                 fontSize: widget.compact ? t.fontSizeSM : t.fontSize,
@@ -785,7 +785,8 @@ class _DropzoneState extends State<_Dropzone> {
                 fontFamilyFallback: t.fontFamilyFallback,
                 decoration: TextDecoration.none,
               ),
-              child: widget.label ??
+              child:
+                  widget.label ??
                   Text(
                     widget.compact
                         ? context.seedLocale.upload
@@ -1288,7 +1289,8 @@ class _IconButtonState extends State<_IconButton> {
               height: t.controlHeightXS,
               decoration: BoxDecoration(
                 // The mark the pointer leaves, for the keyboard too.
-                color: widget.background ??
+                color:
+                    widget.background ??
                     (_hovered || _focusVisible ? t.colorFillSecondary : null),
                 borderRadius: BorderRadius.circular(t.borderRadiusSM),
               ),

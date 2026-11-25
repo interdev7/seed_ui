@@ -56,32 +56,38 @@ enum _Scale {
   large;
 
   double title(Token t) => switch (this) {
-        _Scale.small => t.fontSize,
-        _Scale.middle => t.fontSizeLG,
-        _Scale.large => t.fontSizeXL,
-      };
+    _Scale.small => t.fontSize,
+    _Scale.middle => t.fontSizeLG,
+    _Scale.large => t.fontSizeXL,
+  };
 
   double content(Token t) => switch (this) {
-        _Scale.small => t.fontSizeSM,
-        _Scale.middle => t.fontSize,
-        _Scale.large => t.fontSizeLG,
-      };
+    _Scale.small => t.fontSizeSM,
+    _Scale.middle => t.fontSize,
+    _Scale.large => t.fontSizeLG,
+  };
 
   /// Padding inside a [StepsType.navigation] block.
   EdgeInsets blockPadding(Token t) => switch (this) {
-        _Scale.small =>
-          EdgeInsets.symmetric(horizontal: t.sizeXS, vertical: t.sizeXS),
-        _Scale.middle =>
-          EdgeInsets.symmetric(horizontal: t.sizeXS, vertical: t.sizeSM),
-        _Scale.large =>
-          EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: t.size),
-      };
+    _Scale.small => EdgeInsets.symmetric(
+      horizontal: t.sizeXS,
+      vertical: t.sizeXS,
+    ),
+    _Scale.middle => EdgeInsets.symmetric(
+      horizontal: t.sizeXS,
+      vertical: t.sizeSM,
+    ),
+    _Scale.large => EdgeInsets.symmetric(
+      horizontal: t.sizeSM,
+      vertical: t.size,
+    ),
+  };
 
   double padding(Token t) => switch (this) {
-        _Scale.small => t.sizeXS,
-        _Scale.middle => t.size,
-        _Scale.large => t.sizeLG,
-      };
+    _Scale.small => t.sizeXS,
+    _Scale.middle => t.size,
+    _Scale.large => t.sizeLG,
+  };
 
   /// A run sized by a bare number takes the scale its marker is nearest to,
   /// so the type keeps up with the circle it sits beside.
@@ -90,13 +96,13 @@ enum _Scale {
       : (marker >= 38 ? _Scale.large : _Scale.middle);
 
   static _Scale of(ControlSize size) => switch (size) {
-        SoftSize.small => _Scale.small,
-        SoftSize.middle => _Scale.middle,
-        SoftSize.large => _Scale.large,
-        ExplicitHeight(:final height) => forMarker(height),
-        ExplicitWidth(:final width) => forMarker(width),
-        ExplicitBox(:final height) => forMarker(height),
-      };
+    SoftSize.small => _Scale.small,
+    SoftSize.middle => _Scale.middle,
+    SoftSize.large => _Scale.large,
+    ExplicitHeight(:final height) => forMarker(height),
+    ExplicitWidth(:final width) => forMarker(width),
+    ExplicitBox(:final height) => forMarker(height),
+  };
 }
 
 /// What a horizontal run does when its steps will not fit.
@@ -116,7 +122,7 @@ enum StepsVariant {
   filled,
 
   /// Markers are hollow, drawn as a ring in their status colour.
-  outlined
+  outlined,
 }
 
 /// Which way the steps run.
@@ -125,7 +131,7 @@ enum StepsOrientation {
   horizontal,
 
   /// Steps stack top to bottom, rails down the side.
-  vertical
+  vertical,
 }
 
 /// Whether a title sits beside its marker or under it.
@@ -134,7 +140,7 @@ enum StepTitlePlacement {
   horizontal,
 
   /// The title sits under its marker.
-  vertical
+  vertical,
 }
 
 /// One step.
@@ -182,7 +188,7 @@ class StepItem {
 /// `onChanged`, or left to itself, needs no controller at all.
 class StepsController extends ChangeNotifier {
   /// Creates a [StepsController].
-  StepsController({int current = 0}) : _current = current;
+  StepsController({this._current = 0});
 
   int _current;
 
@@ -438,35 +444,35 @@ class StepsToken {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   StepsToken merge(StepsToken other) => StepsToken(
-        iconSize: other.iconSize ?? iconSize,
-        iconSizeSM: other.iconSizeSM ?? iconSizeSM,
-        iconSizeLG: other.iconSizeLG ?? iconSizeLG,
-        dotSize: other.dotSize ?? dotSize,
-        dotCurrentSize: other.dotCurrentSize ?? dotCurrentSize,
-        railThickness: other.railThickness ?? railThickness,
-        itemGap: other.itemGap ?? itemGap,
-        railInset: other.railInset ?? railInset,
-        contentMaxWidth: other.contentMaxWidth ?? contentMaxWidth,
-        panelPadding: other.panelPadding ?? panelPadding,
-        panelRadius: other.panelRadius ?? panelRadius,
-        panelArrowWidth: other.panelArrowWidth ?? panelArrowWidth,
-        panelMinWidth: other.panelMinWidth ?? panelMinWidth,
-        itemWidth: other.itemWidth ?? itemWidth,
-        itemHeight: other.itemHeight ?? itemHeight,
-        panelWidth: other.panelWidth ?? panelWidth,
-        panelHeight: other.panelHeight ?? panelHeight,
-        railLength: other.railLength ?? railLength,
-        railMinLength: other.railMinLength ?? railMinLength,
-        itemMinWidth: other.itemMinWidth ?? itemMinWidth,
-        arrowColor: other.arrowColor ?? arrowColor,
-        markerColor: other.markerColor ?? markerColor,
-        markerWaitBg: other.markerWaitBg ?? markerWaitBg,
-        markerWaitColor: other.markerWaitColor ?? markerWaitColor,
-        railColor: other.railColor ?? railColor,
-        railFinishColor: other.railFinishColor ?? railFinishColor,
-        dotColor: other.dotColor ?? dotColor,
-        dotWaitColor: other.dotWaitColor ?? dotWaitColor,
-      );
+    iconSize: other.iconSize ?? iconSize,
+    iconSizeSM: other.iconSizeSM ?? iconSizeSM,
+    iconSizeLG: other.iconSizeLG ?? iconSizeLG,
+    dotSize: other.dotSize ?? dotSize,
+    dotCurrentSize: other.dotCurrentSize ?? dotCurrentSize,
+    railThickness: other.railThickness ?? railThickness,
+    itemGap: other.itemGap ?? itemGap,
+    railInset: other.railInset ?? railInset,
+    contentMaxWidth: other.contentMaxWidth ?? contentMaxWidth,
+    panelPadding: other.panelPadding ?? panelPadding,
+    panelRadius: other.panelRadius ?? panelRadius,
+    panelArrowWidth: other.panelArrowWidth ?? panelArrowWidth,
+    panelMinWidth: other.panelMinWidth ?? panelMinWidth,
+    itemWidth: other.itemWidth ?? itemWidth,
+    itemHeight: other.itemHeight ?? itemHeight,
+    panelWidth: other.panelWidth ?? panelWidth,
+    panelHeight: other.panelHeight ?? panelHeight,
+    railLength: other.railLength ?? railLength,
+    railMinLength: other.railMinLength ?? railMinLength,
+    itemMinWidth: other.itemMinWidth ?? itemMinWidth,
+    arrowColor: other.arrowColor ?? arrowColor,
+    markerColor: other.markerColor ?? markerColor,
+    markerWaitBg: other.markerWaitBg ?? markerWaitBg,
+    markerWaitColor: other.markerWaitColor ?? markerWaitColor,
+    railColor: other.railColor ?? railColor,
+    railFinishColor: other.railFinishColor ?? railFinishColor,
+    dotColor: other.dotColor ?? dotColor,
+    dotWaitColor: other.dotWaitColor ?? dotWaitColor,
+  );
 }
 
 @immutable
@@ -519,15 +525,15 @@ class _ResolvedStepsToken {
 
   /// The gap at the end a rail starts from.
   double leadingInset(Axis axis) => railInset.leading(
-        axis,
-        axis == Axis.horizontal ? railInsetHorizontal : railInsetVertical,
-      );
+    axis,
+    axis == Axis.horizontal ? railInsetHorizontal : railInsetVertical,
+  );
 
   /// The gap at the end it runs towards.
   double trailingInset(Axis axis) => railInset.trailing(
-        axis,
-        axis == Axis.horizontal ? railInsetHorizontal : railInsetVertical,
-      );
+    axis,
+    axis == Axis.horizontal ? railInsetHorizontal : railInsetVertical,
+  );
   final double? contentMaxWidth;
   final EdgeInsets panelPadding;
   final double panelRadius;
@@ -755,13 +761,13 @@ class StepsDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   StepsDefaults merge(StepsDefaults other) => StepsDefaults(
-        orientation: other.orientation ?? orientation,
-        type: other.type ?? type,
-        variant: other.variant ?? variant,
-        responsive: other.responsive ?? responsive,
-        overflow: other.overflow ?? overflow,
-        size: other.size ?? size,
-      );
+    orientation: other.orientation ?? orientation,
+    type: other.type ?? type,
+    variant: other.variant ?? variant,
+    responsive: other.responsive ?? responsive,
+    overflow: other.overflow ?? overflow,
+    size: other.size ?? size,
+  );
 }
 
 /// A progress indicator for a task with stages.
@@ -810,9 +816,9 @@ class Steps extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
   }) : assert(
-          percent == null || (percent >= 0 && percent <= 1),
-          'percent is a fraction between 0 and 1',
-        );
+         percent == null || (percent >= 0 && percent <= 1),
+         'percent is a fraction between 0 and 1',
+       );
 
   /// The steps, in order.
   final List<StepItem> items;
@@ -1075,12 +1081,13 @@ class _StepsState extends State<Steps> {
         StepsType.panel => r.panelWidth ?? r.panelMinWidth,
         StepsType.navigation => r.iconSize + r.itemGap + text + t.sizeXS * 2,
         // A rail long enough to read as one, plus its gaps.
-        _ => marker +
-            r.itemGap +
-            text +
-            r.railMinLength +
-            r.leadingInset(Axis.horizontal) +
-            r.trailingInset(Axis.horizontal),
+        _ =>
+          marker +
+              r.itemGap +
+              text +
+              r.railMinLength +
+              r.leadingInset(Axis.horizontal) +
+              r.trailingInset(Axis.horizontal),
       };
       return math.max(3, constraints.maxWidth ~/ floor);
     }
@@ -1100,48 +1107,50 @@ class _StepsState extends State<Steps> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<StepsToken>(context) ??
-            const StepsToken())
-        ._resolve(t, _size);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<StepsToken>(context) ??
+                const StepsToken())
+            ._resolve(t, _size);
 
     final palette = _Palette(t, r, _variant);
 
     Widget build(StepsOrientation orientation) => switch (_type) {
-          StepsType.panel => _PanelRun(
-              state: this,
-              t: t,
-              r: r,
-              palette: palette,
-              orientation: orientation,
-            ),
-          StepsType.navigation => _NavigationRun(
-              state: this,
-              t: t,
-              r: r,
-              palette: palette,
-              orientation: orientation,
-            ),
+      StepsType.panel => _PanelRun(
+        state: this,
+        t: t,
+        r: r,
+        palette: palette,
+        orientation: orientation,
+      ),
+      StepsType.navigation => _NavigationRun(
+        state: this,
+        t: t,
+        r: r,
+        palette: palette,
+        orientation: orientation,
+      ),
 
-          // `inline` is the dot run in miniature: same rails, smaller dots,
-          // muted one-line titles and no content — The kit hides it.
-          _ => _RailRun(
-              state: this,
-              t: t,
-              r: r,
-              palette: palette,
-              orientation: orientation,
-              scale: _type == StepsType.inline ? _Scale.small : r.scale,
-              direction: Directionality.of(context),
-            ),
-        };
+      // `inline` is the dot run in miniature: same rails, smaller dots,
+      // muted one-line titles and no content — The kit hides it.
+      _ => _RailRun(
+        state: this,
+        t: t,
+        r: r,
+        palette: palette,
+        orientation: orientation,
+        scale: _type == StepsType.inline ? _Scale.small : r.scale,
+        direction: Directionality.of(context),
+      ),
+    };
 
     // The fold has to be worked out where the room is known, so the whole run
     // is built inside a LayoutBuilder — including the runs that never turn
     // vertical, which still need the width to count what fits.
     return LayoutBuilder(
       builder: (context, constraints) {
-        final stands = _responsive &&
+        final stands =
+            _responsive &&
             _orientation == StepsOrientation.horizontal &&
             _type != StepsType.inline &&
             _type != StepsType.panel &&
@@ -1204,12 +1213,12 @@ class _Palette {
   Color opaque(Color fill) => Color.alphaBlend(fill, t.colorBgContainer);
 
   Color markerFill(StepStatus s) => switch (s) {
-        StepStatus.wait =>
-          _outlined ? const Color(0x00000000) : opaque(r.markerWaitBg),
-        StepStatus.process => _outlined ? const Color(0x00000000) : _a.base,
-        StepStatus.finish => _outlined ? const Color(0x00000000) : _a.bg,
-        StepStatus.error => _outlined ? const Color(0x00000000) : t.error.base,
-      };
+    StepStatus.wait =>
+      _outlined ? const Color(0x00000000) : opaque(r.markerWaitBg),
+    StepStatus.process => _outlined ? const Color(0x00000000) : _a.base,
+    StepStatus.finish => _outlined ? const Color(0x00000000) : _a.bg,
+    StepStatus.error => _outlined ? const Color(0x00000000) : t.error.base,
+  };
 
   Color? markerBorder(StepStatus s) => !_outlined
       ? null
@@ -1226,17 +1235,17 @@ class _Palette {
   /// kit's blue, but not on a pale yellow somebody named, which is why it is
   /// worked out rather than written down.
   Color markerInk(StepStatus s) => switch (s) {
-        StepStatus.wait => r.markerWaitColor,
-        StepStatus.process => _outlined ? _a.base : _a.onBase,
-        StepStatus.finish => _a.base,
-        StepStatus.error => _outlined ? t.error.base : t.error.onBase,
-      };
+    StepStatus.wait => r.markerWaitColor,
+    StepStatus.process => _outlined ? _a.base : _a.onBase,
+    StepStatus.finish => _a.base,
+    StepStatus.error => _outlined ? t.error.base : t.error.onBase,
+  };
 
   Color dot(StepStatus s) => switch (s) {
-        StepStatus.wait => r.dotWaitColor,
-        StepStatus.process || StepStatus.finish => r.dotColor,
-        StepStatus.error => t.error.base,
-      };
+    StepStatus.wait => r.dotWaitColor,
+    StepStatus.process || StepStatus.finish => r.dotColor,
+    StepStatus.error => t.error.base,
+  };
 
   /// Hover fill of a marker. The kit lifts a filled marker to the accent's
   /// hover tint — an error one to its own — and leaves an outlined one clear.
@@ -1255,9 +1264,9 @@ class _Palette {
         };
 
   Color markerInkHover(StepStatus s) => switch (s) {
-        StepStatus.error => _outlined ? t.error.hover : t.error.base,
-        _ => _outlined ? _a.hover : _a.base,
-      };
+    StepStatus.error => _outlined ? t.error.hover : t.error.base,
+    _ => _outlined ? _a.hover : _a.base,
+  };
 
   /// Hover colour of a step's title and content — the error status keeps to
   /// its own family rather than turning blue.
@@ -1265,16 +1274,16 @@ class _Palette {
       s == StepStatus.error ? t.error.hover : _a.hover;
 
   Color title(StepStatus s) => switch (s) {
-        StepStatus.wait => t.colorTextTertiary,
-        StepStatus.process || StepStatus.finish => t.colorText,
-        StepStatus.error => t.error.base,
-      };
+    StepStatus.wait => t.colorTextTertiary,
+    StepStatus.process || StepStatus.finish => t.colorText,
+    StepStatus.error => t.error.base,
+  };
 
   Color content(StepStatus s) => switch (s) {
-        StepStatus.wait => t.colorTextTertiary,
-        StepStatus.process || StepStatus.finish => t.colorText,
-        StepStatus.error => t.error.base,
-      };
+    StepStatus.wait => t.colorTextTertiary,
+    StepStatus.process || StepStatus.finish => t.colorText,
+    StepStatus.error => t.error.base,
+  };
 
   /// The rail leading *into* a step: travelled once the step is done.
   Color rail(StepStatus s) =>
@@ -1347,7 +1356,8 @@ class _Marker extends StatelessWidget {
         width: size,
         height: r.dotCurrentSize,
         child: Center(
-          child: item.icon ??
+          child:
+              item.icon ??
               AnimatedContainer(
                 duration: t.motionDurationMid,
                 curve: t.motionEaseInOut,
@@ -1364,22 +1374,24 @@ class _Marker extends StatelessWidget {
       );
     }
 
-    final ink =
-        hovered ? palette.markerInkHover(status) : palette.markerInk(status);
+    final ink = hovered
+        ? palette.markerInkHover(status)
+        : palette.markerInk(status);
     final border = hovered
         ? palette.markerBorderHover(status)
         : palette.markerBorder(status);
-    final fill =
-        hovered ? palette.markerFillHover(status) : palette.markerFill(status);
+    final fill = hovered
+        ? palette.markerFillHover(status)
+        : palette.markerFill(status);
 
     // The glyph's colour eases with the circle behind it; the kit transitions
     // both rather than snapping.
     Widget easeInk(Widget Function(Color ink) build) => TweenAnimationBuilder(
-          tween: ColorTween(end: ink),
-          duration: t.motionDurationMid,
-          curve: t.motionEaseInOut,
-          builder: (context, value, _) => build(value ?? ink),
-        );
+      tween: ColorTween(end: ink),
+      duration: t.motionDurationMid,
+      curve: t.motionEaseInOut,
+      builder: (context, value, _) => build(value ?? ink),
+    );
 
     Widget glyph;
     if (item.icon != null) {
@@ -1455,7 +1467,8 @@ class _Marker extends StatelessWidget {
       'the ring goes round a marker: use a circle or a dashboard',
     );
     final ringBox = r.iconSize + stepsRingPadding;
-    final template = progress ??
+    final template =
+        progress ??
         Progress(
           percent: value,
           type: ProgressType.circle,
@@ -1528,16 +1541,19 @@ class _StepText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final titleSize = scale.title(t);
-    final titleColour = colorOverride ??
+    final titleColour =
+        colorOverride ??
         (hovered
             ? palette.accent.hover
             : (inline ? t.colorTextSecondary : palette.title(status)));
-    final contentColour = colorOverride ??
+    final contentColour =
+        colorOverride ??
         (hovered ? palette.accent.hover : palette.content(status));
 
     final column = Column(
-      crossAxisAlignment:
-          centred ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      crossAxisAlignment: centred
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         if (part != _StepTextPart.content &&
@@ -1836,12 +1852,12 @@ class _RailRun extends StatelessWidget {
     // The run fills the width it is given and shares it out equally — no step
     // is wider than another just because its title is longer.
     Row row({bool stacked = false}) => Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var i = 0; i < items.length; i++)
-              Expanded(child: _horizontalStep(i, stacked: stacked)),
-          ],
-        );
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < items.length; i++)
+          Expanded(child: _horizontalStep(i, stacked: stacked)),
+      ],
+    );
 
     // With the rails fixed the steps no longer share the width — each is as
     // wide as its own text — so the row shrink-wraps and scrolls if the sum
@@ -1884,7 +1900,10 @@ class _RailRun extends StatelessWidget {
 
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: SizedBox(width: natural, child: row(stacked: stacked)),
+          child: SizedBox(
+            width: natural,
+            child: row(stacked: stacked),
+          ),
         );
       },
     );
@@ -1921,17 +1940,17 @@ class _RailRun extends StatelessWidget {
     // because its colours are the point.
     final answersHover = index != state._shownCurrent;
     Widget marker(bool hovered) => _Marker(
-          t: t,
-          r: r,
-          palette: palette,
-          status: status,
-          item: item,
-          number: state.numberOf(index),
-          dot: _dot,
-          percent: state.widget.percent,
-          progress: state.widget.progress,
-          hovered: hovered && answersHover,
-        );
+      t: t,
+      r: r,
+      palette: palette,
+      status: status,
+      item: item,
+      number: state.numberOf(index),
+      dot: _dot,
+      percent: state.widget.percent,
+      progress: state.widget.progress,
+      hovered: hovered && answersHover,
+    );
 
     // The kit gives a vertical step a heading band as tall as the taller of
     // the marker and the title line, and centres the marker in it. Both then
@@ -1945,41 +1964,42 @@ class _RailRun extends StatelessWidget {
     final belowMarker = (headerHeight - _markerExtent) / 2;
 
     Widget axis(bool hovered) => SizedBox(
-          width: _markerExtent,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: headerHeight,
-                child: Center(child: marker(hovered)),
-              ),
-              if (!isLast)
-                _railSlot(
-                  axis: Axis.vertical,
-                  gaps: r.leadingInset(Axis.vertical) +
-                      r.trailingInset(Axis.vertical) -
-                      belowMarker,
-                  child: CustomPaint(
-                    size: Size.infinite,
-                    painter: RailPainter(
-                      axis: Axis.vertical,
-                      thickness: r.railThickness,
-                      minLength: r.railMinLength,
-                      startInset: r.leadingInset(Axis.vertical) - belowMarker,
-                      endInset: r.trailingInset(Axis.vertical),
-                      segments: [
-                        RailSegment(
-                          start: 0,
-                          end: double.infinity,
-                          color: palette.rail(status),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+      width: _markerExtent,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: headerHeight,
+            child: Center(child: marker(hovered)),
           ),
-        );
+          if (!isLast)
+            _railSlot(
+              axis: Axis.vertical,
+              gaps:
+                  r.leadingInset(Axis.vertical) +
+                  r.trailingInset(Axis.vertical) -
+                  belowMarker,
+              child: CustomPaint(
+                size: Size.infinite,
+                painter: RailPainter(
+                  axis: Axis.vertical,
+                  thickness: r.railThickness,
+                  minLength: r.railMinLength,
+                  startInset: r.leadingInset(Axis.vertical) - belowMarker,
+                  endInset: r.trailingInset(Axis.vertical),
+                  segments: [
+                    RailSegment(
+                      start: 0,
+                      end: double.infinity,
+                      color: palette.rail(status),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
 
     return _step(
       index,
@@ -2062,17 +2082,17 @@ class _RailRun extends StatelessWidget {
 
     final answersHover = index != state._shownCurrent;
     Widget marker(bool hovered) => _Marker(
-          t: t,
-          r: r,
-          palette: palette,
-          status: status,
-          item: item,
-          number: state.numberOf(index),
-          dot: _dot,
-          percent: state.widget.percent,
-          progress: state.widget.progress,
-          hovered: hovered && answersHover,
-        );
+      t: t,
+      r: r,
+      palette: palette,
+      status: status,
+      item: item,
+      number: state.numberOf(index),
+      dot: _dot,
+      percent: state.widget.percent,
+      progress: state.widget.progress,
+      hovered: hovered && answersHover,
+    );
 
     Widget text(bool hovered, {_StepTextPart part = _StepTextPart.all}) =>
         _StepText(
@@ -2101,22 +2121,19 @@ class _RailRun extends StatelessWidget {
       required Color color,
       required double leadingGap,
       required double trailingGap,
-    }) =>
-        CustomPaint(
-          // Without a size a childless CustomPaint collapses to nothing; the
-          // rail is meant to take whatever width its slot hands it.
-          size: Size.infinite,
-          painter: RailPainter(
-            axis: Axis.horizontal,
-            thickness: r.railThickness,
-            minLength: r.railMinLength,
-            startInset: railsMirrored ? trailingGap : leadingGap,
-            endInset: railsMirrored ? leadingGap : trailingGap,
-            segments: [
-              RailSegment(start: 0, end: double.infinity, color: color),
-            ],
-          ),
-        );
+    }) => CustomPaint(
+      // Without a size a childless CustomPaint collapses to nothing; the
+      // rail is meant to take whatever width its slot hands it.
+      size: Size.infinite,
+      painter: RailPainter(
+        axis: Axis.horizontal,
+        thickness: r.railThickness,
+        minLength: r.railMinLength,
+        startInset: railsMirrored ? trailingGap : leadingGap,
+        endInset: railsMirrored ? leadingGap : trailingGap,
+        segments: [RailSegment(start: 0, end: double.infinity, color: color)],
+      ),
+    );
 
     if (placement == StepTitlePlacement.vertical) {
       // Marker centred over its own title, with the rail passing behind it.
@@ -2204,17 +2221,17 @@ class _RailRun extends StatelessWidget {
     final answersHover = index != state._shownCurrent;
 
     Widget marker(bool hovered) => _Marker(
-          t: t,
-          r: r,
-          palette: palette,
-          status: status,
-          item: item,
-          number: state.numberOf(index),
-          dot: _dot,
-          percent: state.widget.percent,
-          progress: state.widget.progress,
-          hovered: hovered && answersHover,
-        );
+      t: t,
+      r: r,
+      palette: palette,
+      status: status,
+      item: item,
+      number: state.numberOf(index),
+      dot: _dot,
+      percent: state.widget.percent,
+      progress: state.widget.progress,
+      hovered: hovered && answersHover,
+    );
 
     Widget text(bool hovered, {_StepTextPart part = _StepTextPart.all}) =>
         _StepText(
@@ -2238,20 +2255,17 @@ class _RailRun extends StatelessWidget {
       required Color color,
       required double leadingGap,
       required double trailingGap,
-    }) =>
-        CustomPaint(
-          size: Size.infinite,
-          painter: RailPainter(
-            axis: Axis.horizontal,
-            thickness: r.railThickness,
-            minLength: r.railMinLength,
-            startInset: railsMirrored ? trailingGap : leadingGap,
-            endInset: railsMirrored ? leadingGap : trailingGap,
-            segments: [
-              RailSegment(start: 0, end: double.infinity, color: color),
-            ],
-          ),
-        );
+    }) => CustomPaint(
+      size: Size.infinite,
+      painter: RailPainter(
+        axis: Axis.horizontal,
+        thickness: r.railThickness,
+        minLength: r.railMinLength,
+        startInset: railsMirrored ? trailingGap : leadingGap,
+        endInset: railsMirrored ? leadingGap : trailingGap,
+        segments: [RailSegment(start: 0, end: double.infinity, color: color)],
+      ),
+    );
 
     final reserved = _markerExtent + r.itemGap + _minRail;
     final titleWidth = maxWidth - reserved;
@@ -2275,7 +2289,10 @@ class _RailRun extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: band, child: Center(child: marker(hovered))),
+            SizedBox(
+              height: band,
+              child: Center(child: marker(hovered)),
+            ),
             SizedBox(width: r.itemGap),
             ConstrainedBox(
               constraints: BoxConstraints(
@@ -2360,8 +2377,10 @@ class _NavigationRun extends StatelessWidget {
     }
 
     final row = IntrinsicHeight(
-      child:
-          Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: blocks),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: blocks,
+      ),
     );
 
     return LayoutBuilder(
@@ -2387,17 +2406,17 @@ class _NavigationRun extends StatelessWidget {
   }
 
   Widget _arrow() => Padding(
-        padding: EdgeInsets.symmetric(horizontal: t.sizeXS),
-        child: Center(
-          child: RotatedBox(
-            quarterTurns: orientation == StepsOrientation.horizontal ? 0 : 1,
-            child: CustomPaint(
-              size: Size.square(t.fontSizeSM),
-              painter: ChevronPainter(r.arrowColor),
-            ),
-          ),
+    padding: EdgeInsets.symmetric(horizontal: t.sizeXS),
+    child: Center(
+      child: RotatedBox(
+        quarterTurns: orientation == StepsOrientation.horizontal ? 0 : 1,
+        child: CustomPaint(
+          size: Size.square(t.fontSizeSM),
+          painter: ChevronPainter(r.arrowColor),
         ),
-      );
+      ),
+    ),
+  );
 
   Widget _block(int index) {
     final item = state.items[index];
@@ -2434,8 +2453,9 @@ class _NavigationRun extends StatelessWidget {
               // reads as navigation, not as a set of buttons.
               border: Border(
                 bottom: BorderSide(
-                  color:
-                      selected ? palette.accent.base : const Color(0x00000000),
+                  color: selected
+                      ? palette.accent.base
+                      : const Color(0x00000000),
                   width: t.lineWidth * 2,
                 ),
               ),
@@ -2655,7 +2675,8 @@ class _PanelRun extends StatelessWidget {
             widthFactor: 1,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minWidth: r.panelWidth ??
+                minWidth:
+                    r.panelWidth ??
                     math.min(r.panelMinWidth, constraints.maxWidth),
                 maxWidth: r.panelWidth ?? constraints.maxWidth,
               ),
@@ -2747,7 +2768,8 @@ class _HoverIndex extends StatefulWidget {
     BuildContext context,
     int? hovered,
     ValueChanged<int?> setHovered,
-  ) builder;
+  )
+  builder;
 
   @override
   State<_HoverIndex> createState() => _HoverIndexState();
@@ -2757,14 +2779,11 @@ class _HoverIndexState extends State<_HoverIndex> {
   int? _hovered;
 
   @override
-  Widget build(BuildContext context) => widget.builder(
-        context,
-        _hovered,
-        (index) {
-          if (index == _hovered) return;
-          setState(() => _hovered = index);
-        },
-      );
+  Widget build(BuildContext context) =>
+      widget.builder(context, _hovered, (index) {
+        if (index == _hovered) return;
+        setState(() => _hovered = index);
+      });
 }
 
 /// Paints the whole panel strip: every fill once, every line once.
@@ -2981,8 +3000,8 @@ class _PanelStripPainter extends CustomPainter {
       old.arrow != arrow ||
       old.radius != radius ||
       old.strokeWidth != strokeWidth ||
-      Iterable<int>.generate(fills.length).any(
-        (i) => old.fills[i] != fills[i] || old.strokes[i] != strokes[i],
-      ) ||
+      Iterable<int>.generate(
+        fills.length,
+      ).any((i) => old.fills[i] != fills[i] || old.strokes[i] != strokes[i]) ||
       Iterable<int>.generate(seams.length).any((i) => old.seams[i] != seams[i]);
 }

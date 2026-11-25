@@ -54,11 +54,8 @@ class DateTag {
 ///         child: Text(tag.label))
 ///     : child,
 /// ```
-typedef DateTagBuilder = Widget Function(
-  BuildContext context,
-  DateTag tag,
-  Widget child,
-);
+typedef DateTagBuilder =
+    Widget Function(BuildContext context, DateTag tag, Widget child);
 
 /// Defaults for every [MultiDatePicker] under a `ConfigProvider`.
 @immutable
@@ -642,33 +639,34 @@ class _MultiDatePickerState extends State<MultiDatePicker>
   // --------------------------------------------------------------------------
 
   double _height(Token t) => _size.resolveHeight(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 
   double _fontSize(Token t) =>
       _size == SoftSize.large ? t.fontSizeLG : t.fontSize;
 
   String _write(DateTime day, SeedLocalizations words) => words.figures(
-        formatDate(
-          day,
-          widget.format,
-          months: words.shortMonths,
-          weekdays: words.shortWeekdays,
-          am: words.am,
-          pm: words.pm,
-        ),
-      );
+    formatDate(
+      day,
+      widget.format,
+      months: words.shortMonths,
+      weekdays: words.shortWeekdays,
+      am: words.am,
+      pm: words.pm,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
     final words = context.seedLocale;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<DatePickerToken>(context) ??
-            const DatePickerToken())
-        .resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<DatePickerToken>(context) ??
+                const DatePickerToken())
+            .resolve(t);
     _syncAnchor();
 
     final fontSize = _fontSize(t);
@@ -734,22 +732,17 @@ class _MultiDatePickerState extends State<MultiDatePicker>
       if (draw == null) return drawn;
       return draw(
         context,
-        DateTag(
-          date: day,
-          label: label,
-          enabled: _enabled,
-          onRemove: remove,
-        ),
+        DateTag(date: day, label: label, enabled: _enabled, onRemove: remove),
         drawn,
       );
     }
 
     ValueTag countOf(int rest) => ValueTag(
-          token: t,
-          fontSize: fontSize,
-          enabled: _enabled,
-          label: Text(context.seedLocale.figures('+ $rest ...')),
-        );
+      token: t,
+      fontSize: fontSize,
+      enabled: _enabled,
+      label: Text(context.seedLocale.figures('+ $rest ...')),
+    );
 
     final tags = <Widget>[
       for (final day in named) tagFor(day),
@@ -764,8 +757,8 @@ class _MultiDatePickerState extends State<MultiDatePicker>
       cursor: _takesHand
           ? SystemMouseCursors.click
           : _enabled
-              ? SystemMouseCursors.basic
-              : SystemMouseCursors.forbidden,
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.forbidden,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
@@ -814,19 +807,19 @@ class _MultiDatePickerState extends State<MultiDatePicker>
                         ),
                       )
                     : _responsive
-                        // One line, and the line works out how many fit.
-                        // Nothing wraps, so nothing makes the field taller.
-                        ? ResponsiveTagLine(
-                            spacing: t.sizeXXS,
-                            overflowBuilder: countOf,
-                            tags: tags,
-                          )
-                        : Wrap(
-                            spacing: t.sizeXXS,
-                            runSpacing: t.sizeXXS,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: tags,
-                          ),
+                    // One line, and the line works out how many fit.
+                    // Nothing wraps, so nothing makes the field taller.
+                    ? ResponsiveTagLine(
+                        spacing: t.sizeXXS,
+                        overflowBuilder: countOf,
+                        tags: tags,
+                      )
+                    : Wrap(
+                        spacing: t.sizeXXS,
+                        runSpacing: t.sizeXXS,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: tags,
+                      ),
               ),
               SizedBox(width: t.sizeXS),
               if (canClear)
@@ -853,12 +846,12 @@ class _MultiDatePickerState extends State<MultiDatePicker>
                                 painter: ClearIconPainter(t.colorTextTertiary),
                               )
                             : widget.suffixIcon ??
-                                CustomPaint(
-                                  size: Size.square(fontSize),
-                                  painter: CalendarIconPainter(
-                                    statusColor ?? t.colorTextQuaternary,
+                                  CustomPaint(
+                                    size: Size.square(fontSize),
+                                    painter: CalendarIconPainter(
+                                      statusColor ?? t.colorTextQuaternary,
+                                    ),
                                   ),
-                                ),
                       ),
                     ),
                   ),
@@ -891,8 +884,9 @@ class _MultiDatePickerState extends State<MultiDatePicker>
           : SemanticsValidationResult.none,
       child: Focus(
         focusNode: _focus,
-        child:
-            named_ == null ? control : SizedBox(width: named_, child: control),
+        child: named_ == null
+            ? control
+            : SizedBox(width: named_, child: control),
       ),
     );
   }
@@ -908,16 +902,17 @@ class _MultiPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.softToken;
     final words = context.seedLocale;
-    final r = (state.widget.token ??
-            ConfigProvider.componentOf<DatePickerToken>(context) ??
-            const DatePickerToken())
-        .resolve(t)
-        // Never wider than the screen it opens on: a week of roomy days
-        // narrows to fit a phone rather than running off its side.
-        .fittedTo(
-          MediaQuery.sizeOf(context).width - t.sizeLG * 2,
-          padding: t.sizeSM * 2,
-        );
+    final r =
+        (state.widget.token ??
+                ConfigProvider.componentOf<DatePickerToken>(context) ??
+                const DatePickerToken())
+            .resolve(t)
+            // Never wider than the screen it opens on: a week of roomy days
+            // narrows to fit a phone rather than running off its side.
+            .fittedTo(
+              MediaQuery.sizeOf(context).width - t.sizeLG * 2,
+              padding: t.sizeSM * 2,
+            );
 
     return DecoratedBox(
       decoration: BoxDecoration(

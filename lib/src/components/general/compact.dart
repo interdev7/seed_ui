@@ -169,10 +169,10 @@ class _CompactState extends State<Compact> {
             position: children.length == 1
                 ? CompactPosition.only
                 : i == 0
-                    ? CompactPosition.first
-                    : i == children.length - 1
-                        ? CompactPosition.last
-                        : CompactPosition.middle,
+                ? CompactPosition.first
+                : i == children.length - 1
+                ? CompactPosition.last
+                : CompactPosition.middle,
             // Every one after the first is pulled back by the width of a line,
             // so the two borders that meet draw one line rather than two. The
             // borders themselves are left whole: a control that drops a side
@@ -298,13 +298,10 @@ class CompactOverlap extends SingleChildRenderObjectWidget {
 
 class _RenderCompactOverlap extends RenderShiftedBox {
   _RenderCompactOverlap({
-    required double by,
-    required Axis direction,
-    required bool before,
-  })  : _by = by,
-        _direction = direction,
-        _before = before,
-        super(null);
+    required this._by,
+    required this._direction,
+    required this._before,
+  }) : super(null);
 
   double _by;
   set by(double value) {
@@ -362,8 +359,9 @@ class _RenderCompactOverlap extends RenderShiftedBox {
     // lies after it, the extra line already spills that way and shifting as
     // well would carry it a whole line too far.
     final back = _before ? _by : 0.0;
-    (child.parentData! as BoxParentData).offset =
-        _rows ? Offset(-back, 0) : Offset(0, -back);
+    (child.parentData! as BoxParentData).offset = _rows
+        ? Offset(-back, 0)
+        : Offset(0, -back);
     size = constraints.constrain(
       _rows
           ? Size(child.size.width - _by, child.size.height)
@@ -410,15 +408,15 @@ class _CompactRun extends Flex {
 
   @override
   RenderFlex createRenderObject(BuildContext context) => _RenderCompactRun(
-        direction: direction,
-        mainAxisAlignment: mainAxisAlignment,
-        mainAxisSize: mainAxisSize,
-        crossAxisAlignment: crossAxisAlignment,
-        textDirection: getEffectiveTextDirection(context),
-        verticalDirection: verticalDirection,
-        textBaseline: textBaseline,
-        clipBehavior: clipBehavior,
-      )..raised = raised;
+    direction: direction,
+    mainAxisAlignment: mainAxisAlignment,
+    mainAxisSize: mainAxisSize,
+    crossAxisAlignment: crossAxisAlignment,
+    textDirection: getEffectiveTextDirection(context),
+    verticalDirection: verticalDirection,
+    textBaseline: textBaseline,
+    clipBehavior: clipBehavior,
+  )..raised = raised;
 
   @override
   void updateRenderObject(BuildContext context, RenderFlex renderObject) {

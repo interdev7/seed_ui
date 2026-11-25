@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart' as material;
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,7 +9,7 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' as material;
 import 'package:seed_ui/seed_ui.dart';
 
 void main() {
@@ -19,10 +19,7 @@ void main() {
         final kit = ThemeData(dark: dark);
         final m = kit.materialTheme;
 
-        expect(
-          m.brightness,
-          dark ? Brightness.dark : Brightness.light,
-        );
+        expect(m.brightness, dark ? Brightness.dark : Brightness.light);
         // The one that stops a white flash between pages: a transition paints
         // its backdrop with this.
         expect(m.colorScheme.surface, kit.token.colorBgLayout);
@@ -53,8 +50,9 @@ void main() {
       );
     });
 
-    testWidgets('it needs no Builder to be named beside its provider',
-        (tester) async {
+    testWidgets('it needs no Builder to be named beside its provider', (
+      tester,
+    ) async {
       final kit = ThemeData(dark: true);
       await tester.pumpWidget(
         ConfigProvider(

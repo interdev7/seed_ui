@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         Badge,
         Tooltip,
@@ -9,7 +10,6 @@ import 'package:flutter/material.dart'
         Drawer,
         Card,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// What moves on its own repaints itself, and nothing beside it.

@@ -1,7 +1,8 @@
 // The old names are what this file is about.
 // ignore_for_file: deprecated_member_use
 
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -11,22 +12,21 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// Every name the kit has renamed still works until 1.0.0, so code written
 /// against an earlier version keeps building and keeps doing what it did.
 Widget _host(Widget child) => ConfigProvider(
-      child: MaterialApp(
-        navigatorKey: UiKit.navigatorKey,
-        home: Scaffold(
-          body: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(width: 320, height: 400, child: child),
-          ),
-        ),
+  child: MaterialApp(
+    navigatorKey: UiKit.navigatorKey,
+    home: Scaffold(
+      body: Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(width: 320, height: 400, child: child),
       ),
-    );
+    ),
+  ),
+);
 
 void main() {
   testWidgets('Dropdown.popupRender', (tester) async {
@@ -36,8 +36,9 @@ void main() {
           open: true,
           menu: const [DropdownItem(value: 'a', label: 'A')],
           popupRender: (context, menu) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [menu, const Text('footer')]),
+            mainAxisSize: MainAxisSize.min,
+            children: [menu, const Text('footer')],
+          ),
           child: const Text('Open'),
         ),
       ),

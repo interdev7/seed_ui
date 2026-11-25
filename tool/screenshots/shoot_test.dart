@@ -35,9 +35,7 @@ void main() {
         rowKey: (o) => o.ref,
         bordered: true,
         pagination: const TablePagination(defaultPageSize: 5, total: 43),
-        selection: TableSelection<_Order>(
-          defaultSelected: [_orders[2]],
-        ),
+        selection: TableSelection<_Order>(defaultSelected: [_orders[2]]),
         columns: [
           TableColumn(
             title: const Text('Order'),

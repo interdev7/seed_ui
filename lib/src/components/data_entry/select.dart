@@ -33,7 +33,7 @@ enum SelectStatus {
   warning,
 
   /// A red border — the choice is not valid.
-  error
+  error,
 }
 
 /// The box style of a [Select], variants.
@@ -45,7 +45,7 @@ enum SelectVariant {
   filled,
 
   /// Neither border nor fill; only the text and the arrow.
-  borderless
+  borderless,
 }
 
 /// One choice in a [Select].
@@ -148,28 +148,29 @@ class SelectToken {
   final double? borderRadiusLG;
 
   _ResolvedSelectToken _resolve(Token t) => _ResolvedSelectToken(
-        optionSelectedBg: optionSelectedBg ?? t.primary.bg,
-        optionActiveBg: optionActiveBg ?? t.colorFillSecondary,
-        optionPadding: optionPadding ??
-            EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: 5),
-        optionFontSize: optionFontSize ?? t.fontSize,
-        selectorBg: selectorBg ?? t.colorBgContainer,
-        borderRadius: borderRadius ?? t.borderRadius,
-        borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
-        borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
-      );
+    optionSelectedBg: optionSelectedBg ?? t.primary.bg,
+    optionActiveBg: optionActiveBg ?? t.colorFillSecondary,
+    optionPadding:
+        optionPadding ??
+        EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: 5),
+    optionFontSize: optionFontSize ?? t.fontSize,
+    selectorBg: selectorBg ?? t.colorBgContainer,
+    borderRadius: borderRadius ?? t.borderRadius,
+    borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
+    borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SelectToken merge(SelectToken other) => SelectToken(
-        optionSelectedBg: other.optionSelectedBg ?? optionSelectedBg,
-        optionActiveBg: other.optionActiveBg ?? optionActiveBg,
-        optionPadding: other.optionPadding ?? optionPadding,
-        optionFontSize: other.optionFontSize ?? optionFontSize,
-        selectorBg: other.selectorBg ?? selectorBg,
-        borderRadius: other.borderRadius ?? borderRadius,
-        borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
-        borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
-      );
+    optionSelectedBg: other.optionSelectedBg ?? optionSelectedBg,
+    optionActiveBg: other.optionActiveBg ?? optionActiveBg,
+    optionPadding: other.optionPadding ?? optionPadding,
+    optionFontSize: other.optionFontSize ?? optionFontSize,
+    selectorBg: other.selectorBg ?? selectorBg,
+    borderRadius: other.borderRadius ?? borderRadius,
+    borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
+    borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
+  );
 }
 
 @immutable
@@ -232,12 +233,12 @@ class SelectDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SelectDefaults merge(SelectDefaults other) => SelectDefaults(
-        variant: other.variant ?? variant,
-        allowClear: other.allowClear ?? allowClear,
-        showSearch: other.showSearch ?? showSearch,
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-      );
+    variant: other.variant ?? variant,
+    allowClear: other.allowClear ?? allowClear,
+    showSearch: other.showSearch ?? showSearch,
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A dropdown for choosing one or more values from a list.
@@ -480,8 +481,9 @@ class _SelectState<T> extends State<Select<T>> {
   @override
   void initState() {
     super.initState();
-    _internal =
-        widget.defaultValue == null ? null : List<T>.of(widget.defaultValue!);
+    _internal = widget.defaultValue == null
+        ? null
+        : List<T>.of(widget.defaultValue!);
     _popover.onClosed = () {
       if (mounted) setState(() {}); // repaint arrow
     };
@@ -544,12 +546,14 @@ class _SelectState<T> extends State<Select<T>> {
     final search = widget.search;
     final sort = search?.filterSort;
     // Sorting applies even with no query.
-    final base =
-        sort == null ? widget.options : (List.of(widget.options)..sort(sort));
+    final base = sort == null
+        ? widget.options
+        : (List.of(widget.options)..sort(sort));
 
     final q = _searchCtrl.text;
     if (!_searchable || q.isEmpty) return base;
-    final predicate = search?.filterOption ??
+    final predicate =
+        search?.filterOption ??
         widget.filterOption ??
         (input, option) =>
             option._text.toLowerCase().contains(input.toLowerCase());
@@ -796,18 +800,19 @@ class _SelectState<T> extends State<Select<T>> {
     if (target < viewTop) {
       _scrollCtrl.jumpTo(target);
     } else if (target + rowHeight > viewBottom) {
-      _scrollCtrl
-          .jumpTo(target + rowHeight - _scrollCtrl.position.viewportDimension);
+      _scrollCtrl.jumpTo(
+        target + rowHeight - _scrollCtrl.position.viewportDimension,
+      );
     }
   }
 
   // --- sizing ---
 
   double _height(Token t) => _size.resolveHeight(
-        small: t.controlHeightSM,
-        middle: t.controlHeight,
-        large: t.controlHeightLG,
-      );
+    small: t.controlHeightSM,
+    middle: t.controlHeight,
+    large: t.controlHeightLG,
+  );
 
   /// A preset carries a type size of its own; a dimension names only
   /// itself, so the standard one stands.
@@ -816,10 +821,10 @@ class _SelectState<T> extends State<Select<T>> {
 
   /// The corners, per preset — all three of them, where only two were read.
   double _radius(_ResolvedSelectToken r) => switch (_size) {
-        SoftSize.small => r.borderRadiusSM,
-        SoftSize.large => r.borderRadiusLG,
-        _ => r.borderRadius,
-      };
+    SoftSize.small => r.borderRadiusSM,
+    SoftSize.large => r.borderRadiusLG,
+    _ => r.borderRadius,
+  };
 
   Color _borderColor(Token t) {
     if (!_enabled) return t.colorBorder;
@@ -879,10 +884,11 @@ class _SelectState<T> extends State<Select<T>> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<SelectToken>(context) ??
-            const SelectToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<SelectToken>(context) ??
+                const SelectToken())
+            ._resolve(token);
     final fontSize = _fontSize(token);
     final values = _current;
     final hasValue = values.isNotEmpty;
@@ -1010,8 +1016,9 @@ class _SelectState<T> extends State<Select<T>> {
       suffix = _Arrow(color: token.colorTextTertiary, open: _open);
     }
 
-    final leftPadding =
-        _multi && _current.isNotEmpty ? token.sizeXXS : token.sizeXS;
+    final leftPadding = _multi && _current.isNotEmpty
+        ? token.sizeXXS
+        : token.sizeXS;
 
     final box = AnimatedContainer(
       duration: token.motionDurationFast,
@@ -1035,13 +1042,14 @@ class _SelectState<T> extends State<Select<T>> {
         boxShadow: (_focused || _open) && _enabled && bordered
             ? [
                 BoxShadow(
-                  color: (widget.status == SelectStatus.error
-                          ? token.error
-                          : widget.status == SelectStatus.warning
+                  color:
+                      (widget.status == SelectStatus.error
+                              ? token.error
+                              : widget.status == SelectStatus.warning
                               ? token.warning
                               : token.primary)
-                      .base
-                      .withValues(alpha: 0.12),
+                          .base
+                          .withValues(alpha: 0.12),
                   spreadRadius: token.focusRingWidth,
                 ),
               ]
@@ -1123,8 +1131,9 @@ class _SelectState<T> extends State<Select<T>> {
       ),
     );
 
-    final sized =
-        named == null ? control : SizedBox(width: named, child: control);
+    final sized = named == null
+        ? control
+        : SizedBox(width: named, child: control);
 
     // What it is, what it is called, what is in it, and whether it is open.
     // A select said none of that: a reader met a box with no name, no role
@@ -1167,19 +1176,19 @@ class _SelectState<T> extends State<Select<T>> {
     final values = _current;
 
     ValueTag tagFor(T v) => ValueTag(
-          token: token,
-          fontSize: fontSize,
-          enabled: _enabled,
-          label: _displayFor(v),
-          onRemove: _takesHand ? () => _remove(v) : null,
-        );
+      token: token,
+      fontSize: fontSize,
+      enabled: _enabled,
+      label: _displayFor(v),
+      onRemove: _takesHand ? () => _remove(v) : null,
+    );
 
     ValueTag overflowChip(int n) => ValueTag(
-          token: token,
-          fontSize: fontSize,
-          enabled: _enabled,
-          label: Text(context.seedLocale.figures('+ $n ...')),
-        );
+      token: token,
+      fontSize: fontSize,
+      enabled: _enabled,
+      label: Text(context.seedLocale.figures('+ $n ...')),
+    );
 
     // The inline field must size to its content, not stretch to the row width —
     // otherwise it always claims a full line and pushes the tags (and the
@@ -1230,8 +1239,9 @@ class _SelectState<T> extends State<Select<T>> {
 
     // Numeric cap, or no cap: a wrapping, multi-line row of chips.
     final max = widget.maxTagCount;
-    final shown =
-        max != null && values.length > max ? values.take(max).toList() : values;
+    final shown = max != null && values.length > max
+        ? values.take(max).toList()
+        : values;
     final overflow = values.length - shown.length;
 
     return Padding(
@@ -1277,7 +1287,7 @@ class _Dropdown<T> extends StatelessWidget {
     final query = state._searchCtrl.text;
     final exists =
         options.any((o) => o._text.toLowerCase() == query.toLowerCase()) ||
-            values.map((v) => '$v').contains(query);
+        values.map((v) => '$v').contains(query);
     final showCreate =
         state.widget.mode == SelectMode.tags && query.isNotEmpty && !exists;
 
@@ -1295,7 +1305,8 @@ class _Dropdown<T> extends StatelessWidget {
       // notFoundContent wins; else the app-wide emptyBuilder for this slot,
       // which falls back to a default Empty. heightFactor keeps the panel from
       // filling the viewport.
-      final empty = state.widget.notFoundContent ??
+      final empty =
+          state.widget.notFoundContent ??
           ConfigProvider.emptyFor(context, EmptySlot.select);
       body = Align(heightFactor: 1, child: empty);
     } else {
@@ -1336,7 +1347,8 @@ class _Dropdown<T> extends StatelessWidget {
               own: state.widget.token,
               fontSize: state._fontSize(token),
               selectedIcon: state.widget.menuItemSelectedIcon,
-              custom: state.widget.optionBuilder ??
+              custom:
+                  state.widget.optionBuilder ??
                   // ignore: deprecated_member_use_from_same_package
                   state.widget.optionRender,
               onHover: o.disabled ? null : () => state._setHighlight(i),
@@ -1414,10 +1426,11 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
   @override
   Widget build(BuildContext context) {
     final t = widget.token;
-    final r = (widget.own ??
-            ConfigProvider.componentOf<SelectToken>(context) ??
-            const SelectToken())
-        ._resolve(t);
+    final r =
+        (widget.own ??
+                ConfigProvider.componentOf<SelectToken>(context) ??
+                const SelectToken())
+            ._resolve(t);
     final disabled = widget.option.disabled;
     // A single, shared highlight (driven by both keyboard and pointer) — never
     // two rows lit at once.
@@ -1425,15 +1438,15 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
     final bg = widget.selected
         ? r.optionSelectedBg
         : active && !disabled
-            ? r.optionActiveBg
-            // The hover's own colour made clear, not a clear black: the row
-            // eases between the two, and from black it passed through grey.
-            : r.optionActiveBg.withValues(alpha: 0);
+        ? r.optionActiveBg
+        // The hover's own colour made clear, not a clear black: the row
+        // eases between the two, and from black it passed through grey.
+        : r.optionActiveBg.withValues(alpha: 0);
     final color = disabled
         ? t.colorTextQuaternary
         : widget.selected
-            ? t.colorText
-            : t.colorText;
+        ? t.colorText
+        : t.colorText;
 
     final landed = _landed;
     _landed = false;
@@ -1449,8 +1462,9 @@ class _OptionRowState<T> extends State<_OptionRow<T>> {
                     // The menu's own type, not the field's: `optionFontSize`
                     // is a token of this component and took nowhere.
                     fontSize: r.optionFontSize,
-                    fontWeight:
-                        widget.selected ? t.fontWeightStrong : t.fontWeight,
+                    fontWeight: widget.selected
+                        ? t.fontWeightStrong
+                        : t.fontWeight,
                     fontFamily: t.fontFamily,
                     fontFamilyFallback: t.fontFamilyFallback,
                     decoration: TextDecoration.none,

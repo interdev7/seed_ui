@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,7 +9,6 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 const _brand = Color(0xFFFFD500);
@@ -19,9 +19,7 @@ Future<Token> _tokenUnder(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(
     Directionality(
       textDirection: TextDirection.ltr,
-      child: Builder(
-        builder: (context) => child,
-      ),
+      child: Builder(builder: (context) => child),
     ),
   );
   await tester.pumpAndSettle();
@@ -175,8 +173,9 @@ void main() {
       expect(token.primary.base, green);
     });
 
-    testWidgets('runs before the palette, refineTokens after it',
-        (tester) async {
+    testWidgets('runs before the palette, refineTokens after it', (
+      tester,
+    ) async {
       const ink = Color(0xFF123456);
       final token = await _tokenUnder(
         tester,

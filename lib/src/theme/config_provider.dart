@@ -69,39 +69,37 @@ class ThemeData {
     this.components = const ComponentsConfig(),
     this.refineTokens,
     this.refineSeed,
-  })  : _seed = token,
-        _dark = dark,
-        _readyMade = false,
-        token = _refined(
-          Token.derive(
-            _seeded(token ?? const SeedToken(), refineSeed),
-            dark: dark ?? false,
-          ),
-          refineTokens,
-        );
+  }) : _seed = token,
+       _dark = dark,
+       _readyMade = false,
+       token = _refined(
+         Token.derive(
+           _seeded(token ?? const SeedToken(), refineSeed),
+           dark: dark ?? false,
+         ),
+         refineTokens,
+       );
 
   /// Wraps an already-derived token set.
   ///
   /// The token is taken as final: a theme built this way never re-derives
   /// itself from the theme above it, though its [components] still merge.
   const ThemeData.raw(this.token, {this.components = const ComponentsConfig()})
-      : _seed = null,
-        _dark = null,
-        _readyMade = true,
-        refineTokens = null,
-        refineSeed = null;
+    : _seed = null,
+      _dark = null,
+      _readyMade = true,
+      refineTokens = null,
+      refineSeed = null;
 
   const ThemeData._merged({
     required this.token,
     required this.components,
-    required SeedToken? seed,
-    required bool? dark,
-    required bool readyMade,
+    required this._seed,
+    required this._dark,
+    required this._readyMade,
     required this.refineTokens,
     required this.refineSeed,
-  })  : _seed = seed,
-        _dark = dark,
-        _readyMade = readyMade;
+  });
 
   /// Applies [refineTokens] to a freshly derived token set.
   static Token _refined(Token derived, TokenRefinement? refineTokens) =>
@@ -471,8 +469,9 @@ class _ConfigProviderState extends State<ConfigProvider> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _parent =
-        context.dependOnInheritedWidgetOfExactType<_ConfigScope>()?.config;
+    _parent = context
+        .dependOnInheritedWidgetOfExactType<_ConfigScope>()
+        ?.config;
     _resolve();
   }
 
@@ -500,8 +499,9 @@ class _ConfigProviderState extends State<ConfigProvider> {
       locale: widget.locale ?? parent?.locale,
       componentSize: widget.componentSize ?? parent?.componentSize,
       componentDisabled: widget.componentDisabled ?? parent?.componentDisabled,
-      defaults: (parent?.defaults ?? const ComponentDefaults())
-          .merge(widget.defaults ?? const ComponentDefaults()),
+      defaults: (parent?.defaults ?? const ComponentDefaults()).merge(
+        widget.defaults ?? const ComponentDefaults(),
+      ),
     );
   }
 

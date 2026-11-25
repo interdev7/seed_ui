@@ -1,9 +1,8 @@
 name: seed_ui
 description: >-
-  A themeable Flutter widget library — 45+ token-driven components plus
-  context-free message, notification, modal and drawer APIs. No Material
-  dependency.
-version: 0.29.1
+  A themeable Flutter widget library: 45+ token-driven components, and
+  message, notification, modal and drawer APIs callable without a context.
+version: 0.30.0
 homepage: https://github.com/interdev7/seed_ui
 repository: https://github.com/interdev7/seed_ui
 issue_tracker: https://github.com/interdev7/seed_ui/issues
@@ -62,12 +61,16 @@ topics:
   - theming
 
 environment:
-  sdk: ">=3.4.0 <4.0.0"
-  flutter: ">=3.22.0"
+  # material_ui and cupertino_ui (Material and Cupertino moved out of the
+  # framework) need Flutter 3.47 and Dart 3.13. Older Flutter: seed_ui 0.29.x.
+  sdk: ">=3.13.0 <4.0.0"
+  flutter: ">=3.47.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  material_ui: ^1.11.1
+  cupertino_ui: ^1.1.7
 
 dev_dependencies:
   flutter_localizations:

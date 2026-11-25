@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.30.0
+
+### Breaking
+
+- **Requires Flutter 3.47 and Dart 3.13.** Flutter 3.47 moved Material and
+  Cupertino out of the framework into the `material_ui` and `cupertino_ui`
+  packages and deprecated `package:flutter/material.dart` and
+  `package:flutter/cupertino.dart`. The kit now builds on the new packages, so
+  it needs a Flutter that has them. On an older Flutter, stay on 0.29.x — pub
+  picks it for you.
+
+  In your app, import Material from `package:material_ui/material_ui.dart`
+  (with the same `hide`s as before: `ThemeData`, `Divider`, `Drawer`…), and the
+  localization delegates as [Localization](doc/localization.md) shows:
+  `GlobalMaterialLocalizations` from `material_ui`,
+  `GlobalCupertinoLocalizations` from `cupertino_ui`, and only
+  `GlobalWidgetsLocalizations` from `flutter_localizations`.
+
+### Changed
+
+- `material_ui` and `cupertino_ui` are now dependencies. The components are
+  still built on `package:flutter/widgets.dart`; the two packages supply the
+  platform pieces they always used — text-selection handles, the native
+  selection toolbar, the Material theme bridge.
+- No analyzer deprecations on current Flutter, so the pub.dev static analysis
+  score is whole again. CI checks on the latest stable Flutter again.
+
 ## 0.29.1
 
 ### Fixed

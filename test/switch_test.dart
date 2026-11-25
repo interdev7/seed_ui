@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,20 +9,17 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      home: Scaffold(body: Center(child: child)),
-    );
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   testWidgets('tapping toggles and reports the new value', (tester) async {
     bool? seen;
     await tester.pumpWidget(
-      _host(
-        Switch(value: false, onChanged: (v) => seen = v),
-      ),
+      _host(Switch(value: false, onChanged: (v) => seen = v)),
     );
 
     await tester.tap(find.byType(Switch));
@@ -31,9 +29,7 @@ void main() {
   testWidgets('reports false when toggled off', (tester) async {
     bool? seen;
     await tester.pumpWidget(
-      _host(
-        Switch(value: true, onChanged: (v) => seen = v),
-      ),
+      _host(Switch(value: true, onChanged: (v) => seen = v)),
     );
 
     await tester.tap(find.byType(Switch));
@@ -43,9 +39,7 @@ void main() {
   testWidgets('disabled does not toggle', (tester) async {
     var calls = 0;
     await tester.pumpWidget(
-      _host(
-        Switch(value: false, disabled: true, onChanged: (_) => calls++),
-      ),
+      _host(Switch(value: false, disabled: true, onChanged: (_) => calls++)),
     );
 
     await tester.tap(find.byType(Switch));
@@ -55,9 +49,7 @@ void main() {
   testWidgets('loading blocks toggling and shows a spinner', (tester) async {
     var calls = 0;
     await tester.pumpWidget(
-      _host(
-        Switch(value: false, loading: true, onChanged: (_) => calls++),
-      ),
+      _host(Switch(value: false, loading: true, onChanged: (_) => calls++)),
     );
 
     expect(find.byType(Spinner), findsOneWidget);
@@ -95,17 +87,19 @@ void main() {
   });
 
   group('a switch that drives itself', () {
-    Color trackColor(WidgetTester tester) => (tester
-            .widget<AnimatedContainer>(
-              find
-                  .descendant(
-                    of: find.byType(Switch),
-                    matching: find.byType(AnimatedContainer),
-                  )
-                  .at(0),
-            )
-            .decoration! as BoxDecoration)
-        .color!;
+    Color trackColor(WidgetTester tester) =>
+        (tester
+                    .widget<AnimatedContainer>(
+                      find
+                          .descendant(
+                            of: find.byType(Switch),
+                            matching: find.byType(AnimatedContainer),
+                          )
+                          .at(0),
+                    )
+                    .decoration!
+                as BoxDecoration)
+            .color!;
 
     testWidgets('starts where defaultValue says and flips on its own', (
       tester,
@@ -138,9 +132,7 @@ void main() {
     testWidgets('an owner that refuses is shown refusing', (tester) async {
       // Controlled and held at false: the switch must not flip itself on
       // behind the owner's back.
-      await tester.pumpWidget(
-        _host(Switch(value: false, onChanged: (_) {})),
-      );
+      await tester.pumpWidget(_host(Switch(value: false, onChanged: (_) {})));
       await tester.pumpAndSettle();
       final off = trackColor(tester);
       await tester.tap(find.byType(Switch));
@@ -197,12 +189,21 @@ void main() {
         (SoftSize.large, 28.0),
       ]) {
         final (track, handle) = await parts(tester, size);
-        expect(track.height, moreOrLessEquals(height, epsilon: 0.01),
-            reason: '$size is $height tall');
-        expect(track.width, moreOrLessEquals(height * 2, epsilon: 0.01),
-            reason: '$size is twice as long as it is tall');
-        expect(handle.height, moreOrLessEquals(height * 9 / 11, epsilon: 0.01),
-            reason: '$size leaves an eleventh at each end');
+        expect(
+          track.height,
+          moreOrLessEquals(height, epsilon: 0.01),
+          reason: '$size is $height tall',
+        );
+        expect(
+          track.width,
+          moreOrLessEquals(height * 2, epsilon: 0.01),
+          reason: '$size is twice as long as it is tall',
+        );
+        expect(
+          handle.height,
+          moreOrLessEquals(height * 9 / 11, epsilon: 0.01),
+          reason: '$size leaves an eleventh at each end',
+        );
       }
     });
 

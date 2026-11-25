@@ -24,8 +24,9 @@ void main() {
 
     for (final file in components) {
       final source = file.readAsStringSync();
-      for (final match
-          in RegExp(r'\n  final (\w+Token)\? token;').allMatches(source)) {
+      for (final match in RegExp(
+        r'\n  final (\w+Token)\? token;',
+      ).allMatches(source)) {
         final token = match.group(1)!;
         // Either spelling of the read, and either way of falling back: the
         // provider next, or a bare default where there is no provider entry.
@@ -34,8 +35,10 @@ void main() {
           '(ConfigProvider\\.componentOf<$token>|const $token)',
         );
         if (!reads.hasMatch(source)) {
-          deaf.add('${file.path.split('/').last}: $token is taken and '
-              'never read');
+          deaf.add(
+            '${file.path.split('/').last}: $token is taken and '
+            'never read',
+          );
         }
       }
     }
@@ -43,7 +46,8 @@ void main() {
     expect(
       deaf,
       isEmpty,
-      reason: 'these take a token and resolve without it, so naming one on '
+      reason:
+          'these take a token and resolve without it, so naming one on '
           'the widget does nothing:\n${deaf.join("\n")}',
     );
   });

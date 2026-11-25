@@ -3,31 +3,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _wrap(Widget child) => ConfigProvider(
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Center(child: child),
-      ),
-    );
+  child: Directionality(
+    textDirection: TextDirection.ltr,
+    child: Center(child: child),
+  ),
+);
 
 void main() {
   _sizeSlot();
   group('Avatar', () {
     testWidgets('renders an icon properly', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          const Avatar(icon: Text('I')),
-        ),
-      );
+      await tester.pumpWidget(_wrap(const Avatar(icon: Text('I'))));
 
       expect(find.byType(Avatar), findsOneWidget);
     });
 
     testWidgets('renders a string properly', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          const Avatar(child: Text('U')),
-        ),
-      );
+      await tester.pumpWidget(_wrap(const Avatar(child: Text('U'))));
 
       expect(find.text('U'), findsOneWidget);
     });
@@ -37,20 +29,14 @@ void main() {
         'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
       );
 
-      await tester.pumpWidget(
-        _wrap(
-          const Avatar(image: imgProvider),
-        ),
-      );
+      await tester.pumpWidget(_wrap(const Avatar(image: imgProvider)));
 
       expect(find.byType(Image), findsOneWidget);
     });
 
     testWidgets('applies square shape', (tester) async {
       await tester.pumpWidget(
-        _wrap(
-          const Avatar(shape: AvatarShape.square, child: Text('S')),
-        ),
+        _wrap(const Avatar(shape: AvatarShape.square, child: Text('S'))),
       );
 
       final container = tester.widget<Container>(
@@ -183,10 +169,7 @@ void _sizeSlot() {
     testWidgets("and a colour of the avatar's own still wins", (tester) async {
       await tester.pumpWidget(
         _wrap(
-          const Avatar(
-            backgroundColor: Color(0xFF654321),
-            child: Text('MY'),
-          ),
+          const Avatar(backgroundColor: Color(0xFF654321), child: Text('MY')),
         ),
       );
       expect(fill(tester), const Color(0xFF654321));

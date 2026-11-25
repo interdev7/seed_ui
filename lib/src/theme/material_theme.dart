@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart' as material;
 import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' as material;
 
 import 'config_provider.dart';
 import 'design_token.dart';

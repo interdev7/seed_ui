@@ -96,39 +96,35 @@ class ColorPickerToken {
   final List<BoxShadow>? handleShadow;
 
   _ResolvedColorPickerToken _resolve(Token t) => _ResolvedColorPickerToken(
-        handleShadow: handleShadow ??
-            [
-              BoxShadow(
-                color: t.colorTextQuaternary,
-                blurRadius: t.lineWidth * 2,
-              ),
-            ],
-        panelWidth: panelWidth ?? t.controlHeight * 7,
-        saturationHeight: saturationHeight ?? t.controlHeight * 5,
-        sliderHeight: sliderHeight ?? t.sizeXS,
-        handleSize: handleSize ?? t.size,
-        presetSize: presetSize ?? t.fontSizeXL,
-        gap: gap ?? t.sizeSM,
-        borderRadius: borderRadius ?? t.borderRadiusSM,
-        checkerColor: checkerColor ?? t.colorFillSecondary,
-        checkerSize: checkerSize ?? t.sizeXXS,
-        panelBg: panelBg ?? t.colorBgElevated,
-      );
+    handleShadow:
+        handleShadow ??
+        [BoxShadow(color: t.colorTextQuaternary, blurRadius: t.lineWidth * 2)],
+    panelWidth: panelWidth ?? t.controlHeight * 7,
+    saturationHeight: saturationHeight ?? t.controlHeight * 5,
+    sliderHeight: sliderHeight ?? t.sizeXS,
+    handleSize: handleSize ?? t.size,
+    presetSize: presetSize ?? t.fontSizeXL,
+    gap: gap ?? t.sizeSM,
+    borderRadius: borderRadius ?? t.borderRadiusSM,
+    checkerColor: checkerColor ?? t.colorFillSecondary,
+    checkerSize: checkerSize ?? t.sizeXXS,
+    panelBg: panelBg ?? t.colorBgElevated,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ColorPickerToken merge(ColorPickerToken other) => ColorPickerToken(
-        handleShadow: other.handleShadow ?? handleShadow,
-        panelWidth: other.panelWidth ?? panelWidth,
-        saturationHeight: other.saturationHeight ?? saturationHeight,
-        sliderHeight: other.sliderHeight ?? sliderHeight,
-        handleSize: other.handleSize ?? handleSize,
-        presetSize: other.presetSize ?? presetSize,
-        gap: other.gap ?? gap,
-        borderRadius: other.borderRadius ?? borderRadius,
-        checkerColor: other.checkerColor ?? checkerColor,
-        checkerSize: other.checkerSize ?? checkerSize,
-        panelBg: other.panelBg ?? panelBg,
-      );
+    handleShadow: other.handleShadow ?? handleShadow,
+    panelWidth: other.panelWidth ?? panelWidth,
+    saturationHeight: other.saturationHeight ?? saturationHeight,
+    sliderHeight: other.sliderHeight ?? sliderHeight,
+    handleSize: other.handleSize ?? handleSize,
+    presetSize: other.presetSize ?? presetSize,
+    gap: other.gap ?? gap,
+    borderRadius: other.borderRadius ?? borderRadius,
+    checkerColor: other.checkerColor ?? checkerColor,
+    checkerSize: other.checkerSize ?? checkerSize,
+    panelBg: other.panelBg ?? panelBg,
+  );
 }
 
 @immutable
@@ -178,10 +174,10 @@ class ColorPickerDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ColorPickerDefaults merge(ColorPickerDefaults other) => ColorPickerDefaults(
-        format: other.format ?? format,
-        disabledAlpha: other.disabledAlpha ?? disabledAlpha,
-        canCopy: other.canCopy ?? canCopy,
-      );
+    format: other.format ?? format,
+    disabledAlpha: other.disabledAlpha ?? disabledAlpha,
+    canCopy: other.canCopy ?? canCopy,
+  );
 }
 
 /// `#RRGGBB`, or `#RRGGBBAA` for a colour that is not opaque.
@@ -203,7 +199,11 @@ Color? _fromHex(String text) {
   if (hex.length != 8) return null;
   final v = int.parse(hex, radix: 16);
   return Color.fromARGB(
-      v & 0xff, (v >> 24) & 0xff, (v >> 16) & 0xff, (v >> 8) & 0xff);
+    v & 0xff,
+    (v >> 24) & 0xff,
+    (v >> 16) & 0xff,
+    (v >> 8) & 0xff,
+  );
 }
 
 /// A colour, chosen from a square of shades, a strip of hues and a strip of
@@ -414,22 +414,25 @@ class _ColorPickerState extends State<ColorPicker> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<ColorPickerToken>(context) ??
-            const ColorPickerToken())
-        ._resolve(t);
-    final height = (widget.size ??
-            ConfigProvider.componentSizeOf(context) ??
-            SoftSize.middle)
-        .resolveHeight(
-      small: t.controlHeightSM,
-      middle: t.controlHeight,
-      large: t.controlHeightLG,
-    );
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<ColorPickerToken>(context) ??
+                const ColorPickerToken())
+            ._resolve(t);
+    final height =
+        (widget.size ??
+                ConfigProvider.componentSizeOf(context) ??
+                SoftSize.middle)
+            .resolveHeight(
+              small: t.controlHeightSM,
+              middle: t.controlHeight,
+              large: t.controlHeightLG,
+            );
     final color = _color;
     final words = color == null ? context.seedLocale.noColor : _toHex(color);
 
-    final Widget trigger = widget.child ??
+    final Widget trigger =
+        widget.child ??
         Container(
           height: height,
           padding: EdgeInsets.all(t.sizeXXS - t.lineWidth),
@@ -444,18 +447,15 @@ class _ColorPickerState extends State<ColorPicker> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _Swatch(
-                color: color,
-                size: height - t.sizeXXS * 2,
-                token: r,
-              ),
+              _Swatch(color: color, size: height - t.sizeXXS * 2, token: r),
               if (widget.showText) ...[
                 SizedBox(width: t.sizeXS),
                 Text(
                   words,
                   style: TextStyle(
-                    color:
-                        widget.disabled ? t.colorTextQuaternary : t.colorText,
+                    color: widget.disabled
+                        ? t.colorTextQuaternary
+                        : t.colorText,
                     fontSize: t.fontSize,
                     fontFamily: t.fontFamily,
                     fontFamilyFallback: t.fontFamilyFallback,
@@ -584,9 +584,8 @@ class _ColorPickerPanelState extends State<ColorPickerPanel> {
   /// The colour as hue, saturation and value, so a grey or a black keeps the
   /// hue it was dragged to: a colour alone has none to give back.
   late HSVColor _hsv = _fromColor(widget.value);
-  late ColorFormat _ownFormat = ConfigProvider.defaultsOf<ColorPickerDefaults>(
-        context,
-      )?.format ??
+  late ColorFormat _ownFormat =
+      ConfigProvider.defaultsOf<ColorPickerDefaults>(context)?.format ??
       ColorFormat.hex;
 
   ColorFormat get _format => widget.format ?? _ownFormat;
@@ -609,14 +608,16 @@ class _ColorPickerPanelState extends State<ColorPickerPanel> {
     final alpha = (c.a * 100).round() / 100;
     return switch (_format) {
       ColorFormat.hex => _toHex(c),
-      ColorFormat.rgb => see
-          ? 'rgba(${byte(c.r)}, ${byte(c.g)}, ${byte(c.b)}, $alpha)'
-          : 'rgb(${byte(c.r)}, ${byte(c.g)}, ${byte(c.b)})',
-      ColorFormat.hsb => see
-          ? 'hsba(${hsv.hue.round()}, ${part(hsv.saturation)}, '
-              '${part(hsv.value)}, $alpha)'
-          : 'hsb(${hsv.hue.round()}, ${part(hsv.saturation)}, '
-              '${part(hsv.value)})',
+      ColorFormat.rgb =>
+        see
+            ? 'rgba(${byte(c.r)}, ${byte(c.g)}, ${byte(c.b)}, $alpha)'
+            : 'rgb(${byte(c.r)}, ${byte(c.g)}, ${byte(c.b)})',
+      ColorFormat.hsb =>
+        see
+            ? 'hsba(${hsv.hue.round()}, ${part(hsv.saturation)}, '
+                  '${part(hsv.value)}, $alpha)'
+            : 'hsb(${hsv.hue.round()}, ${part(hsv.saturation)}, '
+                  '${part(hsv.value)})',
     };
   }
 
@@ -658,10 +659,11 @@ class _ColorPickerPanelState extends State<ColorPickerPanel> {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<ColorPickerToken>(context) ??
-            const ColorPickerToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<ColorPickerToken>(context) ??
+                const ColorPickerToken())
+            ._resolve(t);
     final locale = context.seedLocale;
     final hsv = _hsv;
     final color = hsv.toColor();
@@ -715,77 +717,77 @@ class _ColorPickerPanelState extends State<ColorPickerPanel> {
       num max,
       void Function(num) onSet, {
       String? suffix,
-    }) =>
-        Expanded(
-          child: InputNumber(
-            value: value,
-            min: 0,
-            max: max,
-            controls: false,
-            size: fieldSize,
-            semanticsLabel: label,
-            suffix: suffix == null ? null : Text(suffix),
-            onChanged: (v) {
-              if (v != null) onSet(v);
-            },
-            onSubmitted: (_) => _done(),
-          ),
-        );
+    }) => Expanded(
+      child: InputNumber(
+        value: value,
+        min: 0,
+        max: max,
+        controls: false,
+        size: fieldSize,
+        semanticsLabel: label,
+        suffix: suffix == null ? null : Text(suffix),
+        onChanged: (v) {
+          if (v != null) onSet(v);
+        },
+        onSubmitted: (_) => _done(),
+      ),
+    );
 
     final fields = switch (_format) {
       ColorFormat.hex => [
-          Expanded(
-            child: _HexField(
-              color: color,
-              onColor: (c) =>
-                  _set(HSVColor.fromColor(c).withAlpha(hsv.alpha), done: true),
-            ),
+        Expanded(
+          child: _HexField(
+            color: color,
+            onColor: (c) =>
+                _set(HSVColor.fromColor(c).withAlpha(hsv.alpha), done: true),
           ),
-        ],
+        ),
+      ],
       ColorFormat.rgb => [
-          for (final (i, label) in const ['R', 'G', 'B'].indexed) ...[
-            if (i > 0) SizedBox(width: t.sizeXXS),
-            number(
-              label,
-              ([color.r, color.g, color.b][i] * 255).round(),
-              255,
-              (v) {
-                final c = color;
-                final parts = [c.r, c.g, c.b]..[i] = v / 255;
-                _set(
-                  HSVColor.fromColor(
-                    Color.from(
-                      alpha: c.a,
-                      red: parts[0],
-                      green: parts[1],
-                      blue: parts[2],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
+        for (final (i, label) in const ['R', 'G', 'B'].indexed) ...[
+          if (i > 0) SizedBox(width: t.sizeXXS),
+          number(label, ([color.r, color.g, color.b][i] * 255).round(), 255, (
+            v,
+          ) {
+            final c = color;
+            final parts = [c.r, c.g, c.b]..[i] = v / 255;
+            _set(
+              HSVColor.fromColor(
+                Color.from(
+                  alpha: c.a,
+                  red: parts[0],
+                  green: parts[1],
+                  blue: parts[2],
+                ),
+              ),
+            );
+          }),
         ],
+      ],
       ColorFormat.hsb => [
-          number('H', hsv.hue.round(), 360,
-              (v) => _set(hsv.withHue(v.toDouble()))),
-          SizedBox(width: t.sizeXXS),
-          number(
-            'S',
-            (hsv.saturation * 100).round(),
-            100,
-            (v) => _set(hsv.withSaturation(v / 100)),
-            suffix: '%',
-          ),
-          SizedBox(width: t.sizeXXS),
-          number(
-            'B',
-            (hsv.value * 100).round(),
-            100,
-            (v) => _set(hsv.withValue(v / 100)),
-            suffix: '%',
-          ),
-        ],
+        number(
+          'H',
+          hsv.hue.round(),
+          360,
+          (v) => _set(hsv.withHue(v.toDouble())),
+        ),
+        SizedBox(width: t.sizeXXS),
+        number(
+          'S',
+          (hsv.saturation * 100).round(),
+          100,
+          (v) => _set(hsv.withSaturation(v / 100)),
+          suffix: '%',
+        ),
+        SizedBox(width: t.sizeXXS),
+        number(
+          'B',
+          (hsv.value * 100).round(),
+          100,
+          (v) => _set(hsv.withValue(v / 100)),
+          suffix: '%',
+        ),
+      ],
     };
 
     final presets = widget.presets ?? const <ColorPreset>[];
@@ -827,9 +829,10 @@ class _ColorPickerPanelState extends State<ColorPickerPanel> {
                 ),
                 SizedBox(width: r.gap / 2),
                 _Swatch(
-                    color: none ? null : color,
-                    size: r.presetSize + t.sizeXXS * 2,
-                    token: r),
+                  color: none ? null : color,
+                  size: r.presetSize + t.sizeXXS * 2,
+                  token: r,
+                ),
               ],
             ),
             SizedBox(height: r.gap),
@@ -895,10 +898,7 @@ class _ColorPickerPanelState extends State<ColorPickerPanel> {
             ),
             for (final preset in presets) ...[
               SizedBox(height: r.gap),
-              Text(
-                preset.label,
-                style: TextStyle(color: t.colorTextTertiary),
-              ),
+              Text(preset.label, style: TextStyle(color: t.colorTextTertiary)),
               SizedBox(height: t.sizeXXS),
               Wrap(
                 spacing: t.sizeXXS * 1.5,
@@ -934,8 +934,9 @@ class _HexField extends StatefulWidget {
 }
 
 class _HexFieldState extends State<_HexField> {
-  late final TextEditingController _controller =
-      TextEditingController(text: _hex(widget.color));
+  late final TextEditingController _controller = TextEditingController(
+    text: _hex(widget.color),
+  );
   final FocusNode _focus = FocusNode();
 
   static String _hex(Color c) => _toHex(c, alpha: false).substring(1);
@@ -960,22 +961,22 @@ class _HexFieldState extends State<_HexField> {
 
   @override
   Widget build(BuildContext context) => Input(
-        controller: _controller,
-        focusNode: _focus,
-        size: SoftSize.small,
-        semanticsLabel: 'HEX',
-        prefix: const Text('#'),
-        autocorrect: false,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp('[0-9a-fA-F]')),
-          LengthLimitingTextInputFormatter(6),
-        ],
-        onChanged: (text) {
-          if (text.length != 6 && text.length != 3) return;
-          final c = _fromHex(text);
-          if (c != null) widget.onColor(c);
-        },
-      );
+    controller: _controller,
+    focusNode: _focus,
+    size: SoftSize.small,
+    semanticsLabel: 'HEX',
+    prefix: const Text('#'),
+    autocorrect: false,
+    inputFormatters: [
+      FilteringTextInputFormatter.allow(RegExp('[0-9a-fA-F]')),
+      LengthLimitingTextInputFormatter(6),
+    ],
+    onChanged: (text) {
+      if (text.length != 6 && text.length != 3) return;
+      final c = _fromHex(text);
+      if (c != null) widget.onColor(c);
+    },
+  );
 }
 
 /// The square where a shade is picked: saturation along it, brightness up
@@ -1003,9 +1004,9 @@ class _AreaState extends State<_Area> {
   bool _focused = false;
 
   void _at(Offset p, Size size) => widget.onChanged(
-        (p.dx / size.width).clamp(0.0, 1.0),
-        (1 - p.dy / size.height).clamp(0.0, 1.0),
-      );
+    (p.dx / size.width).clamp(0.0, 1.0),
+    (1 - p.dy / size.height).clamp(0.0, 1.0),
+  );
 
   void _nudge(double ds, double dv) {
     widget.onChanged(
@@ -1034,14 +1035,24 @@ class _AreaState extends State<_Area> {
         shortcuts: {
           SingleActivator(
             ltr ? LogicalKeyboardKey.arrowRight : LogicalKeyboardKey.arrowLeft,
-          ): const _Nudge(step, 0),
+          ): const _Nudge(
+            step,
+            0,
+          ),
           SingleActivator(
             ltr ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight,
-          ): const _Nudge(-step, 0),
-          const SingleActivator(LogicalKeyboardKey.arrowUp):
-              const _Nudge(0, step),
-          const SingleActivator(LogicalKeyboardKey.arrowDown):
-              const _Nudge(0, -step),
+          ): const _Nudge(
+            -step,
+            0,
+          ),
+          const SingleActivator(LogicalKeyboardKey.arrowUp): const _Nudge(
+            0,
+            step,
+          ),
+          const SingleActivator(LogicalKeyboardKey.arrowDown): const _Nudge(
+            0,
+            -step,
+          ),
         },
         actions: {
           _Nudge: CallbackAction<_Nudge>(
@@ -1072,8 +1083,9 @@ class _AreaState extends State<_Area> {
                           boxShadow: _focused
                               ? [
                                   BoxShadow(
-                                    color:
-                                        t.primary.base.withValues(alpha: 0.12),
+                                    color: t.primary.base.withValues(
+                                      alpha: 0.12,
+                                    ),
                                     blurRadius: 0,
                                     spreadRadius: t.focusRingWidth,
                                   ),
@@ -1082,9 +1094,7 @@ class _AreaState extends State<_Area> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(r.borderRadius),
-                          child: CustomPaint(
-                            painter: _AreaPainter(hsv.hue),
-                          ),
+                          child: CustomPaint(painter: _AreaPainter(hsv.hue)),
                         ),
                       ),
                     ),
@@ -1125,7 +1135,9 @@ class _AreaPainter extends CustomPainter {
     final rect = Offset.zero & size;
     canvas
       ..drawRect(
-          rect, Paint()..color = HSVColor.fromAHSV(1, hue, 1, 1).toColor())
+        rect,
+        Paint()..color = HSVColor.fromAHSV(1, hue, 1, 1).toColor(),
+      )
       ..drawRect(
         rect,
         Paint()
@@ -1207,14 +1219,24 @@ class _StripState extends State<_Strip> {
         shortcuts: {
           SingleActivator(
             rtl ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight,
-          ): const _Nudge(0.01, 0),
-          const SingleActivator(LogicalKeyboardKey.arrowUp):
-              const _Nudge(0.01, 0),
+          ): const _Nudge(
+            0.01,
+            0,
+          ),
+          const SingleActivator(LogicalKeyboardKey.arrowUp): const _Nudge(
+            0.01,
+            0,
+          ),
           SingleActivator(
             rtl ? LogicalKeyboardKey.arrowRight : LogicalKeyboardKey.arrowLeft,
-          ): const _Nudge(-0.01, 0),
-          const SingleActivator(LogicalKeyboardKey.arrowDown):
-              const _Nudge(-0.01, 0),
+          ): const _Nudge(
+            -0.01,
+            0,
+          ),
+          const SingleActivator(LogicalKeyboardKey.arrowDown): const _Nudge(
+            -0.01,
+            0,
+          ),
         },
         actions: {
           _Nudge: CallbackAction<_Nudge>(
@@ -1260,8 +1282,9 @@ class _StripState extends State<_Strip> {
                           boxShadow: _focused
                               ? [
                                   BoxShadow(
-                                    color:
-                                        t.primary.base.withValues(alpha: 0.12),
+                                    color: t.primary.base.withValues(
+                                      alpha: 0.12,
+                                    ),
                                     blurRadius: 0,
                                     spreadRadius: t.focusRingWidth,
                                   ),
@@ -1302,8 +1325,11 @@ class _StripState extends State<_Strip> {
 }
 
 class _StripPainter extends CustomPainter {
-  _StripPainter(
-      {required this.gradient, required this.checker, required this.rtl});
+  _StripPainter({
+    required this.gradient,
+    required this.checker,
+    required this.rtl,
+  });
 
   final Gradient Function(Rect rect) gradient;
   final (Color, double)? checker;
@@ -1356,18 +1382,18 @@ class _Handle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: const Color(0xFFFFFFFF),
-            width: context.softToken.lineWidth * 2,
-          ),
-          boxShadow: shadow,
-        ),
-      );
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+      border: Border.all(
+        color: const Color(0xFFFFFFFF),
+        width: context.softToken.lineWidth * 2,
+      ),
+      boxShadow: shadow,
+    ),
+  );
 }
 
 /// A colour in a rounded square, the clear pattern showing through; no
@@ -1381,20 +1407,20 @@ class _Swatch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox.square(
-        dimension: size,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(token.borderRadius),
-          child: CustomPaint(
-            painter: _SwatchPainter(
-              color: color,
-              checker: token.checkerColor,
-              cell: token.checkerSize,
-              strike: context.softToken.error.base,
-              line: context.softToken.lineWidth,
-            ),
-          ),
+    dimension: size,
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(token.borderRadius),
+      child: CustomPaint(
+        painter: _SwatchPainter(
+          color: color,
+          checker: token.checkerColor,
+          cell: token.checkerSize,
+          strike: context.softToken.error.base,
+          line: context.softToken.lineWidth,
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class _SwatchPainter extends CustomPainter {
@@ -1458,8 +1484,9 @@ class _PresetSwatch extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.softToken;
     // The clear swatch is white: without a line round it, it is not there.
-    final rest =
-        color == null ? t.colorBorder : t.colorBorder.withValues(alpha: 0);
+    final rest = color == null
+        ? t.colorBorder
+        : t.colorBorder.withValues(alpha: 0);
     return Semantics(
       button: true,
       selected: chosen,
@@ -1481,8 +1508,9 @@ class _PresetSwatch extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(t.lineWidth * 2),
             decoration: BoxDecoration(
-              borderRadius:
-                  BorderRadius.circular(token.borderRadius + t.lineWidth * 2),
+              borderRadius: BorderRadius.circular(
+                token.borderRadius + t.lineWidth * 2,
+              ),
               border: Border.all(
                 color: chosen ? t.primary.base : rest,
                 width: t.lineWidth,
@@ -1498,11 +1526,7 @@ class _PresetSwatch extends StatelessWidget {
 
 /// A small button that copies [text], and shows a tick for a moment after.
 class _CopyButton extends StatefulWidget {
-  const _CopyButton({
-    required this.text,
-    this.onCopy,
-    this.iconBuilder,
-  });
+  const _CopyButton({required this.text, this.onCopy, this.iconBuilder});
 
   final String text;
   final ValueChanged<String>? onCopy;
@@ -1576,7 +1600,8 @@ class _CopyButtonState extends State<_CopyButton> {
               ),
               child: IconTheme.merge(
                 data: IconThemeData(color: ink, size: t.fontSize),
-                child: widget.iconBuilder?.call(context, _copied) ??
+                child:
+                    widget.iconBuilder?.call(context, _copied) ??
                     SizedBox.square(
                       dimension: t.fontSize,
                       child: CustomPaint(
@@ -1613,7 +1638,9 @@ class _CopyGlyph extends CustomPainter {
     final r = Radius.circular(w * 0.12);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-          Rect.fromLTWH(w * 0.32, h * 0.08, w * 0.6, h * 0.66), r),
+        Rect.fromLTWH(w * 0.32, h * 0.08, w * 0.6, h * 0.66),
+        r,
+      ),
       paint,
     );
     canvas.drawPath(

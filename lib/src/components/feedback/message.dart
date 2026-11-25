@@ -70,20 +70,21 @@ class MessageToken {
   final double? borderRadius;
 
   _ResolvedMessageToken _resolve(Token t) => _ResolvedMessageToken(
-        contentColor: contentColor ?? t.colorText,
-        colorBgElevated: colorBgElevated ?? t.colorBgElevated,
-        padding: padding ??
-            EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: t.sizeXS + 1),
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-      );
+    contentColor: contentColor ?? t.colorText,
+    colorBgElevated: colorBgElevated ?? t.colorBgElevated,
+    padding:
+        padding ??
+        EdgeInsets.symmetric(horizontal: t.sizeSM, vertical: t.sizeXS + 1),
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   MessageToken merge(MessageToken other) => MessageToken(
-        contentColor: other.contentColor ?? contentColor,
-        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
-        padding: other.padding ?? padding,
-        borderRadius: other.borderRadius ?? borderRadius,
-      );
+    contentColor: other.contentColor ?? contentColor,
+    colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+    padding: other.padding ?? padding,
+    borderRadius: other.borderRadius ?? borderRadius,
+  );
 }
 
 @immutable
@@ -186,17 +187,16 @@ class MessageApi {
     MessagePlacement? placement,
     VoidCallback? onClose,
     Object? key,
-  }) =>
-      open(
-        MessageConfig(
-          content: Text(content),
-          type: StatusType.success,
-          duration: duration,
-          placement: placement,
-          onClose: onClose,
-          key: key,
-        ),
-      );
+  }) => open(
+    MessageConfig(
+      content: Text(content),
+      type: StatusType.success,
+      duration: duration,
+      placement: placement,
+      onClose: onClose,
+      key: key,
+    ),
+  );
 
   /// Shows a red cross toast. Returns a handle that closes it early.
   MessageHandle error(
@@ -205,17 +205,16 @@ class MessageApi {
     MessagePlacement? placement,
     VoidCallback? onClose,
     Object? key,
-  }) =>
-      open(
-        MessageConfig(
-          content: Text(content),
-          type: StatusType.error,
-          duration: duration,
-          placement: placement,
-          onClose: onClose,
-          key: key,
-        ),
-      );
+  }) => open(
+    MessageConfig(
+      content: Text(content),
+      type: StatusType.error,
+      duration: duration,
+      placement: placement,
+      onClose: onClose,
+      key: key,
+    ),
+  );
 
   /// Shows an amber warning toast. Returns a handle that closes it early.
   MessageHandle warning(
@@ -224,17 +223,16 @@ class MessageApi {
     MessagePlacement? placement,
     VoidCallback? onClose,
     Object? key,
-  }) =>
-      open(
-        MessageConfig(
-          content: Text(content),
-          type: StatusType.warning,
-          duration: duration,
-          placement: placement,
-          onClose: onClose,
-          key: key,
-        ),
-      );
+  }) => open(
+    MessageConfig(
+      content: Text(content),
+      type: StatusType.warning,
+      duration: duration,
+      placement: placement,
+      onClose: onClose,
+      key: key,
+    ),
+  );
 
   /// Shows a neutral informational toast. Returns a handle that closes it
   /// early.
@@ -244,17 +242,16 @@ class MessageApi {
     MessagePlacement? placement,
     VoidCallback? onClose,
     Object? key,
-  }) =>
-      open(
-        MessageConfig(
-          content: Text(content),
-          type: StatusType.info,
-          duration: duration,
-          placement: placement,
-          onClose: onClose,
-          key: key,
-        ),
-      );
+  }) => open(
+    MessageConfig(
+      content: Text(content),
+      type: StatusType.info,
+      duration: duration,
+      placement: placement,
+      onClose: onClose,
+      key: key,
+    ),
+  );
 
   /// Shows a spinner toast that stays until dismissed. Call the returned
   /// handle once the work is done.
@@ -264,18 +261,17 @@ class MessageApi {
     MessagePlacement? placement,
     VoidCallback? onClose,
     Object? key,
-  }) =>
-      open(
-        MessageConfig(
-          content: Text(content),
-          type: StatusType.loading,
-          // Loading has no natural timeout: it ends when the work does.
-          duration: duration ?? Duration.zero,
-          placement: placement,
-          onClose: onClose,
-          key: key,
-        ),
-      );
+  }) => open(
+    MessageConfig(
+      content: Text(content),
+      type: StatusType.loading,
+      // Loading has no natural timeout: it ends when the work does.
+      duration: duration ?? Duration.zero,
+      placement: placement,
+      onClose: onClose,
+      key: key,
+    ),
+  );
 
   /// Shows a toast built from [config], for anything the named helpers do
   /// not cover.
@@ -287,13 +283,12 @@ class MessageApi {
     Duration? duration,
     MessagePlacement? placement,
     double? offset,
-  }) =>
-      _stack.configure(
-        maxCount: maxCount,
-        duration: duration,
-        placement: placement,
-        offset: offset,
-      );
+  }) => _stack.configure(
+    maxCount: maxCount,
+    duration: duration,
+    placement: placement,
+    offset: offset,
+  );
 
   /// Dismisses every open message.
   void destroy() => _stack.destroyAll();
@@ -434,8 +429,9 @@ class _MessageStack {
               // Both edges stack the same way: whatever is already on screen
               // keeps its place and the newcomer goes beyond it, so a toast
               // never jumps while the user is reading it.
-              verticalDirection:
-                  atTop ? VerticalDirection.down : VerticalDirection.up,
+              verticalDirection: atTop
+                  ? VerticalDirection.down
+                  : VerticalDirection.up,
               children: [
                 for (final item in stack.items)
                   _MessageCard(
@@ -453,11 +449,7 @@ class _MessageStack {
 }
 
 class _MessageCard extends StatefulWidget {
-  const _MessageCard({
-    super.key,
-    required this.config,
-    required this.atTop,
-  });
+  const _MessageCard({super.key, required this.config, required this.atTop});
 
   final MessageConfig config;
 
@@ -490,10 +482,11 @@ class _MessageCardState extends State<_MessageCard>
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.config.token ??
-            ConfigProvider.componentOf<MessageToken>(context) ??
-            const MessageToken())
-        ._resolve(token);
+    final r =
+        (widget.config.token ??
+                ConfigProvider.componentOf<MessageToken>(context) ??
+                const MessageToken())
+            ._resolve(token);
     final curved = CurvedAnimation(
       parent: _controller,
       curve: token.motionEaseOutCirc,

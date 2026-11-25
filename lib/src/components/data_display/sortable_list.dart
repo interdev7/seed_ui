@@ -30,17 +30,17 @@ class SortableListToken {
   final Color? backgroundColor;
 
   _ResolvedSortableListToken _resolve(Token t) => _ResolvedSortableListToken(
-        liftShadow: liftShadow ?? t.boxShadow,
-        liftRadius: liftRadius ?? t.borderRadius,
-        backgroundColor: backgroundColor,
-      );
+    liftShadow: liftShadow ?? t.boxShadow,
+    liftRadius: liftRadius ?? t.borderRadius,
+    backgroundColor: backgroundColor,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SortableListToken merge(SortableListToken other) => SortableListToken(
-        liftShadow: other.liftShadow ?? liftShadow,
-        liftRadius: other.liftRadius ?? liftRadius,
-        backgroundColor: other.backgroundColor ?? backgroundColor,
-      );
+    liftShadow: other.liftShadow ?? liftShadow,
+    liftRadius: other.liftRadius ?? liftRadius,
+    backgroundColor: other.backgroundColor ?? backgroundColor,
+  );
 }
 
 @immutable
@@ -167,7 +167,8 @@ class SortableList extends StatelessWidget {
     BuildContext context,
     Widget child,
     Animation<double> animation,
-  )? liftBuilder;
+  )?
+  liftBuilder;
 
   /// Per-instance token overrides.
   final SortableListToken? token;
@@ -178,16 +179,18 @@ class SortableList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.softToken;
-    final resolved = (token ??
-            ConfigProvider.componentOf<SortableListToken>(context) ??
-            const SortableListToken())
-        ._resolve(t);
+    final resolved =
+        (token ??
+                ConfigProvider.componentOf<SortableListToken>(context) ??
+                const SortableListToken())
+            ._resolve(t);
 
     return CustomScrollView(
       scrollDirection: _directionIn(context),
       shrinkWrap: sizeToContent,
       controller: controller,
-      physics: physics ??
+      physics:
+          physics ??
           (sizeToContent ? const NeverScrollableScrollPhysics() : null),
       slivers: [
         SliverPadding(
@@ -220,7 +223,8 @@ class SortableList extends StatelessWidget {
 
     Widget content = child;
     if (_showHandleIn(context)) {
-      final grip = handle ??
+      final grip =
+          handle ??
           Padding(
             padding: EdgeInsets.all(t.sizeXXS),
             child: CustomPaint(
@@ -233,8 +237,18 @@ class SortableList extends StatelessWidget {
         child: ReorderableDragStartListener(index: index, child: grip),
       );
       content = _verticalIn(context)
-          ? Row(children: [draggableHandle, Expanded(child: child)])
-          : Column(children: [draggableHandle, Expanded(child: child)]);
+          ? Row(
+              children: [
+                draggableHandle,
+                Expanded(child: child),
+              ],
+            )
+          : Column(
+              children: [
+                draggableHandle,
+                Expanded(child: child),
+              ],
+            );
     } else {
       content = ReorderableDelayedDragStartListener(index: index, child: child);
     }

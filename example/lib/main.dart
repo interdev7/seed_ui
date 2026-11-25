@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' as material show Divider;
-import 'package:flutter/material.dart'
+import 'package:material_ui/material_ui.dart' as material show Divider;
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -11,7 +11,10 @@ import 'package:flutter/material.dart'
         Drawer,
         Divider;
 import 'package:seed_ui/seed_ui.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cupertino_ui/cupertino_ui.dart'
+    show GlobalCupertinoLocalizations;
+import 'package:flutter_localizations/flutter_localizations.dart'
+    show GlobalWidgetsLocalizations;
 import 'package:go_router/go_router.dart';
 
 import 'version.dart';

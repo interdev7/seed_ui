@@ -29,7 +29,7 @@ enum TabPosition {
   left,
 
   /// The bar runs down the right of the panels.
-  right
+  right,
 }
 
 /// What an edit gesture on an [TabsType.editableCard] requested.
@@ -38,7 +38,7 @@ enum TabEditAction {
   add,
 
   /// An existing tab was closed.
-  remove
+  remove,
 }
 
 /// Horizontal placement of a tab's content within its panel.
@@ -50,7 +50,7 @@ enum TabContentPosition {
   center,
 
   /// Labels are pinned to the end of the bar.
-  right
+  right,
 }
 
 /// Where the selected tab lands when the bar scrolls it into view.
@@ -76,14 +76,10 @@ class TabBarExtra {
   const TabBarExtra({this.left, this.right});
 
   /// Extra pinned to the far side the tabs grow toward (the end).
-  const TabBarExtra.right(Widget widget)
-      : left = null,
-        right = widget;
+  const TabBarExtra.right(Widget widget) : left = null, right = widget;
 
   /// Extra pinned to the start of the bar.
-  const TabBarExtra.left(Widget widget)
-      : left = widget,
-        right = null;
+  const TabBarExtra.left(Widget widget) : left = widget, right = null;
 
   /// Content at the start of the bar.
   final Widget? left;
@@ -178,60 +174,62 @@ class TabsToken {
   final FontWeight? fontWeightActive;
 
   _ResolvedTabsToken _resolve(Token t) => _ResolvedTabsToken(
-        fontWeightActive: fontWeightActive ?? FontWeight.w500,
-        inkBarColor: inkBarColor ?? t.primary.base,
-        itemColor: itemColor ?? t.colorText,
-        itemHoverColor: itemHoverColor ?? t.primary.hover,
-        itemSelectedColor: itemSelectedColor ?? t.primary.base,
-        disabledColor: t.colorTextQuaternary,
-        titleFontSize: titleFontSize ?? t.fontSize,
-        titleFontSizeSM: titleFontSizeSM ?? t.fontSize,
-        titleFontSizeLG: titleFontSizeLG ?? t.fontSizeLG,
-        cardBg: cardBg ?? t.colorFillQuaternary,
-        cardGutter: cardGutter ?? 2,
-        // 8px 16px / 4px 8px / 11px 16px.
-        cardPadding: cardPadding ??
-            EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeXS),
-        cardPaddingSM: cardPaddingSM ??
-            EdgeInsets.symmetric(horizontal: t.sizeXS, vertical: t.sizeXXS),
-        cardPaddingLG: cardPaddingLG ??
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-        horizontalItemGutter: horizontalItemGutter ?? t.sizeXL,
-        horizontalItemPadding:
-            horizontalItemPadding ?? EdgeInsets.symmetric(vertical: t.sizeSM),
-        horizontalItemPaddingSM:
-            horizontalItemPaddingSM ?? EdgeInsets.symmetric(vertical: t.sizeXS),
-        horizontalItemPaddingLG: horizontalItemPaddingLG ??
-            EdgeInsets.symmetric(vertical: t.sizeSM + 2),
-        verticalItemPadding: verticalItemPadding ??
-            EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeXS),
-      );
+    fontWeightActive: fontWeightActive ?? FontWeight.w500,
+    inkBarColor: inkBarColor ?? t.primary.base,
+    itemColor: itemColor ?? t.colorText,
+    itemHoverColor: itemHoverColor ?? t.primary.hover,
+    itemSelectedColor: itemSelectedColor ?? t.primary.base,
+    disabledColor: t.colorTextQuaternary,
+    titleFontSize: titleFontSize ?? t.fontSize,
+    titleFontSizeSM: titleFontSizeSM ?? t.fontSize,
+    titleFontSizeLG: titleFontSizeLG ?? t.fontSizeLG,
+    cardBg: cardBg ?? t.colorFillQuaternary,
+    cardGutter: cardGutter ?? 2,
+    // 8px 16px / 4px 8px / 11px 16px.
+    cardPadding:
+        cardPadding ??
+        EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeXS),
+    cardPaddingSM:
+        cardPaddingSM ??
+        EdgeInsets.symmetric(horizontal: t.sizeXS, vertical: t.sizeXXS),
+    cardPaddingLG:
+        cardPaddingLG ??
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+    horizontalItemGutter: horizontalItemGutter ?? t.sizeXL,
+    horizontalItemPadding:
+        horizontalItemPadding ?? EdgeInsets.symmetric(vertical: t.sizeSM),
+    horizontalItemPaddingSM:
+        horizontalItemPaddingSM ?? EdgeInsets.symmetric(vertical: t.sizeXS),
+    horizontalItemPaddingLG:
+        horizontalItemPaddingLG ?? EdgeInsets.symmetric(vertical: t.sizeSM + 2),
+    verticalItemPadding:
+        verticalItemPadding ??
+        EdgeInsets.symmetric(horizontal: t.size, vertical: t.sizeXS),
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TabsToken merge(TabsToken other) => TabsToken(
-        inkBarColor: other.inkBarColor ?? inkBarColor,
-        itemColor: other.itemColor ?? itemColor,
-        itemHoverColor: other.itemHoverColor ?? itemHoverColor,
-        itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
-        titleFontSize: other.titleFontSize ?? titleFontSize,
-        titleFontSizeSM: other.titleFontSizeSM ?? titleFontSizeSM,
-        titleFontSizeLG: other.titleFontSizeLG ?? titleFontSizeLG,
-        cardBg: other.cardBg ?? cardBg,
-        cardGutter: other.cardGutter ?? cardGutter,
-        cardPadding: other.cardPadding ?? cardPadding,
-        cardPaddingSM: other.cardPaddingSM ?? cardPaddingSM,
-        cardPaddingLG: other.cardPaddingLG ?? cardPaddingLG,
-        horizontalItemGutter:
-            other.horizontalItemGutter ?? horizontalItemGutter,
-        horizontalItemPadding:
-            other.horizontalItemPadding ?? horizontalItemPadding,
-        horizontalItemPaddingSM:
-            other.horizontalItemPaddingSM ?? horizontalItemPaddingSM,
-        horizontalItemPaddingLG:
-            other.horizontalItemPaddingLG ?? horizontalItemPaddingLG,
-        verticalItemPadding: other.verticalItemPadding ?? verticalItemPadding,
-        fontWeightActive: other.fontWeightActive ?? fontWeightActive,
-      );
+    inkBarColor: other.inkBarColor ?? inkBarColor,
+    itemColor: other.itemColor ?? itemColor,
+    itemHoverColor: other.itemHoverColor ?? itemHoverColor,
+    itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
+    titleFontSize: other.titleFontSize ?? titleFontSize,
+    titleFontSizeSM: other.titleFontSizeSM ?? titleFontSizeSM,
+    titleFontSizeLG: other.titleFontSizeLG ?? titleFontSizeLG,
+    cardBg: other.cardBg ?? cardBg,
+    cardGutter: other.cardGutter ?? cardGutter,
+    cardPadding: other.cardPadding ?? cardPadding,
+    cardPaddingSM: other.cardPaddingSM ?? cardPaddingSM,
+    cardPaddingLG: other.cardPaddingLG ?? cardPaddingLG,
+    horizontalItemGutter: other.horizontalItemGutter ?? horizontalItemGutter,
+    horizontalItemPadding: other.horizontalItemPadding ?? horizontalItemPadding,
+    horizontalItemPaddingSM:
+        other.horizontalItemPaddingSM ?? horizontalItemPaddingSM,
+    horizontalItemPaddingLG:
+        other.horizontalItemPaddingLG ?? horizontalItemPaddingLG,
+    verticalItemPadding: other.verticalItemPadding ?? verticalItemPadding,
+    fontWeightActive: other.fontWeightActive ?? fontWeightActive,
+  );
 }
 
 /// Fully resolved [TabsToken] — every value non-null.
@@ -281,16 +279,16 @@ class _ResolvedTabsToken {
   final EdgeInsets verticalItemPadding;
 
   double fontSize(SoftSize s) => switch (s) {
-        SoftSize.small => titleFontSizeSM,
-        SoftSize.middle => titleFontSize,
-        SoftSize.large => titleFontSizeLG,
-      };
+    SoftSize.small => titleFontSizeSM,
+    SoftSize.middle => titleFontSize,
+    SoftSize.large => titleFontSizeLG,
+  };
 
   EdgeInsets linePadding(SoftSize s) => switch (s) {
-        SoftSize.small => horizontalItemPaddingSM,
-        SoftSize.middle => horizontalItemPadding,
-        SoftSize.large => horizontalItemPaddingLG,
-      };
+    SoftSize.small => horizontalItemPaddingSM,
+    SoftSize.middle => horizontalItemPadding,
+    SoftSize.large => horizontalItemPaddingLG,
+  };
 
   EdgeInsets cardPaddingFor(SoftSize s) {
     final mainPad = switch (s) {
@@ -340,15 +338,14 @@ class TabItem {
     Widget? icon,
     bool? disabled,
     bool? closable,
-  }) =>
-      TabItem(
-        key: key,
-        label: label ?? this.label,
-        content: content ?? this.content,
-        icon: icon ?? this.icon,
-        disabled: disabled ?? this.disabled,
-        closable: closable ?? this.closable,
-      );
+  }) => TabItem(
+    key: key,
+    label: label ?? this.label,
+    content: content ?? this.content,
+    icon: icon ?? this.icon,
+    disabled: disabled ?? this.disabled,
+    closable: closable ?? this.closable,
+  );
 }
 
 /// Seed values for a tab added through the `+` button, returned from
@@ -386,8 +383,8 @@ class CreateTabData {
 class TabsController extends ChangeNotifier {
   /// Creates a [TabsController].
   TabsController({List<TabItem> items = const [], String? activeKey})
-      : _items = List.of(items),
-        _activeKey = activeKey ?? (items.isNotEmpty ? items.first.key : null);
+    : _items = List.of(items),
+      _activeKey = activeKey ?? (items.isNotEmpty ? items.first.key : null);
 
   List<TabItem> _items;
   String? _activeKey;
@@ -443,8 +440,9 @@ class TabsController extends ChangeNotifier {
     if (i < 0) return;
     _items = [..._items]..removeAt(i);
     if (_activeKey == key) {
-      _activeKey =
-          _items.isEmpty ? null : _items[i.clamp(0, _items.length - 1)].key;
+      _activeKey = _items.isEmpty
+          ? null
+          : _items[i.clamp(0, _items.length - 1)].key;
     }
     notifyListeners();
   }
@@ -530,15 +528,15 @@ class TabsDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   TabsDefaults merge(TabsDefaults other) => TabsDefaults(
-        type: other.type ?? type,
-        tabPosition: other.tabPosition ?? tabPosition,
-        hideAdd: other.hideAdd ?? hideAdd,
-        animated: other.animated ?? animated,
-        scrollAlign: other.scrollAlign ?? scrollAlign,
-        snap: other.snap ?? snap,
-        contentPosition: other.contentPosition ?? contentPosition,
-        size: other.size ?? size,
-      );
+    type: other.type ?? type,
+    tabPosition: other.tabPosition ?? tabPosition,
+    hideAdd: other.hideAdd ?? hideAdd,
+    animated: other.animated ?? animated,
+    scrollAlign: other.scrollAlign ?? scrollAlign,
+    snap: other.snap ?? snap,
+    contentPosition: other.contentPosition ?? contentPosition,
+    size: other.size ?? size,
+  );
 }
 
 /// A tabbed panel.
@@ -759,7 +757,8 @@ class _TabsState extends State<Tabs> {
 
   String get _active {
     final keys = _items.map((e) => e.key).toList();
-    final candidate = widget.controller?.activeKey ??
+    final candidate =
+        widget.controller?.activeKey ??
         widget.activeKey ??
         _internal ??
         widget.defaultActiveKey ??
@@ -818,7 +817,8 @@ class _TabsState extends State<Tabs> {
     final data = widget.onCreateTab?.call(index);
     final key = data?.key ?? controller.nextKey();
     final words = context.seedLocale;
-    final label = data?.label ??
+    final label =
+        data?.label ??
         Text(
           words.tabFallback.replaceAll('{n}', words.figures('${index + 1}')),
         );
@@ -943,7 +943,8 @@ class _TabsState extends State<Tabs> {
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final override = widget.token ??
+    final override =
+        widget.token ??
         ConfigProvider.componentOf<TabsToken>(context) ??
         const TabsToken();
     _r = override._resolve(token);
@@ -969,14 +970,8 @@ class _TabsState extends State<Tabs> {
       // The panel sizes to its content, so Tabs works in an unbounded-height
       // context (a scroll view) as well as a bounded one.
       final children = _tabPosition == TabPosition.top
-          ? [
-              bar,
-              if (panel != null) panel,
-            ]
-          : [
-              if (panel != null) panel,
-              bar,
-            ];
+          ? [bar, if (panel != null) panel]
+          : [if (panel != null) panel, bar];
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -984,14 +979,8 @@ class _TabsState extends State<Tabs> {
       );
     }
     final children = _tabPosition == TabPosition.left
-        ? [
-            bar,
-            if (panel != null) Expanded(child: panel),
-          ]
-        : [
-            if (panel != null) Expanded(child: panel),
-            bar,
-          ];
+        ? [bar, if (panel != null) Expanded(child: panel)]
+        : [if (panel != null) Expanded(child: panel), bar];
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1044,8 +1033,10 @@ class _TabsState extends State<Tabs> {
     // container's border (the ink bar rides it). For card tabs it is drawn
     // *behind* the tabs instead, so each tab can paint over its own slice —
     // grey when inactive, panel colour when active — without any shift.
-    final baseLineSide =
-        BorderSide(color: token.colorBorderSecondary, width: token.lineWidth);
+    final baseLineSide = BorderSide(
+      color: token.colorBorderSecondary,
+      width: token.lineWidth,
+    );
     final border = switch (_tabPosition) {
       TabPosition.top => Border(bottom: baseLineSide),
       TabPosition.bottom => Border(top: baseLineSide),
@@ -1069,8 +1060,9 @@ class _TabsState extends State<Tabs> {
     final barView = _snap
         ? NotificationListener<ScrollMetricsNotification>(
             onNotification: (_) {
-              WidgetsBinding.instance
-                  .addPostFrameCallback((_) => _measureOffsets());
+              WidgetsBinding.instance.addPostFrameCallback(
+                (_) => _measureOffsets(),
+              );
               return false;
             },
             child: scroll,
@@ -1112,29 +1104,41 @@ class _TabsState extends State<Tabs> {
       final c = token.colorBorderSecondary;
       final line = switch (_tabPosition) {
         TabPosition.top => Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SizedBox(height: w, child: ColoredBox(color: c)),
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SizedBox(
+            height: w,
+            child: ColoredBox(color: c),
           ),
+        ),
         TabPosition.bottom => Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            child: SizedBox(height: w, child: ColoredBox(color: c)),
+          left: 0,
+          right: 0,
+          top: 0,
+          child: SizedBox(
+            height: w,
+            child: ColoredBox(color: c),
           ),
+        ),
         TabPosition.left => Positioned(
-            top: 0,
-            bottom: 0,
-            right: 0,
-            child: SizedBox(width: w, child: ColoredBox(color: c)),
+          top: 0,
+          bottom: 0,
+          right: 0,
+          child: SizedBox(
+            width: w,
+            child: ColoredBox(color: c),
           ),
+        ),
         TabPosition.right => Positioned(
-            top: 0,
-            bottom: 0,
-            left: 0,
-            child: SizedBox(width: w, child: ColoredBox(color: c)),
+          top: 0,
+          bottom: 0,
+          left: 0,
+          child: SizedBox(
+            width: w,
+            child: ColoredBox(color: c),
           ),
+        ),
       };
       return Stack(children: [line, content]);
     }
@@ -1156,41 +1160,41 @@ class _TabsState extends State<Tabs> {
     // The ink bar hugs the base-line edge, matching the active tab's extent.
     return switch (_tabPosition) {
       TabPosition.top => AnimatedPositioned(
-          duration: token.motionDurationMid,
-          curve: token.motionEaseInOut,
-          left: r.left,
-          width: r.width,
-          bottom: 0,
-          height: thickness,
-          child: bar,
-        ),
+        duration: token.motionDurationMid,
+        curve: token.motionEaseInOut,
+        left: r.left,
+        width: r.width,
+        bottom: 0,
+        height: thickness,
+        child: bar,
+      ),
       TabPosition.bottom => AnimatedPositioned(
-          duration: token.motionDurationMid,
-          curve: token.motionEaseInOut,
-          left: r.left,
-          width: r.width,
-          top: 0,
-          height: thickness,
-          child: bar,
-        ),
+        duration: token.motionDurationMid,
+        curve: token.motionEaseInOut,
+        left: r.left,
+        width: r.width,
+        top: 0,
+        height: thickness,
+        child: bar,
+      ),
       TabPosition.left => AnimatedPositioned(
-          duration: token.motionDurationMid,
-          curve: token.motionEaseInOut,
-          top: r.top,
-          height: r.height,
-          right: 0,
-          width: thickness,
-          child: bar,
-        ),
+        duration: token.motionDurationMid,
+        curve: token.motionEaseInOut,
+        top: r.top,
+        height: r.height,
+        right: 0,
+        width: thickness,
+        child: bar,
+      ),
       TabPosition.right => AnimatedPositioned(
-          duration: token.motionDurationMid,
-          curve: token.motionEaseInOut,
-          top: r.top,
-          height: r.height,
-          left: 0,
-          width: thickness,
-          child: bar,
-        ),
+        duration: token.motionDurationMid,
+        curve: token.motionEaseInOut,
+        top: r.top,
+        height: r.height,
+        left: 0,
+        width: thickness,
+        child: bar,
+      ),
     };
   }
 
@@ -1220,8 +1224,9 @@ class _TabsState extends State<Tabs> {
           icon: item.icon,
           label: item.label,
           onTap: item.disabled ? null : () => _select(item.key),
-          onClose:
-              _editable && item.closable ? () => _handleRemove(item.key) : null,
+          onClose: _editable && item.closable
+              ? () => _handleRemove(item.key)
+              : null,
         ),
       ),
     );
@@ -1229,7 +1234,8 @@ class _TabsState extends State<Tabs> {
 
   Widget _buildAddButton(Token token) {
     // Match a card tab's full height: its top border + vertical padding + label.
-    final height = token.lineWidth +
+    final height =
+        token.lineWidth +
         _r.cardPaddingFor(_size).vertical +
         _r.fontSize(_size);
     return _AddButton(
@@ -1326,10 +1332,10 @@ class _TabButtonState extends State<_TabButton> {
     final color = widget.disabled
         ? s.disabledColor
         : widget.active
-            ? s.itemSelectedColor
-            : _hovered
-                ? s.itemHoverColor
-                : s.itemColor;
+        ? s.itemSelectedColor
+        : _hovered
+        ? s.itemHoverColor
+        : s.itemColor;
 
     final row = Row(
       mainAxisSize: MainAxisSize.min,
@@ -1384,8 +1390,9 @@ class _TabButtonState extends State<_TabButton> {
               radius: t.borderRadiusLG,
               fill: widget.active ? t.colorBgContainer : s.cardBg,
               border: t.colorBorderSecondary,
-              panelColor:
-                  widget.active ? t.colorBgContainer : t.colorBorderSecondary,
+              panelColor: widget.active
+                  ? t.colorBgContainer
+                  : t.colorBorderSecondary,
               strokeWidth: t.lineWidth,
             ),
             child: padded,
@@ -1393,8 +1400,9 @@ class _TabButtonState extends State<_TabButton> {
         : padded;
 
     return MouseRegion(
-      cursor:
-          widget.disabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      cursor: widget.disabled
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
@@ -1478,7 +1486,8 @@ class _AddButtonState extends State<_AddButton> {
               ),
               border: Border(top: line, left: line, right: line),
             ),
-            child: widget.icon ??
+            child:
+                widget.icon ??
                 CustomPaint(
                   size: Size.square(context.softToken.fontSize),
                   painter: PlusPainter(color),
@@ -1523,14 +1532,26 @@ class _CardTabPainter extends CustomPainter {
     final r = Radius.circular(radius);
     // Round the two corners away from the panel; the panel edge stays square.
     final rrect = switch (position) {
-      TabPosition.top =>
-        RRect.fromRectAndCorners(rect, topLeft: r, topRight: r),
-      TabPosition.bottom =>
-        RRect.fromRectAndCorners(rect, bottomLeft: r, bottomRight: r),
-      TabPosition.left =>
-        RRect.fromRectAndCorners(rect, topLeft: r, bottomLeft: r),
-      TabPosition.right =>
-        RRect.fromRectAndCorners(rect, topRight: r, bottomRight: r),
+      TabPosition.top => RRect.fromRectAndCorners(
+        rect,
+        topLeft: r,
+        topRight: r,
+      ),
+      TabPosition.bottom => RRect.fromRectAndCorners(
+        rect,
+        bottomLeft: r,
+        bottomRight: r,
+      ),
+      TabPosition.left => RRect.fromRectAndCorners(
+        rect,
+        topLeft: r,
+        bottomLeft: r,
+      ),
+      TabPosition.right => RRect.fromRectAndCorners(
+        rect,
+        topRight: r,
+        bottomRight: r,
+      ),
     };
 
     canvas.drawRRect(rrect, Paint()..color = fill);
@@ -1549,14 +1570,14 @@ class _CardTabPainter extends CustomPainter {
       ..strokeWidth = strokeWidth;
     final (a, b) = switch (position) {
       TabPosition.top => (
-          Offset(0, size.height - inset),
-          Offset(size.width, size.height - inset),
-        ),
+        Offset(0, size.height - inset),
+        Offset(size.width, size.height - inset),
+      ),
       TabPosition.bottom => (Offset(0, inset), Offset(size.width, inset)),
       TabPosition.left => (
-          Offset(size.width - inset, 0),
-          Offset(size.width - inset, size.height),
-        ),
+        Offset(size.width - inset, 0),
+        Offset(size.width - inset, size.height),
+      ),
       TabPosition.right => (Offset(inset, 0), Offset(inset, size.height)),
     };
     canvas.drawLine(a, b, edge);

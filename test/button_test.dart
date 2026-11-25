@@ -1,23 +1,17 @@
-import 'package:flutter/material.dart' hide ThemeData, Divider;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' hide ThemeData, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => ConfigProvider(
-      theme: ThemeData(),
-      child: MaterialApp(
-        home: Scaffold(body: child),
-      ),
-    );
+  theme: ThemeData(),
+  child: MaterialApp(home: Scaffold(body: child)),
+);
 
 void main() {
   _iconTests();
   testWidgets('renders button with label', (tester) async {
-    await tester.pumpWidget(
-      _host(
-        const Button(child: Text('Submit')),
-      ),
-    );
+    await tester.pumpWidget(_host(const Button(child: Text('Submit'))));
     expect(find.text('Submit'), findsOneWidget);
   });
 
@@ -25,10 +19,7 @@ void main() {
     bool tapped = false;
     await tester.pumpWidget(
       _host(
-        Button(
-          onPressed: () => tapped = true,
-          child: const Text('Tap Me'),
-        ),
+        Button(onPressed: () => tapped = true, child: const Text('Tap Me')),
       ),
     );
 
@@ -54,12 +45,7 @@ void main() {
 
   testWidgets('shows loading indicator when loading', (tester) async {
     await tester.pumpWidget(
-      _host(
-        const Button(
-          loading: true,
-          child: Text('Loading'),
-        ),
-      ),
+      _host(const Button(loading: true, child: Text('Loading'))),
     );
     expect(find.byType(Spinner), findsOneWidget);
   });
@@ -107,17 +93,21 @@ void main() {
     );
 
     double luminance() {
-      final decoration = tester
-          .widgetList<DecoratedBox>(
-            find.ancestor(
-              of: find.text('Back'),
-              matching: find.byType(DecoratedBox),
-            ),
-          )
-          .first
-          .decoration as BoxDecoration;
-      return Color.alphaBlend(decoration.color!, const Color(0xFFFFFFFF))
-          .computeLuminance();
+      final decoration =
+          tester
+                  .widgetList<DecoratedBox>(
+                    find.ancestor(
+                      of: find.text('Back'),
+                      matching: find.byType(DecoratedBox),
+                    ),
+                  )
+                  .first
+                  .decoration
+              as BoxDecoration;
+      return Color.alphaBlend(
+        decoration.color!,
+        const Color(0xFFFFFFFF),
+      ).computeLuminance();
     }
 
     final disabled = luminance();
@@ -205,8 +195,9 @@ void main() {
       );
     });
 
-    testWidgets('a width alone leaves the height to the presets',
-        (tester) async {
+    testWidgets('a width alone leaves the height to the presets', (
+      tester,
+    ) async {
       expect(
         await boxOf(tester, const ControlSize.width(180)),
         const Size(180, 32),
@@ -229,8 +220,9 @@ void main() {
       expect(small, lessThan(big));
     });
 
-    testWidgets('a theme that moves its scale carries the type with it',
-        (tester) async {
+    testWidgets('a theme that moves its scale carries the type with it', (
+      tester,
+    ) async {
       // The preset is chosen by distance against the theme's own heights, not
       // against numbers written down here.
       Future<double> fontUnder(ButtonToken token) async {
@@ -267,8 +259,9 @@ void main() {
   group('a shadow of its own', () {
     /// What the button's own box casts.
     List<BoxShadow>? castBy(WidgetTester tester) {
-      for (final box
-          in tester.widgetList<DecoratedBox>(find.byType(DecoratedBox))) {
+      for (final box in tester.widgetList<DecoratedBox>(
+        find.byType(DecoratedBox),
+      )) {
         final d = box.decoration;
         if (d is BoxDecoration && d.boxShadow != null) return d.boxShadow;
       }
@@ -349,16 +342,12 @@ void main() {
       expect((tapped, held), (1, 1), reason: 'held, not tapped as well');
     });
 
-    testWidgets('a button that only answers to a hold is a button',
-        (tester) async {
+    testWidgets('a button that only answers to a hold is a button', (
+      tester,
+    ) async {
       var held = 0;
       await tester.pumpWidget(
-        _host(
-          Button(
-            onLongPress: () => held++,
-            child: const Text('Go'),
-          ),
-        ),
+        _host(Button(onLongPress: () => held++, child: const Text('Go'))),
       );
 
       await tester.longPress(find.text('Go'));
@@ -385,16 +374,17 @@ void main() {
       noises = 0;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-        if (call.method == 'SystemSound.play' ||
-            call.method == 'HapticFeedback.vibrate') {
-          noises++;
-        }
-        return null;
-      });
+            if (call.method == 'SystemSound.play' ||
+                call.method == 'HapticFeedback.vibrate') {
+              noises++;
+            }
+            return null;
+          });
     });
 
-    testWidgets('a tap makes it, unless the button says otherwise',
-        (tester) async {
+    testWidgets('a tap makes it, unless the button says otherwise', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(Button(onPressed: () {}, child: const Text('Go'))),
       );
@@ -404,11 +394,7 @@ void main() {
 
       await tester.pumpWidget(
         _host(
-          Button(
-            feedback: false,
-            onPressed: () {},
-            child: const Text('Quiet'),
-          ),
+          Button(feedback: false, onPressed: () {}, child: const Text('Quiet')),
         ),
       );
       await tester.tap(find.text('Quiet'));
@@ -418,12 +404,7 @@ void main() {
 
     testWidgets('so does a hold', (tester) async {
       await tester.pumpWidget(
-        _host(
-          Button(
-            onLongPress: () {},
-            child: const Text('Go'),
-          ),
-        ),
+        _host(Button(onLongPress: () {}, child: const Text('Go'))),
       );
       await tester.longPress(find.text('Go'));
       await tester.pumpAndSettle();
@@ -481,17 +462,16 @@ void _iconTests() {
       ButtonIconPlacement? placement,
       bool loading = false,
       ButtonToken? token,
-    }) =>
-        Center(
-          child: Button(
-            icon: icon,
-            iconPlacement: placement,
-            loading: loading,
-            token: token,
-            onPressed: () {},
-            child: const Text('Next'),
-          ),
-        );
+    }) => Center(
+      child: Button(
+        icon: icon,
+        iconPlacement: placement,
+        loading: loading,
+        token: token,
+        onPressed: () {},
+        child: const Text('Next'),
+      ),
+    );
 
     Rect iconRect(WidgetTester tester) =>
         tester.getRect(find.byKey(const Key('icon')));
@@ -503,8 +483,9 @@ void _iconTests() {
     });
 
     testWidgets('at the end, it stands after them', (tester) async {
-      await tester
-          .pumpWidget(_host(button(placement: ButtonIconPlacement.end)));
+      await tester.pumpWidget(
+        _host(button(placement: ButtonIconPlacement.end)),
+      );
       expect(iconRect(tester).left, greaterThan(words(tester).right));
     });
 
@@ -551,10 +532,7 @@ void _iconTests() {
       for (final placement in ButtonIconPlacement.values) {
         await tester.pumpWidget(
           _host(
-            button(
-              placement: placement,
-              token: const ButtonToken(iconGap: 20),
-            ),
+            button(placement: placement, token: const ButtonToken(iconGap: 20)),
           ),
         );
         final gap = placement == ButtonIconPlacement.start
@@ -568,7 +546,9 @@ void _iconTests() {
       await tester.pumpWidget(_host(button()));
       final t = tester.element(find.byType(Button)).softToken;
       expect(
-          words(tester).left - iconRect(tester).right, closeTo(t.sizeXS, 0.5));
+        words(tester).left - iconRect(tester).right,
+        closeTo(t.sizeXS, 0.5),
+      );
     });
   });
 }

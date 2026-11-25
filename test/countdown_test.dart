@@ -1,14 +1,15 @@
-import 'package:flutter/material.dart'
-    hide ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer, Divider;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
+    hide ThemeData, Checkbox, Radio, Switch, Tooltip, Drawer, Divider;
 import 'package:seed_ui/seed_ui.dart';
 // The formatter is package-internal, but every awkward case is reachable
 // through it directly and none of them is through a running clock.
 import 'package:seed_ui/src/components/data_display/countdown.dart'
     show countdownClock, formatDuration;
 
-Widget _host(Widget child) =>
-    MaterialApp(home: Scaffold(body: Center(child: child)));
+Widget _host(Widget child) => MaterialApp(
+  home: Scaffold(body: Center(child: child)),
+);
 
 /// Drives the widget's clock and the test's timers together.
 ///
@@ -183,9 +184,8 @@ void main() {
     });
 
     testWidgets('a new target restarts the count', (tester) async {
-      Widget at(Duration d) => _host(
-            Countdown(target: clock.now.add(d), format: 'mm:ss'),
-          );
+      Widget at(Duration d) =>
+          _host(Countdown(target: clock.now.add(d), format: 'mm:ss'));
 
       await tester.pumpWidget(at(const Duration(seconds: 5)));
       expect(find.text('00:05'), findsOneWidget);
@@ -223,11 +223,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         _host(
-          Countdown(
-            target: clock.now,
-            type: CountdownType.up,
-            format: 'mm:ss',
-          ),
+          Countdown(target: clock.now, type: CountdownType.up, format: 'mm:ss'),
         ),
       );
       await clock.advance(tester, const Duration(milliseconds: 1900));
@@ -272,18 +268,18 @@ void main() {
       Color colour() => tester.widget<Text>(find.byType(Text)).style!.color!;
 
       Widget under(CountdownToken? instance) => ConfigProvider(
-            theme: ThemeData(
-              components: const ComponentsConfig(
-                countdown: CountdownToken(color: fromProvider),
-              ),
-            ),
-            child: _host(
-              Countdown(
-                target: clock.now.add(const Duration(minutes: 5)),
-                token: instance,
-              ),
-            ),
-          );
+        theme: ThemeData(
+          components: const ComponentsConfig(
+            countdown: CountdownToken(color: fromProvider),
+          ),
+        ),
+        child: _host(
+          Countdown(
+            target: clock.now.add(const Duration(minutes: 5)),
+            token: instance,
+          ),
+        ),
+      );
 
       await tester.pumpWidget(under(null));
       expect(colour(), fromProvider);
@@ -295,8 +291,7 @@ void main() {
     });
   });
   group('CountdownController', () {
-    testWidgets(
-        'pausing holds the count still, and resuming goes on from '
+    testWidgets('pausing holds the count still, and resuming goes on from '
         'where it stopped', (tester) async {
       final c = CountdownController(
         target: clock.now.add(const Duration(seconds: 30)),
@@ -377,11 +372,7 @@ void main() {
 
       await tester.pumpWidget(
         _host(
-          Countdown(
-            controller: c,
-            format: 'mm:ss',
-            onFinish: () => finished++,
-          ),
+          Countdown(controller: c, format: 'mm:ss', onFinish: () => finished++),
         ),
       );
       await clock.advance(tester, const Duration(seconds: 4));

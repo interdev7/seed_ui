@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,7 +10,6 @@ import 'package:flutter/material.dart'
         Drawer,
         Card,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 /// A trigger with a layer whose content reads changing state.
@@ -63,8 +63,9 @@ class _HostState extends State<_Host> {
 }
 
 void main() {
-  testWidgets('it opens only when told to: there is no trigger of its own',
-      (tester) async {
+  testWidgets('it opens only when told to: there is no trigger of its own', (
+    tester,
+  ) async {
     await tester.pumpWidget(const _Host());
     await tester.pumpAndSettle();
     expect(find.text('count 0'), findsNothing);
@@ -75,8 +76,9 @@ void main() {
     expect(find.text('count 0'), findsOneWidget);
   });
 
-  testWidgets('an open popover follows the state its content reads',
-      (tester) async {
+  testWidgets('an open popover follows the state its content reads', (
+    tester,
+  ) async {
     await tester.pumpWidget(const _Host());
     await tester.pumpAndSettle();
     await tester.tap(find.text('trigger'));
@@ -165,8 +167,9 @@ void main() {
           ),
         );
 
-    testWidgets('dims the trigger along with the rest of the page',
-        (tester) async {
+    testWidgets('dims the trigger along with the rest of the page', (
+      tester,
+    ) async {
       await tester.pumpWidget(host(onTap: () {}, open: true));
       await tester.pumpAndSettle();
 

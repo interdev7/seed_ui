@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -8,40 +9,39 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(
   Widget child, {
   ComponentDefaults? defaults,
   TextDirection direction = TextDirection.ltr,
-}) =>
-    ConfigProvider(
-      defaults: defaults,
-      child: MaterialApp(
-        home: Directionality(
-          textDirection: direction,
-          child: Scaffold(
-            body: Align(
-              alignment: Alignment.topLeft,
-              child: SizedBox(width: 400, child: child),
-            ),
-          ),
+}) => ConfigProvider(
+  defaults: defaults,
+  child: MaterialApp(
+    home: Directionality(
+      textDirection: direction,
+      child: Scaffold(
+        body: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(width: 400, child: child),
         ),
       ),
-    );
+    ),
+  ),
+);
 
 /// The runs of line either side of a title, start first.
-List<Rect> _runs(WidgetTester tester) => tester
-    .widgetList<ColoredBox>(
-      find.descendant(
-        of: find.byType(Divider),
-        matching: find.byType(ColoredBox),
-      ),
-    )
-    .map((b) => tester.getRect(find.byWidget(b)))
-    .toList()
-  ..sort((a, b) => a.left.compareTo(b.left));
+List<Rect> _runs(WidgetTester tester) =>
+    tester
+        .widgetList<ColoredBox>(
+          find.descendant(
+            of: find.byType(Divider),
+            matching: find.byType(ColoredBox),
+          ),
+        )
+        .map((b) => tester.getRect(find.byWidget(b)))
+        .toList()
+      ..sort((a, b) => a.left.compareTo(b.left));
 
 void main() {
   group('horizontal', () {
@@ -78,8 +78,10 @@ void main() {
       );
       final runs = _runs(tester);
       expect(runs.first.width, lessThan(runs.last.width / 10));
-      expect(tester.getSize(find.byType(Divider)).height,
-          tester.getSize(find.text('T')).height + 16);
+      expect(
+        tester.getSize(find.byType(Divider)).height,
+        tester.getSize(find.text('T')).height + 16,
+      );
     });
   });
 
@@ -140,10 +142,12 @@ void main() {
 
     testWidgets('plain sets it as body text', (tester) async {
       TextStyle styleOf() => tester
-          .widget<RichText>(find.descendant(
-            of: find.text('T'),
-            matching: find.byType(RichText),
-          ))
+          .widget<RichText>(
+            find.descendant(
+              of: find.text('T'),
+              matching: find.byType(RichText),
+            ),
+          )
           .text
           .style!;
       await tester.pumpWidget(_host(const Divider(child: Text('T'))));
@@ -199,7 +203,10 @@ void main() {
     await tester.pumpWidget(
       _host(
         const Column(
-          children: [Divider(), Divider(child: Text('Details'))],
+          children: [
+            Divider(),
+            Divider(child: Text('Details')),
+          ],
         ),
       ),
     );

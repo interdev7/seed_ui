@@ -63,27 +63,28 @@ class AutoCompleteToken {
   final FontWeight? matchWeight;
 
   _ResolvedAutoCompleteToken _resolve(Token t) => _ResolvedAutoCompleteToken(
-        optionActiveBg: optionActiveBg ?? t.colorFillSecondary,
-        optionColor: optionColor ?? t.colorText,
-        // As tall as a control: a line of text, with the rest of the
-        // control's height shared above and below it.
-        optionPadding: optionPadding ??
-            EdgeInsets.symmetric(
-              horizontal: t.sizeSM,
-              vertical: (t.controlHeight - t.controlHeightXS) / 2,
-            ),
-        optionFontSize: optionFontSize ?? t.fontSize,
-        matchWeight: matchWeight ?? t.fontWeightStrong,
-      );
+    optionActiveBg: optionActiveBg ?? t.colorFillSecondary,
+    optionColor: optionColor ?? t.colorText,
+    // As tall as a control: a line of text, with the rest of the
+    // control's height shared above and below it.
+    optionPadding:
+        optionPadding ??
+        EdgeInsets.symmetric(
+          horizontal: t.sizeSM,
+          vertical: (t.controlHeight - t.controlHeightXS) / 2,
+        ),
+    optionFontSize: optionFontSize ?? t.fontSize,
+    matchWeight: matchWeight ?? t.fontWeightStrong,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   AutoCompleteToken merge(AutoCompleteToken other) => AutoCompleteToken(
-        optionActiveBg: other.optionActiveBg ?? optionActiveBg,
-        optionColor: other.optionColor ?? optionColor,
-        optionPadding: other.optionPadding ?? optionPadding,
-        optionFontSize: other.optionFontSize ?? optionFontSize,
-        matchWeight: other.matchWeight ?? matchWeight,
-      );
+    optionActiveBg: other.optionActiveBg ?? optionActiveBg,
+    optionColor: other.optionColor ?? optionColor,
+    optionPadding: other.optionPadding ?? optionPadding,
+    optionFontSize: other.optionFontSize ?? optionFontSize,
+    matchWeight: other.matchWeight ?? matchWeight,
+  );
 }
 
 @immutable
@@ -221,8 +222,9 @@ class AutoComplete extends StatefulWidget {
 }
 
 class _AutoCompleteState extends State<AutoComplete> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.value ?? widget.defaultValue ?? '');
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.value ?? widget.defaultValue ?? '',
+  );
   FocusNode? _ownFocus;
   FocusNode get _focus => widget.focusNode ?? (_ownFocus ??= FocusNode());
   final _anchor = GlobalKey();
@@ -285,7 +287,8 @@ class _AutoCompleteState extends State<AutoComplete> {
   }
 
   List<AutoCompleteOption> get _matches {
-    final filter = widget.filterOption ??
+    final filter =
+        widget.filterOption ??
         (String input, AutoCompleteOption o) =>
             o.value.toLowerCase().contains(input.toLowerCase());
     return [
@@ -320,8 +323,11 @@ class _AutoCompleteState extends State<AutoComplete> {
     _focus.hasFocus ? _show(resetHighlight: true) : _close();
   }
 
-  int _firstEnabled(List<AutoCompleteOption> options,
-      {int from = 0, int step = 1}) {
+  int _firstEnabled(
+    List<AutoCompleteOption> options, {
+    int from = 0,
+    int step = 1,
+  }) {
     for (var i = from; i >= 0 && i < options.length; i += step) {
       if (!options[i].disabled) return i;
     }
@@ -331,8 +337,9 @@ class _AutoCompleteState extends State<AutoComplete> {
   void _keepHighlight() {
     final matches = _matches;
     if (_highlight >= matches.length) {
-      _highlight =
-          widget.defaultActiveFirstOption ? _firstEnabled(matches) : -1;
+      _highlight = widget.defaultActiveFirstOption
+          ? _firstEnabled(matches)
+          : -1;
     }
   }
 
@@ -340,8 +347,9 @@ class _AutoCompleteState extends State<AutoComplete> {
     if (widget.disabled ?? false) return;
     final matches = _matches;
     if (resetHighlight) {
-      _highlight =
-          widget.defaultActiveFirstOption ? _firstEnabled(matches) : -1;
+      _highlight = widget.defaultActiveFirstOption
+          ? _firstEnabled(matches)
+          : -1;
     }
     if (matches.isEmpty && widget.notFoundContent == null) {
       _close();
@@ -430,10 +438,11 @@ class _AutoCompleteState extends State<AutoComplete> {
 
   Widget _panel(BuildContext context, double width) {
     final t = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<AutoCompleteToken>(context) ??
-            const AutoCompleteToken())
-        ._resolve(t);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<AutoCompleteToken>(context) ??
+                const AutoCompleteToken())
+            ._resolve(t);
     final matches = _matches;
     final Widget body = matches.isEmpty
         ? Align(heightFactor: 1, child: widget.notFoundContent)
@@ -525,8 +534,9 @@ class _OptionRow extends StatelessWidget {
 
     Widget words() {
       final value = option.value;
-      final at =
-          typed.isEmpty ? -1 : value.toLowerCase().indexOf(typed.toLowerCase());
+      final at = typed.isEmpty
+          ? -1
+          : value.toLowerCase().indexOf(typed.toLowerCase());
       if (at < 0) return Text(value, style: style);
       return Text.rich(
         TextSpan(

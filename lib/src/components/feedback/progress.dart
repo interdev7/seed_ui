@@ -91,7 +91,7 @@ class ProgressSteps {
   /// - `isFirst`: `true` for first step, `false` for last step, `null` for middle steps.
   /// - `percent`: completion fraction of this individual step (0.0 to 1.0).
   final ProgressBorderRadius Function(bool? isFirst, double percent)?
-      stepRadius;
+  stepRadius;
 
   /// Callback fired when active step changes.
   ///
@@ -130,14 +130,12 @@ class ProgressBorderRadius {
   }) : _directional = false;
 
   /// Creates a border radius with distinct left and right radii.
-  const ProgressBorderRadius.horizontal({
-    double left = 0,
-    double right = 0,
-  })  : topLeft = left,
-        bottomLeft = left,
-        topRight = right,
-        bottomRight = right,
-        _directional = false;
+  const ProgressBorderRadius.horizontal({double left = 0, double right = 0})
+    : topLeft = left,
+      bottomLeft = left,
+      topRight = right,
+      bottomRight = right,
+      _directional = false;
 
   /// Creates a border radius named by reading order rather than by side.
   ///
@@ -150,30 +148,30 @@ class ProgressBorderRadius {
     double? bottomStart,
     double? topEnd,
     double? bottomEnd,
-  })  : topLeft = topStart,
-        bottomLeft = bottomStart,
-        topRight = topEnd,
-        bottomRight = bottomEnd,
-        _directional = true;
+  }) : topLeft = topStart,
+       bottomLeft = bottomStart,
+       topRight = topEnd,
+       bottomRight = bottomEnd,
+       _directional = true;
 
   /// Creates a border radius with distinct leading and trailing radii.
   const ProgressBorderRadius.horizontalDirectional({
     double start = 0,
     double end = 0,
-  })  : topLeft = start,
-        bottomLeft = start,
-        topRight = end,
-        bottomRight = end,
-        _directional = true;
+  }) : topLeft = start,
+       bottomLeft = start,
+       topRight = end,
+       bottomRight = end,
+       _directional = true;
 
   /// Creates a uniform border radius for all corners.
   const ProgressBorderRadius.all(double radius)
-      : topLeft = radius,
-        bottomLeft = radius,
-        topRight = radius,
-        bottomRight = radius,
-        // The same on every corner, so there is nothing to swap.
-        _directional = false;
+    : topLeft = radius,
+      bottomLeft = radius,
+      topRight = radius,
+      bottomRight = radius,
+      // The same on every corner, so there is nothing to swap.
+      _directional = false;
 
   /// Constant zero radius (square corners).
   static const ProgressBorderRadius zero = ProgressBorderRadius.all(0);
@@ -243,7 +241,7 @@ class ProgressRange {
   ///
   /// If [to] is omitted the range extends to the end (100 %).
   const ProgressRange(this.from, {this.to})
-      : assert(from >= 0 && from <= 1, 'from must be between 0 and 1');
+    : assert(from >= 0 && from <= 1, 'from must be between 0 and 1');
 
   /// Inclusive start of the range (0–1).
   final double from;
@@ -285,14 +283,12 @@ class PercentPosition {
   });
 
   /// Convenience constructor for inner positioning.
-  const PercentPosition.inner({
-    this.align = PercentInfoAlign.center,
-  }) : type = PercentInfoType.inner;
+  const PercentPosition.inner({this.align = PercentInfoAlign.center})
+    : type = PercentInfoType.inner;
 
   /// Convenience constructor for outer positioning.
-  const PercentPosition.outer({
-    this.align = PercentInfoAlign.end,
-  }) : type = PercentInfoType.outer;
+  const PercentPosition.outer({this.align = PercentInfoAlign.end})
+    : type = PercentInfoType.outer;
 
   /// Outer or inner position type.
   final PercentInfoType type;
@@ -354,31 +350,31 @@ class ProgressToken {
   final double? circleStrokeWidth;
 
   _ResolvedProgressToken _resolve(Token t) => _ResolvedProgressToken(
-        circleStrokeWidth: circleStrokeWidth ?? 6,
-        circleStrokeWidthSM: circleStrokeWidthSM ?? 4,
-        circleSizeLG: circleSizeLG ?? 160,
-        circleSizeSM: circleSizeSM ?? 80,
-        lineHeightLG: lineHeightLG ?? 12,
-        lineHeightSM: lineHeightSM ?? 6,
-        defaultColor: defaultColor ?? t.primary.base,
-        remainingColor: remainingColor ?? t.colorFillSecondary,
-        lineHeight: lineHeight ?? 8,
-        circleSize: circleSize ?? 120,
-      );
+    circleStrokeWidth: circleStrokeWidth ?? 6,
+    circleStrokeWidthSM: circleStrokeWidthSM ?? 4,
+    circleSizeLG: circleSizeLG ?? 160,
+    circleSizeSM: circleSizeSM ?? 80,
+    lineHeightLG: lineHeightLG ?? 12,
+    lineHeightSM: lineHeightSM ?? 6,
+    defaultColor: defaultColor ?? t.primary.base,
+    remainingColor: remainingColor ?? t.colorFillSecondary,
+    lineHeight: lineHeight ?? 8,
+    circleSize: circleSize ?? 120,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ProgressToken merge(ProgressToken other) => ProgressToken(
-        circleStrokeWidth: other.circleStrokeWidth ?? circleStrokeWidth,
-        circleStrokeWidthSM: other.circleStrokeWidthSM ?? circleStrokeWidthSM,
-        circleSizeLG: other.circleSizeLG ?? circleSizeLG,
-        circleSizeSM: other.circleSizeSM ?? circleSizeSM,
-        lineHeightLG: other.lineHeightLG ?? lineHeightLG,
-        lineHeightSM: other.lineHeightSM ?? lineHeightSM,
-        defaultColor: other.defaultColor ?? defaultColor,
-        remainingColor: other.remainingColor ?? remainingColor,
-        lineHeight: other.lineHeight ?? lineHeight,
-        circleSize: other.circleSize ?? circleSize,
-      );
+    circleStrokeWidth: other.circleStrokeWidth ?? circleStrokeWidth,
+    circleStrokeWidthSM: other.circleStrokeWidthSM ?? circleStrokeWidthSM,
+    circleSizeLG: other.circleSizeLG ?? circleSizeLG,
+    circleSizeSM: other.circleSizeSM ?? circleSizeSM,
+    lineHeightLG: other.lineHeightLG ?? lineHeightLG,
+    lineHeightSM: other.lineHeightSM ?? lineHeightSM,
+    defaultColor: other.defaultColor ?? defaultColor,
+    remainingColor: other.remainingColor ?? remainingColor,
+    lineHeight: other.lineHeight ?? lineHeight,
+    circleSize: other.circleSize ?? circleSize,
+  );
 }
 
 @immutable
@@ -414,11 +410,7 @@ class _ResolvedProgressToken {
 @immutable
 class ProgressDefaults {
   /// Creates a [ProgressDefaults].
-  const ProgressDefaults({
-    this.showInfo,
-    this.gapPlacement,
-    this.size,
-  });
+  const ProgressDefaults({this.showInfo, this.gapPlacement, this.size});
 
   /// Whether the figure is shown beside the bar.
   final bool? showInfo;
@@ -434,10 +426,10 @@ class ProgressDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   ProgressDefaults merge(ProgressDefaults other) => ProgressDefaults(
-        showInfo: other.showInfo ?? showInfo,
-        gapPlacement: other.gapPlacement ?? gapPlacement,
-        size: other.size ?? size,
-      );
+    showInfo: other.showInfo ?? showInfo,
+    gapPlacement: other.gapPlacement ?? gapPlacement,
+    size: other.size ?? size,
+  );
 }
 
 /// A progress indicator for a task whose completion is known, as a bar or a
@@ -620,33 +612,32 @@ class Progress extends StatefulWidget {
     void Function(double percent)? onProgressChanged,
     Widget? child,
     ProgressToken? token,
-  }) =>
-      Progress(
-        key: key ?? this.key,
-        percent: percent ?? this.percent,
-        type: type ?? this.type,
-        status: status ?? this.status,
-        showInfo: showInfo ?? this.showInfo,
-        strokeWidth: strokeWidth ?? this.strokeWidth,
-        size: size ?? this.size,
-        color: color ?? this.color,
-        trailColor: trailColor ?? this.trailColor,
-        gradient: gradient ?? this.gradient,
-        strokeColor: strokeColor ?? this.strokeColor,
-        rangeColors: rangeColors ?? this.rangeColors,
-        steps: steps ?? this.steps,
-        borderRadius: borderRadius ?? this.borderRadius,
-        strokeLinecap: strokeLinecap ?? this.strokeLinecap,
-        gapDegree: gapDegree ?? this.gapDegree,
-        gapPlacement: gapPlacement ?? this.gapPlacement,
-        percentPosition: percentPosition ?? this.percentPosition,
-        format: format ?? this.format,
-        direction: direction ?? this.direction,
-        onDone: onDone ?? this.onDone,
-        onProgressChanged: onProgressChanged ?? this.onProgressChanged,
-        token: token ?? this.token,
-        child: child ?? this.child,
-      );
+  }) => Progress(
+    key: key ?? this.key,
+    percent: percent ?? this.percent,
+    type: type ?? this.type,
+    status: status ?? this.status,
+    showInfo: showInfo ?? this.showInfo,
+    strokeWidth: strokeWidth ?? this.strokeWidth,
+    size: size ?? this.size,
+    color: color ?? this.color,
+    trailColor: trailColor ?? this.trailColor,
+    gradient: gradient ?? this.gradient,
+    strokeColor: strokeColor ?? this.strokeColor,
+    rangeColors: rangeColors ?? this.rangeColors,
+    steps: steps ?? this.steps,
+    borderRadius: borderRadius ?? this.borderRadius,
+    strokeLinecap: strokeLinecap ?? this.strokeLinecap,
+    gapDegree: gapDegree ?? this.gapDegree,
+    gapPlacement: gapPlacement ?? this.gapPlacement,
+    percentPosition: percentPosition ?? this.percentPosition,
+    format: format ?? this.format,
+    direction: direction ?? this.direction,
+    onDone: onDone ?? this.onDone,
+    onProgressChanged: onProgressChanged ?? this.onProgressChanged,
+    token: token ?? this.token,
+    child: child ?? this.child,
+  );
 
   @override
   State<Progress> createState() => _ProgressState();
@@ -789,45 +780,56 @@ class _ProgressState extends State<Progress> {
       Text(context.seedLocale.figures('${(p * 100).round()}%'));
 
   _ProgressResolvedSize _resolveSize(Token token, _ResolvedProgressToken r) {
-    final effectiveSize = widget.size ??
+    final effectiveSize =
+        widget.size ??
         ConfigProvider.defaultsOf<ProgressDefaults>(context)?.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
     return switch (effectiveSize) {
-      SoftSize.small =>
-        _ProgressResolvedSize(width: r.circleSizeSM, height: r.lineHeightSM),
-      SoftSize.middle =>
-        _ProgressResolvedSize(width: r.circleSize, height: r.lineHeight),
-      SoftSize.large =>
-        _ProgressResolvedSize(width: r.circleSizeLG, height: r.lineHeightLG),
+      SoftSize.small => _ProgressResolvedSize(
+        width: r.circleSizeSM,
+        height: r.lineHeightSM,
+      ),
+      SoftSize.middle => _ProgressResolvedSize(
+        width: r.circleSize,
+        height: r.lineHeight,
+      ),
+      SoftSize.large => _ProgressResolvedSize(
+        width: r.circleSizeLG,
+        height: r.lineHeightLG,
+      ),
       // One number names the height; a bar with no length of its own fills
       // what it is given, as it does for a preset.
-      ExplicitHeight(:final height) =>
-        _ProgressResolvedSize(width: height, height: height),
+      ExplicitHeight(:final height) => _ProgressResolvedSize(
+        width: height,
+        height: height,
+      ),
       // A width names the bar's length — and a ring's diameter — while its
       // thickness stays the standard one, there being no second number.
       ExplicitWidth(:final width) => _ProgressResolvedSize(
-          width: width,
-          height: r.lineHeight,
-          hasFixedStepWidth: widget.steps != null && width > 0,
-        ),
+        width: width,
+        height: r.lineHeight,
+        hasFixedStepWidth: widget.steps != null && width > 0,
+      ),
       ExplicitBox(:final width, :final height) => _ProgressResolvedSize(
-          width: width,
-          height: height,
-          hasFixedStepWidth: widget.steps != null && width > 0,
-        ),
+        width: width,
+        height: height,
+        hasFixedStepWidth: widget.steps != null && width > 0,
+      ),
     };
   }
 
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<ProgressToken>(context) ??
-            const ProgressToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<ProgressToken>(context) ??
+                const ProgressToken())
+            ._resolve(token);
 
-    final dir = widget.direction ??
+    final dir =
+        widget.direction ??
         Directionality.maybeOf(context) ??
         TextDirection.ltr;
 
@@ -854,7 +856,8 @@ class _ProgressState extends State<Progress> {
     final resSize = _resolveSize(token, r);
     final pos = widget.percentPosition ?? const PercentPosition();
     final isInner = pos.type == PercentInfoType.inner;
-    final stroke = widget.strokeWidth ??
+    final stroke =
+        widget.strokeWidth ??
         (isInner
             ? (resSize.height < 18 ? 18.0 : resSize.height)
             : resSize.height);
@@ -878,18 +881,16 @@ class _ProgressState extends State<Progress> {
       final stepItems = List.generate(stepCount, (i) {
         final double stepProgress = stepFillMode == ProgressStepFill.immediately
             ? (rawStepProgress >= i + 1 || (rawStepProgress - i) >= 0.999
-                ? 1.0
-                : 0.0)
+                  ? 1.0
+                  : 0.0)
             : (rawStepProgress - i).clamp(0.0, 1.0);
         final stepActiveColor =
             (widget.strokeColor != null && widget.strokeColor!.isNotEmpty)
-                ? widget.strokeColor![i % widget.strokeColor!.length]
-                : fill;
+            ? widget.strokeColor![i % widget.strokeColor!.length]
+            : fill;
 
         Widget stepContent = SizedBox.expand(
-          child: ColoredBox(
-            color: widget.trailColor ?? r.remainingColor,
-          ),
+          child: ColoredBox(color: widget.trailColor ?? r.remainingColor),
         );
 
         if (stepProgress > 0) {
@@ -915,10 +916,13 @@ class _ProgressState extends State<Progress> {
 
         final BorderRadius stepBorderRadius;
         if (stepRadiusFn != null) {
-          final bool? isFirst =
-              (i == 0) ? true : ((i == stepCount - 1) ? false : null);
-          stepBorderRadius =
-              stepRadiusFn(isFirst, stepProgress).toBorderRadius(dir);
+          final bool? isFirst = (i == 0)
+              ? true
+              : ((i == stepCount - 1) ? false : null);
+          stepBorderRadius = stepRadiusFn(
+            isFirst,
+            stepProgress,
+          ).toBorderRadius(dir);
         } else {
           stepBorderRadius = fallbackRadius;
         }
@@ -945,8 +949,9 @@ class _ProgressState extends State<Progress> {
 
       bar = Row(
         textDirection: dir,
-        mainAxisSize:
-            resSize.hasFixedStepWidth ? MainAxisSize.min : MainAxisSize.max,
+        mainAxisSize: resSize.hasFixedStepWidth
+            ? MainAxisSize.min
+            : MainAxisSize.max,
         children: stepItems,
       );
     } else {
@@ -960,8 +965,9 @@ class _ProgressState extends State<Progress> {
             children: [
               Positioned.fill(
                 child: FractionallySizedBox(
-                  alignment:
-                      isRtl ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isRtl
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   widthFactor: currentPercent,
                   child: SizedBox.expand(
                     child: DecoratedBox(
@@ -1009,8 +1015,9 @@ class _ProgressState extends State<Progress> {
                       )
                     : Positioned.fill(
                         child: Padding(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: token.sizeXS),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: token.sizeXS,
+                          ),
                           child: _buildInnerInfoWidget(
                             token,
                             currentPercent,
@@ -1097,16 +1104,19 @@ class _ProgressState extends State<Progress> {
               final fullWidth = constraints.maxWidth;
               final fillWidth = fullWidth * currentPercent;
               const estInfoWidth = 36.0;
-              final leadingPad = (fillWidth - estInfoWidth)
-                  .clamp(0.0, fullWidth - estInfoWidth);
+              final leadingPad = (fillWidth - estInfoWidth).clamp(
+                0.0,
+                fullWidth - estInfoWidth,
+              );
               return Padding(
                 padding: EdgeInsets.only(
                   left: isRtl ? 0 : leadingPad,
                   right: isRtl ? leadingPad : 0,
                 ),
                 child: Align(
-                  alignment:
-                      isRtl ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isRtl
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: infoWidget,
                 ),
               );
@@ -1179,10 +1189,8 @@ class _ProgressState extends State<Progress> {
           if (currentChild != null) currentChild,
         ],
       ),
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: child,
-      ),
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
       child: showBadge
           ? KeyedSubtree(
               key: const ValueKey('badge'),
@@ -1229,14 +1237,10 @@ class _ProgressState extends State<Progress> {
       duration: token.motionDurationFast,
       layoutBuilder: (currentChild, previousChildren) => Stack(
         alignment: edgeAlign,
-        children: [
-          if (currentChild != null) currentChild,
-        ],
+        children: [if (currentChild != null) currentChild],
       ),
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: child,
-      ),
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
       child: showBadge
           ? KeyedSubtree(
               key: const ValueKey('badge'),
@@ -1273,18 +1277,11 @@ class _ProgressState extends State<Progress> {
     );
   }
 
-  Widget _buildOuterInfoWidget(
-    Token token,
-    double currentPercent,
-    bool isRtl,
-  ) {
+  Widget _buildOuterInfoWidget(Token token, double currentPercent, bool isRtl) {
     if (widget.child != null) return widget.child!;
     final showBadge = widget.format == null && _isComplete(currentPercent);
     return ConstrainedBox(
-      constraints: BoxConstraints(
-        minWidth: 36,
-        maxHeight: token.fontSizeLG,
-      ),
+      constraints: BoxConstraints(minWidth: 36, maxHeight: token.fontSizeLG),
       child: AnimatedSwitcher(
         duration: token.motionDurationFast,
         layoutBuilder: (currentChild, previousChildren) => Stack(
@@ -1294,24 +1291,24 @@ class _ProgressState extends State<Progress> {
             if (currentChild != null) currentChild,
           ],
         ),
-        transitionBuilder: (child, animation) => FadeTransition(
-          opacity: animation,
-          child: child,
-        ),
+        transitionBuilder: (child, animation) =>
+            FadeTransition(opacity: animation, child: child),
         child: showBadge
             ? KeyedSubtree(
                 key: const ValueKey('badge'),
                 child: Align(
-                  alignment:
-                      isRtl ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isRtl
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: _lineBadge(token, currentPercent),
                 ),
               )
             : KeyedSubtree(
                 key: const ValueKey('text'),
                 child: Align(
-                  alignment:
-                      isRtl ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isRtl
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: DefaultTextStyle(
                     style: TextStyle(
                       color: token.colorText,
@@ -1330,7 +1327,8 @@ class _ProgressState extends State<Progress> {
   }
 
   Widget _circle(Token token, _ResolvedProgressToken r, double currentPercent) {
-    final effectiveSize = widget.size ??
+    final effectiveSize =
+        widget.size ??
         ConfigProvider.defaultsOf<ProgressDefaults>(context)?.size ??
         ConfigProvider.componentSizeOf(context) ??
         SoftSize.middle;
@@ -1338,7 +1336,8 @@ class _ProgressState extends State<Progress> {
     final defaultStroke = effectiveSize == SoftSize.small
         ? r.circleStrokeWidthSM
         : r.circleStrokeWidth;
-    final stroke = widget.strokeWidth ??
+    final stroke =
+        widget.strokeWidth ??
         (effectiveSize is ExplicitHeight
             ? effectiveSize.height * 0.1
             : defaultStroke);
@@ -1368,8 +1367,8 @@ class _ProgressState extends State<Progress> {
         child: widget.child != null
             ? Center(child: widget.child)
             : (_showInfo
-                ? Center(child: _circleInfo(token, fill, currentPercent))
-                : null),
+                  ? Center(child: _circleInfo(token, fill, currentPercent))
+                  : null),
       ),
     );
   }
@@ -1382,10 +1381,8 @@ class _ProgressState extends State<Progress> {
     final showBadge = widget.format == null && _isComplete(p);
     return AnimatedSwitcher(
       duration: token.motionDurationFast,
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: child,
-      ),
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
       child: showBadge
           ? KeyedSubtree(
               key: const ValueKey('complete'),
@@ -1500,8 +1497,8 @@ class _CirclePainter extends CustomPainter {
 
       final double stepProgress = (steps?.fill == ProgressStepFill.immediately)
           ? (rawStepProgress >= i + 1 || (rawStepProgress - i) >= 0.999
-              ? 1.0
-              : 0.0)
+                ? 1.0
+                : 0.0)
           : (rawStepProgress - i).clamp(0.0, 1.0);
 
       if (stepProgress > 0) {
@@ -1554,13 +1551,7 @@ class _CirclePainter extends CustomPainter {
           fillPaint.color = fill;
         }
 
-        canvas.drawArc(
-          circleRect,
-          startAngle,
-          sweepAngle,
-          false,
-          fillPaint,
-        );
+        canvas.drawArc(circleRect, startAngle, sweepAngle, false, fillPaint);
       }
     }
   }

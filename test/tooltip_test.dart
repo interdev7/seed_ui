@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart'
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart'
     hide
         ThemeData,
         Checkbox,
@@ -9,13 +10,12 @@ import 'package:flutter/material.dart'
         Tooltip,
         Drawer,
         Divider;
-import 'package:flutter_test/flutter_test.dart';
 import 'package:seed_ui/seed_ui.dart';
 
 Widget _host(Widget child) => MaterialApp(
-      navigatorKey: UiKit.navigatorKey,
-      home: Scaffold(body: Center(child: child)),
-    );
+  navigatorKey: UiKit.navigatorKey,
+  home: Scaffold(body: Center(child: child)),
+);
 
 /// See `message_test.dart`: `pumpAndSettle` is unusable with the kit's
 /// animations. The trailing pump lets the overlay rebuild after exit.
@@ -36,9 +36,7 @@ Future<TestGesture> _hover(WidgetTester tester, Finder target) async {
 void main() {
   testWidgets('appears after the wait duration on hover', (tester) async {
     await tester.pumpWidget(
-      _host(
-        const Tooltip(message: Text('Search'), child: Text('trigger')),
-      ),
+      _host(const Tooltip(message: Text('Search'), child: Text('trigger'))),
     );
 
     await _hover(tester, find.text('trigger'));
@@ -53,9 +51,7 @@ void main() {
 
   testWidgets('hides when the pointer leaves', (tester) async {
     await tester.pumpWidget(
-      _host(
-        const Tooltip(message: Text('Search'), child: Text('trigger')),
-      ),
+      _host(const Tooltip(message: Text('Search'), child: Text('trigger'))),
     );
 
     final gesture = await _hover(tester, find.text('trigger'));
@@ -122,10 +118,7 @@ void main() {
     await _settle(tester);
     expect(find.text('Search'), findsOneWidget);
     // The caret painter is absent.
-    expect(
-      find.byKey(const Key('softPopoverArrow')),
-      findsNothing,
-    );
+    expect(find.byKey(const Key('softPopoverArrow')), findsNothing);
   });
 
   testWidgets('arrow is drawn by default', (tester) async {
@@ -141,10 +134,7 @@ void main() {
 
     await tester.tap(find.text('trigger'));
     await _settle(tester);
-    expect(
-      find.byKey(const Key('softPopoverArrow')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('softPopoverArrow')), findsOneWidget);
   });
 
   testWidgets('a touch tap shows the tooltip and auto-hides', (tester) async {
@@ -168,8 +158,9 @@ void main() {
     expect(find.text('Search'), findsNothing);
   });
 
-  testWidgets('a touch tap shows the tooltip and still taps the child',
-      (tester) async {
+  testWidgets('a touch tap shows the tooltip and still taps the child', (
+    tester,
+  ) async {
     // Regression: on a touchscreen there is no hover, so the tooltip must open
     // on tap — without swallowing the tap the button needs.
     var tapped = 0;

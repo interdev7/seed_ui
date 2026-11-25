@@ -9,7 +9,7 @@ Slider(value: _volume, onChanged: (v) => setState(() => _volume = v))
 `Slider` clashes with Material's own. Hide one of them at the import:
 
 ```dart
-import 'package:flutter/material.dart' hide Slider, RangeSlider;
+import 'package:material_ui/material_ui.dart' hide Slider, RangeSlider;
 ```
 
 ## The scale

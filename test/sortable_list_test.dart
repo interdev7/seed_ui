@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart' hide ThemeData, Divider;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' hide ThemeData, Divider;
 import 'package:seed_ui/seed_ui.dart';
 
 // SortableList (via SliverReorderableList) needs Overlay + Localizations, which
 // MaterialApp provides.
 Widget _app(Widget child) => MaterialApp(
-      home: Scaffold(body: ConfigProvider(child: child)),
-    );
+  home: Scaffold(body: ConfigProvider(child: child)),
+);
 
 class _Harness extends StatefulWidget {
   const _Harness({required this.direction});

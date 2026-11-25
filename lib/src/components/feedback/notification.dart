@@ -68,23 +68,23 @@ class NotificationToken {
   final double? width;
 
   _ResolvedNotificationToken _resolve(Token t) => _ResolvedNotificationToken(
-        colorBgElevated: colorBgElevated ?? t.colorBgElevated,
-        padding: padding ?? EdgeInsets.all(t.sizeMD),
-        borderRadius: borderRadius ?? t.borderRadiusLG,
-        titleFontSize: titleFontSize ?? t.fontSizeLG,
-        descriptionFontSize: descriptionFontSize ?? t.fontSize,
-        width: width ?? 384,
-      );
+    colorBgElevated: colorBgElevated ?? t.colorBgElevated,
+    padding: padding ?? EdgeInsets.all(t.sizeMD),
+    borderRadius: borderRadius ?? t.borderRadiusLG,
+    titleFontSize: titleFontSize ?? t.fontSizeLG,
+    descriptionFontSize: descriptionFontSize ?? t.fontSize,
+    width: width ?? 384,
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   NotificationToken merge(NotificationToken other) => NotificationToken(
-        colorBgElevated: other.colorBgElevated ?? colorBgElevated,
-        padding: other.padding ?? padding,
-        borderRadius: other.borderRadius ?? borderRadius,
-        titleFontSize: other.titleFontSize ?? titleFontSize,
-        descriptionFontSize: other.descriptionFontSize ?? descriptionFontSize,
-        width: other.width ?? width,
-      );
+    colorBgElevated: other.colorBgElevated ?? colorBgElevated,
+    padding: other.padding ?? padding,
+    borderRadius: other.borderRadius ?? borderRadius,
+    titleFontSize: other.titleFontSize ?? titleFontSize,
+    descriptionFontSize: other.descriptionFontSize ?? descriptionFontSize,
+    width: other.width ?? width,
+  );
 }
 
 @immutable
@@ -224,19 +224,18 @@ class NotificationApi {
     List<Widget>? actions,
     VoidCallback? onClose,
     Object? key,
-  }) =>
-      open(
-        NotificationConfig(
-          message: Text(message),
-          description: description == null ? null : Text(description),
-          type: StatusType.success,
-          duration: duration,
-          placement: placement,
-          actions: actions,
-          onClose: onClose,
-          key: key,
-        ),
-      );
+  }) => open(
+    NotificationConfig(
+      message: Text(message),
+      description: description == null ? null : Text(description),
+      type: StatusType.success,
+      duration: duration,
+      placement: placement,
+      actions: actions,
+      onClose: onClose,
+      key: key,
+    ),
+  );
 
   /// Shows a red cross notification. Returns a handle that closes it early.
   NotificationHandle error(
@@ -247,19 +246,18 @@ class NotificationApi {
     List<Widget>? actions,
     VoidCallback? onClose,
     Object? key,
-  }) =>
-      open(
-        NotificationConfig(
-          message: Text(message),
-          description: description == null ? null : Text(description),
-          type: StatusType.error,
-          duration: duration,
-          placement: placement,
-          actions: actions,
-          onClose: onClose,
-          key: key,
-        ),
-      );
+  }) => open(
+    NotificationConfig(
+      message: Text(message),
+      description: description == null ? null : Text(description),
+      type: StatusType.error,
+      duration: duration,
+      placement: placement,
+      actions: actions,
+      onClose: onClose,
+      key: key,
+    ),
+  );
 
   /// Shows an amber warning notification. Returns a handle that closes it
   /// early.
@@ -271,19 +269,18 @@ class NotificationApi {
     List<Widget>? actions,
     VoidCallback? onClose,
     Object? key,
-  }) =>
-      open(
-        NotificationConfig(
-          message: Text(message),
-          description: description == null ? null : Text(description),
-          type: StatusType.warning,
-          duration: duration,
-          placement: placement,
-          actions: actions,
-          onClose: onClose,
-          key: key,
-        ),
-      );
+  }) => open(
+    NotificationConfig(
+      message: Text(message),
+      description: description == null ? null : Text(description),
+      type: StatusType.warning,
+      duration: duration,
+      placement: placement,
+      actions: actions,
+      onClose: onClose,
+      key: key,
+    ),
+  );
 
   /// Shows a neutral informational notification. Returns a handle that closes
   /// it early.
@@ -295,19 +292,18 @@ class NotificationApi {
     List<Widget>? actions,
     VoidCallback? onClose,
     Object? key,
-  }) =>
-      open(
-        NotificationConfig(
-          message: Text(message),
-          description: description == null ? null : Text(description),
-          type: StatusType.info,
-          duration: duration,
-          placement: placement,
-          actions: actions,
-          onClose: onClose,
-          key: key,
-        ),
-      );
+  }) => open(
+    NotificationConfig(
+      message: Text(message),
+      description: description == null ? null : Text(description),
+      type: StatusType.info,
+      duration: duration,
+      placement: placement,
+      actions: actions,
+      onClose: onClose,
+      key: key,
+    ),
+  );
 
   /// Shows a notification built from [config], for anything the named helpers
   /// do not cover.
@@ -321,15 +317,14 @@ class NotificationApi {
     double? offset,
     bool? stack,
     int? stackThreshold,
-  }) =>
-      _stack.configure(
-        maxCount: maxCount,
-        duration: duration,
-        placement: placement,
-        offset: offset,
-        stack: stack,
-        stackThreshold: stackThreshold,
-      );
+  }) => _stack.configure(
+    maxCount: maxCount,
+    duration: duration,
+    placement: placement,
+    offset: offset,
+    stack: stack,
+    stackThreshold: stackThreshold,
+  );
 
   /// Dismisses every notification, or just the one matching [key].
   void destroy([Object? key]) => _stack.destroy(key);
@@ -544,8 +539,10 @@ class _NotificationPlacementContainerState
     duration: const Duration(milliseconds: 300),
     value: 1,
   );
-  late final Animation<double> _curve =
-      CurvedAnimation(parent: _expand, curve: Curves.easeInOut);
+  late final Animation<double> _curve = CurvedAnimation(
+    parent: _expand,
+    curve: Curves.easeInOut,
+  );
 
   @override
   void dispose() {
@@ -593,7 +590,8 @@ class _NotificationPlacementContainerState
 
         if (items.isEmpty) return const SizedBox.shrink();
 
-        final maxWidth = MediaQuery.sizeOf(context).width -
+        final maxWidth =
+            MediaQuery.sizeOf(context).width -
             widget.offset * 2 -
             padding.horizontal;
 
@@ -604,7 +602,8 @@ class _NotificationPlacementContainerState
           _releasePopScope();
         }
 
-        final collapsed = widget.stackEnabled &&
+        final collapsed =
+            widget.stackEnabled &&
             items.length > widget.stackThreshold &&
             !_hovered &&
             !_tapExpanded;
@@ -613,7 +612,8 @@ class _NotificationPlacementContainerState
         // The scroll view has to clip, so the layer is inflated by
         // [_shadowPad] on every side and shifted back by the same amount:
         // clipping then happens well clear of the cards' drop shadows.
-        final maxHeight = MediaQuery.sizeOf(context).height -
+        final maxHeight =
+            MediaQuery.sizeOf(context).height -
             widget.offset * 2 -
             padding.vertical +
             _shadowPad * 2;
@@ -705,8 +705,9 @@ class _NotificationPlacementContainerState
 
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment:
-          left ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      crossAxisAlignment: left
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.end,
       verticalDirection: top ? VerticalDirection.down : VerticalDirection.up,
       children: [
         for (int i = 0; i < count; i++)
@@ -852,11 +853,12 @@ class _NotificationCardState extends State<_NotificationCard>
       return;
     }
 
-    _settleAnimation = Tween<double>(begin: _dragX, end: 0)
-        .animate(CurvedAnimation(parent: _settle, curve: Curves.easeOut))
-      ..addListener(() {
-        if (mounted) setState(() => _dragX = _settleAnimation!.value);
-      });
+    _settleAnimation =
+        Tween<double>(begin: _dragX, end: 0).animate(
+          CurvedAnimation(parent: _settle, curve: Curves.easeOut),
+        )..addListener(() {
+          if (mounted) setState(() => _dragX = _settleAnimation!.value);
+        });
     _settle.forward(from: 0);
   }
 
@@ -875,10 +877,11 @@ class _NotificationCardState extends State<_NotificationCard>
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.config.token ??
-            ConfigProvider.componentOf<NotificationToken>(context) ??
-            const NotificationToken())
-        ._resolve(token);
+    final r =
+        (widget.config.token ??
+                ConfigProvider.componentOf<NotificationToken>(context) ??
+                const NotificationToken())
+            ._resolve(token);
     final curved = CurvedAnimation(
       parent: _controller,
       curve: token.motionEaseOutCirc,
@@ -926,10 +929,7 @@ class _NotificationCardState extends State<_NotificationCard>
       onHorizontalDragEnd: (d) => _onDragEnd(d, width),
       child: Transform.translate(
         offset: Offset(_dragX, 0),
-        child: Opacity(
-          opacity: 1 - progress * 0.6,
-          child: _card(token, r),
-        ),
+        child: Opacity(opacity: 1 - progress * 0.6, child: _card(token, r)),
       ),
     );
   }
@@ -993,8 +993,9 @@ class _NotificationCardState extends State<_NotificationCard>
                   children: [
                     for (final action in config.actions!)
                       Padding(
-                        padding:
-                            EdgeInsetsDirectional.only(start: token.sizeXS),
+                        padding: EdgeInsetsDirectional.only(
+                          start: token.sizeXS,
+                        ),
                         child: action,
                       ),
                   ],

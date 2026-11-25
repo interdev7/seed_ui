@@ -15,7 +15,7 @@ enum SegmentedDirection {
   horizontal,
 
   /// Options stack top to bottom.
-  vertical
+  vertical,
 }
 
 /// Which end of an overflowing [Segmented] an arrow steps towards.
@@ -35,11 +35,12 @@ enum SegmentedArrow {
 /// is one line. It is the shape `EmptyBuilder` already has.
 ///
 /// Call [step] when the arrow is pressed; the kit places what you return.
-typedef SegmentedArrowBuilder = Widget Function(
-  BuildContext context,
-  SegmentedArrow arrow,
-  VoidCallback step,
-);
+typedef SegmentedArrowBuilder =
+    Widget Function(
+      BuildContext context,
+      SegmentedArrow arrow,
+      VoidCallback step,
+    );
 
 /// Drives an overflowing [Segmented] from outside the build.
 ///
@@ -128,9 +129,9 @@ class SegmentedOption<T> {
     this.semanticsLabel,
     this.disabled = false,
   }) : assert(
-          label != null || icon != null || child != null,
-          'a segment needs a label, an icon, or a custom child',
-        );
+         label != null || icon != null || child != null,
+         'a segment needs a label, an icon, or a custom child',
+       );
 
   /// The value reported when this segment is selected.
   final T value;
@@ -235,62 +236,63 @@ class SegmentedToken {
   final List<BoxShadow>? thumbShadow;
 
   _ResolvedSegmentedToken _resolve(Token t) => _ResolvedSegmentedToken(
-        // The layout background, not a translucent fill. A fill lightens the
-        // track in a dark theme, which leaves the elevated thumb *darker* than
-        // the groove it sits in — the elevation reads inverted, and the only
-        // thing separating the two is the shadow.
-        trackBg: trackBg ?? t.colorBgLayout,
-        trackPadding: trackPadding ?? t.sizeXXS / 2,
-        itemColor: itemColor ?? t.colorTextSecondary,
-        itemHoverColor: itemHoverColor ?? t.colorText,
-        itemHoverBg: itemHoverBg ?? t.colorFillSecondary,
-        itemSelectedBg: itemSelectedBg ?? t.colorBgElevated,
-        itemSelectedColor: itemSelectedColor ?? t.colorText,
-        borderRadius: borderRadius ?? t.borderRadius,
-        borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
-        borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
-        // The elevated surface rather than the track's own: a button that
-        // matched the groove would vanish into it. Translucent, so the segment
-        // sliding under it stays readable.
-        arrowBg: arrowBg ?? t.colorBgElevated.withValues(alpha: 0.9),
-        arrowHoverBg: arrowHoverBg ?? t.colorBgElevated,
-        arrowColor: arrowColor ?? t.colorText,
-        thumbShadow: thumbShadow ??
-            [
-              // Enough to read as lifted, tight enough to stay under the
-              // thumb: the track is the page's own colour, so this shadow is
-              // the only thing that separates the two.
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.5 : 0.11),
-                offset: const Offset(0, 2),
-                blurRadius: 5,
-                spreadRadius: -1,
-              ),
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.35 : 0.08),
-                offset: const Offset(0, 1),
-                blurRadius: 2,
-              ),
-            ],
-      );
+    // The layout background, not a translucent fill. A fill lightens the
+    // track in a dark theme, which leaves the elevated thumb *darker* than
+    // the groove it sits in — the elevation reads inverted, and the only
+    // thing separating the two is the shadow.
+    trackBg: trackBg ?? t.colorBgLayout,
+    trackPadding: trackPadding ?? t.sizeXXS / 2,
+    itemColor: itemColor ?? t.colorTextSecondary,
+    itemHoverColor: itemHoverColor ?? t.colorText,
+    itemHoverBg: itemHoverBg ?? t.colorFillSecondary,
+    itemSelectedBg: itemSelectedBg ?? t.colorBgElevated,
+    itemSelectedColor: itemSelectedColor ?? t.colorText,
+    borderRadius: borderRadius ?? t.borderRadius,
+    borderRadiusSM: borderRadiusSM ?? t.borderRadiusSM,
+    borderRadiusLG: borderRadiusLG ?? t.borderRadiusLG,
+    // The elevated surface rather than the track's own: a button that
+    // matched the groove would vanish into it. Translucent, so the segment
+    // sliding under it stays readable.
+    arrowBg: arrowBg ?? t.colorBgElevated.withValues(alpha: 0.9),
+    arrowHoverBg: arrowHoverBg ?? t.colorBgElevated,
+    arrowColor: arrowColor ?? t.colorText,
+    thumbShadow:
+        thumbShadow ??
+        [
+          // Enough to read as lifted, tight enough to stay under the
+          // thumb: the track is the page's own colour, so this shadow is
+          // the only thing that separates the two.
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.5 : 0.11),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+            spreadRadius: -1,
+          ),
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, t.isDark ? 0.35 : 0.08),
+            offset: const Offset(0, 1),
+            blurRadius: 2,
+          ),
+        ],
+  );
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SegmentedToken merge(SegmentedToken other) => SegmentedToken(
-        trackBg: other.trackBg ?? trackBg,
-        trackPadding: other.trackPadding ?? trackPadding,
-        itemColor: other.itemColor ?? itemColor,
-        itemHoverColor: other.itemHoverColor ?? itemHoverColor,
-        itemHoverBg: other.itemHoverBg ?? itemHoverBg,
-        itemSelectedBg: other.itemSelectedBg ?? itemSelectedBg,
-        itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
-        borderRadius: other.borderRadius ?? borderRadius,
-        borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
-        borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
-        arrowBg: other.arrowBg ?? arrowBg,
-        arrowHoverBg: other.arrowHoverBg ?? arrowHoverBg,
-        arrowColor: other.arrowColor ?? arrowColor,
-        thumbShadow: other.thumbShadow ?? thumbShadow,
-      );
+    trackBg: other.trackBg ?? trackBg,
+    trackPadding: other.trackPadding ?? trackPadding,
+    itemColor: other.itemColor ?? itemColor,
+    itemHoverColor: other.itemHoverColor ?? itemHoverColor,
+    itemHoverBg: other.itemHoverBg ?? itemHoverBg,
+    itemSelectedBg: other.itemSelectedBg ?? itemSelectedBg,
+    itemSelectedColor: other.itemSelectedColor ?? itemSelectedColor,
+    borderRadius: other.borderRadius ?? borderRadius,
+    borderRadiusSM: other.borderRadiusSM ?? borderRadiusSM,
+    borderRadiusLG: other.borderRadiusLG ?? borderRadiusLG,
+    arrowBg: other.arrowBg ?? arrowBg,
+    arrowHoverBg: other.arrowHoverBg ?? arrowHoverBg,
+    arrowColor: other.arrowColor ?? arrowColor,
+    thumbShadow: other.thumbShadow ?? thumbShadow,
+  );
 }
 
 @immutable
@@ -361,11 +363,11 @@ class SegmentedDefaults {
 
   /// This one with [other]'s fields laid over it, one field at a time.
   SegmentedDefaults merge(SegmentedDefaults other) => SegmentedDefaults(
-        direction: other.direction ?? direction,
-        scrollButtons: other.scrollButtons ?? scrollButtons,
-        size: other.size ?? size,
-        disabled: other.disabled ?? disabled,
-      );
+    direction: other.direction ?? direction,
+    scrollButtons: other.scrollButtons ?? scrollButtons,
+    size: other.size ?? size,
+    disabled: other.disabled ?? disabled,
+  );
 }
 
 /// A single-select control laid out as a strip of segments, with a thumb that
@@ -508,10 +510,10 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
   /// The preset a height of your own is nearest to: the corners and the type
   /// come from it, since a bare number says nothing about either.
   SoftSize _preset(Token token) => _size.nearestPreset(
-        small: token.controlHeightSM,
-        middle: token.controlHeight,
-        large: token.controlHeightLG,
-      );
+    small: token.controlHeightSM,
+    middle: token.controlHeight,
+    large: token.controlHeightLG,
+  );
 
   final GlobalKey _stackKey = GlobalKey();
   final Map<int, GlobalKey> _segmentKeys = {};
@@ -698,10 +700,14 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
     // above would then aim backwards. Fall back to a viewport's worth.
     if (forward && to <= start + 0.5) {
       to = math.min(
-          position.maxScrollExtent, start + position.viewportDimension);
+        position.maxScrollExtent,
+        start + position.viewportDimension,
+      );
     } else if (!forward && to >= start - 0.5) {
       to = math.max(
-          position.minScrollExtent, start - position.viewportDimension);
+        position.minScrollExtent,
+        start - position.viewportDimension,
+      );
     }
 
     final token = context.softToken;
@@ -742,10 +748,10 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
   GlobalKey _keyFor(int i) => _segmentKeys.putIfAbsent(i, GlobalKey.new);
 
   double _height(Token token) => _size.resolveHeight(
-        small: token.controlHeightSM,
-        middle: token.controlHeight,
-        large: token.controlHeightLG,
-      );
+    small: token.controlHeightSM,
+    middle: token.controlHeight,
+    large: token.controlHeightLG,
+  );
 
   double _radius(_ResolvedSegmentedToken r, Token token) =>
       switch (_preset(token)) {
@@ -755,18 +761,19 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
       };
 
   double _fontSize(Token token) => switch (_preset(token)) {
-        SoftSize.small => token.fontSizeSM,
-        SoftSize.middle => token.fontSize,
-        SoftSize.large => token.fontSizeLG,
-      };
+    SoftSize.small => token.fontSizeSM,
+    SoftSize.middle => token.fontSize,
+    SoftSize.large => token.fontSizeLG,
+  };
 
   @override
   Widget build(BuildContext context) {
     final token = context.softToken;
-    final r = (widget.token ??
-            ConfigProvider.componentOf<SegmentedToken>(context) ??
-            const SegmentedToken())
-        ._resolve(token);
+    final r =
+        (widget.token ??
+                ConfigProvider.componentOf<SegmentedToken>(context) ??
+                const SegmentedToken())
+            ._resolve(token);
     // Positions depend on the laid-out sizes, so measure after the frame and
     // let AnimatedPositioned slide the thumb to the selected segment's rect.
     WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
@@ -816,8 +823,9 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
                     decoration: BoxDecoration(
                       color: _enabled
                           ? (widget.thumbColor ?? r.itemSelectedBg)
-                          : (widget.thumbColor ?? r.itemSelectedBg)
-                              .withValues(alpha: 0.5),
+                          : (widget.thumbColor ?? r.itemSelectedBg).withValues(
+                              alpha: 0.5,
+                            ),
                       borderRadius: BorderRadius.circular(_radius(r, token)),
                       boxShadow: _enabled ? r.thumbShadow : null,
                     ),
@@ -866,11 +874,7 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
   /// viewport the moment it appeared, hiding another segment and so keeping
   /// itself needed. Each sits on the end it steps towards and goes when that
   /// end has nothing left to show.
-  Widget _withArrows(
-    Token token,
-    _ResolvedSegmentedToken r,
-    Widget child,
-  ) {
+  Widget _withArrows(Token token, _ResolvedSegmentedToken r, Widget child) {
     if (block || !_scrollButtons) return child;
     final words = SeedLocalizations.of(context);
 
@@ -995,9 +999,9 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
     // reach this the same way.
     _syncArrows();
     final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
-    final segBox = _segmentKeys[_selectedIndex]
-        ?.currentContext
-        ?.findRenderObject() as RenderBox?;
+    final segBox =
+        _segmentKeys[_selectedIndex]?.currentContext?.findRenderObject()
+            as RenderBox?;
     if (stackBox == null || segBox == null || !segBox.hasSize) return;
     final origin = segBox.localToGlobal(Offset.zero, ancestor: stackBox);
     final rect = origin & segBox.size;
@@ -1020,10 +1024,10 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
     final color = !enabled
         ? token.colorTextQuaternary
         : selected
-            ? r.itemSelectedColor
-            : hovered
-                ? r.itemHoverColor
-                : r.itemColor;
+        ? r.itemSelectedColor
+        : hovered
+        ? r.itemHoverColor
+        : r.itemColor;
 
     final label = option.label == null
         ? null
@@ -1048,7 +1052,8 @@ class _SoftSegmentedState<T> extends State<Segmented<T>> {
             ),
           );
 
-    final content = option.child ??
+    final content =
+        option.child ??
         Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,

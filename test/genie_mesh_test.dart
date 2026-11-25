@@ -19,15 +19,14 @@ void main() {
     PopoverSide side, {
     double mouth = 0.5,
     double mouthWidth = 0.25,
-  }) =>
-      GenieMesh(side: side).build(
-        t: t,
-        offset: Offset.zero,
-        size: box,
-        sourceSize: source,
-        mouthCross: mouth,
-        mouthWidth: mouthWidth,
-      );
+  }) => GenieMesh(side: side).build(
+    t: t,
+    offset: Offset.zero,
+    size: box,
+    sourceSize: source,
+    mouthCross: mouth,
+    mouthWidth: mouthWidth,
+  );
 
   /// Row widths, from the card's mouth edge outwards.
   List<double> widthsAt(
@@ -188,26 +187,28 @@ void main() {
     }
   });
 
-  test('the shadow is there from the first frames, not poured in with the card',
-      () {
-    // The sheet fades in over the first part of the pour, but its shadow must
-    // not: a shadow that arrives along with what casts it reads as a second
-    // card fading in. It is up to weight while the card is still faint.
-    expect(GenieMesh.shadowWeight(0), 0);
-    expect(
-      GenieMesh.shadowWeight(0.1),
-      greaterThan(0.6),
-      reason: 'a tenth of the way in the shadow is barely showing',
-    );
-    expect(GenieMesh.shadowWeight(0.2), 1);
-    expect(GenieMesh.shadowWeight(1), 1);
+  test(
+    'the shadow is there from the first frames, not poured in with the card',
+    () {
+      // The sheet fades in over the first part of the pour, but its shadow must
+      // not: a shadow that arrives along with what casts it reads as a second
+      // card fading in. It is up to weight while the card is still faint.
+      expect(GenieMesh.shadowWeight(0), 0);
+      expect(
+        GenieMesh.shadowWeight(0.1),
+        greaterThan(0.6),
+        reason: 'a tenth of the way in the shadow is barely showing',
+      );
+      expect(GenieMesh.shadowWeight(0.2), 1);
+      expect(GenieMesh.shadowWeight(1), 1);
 
-    // Against the sheet's own fade at the same moment.
-    expect(
-      GenieMesh.shadowWeight(0.1),
-      greaterThan(GenieMesh.smooth(0.1 * 2.5) * 3),
-    );
-  });
+      // Against the sheet's own fade at the same moment.
+      expect(
+        GenieMesh.shadowWeight(0.1),
+        greaterThan(GenieMesh.smooth(0.1 * 2.5) * 3),
+      );
+    },
+  );
 
   test('no frame moves the sheet much more than its neighbours', () {
     // The mesh is a shape at a progress; the pace comes from the curve the
@@ -220,8 +221,10 @@ void main() {
     var last = 0.0;
 
     for (var i = 1; i <= frames; i++) {
-      final before =
-          sheetAt(curve.transform((i - 1) / frames), PopoverSide.top);
+      final before = sheetAt(
+        curve.transform((i - 1) / frames),
+        PopoverSide.top,
+      );
       final after = sheetAt(curve.transform(i / frames), PopoverSide.top);
 
       var biggest = 0.0;

@@ -1159,19 +1159,20 @@ class FloatButtonItem<T> {
 /// like. A wrapper that changes the item's size is worth knowing about: the
 /// layout spaces items by the size in the token, so something much larger will
 /// crowd its neighbours.
-typedef FloatButtonItemBuilder<T> =
-    Widget Function(
-      BuildContext context,
-      FloatButtonItem<T> item,
-      Widget child,
-    );
+typedef FloatButtonItemBuilder<T> = Widget Function(
+  BuildContext context,
+  FloatButtonItem<T> item,
+  Widget child,
+);
 
 /// Draws the caption beside item [item] in place of its plain text.
 ///
 /// Returning null leaves the item with the caption it would have had, so a
 /// builder can dress one item and let the rest alone.
-typedef FloatButtonLabelBuilder<T> =
-    Widget? Function(BuildContext context, FloatButtonItem<T> item);
+typedef FloatButtonLabelBuilder<T> = Widget? Function(
+  BuildContext context,
+  FloatButtonItem<T> item,
+);
 
 /// Opens and closes a [FloatButtonGroup] from outside the build.
 ///

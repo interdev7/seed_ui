@@ -62,66 +62,67 @@ void main() {
     expect(radius.topRight.x, lessThan(ThemeData.light.token.borderRadius));
   });
 
-  testWidgets('hovering a stepper lights the chevron, it does not wash the box', (
-    tester,
-  ) async {
-    // A hover is answered on the chevron; the background is only washed
-    // while the handle is pressed, and faintly.
-    await tester.pumpWidget(
-      _host(
-        ConfigProvider(
-          theme: ThemeData.light,
-          child: const SizedBox(
-            width: 200,
-            child: InputNumber(defaultValue: 1),
+  testWidgets(
+    'hovering a stepper lights the chevron, it does not wash the box',
+    (tester) async {
+      // A hover is answered on the chevron; the background is only washed
+      // while the handle is pressed, and faintly.
+      await tester.pumpWidget(
+        _host(
+          ConfigProvider(
+            theme: ThemeData.light,
+            child: const SizedBox(
+              width: 200,
+              child: InputNumber(defaultValue: 1),
+            ),
           ),
         ),
-      ),
-    );
-    // One pointer for the whole test: the helper's would collide with a second.
-    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
-    await gesture.addPointer(location: Offset.zero);
-    addTearDown(gesture.removePointer);
-    await gesture.moveTo(tester.getCenter(find.byType(InputNumber)));
-    await tester.pumpAndSettle();
+      );
+      // One pointer for the whole test: the helper's would collide with a second.
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+      await gesture.moveTo(tester.getCenter(find.byType(InputNumber)));
+      await tester.pumpAndSettle();
 
-    Color chevronColour() =>
-        (tester.widgetList<CustomPaint>(_carets()).first.painter as dynamic)
-                .color
-            as Color;
-    // The button paints its background through `color:`, which Flutter turns
-    // into a BoxDecoration — a transparent one means nothing is drawn.
-    Color? boxColour() {
-      final box = tester
-          .widgetList<AnimatedContainer>(
-            find.ancestor(
-              of: _carets().first,
-              matching: find.byType(AnimatedContainer),
-            ),
-          )
-          .first
-          .decoration;
-      return box is BoxDecoration ? box.color : null;
-    }
+      Color chevronColour() =>
+          (tester.widgetList<CustomPaint>(_carets()).first.painter as dynamic)
+                  .color
+              as Color;
+      // The button paints its background through `color:`, which Flutter turns
+      // into a BoxDecoration — a transparent one means nothing is drawn.
+      Color? boxColour() {
+        final box = tester
+            .widgetList<AnimatedContainer>(
+              find.ancestor(
+                of: _carets().first,
+                matching: find.byType(AnimatedContainer),
+              ),
+            )
+            .first
+            .decoration;
+        return box is BoxDecoration ? box.color : null;
+      }
 
-    final resting = chevronColour();
+      final resting = chevronColour();
 
-    await gesture.moveTo(tester.getCenter(_carets().first));
-    await tester.pumpAndSettle();
+      await gesture.moveTo(tester.getCenter(_carets().first));
+      await tester.pumpAndSettle();
 
-    expect(
-      chevronColour(),
-      isNot(resting),
-      reason: 'the chevron should pick up the accent',
-    );
-    expect(chevronColour(), ThemeData.light.token.primary.base);
-    final fill = boxColour();
-    expect(
-      fill == null || fill.a == 0,
-      isTrue,
-      reason: 'no grey block behind it, got $fill',
-    );
-  });
+      expect(
+        chevronColour(),
+        isNot(resting),
+        reason: 'the chevron should pick up the accent',
+      );
+      expect(chevronColour(), ThemeData.light.token.primary.base);
+      final fill = boxColour();
+      expect(
+        fill == null || fill.a == 0,
+        isTrue,
+        reason: 'no grey block behind it, got $fill',
+      );
+    },
+  );
 
   testWidgets('steppers add and remove the step', (tester) async {
     num? value = 3;

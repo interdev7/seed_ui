@@ -1102,9 +1102,8 @@ class _GeniePainter extends SnapshotPainter {
       )
       // Fades in over the first part of the pour only: a sheet that is still
       // half transparent when it lands looks like a fade, not a genie.
-      ..color = const Color(
-        0xFFFFFFFF,
-      ).withValues(alpha: GenieMesh.smooth(t * 2.5).clamp(0.0, 1.0));
+      ..color = const Color(0xFFFFFFFF)
+          .withValues(alpha: GenieMesh.smooth(t * 2.5).clamp(0.0, 1.0));
 
     context.canvas.drawVertices(
       ui.Vertices(

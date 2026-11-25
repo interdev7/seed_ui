@@ -742,9 +742,8 @@ void main() {
       // The colour comes from the row around the builder, so a builder that
       // returns bare words still greys out when the item is barred.
       final style = tester.widget<Text>(find.text('Off')).style;
-      final merged = DefaultTextStyle.of(
-        tester.element(find.text('Off')),
-      ).style;
+      final merged = DefaultTextStyle.of(tester.element(find.text('Off')))
+          .style;
       expect(style?.color ?? merged.color, isNotNull);
       expect(
         style?.color ?? merged.color,

@@ -35,12 +35,11 @@ enum SegmentedArrow {
 /// is one line. It is the shape `EmptyBuilder` already has.
 ///
 /// Call [step] when the arrow is pressed; the kit places what you return.
-typedef SegmentedArrowBuilder =
-    Widget Function(
-      BuildContext context,
-      SegmentedArrow arrow,
-      VoidCallback step,
-    );
+typedef SegmentedArrowBuilder = Widget Function(
+  BuildContext context,
+  SegmentedArrow arrow,
+  VoidCallback step,
+);
 
 /// Drives an overflowing [Segmented] from outside the build.
 ///

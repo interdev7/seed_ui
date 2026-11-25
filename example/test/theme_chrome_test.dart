@@ -35,9 +35,8 @@ void main() {
 
     // Switch the app to the dark theme through its own control.
     final state = tester.state<State<DemoApp>>(find.byType(DemoApp));
-    ThemeController.of(
-      tester.element(find.byType(MainLayout)),
-    ).setTheme(ThemeModeOption.dark);
+    ThemeController.of(tester.element(find.byType(MainLayout)))
+        .setTheme(ThemeModeOption.dark);
     // MaterialApp lerps a theme change, so let the animation finish.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));

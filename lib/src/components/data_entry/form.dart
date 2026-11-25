@@ -59,8 +59,10 @@ typedef FormValidator = FutureOr<String?> Function(Object? value);
 /// [values] is every value the form holds, by field name, so a rule about two
 /// fields — a confirmation, an end that must follow a start — can be written
 /// where it belongs rather than reached for through a controller held outside.
-typedef FormCrossValidator =
-    FutureOr<String?> Function(Object? value, Map<String, Object?> values);
+typedef FormCrossValidator = FutureOr<String?> Function(
+  Object? value,
+  Map<String, Object?> values,
+);
 
 /// One thing a value has to satisfy.
 ///

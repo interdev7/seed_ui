@@ -450,19 +450,16 @@ void main() {
               ok =
                   ConfigProvider.defaultsOf<AvatarDefaults>(context)?.shape ==
                       AvatarShape.square &&
-                  ConfigProvider.defaultsOf<RibbonDefaults>(
-                        context,
-                      )?.placement ==
+                  ConfigProvider.defaultsOf<RibbonDefaults>(context)
+                          ?.placement ==
                       RibbonPlacement.start &&
-                  ConfigProvider.defaultsOf<UploadDefaults>(
-                        context,
-                      )?.showSize ==
+                  ConfigProvider.defaultsOf<UploadDefaults>(context)
+                          ?.showSize ==
                       false &&
                   ConfigProvider.defaultsOf<TabsDefaults>(context)?.hideAdd ==
                       true &&
-                  ConfigProvider.defaultsOf<StepsDefaults>(
-                        context,
-                      )?.responsive ==
+                  ConfigProvider.defaultsOf<StepsDefaults>(context)
+                          ?.responsive ==
                       false;
               return const SizedBox();
             },

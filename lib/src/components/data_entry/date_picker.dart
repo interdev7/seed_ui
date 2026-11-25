@@ -350,8 +350,11 @@ class DateCell {
 ///   ],
 /// )
 /// ```
-typedef DateCellBuilder =
-    Widget Function(BuildContext context, DateCell cell, Widget child);
+typedef DateCellBuilder = Widget Function(
+  BuildContext context,
+  DateCell cell,
+  Widget child,
+);
 
 /// What the panel needs of whatever is driving it.
 ///

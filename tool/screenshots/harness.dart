@@ -164,9 +164,8 @@ Future<void> shoot(
     }))!;
 
     Directory(outDir).createSync(recursive: true);
-    File(
-      '$outDir/$name.${dark ? 'dark' : 'light'}.png',
-    ).writeAsBytesSync(bytes);
+    File('$outDir/$name.${dark ? 'dark' : 'light'}.png')
+        .writeAsBytesSync(bytes);
   }
 
   debugDisableShadows = true;

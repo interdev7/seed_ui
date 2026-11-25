@@ -88,9 +88,8 @@ void main() {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       final lines = entity.readAsStringSync().split('\n');
       for (var i = 0; i < lines.length; i++) {
-        final match = RegExp(
-          r'^  final .*\b(on[A-Z]\w*Change)\b;',
-        ).firstMatch(lines[i]);
+        final match = RegExp(r'^  final .*\b(on[A-Z]\w*Change)\b;')
+            .firstMatch(lines[i]);
         if (match == null) continue;
         final name = match.group(1)!;
         if (name == 'onFocusChange' || name.startsWith('_')) continue;

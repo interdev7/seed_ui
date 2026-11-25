@@ -400,16 +400,16 @@ void main() {
     // the very example the class documents, gave English buttons everywhere
     // else. Read from the source, so the next word added is held to it too.
     test('copyWith passes on every field the constructor takes', () {
-      final source = File(
-        'lib/src/l10n/seed_localizations.dart',
-      ).readAsStringSync();
+      final source = File('lib/src/l10n/seed_localizations.dart')
+          .readAsStringSync();
       final ctor = source.substring(
         source.indexOf('  const SeedLocalizations({'),
         source.indexOf('  }) : assert('),
       );
-      final fields = RegExp(
-        r'this\.(\w+)',
-      ).allMatches(ctor).map((m) => m.group(1)!).toList();
+      final fields = RegExp(r'this\.(\w+)')
+          .allMatches(ctor)
+          .map((m) => m.group(1)!)
+          .toList();
       final copy = source.substring(
         source.indexOf('  SeedLocalizations copyWith({'),
       );

@@ -23,6 +23,21 @@ cd "$(git rev-parse --show-toplevel)"
 
 fail=0
 
+# The formatter's style follows the language version, so a Dart older than the
+# one pubspec.yaml asks for formats the code differently from CI — and a commit
+# that passes here then fails there. A terminal or editor opened before a
+# Flutter upgrade still has the old dart on its PATH; say so instead of letting
+# it quietly reformat.
+need=$(sed -n 's/^  sdk: *"*>=\([0-9]*\.[0-9]*\).*/\1/p' pubspec.yaml | head -1)
+have=$(dart --version 2>&1 | sed -n 's/.*version: \([0-9]*\.[0-9]*\).*/\1/p')
+if [ -n "$need" ] && [ -n "$have" ] &&
+   [ "$(printf '%s\n%s\n' "$need" "$have" | sort -V | head -1)" != "$need" ]; then
+  echo "✗ dart $have is older than the $need pubspec.yaml needs ($(command -v dart))."
+  echo "    Its formatter disagrees with CI. Open a new terminal (or restart the"
+  echo "    editor) so PATH picks up the current Flutter, then commit again."
+  exit 1
+fi
+
 if ! dart format --output=none --set-exit-if-changed . >/dev/null 2>&1; then
   echo "✗ dart format would rewrite some files. Run:"
   echo "    dart format ."

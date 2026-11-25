@@ -70,13 +70,12 @@ enum SliderMarkSide {
 /// dot is. Wrap it and the mark keeps every state for nothing; wrap it in a
 /// menu or a popover and the mark becomes something to press. [active] is
 /// whether the handle has reached this mark.
-typedef SliderMarkBuilder =
-    Widget Function(
-      BuildContext context,
-      SliderMark mark,
-      bool active,
-      Widget child,
-    );
+typedef SliderMarkBuilder = Widget Function(
+  BuildContext context,
+  SliderMark mark,
+  bool active,
+  Widget child,
+);
 
 /// A labelled point on a [Slider]'s scale.
 @immutable

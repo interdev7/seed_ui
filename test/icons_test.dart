@@ -186,9 +186,8 @@ void _clearMarkTests() {
 
     test('the disc keeps to the shorter side', () {
       final canvas = _Recorder();
-      ClearIconPainter(
-        const Color(0xFF000000),
-      ).paint(canvas, const Size(16, 32));
+      ClearIconPainter(const Color(0xFF000000))
+          .paint(canvas, const Size(16, 32));
       // Sixteen wide and thirty-two tall makes a mark sixteen across, not one
       // that spills out of the sides.
       expect(canvas.circles.single.radius, 8);

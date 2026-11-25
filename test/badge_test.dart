@@ -268,9 +268,8 @@ void main() {
       );
       expect(find.text('Live'), findsOneWidget);
 
-      final dot = _decorations(
-        tester,
-      ).firstWhere((d) => d.shape == BoxShape.circle);
+      final dot = _decorations(tester)
+          .firstWhere((d) => d.shape == BoxShape.circle);
       expect(dot.color, isNotNull);
       // A status dot sits flush in a line of text: no ring around it.
       expect(dot.border, isNull);

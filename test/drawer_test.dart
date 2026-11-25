@@ -52,9 +52,8 @@ void main() {
     await tester.pumpWidget(_host());
 
     var closed = false;
-    Drawer.open(
-      const DrawerConfig(child: Text('body')),
-    ).then((_) => closed = true);
+    Drawer.open(const DrawerConfig(child: Text('body')))
+        .then((_) => closed = true);
     await _settle(tester);
     expect(closed, isFalse);
 
@@ -89,9 +88,8 @@ void main() {
     await tester.pumpWidget(_host());
 
     var closed = false;
-    Drawer.open(
-      const DrawerConfig(child: Text('body')),
-    ).then((_) => closed = true);
+    Drawer.open(const DrawerConfig(child: Text('body')))
+        .then((_) => closed = true);
     await _settle(tester);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);

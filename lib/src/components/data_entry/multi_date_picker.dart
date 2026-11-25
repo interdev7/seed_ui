@@ -54,8 +54,11 @@ class DateTag {
 ///         child: Text(tag.label))
 ///     : child,
 /// ```
-typedef DateTagBuilder =
-    Widget Function(BuildContext context, DateTag tag, Widget child);
+typedef DateTagBuilder = Widget Function(
+  BuildContext context,
+  DateTag tag,
+  Widget child,
+);
 
 /// Defaults for every [MultiDatePicker] under a `ConfigProvider`.
 @immutable

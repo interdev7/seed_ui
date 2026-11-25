@@ -181,12 +181,12 @@ void main() {
       }
     }
 
-    final config = File(
-      'lib/src/theme/component_defaults.dart',
-    ).readAsStringSync();
-    final reachable = RegExp(
-      r'T == (\w+Defaults)',
-    ).allMatches(config).map((m) => m.group(1)!).toSet();
+    final config = File('lib/src/theme/component_defaults.dart')
+        .readAsStringSync();
+    final reachable = RegExp(r'T == (\w+Defaults)')
+        .allMatches(config)
+        .map((m) => m.group(1)!)
+        .toSet();
 
     expect(asked, isNotEmpty);
     expect(
@@ -210,12 +210,12 @@ void main() {
     // The table in doc/theming.md is the only place a caller finds out what
     // can be set for a subtree. It had drifted: eight components missing, and
     // the `size`/`disabled` fields listed in prose that had stopped matching.
-    final config = File(
-      'lib/src/theme/component_defaults.dart',
-    ).readAsStringSync();
-    final slots = RegExp(
-      r'T == (\w+)Defaults',
-    ).allMatches(config).map((m) => m.group(1)!).toList();
+    final config = File('lib/src/theme/component_defaults.dart')
+        .readAsStringSync();
+    final slots = RegExp(r'T == (\w+)Defaults')
+        .allMatches(config)
+        .map((m) => m.group(1)!)
+        .toList();
 
     final fields = <String, List<String>>{};
     for (final entity in Directory(
@@ -226,9 +226,10 @@ void main() {
         r'class (\w+Defaults) \{(.*?)\n\}',
         dotAll: true,
       ).allMatches(entity.readAsStringSync())) {
-        fields[match.group(1)!] = RegExp(
-          r'final [\w<>,?. ]+\??\s(\w+);',
-        ).allMatches(match.group(2)!).map((m) => m.group(1)!).toList();
+        fields[match.group(1)!] = RegExp(r'final [\w<>,?. ]+\??\s(\w+);')
+            .allMatches(match.group(2)!)
+            .map((m) => m.group(1)!)
+            .toList();
       }
     }
 
@@ -317,9 +318,10 @@ void main() {
         final name = match.group(1)!;
         if (name == 'ComponentDefaults') continue;
         final body = match.group(2)!;
-        final fields = RegExp(
-          r'final [\w<>,?\. ]+\? (\w+);',
-        ).allMatches(body).map((m) => m.group(1)!).toList();
+        final fields = RegExp(r'final [\w<>,?\. ]+\? (\w+);')
+            .allMatches(body)
+            .map((m) => m.group(1)!)
+            .toList();
         if (fields.isEmpty) continue;
         if (!body.contains('$name merge($name other)')) {
           missing.add('$name has no merge');
@@ -359,12 +361,14 @@ void main() {
         r'merge\(\w+ other\) => \w+\(\n(.*?)\n\s*\);',
         dotAll: true,
       ).firstMatch(source)!.group(1)!;
-      final folded = RegExp(
-        r'(\w+):\s',
-      ).allMatches(fold).map((m) => m.group(1)!).toSet();
-      final slots = RegExp(
-        'final \\w+$kind\\? (\\w+);',
-      ).allMatches(source).map((m) => m.group(1)!).toSet();
+      final folded = RegExp(r'(\w+):\s')
+          .allMatches(fold)
+          .map((m) => m.group(1)!)
+          .toSet();
+      final slots = RegExp('final \\w+$kind\\? (\\w+);')
+          .allMatches(source)
+          .map((m) => m.group(1)!)
+          .toSet();
       expect(
         slots.difference(folded),
         isEmpty,
@@ -417,9 +421,9 @@ void main() {
             '^  final [\\w<>,?. ]+? $field;',
             multiLine: true,
           ).allMatches(rest).length;
-          final taken = RegExp(
-            'required this\\.$field,',
-          ).allMatches(rest).length;
+          final taken = RegExp('required this\\.$field,')
+              .allMatches(rest)
+              .length;
           final built = RegExp(
             '^\\s*$field:',
             multiLine: true,
@@ -453,12 +457,12 @@ void main() {
       }
     }
 
-    final config = File(
-      'lib/src/theme/components_config.dart',
-    ).readAsStringSync();
-    final wired = RegExp(
-      r'(\w+Token)\?',
-    ).allMatches(config).map((m) => m.group(1)!).toSet();
+    final config = File('lib/src/theme/components_config.dart')
+        .readAsStringSync();
+    final wired = RegExp(r'(\w+Token)\?')
+        .allMatches(config)
+        .map((m) => m.group(1)!)
+        .toSet();
 
     expect(declared, isNotEmpty);
     expect(
@@ -751,9 +755,10 @@ void main() {
       expect(
         token.primary.base,
         isNot(
-          ThemeData(
-            token: const SeedToken(colorPrimary: pink),
-          ).token.primary.base,
+          ThemeData(token: const SeedToken(colorPrimary: pink))
+              .token
+              .primary
+              .base,
         ),
         reason: 'the same seed in the dark is a different shade',
       );
@@ -872,9 +877,8 @@ void _refinementTests() {
       // And nothing else moved with it.
       expect(
         theme.token.colorText,
-        Token.derive(
-          const SeedToken(colorPrimary: Color(0xFFEB2F96)),
-        ).colorText,
+        Token.derive(const SeedToken(colorPrimary: Color(0xFFEB2F96)))
+            .colorText,
       );
     });
 

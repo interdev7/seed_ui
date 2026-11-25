@@ -569,9 +569,8 @@ class _OtpFormatter extends TextInputFormatter {
     final text = clean(newValue.text);
     // How far the cursor got, counted in the characters that were kept.
     final typed = newValue.selection.isValid
-        ? clean(
-            newValue.text.substring(0, newValue.selection.extentOffset),
-          ).length
+        ? clean(newValue.text.substring(0, newValue.selection.extentOffset))
+              .length
         : text.length;
     final at = typed.clamp(0, text.length);
     return TextEditingValue(

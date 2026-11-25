@@ -389,11 +389,9 @@ void _selectionTests() {
       final config = tester.testTextInput.setClientArgs!;
       expect(config['autocorrect'], isFalse);
       expect(config['enableSuggestions'], isFalse);
-      expect(
-        (config['autofill'] as Map)['hints'],
-        [AutofillHints.username],
-        reason: 'a password manager reads the connection, not the tree',
-      );
+      expect((config['autofill'] as Map)['hints'], [
+        AutofillHints.username,
+      ], reason: 'a password manager reads the connection, not the tree');
     });
 
     testWidgets('a phone keyboard is asked for suggestions all the same', (

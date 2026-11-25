@@ -5892,9 +5892,8 @@ class _TableState<T> extends State<Table<T>> with TickerProviderStateMixin {
       // Only the cell that starts something is built; the places it covers
       // are asked for and given nothing, which is how the grid comes to have
       // the hole a spanning cell fills.
-      final plan = _headingPlan(
-        depth,
-      ).where((cell) => cell.x == at.xIndex && cell.y == at.yIndex);
+      final plan = _headingPlan(depth)
+          .where((cell) => cell.x == at.xIndex && cell.y == at.yIndex);
       if (plan.isEmpty) return null;
       final headed = plan.first.column;
       if (headed.isGroup) {

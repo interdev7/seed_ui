@@ -283,8 +283,7 @@ class _NewYearDemoState extends State<NewYearDemo> {
                               onPressed: () {
                                 Modal.confirm(
                                   title: 'Claim Season Pass? 🎟️',
-                                  content:
-                                      'Enjoy 50% discount on all holiday rewards!',
+                                  content: 'Enjoy 50% discount on all holiday rewards!',
                                   onOk: () {
                                     message.success('Season Pass Unlocked! 🎆');
                                     return true;

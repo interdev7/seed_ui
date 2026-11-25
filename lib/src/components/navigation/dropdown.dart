@@ -88,8 +88,11 @@ sealed class DropdownEntry<T> {
 /// machinery in order to change the look. Its height does not: a builder that
 /// asks for more than `DropdownToken.itemHeight` takes it. [hovered] is the
 /// one thing it could not work out from the item alone.
-typedef DropdownItemBuilder<T> =
-    Widget Function(BuildContext context, DropdownItem<T> item, bool hovered);
+typedef DropdownItemBuilder<T> = Widget Function(
+  BuildContext context,
+  DropdownItem<T> item,
+  bool hovered,
+);
 
 /// A selectable row in a [Dropdown] menu.
 class DropdownItem<T> extends DropdownEntry<T> {

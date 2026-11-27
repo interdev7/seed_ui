@@ -408,12 +408,13 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
         ),
       ),
     );
-    return keyboard > 0
-        ? Padding(
-            padding: EdgeInsets.only(bottom: keyboard),
-            child: panel,
-          )
-        : panel;
+    // Always the same wrapper: swapping it in only while the keyboard is up
+    // rebuilt the panel's content, and the field being typed in lost focus —
+    // the keyboard closed the moment it opened.
+    return Padding(
+      padding: EdgeInsets.only(bottom: keyboard),
+      child: panel,
+    );
   }
 
   Widget _header(Token token) {

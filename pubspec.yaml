@@ -2,7 +2,7 @@ name: seed_ui
 description: >-
   A themeable Flutter widget library: 45+ token-driven components, and
   message, notification, modal and drawer APIs callable without a context.
-version: 0.30.0
+version: 0.30.1
 homepage: https://github.com/interdev7/seed_ui
 repository: https://github.com/interdev7/seed_ui
 issue_tracker: https://github.com/interdev7/seed_ui/issues

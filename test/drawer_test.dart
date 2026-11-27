@@ -238,4 +238,33 @@ void main() {
     Drawer.destroyAll();
     await _settle(tester);
   });
+
+  testWidgets(
+    'a field in a bottom drawer keeps focus when the keyboard opens',
+    (tester) async {
+      await tester.pumpWidget(_host());
+      addTearDown(tester.view.resetViewInsets);
+
+      Drawer.open(
+        const DrawerConfig(
+          placement: DrawerPlacement.bottom,
+          size: 400,
+          child: Input(placeholder: 'note'),
+        ),
+      );
+      await _settle(tester);
+
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+      // The keyboard comes up: the panel moves above it.
+      tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+      await _settle(tester);
+
+      final field = tester.state<EditableTextState>(find.byType(EditableText));
+      expect(field.widget.focusNode.hasFocus, isTrue);
+
+      Drawer.destroyAll();
+      await _settle(tester);
+    },
+  );
 }

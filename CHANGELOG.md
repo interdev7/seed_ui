@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.30.1
+
+### Fixed
+
+- `Drawer` (bottom): a text field inside lost focus the moment the on-screen
+  keyboard opened, so the keyboard closed right away. The panel no longer
+  changes its wrapper when the keyboard comes up.
+
 ## 0.30.0
 
 ### Breaking

@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.30.2
+
+### Fixed
+
+- `Drawer`: a panel kept clear of every system bar, even ones it doesn't
+  touch, so a bottom panel had an empty status-bar gap over its title and the
+  title sat below the header's centre. Only the screen edges the panel reaches
+  are padded now.
+- `Input` with `minLines: 1` and `maxLines` above one (a field that grows):
+  its single line and placeholder were pinned to the top like a text area's.
+  They now sit centred until the text wraps.
+
 ## 0.30.1
 
 ### Fixed

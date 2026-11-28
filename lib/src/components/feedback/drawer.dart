@@ -391,7 +391,15 @@ class _DrawerScaffoldState extends State<_DrawerScaffold>
           color: r.colorBgElevated,
           boxShadow: token.boxShadow,
         ),
+        // Only the screen edges the panel touches keep clear of the system
+        // bars: a bottom panel that stops short of the top got the status
+        // bar's gap over its title anyway, pushing the title off centre.
         child: SafeArea(
+          left: config.placement != DrawerPlacement.right,
+          right: config.placement != DrawerPlacement.left,
+          top:
+              config.placement != DrawerPlacement.bottom || extent >= maxExtent,
+          bottom: config.placement != DrawerPlacement.top,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.max,

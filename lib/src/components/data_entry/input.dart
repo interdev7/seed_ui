@@ -772,6 +772,11 @@ class _SoftInputState extends State<Input> {
 
   bool get _multiline => widget.maxLines == null || widget.maxLines! > 1;
 
+  /// A field that starts as one line and grows ([minLines] of 1): while it
+  /// holds a line it looks like a plain input, so that line sits centred, not
+  /// pinned to the top like a text area's.
+  bool get _growsFromOne => _multiline && widget.minLines == 1;
+
   void _triggerSearch() => widget.search?.onSearch?.call(_controller.text);
 
   @override
@@ -862,7 +867,7 @@ class _SoftInputState extends State<Input> {
     // physical; `start`, `end` and `justify` name a reading end, and follow
     // the direction. Mapping start onto the left is what kept the placeholder
     // on the wrong side of a mirrored field while the text itself moved.
-    final y = _multiline ? -1.0 : 0.0;
+    final y = _multiline && !_growsFromOne ? -1.0 : 0.0;
     final AlignmentGeometry placeholderAlign = switch (widget.textAlign) {
       TextAlign.center => AlignmentDirectional(0, y),
       TextAlign.left => Alignment(-1, y),
@@ -903,7 +908,7 @@ class _SoftInputState extends State<Input> {
     final attached = search != null && search._attached;
 
     final content = Row(
-      crossAxisAlignment: _multiline
+      crossAxisAlignment: _multiline && !_growsFromOne
           ? CrossAxisAlignment.start
           : CrossAxisAlignment.center,
       children: [
